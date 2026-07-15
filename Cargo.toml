@@ -3,6 +3,7 @@ members = [
     "crates/rfb-core",
     "crates/rfb-contract",
     "crates/rfb-legacy-probe",
+    "crates/rfb-legacy-import",
     "crates/rfb-protocol",
     "crates/rfb-replay",
     "crates/rfb-save",

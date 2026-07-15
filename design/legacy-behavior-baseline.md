@@ -1,6 +1,6 @@
 # 旧版行为基准与差分测试规范
 
-状态：P0 规范已确定，首批 20 个原创 contract fixtures 已建立，本地旧版基准仍待扩展
+状态：P0 规范已确定，首批 20 个原创 contract fixtures 和旧存档稳定前缀断言已建立
 
 ## 1. 基准版本
 
@@ -37,6 +37,7 @@
 .local/legacy-baseline/
 ├─ manifest.json
 ├─ save-samples.json
+├─ parsed-save-samples.json
 ├─ saves/
 │  ├─ legacy-save-01.bin
 │  ├─ legacy-save-02.bin
@@ -75,7 +76,24 @@ tests/fixtures/contract-v1/
 cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存档3>
 ```
 
-工具要求源文件位于已验证的 `RFB_LEGACY_SOURCE` 内，读取四字节版本头，复制为中性样本名，并在复制前后校验 SHA-256。当前本机集合包含两份 1.3.0.7 `baseline-exact` 样本和一份 1.2.0.6 `legacy-migration` 样本。样本目前只完成来源、版本头和文件哈希登记，尚不表示 Rust 导入器已经能够解析全部字段。
+工具要求源文件位于已验证的 `RFB_LEGACY_SOURCE` 内，读取四字节版本头，复制为中性样本名，并在复制前后校验 SHA-256。当前本机集合包含两份 1.3.0.7 `baseline-exact` 样本和一份 1.2.0.6 `legacy-migration` 样本。
+
+`rfb-legacy-import` 对样本执行旧格式的链式 XOR 解码，并只解析跨 1.2.0.6/1.3.0.7 稳定、且不依赖 C 结构体内存布局的前缀：
+
+- 四字节版本；
+- `sf_system`、保存时间、生命数和保存次数；
+- RNG 位置及 63 项状态；
+- 9 个基础选项字节、作弊标志、自动保存选项；
+- 8 组 option/window flags 和 masks；
+- 前缀消费长度、解码值校验和及编码字节校验和。
+
+```powershell
+cargo run -p rfb-legacy-import -- inspect-prefix .local/legacy-baseline/saves/legacy-save-01.bin
+cargo run -p rfb-legacy-import -- record-catalog .local/legacy-baseline/save-samples.json
+cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-samples.json
+```
+
+稳定前缀固定解码 409 字节，连同版本头和 XOR seed 共消费 414 个编码字节。`record-catalog` 只创建一次本地 `parsed-save-samples.json`，之后由 `verify-catalog` 精确复验；目录元数据、样本版本、长度和 SHA-256 也同时校验。这不表示旧 `player_type`、物品、地图或完整存档已经可导入。
 
 ## 4. 场景格式
 
@@ -177,5 +195,6 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 - 已完成：回放文件 v1、每 100 命令和最终状态检查点、10,000 回合无漂移测试、存档重载续播测试；
 - 已完成：3 个本地旧存档样本及 SHA-256/版本头清单、快照规范化 Schema v1 和 CLI；
 - 已完成：baseline policy v1、diff waiver v1 格式和 CI 验证；
-- 待完成：旧存档的字段级解析和导入断言；
+- 已完成：旧存档链式 XOR 解码、409 字节稳定前缀解析及 3 个本地样本的字段级断言；
+- 待完成：从稳定前缀继续扩展隔离的完整旧存档导入和结构化转换报告；
 - 当前 fixture 只固定已经实现的原创垂直切片行为，不代表物品、状态、法术、AI 等旧 RFB 模块已经迁移。

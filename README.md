@@ -85,6 +85,16 @@ cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存
 
 工具只把中性命名副本、SHA-256、四字节版本头和本地清单写入被 Git 忽略的 `.local/legacy-baseline/`。当前机器已经准备两份 1.3.0.7 样本和一份 1.2.0.6 迁移样本。
 
+解析旧存档的稳定前缀并建立本地字段断言：
+
+```powershell
+cargo run -p rfb-legacy-import -- inspect-prefix .local/legacy-baseline/saves/legacy-save-01.bin
+cargo run -p rfb-legacy-import -- record-catalog .local/legacy-baseline/save-samples.json
+cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-samples.json
+```
+
+`rfb-legacy-import` 当前只读取不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
+
 快照规范化和 hash：
 
 ```powershell
@@ -93,4 +103,4 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、回放文件 v1、本地旧存档样本、快照规范化工具和基准更新审批规则已经建立。下一步是旧存档字段级解析和导入断言。
+首批 20 个原创 contract fixtures、回放文件 v1、本地旧存档字段级断言、快照规范化工具和基准更新审批规则已经建立。下一步是把 `ReplayRecorder` 接入 Tauri 诊断导出。
