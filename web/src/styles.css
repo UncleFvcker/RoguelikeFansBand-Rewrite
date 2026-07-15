@@ -110,9 +110,17 @@ h1 {
 }
 
 .map-host {
+  width: var(--map-world-width);
+  height: var(--map-world-height);
   max-width: calc(100vw - 3rem);
   overflow: auto;
   line-height: 0;
+}
+
+.map-host[data-camera-mode="player-centered"] {
+  width: var(--map-centered-width);
+  height: var(--map-centered-height);
+  overflow: hidden;
 }
 
 .map-host canvas {
@@ -120,8 +128,8 @@ h1 {
 }
 
 .input-toolbar {
-  display: grid;
-  grid-template-columns: auto auto auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem 0.85rem;
@@ -146,6 +154,7 @@ h1 {
 }
 
 .controls {
+  flex: 1 1 100%;
   margin: 0;
   color: #7f91a5;
   font-size: 0.85rem;
@@ -306,6 +315,7 @@ h1 {
   }
 
   .input-toolbar {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
   }
 }

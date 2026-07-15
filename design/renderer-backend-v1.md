@@ -44,7 +44,16 @@ GameSnapshot / GameUpdate
 - 光照和可见性是独立 Graphics 层，不写回 tileset mapping 或地形背景；
 - tileset 热切换重绘当前 400 个 RenderCell，但保留同一个 Canvas 和游戏会话。
 
-## 5. 测试
+## 5. 镜头与视口
+
+地图提供两个可持久化的前端镜头模式：
+
+- `full-map`：保持当前整图 Canvas 和窄窗口滚动行为；
+- `player-centered`：使用约 15×15 格视口，玩家远离边缘时保持在视口中心，接近地图边缘时钳制世界偏移，避免显示地图外空白。
+
+五个视觉层共同挂在 PixiJS camera container 下。镜头移动只修改 container position，不重建 Canvas、sprite 或 tileset，也不产生新的 dirty cells。窗口或布局尺寸变化由 `ResizeObserver` 重新计算视口偏移；镜头模式和像素偏移只属于前端显示状态，不进入 Rust 核心、存档、回放或 state hash。
+
+## 6. 测试
 
 Node 测试覆盖：
 
@@ -52,14 +61,15 @@ Node 测试覆盖：
 - 地形语义不参与阅读光计算；
 - 地形、物品和角色语义层同时存在；
 - 玩家移动只产生有限且无重复的光照 dirty cells；
-- 记忆 mask 使用独立 delta。
+- 记忆 mask 使用独立 delta；
+- 玩家居中、四边钳制、小地图居中和整图零偏移。
 
-Windows E2E 验证 backend ID、五层顺序、90 格移动更新、0 格等待更新、1 格拾取更新、400 格 tileset 重绘，以及语言/tileset 切换时 Canvas 保持不变。
+Windows E2E 验证 backend ID、五层顺序、90 格移动更新、0 格等待更新、1 格拾取更新、400 格 tileset 重绘，以及语言/tileset/镜头切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、移动后的相机偏移、边缘钳制，以及镜头切换不改变 state hash 或累计 applied cells。
 
-## 6. 后续
+## 7. 后续
 
 - 由 Rust 协议提供正式可见性、记忆状态和玩法光源；
 - 将静态地形按 chunk 缓存为 RenderTexture；
 - 增加 Effects、Interaction 和 Debug pass；
-- 增加 resize、缩放、最小化恢复和截图差异测试；
+- 扩展实际窗口 resize、缩放、最小化恢复和截图差异测试；
 - 根据性能分析决定 sprite pooling、GPU batching 与低分辨率 light RenderTexture。

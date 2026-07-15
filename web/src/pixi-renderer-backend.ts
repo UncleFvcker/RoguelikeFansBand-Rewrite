@@ -2,6 +2,7 @@
 
 import { Application, Container, Graphics, Sprite } from "pixi.js";
 
+import { MAP_CELL_SIZE } from "./camera";
 import { ensureContrast } from "./render-color";
 import type {
   BackendInitialization,
@@ -11,7 +12,6 @@ import type {
 } from "./renderer-backend";
 import { TilesetRuntime, type RuntimeTileVisual } from "./tileset-runtime";
 
-const CELL_SIZE = 28;
 const DEFAULT_BACKGROUND = 0x090d12;
 const GRID_COLOR = 0x18212d;
 
@@ -30,6 +30,7 @@ interface CellView {
 export class PixiRendererBackend implements RendererBackend {
   readonly id = "pixi-layered-v1";
   readonly #application = new Application();
+  readonly #camera = new Container();
   readonly #terrainLayer = new Container();
   readonly #objectLayer = new Container();
   readonly #actorLayer = new Container();
@@ -49,8 +50,8 @@ export class PixiRendererBackend implements RendererBackend {
     this.#contentGlyphs = options.contentGlyphs;
     this.#tileset = await TilesetRuntime.load(options.tilesetManifestUrl, options.contentGlyphs);
     await this.#application.init({
-      width: options.width * CELL_SIZE,
-      height: options.height * CELL_SIZE,
+      width: options.width * MAP_CELL_SIZE,
+      height: options.height * MAP_CELL_SIZE,
       background: "#090d12",
       antialias: false,
       resolution: window.devicePixelRatio,
@@ -58,7 +59,8 @@ export class PixiRendererBackend implements RendererBackend {
     });
     this.#application.canvas.setAttribute("aria-label", options.canvasLabel);
     options.host.replaceChildren(this.#application.canvas);
-    this.#application.stage.addChild(
+    this.#application.stage.addChild(this.#camera);
+    this.#camera.addChild(
       this.#terrainLayer,
       this.#objectLayer,
       this.#actorLayer,
@@ -67,6 +69,10 @@ export class PixiRendererBackend implements RendererBackend {
     );
     this.#createCells();
     return this.#tilesetResult();
+  }
+
+  setCameraOffset(x: number, y: number): void {
+    this.#camera.position.set(x, y);
   }
 
   applyCells(cells: readonly RenderCell[]): number {
@@ -161,9 +167,9 @@ export class PixiRendererBackend implements RendererBackend {
 
 function cellSprite(x: number, y: number): Sprite {
   const sprite = new Sprite({ roundPixels: true });
-  sprite.position.set(x * CELL_SIZE, y * CELL_SIZE);
-  sprite.width = CELL_SIZE;
-  sprite.height = CELL_SIZE;
+  sprite.position.set(x * MAP_CELL_SIZE, y * MAP_CELL_SIZE);
+  sprite.width = MAP_CELL_SIZE;
+  sprite.height = MAP_CELL_SIZE;
   return sprite;
 }
 
@@ -197,12 +203,12 @@ function drawBackground(
   color: number,
   includeGrid: boolean,
 ): void {
-  const x = cell.x * CELL_SIZE;
-  const y = cell.y * CELL_SIZE;
-  graphics.clear().rect(x, y, CELL_SIZE, CELL_SIZE).fill(color);
+  const x = cell.x * MAP_CELL_SIZE;
+  const y = cell.y * MAP_CELL_SIZE;
+  graphics.clear().rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE).fill(color);
   if (includeGrid) {
     graphics
-      .rect(x, y, CELL_SIZE, CELL_SIZE)
+      .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
       .stroke({ color: GRID_COLOR, width: 1, alpha: 0.55 });
   }
 }
@@ -213,24 +219,31 @@ function drawVisibility(graphics: Graphics, cell: RenderCell): void {
   const color = cell.visibility === "remembered" ? 0x12213a : 0x000000;
   const alpha = cell.visibility === "remembered" ? 0.58 : 0.94;
   graphics
-    .rect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+    .rect(
+      cell.x * MAP_CELL_SIZE,
+      cell.y * MAP_CELL_SIZE,
+      MAP_CELL_SIZE,
+      MAP_CELL_SIZE,
+    )
     .fill({ color, alpha });
 }
 
 function drawLighting(lightColor: Graphics, darkness: Graphics, cell: RenderCell): void {
-  const x = cell.x * CELL_SIZE;
-  const y = cell.y * CELL_SIZE;
+  const x = cell.x * MAP_CELL_SIZE;
+  const y = cell.y * MAP_CELL_SIZE;
   const intensity = Math.max(0, Math.min(1, cell.light.intensity));
   lightColor.clear();
   darkness.clear();
   const colorAlpha = Math.max(0, intensity - 0.5) * 0.18;
   if (colorAlpha > 0) {
     lightColor
-      .rect(x, y, CELL_SIZE, CELL_SIZE)
+      .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
       .fill({ color: cell.light.color, alpha: colorAlpha });
   }
   const darknessAlpha = (1 - intensity) * 0.62;
   if (darknessAlpha > 0) {
-    darkness.rect(x, y, CELL_SIZE, CELL_SIZE).fill({ color: 0x000000, alpha: darknessAlpha });
+    darkness
+      .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
+      .fill({ color: 0x000000, alpha: darknessAlpha });
   }
 }

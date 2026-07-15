@@ -30,6 +30,10 @@ export class RenderWorld {
     this.#visibility = new Array<CellVisibility>(width * height).fill("visible");
   }
 
+  get playerPosition(): Position {
+    return { ...this.#playerPosition };
+  }
+
   applySnapshot(snapshot: GameSnapshot): RenderCell[] {
     this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items);
     this.#playerPosition = snapshot.player.position;

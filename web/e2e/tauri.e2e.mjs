@@ -84,6 +84,9 @@ async function runScenario(driver) {
       tileset.value = "ascii";
       tileset.dispatchEvent(new Event("change", { bubbles: true }));
     }
+    const camera = document.querySelector("#camera-mode");
+    camera.value = "full-map";
+    camera.dispatchEvent(new Event("change", { bubbles: true }));
     window.__rfbE2eCanvas = document.querySelector("#map-host canvas");
     return true;
   `);
@@ -103,6 +106,11 @@ async function runScenario(driver) {
   assert.equal(state.rendererLayers, "terrain,object,actor,visibility,lighting");
   assert.equal(state.visibilityMode, "all-visible");
   assert.equal(state.lightingMode, "presentation-player-v1");
+  assert.equal(state.cameraMode, "full-map");
+  assert.equal(state.cameraX, "0");
+  assert.equal(state.cameraY, "0");
+  assert.equal(state.viewportWidth, "560");
+  assert.equal(state.viewportHeight, "560");
   assert.equal(state.canvasUnchanged, true);
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
@@ -174,9 +182,69 @@ async function runScenario(driver) {
   assert.ok(download.size > 100, `save is unexpectedly small: ${download.size}`);
   assert.match((await readState(driver)).messages, /已导出带校验和的 \.rfbsave 存档/);
 
-  await dispatchKey(driver, "Numpad6", "6");
+  const hashBeforeCameraSwitch = state.stateHash;
+  const appliedCellsBeforeCameraSwitch = state.appliedCells;
+  const totalAppliedCellsBeforeCameraSwitch = state.totalAppliedCells;
+  await driver.execute(`
+    const select = document.querySelector("#camera-mode");
+    select.value = "player-centered";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "5, 3"`,
+    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered" && document.querySelector("#map-host")?.dataset.viewportWidth === "420"`,
+    "player-centered camera mode",
+  );
+  state = await readState(driver);
+  assert.equal(state.stateHash, hashBeforeCameraSwitch);
+  assert.equal(state.appliedCells, appliedCellsBeforeCameraSwitch);
+  assert.equal(state.totalAppliedCells, totalAppliedCellsBeforeCameraSwitch);
+  assert.equal(state.cameraX, "0");
+  assert.equal(state.cameraY, "0");
+  assert.equal(state.viewportHeight, "420");
+  assert.equal(state.canvasUnchanged, true);
+
+  for (const x of [5, 6, 7, 8]) {
+    await dispatchKey(driver, "Numpad6", "6");
+    await driver.waitFor(
+      `return document.querySelector("#position-value")?.textContent === "${x}, 3"`,
+      `camera-follow movement to x=${x}`,
+    );
+  }
+  state = await readState(driver);
+  assert.equal(state.cameraMode, "player-centered");
+  assert.equal(state.cameraX, "-28");
+  assert.equal(state.cameraY, "0");
+  assert.equal(state.canvasUnchanged, true);
+
+  const hashAfterCameraMovement = state.stateHash;
+  const cellsAfterCameraMovement = state.totalAppliedCells;
+  await driver.execute(`
+    const select = document.querySelector("#camera-mode");
+    select.value = "full-map";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.querySelector("#map-host")?.dataset.cameraMode === "full-map" && document.querySelector("#map-host")?.dataset.cameraX === "0"`,
+    "full-map camera restore",
+  );
+  state = await readState(driver);
+  assert.equal(state.stateHash, hashAfterCameraMovement);
+  assert.equal(state.totalAppliedCells, cellsAfterCameraMovement);
+  await driver.execute(`
+    const select = document.querySelector("#camera-mode");
+    select.value = "player-centered";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered" && document.querySelector("#map-host")?.dataset.cameraX === "-28"`,
+    "player-centered camera restore",
+  );
+
+  await driver.waitFor(
+    `return document.querySelector("#position-value")?.textContent === "8, 3"`,
     "movement after save",
   );
 
@@ -198,6 +266,8 @@ async function runScenario(driver) {
   assert.equal(state.appliedCells, "400");
   assert.equal(state.itemCount, "0");
   assert.equal(state.inventoryStackCount, "1");
+  assert.equal(state.cameraMode, "player-centered");
+  assert.equal(state.cameraX, "0");
   assert.match(state.inventory, /发光碎片/);
   assert.match(state.messages, /存档校验与载入成功/);
 
@@ -260,12 +330,18 @@ async function readState(driver) {
       rendererLayers: host?.dataset.rendererLayers,
       visibilityMode: host?.dataset.visibilityMode,
       lightingMode: host?.dataset.lightingMode,
+      cameraMode: host?.dataset.cameraMode,
+      cameraX: host?.dataset.cameraX,
+      cameraY: host?.dataset.cameraY,
+      viewportWidth: host?.dataset.viewportWidth,
+      viewportHeight: host?.dataset.viewportHeight,
       contentId: host?.dataset.contentId,
       contentHash: host?.dataset.contentHash,
       worldId: host?.dataset.worldId,
       contentVisualCount: host?.dataset.contentVisualCount,
       itemCount: host?.dataset.itemCount,
       inventoryStackCount: host?.dataset.inventoryStackCount,
+      totalAppliedCells: host?.dataset.totalAppliedCells,
       inventory: document.querySelector("#inventory-list")?.textContent,
       controls: document.querySelector("#controls-help")?.textContent,
       locale: document.documentElement.lang,

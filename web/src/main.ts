@@ -9,7 +9,7 @@ import {
   type MessageKey,
 } from "./localization";
 import { LOCALIZATION_SOURCES } from "./localization-resources";
-import { MapRenderer } from "./map-renderer";
+import { MapRenderer, type CameraMode } from "./map-renderer";
 import type {
   Direction,
   GameCommand,
@@ -40,6 +40,7 @@ const loadInput = element<HTMLInputElement>("load-input");
 const clearMessages = element<HTMLButtonElement>("clear-messages");
 const inputPresetSelect = element<HTMLSelectElement>("input-preset");
 const tilesetPresetSelect = element<HTMLSelectElement>("tileset-preset");
+const cameraModeSelect = element<HTMLSelectElement>("camera-mode");
 const controlsHelp = element<HTMLElement>("controls-help");
 const languageSelect = element<HTMLSelectElement>("language-select");
 
@@ -57,6 +58,7 @@ type MessageRecord =
   | { source: "event"; turn: string; kind: string; event: GameEventDto };
 const INPUT_PRESET_STORAGE_KEY = "rfb.input-preset";
 const TILESET_PRESET_STORAGE_KEY = "rfb.tileset-preset";
+const CAMERA_MODE_STORAGE_KEY = "rfb.camera-mode";
 const LOCALE_STORAGE_KEY = "rfb.locale";
 const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
   ascii: "/tilesets/ascii-default/tileset.json",
@@ -64,12 +66,14 @@ const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
 };
 let inputPreset = readInputPreset();
 let tilesetPreset = readTilesetPreset();
+let cameraMode = readCameraMode();
 const localization = new Localization(readLocale(), LOCALIZATION_SOURCES);
 let connectionState: ConnectionState = "starting";
 let currentInventory: InventoryItemDto[] = [];
 const messageRecords: MessageRecord[] = [];
 inputPresetSelect.value = inputPreset;
 tilesetPresetSelect.value = tilesetPreset;
+cameraModeSelect.value = cameraMode;
 languageSelect.value = localization.locale;
 localization.localizeDocument();
 renderConnectionStatus();
@@ -91,6 +95,7 @@ async function start(): Promise<void> {
       TILESET_MANIFESTS[tilesetPreset],
       contentGlyphs,
       localization.format("map-aria-label"),
+      cameraMode,
     );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
@@ -125,6 +130,11 @@ inputPresetSelect.addEventListener("change", () => {
   addLocalizedMessage("message-input-preset-changed", { preset: inputPreset }, "system");
 });
 tilesetPresetSelect.addEventListener("change", () => void changeTileset());
+cameraModeSelect.addEventListener("change", () => {
+  cameraMode = isCameraMode(cameraModeSelect.value) ? cameraModeSelect.value : "full-map";
+  localStorage.setItem(CAMERA_MODE_STORAGE_KEY, cameraMode);
+  renderer.setCameraMode(cameraMode);
+});
 languageSelect.addEventListener("change", () => {
   const locale = isSupportedLocale(languageSelect.value) ? languageSelect.value : "zh-CN";
   localization.setLocale(locale);
@@ -428,6 +438,15 @@ function readTilesetPreset(): TilesetPreset {
 function readLocale(): "en-US" | "zh-CN" {
   const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
   return isSupportedLocale(stored) ? stored : "zh-CN";
+}
+
+function readCameraMode(): CameraMode {
+  const stored = localStorage.getItem(CAMERA_MODE_STORAGE_KEY);
+  return isCameraMode(stored) ? stored : "full-map";
+}
+
+function isCameraMode(value: string | null): value is CameraMode {
+  return value === "full-map" || value === "player-centered";
 }
 
 function isTilesetPreset(value: string | null): value is TilesetPreset {
