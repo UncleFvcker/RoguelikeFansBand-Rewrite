@@ -22,12 +22,21 @@ const saveButton = element<HTMLButtonElement>("save-button");
 const loadInput = element<HTMLInputElement>("load-input");
 const clearMessages = element<HTMLButtonElement>("clear-messages");
 const inputPresetSelect = element<HTMLSelectElement>("input-preset");
+const tilesetPresetSelect = element<HTMLSelectElement>("tileset-preset");
 const controlsHelp = element<HTMLElement>("controls-help");
 
 type InputPreset = "numpad" | "vi" | "wasd";
+type TilesetPreset = "ascii" | "image";
 const INPUT_PRESET_STORAGE_KEY = "rfb.input-preset";
+const TILESET_PRESET_STORAGE_KEY = "rfb.tileset-preset";
+const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
+  ascii: "/tilesets/ascii-default/tileset.json",
+  image: "/tilesets/image-demo/tileset.json",
+};
 let inputPreset = readInputPreset();
+let tilesetPreset = readTilesetPreset();
 inputPresetSelect.value = inputPreset;
+tilesetPresetSelect.value = tilesetPreset;
 renderInputHelp();
 
 void start();
@@ -35,10 +44,16 @@ void start();
 async function start(): Promise<void> {
   try {
     const snapshot = await core.initialize("42");
-    await renderer.initialize(mapHost, snapshot.width, snapshot.height);
+    const tileset = await renderer.initialize(
+      mapHost,
+      snapshot.width,
+      snapshot.height,
+      TILESET_MANIFESTS[tilesetPreset],
+    );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
     addMessage("Tauri 原生 Rust 核心已启动；地图与文字由不同渲染层管理。", "system");
+    announceTileset(tileset.id, tileset.warnings);
     connectionStatus.textContent = "核心已连接";
     connectionStatus.classList.add("ready");
   } catch (error) {
@@ -63,6 +78,7 @@ inputPresetSelect.addEventListener("change", () => {
   renderInputHelp();
   addMessage(`移动键位已切换为${inputPresetName(inputPreset)}。`, "system");
 });
+tilesetPresetSelect.addEventListener("change", () => void changeTileset());
 window.addEventListener("beforeunload", () => {
   renderer.destroy();
   core.dispose();
@@ -113,6 +129,30 @@ async function importSave(): Promise<void> {
     addMessage("存档校验与载入成功。", "system");
   } catch (error) {
     showError(error);
+  }
+}
+
+async function changeTileset(): Promise<void> {
+  const requested = isTilesetPreset(tilesetPresetSelect.value)
+    ? tilesetPresetSelect.value
+    : "ascii";
+  if (requested === tilesetPreset || busy) {
+    tilesetPresetSelect.value = tilesetPreset;
+    return;
+  }
+  busy = true;
+  try {
+    const result = await renderer.setTileset(TILESET_MANIFESTS[requested]);
+    tilesetPreset = requested;
+    localStorage.setItem(TILESET_PRESET_STORAGE_KEY, tilesetPreset);
+    announceTileset(result.id, result.warnings);
+  } catch (error) {
+    tilesetPresetSelect.value = tilesetPreset;
+    const message = error instanceof Error ? error.message : String(error);
+    addMessage(`地图外观载入失败：${message}`, "error");
+    console.error(error);
+  } finally {
+    busy = false;
   }
 }
 
@@ -212,6 +252,20 @@ function readInputPreset(): InputPreset {
 
 function isInputPreset(value: string | null): value is InputPreset {
   return value === "numpad" || value === "vi" || value === "wasd";
+}
+
+function readTilesetPreset(): TilesetPreset {
+  const stored = localStorage.getItem(TILESET_PRESET_STORAGE_KEY);
+  return isTilesetPreset(stored) ? stored : "ascii";
+}
+
+function isTilesetPreset(value: string | null): value is TilesetPreset {
+  return value === "ascii" || value === "image";
+}
+
+function announceTileset(id: string, warnings: readonly string[]): void {
+  addMessage(`地图外观已载入：${id}。`, "system");
+  for (const warning of warnings) addMessage(warning, "system");
 }
 
 function renderInputHelp(): void {

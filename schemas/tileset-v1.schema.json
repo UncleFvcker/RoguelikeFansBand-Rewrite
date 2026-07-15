@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/tileset-v1.schema.json",
+  "title": "RFB Tileset Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "format",
+    "formatVersion",
+    "id",
+    "labelKey",
+    "mode",
+    "tileWidth",
+    "tileHeight",
+    "mappings",
+    "fallback"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/tileset-v1.schema.json"
+    },
+    "format": { "const": "rfb-tileset" },
+    "formatVersion": { "const": 1 },
+    "id": { "$ref": "#/$defs/stableId" },
+    "labelKey": { "$ref": "#/$defs/messageKey" },
+    "mode": { "enum": ["ascii", "image"] },
+    "tileWidth": { "type": "integer", "minimum": 8, "maximum": 128 },
+    "tileHeight": { "type": "integer", "minimum": 8, "maximum": 128 },
+    "atlas": { "$ref": "#/$defs/atlas" },
+    "mappings": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/stableId" },
+      "additionalProperties": { "$ref": "#/$defs/mapping" }
+    },
+    "fallback": { "$ref": "#/$defs/fallback" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "image" } } },
+      "then": { "required": ["atlas"] },
+      "else": { "not": { "required": ["atlas"] } }
+    }
+  ],
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9_-]+\\.[a-z0-9_-]+\\.[a-z0-9._-]+$"
+    },
+    "messageKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "rgb": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "glyph": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2
+    },
+    "atlas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "columns", "rows"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "columns": { "type": "integer", "minimum": 1, "maximum": 1024 },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 1024 }
+      }
+    },
+    "tile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["foreground"],
+      "properties": {
+        "glyph": { "$ref": "#/$defs/glyph" },
+        "foreground": { "$ref": "#/$defs/rgb" },
+        "background": { "$ref": "#/$defs/rgb" },
+        "tile": { "$ref": "#/$defs/tile" }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["glyph", "foreground", "background"],
+      "properties": {
+        "glyph": { "$ref": "#/$defs/glyph" },
+        "foreground": { "$ref": "#/$defs/rgb" },
+        "background": { "$ref": "#/$defs/rgb" }
+      }
+    }
+  }
+}

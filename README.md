@@ -23,6 +23,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
 - [内容数据格式 v1](design/content-format-v1.md)
+- [Tileset manifest 与资源回退 v1](design/tileset-format-v1.md)
 - [新存档格式 v1](design/save-format-v1.md)
 - [授权、版权与素材迁移审计](design/licensing-and-assets.md)
 - [本地化与中文文本重构计划](design/localization-rewrite-plan.md)
@@ -67,6 +68,7 @@ cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-orig
 
 cd web
 npm ci
+npm test
 npm run build -- --no-bundle
 # 启动可玩开发版：npm run dev
 ```
@@ -124,4 +126,4 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、Tauri 诊断回放、自动协议生成、`rfb-content` 编译器和首个原创 JSON 内容包已经建立。下一步是加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退。
+首批 20 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest 和缺失资源回退已经建立。下一步是为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试。

@@ -15,6 +15,7 @@
 *.js text eol=lf
 *.css text eol=lf
 *.html text eol=lf
+*.svg text eol=lf
 LICENSE text eol=lf
 NOTICE text eol=lf
 

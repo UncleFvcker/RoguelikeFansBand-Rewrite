@@ -19,7 +19,7 @@ Unless a file says otherwise, original creative content is licensed under Creati
 
 - `README.md` and original documentation under `design/` or `docs/`;
 - original gameplay data and prose under `content/` or `packs/`;
-- original artwork, audio and other creative assets under `assets/`.
+- original artwork, audio and other creative assets under `assets/` or `web/public/tilesets/`.
 
 The complete license text is in `LICENSES/CC-BY-SA-4.0.txt`.
 

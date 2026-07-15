@@ -1,0 +1,18 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="84" height="28" viewBox="0 0 84 28" shape-rendering="crispEdges">
+  <g id="floor" transform="translate(0 0)" fill="none" stroke="#53677b" stroke-width="2">
+    <path d="M4 8h7M17 5h5M8 20h6M19 17h5" />
+    <path d="M3 24h21" stroke="#263544" stroke-width="1" />
+  </g>
+  <g id="wall" transform="translate(28 0)">
+    <path fill="#455466" d="M2 3h24v22H2z" />
+    <path fill="#718196" d="M3 4h10v6H3zm12 0h10v6H15zM3 12h6v5H3zm8 0h14v5H11zM3 19h14v5H3zm16 0h6v5h-6z" />
+    <path fill="#26303d" d="M13 4h2v6h-2zM9 12h2v5H9zM17 19h2v5h-2zM3 10h22v2H3zm0 17h22v-3H3z" />
+  </g>
+  <g id="explorer" transform="translate(56 0)">
+    <path fill="#dff6ff" d="M11 3h6v5h-6z" />
+    <path fill="#64bce8" d="M8 9h12v10H8z" />
+    <path fill="#2d7199" d="M5 11h3v8H5zm15 0h3v8h-3zM9 19h4v6H9zm6 0h4v6h-4z" />
+    <path fill="#ffffff" d="M12 5h1v1h-1zm3 0h1v1h-1z" />
+  </g>
+</svg>

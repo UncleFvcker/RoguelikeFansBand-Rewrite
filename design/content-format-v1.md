@@ -187,6 +187,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、一个原创怪物、一个原创物品和一个 20×20 世界；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
-- 待完成：多包依赖图、patch、locale/tileset 回退、运行时加载和存档内容集合迁移。
+- 已完成：前端直接使用内容定义 glyph 的 ASCII atlas，以及图片 tileset 缺失映射/资源回退；
+- 待完成：多包依赖图、patch、locale 回退、核心运行时加载和存档内容集合迁移。
 
 首个包的真实编译 hash 与当前 contract-v1 使用的早期占位 content hash 不同。直接替换会改变全部 state hash，因此本阶段不批量刷新 contract fixtures；运行时激活需作为单独的基准迁移处理。

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/tileset-v1.schema.json",
+  "format": "rfb-tileset",
+  "formatVersion": 1,
+  "id": "rfb.tileset.image-demo",
+  "labelKey": "tileset-image-demo-label",
+  "mode": "image",
+  "tileWidth": 28,
+  "tileHeight": 28,
+  "atlas": {
+    "source": "tiles.svg",
+    "columns": 3,
+    "rows": 1
+  },
+  "mappings": {
+    "demo.terrain.floor": {
+      "foreground": "#dce6f2",
+      "background": "#111820",
+      "tile": { "x": 0, "y": 0 }
+    },
+    "demo.terrain.wall": {
+      "foreground": "#dce6f2",
+      "background": "#26303d",
+      "tile": { "x": 1, "y": 0 }
+    },
+    "demo.actor.explorer": {
+      "foreground": "#8ed8ff",
+      "background": "#17324a",
+      "tile": { "x": 2, "y": 0 }
+    },
+    "demo.actor.ember-mote": {
+      "glyph": "✦",
+      "foreground": "#ff9b5e",
+      "background": "#47251c"
+    },
+    "demo.item.luminous-shard": {
+      "foreground": "#f6e58d",
+      "background": "#2f2b19"
+    }
+  },
+  "fallback": {
+    "glyph": "?",
+    "foreground": "#ff77aa",
+    "background": "#2b1522"
+  }
+}

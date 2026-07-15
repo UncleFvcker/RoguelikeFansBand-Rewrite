@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "asset.tileset.image-demo",
+      "path": "web/public/tilesets/image-demo/tiles.svg",
+      "source": "original-in-repository",
+      "authors": ["UncleFvcker and RoguelikeFansBand Rewrite contributors"],
+      "license": "CC-BY-SA-4.0",
+      "licenseFile": "LICENSES/CC-BY-SA-4.0.txt",
+      "modified": false,
+      "notes": "Original three-cell demonstration atlas created for the rewrite project."
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 
 ## 1. 当前结论
 
-新仓库目前只包含原创规划文档，没有复制旧 C 源码、旧 `localization/` 内容、发布压缩包、字体、音频或 tileset。
+新仓库目前包含原创代码、规划文档、最小内容包和原创演示 SVG tileset，没有复制旧 C 源码、旧 `localization/` 内容、发布压缩包、字体、音频或旧 tileset。
 
 旧项目不是一个可以整体视为 MIT、Apache 或单一 GPL 的代码库。初步检查发现：
 
@@ -78,7 +78,7 @@ LICENSES/
 LICENSE
 NOTICE
 assets/provenance.json
-content/provenance.json
+packs/README.md
 ```
 
 来源记录建议格式：
@@ -115,12 +115,14 @@ content/provenance.json
 
 ## 7. 剩余未决决策
 
-1. 首个官方原创 tileset、字体和音效的来源；
+1. 首个正式字体和音效的来源；
 2. 项目名称与标识是否采用单独商标政策；
 3. 哪些兼容测试结果可以在不包含旧表达的前提下公开；
 4. 是否需要联系上游维护者补充历史授权说明。
 
 这些决策不阻止原创架构、协议、测试工具和最小演示开发，但任何正式发行包都必须继续排除旧版和授权不明资产。
+
+当前原创 `web/public/tilesets/image-demo/tiles.svg` 已登记到 `assets/provenance.json`，按 CC BY-SA 4.0 授权；它只用于验证 manifest、atlas 切片和资源回退，不包含旧版图像或第三方素材。
 
 ## 8. 新仓库双许可证
 

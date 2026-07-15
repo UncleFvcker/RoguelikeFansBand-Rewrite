@@ -11,6 +11,7 @@
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
 - [内容数据格式 v1](content-format-v1.md)
+- [Tileset manifest 与资源回退 v1](tileset-format-v1.md)
 - [新存档格式 v1](save-format-v1.md)
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
@@ -485,6 +486,7 @@ interface SaveGame {
 - Tauri 原生会话 `ReplayRecorder`、`.rfbreplay` 诊断导出和前端下载入口；
 - Rust DTO 自动生成 `web/src/protocol.ts`、JSON Schema 和 CI 漂移检查；
 - `rfb-content`、内容 Schema、确定性 MessagePack 编译器和首个原创 JSON 内容包；
+- 动态 ASCII glyph atlas、tileset manifest v1、原创 SVG 图片 atlas、热切换和缺失资源回退；
 - 3 个 `.local/` 旧存档样本清单和快照规范化 Schema v1；
 - `rfb-legacy-import` 链式 XOR 解码、稳定前缀解析和 3 个本地样本字段断言；
 - baseline policy v1、fixture 级差异豁免格式和 CI 验证；
@@ -493,11 +495,10 @@ interface SaveGame {
 
 下一步建议：
 
-1. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
-2. 为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试；
-3. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
-4. 在内容模型稳定后正式迁移 contract 基准并让 Rust 核心加载编译内容包；
-5. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心。
+1. 为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试；
+2. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
+3. 在内容模型稳定后正式迁移 contract 基准并让 Rust 核心加载编译内容包；
+4. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心。
 
 每完成一个阶段，都应在本文件更新：
 
