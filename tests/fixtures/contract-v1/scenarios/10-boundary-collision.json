@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.collision.outer-wall",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [
+    { "command": { "type": "move", "direction": "west" } },
+    { "command": { "type": "move", "direction": "west" } },
+    { "command": { "type": "move", "direction": "west" } }
+  ],
+  "assertions": {
+    "finalState": { "revision": 3, "turn": 3, "lastCommandSeq": 3, "playerPosition": { "x": 1, "y": 3 }, "entityCount": 1, "stateHash": "bd2ef6855dec72a8a528c59d25ecb7b7a22ea0fcf43099e83c460edc26c4f22c" },
+    "events": [{ "kind": "move.blocked", "messageKey": "game-move-blocked", "args": {} }],
+    "changedCells": [{ "x": 2, "y": 3 }, { "x": 3, "y": 3 }, { "x": 1, "y": 3 }, { "x": 2, "y": 3 }],
+    "removedEntities": [], "errors": [], "saveRoundTripStateHash": null
+  }
+}

@@ -479,14 +479,15 @@ interface SaveGame {
 - Windows Tauri Release EXE 构建；
 - 小键盘、Vi 和 WASD 三套互斥移动预设；
 - WASM crate、Worker 和相关构建链清理；
+- `rfb-contract` 契约测试驱动和首批 20 个原创 exact fixtures；
 - Cargo 测试、TypeScript 检查和 Vite UI 构建；
 - GitHub Actions 基础 CI。
 
 下一步建议：
 
-1. 把原创 contract fixtures 扩展到阶段 0 的 20 个规则场景；
-2. 增加命令回放文件和每 100 命令 state hash 检查点；
-3. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
+1. 增加命令回放文件 v1 和每 100 命令 state hash 检查点；
+2. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
+3. 建立状态快照规范化工具和基准更新审批文件；
 4. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
 5. 建立 `rfb-content` 和第一个原创 JSON 内容包；
 6. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；

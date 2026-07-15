@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.collision.interior-wall",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } }
+  ],
+  "assertions": {
+    "finalState": { "revision": 8, "turn": 8, "lastCommandSeq": 8, "playerPosition": { "x": 10, "y": 3 }, "entityCount": 1, "stateHash": "7db2bcebedd81f5747a4b0af3a1d9f856eb99d4cc67d73db03fa6749e142b186" },
+    "events": [{ "kind": "move.blocked", "messageKey": "game-move-blocked", "args": {} }],
+    "changedCells": [
+      { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 4, "y": 3 }, { "x": 5, "y": 3 },
+      { "x": 5, "y": 3 }, { "x": 6, "y": 3 }, { "x": 6, "y": 3 }, { "x": 7, "y": 3 },
+      { "x": 7, "y": 3 }, { "x": 8, "y": 3 }, { "x": 8, "y": 3 }, { "x": 9, "y": 3 },
+      { "x": 9, "y": 3 }, { "x": 10, "y": 3 }
+    ],
+    "removedEntities": [], "errors": [], "saveRoundTripStateHash": null
+  }
+}

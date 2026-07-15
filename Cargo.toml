@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/rfb-core",
+    "crates/rfb-contract",
     "crates/rfb-legacy-probe",
     "crates/rfb-protocol",
     "crates/rfb-save",

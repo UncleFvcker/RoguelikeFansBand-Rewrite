@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "combat.melee.nonlethal-hit",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south-east" } }
+  ],
+  "assertions": {
+    "finalState": { "revision": 6, "turn": 6, "lastCommandSeq": 6, "playerPosition": { "x": 7, "y": 4 }, "entityCount": 1, "stateHash": "1bb4b3691325497707fb96cea0b60fb504f08d8d1358f15a00459b97454bf288" },
+    "events": [{ "kind": "combat.hit", "messageKey": "combat-player-hit", "args": { "damage": "1", "target": "demo.actor.ember-mote" } }],
+    "changedCells": [
+      { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 4, "y": 3 }, { "x": 5, "y": 3 },
+      { "x": 5, "y": 3 }, { "x": 6, "y": 3 }, { "x": 6, "y": 3 }, { "x": 7, "y": 3 },
+      { "x": 7, "y": 3 }, { "x": 7, "y": 4 }, { "x": 8, "y": 5 }
+    ],
+    "removedEntities": [], "errors": [], "saveRoundTripStateHash": null
+  }
+}

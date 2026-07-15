@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "protocol.command-sequence.skipped",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [
+    { "commandSeq": 2, "command": { "type": "wait" } }
+  ],
+  "assertions": {
+    "finalState": { "revision": 0, "turn": 0, "lastCommandSeq": 0, "playerPosition": { "x": 3, "y": 3 }, "entityCount": 1, "stateHash": "63333eb75d7d9d0a25b56baef20ffe24966fa3e3b5b7de558d4f6805cbe7eb06" },
+    "events": [], "changedCells": [], "removedEntities": [],
+    "errors": [{ "step": 1, "kind": "command-sequence", "stateHash": "63333eb75d7d9d0a25b56baef20ffe24966fa3e3b5b7de558d4f6805cbe7eb06" }],
+    "saveRoundTripStateHash": null
+  }
+}

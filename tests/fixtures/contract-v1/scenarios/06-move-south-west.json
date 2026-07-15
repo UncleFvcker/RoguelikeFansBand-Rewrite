@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.direction.south-west",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [{ "command": { "type": "move", "direction": "south-west" } }],
+  "assertions": {
+    "finalState": { "revision": 1, "turn": 1, "lastCommandSeq": 1, "playerPosition": { "x": 2, "y": 4 }, "entityCount": 1, "stateHash": "8fa55b763cab75b9390ec2def795b8294f1c8297bf8704ebee29c019cd2446a6" },
+    "events": [], "changedCells": [{ "x": 2, "y": 4 }, { "x": 3, "y": 3 }], "removedEntities": [], "errors": [], "saveRoundTripStateHash": null
+  }
+}

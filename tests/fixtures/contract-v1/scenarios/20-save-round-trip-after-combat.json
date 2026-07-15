@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "save.round-trip.after-combat",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south-east" } },
+    { "command": { "type": "move", "direction": "south-east" } }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": { "revision": 7, "turn": 7, "lastCommandSeq": 7, "playerPosition": { "x": 7, "y": 4 }, "entityCount": 1, "stateHash": "586512b74013efad45fd862635a827c6a6277706548e71ba4beb672100f5ab4c" },
+    "events": [
+      { "kind": "combat.hit", "messageKey": "combat-player-hit", "args": { "damage": "1", "target": "demo.actor.ember-mote" } },
+      { "kind": "combat.hit", "messageKey": "combat-player-hit", "args": { "damage": "1", "target": "demo.actor.ember-mote" } }
+    ],
+    "changedCells": [
+      { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 4, "y": 3 }, { "x": 5, "y": 3 },
+      { "x": 5, "y": 3 }, { "x": 6, "y": 3 }, { "x": 6, "y": 3 }, { "x": 7, "y": 3 },
+      { "x": 7, "y": 3 }, { "x": 7, "y": 4 }, { "x": 8, "y": 5 }, { "x": 8, "y": 5 }
+    ],
+    "removedEntities": [], "errors": [],
+    "saveRoundTripStateHash": "586512b74013efad45fd862635a827c6a6277706548e71ba4beb672100f5ab4c"
+  }
+}

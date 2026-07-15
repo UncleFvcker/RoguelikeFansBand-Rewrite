@@ -1,6 +1,6 @@
 # 旧版行为基准与差分测试规范
 
-状态：P0 规范已确定，基准数据尚未生成
+状态：P0 规范已确定，首批 20 个原创 contract fixtures 已建立，本地旧版基准仍待扩展
 
 ## 1. 基准版本
 
@@ -46,37 +46,44 @@
 │  └─ saves/
 └─ screenshots/
 
-tests/fixtures/legacy-contract/
-├─ commands/
-├─ events/
-├─ snapshots/
-└─ saves/
+tests/fixtures/contract-v1/
+└─ scenarios/
+   ├─ 01-move-north.json
+   ├─ ...
+   └─ 20-save-round-trip-after-combat.json
 ```
 
 `manifest.json` 至少记录：旧仓库 commit、构建工具链、编译参数、平台、配置文件哈希、内容文件哈希、随机种子、场景版本和生成时间。
 
 `.local/legacy-baseline/` 不进入 Git。仓库中只提交本项目原创、经过规范化且不包含旧文本、旧专名、完整数值表、截图、存档或其他旧表达内容的契约断言。
 
+提交 fixture 中的 `legacyCommit` 只标识准备对照的旧版基准，不表示当前断言已经从旧版数据复制或完成差分验证。
+
 旧版源码、二进制、文本、数据、截图、存档和素材不能复制到新仓库或新游戏发行包。公共 CI 没有 `RFB_LEGACY_SOURCE` 时跳过本地差分测试，只运行原创 contract fixtures。
 
 ## 4. 场景格式
 
-每个场景使用稳定 ID，并包含：
+每个场景使用稳定 ID。当前 `contract-v1` 的输入部分包含：
 
 ```json
 {
   "schemaVersion": 1,
   "id": "combat.melee.basic-hit",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
   "seed": "0x0123456789abcdef",
-  "preconditions": {},
+  "preconditions": { "world": "demo.original-v1" },
   "commands": [],
-  "assertions": {
-    "state": [],
-    "events": [],
-    "invariants": []
-  }
+  "saveRoundTrip": true,
+  "assertions": {}
 }
+```
+
+`rfb-contract` 执行命令后精确比较最终 revision、turn、command sequence、玩家位置、实体数量、事件顺序、changed cells、删除实体、结构化错误、state hash 和可选存档回环 hash。提交的 fixture 必须包含断言；`observe` 命令只输出实际观察结果，不会自动改写或批量刷新 golden：
+
+```powershell
+cargo run -p rfb-contract -- observe tests/fixtures/contract-v1/scenarios/01-move-north.json
+cargo run -p rfb-contract -- verify tests/fixtures/contract-v1/scenarios/01-move-north.json
 ```
 
 场景不能依赖屏幕坐标、数组下标或本地化后的名称定位对象。对象使用稳定测试 ID；显示文本单独由本地化测试验证。
@@ -128,3 +135,9 @@ tests/fixtures/legacy-contract/
 - 基准更新审批规则。
 
 允许在阶段 0 同时创建最小 Cargo workspace 和测试工具，但不能在没有基准的情况下批量翻译规则模块。
+
+当前完成情况：
+
+- 已完成：基准 manifest 探针、20 个原创 exact contract fixtures、所有原生目标可共用的 `rfb-contract` 测试入口；
+- 待完成：3 个本地旧存档样本、回放文件 v1、每 100 命令检查点、快照规范化工具和基准更新审批文件；
+- 当前 fixture 只固定已经实现的原创垂直切片行为，不代表物品、状态、法术、AI 等旧 RFB 模块已经迁移。

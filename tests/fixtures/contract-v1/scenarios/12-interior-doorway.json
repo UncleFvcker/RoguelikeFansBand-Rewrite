@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.structure.interior-gap",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.original-v1" },
+  "commands": [
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "south" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } },
+    { "command": { "type": "move", "direction": "east" } }
+  ],
+  "assertions": {
+    "finalState": { "revision": 16, "turn": 16, "lastCommandSeq": 16, "playerPosition": { "x": 12, "y": 10 }, "entityCount": 1, "stateHash": "8d6a076585286b0f504f5984ef43cdfa74470c45da6afbce7065096c3c8932ad" },
+    "events": [],
+    "changedCells": [
+      { "x": 3, "y": 3 }, { "x": 3, "y": 4 }, { "x": 3, "y": 4 }, { "x": 3, "y": 5 },
+      { "x": 3, "y": 5 }, { "x": 3, "y": 6 }, { "x": 3, "y": 6 }, { "x": 3, "y": 7 },
+      { "x": 3, "y": 7 }, { "x": 3, "y": 8 }, { "x": 3, "y": 8 }, { "x": 3, "y": 9 },
+      { "x": 3, "y": 9 }, { "x": 3, "y": 10 }, { "x": 3, "y": 10 }, { "x": 4, "y": 10 },
+      { "x": 4, "y": 10 }, { "x": 5, "y": 10 }, { "x": 5, "y": 10 }, { "x": 6, "y": 10 },
+      { "x": 6, "y": 10 }, { "x": 7, "y": 10 }, { "x": 7, "y": 10 }, { "x": 8, "y": 10 },
+      { "x": 8, "y": 10 }, { "x": 9, "y": 10 }, { "x": 9, "y": 10 }, { "x": 10, "y": 10 },
+      { "x": 10, "y": 10 }, { "x": 11, "y": 10 }, { "x": 11, "y": 10 }, { "x": 12, "y": 10 }
+    ],
+    "removedEntities": [], "errors": [], "saveRoundTripStateHash": null
+  }
+}

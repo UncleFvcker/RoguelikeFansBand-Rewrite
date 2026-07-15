@@ -2397,6 +2397,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rfb-contract"
+version = "0.1.0"
+dependencies = [
+ "rfb-core",
+ "rfb-protocol",
+ "rfb-save",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "rfb-core"
 version = "0.1.0"
 dependencies = [
