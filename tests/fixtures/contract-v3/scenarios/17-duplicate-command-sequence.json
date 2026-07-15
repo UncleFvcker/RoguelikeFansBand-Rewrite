@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "protocol.command-sequence.duplicate",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": 1,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "entityCount": 1,
+      "groundItemCount": 1,
+      "inventoryStackCount": 0,
+      "stateHash": "907d0ed1620a2fa008bb4a7fb498474915c3e37b04534d61918a792a66e0df5e"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      }
+    ],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [
+      {
+        "step": 2,
+        "kind": "command-sequence",
+        "stateHash": "907d0ed1620a2fa008bb4a7fb498474915c3e37b04534d61918a792a66e0df5e"
+      }
+    ],
+    "saveRoundTripStateHash": null
+  }
+}

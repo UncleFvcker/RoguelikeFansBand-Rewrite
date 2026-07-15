@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.1、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.2、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.1";
+  protocolVersion: "1.2";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.1 的初始 `GameSnapshot` 还包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、物品实例和每格 `itemId`。内容目录只在全量快照发送；回合增量继续只传变化格和当前实体状态。
+协议 1.2 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆和每格 `itemId`。`GameUpdate` 发送当前地面物品与背包状态；内容视觉目录只在全量快照发送。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
@@ -100,6 +100,8 @@ interface GameCoreV1 {
 ```
 
 `GameCommandEnvelope` 至少包含 `commandSeq`、客户端已知的 `expectedRevision` 和一个具体命令。核心只在 revision 合法时执行会改变规则状态的命令。
+
+当前命令集包括八向 `Move`、`Wait` 和 `PickUp`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆，成功或空地拾取都会消耗一个回合并产生结构化事件。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
 

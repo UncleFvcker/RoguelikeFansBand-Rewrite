@@ -21,6 +21,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
 - [Contract 基准更新与差异豁免政策](design/baseline-update-policy.md)
 - [Contract v2 内容运行时迁移](design/contract-v2-content-migration.md)
+- [Contract v3 背包权威状态迁移](design/contract-v3-inventory-migration.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
 - [内容数据格式 v1](design/content-format-v1.md)
@@ -29,7 +30,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [授权、版权与素材迁移审计](design/licensing-and-assets.md)
 - [本地化与中文文本重构计划](design/localization-rewrite-plan.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v2/scenarios`](tests/fixtures/contract-v2/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 作为占位 content hash 时期的历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v3/scenarios`](tests/fixtures/contract-v3/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 和 `contract-v2` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -54,7 +55,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、三套键位预设、`.rfbsave` 存档和 `.rfbreplay` 诊断回放均已接入。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
+Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、地面物品拾取、HTML 背包、三套键位预设、`.rfbsave` 存档和 `.rfbreplay` 诊断回放均已接入。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
 ### 本地验证
 
@@ -124,17 +125,17 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v2/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v3/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 22 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web
 npm run e2e
 ```
 
-测试覆盖地图局部更新、Canvas/HTML 消息分层、存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。
+测试覆盖地图局部更新、Canvas/HTML 消息分层、地面物品拾取、HTML 背包、存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。
 
 Tauri Android ARM64 Debug APK 构建链也已经建立，Windows 本地可运行：
 

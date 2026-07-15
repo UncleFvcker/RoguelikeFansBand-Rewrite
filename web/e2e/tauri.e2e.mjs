@@ -106,6 +106,8 @@ async function runScenario(driver) {
   assert.equal(state.worldId, "demo.world.original-v1");
   assert.equal(state.contentVisualCount, "5");
   assert.equal(state.itemCount, "1");
+  assert.equal(state.inventoryStackCount, "0");
+  assert.match(state.inventory, /背包是空的/);
 
   await dispatchKey(driver, "Numpad5", "5");
   await driver.waitFor(`return document.querySelector("#turn-value")?.textContent === "1"`, "wait command");
@@ -126,6 +128,20 @@ async function runScenario(driver) {
   assert.equal(state.renderKind, "update");
   assert.equal(state.appliedCells, "2");
   assert.equal(state.canvasUnchanged, true);
+
+  await dispatchKey(driver, "KeyG", "g");
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent === "1 堆"`,
+    "ground item pickup",
+  );
+  state = await readState(driver);
+  assert.equal(state.renderKind, "update");
+  assert.equal(state.appliedCells, "1");
+  assert.equal(state.itemCount, "0");
+  assert.equal(state.inventoryStackCount, "1");
+  assert.match(state.inventory, /发光碎片/);
+  assert.match(state.inventory, /×1/);
+  assert.match(state.messages, /你拾取了发光碎片 ×1/);
 
   await driver.execute(`
     const downloads = [];
@@ -168,12 +184,15 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "2"`,
+    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent === "1 堆"`,
     "save restore",
   );
   state = await readState(driver);
   assert.equal(state.renderKind, "snapshot");
   assert.equal(state.appliedCells, "400");
+  assert.equal(state.itemCount, "0");
+  assert.equal(state.inventoryStackCount, "1");
+  assert.match(state.inventory, /发光碎片/);
   assert.match(state.messages, /存档校验与载入成功/);
 
   await click(driver, "#replay-button");
@@ -217,6 +236,8 @@ async function readState(driver) {
       worldId: host?.dataset.worldId,
       contentVisualCount: host?.dataset.contentVisualCount,
       itemCount: host?.dataset.itemCount,
+      inventoryStackCount: host?.dataset.inventoryStackCount,
+      inventory: document.querySelector("#inventory-list")?.textContent,
       canvasUnchanged: window.__rfbE2eCanvas === host?.querySelector("canvas"),
       messages: document.querySelector("#message-list")?.textContent,
     };

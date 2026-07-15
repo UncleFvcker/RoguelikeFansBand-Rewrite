@@ -3,7 +3,14 @@
 import "./styles.css";
 
 import { MapRenderer } from "./map-renderer";
-import type { Direction, GameCommand, GameEventDto, GameSnapshot, GameUpdate } from "./protocol";
+import type {
+  Direction,
+  GameCommand,
+  GameEventDto,
+  GameSnapshot,
+  GameUpdate,
+  InventoryItemDto,
+} from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 
 const core = new TauriNativeTransport();
@@ -17,6 +24,8 @@ const turnValue = element<HTMLElement>("turn-value");
 const hpValue = element<HTMLElement>("hp-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
+const inventoryCount = element<HTMLElement>("inventory-count");
+const inventoryList = element<HTMLUListElement>("inventory-list");
 const replayButton = element<HTMLButtonElement>("replay-button");
 const saveButton = element<HTMLButtonElement>("save-button");
 const loadInput = element<HTMLInputElement>("load-input");
@@ -57,6 +66,7 @@ async function start(): Promise<void> {
     );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
+    renderInventory(snapshot.inventory);
     addMessage("Tauri 原生 Rust 核心已启动；地图与文字由不同渲染层管理。", "system");
     announceTileset(tileset.id, tileset.warnings);
     connectionStatus.textContent = "核心已连接";
@@ -95,6 +105,7 @@ async function dispatch(command: GameCommand): Promise<void> {
     const update = await core.dispatch(command);
     renderer.applyUpdate(update);
     renderStatus(update);
+    renderInventory(update.inventory);
     for (const event of update.events) addMessage(formatEvent(event), event.kind);
   } catch (error) {
     showError(error);
@@ -132,6 +143,7 @@ async function importSave(): Promise<void> {
     renderContentMetadata(snapshot);
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
+    renderInventory(snapshot.inventory);
     addMessage("存档校验与载入成功。", "system");
   } catch (error) {
     showError(error);
@@ -168,6 +180,8 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
+  mapHost.dataset.itemCount = String(state.items.length);
+  mapHost.dataset.inventoryStackCount = String(state.inventory.length);
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
@@ -175,7 +189,30 @@ function renderContentMetadata(snapshot: GameSnapshot): void {
   mapHost.dataset.contentHash = snapshot.contentHash;
   mapHost.dataset.worldId = snapshot.worldId;
   mapHost.dataset.contentVisualCount = String(snapshot.contentVisuals.length);
-  mapHost.dataset.itemCount = String(snapshot.items.length);
+}
+
+function renderInventory(inventory: InventoryItemDto[]): void {
+  inventoryCount.textContent = `${inventory.length} 堆`;
+  inventoryList.replaceChildren();
+  if (inventory.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "inventory-empty";
+    empty.textContent = "背包是空的。站在物品上按 G 拾取。";
+    inventoryList.append(empty);
+    return;
+  }
+  for (const item of inventory) {
+    const row = document.createElement("li");
+    row.className = "inventory-item";
+    row.dataset.itemId = item.id;
+    const name = document.createElement("span");
+    name.textContent = itemName(item.kindId);
+    const quantity = document.createElement("span");
+    quantity.className = "inventory-quantity";
+    quantity.textContent = `×${item.quantity}`;
+    row.append(name, quantity);
+    inventoryList.append(row);
+  }
 }
 
 function formatEvent(event: GameEventDto): string {
@@ -189,9 +226,18 @@ function formatEvent(event: GameEventDto): string {
       return `你击中了${target}，造成 ${event.args.damage ?? "?"} 点伤害。`;
     case "combat-player-slay":
       return `${target}熄灭了。`;
+    case "item-pickup-success":
+      return `你拾取了${itemName(event.args.target)} ×${event.args.quantity ?? "?"}。`;
+    case "item-pickup-none":
+      return "脚下没有可以拾取的物品。";
     default:
       return `[${event.messageKey}]`;
   }
+}
+
+function itemName(id: string | undefined): string {
+  if (id === "demo.item.luminous-shard") return "发光碎片";
+  return "未知物品";
 }
 
 function entityName(id: string | undefined): string {
@@ -234,6 +280,7 @@ function downloadBytes(bytes: Uint8Array, fileName: string): void {
 
 function commandForKeyboardEvent(event: KeyboardEvent): GameCommand | undefined {
   const key = event.key.toLowerCase();
+  if (key === "g") return { type: "pick-up" };
   if (inputPreset === "numpad") {
     const direction = NUMPAD_DIRECTIONS[event.code];
     if (event.code === "Numpad5") return { type: "wait" };
@@ -288,7 +335,7 @@ function renderInputHelp(): void {
     vi: "HJKL 四向移动，YUBN 斜向移动，句点等待。",
     wasd: "WASD 四向移动，QEZC 斜向移动，空格等待。",
   };
-  controlsHelp.textContent = `${help[inputPreset]} 撞向发光微粒即可攻击。`;
+  controlsHelp.textContent = `${help[inputPreset]} G 拾取脚下物品；撞向发光微粒即可攻击。`;
 }
 
 function inputPresetName(preset: InputPreset): string {

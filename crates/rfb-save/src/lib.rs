@@ -140,8 +140,8 @@ pub enum SaveError {
 #[cfg(test)]
 mod tests {
     use rfb_protocol::{
-        CharacterSummary, EntityDto, ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto,
-        TerrainSaveDto,
+        CharacterSummary, EntityDto, InventoryItemDto, ItemDto, PROTOCOL_VERSION, PlayerDto,
+        Position, RngSaveDto, TerrainSaveDto,
     };
 
     use super::*;
@@ -183,6 +183,7 @@ mod tests {
             },
             entities: Vec::<EntityDto>::new(),
             items: Vec::<ItemDto>::new(),
+            inventory: Vec::<InventoryItemDto>::new(),
             rng: RngSaveDto {
                 algorithm: "rfb-rng-xoshiro256ss-v1".to_owned(),
                 state: [1, 2, 3, 4],

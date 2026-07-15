@@ -9,6 +9,7 @@
 - [旧版行为基准与差分测试](legacy-behavior-baseline.md)
 - [Contract 基准更新与差异豁免政策](baseline-update-policy.md)
 - [Contract v2 内容运行时迁移](contract-v2-content-migration.md)
+- [Contract v3 背包权威状态迁移](contract-v3-inventory-migration.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
 - [内容数据格式 v1](content-format-v1.md)
@@ -220,6 +221,7 @@ interface CoreTransport {
 
 type GameCommand =
   | { type: "move"; direction: Direction }
+  | { type: "pick-up" }
   | { type: "wait" }
   | { type: "use-item"; itemId: ItemId }
   | { type: "cast"; spellId: SpellId; target?: Target }
@@ -500,15 +502,17 @@ interface SaveGame {
 - Tauri Android Gradle/Kotlin 工程、ARM64 Rust target 和 Debug APK 构建链；
 - Android CI 可重复构建并上传未签名调试 APK。
 - `.rfbcontent` 运行时解码、稳定内容索引和内容驱动的世界创建；
-- 协议 1.1 内容视觉目录、地图物品实例和真实 content/world 身份；
+- 协议 1.2 内容视觉目录、地图物品、背包 DTO 和真实 content/world 身份；
 - contract-v2 与 state hash Schema v2 基准迁移，contract-v1 历史保留。
+- `PickUp` 拾取命令、确定性堆叠、HTML 背包面板和存档/回放闭环；
+- contract-v3 与 state hash Schema v3 基准迁移，新增成功/空地拾取场景。
 
 下一步建议：
 
-1. 完成桌面 MVP 的地面物品、拾取命令、背包 DTO/HTML 面板和存档/回放闭环；
-2. 建立 Fluent 双语框架，停止继续增加 TypeScript 用户文案硬编码；
-3. 推进桌面现代渲染器：RendererBackend、物品层、可见性/记忆 mask 和独立光照 buffer；
-4. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
+1. 建立 Fluent 双语框架，优先迁移消息栏、背包和按键提示，停止继续增加 TypeScript 用户文案硬编码；
+2. 推进桌面现代渲染器：RendererBackend、独立物品层、可见性/记忆 mask 和独立光照 buffer；
+3. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
+4. 扩展背包装备、丢弃和多物品选择交互；
 5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
 
 每完成一个阶段，都应在本文件更新：

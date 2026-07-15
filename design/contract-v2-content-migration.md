@@ -2,7 +2,7 @@
 
 状态：已完成
 
-`contract-v2` 是启用真实编译内容包后的首个 active contract 基准。`contract-v1` 保留为历史记录，不再由当前核心执行 exact state hash 验证。
+`contract-v2` 是启用真实编译内容包后的首个运行时内容基准，现已由 `contract-v3` 接替为 active。`contract-v1` 与 `contract-v2` 均作为历史记录保留，不再由当前核心执行 exact state hash 验证。
 
 本次迁移原因：
 
@@ -22,7 +22,7 @@ cargo run -p rfb-contract -- migrate-baseline `
   tests/fixtures/contract-v2/scenarios
 ```
 
-当前 active 验证入口：
+该历史版本的政策验证入口：
 
 ```powershell
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v2/baseline-policy.json

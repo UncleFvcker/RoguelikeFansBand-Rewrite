@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 2;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 3;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -505,6 +505,27 @@ mod tests {
         assert_eq!(replay.checkpoints.len(), 1);
         assert_eq!(replay.checkpoints[0].rng_draw_counter, 3);
         verify(&replay, initial).expect("combat replay should verify");
+    }
+
+    #[test]
+    fn pickup_inventory_state_round_trips_through_replay() {
+        let initial = Game::new(42);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::Move {
+                direction: Direction::East,
+            })
+            .expect("move should execute");
+        recorder
+            .dispatch(GameCommand::PickUp)
+            .expect("pickup should execute");
+        let (final_game, replay) = recorder.finish();
+
+        assert!(final_game.snapshot().items.is_empty());
+        assert_eq!(final_game.snapshot().inventory.len(), 1);
+        let verification = verify(&replay, initial).expect("pickup replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 
     #[test]

@@ -8,8 +8,8 @@ use std::{
 use rfb_content::{ActorRole, ContentCatalog, ContentError, ContentPosition};
 use rfb_protocol::{
     CellDto, ContentVisualDto, EntityDto, GameCommand, GameCommandEnvelope, GameEventDto,
-    GameSnapshot, GameUpdate, ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto,
-    SavePayloadV1, TerrainSaveDto,
+    GameSnapshot, GameUpdate, InventoryItemDto, ItemDto, PROTOCOL_VERSION, PlayerDto, Position,
+    RngSaveDto, SavePayloadV1, TerrainSaveDto,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -34,6 +34,13 @@ struct Item {
     id: String,
     kind_id: String,
     position: Position,
+    quantity: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct InventoryItem {
+    id: String,
+    kind_id: String,
     quantity: u32,
 }
 
@@ -125,6 +132,7 @@ pub struct Game {
     player: Actor,
     entities: Vec<Actor>,
     items: Vec<Item>,
+    inventory: Vec<InventoryItem>,
     rng: RfbRng,
     revision: u32,
     turn: u32,
@@ -211,6 +219,7 @@ impl Game {
             player,
             entities,
             items,
+            inventory: Vec::new(),
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
@@ -263,6 +272,11 @@ impl Game {
             .map(actor_from_entity)
             .collect::<Vec<_>>();
         let items = payload.items.into_iter().map(item_from_dto).collect();
+        let inventory = payload
+            .inventory
+            .into_iter()
+            .map(inventory_item_from_dto)
+            .collect();
         let game = Self {
             content,
             world_id: payload.world_id,
@@ -272,6 +286,7 @@ impl Game {
             player,
             entities,
             items,
+            inventory,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
@@ -296,6 +311,7 @@ impl Game {
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
+            inventory: self.inventory_dto(),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
@@ -325,6 +341,7 @@ impl Game {
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
+            inventory: self.inventory_dto(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
             content_visuals: self.content_visuals(),
@@ -355,6 +372,18 @@ impl Game {
 
         match envelope.command {
             GameCommand::Wait => events.push(event("turn.wait", "game-wait")),
+            GameCommand::PickUp => {
+                if let Some((kind_id, quantity)) = self.pick_up_at_player()? {
+                    changed.insert(self.player.position);
+                    events.push(event_with_args(
+                        "item.pickup",
+                        "item-pickup-success",
+                        [("target", kind_id), ("quantity", quantity.to_string())],
+                    ));
+                } else {
+                    events.push(event("item.pickup.none", "item-pickup-none"));
+                }
+            }
             GameCommand::Move { direction } => {
                 let (dx, dy) = direction.delta();
                 let target = Position {
@@ -415,6 +444,7 @@ impl Game {
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
+            inventory: self.inventory_dto(),
             removed_entities,
             state_hash: self.state_hash(),
         })
@@ -503,6 +533,68 @@ impl Game {
         items
     }
 
+    fn inventory_dto(&self) -> Vec<InventoryItemDto> {
+        let mut inventory = self
+            .inventory
+            .iter()
+            .map(|item| InventoryItemDto {
+                id: item.id.clone(),
+                kind_id: item.kind_id.clone(),
+                quantity: item.quantity,
+            })
+            .collect::<Vec<_>>();
+        inventory.sort_by(|left, right| left.id.cmp(&right.id));
+        inventory
+    }
+
+    fn pick_up_at_player(&mut self) -> Result<Option<(String, u32)>, CoreError> {
+        let Some(index) = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| item.position == self.player.position)
+            .min_by(|(_, left), (_, right)| left.id.cmp(&right.id))
+            .map(|(index, _)| index)
+        else {
+            return Ok(None);
+        };
+
+        let kind_id = self.items[index].kind_id.clone();
+        let max_stack = self
+            .content
+            .item(&kind_id)
+            .ok_or_else(|| CoreError::UnknownItem(kind_id.clone()))?
+            .max_stack;
+        let item = self.items.remove(index);
+        let mut remaining = item.quantity;
+        let mut stack_indices = self
+            .inventory
+            .iter()
+            .enumerate()
+            .filter(|(_, carried)| carried.kind_id == item.kind_id && carried.quantity < max_stack)
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        stack_indices
+            .sort_by(|left, right| self.inventory[*left].id.cmp(&self.inventory[*right].id));
+        for stack_index in stack_indices {
+            let stack = &mut self.inventory[stack_index];
+            let transferred = remaining.min(max_stack - stack.quantity);
+            stack.quantity += transferred;
+            remaining -= transferred;
+            if remaining == 0 {
+                break;
+            }
+        }
+        if remaining > 0 {
+            self.inventory.push(InventoryItem {
+                id: item.id,
+                kind_id: item.kind_id.clone(),
+                quantity: remaining,
+            });
+        }
+        Ok(Some((item.kind_id, item.quantity)))
+    }
+
     fn content_visuals(&self) -> Vec<ContentVisualDto> {
         self.content
             .visual_glyphs()
@@ -563,26 +655,42 @@ impl Game {
         if !self.is_walkable(self.player.position) {
             return Err(CoreError::InvalidSave("player position is invalid"));
         }
+        let mut instance_ids = BTreeSet::new();
+        instance_ids.insert(self.player.id.clone());
         let mut positions = BTreeSet::new();
         positions.insert(self.player.position);
         for entity in &self.entities {
             self.validate_actor(entity, ActorRole::Monster)?;
-            if !self.is_walkable(entity.position) || !positions.insert(entity.position) {
+            if !instance_ids.insert(entity.id.clone())
+                || !self.is_walkable(entity.position)
+                || !positions.insert(entity.position)
+            {
                 return Err(CoreError::InvalidSave("entity position is invalid"));
             }
         }
-        let mut item_ids = BTreeSet::new();
         for item in &self.items {
             let definition = self
                 .content
                 .item(&item.kind_id)
                 .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-            if !item_ids.insert(item.id.clone())
+            if !instance_ids.insert(item.id.clone())
                 || !self.is_walkable(item.position)
                 || item.quantity == 0
                 || item.quantity > definition.max_stack
             {
                 return Err(CoreError::InvalidSave("item state is invalid"));
+            }
+        }
+        for item in &self.inventory {
+            let definition = self
+                .content
+                .item(&item.kind_id)
+                .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+            if !instance_ids.insert(item.id.clone())
+                || item.quantity == 0
+                || item.quantity > definition.max_stack
+            {
+                return Err(CoreError::InvalidSave("inventory item state is invalid"));
             }
         }
         Ok(())
@@ -652,6 +760,14 @@ fn item_from_dto(item: ItemDto) -> Item {
         id: item.id,
         kind_id: item.kind_id,
         position: item.position,
+        quantity: item.quantity,
+    }
+}
+
+fn inventory_item_from_dto(item: InventoryItemDto) -> InventoryItem {
+    InventoryItem {
+        id: item.id,
+        kind_id: item.kind_id,
         quantity: item.quantity,
     }
 }
@@ -736,6 +852,7 @@ mod tests {
         assert_eq!(snapshot.world_id, BUILT_IN_WORLD_ID);
         assert_eq!(snapshot.player.id, "demo.actor.player.1");
         assert_eq!(snapshot.player.kind_id, "demo.actor.explorer");
+        assert!(snapshot.inventory.is_empty());
         assert_eq!(snapshot.entities[0].position, Position { x: 8, y: 5 });
         assert_eq!(shard.position, Position { x: 4, y: 3 });
         assert_eq!(
@@ -792,10 +909,77 @@ mod tests {
             },
         ))
         .expect("move should execute");
+        game.dispatch(command(2, 1, GameCommand::PickUp))
+            .expect("pickup should execute");
 
         let restored = Game::from_save(game.to_save()).expect("save should restore");
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn pickup_moves_the_ground_stack_into_inventory() {
+        let mut game = Game::new(42);
+        game.dispatch(command(
+            1,
+            0,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        ))
+        .expect("move should execute");
+        let update = game
+            .dispatch(command(2, 1, GameCommand::PickUp))
+            .expect("pickup should execute");
+
+        assert!(update.items.is_empty());
+        assert_eq!(update.inventory.len(), 1);
+        assert_eq!(update.inventory[0].id, "demo.item.luminous-shard.1");
+        assert_eq!(update.inventory[0].quantity, 1);
+        assert_eq!(update.changed_cells.len(), 1);
+        assert_eq!(update.changed_cells[0].position, Position { x: 4, y: 3 });
+        assert_eq!(update.changed_cells[0].item_id, None);
+        assert_eq!(update.events[0].message_key, "item-pickup-success");
+    }
+
+    #[test]
+    fn pickup_on_empty_ground_is_a_deterministic_turn() {
+        let mut game = Game::new(42);
+        let before = game.state_hash();
+        let update = game
+            .dispatch(command(1, 0, GameCommand::PickUp))
+            .expect("empty pickup should still execute");
+
+        assert_eq!(update.turn, 1);
+        assert!(update.changed_cells.is_empty());
+        assert!(update.inventory.is_empty());
+        assert_eq!(update.events[0].message_key, "item-pickup-none");
+        assert_ne!(update.state_hash, before);
+    }
+
+    #[test]
+    fn pickup_merges_into_the_lowest_id_compatible_stack() {
+        let mut game = Game::new(42);
+        game.inventory.push(InventoryItem {
+            id: "demo.inventory.luminous-shard.1".to_owned(),
+            kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 19,
+        });
+        game.dispatch(command(
+            1,
+            0,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        ))
+        .expect("move should execute");
+        let update = game
+            .dispatch(command(2, 1, GameCommand::PickUp))
+            .expect("pickup should execute");
+
+        assert_eq!(update.inventory.len(), 1);
+        assert_eq!(update.inventory[0].id, "demo.inventory.luminous-shard.1");
+        assert_eq!(update.inventory[0].quantity, 20);
     }
 
     #[test]

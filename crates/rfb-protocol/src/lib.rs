@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.1";
+pub const PROTOCOL_VERSION: &str = "1.2";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -46,6 +46,7 @@ impl Direction {
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum GameCommand {
     Move { direction: Direction },
+    PickUp,
     Wait,
 }
 
@@ -118,6 +119,15 @@ pub struct ItemDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct InventoryItemDto {
+    pub id: String,
+    pub kind_id: String,
+    pub quantity: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct GameEventDto {
     pub kind: String,
     pub message_key: String,
@@ -138,6 +148,7 @@ pub struct GameSnapshot {
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
+    pub inventory: Vec<InventoryItemDto>,
     pub content_id: String,
     pub content_hash: String,
     pub content_visuals: Vec<ContentVisualDto>,
@@ -158,6 +169,7 @@ pub struct GameUpdate {
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
+    pub inventory: Vec<InventoryItemDto>,
     pub removed_entities: Vec<String>,
     pub state_hash: String,
 }
@@ -198,6 +210,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(PlayerDto);
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
+    push_declaration!(InventoryItemDto);
     push_declaration!(GameEventDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
@@ -240,6 +253,8 @@ pub struct SavePayloadV1 {
     pub entities: Vec<EntityDto>,
     #[serde(default)]
     pub items: Vec<ItemDto>,
+    #[serde(default)]
+    pub inventory: Vec<InventoryItemDto>,
     pub rng: RngSaveDto,
     pub content_id: String,
     pub content_hash: String,

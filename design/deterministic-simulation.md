@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v2：哈希输入包含运行时内容包 ID/hash、world ID 和内容包生成的物品状态。Schema v1 与 contract-v1 只作为历史基准保留，不再用于当前核心的精确验证。
+当前 state hash Schema 为 v3：哈希输入包含运行时内容包 ID/hash、world ID、地面物品和背包物品堆。Schema v1/v2 与 contract-v1/v2 只作为历史基准保留，不再用于当前核心的精确验证。
 
 ## 1. 原则
 

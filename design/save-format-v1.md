@@ -67,6 +67,8 @@ interface SavePayloadV1 {
 }
 ```
 
+当前桌面垂直切片已经把地面 `items` 与 `inventory` 物品堆写入 payload。背包项保存稳定实例 ID、内容 kind ID 和数量，不保存本地化名称、glyph 或 HTML 面板状态；载入后必须验证内容引用、实例 ID 唯一性和 `maxStack` 范围。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

@@ -73,6 +73,10 @@ pub struct FinalStateAssertion {
     pub last_command_seq: u32,
     pub player_position: Position,
     pub entity_count: usize,
+    #[serde(default)]
+    pub ground_item_count: usize,
+    #[serde(default)]
+    pub inventory_stack_count: usize,
     pub state_hash: String,
 }
 
@@ -138,6 +142,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             last_command_seq: snapshot.last_command_seq,
             player_position: snapshot.player.position,
             entity_count: snapshot.entities.len(),
+            ground_item_count: snapshot.items.len(),
+            inventory_stack_count: snapshot.inventory.len(),
             state_hash: snapshot.state_hash,
         },
         events,

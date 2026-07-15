@@ -127,6 +127,18 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "pick-up"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "wait"
             }
           },
@@ -214,6 +226,12 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "inventory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InventoryItemDto"
+          }
+        },
         "items": {
           "type": "array",
           "items": {
@@ -265,6 +283,7 @@
         "player",
         "entities",
         "items",
+        "inventory",
         "contentId",
         "contentHash",
         "contentVisuals",
@@ -301,6 +320,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/GameEventDto"
+          }
+        },
+        "inventory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InventoryItemDto"
           }
         },
         "items": {
@@ -342,8 +367,30 @@
         "player",
         "entities",
         "items",
+        "inventory",
         "removedEntities",
         "stateHash"
+      ]
+    },
+    "InventoryItemDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "quantity"
       ]
     },
     "ItemDto": {

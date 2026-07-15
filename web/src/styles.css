@@ -89,6 +89,7 @@ h1 {
 
 .map-panel,
 .status-panel,
+.inventory-panel,
 .message-panel {
   overflow: hidden;
   border: 1px solid rgb(103 137 168 / 28%);
@@ -183,6 +184,37 @@ h1 {
   font-family: "Cascadia Mono", Consolas, monospace;
   font-size: 1rem;
   text-overflow: ellipsis;
+}
+
+.inventory-list {
+  min-height: 88px;
+  max-height: 180px;
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.inventory-item,
+.inventory-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid rgb(103 137 168 / 10%);
+  color: #c8d5e3;
+  font-size: 0.88rem;
+}
+
+.inventory-empty {
+  border-bottom: 0;
+  color: #64788c;
+}
+
+.inventory-quantity {
+  color: #7fd7b5;
+  font-family: "Cascadia Mono", Consolas, monospace;
 }
 
 .message-list {
