@@ -28,6 +28,8 @@ export class MapRenderer {
   #cells: CellView[] = [];
   #cellData: Array<CellDto | undefined> = [];
   #tileset: TilesetRuntime | undefined;
+  #host: HTMLElement | undefined;
+  #totalAppliedCells = 0;
 
   async initialize(
     host: HTMLElement,
@@ -35,6 +37,7 @@ export class MapRenderer {
     height: number,
     tilesetManifestUrl: string,
   ): Promise<TilesetChangeResult> {
+    this.#host = host;
     this.#width = width;
     this.#height = height;
     this.#tileset = await TilesetRuntime.load(tilesetManifestUrl, CONTENT_GLYPHS);
@@ -50,6 +53,7 @@ export class MapRenderer {
     host.replaceChildren(this.#application.canvas);
     this.#application.stage.addChild(this.#world);
     this.#createCells();
+    this.#recordRender("tileset", 0);
     return this.#tilesetResult();
   }
 
@@ -58,25 +62,33 @@ export class MapRenderer {
     const previous = this.#tileset;
     this.#tileset = replacement;
     previous?.destroy();
+    let appliedCells = 0;
     for (const cell of this.#cellData) {
-      if (cell) this.#applyCell(cell);
+      if (cell) {
+        this.#applyCell(cell);
+        appliedCells += 1;
+      }
     }
+    this.#recordRender("tileset", appliedCells);
     return this.#tilesetResult();
   }
 
   applySnapshot(snapshot: GameSnapshot): void {
     this.#syncActorKinds(snapshot.player, snapshot.entities);
     for (const cell of snapshot.cells) this.#storeAndApplyCell(cell);
+    this.#recordRender("snapshot", snapshot.cells.length);
   }
 
   applyUpdate(update: GameUpdate): void {
     this.#syncActorKinds(update.player, update.entities);
     for (const cell of update.changedCells) this.#storeAndApplyCell(cell);
+    this.#recordRender("update", update.changedCells.length);
   }
 
   destroy(): void {
     this.#tileset?.destroy();
     this.#tileset = undefined;
+    this.#host = undefined;
     this.#application.destroy(true, { children: true });
   }
 
@@ -137,5 +149,16 @@ export class MapRenderer {
     const tileset = this.#tileset;
     if (!tileset) throw new Error("tileset 尚未初始化");
     return { id: tileset.manifest.id, warnings: tileset.warnings };
+  }
+
+  #recordRender(kind: "snapshot" | "update" | "tileset", appliedCells: number): void {
+    const host = this.#host;
+    const tileset = this.#tileset;
+    if (!host || !tileset) return;
+    this.#totalAppliedCells += appliedCells;
+    host.dataset.renderKind = kind;
+    host.dataset.lastAppliedCells = String(appliedCells);
+    host.dataset.totalAppliedCells = String(this.#totalAppliedCells);
+    host.dataset.tilesetId = tileset.manifest.id;
   }
 }

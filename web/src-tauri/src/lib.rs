@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+#[cfg(all(feature = "webdriver", not(debug_assertions)))]
+compile_error!("the webdriver feature is restricted to debug-only E2E builds");
+
 use std::sync::Mutex;
 
 use rfb_core::Game;
@@ -146,7 +149,16 @@ fn export_replay(state: tauri::State<'_, AppState>) -> Result<Vec<u8>, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+
+    #[cfg(feature = "webdriver")]
+    let builder = if std::env::var_os("TAURI_WEBDRIVER_PORT").is_some() {
+        builder.plugin(tauri_plugin_wdio_webdriver::init())
+    } else {
+        builder
+    };
+
+    builder
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             initialize_game,

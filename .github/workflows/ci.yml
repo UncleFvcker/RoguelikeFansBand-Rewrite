@@ -60,3 +60,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: npm ci
       - run: npm run build -- --no-bundle
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: tauri-e2e-failure
+          path: test-results/

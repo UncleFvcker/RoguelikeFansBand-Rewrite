@@ -56,9 +56,9 @@ Schema 位于 `schemas/tileset-v1.schema.json`。manifest 至少包含：
 
 ## 5. 测试与后续
 
-Node 测试覆盖两份已提交 manifest、图片/字符选择、图集缺失、未知 ID 和不安全路径。后续仍需：
+Node 测试覆盖两份已提交 manifest、图片/字符选择、图集缺失、未知 ID 和不安全路径。Windows Tauri E2E 已覆盖 ASCII/图片热切换、同一 Canvas 保留和 400 格重绘计数。后续仍需：
 
-- Tauri 端到端截图和热切换测试；
+- tileset 稳定视觉基准与截图差异测试；
 - 任意 tile 尺寸缩放与高清 atlas；
 - tileset 包签名、来源审计和用户安装目录；
 - 动画 tile、自动连接地形和独立特效图集；

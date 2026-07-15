@@ -13,6 +13,9 @@
     "typecheck": "tsc --noEmit",
     "build": "tauri build",
     "build:ui": "npm run typecheck && vite build",
+    "e2e:build": "tauri build --debug --no-bundle --features webdriver",
+    "e2e:tauri": "node e2e/tauri.e2e.mjs",
+    "e2e": "npm run e2e:build && npm run e2e:tauri",
     "preview": "vite preview"
   },
   "dependencies": {

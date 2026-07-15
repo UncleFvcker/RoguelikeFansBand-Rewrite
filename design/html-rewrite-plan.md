@@ -12,6 +12,7 @@
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
 - [内容数据格式 v1](content-format-v1.md)
 - [Tileset manifest 与资源回退 v1](tileset-format-v1.md)
+- [Tauri 桌面端到端测试](tauri-desktop-e2e.md)
 - [新存档格式 v1](save-format-v1.md)
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
@@ -492,13 +493,15 @@ interface SaveGame {
 - baseline policy v1、fixture 级差异豁免格式和 CI 验证；
 - Cargo 测试、TypeScript 检查和 Vite UI 构建；
 - GitHub Actions 基础 CI。
+- Tauri 内嵌 WebDriver 桌面端到端测试，覆盖 dirty cells、地图/消息分层、存档读写、回放导出和 tileset 热切换；
+- E2E 失败截图与进程日志归档，测试驱动受 debug feature 和显式端口双重限制。
 
 下一步建议：
 
-1. 为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试；
-2. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
-3. 在内容模型稳定后正式迁移 contract 基准并让 Rust 核心加载编译内容包；
-4. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心。
+1. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
+2. 在内容模型稳定后正式迁移 contract 基准并让 Rust 核心加载编译内容包；
+3. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心；
+4. 扩展桌面 E2E 到 resize、缩放、最小化/恢复和稳定视觉基准。
 
 每完成一个阶段，都应在本文件更新：
 

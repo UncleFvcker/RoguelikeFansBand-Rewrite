@@ -13,9 +13,13 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [build-dependencies]
 tauri-build = { version = "2.5.3", features = [] }
 
+[features]
+webdriver = ["dep:tauri-plugin-wdio-webdriver"]
+
 [dependencies]
 rfb-core = { path = "../../crates/rfb-core" }
 rfb-protocol = { path = "../../crates/rfb-protocol" }
 rfb-replay = { path = "../../crates/rfb-replay" }
 rfb-save = { path = "../../crates/rfb-save" }
 tauri = { version = "2.11.5", features = [] }
+tauri-plugin-wdio-webdriver = { version = "1.2.0", optional = true }

@@ -126,4 +126,11 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest 和缺失资源回退已经建立。下一步是为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试。
+首批 20 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+
+```powershell
+cd web
+npm run e2e
+```
+
+测试覆盖地图局部更新、Canvas/HTML 消息分层、存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。下一步是建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
