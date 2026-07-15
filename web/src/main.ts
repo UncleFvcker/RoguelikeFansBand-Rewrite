@@ -20,6 +20,14 @@ const hashValue = element<HTMLElement>("hash-value");
 const saveButton = element<HTMLButtonElement>("save-button");
 const loadInput = element<HTMLInputElement>("load-input");
 const clearMessages = element<HTMLButtonElement>("clear-messages");
+const inputPresetSelect = element<HTMLSelectElement>("input-preset");
+const controlsHelp = element<HTMLElement>("controls-help");
+
+type InputPreset = "numpad" | "vi" | "wasd";
+const INPUT_PRESET_STORAGE_KEY = "rfb.input-preset";
+let inputPreset = readInputPreset();
+inputPresetSelect.value = inputPreset;
+renderInputHelp();
 
 void start();
 
@@ -47,6 +55,12 @@ window.addEventListener("keydown", (event) => {
 saveButton.addEventListener("click", () => void exportSave());
 loadInput.addEventListener("change", () => void importSave());
 clearMessages.addEventListener("click", () => messageList.replaceChildren());
+inputPresetSelect.addEventListener("change", () => {
+  inputPreset = isInputPreset(inputPresetSelect.value) ? inputPresetSelect.value : "numpad";
+  localStorage.setItem(INPUT_PRESET_STORAGE_KEY, inputPreset);
+  renderInputHelp();
+  addMessage(`移动键位已切换为${inputPresetName(inputPreset)}。`, "system");
+});
 window.addEventListener("beforeunload", () => {
   renderer.destroy();
   core.dispose();
@@ -150,59 +164,56 @@ function showError(error: unknown): void {
 
 function commandForKeyboardEvent(event: KeyboardEvent): GameCommand | undefined {
   const key = event.key.toLowerCase();
-  const directionByCode: Partial<Record<string, Direction>> = {
-    Numpad8: "north",
-    Numpad9: "north-east",
-    Numpad6: "east",
-    Numpad3: "south-east",
-    Numpad2: "south",
-    Numpad1: "south-west",
-    Numpad4: "west",
-    Numpad7: "north-west",
-  };
-  const directionByKey: Record<string, Direction> = {
-    arrowup: "north",
-    w: "north",
-    k: "north",
-    "8": "north",
-    arrowright: "east",
-    d: "east",
-    l: "east",
-    "6": "east",
-    arrowdown: "south",
-    s: "south",
-    j: "south",
-    "2": "south",
-    arrowleft: "west",
-    a: "west",
-    h: "west",
-    "4": "west",
-    q: "north-west",
-    y: "north-west",
-    "7": "north-west",
-    home: "north-west",
-    e: "north-east",
-    u: "north-east",
-    "9": "north-east",
-    pageup: "north-east",
-    z: "south-west",
-    b: "south-west",
-    "1": "south-west",
-    end: "south-west",
-    c: "south-east",
-    n: "south-east",
-    "3": "south-east",
-    pagedown: "south-east",
-  };
-  if (key === "." || key === "5" || key === " " || event.code === "Numpad5") {
-    return { type: "wait" };
+  if (inputPreset === "numpad") {
+    const direction = NUMPAD_DIRECTIONS[event.code];
+    if (event.code === "Numpad5") return { type: "wait" };
+    return direction ? { type: "move", direction } : undefined;
   }
-  const direction = directionByCode[event.code] ?? directionByKey[key];
+
+  if (inputPreset === "vi") {
+    const direction = VI_DIRECTIONS[key];
+    if (key === ".") return { type: "wait" };
+    return direction ? { type: "move", direction } : undefined;
+  }
+
+  const direction = WASD_DIRECTIONS[key];
+  if (key === " ") return { type: "wait" };
   return direction ? { type: "move", direction } : undefined;
 }
 
 function isTextInput(target: EventTarget | null): boolean {
-  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  );
+}
+
+function readInputPreset(): InputPreset {
+  const stored = localStorage.getItem(INPUT_PRESET_STORAGE_KEY);
+  return isInputPreset(stored) ? stored : "numpad";
+}
+
+function isInputPreset(value: string | null): value is InputPreset {
+  return value === "numpad" || value === "vi" || value === "wasd";
+}
+
+function renderInputHelp(): void {
+  const help: Record<InputPreset, string> = {
+    numpad: "小键盘 1–9 八向移动，5 等待。NumLock 开关均可使用。",
+    vi: "HJKL 四向移动，YUBN 斜向移动，句点等待。",
+    wasd: "WASD 四向移动，QEZC 斜向移动，空格等待。",
+  };
+  controlsHelp.textContent = `${help[inputPreset]} 撞向发光微粒即可攻击。`;
+}
+
+function inputPresetName(preset: InputPreset): string {
+  const names: Record<InputPreset, string> = {
+    numpad: "小键盘预设",
+    vi: "Vi 键位预设",
+    wasd: "WASD 预设",
+  };
+  return names[preset];
 }
 
 function element<T extends HTMLElement>(id: string): T {
@@ -210,3 +221,36 @@ function element<T extends HTMLElement>(id: string): T {
   if (!found) throw new Error(`Missing element #${id}`);
   return found as T;
 }
+
+const NUMPAD_DIRECTIONS: Partial<Record<string, Direction>> = {
+  Numpad8: "north",
+  Numpad9: "north-east",
+  Numpad6: "east",
+  Numpad3: "south-east",
+  Numpad2: "south",
+  Numpad1: "south-west",
+  Numpad4: "west",
+  Numpad7: "north-west",
+};
+
+const VI_DIRECTIONS: Partial<Record<string, Direction>> = {
+  k: "north",
+  u: "north-east",
+  l: "east",
+  n: "south-east",
+  j: "south",
+  b: "south-west",
+  h: "west",
+  y: "north-west",
+};
+
+const WASD_DIRECTIONS: Partial<Record<string, Direction>> = {
+  w: "north",
+  e: "north-east",
+  d: "east",
+  c: "south-east",
+  s: "south",
+  z: "south-west",
+  a: "west",
+  q: "north-west",
+};

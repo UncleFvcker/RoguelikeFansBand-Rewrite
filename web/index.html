@@ -29,10 +29,17 @@
             <span id="connection-status" class="status-pill">正在启动核心</span>
           </div>
           <div id="map-host" class="map-host"></div>
-          <p class="controls">
-            方向键、WASD 或 HJKL 四向移动；QEZC、YUBN 或小键盘八向移动；句点、空格或小键盘 5
-            等待。撞向发光微粒即可攻击。
-          </p>
+          <div class="input-toolbar">
+            <label for="input-preset">
+              移动键位
+              <select id="input-preset">
+                <option value="numpad">小键盘</option>
+                <option value="vi">Vi 键位（HJKL）</option>
+                <option value="wasd">WASD</option>
+              </select>
+            </label>
+            <p id="controls-help" class="controls"></p>
+          </div>
         </section>
 
         <aside class="ui-column">

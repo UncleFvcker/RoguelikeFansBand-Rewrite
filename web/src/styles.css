@@ -118,9 +118,34 @@ h1 {
   display: block;
 }
 
+.input-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem 0.85rem;
+}
+
+.input-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #91a4b8;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.input-toolbar select {
+  border: 1px solid #354a5f;
+  border-radius: 7px;
+  padding: 0.42rem 0.6rem;
+  color: #dcecff;
+  background: #101c27;
+  font: inherit;
+}
+
 .controls {
   margin: 0;
-  padding: 0.8rem 1rem 0.9rem;
   color: #7f91a5;
   font-size: 0.85rem;
   line-height: 1.6;
@@ -245,6 +270,10 @@ h1 {
   }
 
   .ui-column {
+    grid-template-columns: 1fr;
+  }
+
+  .input-toolbar {
     grid-template-columns: 1fr;
   }
 }
