@@ -4,7 +4,15 @@
 
 目标仓库：`UncleFvcker/RoguelikeFansBand-Rewrite`
 
-关联文档：[本地化与中文文本重构计划](localization-rewrite-plan.md)
+关联文档：
+
+- [旧版行为基准与差分测试](legacy-behavior-baseline.md)
+- [核心协议 v1](protocol-v1.md)
+- [确定性模拟、随机数与回放](deterministic-simulation.md)
+- [内容数据格式 v1](content-format-v1.md)
+- [新存档格式 v1](save-format-v1.md)
+- [授权、版权与素材迁移审计](licensing-and-assets.md)
+- [本地化与中文文本重构计划](localization-rewrite-plan.md)
 
 本文档是 HTML/Web 重构的长期入口。以后每次实现阶段性功能时，应同步更新“当前进度”“接口版本”和“未决问题”，不要让架构约定只存在于聊天记录中。
 
@@ -20,7 +28,7 @@
 - 旧存档、旧数据文件和现有游戏规则可以通过适配器逐步迁移，而不是一次性推倒重来；
 - Tauri 负责桌面封装，浏览器/PWA 和桌面版共用 Rust 核心与 TypeScript 前端。
 
-不采用“一次性把 30 万行 C 翻译成 JavaScript”的方式。Rust 是最终核心语言；现有 C 只在过渡期用于行为对照、旧存档导入和回归测试。第一阶段可以让 C/WASM 临时驱动前端，但新接口必须按 Rust 最终模型设计，避免制造第二套长期 API。
+不采用“一次性把 30 万行 C 翻译成 JavaScript”的方式。Rust 是最终核心语言；现有 C 只用于行为对照、旧存档导入和回归测试，不作为新前端的长期或临时生产核心。新接口直接按 Rust 最终模型设计，避免制造第二套长期 API。
 
 ## 2. 当前工程事实
 
@@ -73,7 +81,7 @@ Command API
 - PWA 作为第一种跨平台运行形式；
 - Tauri 作为正式桌面封装；
 - Rust 原生核心与 WASM 核心共用领域代码；
-- MessagePack/CBOR 作为正式存档载体，JSON 作为开发调试载体；
+- MessagePack 作为正式协议与存档载荷，JSON 作为开发调试载体；
 - Vitest 做协议/规则测试，Playwright 做浏览器回归测试。
 
 技术取舍：不把全部规则写成 TypeScript。TypeScript 负责 UI 和浏览器生态，Rust 负责稳定数据模型、存档、随机数和性能敏感规则；这样既保留 Web 开发速度，也避免大型动态对象重新产生结构漂移。
@@ -314,7 +322,7 @@ pub struct PlayerState {
 
 过渡期继续由 C 兼容工具读取旧存档，并导出新格式，避免马上在 Rust 中重写全部旧版本解析逻辑。Rust 核心只写新格式；旧格式读取器最终作为独立导入工具保留。
 
-新存档外层建议使用版本化 MessagePack/CBOR，开发阶段可使用 JSON：
+新存档使用版本化 RFB 容器和 MessagePack 载荷，开发阶段可导出 JSON；完整容灾规则见[新存档格式 v1](save-format-v1.md)：
 
 ```ts
 interface SaveGame {
@@ -335,12 +343,15 @@ interface SaveGame {
 
 ### 阶段 0：行为基准
 
+- 固定旧版 `v1.3.0.7` / `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`；
 - 固定随机种子测试；
 - 关键战斗、物品生成和状态效果测试；
 - 输入录像/回放；
 - 旧存档读取与保存回环；
 - 记录当前 `Term`、`map_info()` 和窗口刷新流程；
 - 建立截图和地图快照基准。
+
+具体格式和完成门槛见[旧版行为基准与差分测试规范](legacy-behavior-baseline.md)。阶段 0 可以并行创建最小 Cargo workspace 和测试工具，但行为基准没有达到门槛前，不批量迁移规则模块。
 
 ### 阶段 1：Rust 工作区与协议骨架
 
@@ -445,19 +456,21 @@ interface SaveGame {
 
 ## 12. 当前进度与下一步
 
-当前状态：技术栈已确定为 Rust 核心、TypeScript + PixiJS 前端、Tauri 桌面封装；尚未创建 Rust workspace 和 `web/` 工程。
+当前状态：技术栈已确定为 Rust 核心、TypeScript + PixiJS 前端、Tauri 桌面封装；P0 行为基准、授权边界、协议、确定性、内容格式和存档格式规范已经建立；尚未创建 Rust workspace 和 `web/` 工程。
 
 下一步建议：
 
-1. 建立 Cargo workspace 和最小 `rfb-core` crate；
-2. 建立 `rfb-protocol`，定义 `Command API v1`、`GameSnapshot v1` 和 `CellAppearance v1`；
-3. 建立 `rfb-wasm`，打通 Rust/WASM 与 Web Worker；
-4. 建立 `web/` + TypeScript/Vite/PixiJS 工程；
-5. 实现最小 Rust 地图、玩家移动和只读地图快照；
-6. 做出独立 PixiJS 地图与 HTML 消息栏；
-7. 加入 ASCII tileset 回退和图片 tileset manifest；
-8. 建立 Tauri 工程空壳并加载同一前端；
-9. 开始固定种子回放与 C 版本行为对照。
+1. 为旧版 `v1.3.0.7` 建立干净、可复现的基准构建；
+2. 实现基准 manifest、命令回放 v1 和快照规范化工具；
+3. 建立首批 20 个规则场景和 3 个旧存档导入样本；
+4. 建立 Cargo workspace、最小 `rfb-core`、`rfb-protocol` 和测试入口；
+5. 从协议 Schema 生成 TypeScript 类型并验证 JSON/MessagePack 往返；
+6. 建立 `rfb-wasm`，打通 Rust/WASM 与 Web Worker；
+7. 建立 `web/` + TypeScript/Vite/PixiJS 工程；
+8. 实现最小 Rust 地图、玩家移动和只读地图快照；
+9. 做出独立 PixiJS 地图与 HTML 消息栏；
+10. 加入 ASCII tileset 回退和图片 tileset manifest；
+11. 建立 Tauri 工程空壳并加载同一前端。
 
 每完成一个阶段，都应在本文件更新：
 

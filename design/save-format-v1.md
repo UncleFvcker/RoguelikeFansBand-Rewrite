@@ -1,0 +1,170 @@
+# RFB 新存档格式 v1
+
+状态：P0 容器和容灾策略已确定，实现尚未开始
+
+## 1. 基本决定
+
+- 扩展名：`.rfbsave`；
+- 容器格式：RFB 自描述二进制容器；
+- 权威载荷：MessagePack；
+- 调试导出：规范化 JSON，但不能作为正式可继续游戏的默认格式；
+- 校验：SHA-256；
+- 默认不压缩 v1 载荷，后续通过容器 flags 增加版本化压缩；
+- 旧 C 存档只通过独立导入器读取，新核心不再写旧格式。
+
+## 2. 容器布局
+
+```text
+magic              8 bytes   "RFBSAVE\0"
+container_version  u16 LE     1
+flags              u16 LE
+header_length      u32 LE
+payload_length     u64 LE
+payload_sha256     32 bytes
+header_json        header_length bytes UTF-8
+payload_msgpack    payload_length bytes
+```
+
+读取器必须先验证长度上限，再分配内存。未知 flags、超大长度、截断文件和 hash 不符必须给出明确错误，不能 panic。
+
+## 3. Header
+
+Header 只含无需解码完整世界即可展示的信息：
+
+```ts
+interface SaveHeaderV1 {
+  format: "rfb-save";
+  saveSchemaVersion: 1;
+  gameVersion: string;
+  protocolVersion: string;
+  createdAt: string;
+  savedAt: string;
+  characterSummary: {
+    displayName: string;
+    level: number;
+    locationKey: string;
+    turn: number;
+  };
+  content: ContentSetRef;
+  payloadEncoding: "messagepack";
+}
+```
+
+Header 不可信，显示前需要长度限制和转义；载入是否成功以 payload 验证和迁移结果为准。
+
+## 4. Payload
+
+```ts
+interface SavePayloadV1 {
+  schemaVersion: 1;
+  world: WorldSaveV1;
+  player: PlayerSaveV1;
+  levels: LevelSaveV1[];
+  rng: RngSaveV1;
+  options: CoreOptionSaveV1;
+  content: ContentSetRef;
+  migrationHistory: MigrationRecord[];
+}
+```
+
+禁止保存：
+
+- Rust 内存布局和枚举下标；
+- TypeScript UI 状态；
+- RenderWorld、纹理和动画；
+- 已本地化完成的系统句子；
+- 临时计算缓存；
+- 绝对文件路径；
+- 网络令牌和崩溃报告信息。
+
+允许保存玩家自定义名称和模组声明的用户内容，但必须限制长度。
+
+## 5. 写入事务
+
+桌面版执行：
+
+1. 在同一目录创建唯一临时文件；
+2. 完整写入并 flush；
+3. 重新读取 header 和 checksum 做快速验证；
+4. 尽平台能力执行 `fsync`；
+5. 将现有正式存档轮换为 `.bak1`；
+6. 原子 rename 临时文件为正式存档；
+7. 保留最近 3 个可配置备份；
+8. 失败时保留最后一个有效正式存档。
+
+不得先删除旧存档再写新文件。临时文件清理由启动时的恢复流程处理。
+
+浏览器/PWA 使用 IndexedDB 两阶段提交：写入新记录、验证、更新 active pointer，最后异步清理旧记录。
+
+## 6. 载入与恢复
+
+载入顺序：
+
+1. 验证 magic、容器版本、flags 和长度；
+2. 验证 payload SHA-256；
+3. 解析 Header 和 MessagePack；
+4. 验证 Schema 与数值上限；
+5. 验证内容包集合；
+6. 连续执行迁移；
+7. 构建临时世界并运行不变量检查；
+8. 全部成功后替换当前会话。
+
+正式文件损坏时，按 `.bak1` → `.bak2` → `.bak3` 查找最近有效备份，并在恢复前告知玩家。损坏文件不得静默覆盖。
+
+## 7. 迁移规则
+
+- 迁移是 `v1 → v2 → v3` 连续函数；
+- 每一步输入输出都有 fixture 和 hash；
+- 增加字段必须提供默认值或可推导规则；
+- ID 改名通过显式 alias 表；
+- 无法无损迁移时停止并说明具体缺失内容；
+- 迁移在内存中的临时副本上执行；
+- 成功载入旧版本不会立刻覆盖原文件，下一次保存才写新版本；
+- 发布版本不能删除仍在支持窗口内的迁移器。
+
+## 8. 旧 C 存档导入
+
+旧格式读取器作为隔离工具存在：
+
+```text
+tools/rfb-legacy-import/
+```
+
+导入流程输出转换报告，包括：
+
+- 旧版本识别结果；
+- 已转换字段；
+- 无法转换或采用默认值的字段；
+- 名称到稳定 ID 的映射；
+- 内容包要求；
+- 新存档 hash。
+
+导入器只读旧文件，绝不原地覆盖。旧存档解析器必须限制字符串长度、计数和分配大小，并使用 fuzz/corpus 测试。
+
+## 9. 内容包和模组
+
+存档记录每个包的 ID、版本、hash 和加载顺序。载入时分为：
+
+- 完全匹配：正常载入；
+- 版本不同但存在内容迁移器：迁移后载入；
+- 缺失或 hash 不符：默认拒绝，展示差异；
+- 用户明确进入未来的恢复模式：只在复制文件上操作，并生成不可逆警告。
+
+## 10. 安全与隐私
+
+- 文件大小、地图数量、实体数量、字符串和嵌套深度均设上限；
+- 不解析存档内的脚本、HTML 或外部路径；
+- MessagePack 未知扩展类型默认拒绝；
+- 导入文件不能触发网络请求；
+- Header 中的玩家文本按不可信内容转义；
+- 崩溃报告上传存档必须由玩家单独确认。
+
+## 11. v1 验收
+
+- native 与 WASM 读写相同 fixture；
+- 保存 → 读取 → 保存得到语义相同状态和相同 state hash；
+- 模拟断电不会丢失最后一个有效备份；
+- 单字节损坏能被 checksum 发现；
+- 截断、超大长度和畸形 MessagePack 不会 panic；
+- v1 → v2 示例迁移证明连续迁移机制可用；
+- 三个 `v1.3.0.7` 旧存档样本可以导入或给出结构化失败报告。

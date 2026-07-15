@@ -31,6 +31,8 @@
 - 未来新增的 Rust、TypeScript、Tauri 和 tileset manifest；
 - 生成的 `*_name_zh.inc` 与其真实上游数据来源。
 
+第一次审计固定使用旧仓库标签 `v1.3.0.7`、commit `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`。以后升级基线必须记录新的 commit，不允许用一个不断移动的“当前源码”覆盖旧报告。
+
 旧 `localization/` 目录只允许用于：
 
 - 参考过去使用过的脚本结构；

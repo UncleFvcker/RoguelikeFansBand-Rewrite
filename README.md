@@ -16,6 +16,12 @@ RoguelikeFansBand 的新一代重构工程。
 ## 设计文档
 
 - [HTML/Rust 重构计划](design/html-rewrite-plan.md)
+- [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
+- [核心协议 v1](design/protocol-v1.md)
+- [确定性模拟、随机数与回放](design/deterministic-simulation.md)
+- [内容数据格式 v1](design/content-format-v1.md)
+- [新存档格式 v1](design/save-format-v1.md)
+- [授权、版权与素材迁移审计](design/licensing-and-assets.md)
 - [本地化与中文文本重构计划](design/localization-rewrite-plan.md)
 
 ## 原项目
@@ -28,5 +34,4 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-当前处于架构和协议准备阶段。下一步是建立 Cargo workspace、`rfb-core`、`rfb-protocol`、Rust/WASM 桥接以及 TypeScript/PixiJS 前端骨架。
-
+P0 架构规范已经建立。下一步先针对旧版 `v1.3.0.7` 实现行为基准 manifest、命令回放和首批 golden fixtures；达到阶段 0 门槛后，再开始批量迁移 Rust 规则模块。
