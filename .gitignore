@@ -1,0 +1,32 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Tauri
+src-tauri/target/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Environment and local state
+.env
+.env.*
+!.env.example
+*.log
+.tmp/
+tmp/
+
+# Test artifacts
+playwright-report/
+test-results/
+
