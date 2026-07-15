@@ -16,5 +16,6 @@ tauri-build = { version = "2.5.3", features = [] }
 [dependencies]
 rfb-core = { path = "../../crates/rfb-core" }
 rfb-protocol = { path = "../../crates/rfb-protocol" }
+rfb-replay = { path = "../../crates/rfb-replay" }
 rfb-save = { path = "../../crates/rfb-save" }
 tauri = { version = "2.11.5", features = [] }

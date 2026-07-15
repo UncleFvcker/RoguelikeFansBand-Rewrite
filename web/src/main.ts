@@ -17,6 +17,7 @@ const turnValue = element<HTMLElement>("turn-value");
 const hpValue = element<HTMLElement>("hp-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
+const replayButton = element<HTMLButtonElement>("replay-button");
 const saveButton = element<HTMLButtonElement>("save-button");
 const loadInput = element<HTMLInputElement>("load-input");
 const clearMessages = element<HTMLButtonElement>("clear-messages");
@@ -53,6 +54,7 @@ window.addEventListener("keydown", (event) => {
 });
 
 saveButton.addEventListener("click", () => void exportSave());
+replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
 clearMessages.addEventListener("click", () => messageList.replaceChildren());
 inputPresetSelect.addEventListener("change", () => {
@@ -83,16 +85,18 @@ async function dispatch(command: GameCommand): Promise<void> {
 async function exportSave(): Promise<void> {
   try {
     const bytes = await core.save();
-    const blob = new Blob([bytes.slice().buffer as ArrayBuffer], {
-      type: "application/octet-stream",
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "rfb-rewrite-demo.rfbsave";
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadBytes(bytes, "rfb-rewrite-demo.rfbsave");
     addMessage("已导出带校验和的 .rfbsave 存档。", "system");
+  } catch (error) {
+    showError(error);
+  }
+}
+
+async function exportReplay(): Promise<void> {
+  try {
+    const bytes = await core.exportReplay();
+    downloadBytes(bytes, "rfb-rewrite-diagnostic.rfbreplay");
+    addMessage("已导出不包含存档和本地路径的诊断回放。", "system");
   } catch (error) {
     showError(error);
   }
@@ -160,6 +164,18 @@ function showError(error: unknown): void {
   connectionStatus.classList.add("error");
   addMessage(`错误：${message}`, "error");
   console.error(error);
+}
+
+function downloadBytes(bytes: Uint8Array, fileName: string): void {
+  const blob = new Blob([bytes.slice().buffer as ArrayBuffer], {
+    type: "application/octet-stream",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 function commandForKeyboardEvent(event: KeyboardEvent): GameCommand | undefined {

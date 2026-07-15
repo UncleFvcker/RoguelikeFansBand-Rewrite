@@ -7,5 +7,6 @@ export interface CoreTransport {
   dispatch(command: GameCommand): Promise<GameUpdate>;
   save(): Promise<Uint8Array>;
   load(data: Uint8Array): Promise<GameSnapshot>;
+  exportReplay(): Promise<Uint8Array>;
   dispose(): void;
 }

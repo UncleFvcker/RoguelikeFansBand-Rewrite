@@ -81,6 +81,7 @@ interface GameCoreV1 {
   createGame(options: NewGameOptions): Promise<GameSnapshot>;
   loadGame(data: Uint8Array): Promise<GameSnapshot>;
   saveGame(): Promise<Uint8Array>;
+  exportReplay(): Promise<Uint8Array>;
   dispatch(command: GameCommandEnvelope): Promise<GameUpdate>;
   getSnapshot(request: SnapshotRequest): Promise<GameSnapshot>;
   closeSession(): Promise<void>;
@@ -90,6 +91,8 @@ interface GameCoreV1 {
 `GameCommandEnvelope` 至少包含 `commandSeq`、客户端已知的 `expectedRevision` 和一个具体命令。核心只在 revision 合法时执行会改变规则状态的命令。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
+
+`exportReplay()` 导出当前新游戏或最近一次载入存档之后的成功命令段，使用正式 `.rfbreplay` 容器。失败命令不进入记录；回放不包含完整初始存档、玩家姓名或本地路径，因此复验载入后的回放时仍需要具有相同 state hash 的初始状态。
 
 ## 6. 更新与快照
 

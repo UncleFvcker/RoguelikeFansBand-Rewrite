@@ -44,6 +44,11 @@ export class TauriNativeTransport implements CoreTransport {
     return snapshot;
   }
 
+  async exportReplay(): Promise<Uint8Array> {
+    const bytes = await invoke<number[]>("export_replay");
+    return Uint8Array.from(bytes);
+  }
+
   dispose(): void {
     // The native game session is owned by the Tauri application and ends with it.
   }

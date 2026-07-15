@@ -2478,6 +2478,7 @@ version = "0.1.0"
 dependencies = [
  "rfb-core",
  "rfb-protocol",
+ "rfb-replay",
  "rfb-save",
  "tauri",
  "tauri-build",

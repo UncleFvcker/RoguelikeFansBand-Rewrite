@@ -52,7 +52,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、三套键位预设和 `.rfbsave` 存档均已迁移。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
+Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、三套键位预设、`.rfbsave` 存档和 `.rfbreplay` 诊断回放均已接入。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
 ### 本地验证
 
@@ -103,4 +103,4 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、回放文件 v1、本地旧存档字段级断言、快照规范化工具和基准更新审批规则已经建立。下一步是把 `ReplayRecorder` 接入 Tauri 诊断导出。
+首批 20 个原创 contract fixtures、Tauri 诊断回放、本地旧存档字段级断言、快照规范化工具和基准更新审批规则已经建立。下一步是从 Rust 协议 Schema 自动生成 TypeScript 类型，替换手写镜像。
