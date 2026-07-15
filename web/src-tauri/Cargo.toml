@@ -1,0 +1,20 @@
+[package]
+name = "rfb-tauri"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "rfb_tauri_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.5.3", features = [] }
+
+[dependencies]
+rfb-core = { path = "../../crates/rfb-core" }
+rfb-protocol = { path = "../../crates/rfb-protocol" }
+rfb-save = { path = "../../crates/rfb-save" }
+tauri = { version = "2.11.5", features = [] }

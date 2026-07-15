@@ -14,7 +14,7 @@
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
 
-本文档是 HTML/Web 重构的长期入口。以后每次实现阶段性功能时，应同步更新“当前进度”“接口版本”和“未决问题”，不要让架构约定只存在于聊天记录中。
+本文档是 Rust/Tauri 重构的长期入口。以后每次实现阶段性功能时，应同步更新“当前进度”“接口版本”和“未决问题”，不要让架构约定只存在于聊天记录中。
 
 ## 1. 总目标
 
@@ -463,7 +463,7 @@ interface SaveGame {
 
 ## 12. 当前进度与下一步
 
-当前状态：P0 规范已经建立，WASM 垂直切片曾用于验证 Rust/TypeScript/PixiJS 分层可行性。正式目标现已调整为 Tauri 原生核心，不再发布或继续扩展浏览器/WASM 版本。当前 `rfb-wasm`、Web Worker 和 wasm-pack 构建仍暂时存在于代码中，只用于保证替换期间主分支可运行；Tauri 原生垂直切片达到同等能力后立即删除。
+当前状态：P0 规范和 Tauri 2 Windows 原生垂直切片已经建立。WASM 原型完成架构验证后已经退出活动代码；workspace、前端、依赖和 CI 不再包含 `rfb-wasm`、Web Worker、wasm-pack 或 wasm32 构建目标。
 
 已完成：
 
@@ -474,21 +474,24 @@ interface SaveGame {
 - 本地 `v1.3.0.7` Git 对象探针和 `.local/` manifest；
 - PixiJS 保留式 cell 对象和 changed cells 局部更新；
 - 地图 Canvas 与 HTML 消息/状态严格分层；
+- `CoreTransport` 与正式 `TauriNativeTransport`；
+- Tauri Commands 驱动的原生 Rust 游戏会话；
+- Windows Tauri Release EXE 构建；
+- 小键盘、Vi 和 WASD 三套互斥移动预设；
+- WASM crate、Worker 和相关构建链清理；
 - Cargo 测试、TypeScript 检查和 Vite UI 构建；
 - GitHub Actions 基础 CI。
 
 下一步建议：
 
-1. 建立 Tauri 2 Windows 工程和 `CoreTransport`/`TauriNativeTransport`；
-2. 让当前移动、战斗、键位预设和存档垂直切片通过原生 Rust 核心运行；
-3. 从 workspace、前端、CI 和依赖中删除 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 target；
-4. 把原创 contract fixtures 扩展到阶段 0 的 20 个规则场景；
-5. 增加命令回放文件和每 100 命令 state hash 检查点；
-6. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
-7. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
-8. 建立 `rfb-content` 和第一个原创 JSON 内容包；
-9. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
-10. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
+1. 把原创 contract fixtures 扩展到阶段 0 的 20 个规则场景；
+2. 增加命令回放文件和每 100 命令 state hash 检查点；
+3. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
+4. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
+5. 建立 `rfb-content` 和第一个原创 JSON 内容包；
+6. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
+7. 为地图局部更新、消息分层和存档交互建立 Tauri 端到端测试；
+8. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
 
 每完成一个阶段，都应在本文件更新：
 

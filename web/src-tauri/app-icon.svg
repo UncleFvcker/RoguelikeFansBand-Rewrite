@@ -1,0 +1,8 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="104" fill="#10151d"/>
+  <path d="M112 112h288v288H112z" fill="none" stroke="#2c3d52" stroke-width="24"/>
+  <path d="M160 160h192v192H160z" fill="#172334" stroke="#70d7ff" stroke-width="20"/>
+  <path d="M204 312V200h60c45 0 72 21 72 59 0 27-14 45-39 54l45 63h-50l-39-57h-7v57h-42zm42-34h16c21 0 31-7 31-22s-10-21-31-21h-16v43z" fill="#f1f6fb"/>
+  <circle cx="384" cy="128" r="24" fill="#ffb454"/>
+</svg>

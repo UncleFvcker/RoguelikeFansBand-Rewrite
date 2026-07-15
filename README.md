@@ -13,7 +13,7 @@ RoguelikeFansBand 的新一代重构工程。
 - Tauri 2：Windows、Linux、macOS 和 Android 封装
 - Fluent：英文/简体中文本地化
 
-当前不以浏览器/PWA 为发布目标，也不继续维护 WASM 核心。UI 通过 `CoreTransport` 连接 `TauriNativeTransport`；未来如确有网页需求，再单独增加 WASM 适配器。
+当前不以浏览器/PWA 为发布目标，也不维护 WASM 核心。UI 通过 `CoreTransport` 连接 `TauriNativeTransport`；未来如确有网页需求，再单独增加 WASM 适配器。
 
 ## 设计文档
 
@@ -47,11 +47,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-WASM 垂直切片已经完成了架构验证，但现已冻结，不再增加功能。下一实现阶段是建立 Tauri 2 Windows 应用和 `TauriNativeTransport`，恢复现有移动、战斗、键位预设与存档能力；达到同等功能后，从 workspace、前端构建和 CI 删除 `rfb-wasm`、Web Worker、wasm-pack 与 wasm32 target。
+Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、三套键位预设和 `.rfbsave` 存档均已迁移。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
 ### 本地验证
-
-过渡期间下面的 `npm run build` 仍会调用现有 WASM 构建，只用于验证尚未被 Tauri 替换的原型；这不代表 WASM 仍是维护目标。Tauri 原生垂直切片完成后会同步更新这些命令。
 
 ```powershell
 cargo fmt --all -- --check
@@ -60,7 +58,8 @@ cargo clippy --workspace --all-targets -- -D warnings
 
 cd web
 npm ci
-npm run build
+npm run build -- --no-bundle
+# 启动可玩开发版：npm run dev
 ```
 
 如需生成本地旧版参考 manifest：
@@ -72,4 +71,4 @@ $env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
 cargo run -p rfb-legacy-probe
 ```
 
-输出只写入被 Git 忽略的 `.local/legacy-baseline/`。Tauri 原生垂直切片完成后，再把原创 contract fixtures 扩展到阶段 0 的 20 个场景，并建立 `rfb-content` 原创内容包。
+输出只写入被 Git 忽略的 `.local/legacy-baseline/`。下一步是把原创 contract fixtures 扩展到阶段 0 的 20 个场景，再增加回放检查点和本地旧存档导入样本。

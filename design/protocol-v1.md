@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：P0 DTO 原型已实现，Tauri 原生 transport 待建立
+状态：P0 DTO 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 

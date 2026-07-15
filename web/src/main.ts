@@ -2,11 +2,11 @@
 
 import "./styles.css";
 
-import { CoreClient } from "./core-client";
 import { MapRenderer } from "./map-renderer";
 import type { Direction, GameCommand, GameEventDto, GameSnapshot, GameUpdate } from "./protocol";
+import { TauriNativeTransport } from "./tauri-native-transport";
 
-const core = new CoreClient();
+const core = new TauriNativeTransport();
 const renderer = new MapRenderer();
 let busy = false;
 
@@ -37,7 +37,7 @@ async function start(): Promise<void> {
     await renderer.initialize(mapHost, snapshot.width, snapshot.height);
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
-    addMessage("Rust/WASM 核心已启动；地图与文字由不同渲染层管理。", "system");
+    addMessage("Tauri 原生 Rust 核心已启动；地图与文字由不同渲染层管理。", "system");
     connectionStatus.textContent = "核心已连接";
     connectionStatus.classList.add("ready");
   } catch (error) {
