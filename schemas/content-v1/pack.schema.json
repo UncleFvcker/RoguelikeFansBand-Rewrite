@@ -1,0 +1,73 @@
+{
+  "$defs": {
+    "PackDependency": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "versionRequirement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "versionRequirement"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/pack.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "contentRoots": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/PackDependency"
+      },
+      "type": "array"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "loadAfter": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "titleKey": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "version",
+    "titleKey",
+    "dependencies",
+    "loadAfter",
+    "contentRoots"
+  ],
+  "title": "PackManifest",
+  "type": "object"
+}

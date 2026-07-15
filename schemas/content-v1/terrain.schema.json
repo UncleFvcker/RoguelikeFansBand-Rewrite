@@ -1,0 +1,53 @@
+{
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "blocksSight": {
+      "type": "boolean"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "glyph": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "walkable": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "glyph",
+    "walkable",
+    "blocksSight",
+    "tags"
+  ],
+  "title": "TerrainDefinition",
+  "type": "object"
+}

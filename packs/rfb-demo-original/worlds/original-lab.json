@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json",
+  "formatVersion": 1,
+  "id": "demo.world.original-v1",
+  "nameKey": "world-demo-original-lab-name",
+  "width": 20,
+  "height": 20,
+  "fillTerrainId": "demo.terrain.floor",
+  "borderTerrainId": "demo.terrain.wall",
+  "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.wall",
+      "positions": [
+        { "x": 11, "y": 3 },
+        { "x": 11, "y": 4 },
+        { "x": 11, "y": 5 },
+        { "x": 11, "y": 6 },
+        { "x": 11, "y": 7 },
+        { "x": 11, "y": 8 },
+        { "x": 11, "y": 9 },
+        { "x": 11, "y": 11 },
+        { "x": 11, "y": 12 },
+        { "x": 11, "y": 13 },
+        { "x": 11, "y": 14 },
+        { "x": 11, "y": 15 },
+        { "x": 11, "y": 16 }
+      ]
+    }
+  ],
+  "player": {
+    "instanceId": "demo.actor.player.1",
+    "kindId": "demo.actor.explorer",
+    "position": { "x": 3, "y": 3 }
+  },
+  "actors": [
+    {
+      "instanceId": "demo.monster.ember-mote.1",
+      "kindId": "demo.actor.ember-mote",
+      "position": { "x": 8, "y": 5 }
+    }
+  ],
+  "items": [
+    {
+      "instanceId": "demo.item.luminous-shard.1",
+      "kindId": "demo.item.luminous-shard",
+      "position": { "x": 4, "y": 3 },
+      "quantity": 1
+    }
+  ]
+}

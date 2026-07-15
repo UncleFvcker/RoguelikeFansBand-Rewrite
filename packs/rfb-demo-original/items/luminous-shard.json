@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.luminous-shard",
+  "nameKey": "item-demo-luminous-shard-name",
+  "descriptionKey": "item-demo-luminous-shard-description",
+  "glyph": "!",
+  "maxStack": 20,
+  "tags": ["crystal", "light-source"]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.explorer",
+  "role": "player",
+  "nameKey": "actor-demo-explorer-name",
+  "descriptionKey": "actor-demo-explorer-description",
+  "glyph": "@",
+  "level": 1,
+  "maxHp": 10,
+  "tags": ["humanoid", "player-archetype"]
+}

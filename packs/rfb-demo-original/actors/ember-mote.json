@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.ember-mote",
+  "role": "monster",
+  "nameKey": "actor-demo-ember-mote-name",
+  "descriptionKey": "actor-demo-ember-mote-description",
+  "glyph": "*",
+  "level": 1,
+  "maxHp": 3,
+  "tags": ["elemental", "light-source"]
+}

@@ -62,6 +62,8 @@ cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test -p rfb-contract
 cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
+cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
+cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
 
 cd web
 npm ci
@@ -76,6 +78,16 @@ cargo run -p rfb-protocol --features bindings --bin generate-bindings
 ```
 
 该命令更新 `web/src/protocol.ts` 和 `schemas/protocol-v1.schema.json`；CI 使用 `--check` 拒绝未同步的生成文件。
+
+验证或编译原创内容包：
+
+```powershell
+cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
+cargo run -p rfb-content --bin rfb-contentc -- compile packs/rfb-demo-original target/generated/rfb-demo-original.rfbcontent
+cargo run -p rfb-content --features schemas --bin generate-content-schemas
+```
+
+内容编译器会严格解析 JSON、校验稳定 ID/引用/范围，规范化排序后输出带 SHA-256 校验的 MessagePack 容器。首个原创包的固定 content hash 记录在 `packs/rfb-demo-original/content.lock.json`。
 
 如需生成本地旧版参考 manifest：
 
@@ -112,4 +124,4 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、Tauri 诊断回放、Rust → TypeScript/JSON Schema 协议生成、本地旧存档字段级断言和基准更新审批规则已经建立。下一步是建立 `rfb-content` 和第一个原创 JSON 内容包。
+首批 20 个原创 contract fixtures、Tauri 诊断回放、自动协议生成、`rfb-content` 编译器和首个原创 JSON 内容包已经建立。下一步是加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退。

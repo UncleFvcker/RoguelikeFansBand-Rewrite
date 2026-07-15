@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 格式基线已确定，Schema 尚未实现
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现
 
 ## 1. 目标
 
@@ -19,18 +19,15 @@
 ```text
 packs/base/
 ├─ pack.json
-├─ monsters/
+├─ actors/
 ├─ items/
-├─ artifacts/
-├─ races/
-├─ classes/
-├─ personalities/
-├─ spells/
 ├─ terrain/
-├─ quests/
+├─ worlds/
 ├─ locales/
 └─ assets/
 ```
+
+当前 v1 编译器先实现 `actors`、`items`、`terrain` 和 `worlds` 四个严格类型根。后续怪物能力、职业、种族、法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
 
 `pack.json`：
 
@@ -103,6 +100,20 @@ rfb.terrain.wall.granite
 8. 输出 MessagePack 内容包和 SHA-256 content hash；
 9. 生成 Rust/TypeScript 开发期索引和审计报告。
 
+当前已完成第 1、2、3、7、8 项的单包版本，包括：
+
+- `deny_unknown_fields` 严格 JSON 解析；
+- 单文件 1 MiB、单包 16 MiB、最多 2048 文件的输入上限；
+- 禁止内容目录和文件符号链接；
+- 稳定 ID、语义版本、消息 key、glyph、tag 和数值范围检查；
+- 世界中的地形、角色与物品悬空引用检查；
+- 定义、tag、spawn 和地形覆盖的规范化排序；
+- `RFBCONT\0`、MessagePack payload、长度和 SHA-256 校验；
+- `content.lock.json` 固定包 ID、版本和编译 content hash；
+- 五份提交到 `schemas/content-v1/` 的 JSON Schema。
+
+多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
+
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
 ## 6. 数据包组合
@@ -169,3 +180,13 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 包加载顺序可复现；
 - 缺失本地化和 tileset 映射有明确回退；
 - 存档能够验证精确内容集合。
+
+当前完成情况：
+
+- 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
+- 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、一个原创怪物、一个原创物品和一个 20×20 世界；
+- 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
+- 已完成：内容 Schema 生成与 CI 漂移检查；
+- 待完成：多包依赖图、patch、locale/tileset 回退、运行时加载和存档内容集合迁移。
+
+首个包的真实编译 hash 与当前 contract-v1 使用的早期占位 content hash 不同。直接替换会改变全部 state hash，因此本阶段不批量刷新 contract fixtures；运行时激活需作为单独的基准迁移处理。

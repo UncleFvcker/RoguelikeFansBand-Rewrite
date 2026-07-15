@@ -2397,6 +2397,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rfb-content"
+version = "0.1.0"
+dependencies = [
+ "rmp-serde",
+ "schemars 1.2.1",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "rfb-contract"
 version = "0.1.0"
 dependencies = [

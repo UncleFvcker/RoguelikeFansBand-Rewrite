@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.wall",
+  "nameKey": "terrain-demo-wall-name",
+  "descriptionKey": "terrain-demo-wall-description",
+  "glyph": "#",
+  "walkable": false,
+  "blocksSight": true,
+  "tags": ["interior", "stone"]
+}

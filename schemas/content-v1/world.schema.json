@@ -1,0 +1,166 @@
+{
+  "$defs": {
+    "ActorSpawn": {
+      "additionalProperties": false,
+      "properties": {
+        "instanceId": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        }
+      },
+      "required": [
+        "instanceId",
+        "kindId",
+        "position"
+      ],
+      "type": "object"
+    },
+    "ContentPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "y": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "ItemSpawn": {
+      "additionalProperties": false,
+      "properties": {
+        "instanceId": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        },
+        "quantity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "instanceId",
+        "kindId",
+        "position",
+        "quantity"
+      ],
+      "type": "object"
+    },
+    "TerrainOverride": {
+      "additionalProperties": false,
+      "properties": {
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terrainId",
+        "positions"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "actors": {
+      "items": {
+        "$ref": "#/$defs/ActorSpawn"
+      },
+      "type": "array"
+    },
+    "borderTerrainId": {
+      "type": "string"
+    },
+    "fillTerrainId": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "height": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ItemSpawn"
+      },
+      "type": "array"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "player": {
+      "$ref": "#/$defs/ActorSpawn"
+    },
+    "terrainOverrides": {
+      "items": {
+        "$ref": "#/$defs/TerrainOverride"
+      },
+      "type": "array"
+    },
+    "width": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "width",
+    "height",
+    "fillTerrainId",
+    "borderTerrainId",
+    "terrainOverrides",
+    "player",
+    "actors",
+    "items"
+  ],
+  "title": "WorldDefinition",
+  "type": "object"
+}

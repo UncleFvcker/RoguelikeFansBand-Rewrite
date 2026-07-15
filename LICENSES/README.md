@@ -18,7 +18,7 @@ The complete MPL-2.0 text is available in the repository root `LICENSE` file.
 Unless a file says otherwise, original creative content is licensed under Creative Commons Attribution-ShareAlike 4.0 International. This includes:
 
 - `README.md` and original documentation under `design/` or `docs/`;
-- original gameplay data and prose under `content/`;
+- original gameplay data and prose under `content/` or `packs/`;
 - original artwork, audio and other creative assets under `assets/`.
 
 The complete license text is in `LICENSES/CC-BY-SA-4.0.txt`.

@@ -1,0 +1,69 @@
+{
+  "$defs": {
+    "ActorRole": {
+      "enum": [
+        "player",
+        "monster"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "glyph": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "level": {
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "maxHp": {
+      "format": "int32",
+      "type": "integer"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "role": {
+      "$ref": "#/$defs/ActorRole"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "role",
+    "nameKey",
+    "descriptionKey",
+    "glyph",
+    "level",
+    "maxHp",
+    "tags"
+  ],
+  "title": "ActorDefinition",
+  "type": "object"
+}

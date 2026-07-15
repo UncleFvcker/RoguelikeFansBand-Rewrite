@@ -1,0 +1,27 @@
+[package]
+name = "rfb-content"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+schemas = ["dep:schemars"]
+
+[dependencies]
+rmp-serde.workspace = true
+schemars = { workspace = true, optional = true }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[[bin]]
+name = "rfb-contentc"
+path = "src/bin/rfb-contentc.rs"
+
+[[bin]]
+name = "generate-content-schemas"
+path = "src/bin/generate-content-schemas.rs"
+required-features = ["schemas"]

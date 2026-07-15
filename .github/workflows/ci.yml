@@ -20,6 +20,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
       - run: cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
+      - run: cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
+      - run: cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
       - run: cargo check --workspace --exclude rfb-tauri --all-targets
       - run: cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
       - run: cargo test --workspace --exclude rfb-tauri
