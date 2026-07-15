@@ -1,6 +1,6 @@
-# RoguelikeFansBand HTML 重构计划
+# RoguelikeFansBand Rust/Tauri 重构计划
 
-状态：技术栈已确定，初版规划
+状态：原生 Rust + Tauri 2 技术路线已确定，WASM 目标已停止维护
 
 目标仓库：`UncleFvcker/RoguelikeFansBand-Rewrite`
 
@@ -20,15 +20,16 @@
 
 将 RoguelikeFansBand 逐步重构为：
 
-- HTML/CSS/TypeScript 负责界面、地图显示、tileset、动画和输入；
+- Tauri WebView 中的 HTML/CSS/TypeScript 负责界面、地图显示、tileset、动画和输入；
 - Rust 游戏核心负责规则、随机数、地图、战斗、AI、物品和存档；
 - 地图渲染与文字/UI 完全分层；
 - ASCII、图片 tileset 和未来的 WebGL 视觉效果共用同一套语义化外观接口；
 - `player_type`、`object_type`、`monster_type` 等内部结构不再成为外部接口和存档格式；
 - 旧存档可以由本地只读导入工具转换，现有规则通过行为测试独立重写；旧数据、文本和素材不进入新仓库或发行包；
-- Tauri 负责桌面封装，浏览器/PWA 和桌面版共用 Rust 核心与 TypeScript 前端。
+- Tauri 2 负责 Windows、Linux、macOS 和 Android 封装，各平台共用原生 Rust 核心与 TypeScript/PixiJS 前端；
+- 当前不发布浏览器/PWA 版本，也不继续维护 WASM 核心；如未来恢复网页版本，只新增 `WasmWorkerTransport` 适配器，不改变领域核心。
 
-不采用“一次性把 30 万行 C 翻译成 JavaScript”的方式。Rust 是最终核心语言；现有 C 只用于行为对照、旧存档导入和回归测试，不作为新前端的长期或临时生产核心。新接口直接按 Rust 最终模型设计，避免制造第二套长期 API。
+不采用“一次性把 30 万行 C 翻译成 JavaScript”的方式。Rust 是唯一正式核心语言；现有 C 只用于行为对照、旧存档导入和回归测试。TypeScript 通过传输无关的 `CoreTransport` 调用 Tauri 原生适配器，不能依赖 Rust 内部结构。当前已经完成的 WASM 垂直切片只作为架构验证历史保留，Tauri 原生垂直切片完成后从活动 workspace、前端构建和 CI 中移除。
 
 ## 2. 当前工程事实
 
@@ -51,10 +52,16 @@
 输入层（键盘／鼠标／触摸／手柄）
         │
         ▼
-Command API
+TypeScript/PixiJS UI（Tauri WebView）
         │
         ▼
-游戏核心（最终 Rust；过渡期允许 C/WASM 适配器）
+CoreTransport
+        │
+        ▼
+Tauri Commands / Events
+        │
+        ▼
+原生 Rust 游戏核心
         │
         ├── Game Events ──────► HTML UI 层
         ├── Game Snapshot ────► Cell Appearance Composer
@@ -68,7 +75,7 @@ Command API
                                   └── 动画／特效层
                                              │
                                              ▼
-                                      Canvas/WebGL 地图
+                                      PixiJS/WebGL 地图
 ```
 
 地图使用 Canvas/WebGL，消息、人物状态、背包、菜单和对话使用 HTML/CSS。不要用大量 DOM 节点绘制地图格。
@@ -77,16 +84,14 @@ Command API
 
 - Rust + Cargo + Serde：最终游戏核心；
 - TypeScript + Vite：前端应用和工具链；
-- Canvas 2D 作为兼容回退；
 - PixiJS/WebGL2 作为主要地图渲染器；
-- Rust/WASM 放入 Web Worker，避免游戏回合阻塞界面；
-- PWA 作为第一种跨平台运行形式；
-- Tauri 作为正式桌面封装；
-- Rust 原生核心与 WASM 核心共用领域代码；
-- MessagePack 作为正式协议与存档载荷，JSON 作为开发调试载体；
-- Vitest 做协议/规则测试，Playwright 做浏览器回归测试。
+- Tauri 2 Commands/Events 连接 TypeScript UI 与原生 Rust 核心；
+- Tauri 桌面端作为第一正式运行目标，随后启用 Tauri Android；
+- `CoreTransport` 隔离 UI 与具体传输实现；
+- MessagePack 作为存档、回放和批量数据载荷，Tauri 控制命令使用 Serde DTO；
+- Vitest 做 UI/协议测试，Rust 测试规则核心，Tauri WebDriver/Appium 做桌面与 Android 集成测试。
 
-技术取舍：不把全部规则写成 TypeScript。TypeScript 负责 UI 和浏览器生态，Rust 负责稳定数据模型、存档、随机数和性能敏感规则；这样既保留 Web 开发速度，也避免大型动态对象重新产生结构漂移。
+技术取舍：不把规则写成 TypeScript。TypeScript 只负责 UI 和 WebView 生态，Rust 负责稳定数据模型、存档、随机数和全部权威规则。Tauri IPC 只传输 DTO，前端不能直接修改核心状态。
 
 ## 4. 核心分层原则
 
@@ -187,7 +192,7 @@ interface RendererBackend {
 - 动态实体使用 GPU instancing/sprite batching；
 - 相机视野外对象剔除；
 - 使用 dirty cells/deltas，不做无条件整屏重建；
-- Rust/WASM 与 TypeScript 之间优先传 TypedArray 或紧凑二进制数据；
+- Tauri IPC 的高频地图更新优先传紧凑 delta；只有性能分析证明必要时才切换为 TypedArray/二进制批量通道；
 - 临时动画只存在于前端 RenderWorld，不写入核心存档；
 - 固定像素 tileset 默认使用 nearest-neighbor，高清素材可选择 linear；
 - 光照缓冲允许低分辨率渲染后上采样，以控制低端显卡开销；
@@ -195,12 +200,12 @@ interface RendererBackend {
 
 ASCII 地图也视为一种 tileset：使用动态 glyph atlas 或 bitmap font atlas，经过同一 `ActorPass`/`TerrainPass` 绘制，而不是另建一套终端式渲染管线。中文消息和复杂排版继续由 HTML UI 层负责。
 
-## 5. HTML/WASM 核心接口 v1
+## 5. Tauri 原生核心接口 v1
 
-第一阶段先定义接口，再实现界面：
+TypeScript 依赖传输无关接口，正式实现为 `TauriNativeTransport`：
 
 ```ts
-interface GameCore {
+interface CoreTransport {
   createGame(options: NewGameOptions): Promise<void>;
   loadGame(data: Uint8Array): Promise<void>;
   saveGame(): Promise<Uint8Array>;
@@ -223,7 +228,7 @@ interface GameUpdate {
 }
 ```
 
-接口必须版本化，并使用序列化 DTO；前端不能持有 C 结构体指针，也不能修改核心内部对象。
+接口必须版本化，并使用序列化 DTO；前端不能持有 Rust 引用或修改核心内部对象。未来需要网页版本时，可以实现相同接口的 `WasmWorkerTransport`，但不进入当前开发范围。
 
 ## 6. Tileset 设计
 
@@ -358,26 +363,26 @@ interface SaveGame {
 ### 阶段 1：Rust 工作区与协议骨架
 
 - 建立 Cargo workspace；
-- 建立 `rfb-core`、`rfb-protocol`、`rfb-content`、`rfb-save` 和 `rfb-wasm` crate；
+- 建立 `rfb-core`、`rfb-protocol`、`rfb-content` 和 `rfb-save` crate；
+- 建立 Tauri 2 应用和 `TauriNativeTransport`；
 - 定义稳定 ID、随机数、命令、事件、快照和错误类型；
 - 实现最小地图、玩家位置和回合推进；
 - C 版本继续作为规则基准，不在 Rust 中调用 Win32/Term。
 
 验收：Rust 单元测试中可以创建最小世界、移动玩家、输出确定性的 `GameUpdate`，并完成新格式存档回环。
 
-### 阶段 2：TypeScript + PixiJS 前端 MVP
+### 阶段 2：Tauri + TypeScript + PixiJS 前端 MVP
 
 - 建立 Vite/TypeScript 前端；
 - 使用 PixiJS 建立地图 stage 和 sprite batch；
-- 提供 Canvas 2D/ASCII 兼容后端；
 - HTML 消息区；
 - HTML 人物状态和背包；
 - 键盘输入；
-- Rust/WASM Worker 通信；
+- Tauri Commands/Events 与原生 Rust 核心通信；
 - 新格式存档导入/导出；
 - 一个 ASCII tileset 和一个图片 tileset。
 
-验收：浏览器中完成一段完整的移动和战斗流程，地图与文字互不覆盖。
+验收：Windows Tauri 应用中完成一段完整的移动和战斗流程，地图与文字互不覆盖；核心不依赖 WebView 和平台 UI。
 
 ### 阶段 3：现代地图渲染
 
@@ -391,15 +396,15 @@ interface SaveGame {
 - dirty cells/RenderDelta 局部刷新；
 - resize、缩放、最小化/恢复回归测试。
 
-### 阶段 4：Tauri 桌面版与跨平台能力
+### 阶段 4：桌面与 Android 跨平台能力
 
-- 建立 Tauri 工程；
 - 桌面版复用同一套 TypeScript/PixiJS 前端；
-- Rust 核心以原生库运行，浏览器版使用 WASM；
+- Windows、Linux、macOS 和 Android 均运行原生 Rust 核心；
 - 实现桌面文件选择、存档目录、日志、崩溃报告和自动更新接口；
-- Windows、Linux、macOS 使用相同协议和内容数据。
+- 实现 Android 应用生命周期、返回键、存档分享、触摸输入和横竖屏布局；
+- 所有平台使用相同协议和内容数据。
 
-验收：同一个存档和固定种子在浏览器版与 Tauri 版产生一致的核心事件和地图快照。
+验收：同一个存档和固定种子在 Windows、Linux、macOS 和 Android 原生核心中产生一致的事件和状态哈希。
 
 ### 阶段 5：逐模块完成 Rust 规则核心
 
@@ -417,22 +422,22 @@ interface SaveGame {
 
 第一个目标不是“完整重写”，而是：
 
-> 用最小 Rust/WASM 核心驱动 TypeScript + PixiJS 地图，并使用独立 HTML 消息面板完成移动、基础战斗、拾取和新格式存档。
+> 用 Tauri 原生 Rust 核心驱动 TypeScript + PixiJS 地图，并使用独立 HTML 消息面板完成移动、基础战斗、拾取和新格式存档。
 
 交付物：
 
 - Cargo workspace 和 `rfb-core`；
 - `web/` TypeScript/Vite 工程骨架；
-- Rust/WASM 构建目标；
+- Tauri 2 Windows 应用和原生 Rust transport；
 - Command API v1；
 - Snapshot API v1；
-- PixiJS 地图和 Canvas/ASCII 回退；
+- PixiJS 地图和 ASCII glyph atlas；
 - HTML 消息/人物面板；
 - tileset manifest v1；
 - 一个 ASCII 和一个图片 tileset；
 - 固定种子回放测试；
-- Windows 浏览器可玩演示；
-- Tauri 空壳能够加载同一前端，为下一阶段桌面集成做准备。
+- Windows Tauri 可玩演示；
+- Tauri Android 工程可以编译并加载同一前端。
 
 ## 11. 测试与质量门槛
 
@@ -458,7 +463,7 @@ interface SaveGame {
 
 ## 12. 当前进度与下一步
 
-当前状态：P0 规范已经建立，第一个最小垂直切片已经实现。Cargo workspace 包含 `rfb-core`、`rfb-protocol`、`rfb-save`、`rfb-wasm` 和 `rfb-legacy-probe`；Web 工程已打通 Rust/WASM Worker、MessagePack、PixiJS 地图、独立 HTML 状态/消息面板以及 `.rfbsave` 读写。
+当前状态：P0 规范已经建立，WASM 垂直切片曾用于验证 Rust/TypeScript/PixiJS 分层可行性。正式目标现已调整为 Tauri 原生核心，不再发布或继续扩展浏览器/WASM 版本。当前 `rfb-wasm`、Web Worker 和 wasm-pack 构建仍暂时存在于代码中，只用于保证替换期间主分支可运行；Tauri 原生垂直切片达到同等能力后立即删除。
 
 已完成：
 
@@ -469,19 +474,21 @@ interface SaveGame {
 - 本地 `v1.3.0.7` Git 对象探针和 `.local/` manifest；
 - PixiJS 保留式 cell 对象和 changed cells 局部更新；
 - 地图 Canvas 与 HTML 消息/状态严格分层；
-- Cargo 测试、TypeScript 检查、WASM 与 Vite 生产构建；
+- Cargo 测试、TypeScript 检查和 Vite UI 构建；
 - GitHub Actions 基础 CI。
 
 下一步建议：
 
-1. 把原创 contract fixtures 扩展到阶段 0 的 20 个规则场景；
-2. 增加命令回放文件和每 100 命令 state hash 检查点；
-3. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
-4. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
-5. 建立 `rfb-content` 和第一个原创 JSON 内容包；
-6. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
-7. 为地图局部更新、消息分层和存档交互增加独立端到端测试；
-8. 建立 Tauri 工程空壳并加载同一前端。
+1. 建立 Tauri 2 Windows 工程和 `CoreTransport`/`TauriNativeTransport`；
+2. 让当前移动、战斗、键位预设和存档垂直切片通过原生 Rust 核心运行；
+3. 从 workspace、前端、CI 和依赖中删除 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 target；
+4. 把原创 contract fixtures 扩展到阶段 0 的 20 个规则场景；
+5. 增加命令回放文件和每 100 命令 state hash 检查点；
+6. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
+7. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
+8. 建立 `rfb-content` 和第一个原创 JSON 内容包；
+9. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
+10. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
 
 每完成一个阶段，都应在本文件更新：
 

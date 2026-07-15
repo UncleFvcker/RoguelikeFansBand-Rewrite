@@ -12,7 +12,7 @@
 - 本地化显示；
 - 模组和数据包扩展；
 - 存档可以记录精确内容集合；
-- Rust、WASM 和 Tauri 使用同一份编译后数据。
+- Windows、Linux、macOS 和 Android 原生 Rust 核心使用同一份编译后数据。
 
 ## 2. 数据包结构
 
@@ -164,7 +164,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 ## 11. v1 验收
 
 - 一个基础包可以定义最小地图、玩家、怪物和物品；
-- Rust native 与 WASM 加载后产生相同 content hash；
+- 所有原生平台加载后产生相同 content hash；
 - 重复 ID、悬空引用、循环依赖和非法 patch 都会失败；
 - 包加载顺序可复现；
 - 缺失本地化和 tileset 映射有明确回退；

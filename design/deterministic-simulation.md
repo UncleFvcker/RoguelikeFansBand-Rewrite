@@ -4,7 +4,7 @@
 
 ## 1. 原则
 
-相同核心版本、内容哈希、初始存档和命令序列，必须在 Rust 原生与 WASM 中产生相同：
+相同核心版本、内容哈希、初始存档和命令序列，必须在 Windows、Linux、macOS 和 Android 原生 Rust 核心中产生相同：
 
 - RNG 消耗；
 - 游戏事件；
@@ -84,7 +84,7 @@ interface ReplayV1 {
 
 ## 7. 并发规则
 
-游戏规则在逻辑上单线程串行执行命令。Worker、文件 IO 和资源加载可以并发，但不能并发修改权威世界状态。
+游戏规则在逻辑上单线程串行执行命令。Tauri 异步 command、文件 IO 和资源加载可以并发，但不能并发修改权威世界状态。
 
 后台任务的结果必须通过带序号的消息在确定的同步点提交。完成先后不能改变游戏规则。
 
@@ -103,7 +103,7 @@ interface ReplayV1 {
 
 ## 9. 验收
 
-- 同一 fixture 在 Windows native、Windows WASM 和 CI Linux native 结果一致；
+- 同一 fixture 在 Windows、CI Linux、macOS 和 Android ARM64 原生核心结果一致；
 - 10,000 回合回放不发生 state hash 漂移；
 - 保存并重载后继续回放的结果与不中断回放一致；
 - 日志等级、语言和渲染后端变化不改变 RNG draw counter；

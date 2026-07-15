@@ -94,7 +94,7 @@ interface SavePayloadV1 {
 
 不得先删除旧存档再写新文件。临时文件清理由启动时的恢复流程处理。
 
-浏览器/PWA 使用 IndexedDB 两阶段提交：写入新记录、验证、更新 active pointer，最后异步清理旧记录。
+Android 使用应用私有目录和同样的临时文件、校验、原子替换与备份流程；通过系统文件选择器进行玩家主动导入、导出和分享。各平台路径由 Tauri 适配层提供，核心存档格式不感知操作系统。
 
 ## 6. 载入与恢复
 
@@ -161,7 +161,7 @@ tools/rfb-legacy-import/
 
 ## 11. v1 验收
 
-- native 与 WASM 读写相同 fixture；
+- Windows、Linux、macOS 和 Android 原生核心读写相同 fixture；
 - 保存 → 读取 → 保存得到语义相同状态和相同 state hash；
 - 模拟断电不会丢失最后一个有效备份；
 - 单字节损坏能被 checksum 发现；

@@ -1,13 +1,12 @@
-# RFB 核心协议 v1
+# RFB CoreTransport 协议 v1
 
-状态：P0 协议基线已确定，代码尚未生成
+状态：P0 DTO 原型已实现，Tauri 原生 transport 待建立
 
 ## 1. 适用边界
 
 该协议连接：
 
-- Rust 核心与浏览器 Web Worker；
-- Rust 原生核心与 Tauri 前端；
+- TypeScript/PixiJS UI 与 Tauri 原生 Rust 核心；
 - 测试驱动器与核心；
 - 未来只读观察器和回放工具。
 
@@ -16,7 +15,8 @@
 ## 2. 编码决定
 
 - 开发调试：JSON；
-- 正式 Worker/Tauri 传输：MessagePack；
+- Tauri 控制命令与低频 DTO：Serde JSON/结构化 IPC；
+- 存档、回放和经性能分析确认的批量载荷：MessagePack；
 - 协议 Schema：Rust 类型为权威定义，同时生成 JSON Schema 和 TypeScript 类型；
 - 字节序：自定义二进制字段统一小端；
 - 64 位整数：跨 TypeScript 边界时编码为十进制字符串或固定 8 字节，禁止直接当作 JS `number`；
@@ -139,7 +139,7 @@ interface ProtocolError {
 
 核心不把 Rust panic、文件路径或英文拼接句子直接展示给玩家。技术细节进入本地日志；用户消息通过本地化 `messageKey` 生成。
 
-核心 panic、Worker 崩溃或 Tauri 通道断开后，前端必须把会话标为不可继续，避免在未知状态下重复执行命令。
+核心 panic、Tauri command 失败或事件通道断开后，前端必须把会话标为不可继续，避免在未知状态下重复执行命令。
 
 ## 9. 协议兼容规则
 
@@ -162,7 +162,8 @@ major 版本要求：
 
 - Rust → JSON → TypeScript fixture；
 - TypeScript → MessagePack → Rust fixture；
-- native/WASM 相同命令流产生相同 state hash；
+- Windows、Linux、macOS 和 Android 原生核心对相同命令流产生相同 state hash；
+- `TauriNativeTransport` 与直接 Rust 测试驱动器产生相同 DTO；
 - revision 缺口触发完整重同步；
 - 重复 commandSeq 不会重复执行；
 - 未知 capability 和可选字段保持向前兼容；

@@ -7,15 +7,17 @@ RoguelikeFansBand 的新一代重构工程。
 ## 技术方向
 
 - Rust：游戏规则、数据模型、随机数、存档、AI 与原生核心
-- TypeScript + Vite：Web 前端和开发工具
+- TypeScript + Vite：Tauri WebView 界面和开发工具
 - PixiJS：地图、tileset、光照与动画渲染
-- WebAssembly + Web Worker：浏览器中的 Rust 核心
-- Tauri：Windows、Linux 和 macOS 桌面封装
+- Tauri 2 IPC：TypeScript UI 与原生 Rust 核心通信
+- Tauri 2：Windows、Linux、macOS 和 Android 封装
 - Fluent：英文/简体中文本地化
+
+当前不以浏览器/PWA 为发布目标，也不继续维护 WASM 核心。UI 通过 `CoreTransport` 连接 `TauriNativeTransport`；未来如确有网页需求，再单独增加 WASM 适配器。
 
 ## 设计文档
 
-- [HTML/Rust 重构计划](design/html-rewrite-plan.md)
+- [Rust/Tauri 重构计划](design/html-rewrite-plan.md)
 - [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
@@ -45,9 +47,11 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-第一个最小垂直切片已经建立：Rust 核心、MessagePack 协议、WASM Worker、PixiJS 地图层、HTML 状态/消息层、存档读写和本地旧版探针均已打通。地图使用原创测试内容，旧 RFB 仍只从本地固定 Git 对象读取。
+WASM 垂直切片已经完成了架构验证，但现已冻结，不再增加功能。下一实现阶段是建立 Tauri 2 Windows 应用和 `TauriNativeTransport`，恢复现有移动、战斗、键位预设与存档能力；达到同等功能后，从 workspace、前端构建和 CI 删除 `rfb-wasm`、Web Worker、wasm-pack 与 wasm32 target。
 
 ### 本地验证
+
+过渡期间下面的 `npm run build` 仍会调用现有 WASM 构建，只用于验证尚未被 Tauri 替换的原型；这不代表 WASM 仍是维护目标。Tauri 原生垂直切片完成后会同步更新这些命令。
 
 ```powershell
 cargo fmt --all -- --check
@@ -68,4 +72,4 @@ $env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
 cargo run -p rfb-legacy-probe
 ```
 
-输出只写入被 Git 忽略的 `.local/legacy-baseline/`。下一步是把原创 contract fixtures 扩展到阶段 0 的 20 个场景，再增加 Tauri 空壳和更完整的内容加载器。
+输出只写入被 Git 忽略的 `.local/legacy-baseline/`。Tauri 原生垂直切片完成后，再把原创 contract fixtures 扩展到阶段 0 的 20 个场景，并建立 `rfb-content` 原创内容包。
