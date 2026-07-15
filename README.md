@@ -30,6 +30,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [授权、版权与素材迁移审计](design/licensing-and-assets.md)
 - [本地化与中文文本重构计划](design/localization-rewrite-plan.md)
 - [Fluent 本地化运行时 v1](design/fluent-localization-v1.md)
+- [桌面分层 RendererBackend v1](design/renderer-backend-v1.md)
 
 当前原创规则契约位于 [`tests/fixtures/contract-v3/scenarios`](tests/fixtures/contract-v3/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 和 `contract-v2` 作为历史基准保留。
 
@@ -56,7 +57,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、地面物品拾取、HTML 背包、三套键位预设、Fluent 中英双语热切换、`.rfbsave` 存档和 `.rfbreplay` 诊断回放均已接入。简体中文为默认语言，语言设置只属于前端，不影响权威状态。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
+Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、地面物品拾取、HTML 背包、三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、`.rfbsave` 存档和 `.rfbreplay` 诊断回放均已接入。简体中文为默认语言，语言和纯视觉阅读光只属于前端，不影响权威状态。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
 ### 本地验证
 

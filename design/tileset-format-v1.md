@@ -1,6 +1,6 @@
 # Tileset manifest 与资源回退 v1
 
-状态：ASCII glyph atlas、图片 atlas、manifest v1 和回退链已实现
+状态：ASCII glyph atlas、图片 atlas、manifest v1、回退链和五层 RendererBackend 已实现
 
 ## 1. 边界
 
@@ -10,7 +10,7 @@ ASCII 与图片模式共用同一条 PixiJS `Sprite + Texture` 渲染路径：
 
 - ASCII 字符先绘制到动态 canvas atlas，再切成 PixiJS texture；
 - 图片资源加载为 atlas texture，再按 manifest 坐标切片；
-- 地图 cell 始终持有保留式 sprite，只替换 texture、tint 和背景；
+- 地图 cell 始终持有独立的地形、物品和角色 sprite，只替换 texture、tint 和背景；
 - tileset 切换只重绘已有 cell，不重新创建游戏会话。
 
 ## 2. Manifest v1
@@ -56,7 +56,7 @@ Schema 位于 `schemas/tileset-v1.schema.json`。manifest 至少包含：
 
 ## 5. 测试与后续
 
-Node 测试覆盖两份已提交 manifest、图片/字符选择、图集缺失、未知 ID 和不安全路径。Windows Tauri E2E 已覆盖 ASCII/图片热切换、同一 Canvas 保留和 400 格重绘计数。后续仍需：
+Node 测试覆盖两份已提交 manifest、图片/字符选择、图集缺失、未知 ID、不安全路径和 glyph 对比度保护。Windows Tauri E2E 已覆盖 ASCII/图片热切换、五层 backend、同一 Canvas 保留和 400 格重绘计数。后续仍需：
 
 - tileset 稳定视觉基准与截图差异测试；
 - 任意 tile 尺寸缩放与高清 atlas；

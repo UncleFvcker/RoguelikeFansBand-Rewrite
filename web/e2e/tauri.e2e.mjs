@@ -98,6 +98,11 @@ async function runScenario(driver) {
   assert.equal(state.renderKind, "snapshot");
   assert.equal(state.appliedCells, "400");
   assert.equal(state.tilesetId, "rfb.tileset.ascii-default");
+  assert.equal(state.rendererBackend, "pixi-layered-v1");
+  assert.equal(state.rendererLayerCount, "5");
+  assert.equal(state.rendererLayers, "terrain,object,actor,visibility,lighting");
+  assert.equal(state.visibilityMode, "all-visible");
+  assert.equal(state.lightingMode, "presentation-player-v1");
   assert.equal(state.canvasUnchanged, true);
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
@@ -127,7 +132,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.turn, "2");
   assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "2");
+  assert.equal(state.appliedCells, "90");
   assert.equal(state.canvasUnchanged, true);
 
   await dispatchKey(driver, "KeyG", "g");
@@ -250,6 +255,11 @@ async function readState(driver) {
       renderKind: host?.dataset.renderKind,
       appliedCells: host?.dataset.lastAppliedCells,
       tilesetId: host?.dataset.tilesetId,
+      rendererBackend: host?.dataset.rendererBackend,
+      rendererLayerCount: host?.dataset.rendererLayerCount,
+      rendererLayers: host?.dataset.rendererLayers,
+      visibilityMode: host?.dataset.visibilityMode,
+      lightingMode: host?.dataset.lightingMode,
       contentId: host?.dataset.contentId,
       contentHash: host?.dataset.contentHash,
       worldId: host?.dataset.worldId,

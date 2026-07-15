@@ -10,6 +10,7 @@ import {
 } from "./tileset-manifest";
 
 export interface RuntimeTileVisual {
+  source: "glyph" | "image";
   texture: Texture;
   tint: number;
   background?: number;
@@ -109,6 +110,7 @@ export class TilesetRuntime {
         this.#imageFrames.set(key, texture);
       }
       return {
+        source: "image",
         texture,
         tint: 0xffffff,
         ...(visual.background === undefined ? {} : { background: visual.background }),
@@ -116,6 +118,7 @@ export class TilesetRuntime {
       };
     }
     return {
+      source: "glyph",
       texture: this.#glyphAtlas.texture(visual.glyph),
       tint: visual.foreground,
       ...(visual.background === undefined ? {} : { background: visual.background }),

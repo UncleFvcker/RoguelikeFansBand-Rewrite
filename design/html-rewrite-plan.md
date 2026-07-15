@@ -19,6 +19,8 @@
 - [新存档格式 v1](save-format-v1.md)
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
+- [Fluent 本地化运行时 v1](fluent-localization-v1.md)
+- [桌面分层 RendererBackend v1](renderer-backend-v1.md)
 
 本文档是 Rust/Tauri 重构的长期入口。以后每次实现阶段性功能时，应同步更新“当前进度”“接口版本”和“未决问题”，不要让架构约定只存在于聊天记录中。
 
@@ -508,10 +510,13 @@ interface SaveGame {
 - contract-v3 与 state hash Schema v3 基准迁移，新增成功/空地拾取场景。
 - Fluent `zh-CN`/`en-US` 双语运行时、Rust/TypeScript 共用资源、语言热切换和中文默认界面；
 - 消息历史、背包、内容名称、按键提示和主要桌面 UI 已移除业务文案硬编码。
+- `RendererBackend`/`PixiRendererBackend`、RenderWorld 和地形/物品/角色/可见性/光照五层已建立；
+- 玩家阅读光使用独立 buffer 与有限 dirty footprint，glyph 绘制加入对比度保护；
+- 当前可见性明确为 `all-visible`，记忆/隐藏 mask 仅建立接口，尚未替代未来 Rust 权威 FOV。
 
 下一步建议：
 
-1. 推进桌面现代渲染器：RendererBackend、独立物品层、可见性/记忆 mask 和独立光照 buffer；
+1. 由 Rust 协议提供正式可见性/记忆状态和玩法光源，替换前端临时 `all-visible`/阅读光策略；
 2. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
 3. 扩展背包装备、丢弃和多物品选择交互；
 4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
