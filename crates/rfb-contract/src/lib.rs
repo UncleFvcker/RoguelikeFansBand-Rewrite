@@ -10,6 +10,7 @@ use rfb_protocol::{
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;

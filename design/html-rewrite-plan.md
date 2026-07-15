@@ -7,6 +7,7 @@
 关联文档：
 
 - [旧版行为基准与差分测试](legacy-behavior-baseline.md)
+- [Contract 基准更新与差异豁免政策](baseline-update-policy.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
 - [内容数据格式 v1](content-format-v1.md)
@@ -482,19 +483,19 @@ interface SaveGame {
 - `rfb-contract` 契约测试驱动和首批 20 个原创 exact fixtures；
 - `rfb-replay` v1、每 100 命令/最终检查点和 10,000 回合无漂移测试；
 - 3 个 `.local/` 旧存档样本清单和快照规范化 Schema v1；
+- baseline policy v1、fixture 级差异豁免格式和 CI 验证；
 - Cargo 测试、TypeScript 检查和 Vite UI 构建；
 - GitHub Actions 基础 CI。
 
 下一步建议：
 
-1. 建立基准更新审批文件和差异豁免格式；
-2. 为 3 个本地旧存档增加字段级解析和导入断言；
-3. 将 `ReplayRecorder` 接入 Tauri 诊断导出；
-4. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
-5. 建立 `rfb-content` 和第一个原创 JSON 内容包；
-6. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
-7. 为地图局部更新、消息分层和存档交互建立 Tauri 端到端测试；
-8. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
+1. 为 3 个本地旧存档增加字段级解析和导入断言；
+2. 将 `ReplayRecorder` 接入 Tauri 诊断导出；
+3. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
+4. 建立 `rfb-content` 和第一个原创 JSON 内容包；
+5. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
+6. 为地图局部更新、消息分层和存档交互建立 Tauri 端到端测试；
+7. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
 
 每完成一个阶段，都应在本文件更新：
 

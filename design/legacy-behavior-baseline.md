@@ -52,6 +52,9 @@
 └─ screenshots/
 
 tests/fixtures/contract-v1/
+├─ baseline-policy.json
+├─ waivers/
+│  └─ README.md
 └─ scenarios/
    ├─ 01-move-north.json
    ├─ ...
@@ -135,6 +138,8 @@ cargo run -p rfb-contract -- verify tests/fixtures/contract-v1/scenarios/01-move
 - 差异豁免必须包含旧结果、新结果、批准日期和关联 issue；
 - 不允许通过更新全部 golden 文件来隐藏无法解释的变化。
 
+完整审批流程、机器验证规则和 waiver v1 格式见[Contract 基准更新与差异豁免政策](baseline-update-policy.md)。当前没有已批准差异。
+
 `rfb-contract` 的快照规范化 Schema v1：
 
 - 递归按 key 规范化 JSON object；
@@ -171,5 +176,6 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 - 已完成：基准 manifest 探针、20 个原创 exact contract fixtures、所有原生目标可共用的 `rfb-contract` 测试入口；
 - 已完成：回放文件 v1、每 100 命令和最终状态检查点、10,000 回合无漂移测试、存档重载续播测试；
 - 已完成：3 个本地旧存档样本及 SHA-256/版本头清单、快照规范化 Schema v1 和 CLI；
-- 待完成：基准更新审批文件，以及旧存档的字段级解析和导入断言；
+- 已完成：baseline policy v1、diff waiver v1 格式和 CI 验证；
+- 待完成：旧存档的字段级解析和导入断言；
 - 当前 fixture 只固定已经实现的原创垂直切片行为，不代表物品、状态、法术、AI 等旧 RFB 模块已经迁移。

@@ -19,6 +19,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 - [Rust/Tauri 重构计划](design/html-rewrite-plan.md)
 - [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
+- [Contract 基准更新与差异豁免政策](design/baseline-update-policy.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
 - [内容数据格式 v1](design/content-format-v1.md)
@@ -89,6 +90,7 @@ cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、回放文件 v1、本地旧存档样本和快照规范化工具已经建立。下一步是补充基准更新审批规则。
+首批 20 个原创 contract fixtures、回放文件 v1、本地旧存档样本、快照规范化工具和基准更新审批规则已经建立。下一步是旧存档字段级解析和导入断言。
