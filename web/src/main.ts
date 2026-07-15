@@ -38,7 +38,7 @@ async function start(): Promise<void> {
 }
 
 window.addEventListener("keydown", (event) => {
-  const command = commandForKey(event.key);
+  const command = commandForKeyboardEvent(event);
   if (!command || busy || isTextInput(event.target)) return;
   event.preventDefault();
   void dispatch(command);
@@ -148,31 +148,56 @@ function showError(error: unknown): void {
   console.error(error);
 }
 
-function commandForKey(key: string): GameCommand | undefined {
+function commandForKeyboardEvent(event: KeyboardEvent): GameCommand | undefined {
+  const key = event.key.toLowerCase();
+  const directionByCode: Partial<Record<string, Direction>> = {
+    Numpad8: "north",
+    Numpad9: "north-east",
+    Numpad6: "east",
+    Numpad3: "south-east",
+    Numpad2: "south",
+    Numpad1: "south-west",
+    Numpad4: "west",
+    Numpad7: "north-west",
+  };
   const directionByKey: Record<string, Direction> = {
-    ArrowUp: "north",
+    arrowup: "north",
+    w: "north",
     k: "north",
     "8": "north",
-    ArrowRight: "east",
+    arrowright: "east",
+    d: "east",
     l: "east",
     "6": "east",
-    ArrowDown: "south",
+    arrowdown: "south",
+    s: "south",
     j: "south",
     "2": "south",
-    ArrowLeft: "west",
+    arrowleft: "west",
+    a: "west",
     h: "west",
     "4": "west",
+    q: "north-west",
     y: "north-west",
     "7": "north-west",
+    home: "north-west",
+    e: "north-east",
     u: "north-east",
     "9": "north-east",
+    pageup: "north-east",
+    z: "south-west",
     b: "south-west",
     "1": "south-west",
+    end: "south-west",
+    c: "south-east",
     n: "south-east",
     "3": "south-east",
+    pagedown: "south-east",
   };
-  if (key === "." || key === "5") return { type: "wait" };
-  const direction = directionByKey[key];
+  if (key === "." || key === "5" || key === " " || event.code === "Numpad5") {
+    return { type: "wait" };
+  }
+  const direction = directionByCode[event.code] ?? directionByKey[key];
   return direction ? { type: "move", direction } : undefined;
 }
 
