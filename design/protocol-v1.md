@@ -168,4 +168,3 @@ major 版本要求：
 - 未知 capability 和可选字段保持向前兼容；
 - fuzz 测试不会因畸形消息 panic 或越界分配；
 - 协议 Schema 的破坏性变化由 CI 阻止。
-
