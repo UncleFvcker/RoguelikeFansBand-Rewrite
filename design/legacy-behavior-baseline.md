@@ -10,8 +10,12 @@
 - 标签：`v1.3.0.7`
 - commit：`191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`
 - 发布平台基准：Windows x64
+- 本地来源变量：`RFB_LEGACY_SOURCE`
+- 当前默认路径：`D:/codex/Frogcomposband/master`
 
-生成基准时必须使用该 commit 的干净工作树。开发机上的未提交修改、旧 `localization/` 产物和后续 master 变更都不能混入基准。
+工具直接读取本地 Git 仓库，但必须通过 `RFB_LEGACY_REF=v1.3.0.7` 解析并校验上述 commit。默认使用 `git show`、`git archive` 或等价的 Git 对象读取方式，不能把当前工作树当作基准，因为其中可能存在未提交修改和规划分支提交。
+
+工具对旧仓库只有读取权限，不能 checkout、clean、reset、修改或生成文件到旧仓库。临时导出统一写入新仓库被忽略的 `.local/legacy-cache/`。
 
 如果以后更换基准版本，必须新增一个基准集合，不能覆盖已有结果。
 
@@ -30,7 +34,7 @@
 计划目录：
 
 ```text
-compat/legacy-baseline/
+.local/legacy-baseline/
 ├─ manifest.json
 ├─ scenarios/
 │  ├─ movement/
@@ -42,7 +46,7 @@ compat/legacy-baseline/
 │  └─ saves/
 └─ screenshots/
 
-tests/fixtures/legacy/
+tests/fixtures/legacy-contract/
 ├─ commands/
 ├─ events/
 ├─ snapshots/
@@ -51,7 +55,9 @@ tests/fixtures/legacy/
 
 `manifest.json` 至少记录：旧仓库 commit、构建工具链、编译参数、平台、配置文件哈希、内容文件哈希、随机种子、场景版本和生成时间。
 
-旧版二进制、受限制素材和完整数据文件是否可以重新分发，必须服从[授权与素材迁移审计](licensing-and-assets.md)。授权未确认前，只提交由本项目原创的测试描述和不包含受保护表达的大幅精简断言。
+`.local/legacy-baseline/` 不进入 Git。仓库中只提交本项目原创、经过规范化且不包含旧文本、旧专名、完整数值表、截图、存档或其他旧表达内容的契约断言。
+
+旧版源码、二进制、文本、数据、截图、存档和素材不能复制到新仓库或新游戏发行包。公共 CI 没有 `RFB_LEGACY_SOURCE` 时跳过本地差分测试，只运行原创 contract fixtures。
 
 ## 4. 场景格式
 
@@ -115,7 +121,7 @@ tests/fixtures/legacy/
 
 - 基准 manifest 生成器；
 - 至少 20 个代表性规则场景；
-- 至少 3 个旧存档导入样本；
+- 至少 3 个仅保存在本机 `.local/` 中的旧存档导入样本；
 - 命令回放格式 v1；
 - 状态快照规范化工具；
 - 原生/WASM 共用的差分测试入口；

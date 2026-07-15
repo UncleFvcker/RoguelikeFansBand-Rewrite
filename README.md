@@ -30,7 +30,18 @@ RoguelikeFansBand 的新一代重构工程。
 
 [UncleFvcker/RoguelikeFansBand-zh-CN](https://github.com/UncleFvcker/RoguelikeFansBand-zh-CN)
 
-旧项目在重构期间作为规则行为、数据内容和旧存档兼容的参考实现。
+旧项目在重构期间只作为规则行为、平台表现和旧存档格式的本地参考实现。
+
+旧版内容不会复制进本仓库或新游戏发行包。开发工具通过本地环境变量 `RFB_LEGACY_SOURCE` 只读访问旧仓库，并固定读取 `v1.3.0.7`；默认开发路径见 [`.env.example`](.env.example)。新游戏内容、文本和素材均单独创作。
+
+## 许可证
+
+- 原创 Rust/TypeScript 代码、工具、测试和 Schema：`MPL-2.0`；
+- 原创文档、游戏数据和美术素材：`CC BY-SA 4.0`；
+- 第三方内容：保留各自许可证；
+- 旧 RFB/FrogComposband/Angband 内容不在本仓库中，也不由上述许可证重新授权。
+
+完整适用范围见 [LICENSES/README.md](LICENSES/README.md) 和 [NOTICE](NOTICE)。
 
 ## 当前阶段
 
