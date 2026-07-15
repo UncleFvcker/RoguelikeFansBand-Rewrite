@@ -45,4 +45,27 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-P0 架构规范已经建立。下一步先针对旧版 `v1.3.0.7` 实现行为基准 manifest、命令回放和首批 golden fixtures；达到阶段 0 门槛后，再开始批量迁移 Rust 规则模块。
+第一个最小垂直切片已经建立：Rust 核心、MessagePack 协议、WASM Worker、PixiJS 地图层、HTML 状态/消息层、存档读写和本地旧版探针均已打通。地图使用原创测试内容，旧 RFB 仍只从本地固定 Git 对象读取。
+
+### 本地验证
+
+```powershell
+cargo fmt --all -- --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+
+cd web
+npm ci
+npm run build
+```
+
+如需生成本地旧版参考 manifest：
+
+```powershell
+$env:RFB_LEGACY_SOURCE="D:/codex/Frogcomposband/master"
+$env:RFB_LEGACY_REF="v1.3.0.7"
+$env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
+cargo run -p rfb-legacy-probe
+```
+
+输出只写入被 Git 忽略的 `.local/legacy-baseline/`。下一步是把原创 contract fixtures 扩展到阶段 0 的 20 个场景，再增加 Tauri 空壳和更完整的内容加载器。

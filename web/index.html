@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10151d" />
+    <title>RoguelikeFansBand Rewrite — Vertical Slice</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">RFB REWRITE / ORIGINAL TEST WORLD</p>
+          <h1>渲染与规则分层验证场</h1>
+        </div>
+        <div class="header-actions">
+          <button id="save-button" type="button">导出存档</button>
+          <label class="file-button">
+            载入存档
+            <input id="load-input" type="file" accept=".rfbsave,application/octet-stream" />
+          </label>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="map-panel" aria-label="游戏地图">
+          <div class="panel-heading">
+            <span>PIXIJS MAP LAYER</span>
+            <span id="connection-status" class="status-pill">正在启动核心</span>
+          </div>
+          <div id="map-host" class="map-host"></div>
+          <p class="controls">
+            方向键 / 小键盘 / HJKL 移动，句点等待。撞向发光微粒即可攻击。
+          </p>
+        </section>
+
+        <aside class="ui-column">
+          <section class="status-panel" aria-labelledby="status-title">
+            <div class="panel-heading">
+              <span id="status-title">HTML STATUS LAYER</span>
+            </div>
+            <dl class="status-grid">
+              <div><dt>回合</dt><dd id="turn-value">0</dd></div>
+              <div><dt>生命</dt><dd id="hp-value">--</dd></div>
+              <div><dt>位置</dt><dd id="position-value">--</dd></div>
+              <div><dt>状态哈希</dt><dd id="hash-value">--</dd></div>
+            </dl>
+          </section>
+
+          <section class="message-panel" aria-labelledby="message-title">
+            <div class="panel-heading">
+              <span id="message-title">HTML MESSAGE LAYER</span>
+              <button id="clear-messages" class="quiet-button" type="button">清空</button>
+            </div>
+            <ol id="message-list" class="message-list" aria-live="polite"></ol>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

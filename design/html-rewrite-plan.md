@@ -458,21 +458,30 @@ interface SaveGame {
 
 ## 12. 当前进度与下一步
 
-当前状态：技术栈已确定为 Rust 核心、TypeScript + PixiJS 前端、Tauri 桌面封装；P0 行为基准、授权边界、协议、确定性、内容格式和存档格式规范已经建立；尚未创建 Rust workspace 和 `web/` 工程。
+当前状态：P0 规范已经建立，第一个最小垂直切片已经实现。Cargo workspace 包含 `rfb-core`、`rfb-protocol`、`rfb-save`、`rfb-wasm` 和 `rfb-legacy-probe`；Web 工程已打通 Rust/WASM Worker、MessagePack、PixiJS 地图、独立 HTML 状态/消息面板以及 `.rfbsave` 读写。
+
+已完成：
+
+- 20×20 原创测试地图、玩家移动、等待和基础攻击；
+- xoshiro256** 固定种子 RNG、command sequence、revision 和 state hash；
+- MessagePack Command/Snapshot/Update DTO；
+- RFB 存档容器、SHA-256 校验和与读写回环；
+- 本地 `v1.3.0.7` Git 对象探针和 `.local/` manifest；
+- PixiJS 保留式 cell 对象和 changed cells 局部更新；
+- 地图 Canvas 与 HTML 消息/状态严格分层；
+- Cargo 测试、TypeScript 检查、WASM 与 Vite 生产构建；
+- GitHub Actions 基础 CI。
 
 下一步建议：
 
-1. 为旧版 `v1.3.0.7` 建立干净、可复现的基准构建；
-2. 实现基准 manifest、命令回放 v1 和快照规范化工具；
-3. 建立首批 20 个规则场景和 3 个旧存档导入样本；
-4. 建立 Cargo workspace、最小 `rfb-core`、`rfb-protocol` 和测试入口；
-5. 从协议 Schema 生成 TypeScript 类型并验证 JSON/MessagePack 往返；
-6. 建立 `rfb-wasm`，打通 Rust/WASM 与 Web Worker；
-7. 建立 `web/` + TypeScript/Vite/PixiJS 工程；
-8. 实现最小 Rust 地图、玩家移动和只读地图快照；
-9. 做出独立 PixiJS 地图与 HTML 消息栏；
-10. 加入 ASCII tileset 回退和图片 tileset manifest；
-11. 建立 Tauri 工程空壳并加载同一前端。
+1. 把原创 contract fixtures 扩展到阶段 0 的 20 个规则场景；
+2. 增加命令回放文件和每 100 命令 state hash 检查点；
+3. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
+4. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
+5. 建立 `rfb-content` 和第一个原创 JSON 内容包；
+6. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
+7. 为地图局部更新、消息分层和存档交互增加独立端到端测试；
+8. 建立 Tauri 工程空壳并加载同一前端。
 
 每完成一个阶段，都应在本文件更新：
 

@@ -1,0 +1,250 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+:root {
+  color: #dce6f2;
+  background: #090d12;
+  font-family: Inter, "Noto Sans SC", "Microsoft YaHei UI", sans-serif;
+  font-synthesis: none;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 0%, rgb(39 64 86 / 45%), transparent 36rem),
+    linear-gradient(145deg, #0b1118, #070a0e 72%);
+}
+
+button,
+.file-button {
+  border: 1px solid #3a5168;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  color: #deecfa;
+  background: #172433;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+button:hover,
+.file-button:hover {
+  border-color: #6fbce8;
+  background: #1c3043;
+}
+
+#app {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.eyebrow,
+.panel-heading {
+  color: #6f8da8;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.13em;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2.3rem);
+  font-weight: 640;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.file-button input {
+  display: none;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(300px, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.map-panel,
+.status-panel,
+.message-panel {
+  overflow: hidden;
+  border: 1px solid rgb(103 137 168 / 28%);
+  border-radius: 12px;
+  background: rgb(13 20 28 / 88%);
+  box-shadow: 0 22px 60px rgb(0 0 0 / 24%);
+}
+
+.panel-heading {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid rgb(103 137 168 / 20%);
+  background: rgb(20 31 42 / 70%);
+}
+
+.map-host {
+  max-width: calc(100vw - 3rem);
+  overflow: auto;
+  line-height: 0;
+}
+
+.map-host canvas {
+  display: block;
+}
+
+.controls {
+  margin: 0;
+  padding: 0.8rem 1rem 0.9rem;
+  color: #7f91a5;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.ui-column {
+  display: grid;
+  gap: 1rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: rgb(103 137 168 / 16%);
+}
+
+.status-grid div {
+  min-width: 0;
+  padding: 1rem;
+  background: #0e161f;
+}
+
+.status-grid dt {
+  margin-bottom: 0.4rem;
+  color: #6f8499;
+  font-size: 0.76rem;
+}
+
+.status-grid dd {
+  overflow: hidden;
+  margin: 0;
+  color: #dcecff;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+}
+
+.message-list {
+  height: 390px;
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.message {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.68rem 0.9rem;
+  border-bottom: 1px solid rgb(103 137 168 / 10%);
+  color: #c8d5e3;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.message-turn {
+  color: #53677b;
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.message-combat-hit,
+.message-combat-slay {
+  color: #ffc18d;
+}
+
+.message-error {
+  color: #ff9292;
+}
+
+.status-pill {
+  border: 1px solid #5f7184;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  color: #91a2b4;
+  letter-spacing: 0.04em;
+}
+
+.status-pill.ready {
+  border-color: #3c8f73;
+  color: #79d4b1;
+}
+
+.status-pill.error {
+  border-color: #a34e58;
+  color: #ff9ca5;
+}
+
+.quiet-button {
+  border: 0;
+  padding: 0.2rem 0.35rem;
+  color: #6f8da8;
+  background: transparent;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 1000px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-column {
+    grid-template-columns: minmax(240px, 0.7fr) minmax(320px, 1.3fr);
+  }
+}
+
+@media (max-width: 680px) {
+  #app {
+    padding: 0.75rem;
+  }
+
+  .app-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header-actions,
+  .header-actions > * {
+    flex: 1;
+  }
+
+  .ui-column {
+    grid-template-columns: 1fr;
+  }
+}

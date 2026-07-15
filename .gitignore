@@ -1,12 +1,14 @@
 # Rust
 /target/
 **/*.rs.bk
+crates/rfb-wasm/pkg/
 
 # Node / frontend
 node_modules/
 dist/
 .vite/
 coverage/
+web/src/wasm/
 
 # Tauri
 src-tauri/target/
