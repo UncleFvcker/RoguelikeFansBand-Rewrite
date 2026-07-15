@@ -36,7 +36,7 @@ async function main() {
     });
 
     await waitForServer(port, child);
-    client = await WebDriverClient.create(port);
+    client = await WebDriverClient.create(port, child);
     await runScenario(client);
     process.stdout.write("Tauri desktop E2E passed.\n");
   } catch (error) {
@@ -251,11 +251,27 @@ class WebDriverClient {
     this.sessionId = sessionId;
   }
 
-  static async create(port) {
-    const response = await request(port, "POST", "/session", {
-      capabilities: { alwaysMatch: { "wdio:tauriServiceOptions": { windowLabel: "main" } } },
-    });
-    return new WebDriverClient(port, response.sessionId);
+  static async create(port, app, timeoutMs = 15_000) {
+    const deadline = Date.now() + timeoutMs;
+    let lastError;
+    while (Date.now() < deadline) {
+      if (app.exitCode !== null || app.signalCode !== null) {
+        throw new Error(
+          `Tauri application exited before its main window was available (${app.exitCode ?? app.signalCode})`,
+        );
+      }
+      try {
+        const response = await request(port, "POST", "/session", {
+          capabilities: { alwaysMatch: { "wdio:tauriServiceOptions": { windowLabel: "main" } } },
+        });
+        return new WebDriverClient(port, response.sessionId);
+      } catch (error) {
+        lastError = error;
+        if (!String(error).includes("no such window")) throw error;
+        await delay(100);
+      }
+    }
+    throw new Error(`Timed out waiting for the Tauri main window: ${String(lastError)}`);
   }
 
   async execute(script, args = []) {
