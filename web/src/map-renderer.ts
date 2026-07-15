@@ -2,8 +2,7 @@
 
 import { Application, Container, Graphics, Sprite } from "pixi.js";
 
-import { CONTENT_GLYPHS } from "./content-visuals";
-import type { CellDto, EntityDto, GameSnapshot, GameUpdate, PlayerDto } from "./protocol";
+import type { CellDto, EntityDto, GameSnapshot, GameUpdate, ItemDto, PlayerDto } from "./protocol";
 import { TilesetRuntime } from "./tileset-runtime";
 
 const CELL_SIZE = 28;
@@ -22,12 +21,13 @@ export interface TilesetChangeResult {
 export class MapRenderer {
   readonly #application = new Application();
   readonly #world = new Container();
-  readonly #actorKinds = new Map<string, string>();
+  readonly #entityKinds = new Map<string, string>();
   #width = 0;
   #height = 0;
   #cells: CellView[] = [];
   #cellData: Array<CellDto | undefined> = [];
   #tileset: TilesetRuntime | undefined;
+  #contentGlyphs: Readonly<Record<string, string>> = {};
   #host: HTMLElement | undefined;
   #totalAppliedCells = 0;
 
@@ -36,11 +36,13 @@ export class MapRenderer {
     width: number,
     height: number,
     tilesetManifestUrl: string,
+    contentGlyphs: Readonly<Record<string, string>>,
   ): Promise<TilesetChangeResult> {
     this.#host = host;
     this.#width = width;
     this.#height = height;
-    this.#tileset = await TilesetRuntime.load(tilesetManifestUrl, CONTENT_GLYPHS);
+    this.#contentGlyphs = contentGlyphs;
+    this.#tileset = await TilesetRuntime.load(tilesetManifestUrl, contentGlyphs);
     await this.#application.init({
       width: width * CELL_SIZE,
       height: height * CELL_SIZE,
@@ -58,7 +60,7 @@ export class MapRenderer {
   }
 
   async setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult> {
-    const replacement = await TilesetRuntime.load(tilesetManifestUrl, CONTENT_GLYPHS);
+    const replacement = await TilesetRuntime.load(tilesetManifestUrl, this.#contentGlyphs);
     const previous = this.#tileset;
     this.#tileset = replacement;
     previous?.destroy();
@@ -74,13 +76,13 @@ export class MapRenderer {
   }
 
   applySnapshot(snapshot: GameSnapshot): void {
-    this.#syncActorKinds(snapshot.player, snapshot.entities);
+    this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items);
     for (const cell of snapshot.cells) this.#storeAndApplyCell(cell);
     this.#recordRender("snapshot", snapshot.cells.length);
   }
 
   applyUpdate(update: GameUpdate): void {
-    this.#syncActorKinds(update.player, update.entities);
+    this.#syncEntityKinds(update.player, update.entities, update.items);
     for (const cell of update.changedCells) this.#storeAndApplyCell(cell);
     this.#recordRender("update", update.changedCells.length);
   }
@@ -105,10 +107,11 @@ export class MapRenderer {
     }
   }
 
-  #syncActorKinds(player: PlayerDto, entities: EntityDto[]): void {
-    this.#actorKinds.clear();
-    this.#actorKinds.set(player.id, player.kindId);
-    for (const entity of entities) this.#actorKinds.set(entity.id, entity.kindId);
+  #syncEntityKinds(player: PlayerDto, entities: EntityDto[], items: ItemDto[]): void {
+    this.#entityKinds.clear();
+    this.#entityKinds.set(player.id, player.kindId);
+    for (const entity of entities) this.#entityKinds.set(entity.id, entity.kindId);
+    for (const item of items) this.#entityKinds.set(item.id, item.kindId);
   }
 
   #storeAndApplyCell(cell: CellDto): void {
@@ -126,9 +129,16 @@ export class MapRenderer {
 
     const terrainVisual = tileset.resolve(cell.terrainId);
     const actorSemanticId = cell.actorId
-      ? (this.#actorKinds.get(cell.actorId) ?? cell.actorId)
+      ? (this.#entityKinds.get(cell.actorId) ?? cell.actorId)
       : undefined;
-    const symbolVisual = actorSemanticId ? tileset.resolve(actorSemanticId) : terrainVisual;
+    const itemSemanticId = cell.itemId
+      ? (this.#entityKinds.get(cell.itemId) ?? cell.itemId)
+      : undefined;
+    const symbolVisual = actorSemanticId
+      ? tileset.resolve(actorSemanticId)
+      : itemSemanticId
+        ? tileset.resolve(itemSemanticId)
+        : terrainVisual;
     const background = symbolVisual.background ?? terrainVisual.background ?? DEFAULT_BACKGROUND;
     const x = cell.position.x * CELL_SIZE;
     const y = cell.position.y * CELL_SIZE;

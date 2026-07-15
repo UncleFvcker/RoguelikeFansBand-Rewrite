@@ -52,7 +52,7 @@
 │  └─ saves/
 └─ screenshots/
 
-tests/fixtures/contract-v1/
+tests/fixtures/contract-v2/
 ├─ baseline-policy.json
 ├─ waivers/
 │  └─ README.md
@@ -97,7 +97,7 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 
 ## 4. 场景格式
 
-每个场景使用稳定 ID。当前 `contract-v1` 的输入部分包含：
+每个场景使用稳定 ID。当前 active `contract-v2` 的输入部分包含：
 
 ```json
 {
@@ -106,7 +106,7 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0x0123456789abcdef",
-  "preconditions": { "world": "demo.original-v1" },
+  "preconditions": { "world": "demo.world.original-v1" },
   "commands": [],
   "saveRoundTrip": true,
   "assertions": {}
@@ -116,8 +116,8 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 `rfb-contract` 执行命令后精确比较最终 revision、turn、command sequence、玩家位置、实体数量、事件顺序、changed cells、删除实体、结构化错误、state hash 和可选存档回环 hash。提交的 fixture 必须包含断言；`observe` 命令只输出实际观察结果，不会自动改写或批量刷新 golden：
 
 ```powershell
-cargo run -p rfb-contract -- observe tests/fixtures/contract-v1/scenarios/01-move-north.json
-cargo run -p rfb-contract -- verify tests/fixtures/contract-v1/scenarios/01-move-north.json
+cargo run -p rfb-contract -- observe tests/fixtures/contract-v2/scenarios/01-move-north.json
+cargo run -p rfb-contract -- verify tests/fixtures/contract-v2/scenarios/01-move-north.json
 ```
 
 场景不能依赖屏幕坐标、数组下标或本地化后的名称定位对象。对象使用稳定测试 ID；显示文本单独由本地化测试验证。

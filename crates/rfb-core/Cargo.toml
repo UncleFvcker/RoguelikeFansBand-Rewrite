@@ -5,11 +5,15 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+build = "build.rs"
+
+[build-dependencies]
+rfb-content = { path = "../rfb-content" }
 
 [dependencies]
+rfb-content = { path = "../rfb-content" }
 rfb-protocol = { path = "../rfb-protocol" }
 rmp-serde.workspace = true
 serde.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
-

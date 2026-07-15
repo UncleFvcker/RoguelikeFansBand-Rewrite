@@ -1,46 +1,24 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+};
 
+use rfb_content::{ActorRole, ContentCatalog, ContentError, ContentPosition};
 use rfb_protocol::{
-    CellDto, DEMO_CONTENT_HASH, DEMO_CONTENT_ID, EntityDto, GameCommand, GameCommandEnvelope,
-    GameEventDto, GameSnapshot, GameUpdate, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto,
+    CellDto, ContentVisualDto, EntityDto, GameCommand, GameCommandEnvelope, GameEventDto,
+    GameSnapshot, GameUpdate, ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto,
     SavePayloadV1, TerrainSaveDto,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
-pub const MAP_WIDTH: u16 = 20;
-pub const MAP_HEIGHT: u16 = 20;
-pub const PLAYER_ID: &str = "demo.player";
-pub const PLAYER_KIND_ID: &str = "demo.actor.explorer";
-pub const MONSTER_ID: &str = "demo.monster.ember-mote.1";
-pub const MONSTER_KIND_ID: &str = "demo.actor.ember-mote";
+pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 pub const RNG_ALGORITHM: &str = "rfb-rng-xoshiro256ss-v1";
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-enum Terrain {
-    Floor,
-    Wall,
-}
-
-impl Terrain {
-    const fn id(self) -> &'static str {
-        match self {
-            Self::Floor => "demo.terrain.floor",
-            Self::Wall => "demo.terrain.wall",
-        }
-    }
-
-    fn from_id(id: &str) -> Result<Self, CoreError> {
-        match id {
-            "demo.terrain.floor" => Ok(Self::Floor),
-            "demo.terrain.wall" => Ok(Self::Wall),
-            other => Err(CoreError::UnknownTerrain(other.to_owned())),
-        }
-    }
-}
+const BUILT_IN_CONTENT_BYTES: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct Actor {
@@ -49,6 +27,14 @@ struct Actor {
     position: Position,
     hp: i32,
     max_hp: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct Item {
+    id: String,
+    kind_id: String,
+    position: Position,
+    quantity: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -131,11 +117,14 @@ fn splitmix64(state: &mut u64) -> u64 {
 
 #[derive(Debug, Clone)]
 pub struct Game {
+    content: Arc<ContentCatalog>,
+    world_id: String,
     width: u16,
     height: u16,
-    terrain: Vec<Terrain>,
+    terrain: Vec<String>,
     player: Actor,
     entities: Vec<Actor>,
+    items: Vec<Item>,
     rng: RfbRng,
     revision: u32,
     turn: u32,
@@ -145,51 +134,112 @@ pub struct Game {
 impl Game {
     #[must_use]
     pub fn new(seed: u64) -> Self {
-        let mut terrain = vec![Terrain::Floor; usize::from(MAP_WIDTH * MAP_HEIGHT)];
-        for y in 0..MAP_HEIGHT {
-            for x in 0..MAP_WIDTH {
-                if x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1 {
-                    terrain[usize::from(y * MAP_WIDTH + x)] = Terrain::Wall;
+        Self::from_content(
+            seed,
+            load_built_in_content().expect("built-in content should decode"),
+            BUILT_IN_WORLD_ID,
+        )
+        .expect("built-in world should create a game")
+    }
+
+    pub fn from_content(
+        seed: u64,
+        content: Arc<ContentCatalog>,
+        world_id: &str,
+    ) -> Result<Self, CoreError> {
+        let world = content
+            .world(world_id)
+            .ok_or_else(|| CoreError::UnknownWorld(world_id.to_owned()))?;
+        let width = world.width;
+        let height = world.height;
+        let mut terrain =
+            vec![world.fill_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        for y in 0..height {
+            for x in 0..width {
+                if x == 0 || y == 0 || x == width - 1 || y == height - 1 {
+                    terrain[usize::from(y) * usize::from(width) + usize::from(x)] =
+                        world.border_terrain_id.clone();
                 }
             }
         }
-        for y in 3..17 {
-            if y != 10 {
-                terrain[usize::from(y * MAP_WIDTH + 11)] = Terrain::Wall;
+        for terrain_override in &world.terrain_overrides {
+            for position in &terrain_override.positions {
+                terrain[usize::from(position.y) * usize::from(width) + usize::from(position.x)] =
+                    terrain_override.terrain_id.clone();
             }
         }
-
-        Self {
-            width: MAP_WIDTH,
-            height: MAP_HEIGHT,
+        let player_definition = content
+            .actor(&world.player.kind_id)
+            .ok_or_else(|| CoreError::UnknownActor(world.player.kind_id.clone()))?;
+        let player = actor_from_spawn(
+            &world.player.instance_id,
+            &world.player.kind_id,
+            world.player.position,
+            player_definition.max_hp,
+        );
+        let entities = world
+            .actors
+            .iter()
+            .map(|spawn| {
+                let definition = content
+                    .actor(&spawn.kind_id)
+                    .ok_or_else(|| CoreError::UnknownActor(spawn.kind_id.clone()))?;
+                Ok(actor_from_spawn(
+                    &spawn.instance_id,
+                    &spawn.kind_id,
+                    spawn.position,
+                    definition.max_hp,
+                ))
+            })
+            .collect::<Result<Vec<_>, CoreError>>()?;
+        let items = world
+            .items
+            .iter()
+            .map(|spawn| Item {
+                id: spawn.instance_id.clone(),
+                kind_id: spawn.kind_id.clone(),
+                position: position_from_content(spawn.position),
+                quantity: spawn.quantity,
+            })
+            .collect();
+        let game = Self {
+            content,
+            world_id: world_id.to_owned(),
+            width,
+            height,
             terrain,
-            player: Actor {
-                id: PLAYER_ID.to_owned(),
-                kind_id: PLAYER_KIND_ID.to_owned(),
-                position: Position { x: 3, y: 3 },
-                hp: 10,
-                max_hp: 10,
-            },
-            entities: vec![Actor {
-                id: MONSTER_ID.to_owned(),
-                kind_id: MONSTER_KIND_ID.to_owned(),
-                position: Position { x: 8, y: 5 },
-                hp: 3,
-                max_hp: 3,
-            }],
+            player,
+            entities,
+            items,
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
             last_command_seq: 0,
-        }
+        };
+        game.validate_state()?;
+        Ok(game)
     }
 
     pub fn from_save(payload: SavePayloadV1) -> Result<Self, CoreError> {
+        Self::from_save_with_content(
+            payload,
+            load_built_in_content().expect("built-in content should decode"),
+        )
+    }
+
+    pub fn from_save_with_content(
+        payload: SavePayloadV1,
+        content: Arc<ContentCatalog>,
+    ) -> Result<Self, CoreError> {
         if payload.schema_version != 1 {
             return Err(CoreError::UnsupportedSaveVersion(payload.schema_version));
         }
-        if payload.content_id != DEMO_CONTENT_ID || payload.content_hash != DEMO_CONTENT_HASH {
+        if payload.content_id != content.pack_id() || payload.content_hash != content.content_hash()
+        {
             return Err(CoreError::ContentMismatch);
+        }
+        if content.world(&payload.world_id).is_none() {
+            return Err(CoreError::UnknownWorld(payload.world_id));
         }
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0 || payload.terrain.terrain_ids.len() != expected_len {
@@ -199,26 +249,35 @@ impl Game {
             .terrain
             .terrain_ids
             .iter()
-            .map(|id| Terrain::from_id(id))
-            .collect::<Result<Vec<_>, _>>()?;
+            .map(|id| {
+                content
+                    .terrain(id)
+                    .map(|_| id.clone())
+                    .ok_or_else(|| CoreError::UnknownTerrain(id.clone()))
+            })
+            .collect::<Result<Vec<_>, CoreError>>()?;
         let player = actor_from_player(payload.player);
         let entities = payload
             .entities
             .into_iter()
             .map(actor_from_entity)
             .collect::<Vec<_>>();
+        let items = payload.items.into_iter().map(item_from_dto).collect();
         let game = Self {
+            content,
+            world_id: payload.world_id,
             width: payload.terrain.width,
             height: payload.terrain.height,
             terrain,
             player,
             entities,
+            items,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
             last_command_seq: payload.last_command_seq,
         };
-        game.validate_positions()?;
+        game.validate_state()?;
         Ok(game)
     }
 
@@ -232,17 +291,15 @@ impl Game {
             terrain: TerrainSaveDto {
                 width: self.width,
                 height: self.height,
-                terrain_ids: self
-                    .terrain
-                    .iter()
-                    .map(|terrain| terrain.id().to_owned())
-                    .collect(),
+                terrain_ids: self.terrain.clone(),
             },
             player: self.player_dto(),
             entities: self.entities_dto(),
+            items: self.items_dto(),
             rng: self.rng.to_save(),
-            content_id: DEMO_CONTENT_ID.to_owned(),
-            content_hash: DEMO_CONTENT_HASH.to_owned(),
+            content_id: self.content.pack_id().to_owned(),
+            content_hash: self.content.content_hash().to_owned(),
+            world_id: self.world_id.clone(),
         }
     }
 
@@ -267,7 +324,11 @@ impl Game {
             cells,
             player: self.player_dto(),
             entities: self.entities_dto(),
-            content_hash: DEMO_CONTENT_HASH.to_owned(),
+            items: self.items_dto(),
+            content_id: self.content.pack_id().to_owned(),
+            content_hash: self.content.content_hash().to_owned(),
+            content_visuals: self.content_visuals(),
+            world_id: self.world_id.clone(),
             state_hash: self.state_hash(),
         }
     }
@@ -353,6 +414,7 @@ impl Game {
                 .collect(),
             player: self.player_dto(),
             entities: self.entities_dto(),
+            items: self.items_dto(),
             removed_entities,
             state_hash: self.state_hash(),
         })
@@ -374,6 +436,30 @@ impl Game {
     #[must_use]
     pub const fn rng_algorithm(&self) -> &'static str {
         RNG_ALGORITHM
+    }
+
+    #[must_use]
+    pub fn content_id(&self) -> &str {
+        self.content.pack_id()
+    }
+
+    #[must_use]
+    pub fn content_hash(&self) -> &str {
+        self.content.content_hash()
+    }
+
+    #[must_use]
+    pub fn world_id(&self) -> &str {
+        &self.world_id
+    }
+
+    #[must_use]
+    pub fn location_key(&self) -> &str {
+        &self
+            .content
+            .world(&self.world_id)
+            .expect("game world must remain in its content catalog")
+            .name_key
     }
 
     fn player_dto(&self) -> PlayerDto {
@@ -402,6 +488,29 @@ impl Game {
         entities
     }
 
+    fn items_dto(&self) -> Vec<ItemDto> {
+        let mut items = self
+            .items
+            .iter()
+            .map(|item| ItemDto {
+                id: item.id.clone(),
+                kind_id: item.kind_id.clone(),
+                position: item.position,
+                quantity: item.quantity,
+            })
+            .collect::<Vec<_>>();
+        items.sort_by(|left, right| left.id.cmp(&right.id));
+        items
+    }
+
+    fn content_visuals(&self) -> Vec<ContentVisualDto> {
+        self.content
+            .visual_glyphs()
+            .into_iter()
+            .map(|(id, glyph)| ContentVisualDto { id, glyph })
+            .collect()
+    }
+
     fn cell_dto(&self, position: Position) -> CellDto {
         let actor_id = if self.player.position == position {
             Some(self.player.id.clone())
@@ -413,13 +522,18 @@ impl Game {
         };
         CellDto {
             position,
-            terrain_id: self.terrain_at(position).id().to_owned(),
+            terrain_id: self.terrain_at(position).to_owned(),
+            item_id: self
+                .items
+                .iter()
+                .find(|item| item.position == position)
+                .map(|item| item.id.clone()),
             actor_id,
         }
     }
 
-    fn terrain_at(&self, position: Position) -> Terrain {
-        self.terrain[self.index(position).expect("validated map position")]
+    fn terrain_at(&self, position: Position) -> &str {
+        &self.terrain[self.index(position).expect("validated map position")]
     }
 
     fn index(&self, position: Position) -> Option<usize> {
@@ -435,21 +549,81 @@ impl Game {
 
     fn is_walkable(&self, position: Position) -> bool {
         self.index(position)
-            .is_some_and(|index| self.terrain[index] == Terrain::Floor)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(|terrain| terrain.walkable)
     }
 
-    fn validate_positions(&self) -> Result<(), CoreError> {
+    fn validate_state(&self) -> Result<(), CoreError> {
+        for terrain_id in &self.terrain {
+            if self.content.terrain(terrain_id).is_none() {
+                return Err(CoreError::UnknownTerrain(terrain_id.clone()));
+            }
+        }
+        self.validate_actor(&self.player, ActorRole::Player)?;
         if !self.is_walkable(self.player.position) {
             return Err(CoreError::InvalidSave("player position is invalid"));
         }
         let mut positions = BTreeSet::new();
         positions.insert(self.player.position);
         for entity in &self.entities {
+            self.validate_actor(entity, ActorRole::Monster)?;
             if !self.is_walkable(entity.position) || !positions.insert(entity.position) {
                 return Err(CoreError::InvalidSave("entity position is invalid"));
             }
         }
+        let mut item_ids = BTreeSet::new();
+        for item in &self.items {
+            let definition = self
+                .content
+                .item(&item.kind_id)
+                .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+            if !item_ids.insert(item.id.clone())
+                || !self.is_walkable(item.position)
+                || item.quantity == 0
+                || item.quantity > definition.max_stack
+            {
+                return Err(CoreError::InvalidSave("item state is invalid"));
+            }
+        }
         Ok(())
+    }
+
+    fn validate_actor(&self, actor: &Actor, expected_role: ActorRole) -> Result<(), CoreError> {
+        let definition = self
+            .content
+            .actor(&actor.kind_id)
+            .ok_or_else(|| CoreError::UnknownActor(actor.kind_id.clone()))?;
+        if definition.role != expected_role
+            || actor.max_hp != definition.max_hp
+            || actor.hp <= 0
+            || actor.hp > actor.max_hp
+        {
+            return Err(CoreError::InvalidSave("actor state is invalid"));
+        }
+        Ok(())
+    }
+}
+
+pub fn load_built_in_content() -> Result<Arc<ContentCatalog>, CoreError> {
+    Ok(Arc::new(ContentCatalog::from_bytes(
+        BUILT_IN_CONTENT_BYTES,
+    )?))
+}
+
+fn actor_from_spawn(id: &str, kind_id: &str, position: ContentPosition, max_hp: i32) -> Actor {
+    Actor {
+        id: id.to_owned(),
+        kind_id: kind_id.to_owned(),
+        position: position_from_content(position),
+        hp: max_hp,
+        max_hp,
+    }
+}
+
+const fn position_from_content(position: ContentPosition) -> Position {
+    Position {
+        x: position.x as i32,
+        y: position.y as i32,
     }
 }
 
@@ -470,6 +644,15 @@ fn actor_from_entity(entity: EntityDto) -> Actor {
         position: entity.position,
         hp: entity.hp,
         max_hp: entity.max_hp,
+    }
+}
+
+fn item_from_dto(item: ItemDto) -> Item {
+    Item {
+        id: item.id,
+        kind_id: item.kind_id,
+        position: item.position,
+        quantity: item.quantity,
     }
 }
 
@@ -508,10 +691,18 @@ pub enum CoreError {
     UnsupportedRng(String),
     #[error("save content set does not match the demo content set")]
     ContentMismatch,
+    #[error("content set does not define world {0}")]
+    UnknownWorld(String),
     #[error("save contains unknown terrain ID {0}")]
     UnknownTerrain(String),
+    #[error("content set does not define actor {0}")]
+    UnknownActor(String),
+    #[error("content set does not define item {0}")]
+    UnknownItem(String),
     #[error("invalid save: {0}")]
     InvalidSave(&'static str),
+    #[error(transparent)]
+    Content(#[from] ContentError),
 }
 
 #[cfg(test)]
@@ -526,6 +717,41 @@ mod tests {
             expected_revision: revision,
             command,
         }
+    }
+
+    #[test]
+    fn built_in_game_is_created_from_the_compiled_content_pack() {
+        let snapshot = Game::new(42).snapshot();
+        let shard = snapshot
+            .items
+            .iter()
+            .find(|item| item.id == "demo.item.luminous-shard.1")
+            .expect("compiled world should spawn its item");
+
+        assert_eq!(snapshot.content_id, "rfb.demo.original-v1");
+        assert_eq!(
+            snapshot.content_hash,
+            "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025"
+        );
+        assert_eq!(snapshot.world_id, BUILT_IN_WORLD_ID);
+        assert_eq!(snapshot.player.id, "demo.actor.player.1");
+        assert_eq!(snapshot.player.kind_id, "demo.actor.explorer");
+        assert_eq!(snapshot.entities[0].position, Position { x: 8, y: 5 });
+        assert_eq!(shard.position, Position { x: 4, y: 3 });
+        assert_eq!(
+            snapshot
+                .cells
+                .iter()
+                .find(|cell| cell.position == shard.position)
+                .and_then(|cell| cell.item_id.as_deref()),
+            Some("demo.item.luminous-shard.1")
+        );
+        assert!(
+            snapshot
+                .content_visuals
+                .iter()
+                .any(|visual| visual.id == "demo.item.luminous-shard" && visual.glyph == "!")
+        );
     }
 
     #[test]

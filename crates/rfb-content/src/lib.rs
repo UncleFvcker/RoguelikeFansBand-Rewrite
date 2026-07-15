@@ -186,6 +186,17 @@ pub struct CompiledArtifact {
     pub bytes: Vec<u8>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContentCatalog {
+    pack_id: String,
+    pack_version: String,
+    content_hash: String,
+    terrain: BTreeMap<String, TerrainDefinition>,
+    actors: BTreeMap<String, ActorDefinition>,
+    items: BTreeMap<String, ItemDefinition>,
+    worlds: BTreeMap<String, WorldDefinition>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContentSummary {
@@ -219,6 +230,99 @@ impl CompiledArtifact {
             item_count: self.content.items.len(),
             world_count: self.content.worlds.len(),
         }
+    }
+}
+
+impl ContentCatalog {
+    #[must_use]
+    pub fn from_artifact(artifact: CompiledArtifact) -> Self {
+        let CompiledArtifact {
+            content,
+            content_hash,
+            ..
+        } = artifact;
+        Self {
+            pack_id: content.pack_id,
+            pack_version: content.pack_version,
+            content_hash,
+            terrain: content
+                .terrain
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            actors: content
+                .actors
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            items: content
+                .items
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            worlds: content
+                .worlds
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+        }
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, ContentError> {
+        Ok(Self::from_artifact(decode_content(bytes)?))
+    }
+
+    #[must_use]
+    pub fn pack_id(&self) -> &str {
+        &self.pack_id
+    }
+
+    #[must_use]
+    pub fn pack_version(&self) -> &str {
+        &self.pack_version
+    }
+
+    #[must_use]
+    pub fn content_hash(&self) -> &str {
+        &self.content_hash
+    }
+
+    #[must_use]
+    pub fn terrain(&self, id: &str) -> Option<&TerrainDefinition> {
+        self.terrain.get(id)
+    }
+
+    #[must_use]
+    pub fn actor(&self, id: &str) -> Option<&ActorDefinition> {
+        self.actors.get(id)
+    }
+
+    #[must_use]
+    pub fn item(&self, id: &str) -> Option<&ItemDefinition> {
+        self.items.get(id)
+    }
+
+    #[must_use]
+    pub fn world(&self, id: &str) -> Option<&WorldDefinition> {
+        self.worlds.get(id)
+    }
+
+    #[must_use]
+    pub fn visual_glyphs(&self) -> BTreeMap<String, String> {
+        self.terrain
+            .iter()
+            .map(|(id, definition)| (id.clone(), definition.glyph.clone()))
+            .chain(
+                self.actors
+                    .iter()
+                    .map(|(id, definition)| (id.clone(), definition.glyph.clone())),
+            )
+            .chain(
+                self.items
+                    .iter()
+                    .map(|(id, definition)| (id.clone(), definition.glyph.clone())),
+            )
+            .collect()
     }
 }
 
@@ -1051,6 +1155,40 @@ mod tests {
         assert_eq!(first.content.actors.len(), 2);
         assert_eq!(first.content.items.len(), 1);
         assert_eq!(first.content.worlds.len(), 1);
+    }
+
+    #[test]
+    fn compiled_catalog_exposes_stable_runtime_indexes() {
+        let artifact =
+            verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+        let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+
+        assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
+        assert_eq!(catalog.pack_version(), "1.0.0");
+        assert_eq!(catalog.content_hash(), artifact.content_hash);
+        assert_eq!(
+            catalog
+                .terrain("demo.terrain.wall")
+                .map(|terrain| terrain.walkable),
+            Some(false)
+        );
+        assert_eq!(
+            catalog
+                .actor("demo.actor.ember-mote")
+                .map(|actor| actor.max_hp),
+            Some(3)
+        );
+        assert_eq!(
+            catalog
+                .item("demo.item.luminous-shard")
+                .map(|item| item.max_stack),
+            Some(20)
+        );
+        assert!(catalog.world("demo.world.original-v1").is_some());
+        assert_eq!(
+            catalog.visual_glyphs().get("demo.item.luminous-shard"),
+            Some(&"!".to_owned())
+        );
     }
 
     #[test]

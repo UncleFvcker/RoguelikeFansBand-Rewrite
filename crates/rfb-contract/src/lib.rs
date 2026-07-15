@@ -4,8 +4,8 @@ use std::collections::BTreeSet;
 
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
-    CharacterSummary, DEMO_CONTENT_HASH, DEMO_CONTENT_ID, GameCommand, GameCommandEnvelope,
-    GameEventDto, PROTOCOL_VERSION, Position, SaveHeaderV1,
+    CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, PROTOCOL_VERSION, Position,
+    SaveHeaderV1,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -15,9 +15,10 @@ pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
-pub const ORIGINAL_TEST_WORLD: &str = "demo.original-v1";
+pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
+pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ContractFixture {
     pub schema_version: u16,
@@ -32,20 +33,20 @@ pub struct ContractFixture {
     pub assertions: Option<ContractAssertions>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Determinism {
     Exact,
     Semantic,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Preconditions {
     pub world: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ContractCommand {
     pub command: GameCommand,
@@ -181,7 +182,9 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     if fixture.legacy_commit != LEGACY_BASELINE_COMMIT {
         return Err(ContractError::LegacyCommit(fixture.legacy_commit.clone()));
     }
-    if fixture.preconditions.world != ORIGINAL_TEST_WORLD {
+    if fixture.preconditions.world != ORIGINAL_TEST_WORLD
+        && fixture.preconditions.world != HISTORICAL_TEST_WORLD
+    {
         return Err(ContractError::UnknownWorld(
             fixture.preconditions.world.clone(),
         ));
@@ -221,11 +224,11 @@ fn save_round_trip(game: &Game) -> Result<String, ContractError> {
         character_summary: CharacterSummary {
             display_name: "原创契约测试探索者".to_owned(),
             level: 1,
-            location_key: "location-demo-lab".to_owned(),
+            location_key: game.location_key().to_owned(),
             turn: snapshot.turn,
         },
-        content_id: DEMO_CONTENT_ID.to_owned(),
-        content_hash: DEMO_CONTENT_HASH.to_owned(),
+        content_id: snapshot.content_id.clone(),
+        content_hash: snapshot.content_hash.clone(),
         payload_encoding: "messagepack".to_owned(),
     };
     let bytes = rfb_save::encode(&header, &game.to_save())?;

@@ -9,10 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.0";
-pub const DEMO_CONTENT_ID: &str = "rfb.demo.original-v1";
-pub const DEMO_CONTENT_HASH: &str =
-    "4df1b330468f15704e402764e0f60e5e9a0cbe2586dbce30ed2fe26703ea3de6";
+pub const PROTOCOL_VERSION: &str = "1.1";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -74,7 +71,16 @@ pub struct Position {
 pub struct CellDto {
     pub position: Position,
     pub terrain_id: String,
+    pub item_id: Option<String>,
     pub actor_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContentVisualDto {
+    pub id: String,
+    pub glyph: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -102,6 +108,16 @@ pub struct EntityDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct ItemDto {
+    pub id: String,
+    pub kind_id: String,
+    pub position: Position,
+    pub quantity: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct GameEventDto {
     pub kind: String,
     pub message_key: String,
@@ -121,7 +137,11 @@ pub struct GameSnapshot {
     pub cells: Vec<CellDto>,
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
+    pub items: Vec<ItemDto>,
+    pub content_id: String,
     pub content_hash: String,
+    pub content_visuals: Vec<ContentVisualDto>,
+    pub world_id: String,
     pub state_hash: String,
 }
 
@@ -137,6 +157,7 @@ pub struct GameUpdate {
     pub changed_cells: Vec<CellDto>,
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
+    pub items: Vec<ItemDto>,
     pub removed_entities: Vec<String>,
     pub state_hash: String,
 }
@@ -173,8 +194,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameCommandEnvelope);
     push_declaration!(Position);
     push_declaration!(CellDto);
+    push_declaration!(ContentVisualDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityDto);
+    push_declaration!(ItemDto);
     push_declaration!(GameEventDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
@@ -215,9 +238,13 @@ pub struct SavePayloadV1 {
     pub terrain: TerrainSaveDto,
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
+    #[serde(default)]
+    pub items: Vec<ItemDto>,
     pub rng: RngSaveDto,
     pub content_id: String,
     pub content_hash: String,
+    #[serde(default)]
+    pub world_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

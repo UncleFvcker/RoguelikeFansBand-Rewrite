@@ -8,6 +8,7 @@
 
 - [旧版行为基准与差分测试](legacy-behavior-baseline.md)
 - [Contract 基准更新与差异豁免政策](baseline-update-policy.md)
+- [Contract v2 内容运行时迁移](contract-v2-content-migration.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
 - [内容数据格式 v1](content-format-v1.md)
@@ -498,13 +499,17 @@ interface SaveGame {
 - E2E 失败截图与进程日志归档，测试驱动受 debug feature 和显式端口双重限制。
 - Tauri Android Gradle/Kotlin 工程、ARM64 Rust target 和 Debug APK 构建链；
 - Android CI 可重复构建并上传未签名调试 APK。
+- `.rfbcontent` 运行时解码、稳定内容索引和内容驱动的世界创建；
+- 协议 1.1 内容视觉目录、地图物品实例和真实 content/world 身份；
+- contract-v2 与 state hash Schema v2 基准迁移，contract-v1 历史保留。
 
 下一步建议：
 
-1. 在 Android 真机验证启动、生命周期、存档/回放和文件选择器，并设计不占用现有键位的触屏操作层；
-2. 在内容模型稳定后正式迁移 contract 基准并让 Rust 核心加载编译内容包；
-3. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心；
-4. 扩展桌面 E2E 到 resize、缩放、最小化/恢复和稳定视觉基准。
+1. 完成桌面 MVP 的地面物品、拾取命令、背包 DTO/HTML 面板和存档/回放闭环；
+2. 建立 Fluent 双语框架，停止继续增加 TypeScript 用户文案硬编码；
+3. 推进桌面现代渲染器：RendererBackend、物品层、可见性/记忆 mask 和独立光照 buffer；
+4. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
+5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
 
 每完成一个阶段，都应在本文件更新：
 

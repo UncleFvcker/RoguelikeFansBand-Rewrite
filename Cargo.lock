@@ -2641,6 +2641,7 @@ dependencies = [
 name = "rfb-core"
 version = "0.1.0"
 dependencies = [
+ "rfb-content",
  "rfb-protocol",
  "rmp-serde",
  "serde",

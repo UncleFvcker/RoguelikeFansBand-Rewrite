@@ -2,6 +2,8 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
+当前 state hash Schema 为 v2：哈希输入包含运行时内容包 ID/hash、world ID 和内容包生成的物品状态。Schema v1 与 contract-v1 只作为历史基准保留，不再用于当前核心的精确验证。
+
 ## 1. 原则
 
 相同核心版本、内容哈希、初始存档和命令序列，必须在 Windows、Linux、macOS 和 Android 原生 Rust 核心中产生相同：

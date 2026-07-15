@@ -7,8 +7,8 @@ use std::sync::Mutex;
 
 use rfb_core::Game;
 use rfb_protocol::{
-    CharacterSummary, DEMO_CONTENT_HASH, DEMO_CONTENT_ID, GameCommand, GameCommandEnvelope,
-    GameSnapshot, GameUpdate, PROTOCOL_VERSION, SaveHeaderV1,
+    CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, PROTOCOL_VERSION,
+    SaveHeaderV1,
 };
 use rfb_replay::ReplayRecorder;
 
@@ -71,11 +71,11 @@ impl AppState {
             character_summary: CharacterSummary {
                 display_name: "原创测试探索者".to_owned(),
                 level: 1,
-                location_key: "location-demo-lab".to_owned(),
+                location_key: session.recorder.game().location_key().to_owned(),
                 turn: snapshot.turn,
             },
-            content_id: DEMO_CONTENT_ID.to_owned(),
-            content_hash: DEMO_CONTENT_HASH.to_owned(),
+            content_id: snapshot.content_id,
+            content_hash: snapshot.content_hash,
             payload_encoding: "messagepack".to_owned(),
         };
         rfb_save::encode(&header, &session.recorder.game().to_save())

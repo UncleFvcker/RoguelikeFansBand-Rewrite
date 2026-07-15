@@ -44,11 +44,16 @@ void start();
 async function start(): Promise<void> {
   try {
     const snapshot = await core.initialize("42");
+    const contentGlyphs = Object.fromEntries(
+      snapshot.contentVisuals.map((visual) => [visual.id, visual.glyph]),
+    );
+    renderContentMetadata(snapshot);
     const tileset = await renderer.initialize(
       mapHost,
       snapshot.width,
       snapshot.height,
       TILESET_MANIFESTS[tilesetPreset],
+      contentGlyphs,
     );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
@@ -124,6 +129,7 @@ async function importSave(): Promise<void> {
   if (!file) return;
   try {
     const snapshot = await core.load(new Uint8Array(await file.arrayBuffer()));
+    renderContentMetadata(snapshot);
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
     addMessage("存档校验与载入成功。", "system");
@@ -162,6 +168,14 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
+}
+
+function renderContentMetadata(snapshot: GameSnapshot): void {
+  mapHost.dataset.contentId = snapshot.contentId;
+  mapHost.dataset.contentHash = snapshot.contentHash;
+  mapHost.dataset.worldId = snapshot.worldId;
+  mapHost.dataset.contentVisualCount = String(snapshot.contentVisuals.length);
+  mapHost.dataset.itemCount = String(snapshot.items.length);
 }
 
 function formatEvent(event: GameEventDto): string {

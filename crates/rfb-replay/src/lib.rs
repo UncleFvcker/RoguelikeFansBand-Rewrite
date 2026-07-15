@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_core::{CoreError, Game};
-use rfb_protocol::{
-    DEMO_CONTENT_HASH, GameCommand, GameCommandEnvelope, GameUpdate, PROTOCOL_VERSION,
-};
+use rfb_protocol::{GameCommand, GameCommandEnvelope, GameUpdate, PROTOCOL_VERSION};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 1;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 2;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -295,7 +293,7 @@ fn validate_metadata(replay: &ReplayV1, game: &Game) -> Result<(), ReplayError> 
             replay.protocol_version.clone(),
         ));
     }
-    if replay.content_hash != DEMO_CONTENT_HASH {
+    if replay.content_hash != game.content_hash() {
         return Err(ReplayError::ContentMismatch(replay.content_hash.clone()));
     }
     if replay.rng_algorithm != game.rng_algorithm() {

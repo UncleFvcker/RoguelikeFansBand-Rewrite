@@ -29,6 +29,12 @@
             "null"
           ]
         },
+        "itemId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "position": {
           "$ref": "#/$defs/Position"
         },
@@ -39,6 +45,21 @@
       "required": [
         "position",
         "terrainId"
+      ]
+    },
+    "ContentVisualDto": {
+      "type": "object",
+      "properties": {
+        "glyph": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "glyph"
       ]
     },
     "Direction": {
@@ -172,6 +193,15 @@
         "contentHash": {
           "type": "string"
         },
+        "contentId": {
+          "type": "string"
+        },
+        "contentVisuals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentVisualDto"
+          }
+        },
         "entities": {
           "type": "array",
           "items": {
@@ -183,6 +213,12 @@
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDto"
+          }
         },
         "lastCommandSeq": {
           "type": "integer",
@@ -213,6 +249,9 @@
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0
+        },
+        "worldId": {
+          "type": "string"
         }
       },
       "required": [
@@ -225,7 +264,11 @@
         "cells",
         "player",
         "entities",
+        "items",
+        "contentId",
         "contentHash",
+        "contentVisuals",
+        "worldId",
         "stateHash"
       ]
     },
@@ -260,6 +303,12 @@
             "$ref": "#/$defs/GameEventDto"
           }
         },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDto"
+          }
+        },
         "player": {
           "$ref": "#/$defs/PlayerDto"
         },
@@ -292,8 +341,34 @@
         "changedCells",
         "player",
         "entities",
+        "items",
         "removedEntities",
         "stateHash"
+      ]
+    },
+    "ItemDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "position",
+        "quantity"
       ]
     },
     "PlayerDto": {

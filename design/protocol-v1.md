@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：P0 DTO、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.1、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.0";
+  protocolVersion: "1.1";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -75,6 +75,8 @@ interface ProtocolEnvelope<T> {
   payload: T;
 }
 ```
+
+协议 1.1 的初始 `GameSnapshot` 还包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、物品实例和每格 `itemId`。内容目录只在全量快照发送；回合增量继续只传变化格和当前实体状态。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

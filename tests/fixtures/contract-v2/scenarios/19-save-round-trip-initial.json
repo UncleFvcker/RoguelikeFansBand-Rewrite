@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "save.round-trip.initial-state",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0x0123456789abcdef",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 0,
+      "turn": 0,
+      "lastCommandSeq": 0,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "entityCount": 1,
+      "stateHash": "0d706adfb4678b72d01a3f6ab261e76df3e550e8f1f87c69ff0a7fbf0fd21244"
+    },
+    "events": [],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "0d706adfb4678b72d01a3f6ab261e76df3e550e8f1f87c69ff0a7fbf0fd21244"
+  }
+}

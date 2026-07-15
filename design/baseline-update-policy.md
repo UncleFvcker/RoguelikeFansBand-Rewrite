@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v1/baseline-policy.json` 是机器可读政策。公共 CI 每次运行：
+`tests/fixtures/contract-v2/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v2/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -99,3 +99,5 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline
 - 删除一个已发布 fixture 集合。
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
+
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；迁移范围和 state hash Schema 变化见[Contract v2 内容运行时迁移](contract-v2-content-migration.md)。

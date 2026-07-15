@@ -98,6 +98,14 @@ async function runScenario(driver) {
   assert.equal(state.appliedCells, "400");
   assert.equal(state.tilesetId, "rfb.tileset.ascii-default");
   assert.equal(state.canvasUnchanged, true);
+  assert.equal(state.contentId, "rfb.demo.original-v1");
+  assert.equal(
+    state.contentHash,
+    "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
+  );
+  assert.equal(state.worldId, "demo.world.original-v1");
+  assert.equal(state.contentVisualCount, "5");
+  assert.equal(state.itemCount, "1");
 
   await dispatchKey(driver, "Numpad5", "5");
   await driver.waitFor(`return document.querySelector("#turn-value")?.textContent === "1"`, "wait command");
@@ -204,6 +212,11 @@ async function readState(driver) {
       renderKind: host?.dataset.renderKind,
       appliedCells: host?.dataset.lastAppliedCells,
       tilesetId: host?.dataset.tilesetId,
+      contentId: host?.dataset.contentId,
+      contentHash: host?.dataset.contentHash,
+      worldId: host?.dataset.worldId,
+      contentVisualCount: host?.dataset.contentVisualCount,
+      itemCount: host?.dataset.itemCount,
       canvasUnchanged: window.__rfbE2eCanvas === host?.querySelector("canvas"),
       messages: document.querySelector("#message-list")?.textContent,
     };

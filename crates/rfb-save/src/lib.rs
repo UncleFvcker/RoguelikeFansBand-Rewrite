@@ -140,8 +140,8 @@ pub enum SaveError {
 #[cfg(test)]
 mod tests {
     use rfb_protocol::{
-        CharacterSummary, DEMO_CONTENT_HASH, DEMO_CONTENT_ID, EntityDto, PROTOCOL_VERSION,
-        PlayerDto, Position, RngSaveDto, TerrainSaveDto,
+        CharacterSummary, EntityDto, ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto,
+        TerrainSaveDto,
     };
 
     use super::*;
@@ -160,8 +160,8 @@ mod tests {
                 location_key: "location-demo".to_owned(),
                 turn: 0,
             },
-            content_id: DEMO_CONTENT_ID.to_owned(),
-            content_hash: DEMO_CONTENT_HASH.to_owned(),
+            content_id: "rfb.test.content-v1".to_owned(),
+            content_hash: "0".repeat(64),
             payload_encoding: "messagepack".to_owned(),
         };
         let payload = SavePayloadV1 {
@@ -182,13 +182,15 @@ mod tests {
                 max_hp: 10,
             },
             entities: Vec::<EntityDto>::new(),
+            items: Vec::<ItemDto>::new(),
             rng: RngSaveDto {
                 algorithm: "rfb-rng-xoshiro256ss-v1".to_owned(),
                 state: [1, 2, 3, 4],
                 draw_counter: 0,
             },
-            content_id: DEMO_CONTENT_ID.to_owned(),
-            content_hash: DEMO_CONTENT_HASH.to_owned(),
+            content_id: "rfb.test.content-v1".to_owned(),
+            content_hash: "0".repeat(64),
+            world_id: "test.world.fixture".to_owned(),
         };
         (header, payload)
     }

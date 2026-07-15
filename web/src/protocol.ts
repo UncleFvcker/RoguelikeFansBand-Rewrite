@@ -9,15 +9,19 @@ export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number
 
 export type Position = { x: number, y: number, };
 
-export type CellDto = { position: Position, terrainId: string, actorId: string | null, };
+export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, };
+
+export type ContentVisualDto = { id: string, glyph: string, };
 
 export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, };
 
 export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, };
 
+export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
+
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, };
 
-export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, player: PlayerDto, entities: Array<EntityDto>, contentHash: string, stateHash: string, };
+export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
 
-export type GameUpdate = { baseRevision: number, revision: number, turn: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, player: PlayerDto, entities: Array<EntityDto>, removedEntities: Array<string>, stateHash: string, };
+export type GameUpdate = { baseRevision: number, revision: number, turn: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, removedEntities: Array<string>, stateHash: string, };
 
