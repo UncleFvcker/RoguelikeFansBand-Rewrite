@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：P0 DTO 与 `TauriNativeTransport` 已实现
+状态：P0 DTO、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -23,6 +23,15 @@
 - 地图批量数据允许使用 `ArrayBuffer`/TypedArray 专用载荷，不能把每格都扩展成大型 JSON 对象。
 
 JSON 与 MessagePack 必须表达相同语义；业务逻辑不能依赖 map key 顺序或具体编码器行为。
+
+Rust `rfb-protocol` 是协议类型的唯一权威来源：
+
+```powershell
+cargo run -p rfb-protocol --features bindings --bin generate-bindings
+cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
+```
+
+生成结果分别提交到 `web/src/protocol.ts` 和 `schemas/protocol-v1.schema.json`。前者供 TypeScript 编译器使用，后者供工具、兼容检查和未来插件接口使用；二者都禁止手工编辑，CI 会拒绝与 Rust DTO 不一致的提交。
 
 ## 3. 版本与握手
 
@@ -171,4 +180,5 @@ major 版本要求：
 - 重复 commandSeq 不会重复执行；
 - 未知 capability 和可选字段保持向前兼容；
 - fuzz 测试不会因畸形消息 panic 或越界分配；
-- 协议 Schema 的破坏性变化由 CI 阻止。
+- 已提交的 TypeScript/JSON Schema 与 Rust DTO 发生漂移时由 CI 阻止；
+- 协议 Schema 的破坏性变化需要在后续兼容性检查中显式批准。

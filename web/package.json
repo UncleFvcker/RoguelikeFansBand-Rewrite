@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "tauri dev",
     "dev:ui": "vite --host 127.0.0.1 --port 1420 --strictPort",
+    "generate:protocol": "cargo run --manifest-path ../Cargo.toml -p rfb-protocol --features bindings --bin generate-bindings",
+    "check:protocol": "cargo run --manifest-path ../Cargo.toml -p rfb-protocol --features bindings --bin generate-bindings -- --check",
     "typecheck": "tsc --noEmit",
     "build": "tauri build",
     "build:ui": "npm run typecheck && vite build",

@@ -61,12 +61,21 @@ cargo fmt --all -- --check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test -p rfb-contract
+cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
 
 cd web
 npm ci
 npm run build -- --no-bundle
 # 启动可玩开发版：npm run dev
 ```
+
+Rust 是 CoreTransport DTO 的唯一权威来源。修改 `rfb-protocol` 后运行：
+
+```powershell
+cargo run -p rfb-protocol --features bindings --bin generate-bindings
+```
+
+该命令更新 `web/src/protocol.ts` 和 `schemas/protocol-v1.schema.json`；CI 使用 `--check` 拒绝未同步的生成文件。
 
 如需生成本地旧版参考 manifest：
 
@@ -103,4 +112,4 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v1/baseline-policy.json
 ```
 
-首批 20 个原创 contract fixtures、Tauri 诊断回放、本地旧存档字段级断言、快照规范化工具和基准更新审批规则已经建立。下一步是从 Rust 协议 Schema 自动生成 TypeScript 类型，替换手写镜像。
+首批 20 个原创 contract fixtures、Tauri 诊断回放、Rust → TypeScript/JSON Schema 协议生成、本地旧存档字段级断言和基准更新审批规则已经建立。下一步是建立 `rfb-content` 和第一个原创 JSON 内容包。

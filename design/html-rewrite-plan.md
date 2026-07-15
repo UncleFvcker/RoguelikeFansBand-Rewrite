@@ -483,6 +483,7 @@ interface SaveGame {
 - `rfb-contract` 契约测试驱动和首批 20 个原创 exact fixtures；
 - `rfb-replay` v1、每 100 命令/最终检查点和 10,000 回合无漂移测试；
 - Tauri 原生会话 `ReplayRecorder`、`.rfbreplay` 诊断导出和前端下载入口；
+- Rust DTO 自动生成 `web/src/protocol.ts`、JSON Schema 和 CI 漂移检查；
 - 3 个 `.local/` 旧存档样本清单和快照规范化 Schema v1；
 - `rfb-legacy-import` 链式 XOR 解码、稳定前缀解析和 3 个本地样本字段断言；
 - baseline policy v1、fixture 级差异豁免格式和 CI 验证；
@@ -491,12 +492,11 @@ interface SaveGame {
 
 下一步建议：
 
-1. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
-2. 建立 `rfb-content` 和第一个原创 JSON 内容包；
-3. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
-4. 为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试；
-5. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
-6. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心。
+1. 建立 `rfb-content` 和第一个原创 JSON 内容包；
+2. 加入 ASCII glyph atlas、图片 tileset manifest 和缺失资源回退；
+3. 为地图局部更新、消息分层、存档和回放交互建立 Tauri 端到端测试；
+4. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
+5. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心。
 
 每完成一个阶段，都应在本文件更新：
 

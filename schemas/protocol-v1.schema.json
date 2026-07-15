@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProtocolSchemaV1",
+  "description": "Schema bundle for the types crossing the CoreTransport boundary.",
+  "type": "object",
+  "properties": {
+    "command": {
+      "$ref": "#/$defs/GameCommandEnvelope"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/GameSnapshot"
+    },
+    "update": {
+      "$ref": "#/$defs/GameUpdate"
+    }
+  },
+  "required": [
+    "command",
+    "snapshot",
+    "update"
+  ],
+  "$defs": {
+    "CellDto": {
+      "type": "object",
+      "properties": {
+        "actorId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "position",
+        "terrainId"
+      ]
+    },
+    "Direction": {
+      "type": "string",
+      "enum": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ]
+    },
+    "EntityDto": {
+      "type": "object",
+      "properties": {
+        "hp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "position",
+        "hp",
+        "maxHp"
+      ]
+    },
+    "GameCommand": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "move"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "wait"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "GameCommandEnvelope": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/$defs/GameCommand"
+        },
+        "commandSeq": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "commandSeq",
+        "expectedRevision",
+        "command"
+      ]
+    },
+    "GameEventDto": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "type": "string"
+        },
+        "messageKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "messageKey",
+        "args"
+      ]
+    },
+    "GameSnapshot": {
+      "type": "object",
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellDto"
+          }
+        },
+        "contentHash": {
+          "type": "string"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityDto"
+          }
+        },
+        "height": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "lastCommandSeq": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "player": {
+          "$ref": "#/$defs/PlayerDto"
+        },
+        "protocolVersion": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "stateHash": {
+          "type": "string"
+        },
+        "turn": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "revision",
+        "turn",
+        "lastCommandSeq",
+        "width",
+        "height",
+        "cells",
+        "player",
+        "entities",
+        "contentHash",
+        "stateHash"
+      ]
+    },
+    "GameUpdate": {
+      "type": "object",
+      "properties": {
+        "baseRevision": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "changedCells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellDto"
+          }
+        },
+        "commandSeq": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityDto"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GameEventDto"
+          }
+        },
+        "player": {
+          "$ref": "#/$defs/PlayerDto"
+        },
+        "removedEntities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "revision": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "stateHash": {
+          "type": "string"
+        },
+        "turn": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "baseRevision",
+        "revision",
+        "turn",
+        "commandSeq",
+        "events",
+        "changedCells",
+        "player",
+        "entities",
+        "removedEntities",
+        "stateHash"
+      ]
+    },
+    "PlayerDto": {
+      "type": "object",
+      "properties": {
+        "hp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "position",
+        "hp",
+        "maxHp"
+      ]
+    },
+    "Position": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    }
+  }
+}
