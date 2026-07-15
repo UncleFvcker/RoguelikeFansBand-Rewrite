@@ -133,4 +133,12 @@ cd web
 npm run e2e
 ```
 
-测试覆盖地图局部更新、Canvas/HTML 消息分层、存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。下一步是建立 Tauri Android target，并验证与 Windows 使用同一原生核心。
+测试覆盖地图局部更新、Canvas/HTML 消息分层、存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。
+
+Tauri Android ARM64 Debug APK 构建链也已经建立，Windows 本地可运行：
+
+```powershell
+.\scripts\build-android.ps1 -Proxy http://127.0.0.1:7897
+```
+
+Android 与 Windows 使用同一个 Rust 核心和 Tauri Commands。详细依赖、产物位置和当前尚未完成的真机验证见 [Tauri Android 原生目标](design/android-target.md)。

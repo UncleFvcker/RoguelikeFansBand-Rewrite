@@ -13,6 +13,7 @@
 - [内容数据格式 v1](content-format-v1.md)
 - [Tileset manifest 与资源回退 v1](tileset-format-v1.md)
 - [Tauri 桌面端到端测试](tauri-desktop-e2e.md)
+- [Tauri Android 原生目标](android-target.md)
 - [新存档格式 v1](save-format-v1.md)
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
@@ -495,10 +496,12 @@ interface SaveGame {
 - GitHub Actions 基础 CI。
 - Tauri 内嵌 WebDriver 桌面端到端测试，覆盖 dirty cells、地图/消息分层、存档读写、回放导出和 tileset 热切换；
 - E2E 失败截图与进程日志归档，测试驱动受 debug feature 和显式端口双重限制。
+- Tauri Android Gradle/Kotlin 工程、ARM64 Rust target 和 Debug APK 构建链；
+- Android CI 可重复构建并上传未签名调试 APK。
 
 下一步建议：
 
-1. 建立 Tauri Android target，并验证与 Windows 使用同一原生核心；
+1. 在 Android 真机验证启动、生命周期、存档/回放和文件选择器，并设计不占用现有键位的触屏操作层；
 2. 在内容模型稳定后正式迁移 contract 基准并让 Rust 核心加载编译内容包；
 3. 在隔离导入器内逐段扩展旧存档解析，输出结构化转换报告，不让旧结构体布局进入新核心；
 4. 扩展桌面 E2E 到 resize、缩放、最小化/恢复和稳定视觉基准。

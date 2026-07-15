@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MPL-2.0",
   "scripts": {
+    "tauri": "tauri",
     "dev": "tauri dev",
     "dev:ui": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "generate:protocol": "cargo run --manifest-path ../Cargo.toml -p rfb-protocol --features bindings --bin generate-bindings",
@@ -16,6 +17,7 @@
     "e2e:build": "tauri build --debug --no-bundle --features webdriver",
     "e2e:tauri": "node e2e/tauri.e2e.mjs",
     "e2e": "npm run e2e:build && npm run e2e:tauri",
+    "android:build:debug": "tauri android build --debug --target aarch64 --apk --ci",
     "preview": "vite preview"
   },
   "dependencies": {

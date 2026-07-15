@@ -7,3 +7,7 @@ Original documentation, gameplay content and creative assets are licensed under 
 Legacy RoguelikeFansBand, FrogComposband and Angband content is not included in this repository and is not covered by these licenses. Development tools may read a separately installed local legacy repository for compatibility testing. That source retains its original copyright and license terms.
 
 Third-party notices will be appended here as dependencies and assets are introduced.
+
+The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
+from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
+https://github.com/tauri-apps/tauri
