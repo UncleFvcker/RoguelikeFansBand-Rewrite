@@ -4,6 +4,7 @@ members = [
     "crates/rfb-contract",
     "crates/rfb-legacy-probe",
     "crates/rfb-protocol",
+    "crates/rfb-replay",
     "crates/rfb-save",
     "web/src-tauri",
 ]

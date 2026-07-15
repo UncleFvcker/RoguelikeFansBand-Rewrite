@@ -366,6 +366,16 @@ impl Game {
         format!("{digest:x}")
     }
 
+    #[must_use]
+    pub const fn rng_draw_counter(&self) -> u64 {
+        self.rng.draw_counter
+    }
+
+    #[must_use]
+    pub const fn rng_algorithm(&self) -> &'static str {
+        RNG_ALGORITHM
+    }
+
     fn player_dto(&self) -> PlayerDto {
         PlayerDto {
             id: self.player.id.clone(),

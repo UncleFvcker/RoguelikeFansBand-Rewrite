@@ -2438,6 +2438,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "rfb-replay"
+version = "0.1.0"
+dependencies = [
+ "rfb-core",
+ "rfb-protocol",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "rfb-save"
 version = "0.1.0"
 dependencies = [

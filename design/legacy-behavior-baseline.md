@@ -139,5 +139,6 @@ cargo run -p rfb-contract -- verify tests/fixtures/contract-v1/scenarios/01-move
 当前完成情况：
 
 - 已完成：基准 manifest 探针、20 个原创 exact contract fixtures、所有原生目标可共用的 `rfb-contract` 测试入口；
-- 待完成：3 个本地旧存档样本、回放文件 v1、每 100 命令检查点、快照规范化工具和基准更新审批文件；
+- 已完成：回放文件 v1、每 100 命令和最终状态检查点、10,000 回合无漂移测试、存档重载续播测试；
+- 待完成：3 个本地旧存档样本、快照规范化工具和基准更新审批文件；
 - 当前 fixture 只固定已经实现的原创垂直切片行为，不代表物品、状态、法术、AI 等旧 RFB 模块已经迁移。

@@ -1,6 +1,6 @@
 # 确定性模拟、随机数与回放规范
 
-状态：P0 规则已确定，参考实现尚未编写
+状态：P0 规则、RNG 和 `rfb-replay` v1 参考实现已建立，Tauri 诊断导出待接入
 
 ## 1. 原则
 
@@ -64,6 +64,7 @@ interface ReplayV1 {
   contentHash: string;
   initialSaveHash: string;
   rngAlgorithm: string;
+  stateHashSchemaVersion: 1;
   commands: ReplayCommand[];
   checkpoints: ReplayCheckpoint[];
 }
@@ -71,7 +72,18 @@ interface ReplayV1 {
 
 每条命令记录 `commandSeq`、执行前 revision、回合号和命令 DTO。禁止记录本地化文本代替语义 ID。
 
-检查点默认每 100 个命令生成一次，包含 revision、turn、RNG draw counter 和 state hash。调试版本可以附带规范化快照。
+检查点默认每 100 个成功命令生成一次，回放结束或导出时还会补充最后一个命令的检查点。检查点包含 revision、turn、RNG draw counter 和 state hash。调试版本可以附带规范化快照。
+
+正式 `.rfbreplay` 文件使用 `RFBREPL\0` magic、容器版本、payload 长度、SHA-256 校验和与 MessagePack payload。开发工具可以读写等价 JSON，但 JSON 不是正式发行载荷。
+
+`ReplayRecorder` 只包装正常的 `Game::dispatch`，不会实现第二套规则路径。它支持：
+
+- 自动构造命令序号的记录入口；
+- 记录已有 `GameCommandEnvelope`；
+- 不结束游戏会话即可导出回放快照；
+- 从任意新游戏或载入后的存档状态开始新的回放段；
+- 播放前检查核心版本、协议、内容 hash、RNG 和初始状态 hash；
+- 播放时检查命令上下文、检查点调度和所有检查点内容。
 
 ## 6. State hash
 
@@ -108,3 +120,5 @@ interface ReplayV1 {
 - 保存并重载后继续回放的结果与不中断回放一致；
 - 日志等级、语言和渲染后端变化不改变 RNG draw counter；
 - 随机数算法或 hash Schema 变化时旧回放给出明确的不兼容错误。
+
+当前自动测试已经覆盖 10,000 回合无漂移、每 100 命令检查点、最终检查点、RNG draw counter、存档重载续播、命令和上下文篡改、错误初始状态、二进制/JSON 回环以及 checksum 损坏检测。

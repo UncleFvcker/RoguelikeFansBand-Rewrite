@@ -28,6 +28,8 @@ RoguelikeFansBand 的新一代重构工程。
 
 原创规则契约位于 [`tests/fixtures/contract-v1/scenarios`](tests/fixtures/contract-v1/scenarios)，由 `rfb-contract` 在所有平台运行。
 
+确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
+
 ## 原项目
 
 旧版 RFB 源码和当前可玩版本继续保留在：
@@ -74,4 +76,4 @@ $env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
 cargo run -p rfb-legacy-probe
 ```
 
-输出只写入被 Git 忽略的 `.local/legacy-baseline/`。首批 20 个原创 contract fixtures 已建立；下一步是增加回放文件 v1、每 100 命令 state hash 检查点和本地旧存档导入样本。
+输出只写入被 Git 忽略的 `.local/legacy-baseline/`。首批 20 个原创 contract fixtures、回放文件 v1 和每 100 命令 state hash 检查点已经建立；下一步是准备本地旧存档导入样本和状态快照规范化工具。
