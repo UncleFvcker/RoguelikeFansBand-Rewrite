@@ -76,4 +76,19 @@ $env:RFB_LEGACY_COMMIT="191f48c3fd1cdbc81a3d3395a88cd6758402b4d9"
 cargo run -p rfb-legacy-probe
 ```
 
-输出只写入被 Git 忽略的 `.local/legacy-baseline/`。首批 20 个原创 contract fixtures、回放文件 v1 和每 100 命令 state hash 检查点已经建立；下一步是准备本地旧存档导入样本和状态快照规范化工具。
+登记本地旧存档样本时显式传入至少 3 个旧仓库内的文件路径：
+
+```powershell
+cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存档3>
+```
+
+工具只把中性命名副本、SHA-256、四字节版本头和本地清单写入被 Git 忽略的 `.local/legacy-baseline/`。当前机器已经准备两份 1.3.0.7 样本和一份 1.2.0.6 迁移样本。
+
+快照规范化和 hash：
+
+```powershell
+cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
+cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
+```
+
+首批 20 个原创 contract fixtures、回放文件 v1、本地旧存档样本和快照规范化工具已经建立。下一步是补充基准更新审批规则。

@@ -2,7 +2,11 @@
 
 use std::{env, fs, path::PathBuf, process::ExitCode};
 
-use rfb_contract::{ContractFixture, observe, verify};
+use rfb_contract::{
+    ContractFixture, observe,
+    snapshot::{normalize_json, normalized_hash},
+    verify,
+};
 
 fn main() -> ExitCode {
     match run() {
@@ -16,24 +20,41 @@ fn main() -> ExitCode {
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().skip(1);
-    let mode = args
-        .next()
-        .ok_or("usage: rfb-contract <observe|verify> <fixture.json>")?;
-    let path = PathBuf::from(
-        args.next()
-            .ok_or("usage: rfb-contract <observe|verify> <fixture.json>")?,
-    );
+    let mode = args.next().ok_or(
+        "usage: rfb-contract <observe|verify|normalize-snapshot|hash-snapshot> <input.json>",
+    )?;
+    let path = PathBuf::from(args.next().ok_or(
+        "usage: rfb-contract <observe|verify|normalize-snapshot|hash-snapshot> <input.json>",
+    )?);
     if args.next().is_some() {
-        return Err("usage: rfb-contract <observe|verify> <fixture.json>".into());
+        return Err(
+            "usage: rfb-contract <observe|verify|normalize-snapshot|hash-snapshot> <input.json>"
+                .into(),
+        );
     }
-    let fixture: ContractFixture = serde_json::from_slice(&fs::read(path)?)?;
     match mode.to_string_lossy().as_ref() {
-        "observe" => println!("{}", serde_json::to_string_pretty(&observe(&fixture)?)?),
+        "observe" => {
+            let fixture: ContractFixture = serde_json::from_slice(&fs::read(path)?)?;
+            println!("{}", serde_json::to_string_pretty(&observe(&fixture)?)?);
+        }
         "verify" => {
+            let fixture: ContractFixture = serde_json::from_slice(&fs::read(path)?)?;
             verify(&fixture)?;
             println!("{}: ok", fixture.id);
         }
-        _ => return Err("mode must be observe or verify".into()),
+        "normalize-snapshot" => {
+            let normalized = normalize_json(&fs::read(path)?)?;
+            println!("{}", serde_json::to_string_pretty(&normalized)?);
+        }
+        "hash-snapshot" => {
+            let normalized = normalize_json(&fs::read(path)?)?;
+            println!("{}", normalized_hash(&normalized)?);
+        }
+        _ => {
+            return Err(
+                "mode must be observe, verify, normalize-snapshot, or hash-snapshot".into(),
+            );
+        }
     }
     Ok(())
 }

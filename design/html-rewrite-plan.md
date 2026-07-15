@@ -481,13 +481,14 @@ interface SaveGame {
 - WASM crate、Worker 和相关构建链清理；
 - `rfb-contract` 契约测试驱动和首批 20 个原创 exact fixtures；
 - `rfb-replay` v1、每 100 命令/最终检查点和 10,000 回合无漂移测试；
+- 3 个 `.local/` 旧存档样本清单和快照规范化 Schema v1；
 - Cargo 测试、TypeScript 检查和 Vite UI 构建；
 - GitHub Actions 基础 CI。
 
 下一步建议：
 
-1. 建立 3 个只保存在 `.local/` 的旧存档导入样本；
-2. 建立状态快照规范化工具和基准更新审批文件；
+1. 建立基准更新审批文件和差异豁免格式；
+2. 为 3 个本地旧存档增加字段级解析和导入断言；
 3. 将 `ReplayRecorder` 接入 Tauri 诊断导出；
 4. 从 Rust 协议 Schema 自动生成 TypeScript 类型，替换当前手写镜像；
 5. 建立 `rfb-content` 和第一个原创 JSON 内容包；

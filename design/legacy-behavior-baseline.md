@@ -36,6 +36,11 @@
 ```text
 .local/legacy-baseline/
 ├─ manifest.json
+├─ save-samples.json
+├─ saves/
+│  ├─ legacy-save-01.bin
+│  ├─ legacy-save-02.bin
+│  └─ legacy-save-03.bin
 ├─ scenarios/
 │  ├─ movement/
 │  ├─ combat/
@@ -60,6 +65,14 @@ tests/fixtures/contract-v1/
 提交 fixture 中的 `legacyCommit` 只标识准备对照的旧版基准，不表示当前断言已经从旧版数据复制或完成差分验证。
 
 旧版源码、二进制、文本、数据、截图、存档和素材不能复制到新仓库或新游戏发行包。公共 CI 没有 `RFB_LEGACY_SOURCE` 时跳过本地差分测试，只运行原创 contract fixtures。
+
+本地样本通过以下命令登记：
+
+```powershell
+cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存档3>
+```
+
+工具要求源文件位于已验证的 `RFB_LEGACY_SOURCE` 内，读取四字节版本头，复制为中性样本名，并在复制前后校验 SHA-256。当前本机集合包含两份 1.3.0.7 `baseline-exact` 样本和一份 1.2.0.6 `legacy-migration` 样本。样本目前只完成来源、版本头和文件哈希登记，尚不表示 Rust 导入器已经能够解析全部字段。
 
 ## 4. 场景格式
 
@@ -122,6 +135,23 @@ cargo run -p rfb-contract -- verify tests/fixtures/contract-v1/scenarios/01-move
 - 差异豁免必须包含旧结果、新结果、批准日期和关联 issue；
 - 不允许通过更新全部 golden 文件来隐藏无法解释的变化。
 
+`rfb-contract` 的快照规范化 Schema v1：
+
+- 递归按 key 规范化 JSON object；
+- `entities`、`items`、`statuses` 按稳定 ID 排序；
+- `cells`、`changedCells` 按 y/x 坐标排序；
+- `removedEntities` 等无序 ID 集合按字符串排序；
+- 保留事件和命令数组顺序；
+- 移除时间戳、session/request ID、本地源路径、平台和窗口信息；
+- 统一 CRLF/CR 为 LF；
+- 拒绝权威快照中的浮点数；
+- 在规范化输出中写入 `normalizationSchemaVersion`。
+
+```powershell
+cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
+cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
+```
+
 ## 8. 阶段 0 完成门槛
 
 进入大规模 Rust 规则实现前，必须完成：
@@ -140,5 +170,6 @@ cargo run -p rfb-contract -- verify tests/fixtures/contract-v1/scenarios/01-move
 
 - 已完成：基准 manifest 探针、20 个原创 exact contract fixtures、所有原生目标可共用的 `rfb-contract` 测试入口；
 - 已完成：回放文件 v1、每 100 命令和最终状态检查点、10,000 回合无漂移测试、存档重载续播测试；
-- 待完成：3 个本地旧存档样本、快照规范化工具和基准更新审批文件；
+- 已完成：3 个本地旧存档样本及 SHA-256/版本头清单、快照规范化 Schema v1 和 CLI；
+- 待完成：基准更新审批文件，以及旧存档的字段级解析和导入断言；
 - 当前 fixture 只固定已经实现的原创垂直切片行为，不代表物品、状态、法术、AI 等旧 RFB 模块已经迁移。
