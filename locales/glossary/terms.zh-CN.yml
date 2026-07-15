@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+
+schemaVersion: 1
+terms:
+  - id: ui.inventory
+    preferred: 背包
+    forbidden: [库存, 物品栏]
+  - id: ui.tileset
+    preferred: 地图外观
+    allowedTechnical: [Tileset]
+  - id: replay.diagnostic
+    preferred: 诊断回放
+  - id: item.stack
+    preferred: 堆
+  - id: state.hash
+    preferred: 状态哈希
+  - id: actor.ember-mote
+    preferred: 发光微粒
+  - id: item.luminous-shard
+    preferred: 发光碎片

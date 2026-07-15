@@ -2,6 +2,13 @@
 
 import "./styles.css";
 
+import {
+  Localization,
+  isSupportedLocale,
+  type LocalizationArgs,
+  type MessageKey,
+} from "./localization";
+import { LOCALIZATION_SOURCES } from "./localization-resources";
 import { MapRenderer } from "./map-renderer";
 import type {
   Direction,
@@ -12,6 +19,7 @@ import type {
   InventoryItemDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
+import type { TilesetWarning } from "./tileset-runtime";
 
 const core = new TauriNativeTransport();
 const renderer = new MapRenderer();
@@ -33,19 +41,38 @@ const clearMessages = element<HTMLButtonElement>("clear-messages");
 const inputPresetSelect = element<HTMLSelectElement>("input-preset");
 const tilesetPresetSelect = element<HTMLSelectElement>("tileset-preset");
 const controlsHelp = element<HTMLElement>("controls-help");
+const languageSelect = element<HTMLSelectElement>("language-select");
 
 type InputPreset = "numpad" | "vi" | "wasd";
 type TilesetPreset = "ascii" | "image";
+type ConnectionState = "starting" | "ready" | "error";
+type MessageRecord =
+  | {
+      source: "key";
+      turn: string;
+      kind: string;
+      key: MessageKey;
+      args?: Record<string, string | number>;
+    }
+  | { source: "event"; turn: string; kind: string; event: GameEventDto };
 const INPUT_PRESET_STORAGE_KEY = "rfb.input-preset";
 const TILESET_PRESET_STORAGE_KEY = "rfb.tileset-preset";
+const LOCALE_STORAGE_KEY = "rfb.locale";
 const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
   ascii: "/tilesets/ascii-default/tileset.json",
   image: "/tilesets/image-demo/tileset.json",
 };
 let inputPreset = readInputPreset();
 let tilesetPreset = readTilesetPreset();
+const localization = new Localization(readLocale(), LOCALIZATION_SOURCES);
+let connectionState: ConnectionState = "starting";
+let currentInventory: InventoryItemDto[] = [];
+const messageRecords: MessageRecord[] = [];
 inputPresetSelect.value = inputPreset;
 tilesetPresetSelect.value = tilesetPreset;
+languageSelect.value = localization.locale;
+localization.localizeDocument();
+renderConnectionStatus();
 renderInputHelp();
 
 void start();
@@ -63,14 +90,15 @@ async function start(): Promise<void> {
       snapshot.height,
       TILESET_MANIFESTS[tilesetPreset],
       contentGlyphs,
+      localization.format("map-aria-label"),
     );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
     renderInventory(snapshot.inventory);
-    addMessage("Tauri 原生 Rust 核心已启动；地图与文字由不同渲染层管理。", "system");
+    addLocalizedMessage("message-core-started", undefined, "system");
     announceTileset(tileset.id, tileset.warnings);
-    connectionStatus.textContent = "核心已连接";
-    connectionStatus.classList.add("ready");
+    connectionState = "ready";
+    renderConnectionStatus();
   } catch (error) {
     showError(error);
   }
@@ -86,14 +114,29 @@ window.addEventListener("keydown", (event) => {
 saveButton.addEventListener("click", () => void exportSave());
 replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
-clearMessages.addEventListener("click", () => messageList.replaceChildren());
+clearMessages.addEventListener("click", () => {
+  messageRecords.length = 0;
+  renderMessages();
+});
 inputPresetSelect.addEventListener("change", () => {
   inputPreset = isInputPreset(inputPresetSelect.value) ? inputPresetSelect.value : "numpad";
   localStorage.setItem(INPUT_PRESET_STORAGE_KEY, inputPreset);
   renderInputHelp();
-  addMessage(`移动键位已切换为${inputPresetName(inputPreset)}。`, "system");
+  addLocalizedMessage("message-input-preset-changed", { preset: inputPreset }, "system");
 });
 tilesetPresetSelect.addEventListener("change", () => void changeTileset());
+languageSelect.addEventListener("change", () => {
+  const locale = isSupportedLocale(languageSelect.value) ? languageSelect.value : "zh-CN";
+  localization.setLocale(locale);
+  localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  localization.localizeDocument();
+  languageSelect.value = locale;
+  renderer.setCanvasLabel(localization.format("map-aria-label"));
+  renderConnectionStatus();
+  renderInputHelp();
+  renderInventory(currentInventory);
+  renderMessages();
+});
 window.addEventListener("beforeunload", () => {
   renderer.destroy();
   core.dispose();
@@ -106,7 +149,7 @@ async function dispatch(command: GameCommand): Promise<void> {
     renderer.applyUpdate(update);
     renderStatus(update);
     renderInventory(update.inventory);
-    for (const event of update.events) addMessage(formatEvent(event), event.kind);
+    for (const event of update.events) addGameEvent(event);
   } catch (error) {
     showError(error);
   } finally {
@@ -118,7 +161,7 @@ async function exportSave(): Promise<void> {
   try {
     const bytes = await core.save();
     downloadBytes(bytes, "rfb-rewrite-demo.rfbsave");
-    addMessage("已导出带校验和的 .rfbsave 存档。", "system");
+    addLocalizedMessage("message-save-exported", undefined, "system");
   } catch (error) {
     showError(error);
   }
@@ -128,7 +171,7 @@ async function exportReplay(): Promise<void> {
   try {
     const bytes = await core.exportReplay();
     downloadBytes(bytes, "rfb-rewrite-diagnostic.rfbreplay");
-    addMessage("已导出不包含存档和本地路径的诊断回放。", "system");
+    addLocalizedMessage("message-replay-exported", undefined, "system");
   } catch (error) {
     showError(error);
   }
@@ -144,7 +187,7 @@ async function importSave(): Promise<void> {
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
     renderInventory(snapshot.inventory);
-    addMessage("存档校验与载入成功。", "system");
+    addLocalizedMessage("message-save-loaded", undefined, "system");
   } catch (error) {
     showError(error);
   }
@@ -167,7 +210,7 @@ async function changeTileset(): Promise<void> {
   } catch (error) {
     tilesetPresetSelect.value = tilesetPreset;
     const message = error instanceof Error ? error.message : String(error);
-    addMessage(`地图外观载入失败：${message}`, "error");
+    addLocalizedMessage("message-tileset-load-failed", { error: message }, "error");
     console.error(error);
   } finally {
     busy = false;
@@ -192,12 +235,15 @@ function renderContentMetadata(snapshot: GameSnapshot): void {
 }
 
 function renderInventory(inventory: InventoryItemDto[]): void {
-  inventoryCount.textContent = `${inventory.length} 堆`;
+  currentInventory = inventory.map((item) => ({ ...item }));
+  inventoryCount.textContent = localization.format("inventory-stack-count", {
+    count: inventory.length,
+  });
   inventoryList.replaceChildren();
   if (inventory.length === 0) {
     const empty = document.createElement("li");
     empty.className = "inventory-empty";
-    empty.textContent = "背包是空的。站在物品上按 G 拾取。";
+    empty.textContent = localization.format("inventory-empty");
     inventoryList.append(empty);
     return;
   }
@@ -206,63 +252,122 @@ function renderInventory(inventory: InventoryItemDto[]): void {
     row.className = "inventory-item";
     row.dataset.itemId = item.id;
     const name = document.createElement("span");
-    name.textContent = itemName(item.kindId);
+    name.textContent = contentName(item.kindId);
     const quantity = document.createElement("span");
     quantity.className = "inventory-quantity";
-    quantity.textContent = `×${item.quantity}`;
+    quantity.textContent = localization.format("inventory-quantity", {
+      quantity: item.quantity,
+    });
     row.append(name, quantity);
     inventoryList.append(row);
   }
 }
 
 function formatEvent(event: GameEventDto): string {
-  const target = entityName(event.args.target);
   switch (event.messageKey) {
     case "game-wait":
-      return "你在寂静中停留了一回合。";
+      return localization.format("message-game-wait");
     case "game-move-blocked":
-      return "前方的结构阻挡了道路。";
+      return localization.format("message-move-blocked");
     case "combat-player-hit":
-      return `你击中了${target}，造成 ${event.args.damage ?? "?"} 点伤害。`;
+      return localization.format("message-combat-hit", {
+        target: contentName(event.args.target),
+        damage: event.args.damage ?? "?",
+      });
     case "combat-player-slay":
-      return `${target}熄灭了。`;
+      return localization.format("message-combat-slay", {
+        target: contentName(event.args.target),
+      });
     case "item-pickup-success":
-      return `你拾取了${itemName(event.args.target)} ×${event.args.quantity ?? "?"}。`;
+      return localization.format("message-item-pickup-success", {
+        target: contentName(event.args.target),
+        quantity: event.args.quantity ?? "?",
+      });
     case "item-pickup-none":
-      return "脚下没有可以拾取的物品。";
+      return localization.format("message-item-pickup-none");
     default:
-      return `[${event.messageKey}]`;
+      return localization.format("message-unknown-event", { key: event.messageKey });
   }
 }
 
-function itemName(id: string | undefined): string {
-  if (id === "demo.item.luminous-shard") return "发光碎片";
-  return "未知物品";
+function contentName(id: string | undefined): string {
+  if (id === "demo.item.luminous-shard") {
+    return localization.format("item-demo-luminous-shard-name");
+  }
+  if (id === "demo.actor.ember-mote") {
+    return localization.format("actor-demo-ember-mote-name");
+  }
+  return localization.format(
+    id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",
+  );
 }
 
-function entityName(id: string | undefined): string {
-  if (id === "demo.actor.ember-mote") return "发光微粒";
-  return "未知实体";
+function addLocalizedMessage(
+  key: MessageKey,
+  args: Record<string, string | number> | undefined,
+  kind: string,
+): void {
+  messageRecords.push({
+    source: "key",
+    turn: turnValue.textContent ?? "0",
+    kind,
+    key,
+    args,
+  });
+  renderMessages();
 }
 
-function addMessage(text: string, kind: string): void {
+function addGameEvent(event: GameEventDto): void {
+  messageRecords.push({
+    source: "event",
+    turn: turnValue.textContent ?? "0",
+    kind: event.kind,
+    event,
+  });
+  renderMessages();
+}
+
+function renderMessages(): void {
+  messageList.replaceChildren();
+  for (const record of messageRecords) renderMessage(record);
+  messageList.scrollTop = messageList.scrollHeight;
+}
+
+function renderMessage(record: MessageRecord): void {
   const item = document.createElement("li");
-  item.className = `message message-${kind.replaceAll(".", "-")}`;
+  item.className = `message message-${record.kind.replaceAll(".", "-")}`;
   const turn = document.createElement("span");
   turn.className = "message-turn";
-  turn.textContent = turnValue.textContent ?? "0";
+  turn.textContent = record.turn;
   const content = document.createElement("span");
-  content.textContent = text;
+  content.textContent =
+    record.source === "event"
+      ? formatEvent(record.event)
+      : localization.format(record.key, localizedMessageArgs(record));
   item.append(turn, content);
   messageList.append(item);
-  messageList.scrollTop = messageList.scrollHeight;
+}
+
+function localizedMessageArgs(
+  record: Extract<MessageRecord, { source: "key" }>,
+): LocalizationArgs | undefined {
+  if (!record.args) return undefined;
+  if (record.key === "message-input-preset-changed") {
+    const preset = String(record.args.preset);
+    return {
+      preset: isInputPreset(preset)
+        ? localization.format(inputPresetMessageKey(preset))
+        : preset,
+    };
+  }
+  return record.args;
 }
 
 function showError(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
-  connectionStatus.textContent = "核心错误";
-  connectionStatus.classList.add("error");
-  addMessage(`错误：${message}`, "error");
+  connectionState = "error";
+  renderConnectionStatus();
+  addLocalizedMessage("message-error", { error: message }, "error");
   console.error(error);
 }
 
@@ -320,31 +425,55 @@ function readTilesetPreset(): TilesetPreset {
   return isTilesetPreset(stored) ? stored : "ascii";
 }
 
+function readLocale(): "en-US" | "zh-CN" {
+  const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+  return isSupportedLocale(stored) ? stored : "zh-CN";
+}
+
 function isTilesetPreset(value: string | null): value is TilesetPreset {
   return value === "ascii" || value === "image";
 }
 
-function announceTileset(id: string, warnings: readonly string[]): void {
-  addMessage(`地图外观已载入：${id}。`, "system");
-  for (const warning of warnings) addMessage(warning, "system");
+function announceTileset(id: string, warnings: readonly TilesetWarning[]): void {
+  addLocalizedMessage("message-tileset-loaded", { id }, "system");
+  for (const warning of warnings) {
+    addLocalizedMessage(tilesetWarningMessageKey(warning), undefined, "system");
+  }
 }
 
 function renderInputHelp(): void {
-  const help: Record<InputPreset, string> = {
-    numpad: "小键盘 1–9 八向移动，5 等待。NumLock 开关均可使用。",
-    vi: "HJKL 四向移动，YUBN 斜向移动，句点等待。",
-    wasd: "WASD 四向移动，QEZC 斜向移动，空格等待。",
+  const keys: Record<InputPreset, MessageKey> = {
+    numpad: "controls-numpad",
+    vi: "controls-vi",
+    wasd: "controls-wasd",
   };
-  controlsHelp.textContent = `${help[inputPreset]} G 拾取脚下物品；撞向发光微粒即可攻击。`;
+  controlsHelp.textContent = localization.format(keys[inputPreset]);
 }
 
-function inputPresetName(preset: InputPreset): string {
-  const names: Record<InputPreset, string> = {
-    numpad: "小键盘预设",
-    vi: "Vi 键位预设",
-    wasd: "WASD 预设",
+function inputPresetMessageKey(preset: InputPreset): MessageKey {
+  const keys: Record<InputPreset, MessageKey> = {
+    numpad: "input-preset-numpad",
+    vi: "input-preset-vi",
+    wasd: "input-preset-wasd",
   };
-  return names[preset];
+  return keys[preset];
+}
+
+function tilesetWarningMessageKey(warning: TilesetWarning): MessageKey {
+  return warning === "image-too-small"
+    ? "message-tileset-image-too-small"
+    : "message-tileset-image-load-failed";
+}
+
+function renderConnectionStatus(): void {
+  const keys: Record<ConnectionState, MessageKey> = {
+    starting: "connection-starting",
+    ready: "connection-ready",
+    error: "connection-error",
+  };
+  connectionStatus.textContent = localization.format(keys[connectionState]);
+  connectionStatus.classList.toggle("ready", connectionState === "ready");
+  connectionStatus.classList.toggle("error", connectionState === "error");
 }
 
 function element<T extends HTMLElement>(id: string): T {

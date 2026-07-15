@@ -3,7 +3,7 @@
 import { Application, Container, Graphics, Sprite } from "pixi.js";
 
 import type { CellDto, EntityDto, GameSnapshot, GameUpdate, ItemDto, PlayerDto } from "./protocol";
-import { TilesetRuntime } from "./tileset-runtime";
+import { TilesetRuntime, type TilesetWarning } from "./tileset-runtime";
 
 const CELL_SIZE = 28;
 const DEFAULT_BACKGROUND = 0x090d12;
@@ -15,7 +15,7 @@ interface CellView {
 
 export interface TilesetChangeResult {
   id: string;
-  warnings: readonly string[];
+  warnings: readonly TilesetWarning[];
 }
 
 export class MapRenderer {
@@ -37,6 +37,7 @@ export class MapRenderer {
     height: number,
     tilesetManifestUrl: string,
     contentGlyphs: Readonly<Record<string, string>>,
+    canvasLabel: string,
   ): Promise<TilesetChangeResult> {
     this.#host = host;
     this.#width = width;
@@ -51,12 +52,16 @@ export class MapRenderer {
       resolution: window.devicePixelRatio,
       autoDensity: true,
     });
-    this.#application.canvas.setAttribute("aria-label", "原创测试地图画布");
+    this.#application.canvas.setAttribute("aria-label", canvasLabel);
     host.replaceChildren(this.#application.canvas);
     this.#application.stage.addChild(this.#world);
     this.#createCells();
     this.#recordRender("tileset", 0);
     return this.#tilesetResult();
+  }
+
+  setCanvasLabel(label: string): void {
+    if (this.#host) this.#application.canvas.setAttribute("aria-label", label);
   }
 
   async setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult> {
@@ -157,7 +162,7 @@ export class MapRenderer {
 
   #tilesetResult(): TilesetChangeResult {
     const tileset = this.#tileset;
-    if (!tileset) throw new Error("tileset 尚未初始化");
+    if (!tileset) throw new Error("tileset runtime is not initialized");
     return { id: tileset.manifest.id, warnings: tileset.warnings };
   }
 

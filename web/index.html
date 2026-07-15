@@ -4,46 +4,53 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#10151d" />
-    <title>RoguelikeFansBand Rewrite — Vertical Slice</title>
+    <title data-l10n-id="app-title"></title>
   </head>
   <body>
     <div id="app">
       <header class="app-header">
         <div>
-          <p class="eyebrow">RFB REWRITE / ORIGINAL TEST WORLD</p>
-          <h1>渲染与规则分层验证场</h1>
+          <p class="eyebrow" data-l10n-id="app-eyebrow"></p>
+          <h1 data-l10n-id="app-heading"></h1>
         </div>
         <div class="header-actions">
-          <button id="replay-button" type="button">导出诊断回放</button>
-          <button id="save-button" type="button">导出存档</button>
+          <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>
+          <button id="save-button" type="button" data-l10n-id="action-export-save"></button>
           <label class="file-button">
-            载入存档
+            <span data-l10n-id="action-load-save"></span>
             <input id="load-input" type="file" accept=".rfbsave,application/octet-stream" />
           </label>
         </div>
       </header>
 
       <main class="game-layout">
-        <section class="map-panel" aria-label="游戏地图">
+        <section class="map-panel" data-l10n-aria-label="map-aria-label">
           <div class="panel-heading">
-            <span>PIXIJS MAP LAYER</span>
-            <span id="connection-status" class="status-pill">正在启动核心</span>
+            <span data-l10n-id="panel-map-title"></span>
+            <span id="connection-status" class="status-pill"></span>
           </div>
           <div id="map-host" class="map-host"></div>
           <div class="input-toolbar">
             <label for="input-preset">
-              移动键位
+              <span data-l10n-id="settings-input-label"></span>
               <select id="input-preset">
-                <option value="numpad">小键盘</option>
-                <option value="vi">Vi 键位（HJKL）</option>
-                <option value="wasd">WASD</option>
+                <option value="numpad" data-l10n-id="input-preset-numpad"></option>
+                <option value="vi" data-l10n-id="input-preset-vi"></option>
+                <option value="wasd" data-l10n-id="input-preset-wasd"></option>
               </select>
             </label>
             <label for="tileset-preset">
-              地图外观
+              <span data-l10n-id="settings-tileset-label"></span>
               <select id="tileset-preset">
-                <option value="ascii">ASCII Glyph Atlas</option>
-                <option value="image">原创图片 Tileset</option>
+                <option value="ascii" data-l10n-id="tileset-ascii"></option>
+                <option value="image" data-l10n-id="tileset-image"></option>
+              </select>
+            </label>
+            <label for="language-select">
+              <span data-l10n-id="settings-language-label"></span>
+              <select id="language-select">
+                <option value="en-US" data-l10n-id="language-name-en-us"></option>
+                <option value="zh-CN" data-l10n-id="language-name-zh-cn"></option>
               </select>
             </label>
             <p id="controls-help" class="controls"></p>
@@ -53,28 +60,28 @@
         <aside class="ui-column">
           <section class="status-panel" aria-labelledby="status-title">
             <div class="panel-heading">
-              <span id="status-title">HTML STATUS LAYER</span>
+              <span id="status-title" data-l10n-id="panel-status-title"></span>
             </div>
             <dl class="status-grid">
-              <div><dt>回合</dt><dd id="turn-value">0</dd></div>
-              <div><dt>生命</dt><dd id="hp-value">--</dd></div>
-              <div><dt>位置</dt><dd id="position-value">--</dd></div>
-              <div><dt>状态哈希</dt><dd id="hash-value">--</dd></div>
+              <div><dt data-l10n-id="status-turn"></dt><dd id="turn-value">0</dd></div>
+              <div><dt data-l10n-id="status-health"></dt><dd id="hp-value">--</dd></div>
+              <div><dt data-l10n-id="status-position"></dt><dd id="position-value">--</dd></div>
+              <div><dt data-l10n-id="status-hash"></dt><dd id="hash-value">--</dd></div>
             </dl>
           </section>
 
           <section class="inventory-panel" aria-labelledby="inventory-title">
             <div class="panel-heading">
-              <span id="inventory-title">HTML INVENTORY LAYER</span>
-              <span id="inventory-count">0 堆</span>
+              <span id="inventory-title" data-l10n-id="panel-inventory-title"></span>
+              <span id="inventory-count"></span>
             </div>
             <ul id="inventory-list" class="inventory-list" aria-live="polite"></ul>
           </section>
 
           <section class="message-panel" aria-labelledby="message-title">
             <div class="panel-heading">
-              <span id="message-title">HTML MESSAGE LAYER</span>
-              <button id="clear-messages" class="quiet-button" type="button">清空</button>
+              <span id="message-title" data-l10n-id="panel-message-title"></span>
+              <button id="clear-messages" class="quiet-button" type="button" data-l10n-id="action-clear-messages"></button>
             </div>
             <ol id="message-list" class="message-list" aria-live="polite"></ol>
           </section>

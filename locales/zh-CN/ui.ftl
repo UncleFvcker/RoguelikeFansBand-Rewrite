@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+
+app-title = RoguelikeFansBand 重构版 — 垂直切片
+app-eyebrow = RFB 重构 / 原创测试世界
+app-heading = 渲染与规则分层验证场
+action-export-replay = 导出诊断回放
+action-export-save = 导出存档
+action-load-save = 载入存档
+map-aria-label = 游戏地图
+panel-map-title = PIXIJS 地图层
+connection-starting = 正在启动核心
+connection-ready = 核心已连接
+connection-error = 核心错误
+settings-input-label = 移动键位
+settings-tileset-label = 地图外观
+settings-language-label = 语言
+language-name-en-us = English
+language-name-zh-cn = 简体中文
+input-preset-numpad = 小键盘
+input-preset-vi = Vi 键位（HJKL）
+input-preset-wasd = WASD
+tileset-ascii = ASCII 字符图集
+tileset-image = 原创图片 Tileset
+panel-status-title = HTML 状态层
+status-turn = 回合
+status-health = 生命
+status-position = 位置
+status-hash = 状态哈希
+panel-inventory-title = HTML 背包层
+inventory-stack-count = { $count } 堆
+inventory-empty = 背包是空的。站在物品上按 G 拾取。
+inventory-quantity = ×{ $quantity }
+panel-message-title = HTML 消息层
+action-clear-messages = 清空
+controls-numpad = 小键盘 1–9 八向移动，5 等待；NumLock 开关均可使用。按 G 拾取脚下物品；撞向发光微粒即可攻击。
+controls-vi = HJKL 四向移动，YUBN 斜向移动，句点等待。按 G 拾取脚下物品；撞向发光微粒即可攻击。
+controls-wasd = WASD 四向移动，QEZC 斜向移动，空格等待。按 G 拾取脚下物品；撞向发光微粒即可攻击。

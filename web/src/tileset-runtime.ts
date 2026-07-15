@@ -16,9 +16,11 @@ export interface RuntimeTileVisual {
   usedFallback: boolean;
 }
 
+export type TilesetWarning = "image-too-small" | "image-load-failed";
+
 export class TilesetRuntime {
   readonly manifest: TilesetManifestV1;
-  readonly warnings: readonly string[];
+  readonly warnings: readonly TilesetWarning[];
   readonly #contentGlyphs: Readonly<Record<string, string>>;
   readonly #glyphAtlas: GlyphAtlas;
   readonly #imageAtlas: Texture | undefined;
@@ -29,7 +31,7 @@ export class TilesetRuntime {
     contentGlyphs: Readonly<Record<string, string>>,
     glyphAtlas: GlyphAtlas,
     imageAtlas: Texture | undefined,
-    warnings: string[],
+    warnings: TilesetWarning[],
   ) {
     this.manifest = manifest;
     this.#contentGlyphs = contentGlyphs;
@@ -43,7 +45,7 @@ export class TilesetRuntime {
     contentGlyphs: Readonly<Record<string, string>>,
   ): Promise<TilesetRuntime> {
     const response = await fetch(manifestUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error(`无法加载 tileset manifest：${response.status}`);
+    if (!response.ok) throw new Error(`tileset manifest request failed: HTTP ${response.status}`);
     const manifest = parseTilesetManifest(await response.json());
     const glyphs = [
       ...Object.values(contentGlyphs),
@@ -58,7 +60,7 @@ export class TilesetRuntime {
       manifest.tileHeight,
       manifest.fallback.glyph,
     );
-    const warnings: string[] = [];
+    const warnings: TilesetWarning[] = [];
     let imageAtlas: Texture | undefined;
 
     if (manifest.mode === "image" && manifest.atlas) {
@@ -71,13 +73,13 @@ export class TilesetRuntime {
         const expectedWidth = manifest.atlas.columns * manifest.tileWidth;
         const expectedHeight = manifest.atlas.rows * manifest.tileHeight;
         if (loaded.source.width < expectedWidth || loaded.source.height < expectedHeight) {
-          warnings.push("图片图集尺寸不足，已回退到 ASCII glyph atlas。");
+          warnings.push("image-too-small");
         } else {
           loaded.source.scaleMode = "nearest";
           imageAtlas = loaded;
         }
       } catch {
-        warnings.push("图片图集加载失败，已回退到 ASCII glyph atlas。");
+        warnings.push("image-load-failed");
       }
     }
 

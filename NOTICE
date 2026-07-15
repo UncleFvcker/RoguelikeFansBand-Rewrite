@@ -11,3 +11,8 @@ Third-party notices will be appended here as dependencies and assets are introdu
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri
+
+Mozilla Fluent TypeScript and Rust libraries are used for localization. They are
+available under the Apache License 2.0:
+https://github.com/projectfluent/fluent.js
+https://github.com/projectfluent/fluent-rs

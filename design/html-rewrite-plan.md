@@ -506,13 +506,15 @@ interface SaveGame {
 - contract-v2 与 state hash Schema v2 基准迁移，contract-v1 历史保留。
 - `PickUp` 拾取命令、确定性堆叠、HTML 背包面板和存档/回放闭环；
 - contract-v3 与 state hash Schema v3 基准迁移，新增成功/空地拾取场景。
+- Fluent `zh-CN`/`en-US` 双语运行时、Rust/TypeScript 共用资源、语言热切换和中文默认界面；
+- 消息历史、背包、内容名称、按键提示和主要桌面 UI 已移除业务文案硬编码。
 
 下一步建议：
 
-1. 建立 Fluent 双语框架，优先迁移消息栏、背包和按键提示，停止继续增加 TypeScript 用户文案硬编码；
-2. 推进桌面现代渲染器：RendererBackend、独立物品层、可见性/记忆 mask 和独立光照 buffer；
-3. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
-4. 扩展背包装备、丢弃和多物品选择交互；
+1. 推进桌面现代渲染器：RendererBackend、独立物品层、可见性/记忆 mask 和独立光照 buffer；
+2. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
+3. 扩展背包装备、丢弃和多物品选择交互；
+4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
 5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
 
 每完成一个阶段，都应在本文件更新：

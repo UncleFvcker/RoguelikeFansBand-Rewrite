@@ -61,16 +61,17 @@ async function main() {
 
 async function runScenario(driver) {
   await driver.waitFor(
-    `return document.querySelector("#connection-status")?.textContent === "核心已连接"`,
+    `return document.querySelector("#connection-status")?.classList.contains("ready")`,
     "native core connection",
   );
   await driver.execute(`
     localStorage.clear();
+    localStorage.setItem("rfb.locale", "zh-CN");
     setTimeout(() => window.location.reload(), 0);
     return true;
   `);
   await driver.waitFor(
-    `return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.querySelector("#connection-status")?.textContent === "核心已连接"`,
+    `return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.querySelector("#connection-status")?.classList.contains("ready")`,
     "deterministic application reload",
   );
 
@@ -141,7 +142,7 @@ async function runScenario(driver) {
   assert.equal(state.inventoryStackCount, "1");
   assert.match(state.inventory, /发光碎片/);
   assert.match(state.inventory, /×1/);
-  assert.match(state.messages, /你拾取了发光碎片 ×1/);
+  assert.match(state.messages, /你将 1 个发光碎片收入了背包/);
 
   await driver.execute(`
     const downloads = [];
@@ -220,6 +221,24 @@ async function runScenario(driver) {
   assert.equal(state.appliedCells, "400");
   assert.equal(state.canvasUnchanged, true);
   assert.match(state.messages, /地图外观已载入：rfb\.tileset\.image-demo/);
+
+  const hashBeforeLanguageSwitch = state.stateHash;
+  await driver.execute(`
+    const select = document.querySelector("#language-select");
+    select.value = "en-US";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.documentElement.lang === "en-US" && document.querySelector("#connection-status")?.textContent === "Core connected"`,
+    "English locale switch",
+  );
+  state = await readState(driver);
+  assert.equal(state.stateHash, hashBeforeLanguageSwitch);
+  assert.equal(state.canvasUnchanged, true);
+  assert.match(state.inventory, /luminous shard/);
+  assert.match(state.messages, /You pick up luminous shard ×1/);
+  assert.match(state.controls, /Numpad 1–9 moves in eight directions/);
 }
 
 async function readState(driver) {
@@ -238,6 +257,9 @@ async function readState(driver) {
       itemCount: host?.dataset.itemCount,
       inventoryStackCount: host?.dataset.inventoryStackCount,
       inventory: document.querySelector("#inventory-list")?.textContent,
+      controls: document.querySelector("#controls-help")?.textContent,
+      locale: document.documentElement.lang,
+      stateHash: document.querySelector("#hash-value")?.title,
       canvasUnchanged: window.__rfbE2eCanvas === host?.querySelector("canvas"),
       messages: document.querySelector("#message-list")?.textContent,
     };

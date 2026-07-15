@@ -19,7 +19,7 @@ export class GlyphAtlas {
     canvas.width = columns * frameWidth;
     canvas.height = rows * frameHeight;
     const context = canvas.getContext("2d");
-    if (!context) throw new Error("无法创建 ASCII glyph atlas");
+    if (!context) throw new Error("could not create the ASCII glyph atlas canvas context");
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = "#ffffff";
