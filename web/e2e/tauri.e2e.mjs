@@ -155,7 +155,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.6");
+  assert.equal(state.protocolVersion, "1.7");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -170,7 +170,7 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd",
+    "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
   assert.equal(state.contentVisualCount, "6");

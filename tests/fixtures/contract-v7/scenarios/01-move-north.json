@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.direction.north",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "north"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 2
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "entityCount": 1,
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "84f4a9815a677c13f8ef48b06f860fe56c2fce31a81c0772e893620e29b6a37a"
+    },
+    "events": [],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

@@ -1,6 +1,6 @@
 # Contract v6 基础战斗属性迁移
 
-状态：active contract baseline
+状态：历史 contract baseline，已由 contract-v7 接替
 
 ## 1. 迁移范围
 

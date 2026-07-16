@@ -93,6 +93,8 @@ pub struct ActorDefinition {
     pub max_hp: i32,
     pub attack: i32,
     pub defense: i32,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
     pub tags: Vec<String>,
 }
 
@@ -530,6 +532,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || actor.attack > 1_000_000
             || actor.defense < 0
             || actor.defense > 1_000_000
+            || actor.damage_dice == 0
+            || actor.damage_dice > 100
+            || actor.damage_sides == 0
+            || actor.damage_sides > 10_000
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
@@ -1220,7 +1226,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.3.0");
+        assert_eq!(catalog.pack_version(), "1.4.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1235,10 +1241,13 @@ mod tests {
             Some(3)
         );
         assert_eq!(
-            catalog
-                .actor("demo.actor.explorer")
-                .map(|actor| (actor.attack, actor.defense)),
-            Some((2, 1))
+            catalog.actor("demo.actor.explorer").map(|actor| (
+                actor.attack,
+                actor.defense,
+                actor.damage_dice,
+                actor.damage_sides,
+            )),
+            Some((2, 1, 1, 2))
         );
         assert_eq!(
             catalog

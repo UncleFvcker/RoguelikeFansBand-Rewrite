@@ -9,6 +9,8 @@ export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number
 
 export type StatModifiersDto = { attack: number, defense: number, maxHp: number, };
 
+export type DamageDiceDto = { dice: number, sides: number, };
+
 export type Position = { x: number, y: number, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, };
@@ -21,9 +23,9 @@ export type CellVisualDto = { position: Position, visibility: VisibilityState, l
 
 export type ContentVisualDto = { id: string, glyph: string, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, equipmentModifiers: StatModifiersDto, };
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, isDead: boolean, equipmentModifiers: StatModifiersDto, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, attack: number, defense: number, };
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, };
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.6";
+pub const PROTOCOL_VERSION: &str = "1.7";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -68,6 +68,14 @@ pub struct StatModifiersDto {
     pub defense: i32,
     #[serde(default)]
     pub max_hp: i32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DamageDiceDto {
+    pub dice: u16,
+    pub sides: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -150,6 +158,14 @@ pub struct PlayerDto {
     #[serde(default)]
     pub base_defense: i32,
     #[serde(default)]
+    pub melee_skill: i32,
+    #[serde(default)]
+    pub armor_class: i32,
+    #[serde(default)]
+    pub melee_damage: DamageDiceDto,
+    #[serde(default)]
+    pub is_dead: bool,
+    #[serde(default)]
     pub equipment_modifiers: StatModifiersDto,
 }
 
@@ -166,6 +182,12 @@ pub struct EntityDto {
     pub attack: i32,
     #[serde(default)]
     pub defense: i32,
+    #[serde(default)]
+    pub melee_skill: i32,
+    #[serde(default)]
+    pub armor_class: i32,
+    #[serde(default)]
+    pub melee_damage: DamageDiceDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -291,6 +313,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
+    push_declaration!(DamageDiceDto);
     push_declaration!(Position);
     push_declaration!(CellDto);
     push_declaration!(VisibilityState);

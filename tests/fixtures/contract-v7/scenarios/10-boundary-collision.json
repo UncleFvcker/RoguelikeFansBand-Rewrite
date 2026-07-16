@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.collision.outer-wall",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 3,
+      "turn": 3,
+      "lastCommandSeq": 3,
+      "playerPosition": {
+        "x": 1,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "entityCount": 1,
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "d1e967d981b2715e84554d5c7a2ff9e72c252f120c89524615d8cb16ace3aee2"
+    },
+    "events": [
+      {
+        "kind": "move.blocked",
+        "messageKey": "game-move-blocked",
+        "args": {}
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

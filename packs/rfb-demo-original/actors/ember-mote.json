@@ -10,5 +10,7 @@
   "maxHp": 3,
   "attack": 1,
   "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
   "tags": ["elemental", "light-source"]
 }

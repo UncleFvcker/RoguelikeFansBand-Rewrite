@@ -7,10 +7,10 @@ use std::{
 
 use rfb_content::{ActorRole, ContentCatalog, ContentError, ContentPosition};
 use rfb_protocol::{
-    CellDto, CellLightDto, CellVisualDto, ContentVisualDto, EntityDto, EquipmentItemDto,
-    GameCommand, GameCommandEnvelope, GameEventDto, GameSnapshot, GameUpdate, InventoryItemDto,
-    ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto, SavePayloadV1, StatModifiersDto,
-    TerrainSaveDto, VisibilityState,
+    CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, EntityDto,
+    EquipmentItemDto, GameCommand, GameCommandEnvelope, GameEventDto, GameSnapshot, GameUpdate,
+    InventoryItemDto, ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto, SavePayloadV1,
+    StatModifiersDto, TerrainSaveDto, VisibilityState,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -18,13 +18,14 @@ use thiserror::Error;
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 pub const RNG_ALGORITHM: &str = "rfb-rng-xoshiro256ss-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 3] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 4] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
+    "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd";
+    "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -36,6 +37,12 @@ const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
 const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
 const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
+const ATTACK_SKILL_PER_RATING: i32 = 20;
+const ARMOR_CLASS_PER_RATING: i32 = 10;
+const MONSTER_MINIMUM_LEVEL: i32 = 4;
+const MONSTER_LEVEL_SKILL_MULTIPLIER: i32 = 3;
+const MELEE_MAXIMUM_ARMOR_CLASS: i32 = 180;
+const MELEE_MAXIMUM_DAMAGE_REDUCTION: i32 = 60;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct Actor {
@@ -446,6 +453,9 @@ impl Game {
                 received: envelope.command_seq,
             });
         }
+        if self.player_is_dead() {
+            return Err(CoreError::PlayerDead);
+        }
 
         let base_revision = self.revision;
         let previous_visuals = self.visual_cells();
@@ -551,32 +561,7 @@ impl Game {
                     .position(|entity| entity.position == target)
                 {
                     changed.insert(target);
-                    let attack = self.effective_player_attack();
-                    let defense = self
-                        .content
-                        .actor(&self.entities[index].kind_id)
-                        .map_or(0, |definition| definition.defense);
-                    let roll = i32::try_from(self.rng.bounded(2)).unwrap_or(0);
-                    let damage = attack.saturating_add(roll).saturating_sub(defense).max(1);
-                    let monster = &mut self.entities[index];
-                    monster.hp -= damage;
-                    events.push(event_with_args(
-                        "combat.hit",
-                        "combat-player-hit",
-                        [
-                            ("target", monster.kind_id.clone()),
-                            ("damage", damage.to_string()),
-                        ],
-                    ));
-                    if monster.hp <= 0 {
-                        let removed = self.entities.remove(index);
-                        removed_entities.push(removed.id);
-                        events.push(event_with_args(
-                            "combat.slay",
-                            "combat-player-slay",
-                            [("target", removed.kind_id)],
-                        ));
-                    }
+                    self.resolve_player_melee(index, &mut events, &mut removed_entities);
                 } else {
                     let old_position = self.player.position;
                     self.player.position = target;
@@ -585,6 +570,8 @@ impl Game {
                 }
             }
         }
+
+        self.resolve_monster_turn(&mut events);
 
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(1);
@@ -677,6 +664,13 @@ impl Game {
             base_attack: definition.attack,
             defense: self.effective_player_defense(),
             base_defense: definition.defense,
+            melee_skill: rating_to_combat_value(self.effective_player_attack()),
+            armor_class: rating_to_armor_class(self.effective_player_defense()),
+            melee_damage: DamageDiceDto {
+                dice: definition.damage_dice,
+                sides: definition.damage_sides,
+            },
+            is_dead: self.player_is_dead(),
             equipment_modifiers,
         }
     }
@@ -698,6 +692,12 @@ impl Game {
                     max_hp: entity.max_hp,
                     attack: definition.attack,
                     defense: definition.defense,
+                    melee_skill: monster_melee_skill(definition.attack, definition.level),
+                    armor_class: rating_to_armor_class(definition.defense),
+                    melee_damage: DamageDiceDto {
+                        dice: definition.damage_dice,
+                        sides: definition.damage_sides,
+                    },
                 }
             })
             .collect::<Vec<_>>();
@@ -970,6 +970,139 @@ impl Game {
         effective_stat(base, self.equipment_modifiers().defense)
     }
 
+    fn player_is_dead(&self) -> bool {
+        self.player.hp < 0
+    }
+
+    fn resolve_player_melee(
+        &mut self,
+        index: usize,
+        events: &mut Vec<GameEventDto>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("monster actor definition must remain available")
+            .clone();
+        let target_kind = self.entities[index].kind_id.clone();
+        let skill = rating_to_combat_value(self.effective_player_attack());
+        let armor_class = rating_to_armor_class(definition.defense);
+        if !self.check_player_hit(skill, armor_class) {
+            events.push(event_with_args(
+                "combat.miss",
+                "combat-player-miss",
+                [("target", target_kind)],
+            ));
+            return;
+        }
+
+        let player_definition = self
+            .content
+            .actor(&self.player.kind_id)
+            .expect("player actor definition must remain available")
+            .clone();
+        let damage = self.roll_damage(
+            player_definition.damage_dice,
+            player_definition.damage_sides,
+        );
+        self.entities[index].hp = self.entities[index].hp.saturating_sub(damage);
+        events.push(event_with_args(
+            "combat.hit",
+            "combat-player-hit",
+            [("target", target_kind), ("damage", damage.to_string())],
+        ));
+        if self.entities[index].hp <= 0 {
+            let removed = self.entities.remove(index);
+            removed_entities.push(removed.id);
+            events.push(event_with_args(
+                "combat.slay",
+                "combat-player-slay",
+                [("target", removed.kind_id)],
+            ));
+        }
+    }
+
+    fn resolve_monster_turn(&mut self, events: &mut Vec<GameEventDto>) {
+        let player_position = self.player.position;
+        let mut attackers = self
+            .entities
+            .iter()
+            .filter(|entity| adjacent(entity.position, player_position))
+            .map(|entity| (entity.id.clone(), entity.kind_id.clone()))
+            .collect::<Vec<_>>();
+        attackers.sort_by(|left, right| left.0.cmp(&right.0));
+
+        for (_, kind_id) in attackers {
+            if self.player_is_dead() {
+                break;
+            }
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("monster actor definition must remain available")
+                .clone();
+            let skill = monster_melee_skill(definition.attack, definition.level);
+            let armor_class = rating_to_armor_class(self.effective_player_defense());
+            if !self.check_monster_hit(skill, armor_class) {
+                events.push(event_with_args(
+                    "combat.monster-miss",
+                    "combat-monster-miss",
+                    [("source", kind_id)],
+                ));
+                continue;
+            }
+
+            let raw_damage = self.roll_damage(definition.damage_dice, definition.damage_sides);
+            let damage = apply_melee_armor_reduction(raw_damage, armor_class);
+            self.player.hp = self.player.hp.saturating_sub(damage);
+            events.push(event_with_args(
+                "combat.monster-hit",
+                "combat-monster-hit",
+                [("source", kind_id.clone()), ("damage", damage.to_string())],
+            ));
+            if self.player_is_dead() {
+                events.push(event_with_args(
+                    "combat.player-death",
+                    "combat-player-death",
+                    [("source", kind_id)],
+                ));
+            }
+        }
+    }
+
+    fn check_player_hit(&mut self, skill: i32, armor_class: i32) -> bool {
+        if skill <= 0 {
+            return false;
+        }
+        self.check_hit(skill, armor_class)
+    }
+
+    fn check_monster_hit(&mut self, skill: i32, armor_class: i32) -> bool {
+        self.check_hit(skill, armor_class)
+    }
+
+    fn check_hit(&mut self, skill: i32, armor_class: i32) -> bool {
+        let percentile = self.rng.bounded(100);
+        if percentile < 10 {
+            return percentile < 5;
+        }
+        if skill <= 0 {
+            return false;
+        }
+        let threshold = armor_class.max(0).saturating_mul(3) / 4;
+        i32::try_from(self.rng.bounded(skill as u64)).unwrap_or(i32::MAX) >= threshold
+    }
+
+    fn roll_damage(&mut self, dice: u16, sides: u16) -> i32 {
+        (0..dice).fold(0_i32, |total, _| {
+            let roll = i32::try_from(self.rng.bounded(u64::from(sides)))
+                .unwrap_or(i32::MAX)
+                .saturating_add(1);
+            total.saturating_add(roll)
+        })
+    }
+
     fn clamp_player_hp_to_effective_max(&mut self) {
         self.player.hp = self.player.hp.min(self.effective_player_max_hp());
     }
@@ -1239,7 +1372,8 @@ impl Game {
         };
         if definition.role != expected_role
             || actor.max_hp != definition.max_hp
-            || actor.hp <= 0
+            || (expected_role == ActorRole::Monster && actor.hp <= 0)
+            || (expected_role == ActorRole::Player && actor.hp < -1_000_000)
             || actor.hp > effective_max_hp
         {
             return Err(CoreError::InvalidSave("actor state is invalid"));
@@ -1252,6 +1386,35 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     let dx = left.x - right.x;
     let dy = left.y - right.y;
     dx * dx + dy * dy
+}
+
+fn adjacent(left: Position, right: Position) -> bool {
+    let dx = (left.x - right.x).abs();
+    let dy = (left.y - right.y).abs();
+    dx <= 1 && dy <= 1 && (dx != 0 || dy != 0)
+}
+
+fn rating_to_combat_value(rating: i32) -> i32 {
+    rating.saturating_mul(ATTACK_SKILL_PER_RATING)
+}
+
+fn rating_to_armor_class(rating: i32) -> i32 {
+    rating.saturating_mul(ARMOR_CLASS_PER_RATING)
+}
+
+fn monster_melee_skill(attack: i32, level: u32) -> i32 {
+    let level = i32::try_from(level)
+        .unwrap_or(i32::MAX)
+        .max(MONSTER_MINIMUM_LEVEL);
+    rating_to_combat_value(attack)
+        .saturating_add(level.saturating_mul(MONSTER_LEVEL_SKILL_MULTIPLIER))
+}
+
+fn apply_melee_armor_reduction(damage: i32, armor_class: i32) -> i32 {
+    let armor_class = armor_class.clamp(0, MELEE_MAXIMUM_ARMOR_CLASS);
+    let reduction =
+        MELEE_MAXIMUM_DAMAGE_REDUCTION.saturating_mul(armor_class) / MELEE_MAXIMUM_ARMOR_CLASS;
+    damage.saturating_mul(100 - reduction) / 100
 }
 
 fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8) -> u8 {
@@ -1468,6 +1631,8 @@ pub enum CoreError {
     RevisionMismatch { expected: u32, received: u32 },
     #[error("command sequence mismatch: expected {expected}, received {received}")]
     CommandSequence { expected: u32, received: u32 },
+    #[error("the player is dead and cannot act")]
+    PlayerDead,
     #[error("unsupported save schema version {0}")]
     UnsupportedSaveVersion(u16),
     #[error("save uses unsupported RNG algorithm {0}")]
@@ -1839,7 +2004,7 @@ mod tests {
     }
 
     #[test]
-    fn equipped_attack_modifier_changes_authoritative_melee_damage() {
+    fn equipped_attack_modifier_changes_authoritative_melee_skill() {
         let mut game = Game::new(42);
         collect_both_demo_items(&mut game);
         game.dispatch(command(
@@ -1865,8 +2030,9 @@ mod tests {
             .expect("equipped attack should execute");
 
         assert_eq!(update.events[0].message_key, "combat-player-hit");
-        assert_eq!(update.events[0].args["damage"], "2");
-        assert_eq!(update.entities[0].hp, 1);
+        assert_eq!(update.player.melee_skill, 60);
+        assert_eq!(update.events[0].args["damage"], "1");
+        assert_eq!(update.entities[0].hp, 2);
     }
 
     #[test]
@@ -2003,6 +2169,79 @@ mod tests {
             .expect_err("stale command should fail");
         assert!(matches!(error, CoreError::RevisionMismatch { .. }));
         assert_eq!(game.state_hash(), before);
+    }
+
+    #[test]
+    fn rfb_style_armor_reduction_uses_the_legacy_linear_cap() {
+        assert_eq!(apply_melee_armor_reduction(100, 0), 100);
+        assert_eq!(apply_melee_armor_reduction(100, 90), 70);
+        assert_eq!(apply_melee_armor_reduction(100, 180), 40);
+        assert_eq!(apply_melee_armor_reduction(100, 999), 40);
+    }
+
+    #[test]
+    fn fixed_seed_exercises_player_miss_and_death_rejection() {
+        let mut miss_game = Game::new(10);
+        approach_monster(&mut miss_game);
+        let miss_update = miss_game
+            .dispatch(command(
+                6,
+                5,
+                GameCommand::Move {
+                    direction: Direction::SouthEast,
+                },
+            ))
+            .expect("fixed-seed player attack should execute");
+        assert!(
+            miss_update
+                .events
+                .iter()
+                .any(|event| event.message_key == "combat-player-miss")
+        );
+
+        let mut game = Game::new(0);
+        approach_monster(&mut game);
+        game.player.hp = 0;
+        let update = game
+            .dispatch(command(6, 5, GameCommand::Wait))
+            .expect("adjacent monster turn should execute");
+        assert!(update.player.is_dead);
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == "combat-player-death")
+        );
+        assert!(matches!(
+            game.dispatch(command(7, 6, GameCommand::Wait)),
+            Err(CoreError::PlayerDead)
+        ));
+
+        let mut full_health_game = Game::new(0);
+        approach_monster(&mut full_health_game);
+        let death_command = (6..100_u32).find(|seq| {
+            full_health_game
+                .dispatch(command(*seq, *seq - 1, GameCommand::Wait))
+                .is_ok_and(|update| update.player.is_dead)
+        });
+        assert_eq!(death_command, Some(18));
+    }
+
+    fn approach_monster(game: &mut Game) {
+        for (index, direction) in [
+            Direction::East,
+            Direction::East,
+            Direction::East,
+            Direction::East,
+            Direction::South,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let seq = u32::try_from(index + 1).expect("short path sequence should fit");
+            game.dispatch(command(seq, seq - 1, GameCommand::Move { direction }))
+                .expect("path to adjacent monster tile should execute");
+        }
     }
 
     fn collect_both_demo_items(game: &mut Game) {

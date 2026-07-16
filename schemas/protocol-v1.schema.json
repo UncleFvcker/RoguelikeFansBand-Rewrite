@@ -101,6 +101,27 @@
         "glyph"
       ]
     },
+    "DamageDiceDto": {
+      "type": "object",
+      "properties": {
+        "dice": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "sides": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "dice",
+        "sides"
+      ]
+    },
     "Direction": {
       "type": "string",
       "enum": [
@@ -117,6 +138,11 @@
     "EntityDto": {
       "type": "object",
       "properties": {
+        "armorClass": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "attack": {
           "type": "integer",
           "format": "int32",
@@ -140,6 +166,18 @@
         "maxHp": {
           "type": "integer",
           "format": "int32"
+        },
+        "meleeDamage": {
+          "$ref": "#/$defs/DamageDiceDto",
+          "default": {
+            "dice": 0,
+            "sides": 0
+          }
+        },
+        "meleeSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -619,6 +657,11 @@
     "PlayerDto": {
       "type": "object",
       "properties": {
+        "armorClass": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "attack": {
           "type": "integer",
           "format": "int32",
@@ -659,12 +702,28 @@
         "id": {
           "type": "string"
         },
+        "isDead": {
+          "type": "boolean",
+          "default": false
+        },
         "kindId": {
           "type": "string"
         },
         "maxHp": {
           "type": "integer",
           "format": "int32"
+        },
+        "meleeDamage": {
+          "$ref": "#/$defs/DamageDiceDto",
+          "default": {
+            "dice": 0,
+            "sides": 0
+          }
+        },
+        "meleeSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
         },
         "position": {
           "$ref": "#/$defs/Position"

@@ -19,6 +19,18 @@
       "format": "int32",
       "type": "integer"
     },
+    "damageDice": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "damageSides": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "defense": {
       "format": "int32",
       "type": "integer"
@@ -72,6 +84,8 @@
     "maxHp",
     "attack",
     "defense",
+    "damageDice",
+    "damageSides",
     "tags"
   ],
   "title": "ActorDefinition",

@@ -39,6 +39,7 @@ const crashDiagnostics = new DesktopCrashDiagnostics();
 const nativeSaveStorage = new NativeSaveStorage();
 const renderer = new MapRenderer();
 let busy = false;
+let playerDead = false;
 let nativeSaveBusy = false;
 let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
@@ -157,7 +158,7 @@ async function start(): Promise<void> {
 
 window.addEventListener("keydown", (event) => {
   const command = commandForKeyboardEvent(event);
-  if (!command || busy || isTextInput(event.target)) return;
+  if (!command || busy || playerDead || isTextInput(event.target)) return;
   event.preventDefault();
   void dispatch(command);
 });
@@ -260,6 +261,7 @@ function announceCrashDiagnostic(status: CrashDiagnosticStatus): void {
 }
 
 async function dispatch(command: GameCommand): Promise<void> {
+  if (playerDead) return;
   busy = true;
   updateInventoryActions();
   try {
@@ -594,6 +596,8 @@ async function changeTileset(): Promise<void> {
 
 function renderStatus(state: GameSnapshot | GameUpdate): void {
   currentStatus = state;
+  playerDead = state.player.isDead;
+  document.documentElement.dataset.playerState = playerDead ? "dead" : "alive";
   turnValue.textContent = String(state.turn);
   hpValue.textContent = localization.format(
     state.player.equipmentModifiers.maxHp > 0
@@ -617,6 +621,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   mapHost.dataset.itemCount = String(state.items.length);
   mapHost.dataset.inventoryStackCount = String(state.inventory.length);
   mapHost.dataset.equipmentCount = String(state.equipment.length);
+  updateInventoryActions();
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
@@ -758,7 +763,8 @@ function updateInventoryActions(): void {
   inventorySelectionCount.textContent = localization.format("inventory-selected-count", {
     count: selected.length,
   });
-  inventoryEquip.disabled = busy || selected.length !== 1 || !selected[0]?.equipmentSlot;
+  inventoryEquip.disabled =
+    busy || playerDead || selected.length !== 1 || !selected[0]?.equipmentSlot;
   const [item] = selected;
   if (selected.length === 1 && item) {
     if (dropQuantityItemId !== item.id) {
@@ -767,21 +773,21 @@ function updateInventoryActions(): void {
     }
     inventoryDropQuantity.min = "1";
     inventoryDropQuantity.max = String(item.quantity);
-    inventoryDropQuantity.disabled = busy;
-    inventoryDrop.disabled = busy || selectedDropQuantity(item) === undefined;
+    inventoryDropQuantity.disabled = busy || playerDead;
+    inventoryDrop.disabled = busy || playerDead || selectedDropQuantity(item) === undefined;
   } else {
     dropQuantityItemId = undefined;
     inventoryDropQuantity.value = "";
     inventoryDropQuantity.disabled = true;
-    inventoryDrop.disabled = busy || selected.length === 0;
+    inventoryDrop.disabled = busy || playerDead || selected.length === 0;
   }
   for (const checkbox of inventoryList.querySelectorAll<HTMLInputElement>(
     'input[type="checkbox"]',
   )) {
-    checkbox.disabled = busy;
+    checkbox.disabled = busy || playerDead;
   }
   for (const button of equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
-    button.disabled = busy;
+    button.disabled = busy || playerDead;
   }
 }
 
@@ -842,6 +848,23 @@ function formatEvent(event: GameEventDto): string {
     case "combat-player-slay":
       return localization.format("message-combat-slay", {
         target: contentName(event.args.target),
+      });
+    case "combat-player-miss":
+      return localization.format("message-combat-player-miss", {
+        target: contentName(event.args.target),
+      });
+    case "combat-monster-miss":
+      return localization.format("message-combat-monster-miss", {
+        source: contentName(event.args.source),
+      });
+    case "combat-monster-hit":
+      return localization.format("message-combat-monster-hit", {
+        source: contentName(event.args.source),
+        damage: event.args.damage ?? "?",
+      });
+    case "combat-player-death":
+      return localization.format("message-combat-player-death", {
+        source: contentName(event.args.source),
       });
     case "item-pickup-success":
       return localization.format("message-item-pickup-success", {

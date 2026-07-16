@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "id": "combat.melee.nonlethal-hit",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south-east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 6,
+      "turn": 6,
+      "lastCommandSeq": 6,
+      "playerPosition": {
+        "x": 7,
+        "y": 4
+      },
+      "playerHp": 7,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "entityCount": 1,
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "3d7df9ddbad5e5e07df49effca044c36cbd1c41e55aab5dbceaa60468b51c51e"
+    },
+    "events": [
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "1",
+          "target": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "source": "demo.actor.ember-mote"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

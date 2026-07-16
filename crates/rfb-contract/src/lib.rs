@@ -105,6 +105,7 @@ pub struct CommandErrorAssertion {
 pub enum CommandErrorKind {
     RevisionMismatch,
     CommandSequence,
+    PlayerDead,
 }
 
 pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, ContractError> {
@@ -232,6 +233,7 @@ fn command_error_kind(error: &CoreError) -> Result<CommandErrorKind, ContractErr
     match error {
         CoreError::RevisionMismatch { .. } => Ok(CommandErrorKind::RevisionMismatch),
         CoreError::CommandSequence { .. } => Ok(CommandErrorKind::CommandSequence),
+        CoreError::PlayerDead => Ok(CommandErrorKind::PlayerDead),
         other => Err(ContractError::UnexpectedCoreError(other.to_string())),
     }
 }

@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 6;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 7;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -501,9 +501,9 @@ mod tests {
         }
         let (final_game, replay) = recorder.finish();
 
-        assert_eq!(final_game.rng_draw_counter(), 3);
+        assert_eq!(final_game.rng_draw_counter(), 12);
         assert_eq!(replay.checkpoints.len(), 1);
-        assert_eq!(replay.checkpoints[0].rng_draw_counter, 3);
+        assert_eq!(replay.checkpoints[0].rng_draw_counter, 12);
         verify(&replay, initial).expect("combat replay should verify");
     }
 
