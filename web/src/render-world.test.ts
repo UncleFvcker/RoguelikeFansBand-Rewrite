@@ -53,6 +53,7 @@ test("game updates dirty only authoritative cell and visual deltas", () => {
     entities: [],
     items: [],
     inventory: [],
+    equipment: [],
     removedEntities: [],
     stateHash: "hash",
   });
@@ -86,7 +87,7 @@ test("remembered and hidden cells do not expose current occupants", () => {
 
 function snapshotFixture() {
   return {
-    protocolVersion: "1.3",
+    protocolVersion: "1.4",
     revision: 0,
     turn: 0,
     lastCommandSeq: 0,
@@ -111,6 +112,7 @@ function snapshotFixture() {
       },
     ],
     inventory: [],
+    equipment: [],
     contentId: "content",
     contentHash: "hash",
     contentVisuals: [],

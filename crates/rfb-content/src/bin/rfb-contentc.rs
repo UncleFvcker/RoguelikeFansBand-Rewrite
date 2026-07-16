@@ -2,7 +2,7 @@
 
 use std::{env, fs, path::PathBuf, process::ExitCode};
 
-use rfb_content::{read_compiled_file, verify_pack_lock};
+use rfb_content::{compile_pack_dir, read_compiled_file, verify_pack_lock};
 
 fn main() -> ExitCode {
     match run() {
@@ -16,15 +16,20 @@ fn main() -> ExitCode {
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().skip(1);
-    let mode = args
-        .next()
-        .ok_or("usage: rfb-contentc <verify-source|compile|inspect> <input> [output]")?;
-    let input = PathBuf::from(
-        args.next()
-            .ok_or("usage: rfb-contentc <verify-source|compile|inspect> <input> [output]")?,
-    );
+    let mode = args.next().ok_or(
+        "usage: rfb-contentc <inspect-source|verify-source|compile|inspect> <input> [output]",
+    )?;
+    let input = PathBuf::from(args.next().ok_or(
+        "usage: rfb-contentc <inspect-source|verify-source|compile|inspect> <input> [output]",
+    )?);
 
     match mode.to_string_lossy().as_ref() {
+        "inspect-source" => {
+            if args.next().is_some() {
+                return Err("inspect-source accepts exactly one input directory".into());
+            }
+            print_summary(&compile_pack_dir(&input)?)?;
+        }
         "verify-source" => {
             if args.next().is_some() {
                 return Err("verify-source accepts exactly one input directory".into());
@@ -50,7 +55,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             print_summary(&read_compiled_file(&input)?)?;
         }
-        _ => return Err("mode must be verify-source, compile, or inspect".into()),
+        _ => {
+            return Err("mode must be inspect-source, verify-source, compile, or inspect".into());
+        }
     }
     Ok(())
 }

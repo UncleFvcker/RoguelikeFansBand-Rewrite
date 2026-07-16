@@ -45,6 +45,12 @@
       "kindId": "demo.item.luminous-shard",
       "position": { "x": 4, "y": 3 },
       "quantity": 1
+    },
+    {
+      "instanceId": "demo.item.echo-charm.1",
+      "kindId": "demo.item.echo-charm",
+      "position": { "x": 5, "y": 3 },
+      "quantity": 1
     }
   ]
 }

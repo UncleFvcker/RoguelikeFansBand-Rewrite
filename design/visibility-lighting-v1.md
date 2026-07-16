@@ -1,6 +1,6 @@
 # Rust 权威可见性与光照 v1
 
-状态：协议 1.3、Rust FOV/探索记忆、内容标签光源和前端消费链路已实现
+状态：功能自协议 1.3 实现，当前协议 1.4 继续使用 Rust FOV/探索记忆、内容标签光源和前端消费链路
 
 ## 1. 边界
 
@@ -34,7 +34,7 @@ interface CellVisualDto {
 - 曾经进入 FOV、当前离开的格写入 `remembered`；
 - 从未进入 FOV 的格写入 `hidden`。
 
-探索记忆作为 `SavePayloadV1.explored` 保存，以便载入后恢复地图记忆。旧存档缺失该字段时从空记忆开始并立即揭示当前 FOV。`explored` 在 state hash 输入中被省略，因此只改变地图记忆不会改变权威规则哈希或 contract-v3 基准。
+探索记忆作为 `SavePayloadV1.explored` 保存，以便载入后恢复地图记忆。旧存档缺失该字段时从空记忆开始并立即揭示当前 FOV。`explored` 在 state hash 输入中被省略，因此只改变地图记忆不会改变权威规则哈希或当前 contract 基准。
 
 ## 4. 光源 v1
 
@@ -64,7 +64,7 @@ interface CellVisualDto {
 - 发光怪物的内容标签生成独立光色；
 - 探索记忆保存/载入一致，但不改变 state hash；
 - 记忆格不暴露怪物和物品；
-- Windows Tauri E2E 验证协议 1.3、400 个初始视觉格、初始可见/隐藏分布、移动后 remembered 格出现、79 格首次移动更新、0 格等待和 Canvas 复用。
+- Windows Tauri E2E 验证当前协议、400 个初始视觉格、初始可见/隐藏分布、移动后 remembered 格出现、79 格首次移动更新、0 格等待和 Canvas 复用。
 
 ## 7. 后续
 

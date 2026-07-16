@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "item.pickup.empty-ground",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "entityCount": 1,
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "stateHash": "fb8564873a08b316ba6cf80fc0b631b9309a66c0cfc0426fe342d1d6b1a6cfdc"
+    },
+    "events": [
+      {
+        "kind": "item.pickup.none",
+        "messageKey": "item-pickup-none",
+        "args": {}
+      }
+    ],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

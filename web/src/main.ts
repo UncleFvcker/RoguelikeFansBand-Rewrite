@@ -18,6 +18,7 @@ import {
 } from "./native-save-storage";
 import type {
   Direction,
+  EquipmentItemDto,
   GameCommand,
   GameEventDto,
   GameSnapshot,
@@ -41,7 +42,11 @@ const hpValue = element<HTMLElement>("hp-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
 const inventoryCount = element<HTMLElement>("inventory-count");
+const inventorySelectionCount = element<HTMLElement>("inventory-selection-count");
+const inventoryEquip = element<HTMLButtonElement>("inventory-equip");
+const inventoryDrop = element<HTMLButtonElement>("inventory-drop");
 const inventoryList = element<HTMLUListElement>("inventory-list");
+const equipmentList = element<HTMLUListElement>("equipment-list");
 const nativeSaveName = element<HTMLInputElement>("native-save-name");
 const nativeSaveCreate = element<HTMLButtonElement>("native-save-create");
 const nativeSaveRefresh = element<HTMLButtonElement>("native-save-refresh");
@@ -85,6 +90,8 @@ let zoom = readZoomLevel();
 const localization = new Localization(readLocale(), LOCALIZATION_SOURCES);
 let connectionState: ConnectionState = "starting";
 let currentInventory: InventoryItemDto[] = [];
+let currentEquipment: EquipmentItemDto[] = [];
+const selectedInventoryIds = new Set<string>();
 let nativeSaves: NativeSaveSummary[] = [];
 const messageRecords: MessageRecord[] = [];
 inputPresetSelect.value = inputPreset;
@@ -119,7 +126,7 @@ async function start(): Promise<void> {
     );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
-    renderInventory(snapshot.inventory);
+    renderInventory(snapshot.inventory, snapshot.equipment);
     addLocalizedMessage("message-core-started", undefined, "system");
     announceTileset(tileset.id, tileset.warnings);
     connectionState = "ready";
@@ -143,6 +150,8 @@ loadInput.addEventListener("change", () => void importSave());
 nativeSaveCreate.addEventListener("click", () => void createNativeSave());
 nativeSaveRefresh.addEventListener("click", () => void refreshNativeSaves());
 nativeSaveName.addEventListener("input", updateNativeSaveControls);
+inventoryEquip.addEventListener("click", () => void equipSelectedInventoryItem());
+inventoryDrop.addEventListener("click", () => void dropSelectedInventoryItems());
 clearMessages.addEventListener("click", () => {
   messageRecords.length = 0;
   renderMessages();
@@ -174,7 +183,7 @@ languageSelect.addEventListener("change", () => {
   renderer.setCanvasLabel(localization.format("map-aria-label"));
   renderConnectionStatus();
   renderInputHelp();
-  renderInventory(currentInventory);
+  renderInventory(currentInventory, currentEquipment);
   localizeNativeSaveControls();
   renderNativeSaves();
   renderMessages();
@@ -186,16 +195,18 @@ window.addEventListener("beforeunload", () => {
 
 async function dispatch(command: GameCommand): Promise<void> {
   busy = true;
+  updateInventoryActions();
   try {
     const update = await core.dispatch(command);
     renderer.applyUpdate(update);
     renderStatus(update);
-    renderInventory(update.inventory);
+    renderInventory(update.inventory, update.equipment);
     for (const event of update.events) addGameEvent(event);
   } catch (error) {
     showError(error);
   } finally {
     busy = false;
+    updateInventoryActions();
   }
 }
 
@@ -286,6 +297,7 @@ async function loadNativeSave(summary: NativeSaveSummary): Promise<void> {
   nativeSaveBusy = true;
   busy = true;
   updateNativeSaveControls();
+  updateInventoryActions();
   try {
     const result = await nativeSaveStorage.load(summary.slotId);
     applyLoadedSnapshot(result.snapshot);
@@ -305,6 +317,7 @@ async function loadNativeSave(summary: NativeSaveSummary): Promise<void> {
     busy = false;
     nativeSaveBusy = false;
     updateNativeSaveControls();
+    updateInventoryActions();
   }
 }
 
@@ -335,7 +348,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   renderContentMetadata(snapshot);
   renderer.applySnapshot(snapshot);
   renderStatus(snapshot);
-  renderInventory(snapshot.inventory);
+  renderInventory(snapshot.inventory, snapshot.equipment);
 }
 
 function replaceNativeSaveSummary(summary: NativeSaveSummary): void {
@@ -496,6 +509,7 @@ async function changeTileset(): Promise<void> {
     return;
   }
   busy = true;
+  updateInventoryActions();
   try {
     const result = await renderer.setTileset(TILESET_MANIFESTS[requested]);
     tilesetPreset = requested;
@@ -508,6 +522,7 @@ async function changeTileset(): Promise<void> {
     console.error(error);
   } finally {
     busy = false;
+    updateInventoryActions();
   }
 }
 
@@ -519,6 +534,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   hashValue.title = state.stateHash;
   mapHost.dataset.itemCount = String(state.items.length);
   mapHost.dataset.inventoryStackCount = String(state.inventory.length);
+  mapHost.dataset.equipmentCount = String(state.equipment.length);
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
@@ -530,8 +546,16 @@ function renderContentMetadata(snapshot: GameSnapshot): void {
   mapHost.dataset.visualCellCount = String(snapshot.visualCells.length);
 }
 
-function renderInventory(inventory: InventoryItemDto[]): void {
+function renderInventory(
+  inventory: InventoryItemDto[],
+  equipment: EquipmentItemDto[],
+): void {
   currentInventory = inventory.map((item) => ({ ...item }));
+  currentEquipment = equipment.map((item) => ({ ...item }));
+  const availableIds = new Set(inventory.map((item) => item.id));
+  for (const itemId of selectedInventoryIds) {
+    if (!availableIds.has(itemId)) selectedInventoryIds.delete(itemId);
+  }
   inventoryCount.textContent = localization.format("inventory-stack-count", {
     count: inventory.length,
   });
@@ -541,21 +565,116 @@ function renderInventory(inventory: InventoryItemDto[]): void {
     empty.className = "inventory-empty";
     empty.textContent = localization.format("inventory-empty");
     inventoryList.append(empty);
+  } else {
+    for (const item of inventory) {
+      const row = document.createElement("li");
+      row.className = "inventory-item";
+      row.dataset.itemId = item.id;
+      const label = document.createElement("label");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selectedInventoryIds.has(item.id);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) selectedInventoryIds.add(item.id);
+        else selectedInventoryIds.delete(item.id);
+        updateInventoryActions();
+      });
+      const details = document.createElement("span");
+      details.className = "inventory-item-details";
+      const name = document.createElement("span");
+      name.className = "inventory-item-name";
+      name.textContent = contentName(item.kindId);
+      details.append(name);
+      if (item.equipmentSlot) {
+        const equippable = document.createElement("span");
+        equippable.className = "inventory-equippable";
+        equippable.textContent = localization.format("inventory-equippable", {
+          slot: equipmentSlotName(item.equipmentSlot),
+        });
+        details.append(equippable);
+      }
+      const quantity = document.createElement("span");
+      quantity.className = "inventory-quantity";
+      quantity.textContent = localization.format("inventory-quantity", {
+        quantity: item.quantity,
+      });
+      label.append(checkbox, details, quantity);
+      row.append(label);
+      inventoryList.append(row);
+    }
+  }
+  renderEquipment(equipment);
+  updateInventoryActions();
+}
+
+function renderEquipment(equipment: EquipmentItemDto[]): void {
+  equipmentList.replaceChildren();
+  if (equipment.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "equipment-empty";
+    empty.textContent = localization.format("equipment-empty");
+    equipmentList.append(empty);
     return;
   }
-  for (const item of inventory) {
+  for (const item of equipment) {
     const row = document.createElement("li");
-    row.className = "inventory-item";
-    row.dataset.itemId = item.id;
+    row.className = "equipment-item";
+    row.dataset.slotId = item.slotId;
+    const details = document.createElement("span");
+    details.className = "equipment-item-details";
     const name = document.createElement("span");
     name.textContent = contentName(item.kindId);
-    const quantity = document.createElement("span");
-    quantity.className = "inventory-quantity";
-    quantity.textContent = localization.format("inventory-quantity", {
-      quantity: item.quantity,
-    });
-    row.append(name, quantity);
-    inventoryList.append(row);
+    const slot = document.createElement("span");
+    slot.className = "equipment-slot";
+    slot.textContent = equipmentSlotName(item.slotId);
+    details.append(name, slot);
+    const unequip = document.createElement("button");
+    unequip.type = "button";
+    unequip.textContent = localization.format("action-equipment-unequip");
+    unequip.disabled = busy;
+    unequip.addEventListener("click", () => void unequipItem(item.slotId));
+    row.append(details, unequip);
+    equipmentList.append(row);
+  }
+}
+
+async function equipSelectedInventoryItem(): Promise<void> {
+  const selected = selectedInventoryItems();
+  if (busy || selected.length !== 1 || !selected[0]?.equipmentSlot) return;
+  await dispatch({ type: "equip", itemId: selected[0].id });
+}
+
+async function dropSelectedInventoryItems(): Promise<void> {
+  const itemIds = selectedInventoryItems()
+    .map((item) => item.id)
+    .sort();
+  if (busy || itemIds.length === 0) return;
+  await dispatch({ type: "drop", itemIds });
+}
+
+async function unequipItem(slotId: string): Promise<void> {
+  if (busy) return;
+  await dispatch({ type: "unequip", slotId });
+}
+
+function selectedInventoryItems(): InventoryItemDto[] {
+  return currentInventory.filter((item) => selectedInventoryIds.has(item.id));
+}
+
+function updateInventoryActions(): void {
+  const selected = selectedInventoryItems();
+  inventorySelectionCount.textContent = localization.format("inventory-selected-count", {
+    count: selected.length,
+  });
+  inventoryEquip.disabled = busy || selected.length !== 1 || !selected[0]?.equipmentSlot;
+  inventoryDrop.disabled = busy || selected.length === 0;
+  for (const checkbox of inventoryList.querySelectorAll<HTMLInputElement>(
+    'input[type="checkbox"]',
+  )) {
+    checkbox.disabled = busy;
+  }
+  for (const button of equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
+    button.disabled = busy;
   }
 }
 
@@ -581,6 +700,35 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-pickup-none":
       return localization.format("message-item-pickup-none");
+    case "item-equip-success":
+      return localization.format("message-item-equip-success", {
+        target: contentName(event.args.target),
+        slot: equipmentSlotName(event.args.slot),
+      });
+    case "item-equip-swap":
+      return localization.format("message-item-equip-swap", {
+        target: contentName(event.args.target),
+        replaced: contentName(event.args.replaced),
+        slot: equipmentSlotName(event.args.slot),
+      });
+    case "item-equip-unavailable":
+      return localization.format("message-item-equip-unavailable");
+    case "item-unequip-success":
+      return localization.format("message-item-unequip-success", {
+        target: contentName(event.args.target),
+        slot: equipmentSlotName(event.args.slot),
+      });
+    case "item-unequip-none":
+      return localization.format("message-item-unequip-none", {
+        slot: equipmentSlotName(event.args.slot),
+      });
+    case "item-drop-success":
+      return localization.format("message-item-drop-success", {
+        stacks: event.args.stacks ?? "?",
+        quantity: event.args.quantity ?? "?",
+      });
+    case "item-drop-none":
+      return localization.format("message-item-drop-none");
     default:
       return localization.format("message-unknown-event", { key: event.messageKey });
   }
@@ -590,12 +738,20 @@ function contentName(id: string | undefined): string {
   if (id === "demo.item.luminous-shard") {
     return localization.format("item-demo-luminous-shard-name");
   }
+  if (id === "demo.item.echo-charm") {
+    return localization.format("item-demo-echo-charm-name");
+  }
   if (id === "demo.actor.ember-mote") {
     return localization.format("actor-demo-ember-mote-name");
   }
   return localization.format(
     id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",
   );
+}
+
+function equipmentSlotName(slotId: string | undefined): string {
+  if (slotId === "charm") return localization.format("equipment-slot-charm");
+  return localization.format("equipment-slot-unknown", { slot: slotId ?? "?" });
 }
 
 function addLocalizedMessage(

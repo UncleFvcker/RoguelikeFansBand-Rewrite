@@ -100,6 +100,8 @@ rfb.terrain.wall.granite
 8. 输出 MessagePack 内容包和 SHA-256 content hash；
 9. 生成 Rust/TypeScript 开发期索引和审计报告。
 
+`inspect-source` 只编译并显示规范化摘要/hash，不读取或改写 lock；修改内容后先审查该输出，再显式更新 `content.lock.json`。`verify-source` 则要求源内容与已提交 lock 完全一致。
+
 当前已完成第 1、2、3、7、8 项的单包版本，包括：
 
 - `deny_unknown_fields` 严格 JSON 解析；
@@ -111,6 +113,8 @@ rfb.terrain.wall.granite
 - `RFBCONT\0`、MessagePack payload、长度和 SHA-256 校验；
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 五份提交到 `schemas/content-v1/` 的 JSON Schema。
+
+物品定义现可使用可选 `equipmentSlot` 稳定字符串声明装备槽。首版要求可装备物品 `maxStack = 1`，避免在尚无实例 ID 分配器时拆分可堆叠物品。原创包 1.1.0 使用 `charm` 槽位加入回声护符；槽位显示名由 Fluent UI 资源提供，不写入内容实例或存档。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -192,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；后续背包权威状态迁移到 `contract-v3` 和 Schema v3。旧版本继续作为历史记录保留。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包权威状态迁移到 `contract-v3`/Schema v3，装备与批量丢弃继续迁移到 `contract-v4`/Schema v4。旧版本继续作为历史记录保留。

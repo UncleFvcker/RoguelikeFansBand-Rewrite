@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 3;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 4;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -521,10 +521,48 @@ mod tests {
             .expect("pickup should execute");
         let (final_game, replay) = recorder.finish();
 
-        assert!(final_game.snapshot().items.is_empty());
+        assert_eq!(final_game.snapshot().items.len(), 1);
         assert_eq!(final_game.snapshot().inventory.len(), 1);
         let verification = verify(&replay, initial).expect("pickup replay should verify");
         assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn equipment_and_batch_drop_round_trip_through_replay() {
+        let initial = Game::new(42);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        for command in [
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::PickUp,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::PickUp,
+            GameCommand::Equip {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
+            GameCommand::Unequip {
+                slot_id: "charm".to_owned(),
+            },
+            GameCommand::Drop {
+                item_ids: vec![
+                    "demo.item.echo-charm.1".to_owned(),
+                    "demo.item.luminous-shard.1".to_owned(),
+                ],
+            },
+        ] {
+            recorder.dispatch(command).expect("command should execute");
+        }
+        let (final_game, replay) = recorder.finish();
+
+        assert!(final_game.snapshot().inventory.is_empty());
+        assert!(final_game.snapshot().equipment.is_empty());
+        assert_eq!(final_game.snapshot().items.len(), 2);
+        let verification = verify(&replay, initial).expect("inventory action replay should verify");
+        assert_eq!(verification.commands_verified, 7);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 

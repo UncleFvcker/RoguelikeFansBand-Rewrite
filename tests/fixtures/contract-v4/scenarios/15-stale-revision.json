@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "protocol.revision.stale-initial",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": 99
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 0,
+      "turn": 0,
+      "lastCommandSeq": 0,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "entityCount": 1,
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "stateHash": "deeac895279aac631e5f201d44491e6e3d772c775a0eaaee06d96da06f9ba3fa"
+    },
+    "events": [],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [
+      {
+        "step": 1,
+        "kind": "revision-mismatch",
+        "stateHash": "deeac895279aac631e5f201d44491e6e3d772c775a0eaaee06d96da06f9ba3fa"
+      }
+    ],
+    "saveRoundTripStateHash": null
+  }
+}

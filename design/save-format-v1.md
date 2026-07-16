@@ -71,7 +71,7 @@ interface SavePayloadV1 {
 }
 ```
 
-当前桌面垂直切片已经把地面 `items` 与 `inventory` 物品堆写入 payload。背包项保存稳定实例 ID、内容 kind ID 和数量，不保存本地化名称、glyph 或 HTML 面板状态；载入后必须验证内容引用、实例 ID 唯一性和 `maxStack` 范围。
+当前桌面垂直切片已经把地面 `items`、`inventory` 物品堆和 `equipment` 装备列表写入 payload。背包与装备项保存稳定实例 ID、内容 kind ID、数量及装备槽 ID，不保存本地化名称、glyph、选择复选框或 HTML 面板状态；载入后必须验证内容引用、实例 ID 唯一性、`maxStack`、槽位匹配和槽位唯一性。旧存档缺失 `equipment` 时按空列表载入。
 
 协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；该数组不参与 state hash，因此地图探索显示不会改变规则基准或回放检查点。
 

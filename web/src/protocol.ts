@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "wait" };
+export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "equip", itemId: string, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -25,11 +25,13 @@ export type EntityDto = { id: string, kindId: string, position: Position, hp: nu
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 
-export type InventoryItemDto = { id: string, kindId: string, quantity: number, };
+export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, };
+
+export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, };
 
-export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
+export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
 
-export type GameUpdate = { baseRevision: number, revision: number, turn: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, changedVisualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, removedEntities: Array<string>, stateHash: string, };
+export type GameUpdate = { baseRevision: number, revision: number, turn: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, changedVisualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, removedEntities: Array<string>, stateHash: string, };
 

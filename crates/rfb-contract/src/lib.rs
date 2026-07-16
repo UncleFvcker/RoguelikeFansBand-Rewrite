@@ -77,6 +77,8 @@ pub struct FinalStateAssertion {
     pub ground_item_count: usize,
     #[serde(default)]
     pub inventory_stack_count: usize,
+    #[serde(default)]
+    pub equipment_count: usize,
     pub state_hash: String,
 }
 
@@ -144,6 +146,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             entity_count: snapshot.entities.len(),
             ground_item_count: snapshot.items.len(),
             inventory_stack_count: snapshot.inventory.len(),
+            equipment_count: snapshot.equipment.len(),
             state_hash: snapshot.state_hash,
         },
         events,

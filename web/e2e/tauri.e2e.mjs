@@ -138,7 +138,7 @@ async function runScenario(driver) {
   assert.equal(state.totalRebuiltTerrainChunks, "9");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.3");
+  assert.equal(state.protocolVersion, "1.4");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -153,12 +153,13 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
+    "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.contentVisualCount, "5");
-  assert.equal(state.itemCount, "1");
+  assert.equal(state.contentVisualCount, "6");
+  assert.equal(state.itemCount, "2");
   assert.equal(state.inventoryStackCount, "0");
+  assert.equal(state.equipmentCount, "0");
   assert.match(state.inventory, /背包是空的/);
 
   await dispatchKey(driver, "Numpad5", "5");
@@ -192,7 +193,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.renderKind, "update");
   assert.equal(state.appliedCells, "1");
-  assert.equal(state.itemCount, "0");
+  assert.equal(state.itemCount, "1");
   assert.equal(state.inventoryStackCount, "1");
   assert.match(state.inventory, /发光碎片/);
   assert.match(state.inventory, /×1/);
@@ -294,6 +295,86 @@ async function runScenario(driver) {
   assert.equal(download.fileName, "rfb-rewrite-demo.rfbsave");
   assert.ok(download.size > 100, `save is unexpectedly small: ${download.size}`);
   assert.match((await readState(driver)).messages, /已导出带校验和的 \.rfbsave 存档/);
+
+  await dispatchKey(driver, "Numpad6", "6");
+  await driver.waitFor(
+    `return document.querySelector("#position-value")?.textContent === "5, 3" && document.querySelector("#turn-value")?.textContent === "4"`,
+    "movement to equippable item",
+  );
+  await dispatchKey(driver, "KeyG", "g");
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "5" && document.querySelector("#inventory-count")?.textContent === "2 堆"`,
+    "second item pickup",
+  );
+  state = await readState(driver);
+  assert.equal(state.itemCount, "0");
+  assert.equal(state.inventoryStackCount, "2");
+  assert.match(state.inventory, /回声护符/);
+  assert.match(state.inventory, /可装备：护符/);
+
+  await driver.execute(`
+    const row = document.querySelector('[data-item-id="demo.item.echo-charm.1"]');
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    checkbox.click();
+    return true;
+  `);
+  await click(driver, "#inventory-equip");
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "6" && document.querySelector("#map-host")?.dataset.equipmentCount === "1"`,
+    "equipment action",
+  );
+  state = await readState(driver);
+  assert.equal(state.inventoryStackCount, "1");
+  assert.equal(state.equipmentCount, "1");
+  assert.match(state.equipment, /回声护符/);
+  assert.match(state.messages, /装备在护符槽位/);
+
+  await click(driver, '[data-slot-id="charm"] button');
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "7" && document.querySelector("#map-host")?.dataset.equipmentCount === "0"`,
+    "unequipment action",
+  );
+  state = await readState(driver);
+  assert.equal(state.inventoryStackCount, "2");
+  assert.match(state.messages, /卸下了回声护符/);
+
+  await driver.execute(`
+    for (const checkbox of document.querySelectorAll('#inventory-list input[type="checkbox"]')) {
+      if (!checkbox.checked) checkbox.click();
+    }
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.querySelector("#inventory-selection-count")?.textContent === "已选择 2 堆"`,
+    "multi-item selection",
+  );
+  await click(driver, "#inventory-drop");
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "8" && document.querySelector("#inventory-count")?.textContent === "0 堆"`,
+    "batch item drop",
+  );
+  state = await readState(driver);
+  assert.equal(state.itemCount, "2");
+  assert.equal(state.inventoryStackCount, "0");
+  assert.match(state.messages, /丢下了 2 堆物品，共 2 件/);
+
+  await driver.execute(`
+    const saved = window.__rfbE2eDownloads.find((item) => item.fileName.endsWith(".rfbsave"));
+    const input = document.querySelector("#load-input");
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([saved.blob], saved.fileName, { type: "application/octet-stream" }));
+    input.files = transfer.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent === "1 堆"`,
+    "inventory action save reset",
+  );
+  state = await readState(driver);
+  assert.equal(state.itemCount, "1");
+  assert.equal(state.equipmentCount, "0");
+  assert.equal(state.canvasUnchanged, true);
 
   const hashBeforeCameraSwitch = state.stateHash;
   const appliedCellsBeforeCameraSwitch = state.appliedCells;
@@ -414,7 +495,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.renderKind, "snapshot");
   assert.equal(state.appliedCells, "400");
-  assert.equal(state.itemCount, "0");
+  assert.equal(state.itemCount, "1");
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.cameraMode, "player-centered");
   assert.equal(state.cameraX, "0");
@@ -508,8 +589,10 @@ async function readState(driver) {
       contentVisualCount: host?.dataset.contentVisualCount,
       itemCount: host?.dataset.itemCount,
       inventoryStackCount: host?.dataset.inventoryStackCount,
+      equipmentCount: host?.dataset.equipmentCount,
       totalAppliedCells: host?.dataset.totalAppliedCells,
       inventory: document.querySelector("#inventory-list")?.textContent,
+      equipment: document.querySelector("#equipment-list")?.textContent,
       controls: document.querySelector("#controls-help")?.textContent,
       locale: document.documentElement.lang,
       stateHash: document.querySelector("#hash-value")?.title,

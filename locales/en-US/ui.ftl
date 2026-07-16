@@ -43,6 +43,15 @@ inventory-stack-count =
     }
 inventory-empty = Your inventory is empty. Stand on an item and press G to pick it up.
 inventory-quantity = ×{ $quantity }
+inventory-selected-count = { $count } selected
+inventory-equippable = Equippable: { $slot }
+action-inventory-equip = Equip
+action-inventory-drop = Drop
+panel-equipment-title = Equipment
+equipment-empty = Nothing is currently equipped.
+action-equipment-unequip = Unequip
+equipment-slot-charm = Charm
+equipment-slot-unknown = Unknown slot ({ $slot })
 panel-native-save-title = Native Saves
 action-native-save-refresh = Refresh
 native-save-name-label = New save name

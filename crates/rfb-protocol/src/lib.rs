@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.3";
+pub const PROTOCOL_VERSION: &str = "1.4";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -43,10 +43,17 @@ impl Direction {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
-#[serde(tag = "type", rename_all = "kebab-case")]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
 pub enum GameCommand {
+    Drop { item_ids: Vec<String> },
+    Equip { item_id: String },
     Move { direction: Direction },
     PickUp,
+    Unequip { slot_id: String },
     Wait,
 }
 
@@ -149,6 +156,18 @@ pub struct InventoryItemDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default)]
+    pub equipment_slot: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct EquipmentItemDto {
+    pub id: String,
+    pub kind_id: String,
+    pub quantity: u32,
+    pub slot_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -177,6 +196,8 @@ pub struct GameSnapshot {
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
     pub inventory: Vec<InventoryItemDto>,
+    #[serde(default)]
+    pub equipment: Vec<EquipmentItemDto>,
     pub content_id: String,
     pub content_hash: String,
     pub content_visuals: Vec<ContentVisualDto>,
@@ -200,6 +221,8 @@ pub struct GameUpdate {
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
     pub inventory: Vec<InventoryItemDto>,
+    #[serde(default)]
+    pub equipment: Vec<EquipmentItemDto>,
     pub removed_entities: Vec<String>,
     pub state_hash: String,
 }
@@ -244,6 +267,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
     push_declaration!(InventoryItemDto);
+    push_declaration!(EquipmentItemDto);
     push_declaration!(GameEventDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
@@ -288,6 +312,8 @@ pub struct SavePayloadV1 {
     pub items: Vec<ItemDto>,
     #[serde(default)]
     pub inventory: Vec<InventoryItemDto>,
+    #[serde(default)]
+    pub equipment: Vec<EquipmentItemDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub explored: Vec<bool>,
     pub rng: RngSaveDto,
@@ -345,17 +371,35 @@ mod tests {
 
     #[test]
     fn command_messagepack_round_trip() {
-        let command = GameCommandEnvelope {
-            command_seq: 1,
-            expected_revision: 0,
-            command: GameCommand::Move {
+        for (index, command) in [
+            GameCommand::Move {
                 direction: Direction::SouthEast,
             },
-        };
-
-        let encoded = to_msgpack(&command).expect("command should encode");
-        let decoded: GameCommandEnvelope = from_msgpack(&encoded).expect("command should decode");
-        assert_eq!(decoded, command);
+            GameCommand::PickUp,
+            GameCommand::Equip {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
+            GameCommand::Unequip {
+                slot_id: "charm".to_owned(),
+            },
+            GameCommand::Drop {
+                item_ids: vec!["demo.item.echo-charm.1".to_owned()],
+            },
+            GameCommand::Wait,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let envelope = GameCommandEnvelope {
+                command_seq: index as u32 + 1,
+                expected_revision: index as u32,
+                command,
+            };
+            let encoded = to_msgpack(&envelope).expect("command should encode");
+            let decoded: GameCommandEnvelope =
+                from_msgpack(&encoded).expect("command should decode");
+            assert_eq!(decoded, envelope);
+        }
     }
 
     #[cfg(feature = "bindings")]
@@ -364,6 +408,8 @@ mod tests {
         let typescript = generated_typescript();
         assert!(typescript.contains("actorId: string | null"));
         assert!(typescript.contains("commandSeq: number"));
+        assert!(typescript.contains("itemIds: Array<string>"));
+        assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
 
         let schema: serde_json::Value = serde_json::from_str(

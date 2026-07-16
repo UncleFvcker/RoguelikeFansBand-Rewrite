@@ -106,6 +106,8 @@ pub struct ItemDefinition {
     pub description_key: String,
     pub glyph: String,
     pub max_stack: u32,
+    #[serde(default)]
+    pub equipment_slot: Option<String>,
     pub tags: Vec<String>,
 }
 
@@ -523,6 +525,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if item.max_stack == 0 || item.max_stack > 1_000_000 {
             return Err(ContentError::InvalidItemStack(item.id.clone()));
         }
+        if let Some(slot) = &item.equipment_slot
+            && (item.max_stack != 1 || validate_equipment_slot(slot).is_err())
+        {
+            return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
+        }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
         item_limits.insert(item.id.clone(), item.max_stack);
@@ -852,6 +859,18 @@ fn validate_message_key(key: &str) -> Result<(), ContentError> {
     Ok(())
 }
 
+fn validate_equipment_slot(slot: &str) -> Result<(), ContentError> {
+    if slot.is_empty()
+        || slot.len() > 64
+        || !slot.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'-' | b'_')
+        })
+    {
+        return Err(ContentError::InvalidEquipmentSlot(slot.to_owned()));
+    }
+    Ok(())
+}
+
 fn validate_definition_text(
     id: &str,
     name_key: &str,
@@ -1085,6 +1104,8 @@ pub enum ContentError {
     InvalidActorStats(String),
     #[error("item stack limit is outside supported limits: {0}")]
     InvalidItemStack(String),
+    #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
+    InvalidEquipmentSlot(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1153,7 +1174,7 @@ mod tests {
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
         assert_eq!(first.content.actors.len(), 2);
-        assert_eq!(first.content.items.len(), 1);
+        assert_eq!(first.content.items.len(), 2);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -1164,7 +1185,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.0.0");
+        assert_eq!(catalog.pack_version(), "1.1.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1183,6 +1204,12 @@ mod tests {
                 .item("demo.item.luminous-shard")
                 .map(|item| item.max_stack),
             Some(20)
+        );
+        assert_eq!(
+            catalog
+                .item("demo.item.echo-charm")
+                .and_then(|item| item.equipment_slot.as_deref()),
+            Some("charm")
         );
         assert!(catalog.world("demo.world.original-v1").is_some());
         assert_eq!(
@@ -1215,6 +1242,24 @@ mod tests {
         assert!(matches!(
             decode_content(&corrupted),
             Err(ContentError::ChecksumMismatch)
+        ));
+    }
+
+    #[test]
+    fn equippable_items_require_a_valid_slot_and_single_item_stack() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let mut invalid = artifact.content.clone();
+        let shard = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.luminous-shard")
+            .expect("fixture should contain the shard");
+        shard.equipment_slot = Some("charm".to_owned());
+
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidEquipmentSlot(_))
         ));
     }
 

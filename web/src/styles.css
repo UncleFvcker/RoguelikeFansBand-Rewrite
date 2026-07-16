@@ -205,6 +205,32 @@ h1 {
   list-style: none;
 }
 
+.inventory-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid rgb(103 137 168 / 12%);
+  color: #71879c;
+  font-size: 0.76rem;
+}
+
+.inventory-actions > div {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.inventory-actions > span {
+  white-space: nowrap;
+}
+
+.inventory-actions button,
+.equipment-item button {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+}
+
 .inventory-item,
 .inventory-empty {
   display: flex;
@@ -217,6 +243,42 @@ h1 {
   font-size: 0.88rem;
 }
 
+.inventory-item {
+  align-items: stretch;
+  padding: 0;
+}
+
+.inventory-item label {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+}
+
+.inventory-item input {
+  accent-color: #62cfa4;
+}
+
+.inventory-item-details {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.inventory-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-equippable {
+  color: #9d8bd7;
+  font-size: 0.7rem;
+}
+
 .inventory-empty {
   border-bottom: 0;
   color: #64788c;
@@ -225,6 +287,50 @@ h1 {
 .inventory-quantity {
   color: #7fd7b5;
   font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.equipment-heading {
+  padding: 0.55rem 0.9rem;
+  border-top: 1px solid rgb(103 137 168 / 16%);
+  border-bottom: 1px solid rgb(103 137 168 / 12%);
+  color: #7890a7;
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.equipment-list {
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+}
+
+.equipment-item,
+.equipment-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.6rem 0.9rem;
+  color: #c8d5e3;
+  font-size: 0.82rem;
+}
+
+.equipment-item-details {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.equipment-slot,
+.equipment-empty {
+  color: #6f8499;
+  font-size: 0.72rem;
+}
+
+.inventory-actions button:disabled,
+.equipment-item button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .native-save-create {

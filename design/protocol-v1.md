@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.3、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.4、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.3";
+  protocolVersion: "1.4";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.3 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆、每格 `itemId`，以及 Rust 权威 `visualCells`。`GameUpdate` 发送当前地面物品、背包状态和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)。
+协议 1.4 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆、装备列表、每格 `itemId`，以及 Rust 权威 `visualCells`。`GameUpdate` 发送当前地面物品、背包、装备状态和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
@@ -101,7 +101,7 @@ interface GameCoreV1 {
 
 `GameCommandEnvelope` 至少包含 `commandSeq`、客户端已知的 `expectedRevision` 和一个具体命令。核心只在 revision 合法时执行会改变规则状态的命令。
 
-当前命令集包括八向 `Move`、`Wait` 和 `PickUp`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆，成功或空地拾取都会消耗一个回合并产生结构化事件。
+当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip` 和 `Drop`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆到玩家脚下。所有成功或无可操作目标的游戏命令都会消耗一个回合并产生结构化事件。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
 

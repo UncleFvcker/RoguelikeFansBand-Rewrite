@@ -143,8 +143,68 @@
         "maxHp"
       ]
     },
+    "EquipmentItemDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "slotId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "quantity",
+        "slotId"
+      ]
+    },
     "GameCommand": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "itemIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "drop"
+            }
+          },
+          "required": [
+            "type",
+            "itemIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "equip"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -171,6 +231,22 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "slotId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "unequip"
+            }
+          },
+          "required": [
+            "type",
+            "slotId"
           ]
         },
         {
@@ -257,6 +333,13 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/EntityDto"
+          }
+        },
+        "equipment": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EquipmentItemDto"
           }
         },
         "height": {
@@ -369,6 +452,13 @@
             "$ref": "#/$defs/EntityDto"
           }
         },
+        "equipment": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EquipmentItemDto"
+          }
+        },
         "events": {
           "type": "array",
           "items": {
@@ -428,6 +518,13 @@
     "InventoryItemDto": {
       "type": "object",
       "properties": {
+        "equipmentSlot": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "id": {
           "type": "string"
         },

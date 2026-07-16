@@ -9,6 +9,13 @@
     "descriptionKey": {
       "type": "string"
     },
+    "equipmentSlot": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,

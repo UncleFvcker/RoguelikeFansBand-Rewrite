@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "item.equip.charm",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": { "world": "demo.world.original-v1" },
+  "commands": [
+    { "command": { "type": "move", "direction": "east" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "pick-up" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "move", "direction": "east" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "pick-up" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "equip", "itemId": "demo.item.echo-charm.1" }, "commandSeq": null, "expectedRevision": null }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 5,
+      "turn": 5,
+      "lastCommandSeq": 5,
+      "playerPosition": { "x": 5, "y": 3 },
+      "entityCount": 1,
+      "groundItemCount": 0,
+      "inventoryStackCount": 1,
+      "equipmentCount": 1,
+      "stateHash": "0d64c2382a1db62eaa700582bfa2959b1f297f776b9b2ae57c862002996c8648"
+    },
+    "events": [
+      { "kind": "item.pickup", "messageKey": "item-pickup-success", "args": { "quantity": "1", "target": "demo.item.luminous-shard" } },
+      { "kind": "item.pickup", "messageKey": "item-pickup-success", "args": { "quantity": "1", "target": "demo.item.echo-charm" } },
+      { "kind": "item.equip", "messageKey": "item-equip-success", "args": { "slot": "charm", "target": "demo.item.echo-charm" } }
+    ],
+    "changedCells": [
+      { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 4, "y": 3 },
+      { "x": 4, "y": 3 }, { "x": 5, "y": 3 }, { "x": 5, "y": 3 }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "0d64c2382a1db62eaa700582bfa2959b1f297f776b9b2ae57c862002996c8648"
+  }
+}
