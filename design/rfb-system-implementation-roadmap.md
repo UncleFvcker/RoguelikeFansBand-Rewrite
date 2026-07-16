@@ -310,6 +310,8 @@ crates/rfb-core/src/
 
 目标：把当前可玩切片迁入模块化结构，并加入真正的速度/能量回合。
 
+当前进度：前置重构已完成 `rfb-core` 入口、游戏聚合、运行状态、RNG、战斗公式、事件构造、存档转换和错误模块的首轮拆分；存档已改用独立权威 DTO，并通过显式 Schema v7 投影保持 contract-v7 state hash 不变。地面、背包和装备运行状态已统一为 `ItemInstance + ItemLocation`，完整拾取/丢弃/装备迁移只在拆分堆叠时创建新实例。物品、移动和当前近战已改为先产生强类型 `DomainEvent`，再统一投影为本地化 `GameEventDto`。行动调度仍待实现。
+
 实现：
 
 - 拆分 `rfb-core` 单文件，不改变现有 v7 行为；

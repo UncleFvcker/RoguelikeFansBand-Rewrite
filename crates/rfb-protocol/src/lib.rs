@@ -357,20 +357,68 @@ pub struct RngSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PlayerSaveDto {
+    pub id: String,
+    pub kind_id: String,
+    pub position: Position,
+    pub hp: i32,
+    #[serde(default)]
+    pub base_max_hp: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActorSaveDto {
+    pub id: String,
+    pub kind_id: String,
+    pub position: Position,
+    pub hp: i32,
+    #[serde(default)]
+    pub max_hp: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ItemSaveDto {
+    pub id: String,
+    pub kind_id: String,
+    pub position: Position,
+    pub quantity: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InventoryItemSaveDto {
+    pub id: String,
+    pub kind_id: String,
+    pub quantity: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EquipmentItemSaveDto {
+    pub id: String,
+    pub kind_id: String,
+    pub quantity: u32,
+    pub slot_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
     pub schema_version: u16,
     pub revision: u32,
     pub turn: u32,
     pub last_command_seq: u32,
     pub terrain: TerrainSaveDto,
-    pub player: PlayerDto,
-    pub entities: Vec<EntityDto>,
+    pub player: PlayerSaveDto,
+    pub entities: Vec<ActorSaveDto>,
     #[serde(default)]
-    pub items: Vec<ItemDto>,
+    pub items: Vec<ItemSaveDto>,
     #[serde(default)]
-    pub inventory: Vec<InventoryItemDto>,
+    pub inventory: Vec<InventoryItemSaveDto>,
     #[serde(default)]
-    pub equipment: Vec<EquipmentItemDto>,
+    pub equipment: Vec<EquipmentItemSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -428,6 +476,42 @@ pub fn from_msgpack<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, CodecError> 
 mod tests {
     use super::*;
 
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct LegacySavePayloadV1 {
+        schema_version: u16,
+        revision: u32,
+        turn: u32,
+        last_command_seq: u32,
+        terrain: TerrainSaveDto,
+        player: PlayerDto,
+        entities: Vec<EntityDto>,
+        items: Vec<ItemDto>,
+        inventory: Vec<InventoryItemDto>,
+        equipment: Vec<EquipmentItemDto>,
+        next_item_instance_serial: u64,
+        explored: Vec<bool>,
+        rng: RngSaveDto,
+        content_id: String,
+        content_hash: String,
+        world_id: String,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct DerivedFieldProbe {
+        #[serde(default)]
+        attack: Option<i32>,
+        #[serde(default)]
+        defense: Option<i32>,
+        #[serde(default)]
+        melee_skill: Option<i32>,
+        #[serde(default)]
+        armor_class: Option<i32>,
+        #[serde(default)]
+        equipment_modifiers: Option<StatModifiersDto>,
+    }
+
     #[test]
     fn command_messagepack_round_trip() {
         for (index, command) in [
@@ -463,6 +547,122 @@ mod tests {
                 from_msgpack(&encoded).expect("command should decode");
             assert_eq!(decoded, envelope);
         }
+    }
+
+    #[test]
+    fn legacy_v1_save_payload_decodes_into_authoritative_save_dtos() {
+        let legacy = LegacySavePayloadV1 {
+            schema_version: 1,
+            revision: 2,
+            turn: 2,
+            last_command_seq: 2,
+            terrain: TerrainSaveDto {
+                width: 1,
+                height: 1,
+                terrain_ids: vec!["demo.terrain.floor".to_owned()],
+            },
+            player: PlayerDto {
+                id: "demo.player".to_owned(),
+                kind_id: "demo.actor.explorer".to_owned(),
+                position: Position { x: 0, y: 0 },
+                hp: 8,
+                max_hp: 14,
+                base_max_hp: 10,
+                attack: 3,
+                base_attack: 2,
+                defense: 2,
+                base_defense: 1,
+                melee_skill: 60,
+                armor_class: 20,
+                melee_damage: DamageDiceDto { dice: 1, sides: 2 },
+                is_dead: false,
+                equipment_modifiers: StatModifiersDto {
+                    attack: 1,
+                    defense: 1,
+                    max_hp: 4,
+                },
+            },
+            entities: vec![EntityDto {
+                id: "demo.monster.1".to_owned(),
+                kind_id: "demo.actor.monster".to_owned(),
+                position: Position { x: 1, y: 0 },
+                hp: 3,
+                max_hp: 3,
+                attack: 1,
+                defense: 1,
+                melee_skill: 32,
+                armor_class: 10,
+                melee_damage: DamageDiceDto { dice: 1, sides: 2 },
+            }],
+            items: vec![ItemDto {
+                id: "demo.item.ground.1".to_owned(),
+                kind_id: "demo.item.shard".to_owned(),
+                position: Position { x: 0, y: 0 },
+                quantity: 2,
+            }],
+            inventory: vec![InventoryItemDto {
+                id: "demo.item.inventory.1".to_owned(),
+                kind_id: "demo.item.charm".to_owned(),
+                quantity: 1,
+                equipment_slot: Some("charm".to_owned()),
+                modifiers: StatModifiersDto {
+                    attack: 1,
+                    defense: 1,
+                    max_hp: 4,
+                },
+            }],
+            equipment: vec![EquipmentItemDto {
+                id: "demo.item.equipment.1".to_owned(),
+                kind_id: "demo.item.charm".to_owned(),
+                quantity: 1,
+                slot_id: "charm".to_owned(),
+                modifiers: StatModifiersDto {
+                    attack: 1,
+                    defense: 1,
+                    max_hp: 4,
+                },
+            }],
+            next_item_instance_serial: 4,
+            explored: vec![true],
+            rng: RngSaveDto {
+                algorithm: "rfb-rng-xoshiro256ss-v1".to_owned(),
+                state: [1, 2, 3, 4],
+                draw_counter: 5,
+            },
+            content_id: "demo.content".to_owned(),
+            content_hash: "0".repeat(64),
+            world_id: "demo.world".to_owned(),
+        };
+
+        let encoded = to_msgpack(&legacy).expect("legacy payload should encode");
+        let decoded: SavePayloadV1 =
+            from_msgpack(&encoded).expect("legacy payload should migrate while decoding");
+
+        assert_eq!(decoded.player.base_max_hp, 10);
+        assert_eq!(decoded.entities[0].max_hp, 3);
+        assert_eq!(decoded.inventory[0].kind_id, "demo.item.charm");
+        assert_eq!(decoded.equipment[0].slot_id, "charm");
+    }
+
+    #[test]
+    fn authoritative_player_save_omits_derived_combat_fields() {
+        let player = PlayerSaveDto {
+            id: "demo.player".to_owned(),
+            kind_id: "demo.actor.explorer".to_owned(),
+            position: Position { x: 0, y: 0 },
+            hp: 10,
+            base_max_hp: 10,
+        };
+
+        let encoded = to_msgpack(&player).expect("player save should encode");
+        let probe: DerivedFieldProbe =
+            from_msgpack(&encoded).expect("derived field probe should decode");
+
+        assert_eq!(probe.attack, None);
+        assert_eq!(probe.defense, None);
+        assert_eq!(probe.melee_skill, None);
+        assert_eq!(probe.armor_class, None);
+        assert_eq!(probe.equipment_modifiers, None);
     }
 
     #[cfg(feature = "bindings")]

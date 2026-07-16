@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MPL-2.0
+
+use rfb_protocol::Position;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct Actor {
+    pub(crate) id: String,
+    pub(crate) kind_id: String,
+    pub(crate) position: Position,
+    pub(crate) hp: i32,
+    pub(crate) max_hp: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum ItemLocation {
+    Ground(Position),
+    Inventory,
+    Equipped { slot_id: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct ItemInstance {
+    pub(crate) id: String,
+    pub(crate) kind_id: String,
+    pub(crate) quantity: u32,
+    pub(crate) location: ItemLocation,
+}
+
+pub(crate) struct EquipOutcome {
+    pub(crate) kind_id: String,
+    pub(crate) slot_id: String,
+    pub(crate) replaced_kind_id: Option<String>,
+}

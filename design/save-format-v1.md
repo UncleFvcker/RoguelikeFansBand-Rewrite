@@ -1,6 +1,6 @@
 # RFB 新存档格式 v1
 
-状态：v1 容器、校验读写和 Windows/Tauri 原生目录事务已实现；迁移链与旧存档完整导入仍未实现
+状态：v1 容器、独立权威存档 DTO、校验读写和 Windows/Tauri 原生目录事务已实现；跨 schema 迁移链与旧 C 存档完整导入仍未实现
 
 ## 1. 基本决定
 
@@ -61,19 +61,33 @@ Header 不可信，显示前需要长度限制和转义；载入是否成功以 
 ```ts
 interface SavePayloadV1 {
   schemaVersion: 1;
-  world: WorldSaveV1;
-  player: PlayerSaveV1;
-  levels: LevelSaveV1[];
-  rng: RngSaveV1;
-  options: CoreOptionSaveV1;
-  content: ContentSetRef;
-  migrationHistory: MigrationRecord[];
+  revision: number;
+  turn: number;
+  lastCommandSeq: number;
+  terrain: TerrainSaveDto;
+  player: PlayerSaveDto;
+  entities: ActorSaveDto[];
+  items: ItemSaveDto[];
+  inventory: InventoryItemSaveDto[];
+  equipment: EquipmentItemSaveDto[];
+  nextItemInstanceSerial: number;
+  explored: boolean[];
+  rng: RngSaveDto;
+  contentId: string;
+  contentHash: string;
+  worldId: string;
 }
 ```
 
-当前桌面垂直切片已经把地面 `items`、`inventory` 物品堆、`equipment` 装备列表和 `nextItemInstanceSerial` 写入 payload。背包与装备项保存稳定实例 ID、内容 kind ID、数量及装备槽 ID，不保存本地化名称、glyph、选择复选框或 HTML 面板状态；属性修正以及最终最大生命、攻击、防御、近战能力、AC 和伤害骰在载入时由当前内容与装备重新派生。玩家负生命值代表已死亡，可安全保存和重载；`isDead` 是由生命值派生的协议字段。载入后必须验证内容引用、实例 ID 唯一性、`maxStack`、槽位匹配、槽位唯一性，以及生成实例序号不能落后于任何 `generated.item.N`。旧存档缺失 `equipment` 时按空列表载入，缺失分配序号时从所有现有实例 ID 推导；协议 1.7 之前缺失的近战能力、AC、伤害骰和死亡字段按未保存处理，并从 actor/item 内容定义和生命值恢复。
+当前桌面垂直切片已经把地面 `items`、`inventory` 物品堆、`equipment` 装备列表和 `nextItemInstanceSerial` 写入 payload。存档使用独立的 `PlayerSaveDto`、`ActorSaveDto` 和物品存档 DTO，不再复用面向前端的 `PlayerDto`、`EntityDto`、`InventoryItemDto` 或 `EquipmentItemDto`。
 
-协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；该数组不参与 state hash，因此地图探索显示不会改变规则基准或回放检查点。
+Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明确区分 `Ground(position)`、`Inventory` 和 `Equipped(slotId)`。拾取、整堆丢弃、装备与卸下只改变同一实例的位置；部分拆堆才分配新的稳定实例 ID。v1 存档线格式继续投影为 `items`、`inventory` 和 `equipment` 三个列表，以兼容现有文件和 contract-v7，但这三个列表不再对应三套核心结构体。
+
+玩家存档只保存实例 ID、种类 ID、位置、当前生命和自然最大生命；怪物保存相同的运行状态。最终最大生命、攻击、防御、近战能力、AC、伤害骰、装备 modifier、死亡标志、glyph 和本地化文本均不写入新存档，而是在载入后由当前内容、装备和生命值重新派生。旧 v1 MessagePack 中多余的派生字段会由新读取器安全忽略，因此现有存档仍可载入。
+
+背包与装备项保存稳定实例 ID、内容 kind ID、数量及装备槽 ID，不保存选择复选框或 HTML 面板状态。载入后必须验证内容引用、实例 ID 唯一性、`maxStack`、槽位匹配、槽位唯一性，以及生成实例序号不能落后于任何 `generated.item.N`。旧存档缺失 `equipment` 时按空列表载入，缺失分配序号时从所有现有实例 ID 推导。玩家负生命值代表已死亡，可安全保存和重载；`isDead` 仅是协议派生字段。
+
+协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；该数组不参与 state hash，因此地图探索显示不会改变规则基准或回放检查点。当前 state hash Schema v7 使用独立的历史兼容投影，不再直接哈希当前存档 DTO；因此清理存档中的重复派生字段不会改写 contract-v7 基准。
 
 禁止保存：
 

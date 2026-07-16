@@ -140,8 +140,8 @@ pub enum SaveError {
 #[cfg(test)]
 mod tests {
     use rfb_protocol::{
-        CharacterSummary, EntityDto, InventoryItemDto, ItemDto, PROTOCOL_VERSION, PlayerDto,
-        Position, RngSaveDto, TerrainSaveDto,
+        ActorSaveDto, CharacterSummary, InventoryItemSaveDto, ItemSaveDto, PROTOCOL_VERSION,
+        PlayerSaveDto, Position, RngSaveDto, TerrainSaveDto,
     };
 
     use super::*;
@@ -175,26 +175,16 @@ mod tests {
                 height: 1,
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
             },
-            player: PlayerDto {
+            player: PlayerSaveDto {
                 id: "demo.player".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
                 position: Position { x: 0, y: 0 },
                 hp: 10,
-                max_hp: 10,
                 base_max_hp: 10,
-                attack: 2,
-                base_attack: 2,
-                defense: 1,
-                base_defense: 1,
-                melee_skill: 40,
-                armor_class: 10,
-                melee_damage: rfb_protocol::DamageDiceDto { dice: 1, sides: 2 },
-                is_dead: false,
-                equipment_modifiers: Default::default(),
             },
-            entities: Vec::<EntityDto>::new(),
-            items: Vec::<ItemDto>::new(),
-            inventory: Vec::<InventoryItemDto>::new(),
+            entities: Vec::<ActorSaveDto>::new(),
+            items: Vec::<ItemSaveDto>::new(),
+            inventory: Vec::<InventoryItemSaveDto>::new(),
             equipment: Vec::new(),
             next_item_instance_serial: 1,
             explored: vec![true],

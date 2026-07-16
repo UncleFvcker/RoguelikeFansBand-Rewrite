@@ -2,7 +2,9 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v3：哈希输入包含运行时内容包 ID/hash、world ID、地面物品和背包物品堆。Schema v1/v2 与 contract-v1/v2 只作为历史基准保留，不再用于当前核心的精确验证。
+当前 state hash Schema 为 v7：哈希输入覆盖运行时内容包 ID/hash、world ID、玩家与怪物战斗状态、地面/背包/装备物品、实例分配序号、RNG、回合和命令序号。Schema v1-v6 与 contract-v1-v6 只作为历史基准保留，不再用于当前核心的 active 精确验证。
+
+state hash 与正式存档 DTO 已解耦。Schema v7 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 v7 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 
@@ -66,7 +68,7 @@ interface ReplayV1 {
   contentHash: string;
   initialSaveHash: string;
   rngAlgorithm: string;
-  stateHashSchemaVersion: 1;
+  stateHashSchemaVersion: 7;
   commands: ReplayCommand[];
   checkpoints: ReplayCheckpoint[];
 }

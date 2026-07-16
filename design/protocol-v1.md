@@ -121,6 +121,8 @@ interface GameUpdate {
 }
 ```
 
+`GameEventDto[]` 是领域事件的前端投影，不是核心内部事件模型。核心使用强类型 `DomainEvent` 保留伤害、数量、物品种类、槽位和来源/目标等语义字段，并在构建 `GameUpdate` 时一次性转换；前端不得根据 message key 反推规则结果。
+
 要求：
 
 - `baseRevision` 必须等于前端当前 revision；
