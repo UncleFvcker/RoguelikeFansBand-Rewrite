@@ -225,6 +225,7 @@ fn save_round_trip(game: &Game) -> Result<String, ContractError> {
         save_schema_version: 1,
         game_version: env!("CARGO_PKG_VERSION").to_owned(),
         protocol_version: PROTOCOL_VERSION.to_owned(),
+        slot_name: "契约回环".to_owned(),
         created_at: "2026-07-15T00:00:00Z".to_owned(),
         saved_at: "2026-07-15T00:01:00Z".to_owned(),
         character_summary: CharacterSummary {

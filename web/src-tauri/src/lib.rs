@@ -5,12 +5,22 @@ compile_error!("the webdriver feature is restricted to debug-only E2E builds");
 
 use std::sync::Mutex;
 
+use serde::Serialize;
+use tauri::Manager;
+
 use rfb_core::Game;
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, PROTOCOL_VERSION,
     SaveHeaderV1,
 };
 use rfb_replay::ReplayRecorder;
+
+mod native_storage;
+
+use native_storage::{
+    DesktopCommandError, DesktopResult, NativeSaveStore, NativeSaveSummary, append_log,
+    install_panic_log, validate_slot_name,
+};
 
 struct GameSession {
     recorder: ReplayRecorder,
@@ -20,6 +30,7 @@ struct GameSession {
 #[derive(Default)]
 struct AppState {
     session: Mutex<Option<GameSession>>,
+    storage: Mutex<()>,
 }
 
 impl AppState {
@@ -56,6 +67,10 @@ impl AppState {
     }
 
     fn save(&self, saved_at: String) -> Result<Vec<u8>, String> {
+        self.save_named(saved_at, String::new())
+    }
+
+    fn save_named(&self, saved_at: String, slot_name: String) -> Result<Vec<u8>, String> {
         let session = self.lock_session()?;
         let session = session
             .as_ref()
@@ -66,6 +81,7 @@ impl AppState {
             save_schema_version: 1,
             game_version: env!("CARGO_PKG_VERSION").to_owned(),
             protocol_version: PROTOCOL_VERSION.to_owned(),
+            slot_name,
             created_at: session.created_at.clone(),
             saved_at,
             character_summary: CharacterSummary {
@@ -111,6 +127,41 @@ impl AppState {
         *self.lock_session()? = Some(session);
         Ok(())
     }
+
+    fn lock_storage(&self) -> DesktopResult<std::sync::MutexGuard<'_, ()>> {
+        self.storage
+            .lock()
+            .map_err(|_| DesktopCommandError::new("native-save-lock", "storage lock is poisoned"))
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeLoadResult {
+    snapshot: GameSnapshot,
+    recovery_backup: Option<u8>,
+}
+
+fn native_store(app: &tauri::AppHandle) -> DesktopResult<NativeSaveStore> {
+    let root = app
+        .path()
+        .app_local_data_dir()
+        .map_err(|error| DesktopCommandError::new("native-save-directory", error.to_string()))?
+        .join("saves");
+    Ok(NativeSaveStore::new(root))
+}
+
+fn desktop_log_path(app: &tauri::AppHandle) -> DesktopResult<std::path::PathBuf> {
+    app.path()
+        .app_log_dir()
+        .map(|directory| directory.join("rfb-desktop.log"))
+        .map_err(|error| DesktopCommandError::new("desktop-log-directory", error.to_string()))
+}
+
+fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
+    if let Ok(path) = desktop_log_path(app) {
+        append_log(&path, event, detail);
+    }
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -147,6 +198,95 @@ fn export_replay(state: tauri::State<'_, AppState>) -> Result<Vec<u8>, String> {
     state.export_replay()
 }
 
+#[tauri::command]
+fn list_native_saves(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+) -> DesktopResult<Vec<NativeSaveSummary>> {
+    let _storage = state.lock_storage()?;
+    let result = native_store(&app)?.list();
+    if let Err(error) = &result {
+        log_event(&app, "native-save-list-error", &error.code);
+    }
+    result
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn save_native_game(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    slot_id: Option<String>,
+    slot_name: String,
+    saved_at: String,
+) -> DesktopResult<NativeSaveSummary> {
+    let result: DesktopResult<NativeSaveSummary> = (|| {
+        let slot_name = validate_slot_name(&slot_name)?;
+        let _storage = state.lock_storage()?;
+        let store = native_store(&app)?;
+        let slot_id = slot_id.map_or_else(|| store.create_slot_id(), Ok)?;
+        let bytes = state
+            .save_named(saved_at, slot_name)
+            .map_err(|error| DesktopCommandError::new("native-save-encode", error))?;
+        let summary = store.write(&slot_id, &bytes)?;
+        log_event(&app, "native-save-written", &slot_id);
+        Ok(summary)
+    })();
+    if let Err(error) = &result {
+        log_event(&app, "native-save-write-error", &error.code);
+    }
+    result
+}
+
+#[tauri::command]
+fn load_native_game(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    slot_id: String,
+) -> DesktopResult<NativeLoadResult> {
+    let result: DesktopResult<NativeLoadResult> = (|| {
+        let _storage = state.lock_storage()?;
+        let loaded = native_store(&app)?.load(&slot_id)?;
+        let snapshot = state
+            .load(&loaded.bytes)
+            .map_err(|error| DesktopCommandError::new("native-save-load", error))?;
+        log_event(
+            &app,
+            if loaded.recovery_backup.is_some() {
+                "native-save-backup-loaded"
+            } else {
+                "native-save-loaded"
+            },
+            &slot_id,
+        );
+        Ok(NativeLoadResult {
+            snapshot,
+            recovery_backup: loaded.recovery_backup,
+        })
+    })();
+    if let Err(error) = &result {
+        log_event(&app, "native-save-load-error", &error.code);
+    }
+    result
+}
+
+#[tauri::command]
+fn delete_native_save(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    slot_id: String,
+) -> DesktopResult<()> {
+    let result: DesktopResult<()> = (|| {
+        let _storage = state.lock_storage()?;
+        native_store(&app)?.delete(&slot_id)?;
+        log_event(&app, "native-save-deleted", &slot_id);
+        Ok(())
+    })();
+    if let Err(error) = &result {
+        log_event(&app, "native-save-delete-error", &error.code);
+    }
+    result
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
@@ -159,13 +299,31 @@ pub fn run() {
     };
 
     builder
+        .setup(|app| {
+            let store = native_store(app.handle()).map_err(|error| {
+                std::io::Error::other(format!("{}: {}", error.code, error.detail))
+            })?;
+            store.ensure_ready().map_err(|error| {
+                std::io::Error::other(format!("{}: {}", error.code, error.detail))
+            })?;
+            let log_path = desktop_log_path(app.handle()).map_err(|error| {
+                std::io::Error::other(format!("{}: {}", error.code, error.detail))
+            })?;
+            install_panic_log(log_path.clone());
+            append_log(&log_path, "desktop-start", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        })
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             initialize_game,
             dispatch_game_command,
             save_game,
             load_game,
-            export_replay
+            export_replay,
+            list_native_saves,
+            save_native_game,
+            load_native_game,
+            delete_native_save
         ])
         .run(tauri::generate_context!())
         .expect("failed to run RoguelikeFansBand Rewrite");

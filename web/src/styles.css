@@ -90,6 +90,7 @@ h1 {
 .map-panel,
 .status-panel,
 .inventory-panel,
+.save-panel,
 .message-panel {
   overflow: hidden;
   border: 1px solid rgb(103 137 168 / 28%);
@@ -224,6 +225,103 @@ h1 {
 .inventory-quantity {
   color: #7fd7b5;
   font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.native-save-create {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid rgb(103 137 168 / 12%);
+  color: #71879c;
+  font-size: 0.78rem;
+}
+
+.native-save-create > div {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.native-save-create input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #354a5f;
+  border-radius: 7px;
+  padding: 0.55rem 0.65rem;
+  color: #dcecff;
+  background: #101c27;
+  font: inherit;
+}
+
+.native-save-list {
+  max-height: 250px;
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.native-save-item,
+.native-save-empty {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid rgb(103 137 168 / 10%);
+}
+
+.native-save-empty {
+  color: #64788c;
+  font-size: 0.86rem;
+}
+
+.native-save-header,
+.native-save-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.native-save-name {
+  overflow: hidden;
+  color: #dcecff;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.native-save-status {
+  color: #79d4b1;
+  font-size: 0.72rem;
+}
+
+.native-save-status-recoverable {
+  color: #ffc18d;
+}
+
+.native-save-status-corrupt {
+  color: #ff9292;
+}
+
+.native-save-meta {
+  margin: 0.35rem 0 0.55rem;
+  color: #687d91;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.native-save-actions {
+  justify-content: flex-start;
+}
+
+.native-save-actions button {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.74rem;
+}
+
+.native-save-create input:disabled,
+.native-save-actions button:disabled,
+#native-save-create:disabled,
+#native-save-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .message-list {

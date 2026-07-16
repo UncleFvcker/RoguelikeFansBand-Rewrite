@@ -53,8 +53,12 @@ export class TauriNativeTransport implements CoreTransport {
     // The native game session is owned by the Tauri application and ends with it.
   }
 
-  #syncSnapshot(snapshot: GameSnapshot): void {
+  synchronize(snapshot: GameSnapshot): void {
     this.#revision = snapshot.revision;
     this.#commandSeq = snapshot.lastCommandSeq;
+  }
+
+  #syncSnapshot(snapshot: GameSnapshot): void {
+    this.synchronize(snapshot);
   }
 }

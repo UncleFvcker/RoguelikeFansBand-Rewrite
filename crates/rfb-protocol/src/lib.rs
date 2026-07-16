@@ -313,6 +313,8 @@ pub struct SaveHeaderV1 {
     pub save_schema_version: u16,
     pub game_version: String,
     pub protocol_version: String,
+    #[serde(default)]
+    pub slot_name: String,
     pub created_at: String,
     pub saved_at: String,
     pub character_summary: CharacterSummary,

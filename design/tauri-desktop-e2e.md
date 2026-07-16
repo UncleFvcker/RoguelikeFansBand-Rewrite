@@ -32,6 +32,9 @@
 7. 在整图与玩家居中镜头间切换，移动到可跟随区域并验证相机偏移、边缘钳制、state hash 和 dirty cell 计数不受镜头切换影响；
 8. 从 100% 切换到 150% 缩放再恢复，验证相机偏移、视口尺寸、Canvas 身份、state hash 和 dirty cell 计数；
 9. 从 ASCII 热切换到原创图片 tileset，重用同一 Canvas 并重绘 400 格。
+10. 创建桌面原生命名存档槽，验证地点、回合和状态摘要；移动后载入并恢复 state hash；
+11. 原生载入后继续派发命令，验证 TypeScript command sequence/revision 与 Rust 会话同步；
+12. 覆盖并删除原生槽，同时保留手动 `.rfbsave` 导入/导出场景。
 
 `MapRenderer` 在 `#map-host` 暴露只读诊断属性：最近渲染类型、最近处理格数、累计处理格数、当前 tileset ID、镜头模式、缩放、相机偏移、视口尺寸，以及 visible/remembered/hidden 格数量。这些信息不影响游戏规则、存档或状态哈希。
 
@@ -56,4 +59,5 @@ npm run e2e
 - 稳定截图基准和可控像素容差；
 - 键位三预设的焦点与文本输入隔离；
 - 损坏存档、无效 tileset 与核心错误的 UI 恢复；
+- 通过受控测试入口模拟主文件损坏，验证 UI 的 `recoverable` 状态和备份提示；
 - Android Appium 场景复用同一语义断言。

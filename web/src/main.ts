@@ -11,6 +11,11 @@ import {
 import { LOCALIZATION_SOURCES } from "./localization-resources";
 import { MapRenderer, type CameraMode } from "./map-renderer";
 import { parseZoomLevel, type ZoomLevel } from "./camera";
+import {
+  NativeSaveStorage,
+  desktopErrorCode,
+  type NativeSaveSummary,
+} from "./native-save-storage";
 import type {
   Direction,
   GameCommand,
@@ -23,8 +28,10 @@ import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
 
 const core = new TauriNativeTransport();
+const nativeSaveStorage = new NativeSaveStorage();
 const renderer = new MapRenderer();
 let busy = false;
+let nativeSaveBusy = false;
 
 const mapHost = element<HTMLElement>("map-host");
 const connectionStatus = element<HTMLElement>("connection-status");
@@ -35,6 +42,10 @@ const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
 const inventoryCount = element<HTMLElement>("inventory-count");
 const inventoryList = element<HTMLUListElement>("inventory-list");
+const nativeSaveName = element<HTMLInputElement>("native-save-name");
+const nativeSaveCreate = element<HTMLButtonElement>("native-save-create");
+const nativeSaveRefresh = element<HTMLButtonElement>("native-save-refresh");
+const nativeSaveList = element<HTMLUListElement>("native-save-list");
 const replayButton = element<HTMLButtonElement>("replay-button");
 const saveButton = element<HTMLButtonElement>("save-button");
 const loadInput = element<HTMLInputElement>("load-input");
@@ -74,6 +85,7 @@ let zoom = readZoomLevel();
 const localization = new Localization(readLocale(), LOCALIZATION_SOURCES);
 let connectionState: ConnectionState = "starting";
 let currentInventory: InventoryItemDto[] = [];
+let nativeSaves: NativeSaveSummary[] = [];
 const messageRecords: MessageRecord[] = [];
 inputPresetSelect.value = inputPreset;
 tilesetPresetSelect.value = tilesetPreset;
@@ -81,8 +93,10 @@ cameraModeSelect.value = cameraMode;
 zoomSelect.value = String(zoom);
 languageSelect.value = localization.locale;
 localization.localizeDocument();
+localizeNativeSaveControls();
 renderConnectionStatus();
 renderInputHelp();
+renderNativeSaves();
 
 void start();
 
@@ -110,6 +124,7 @@ async function start(): Promise<void> {
     announceTileset(tileset.id, tileset.warnings);
     connectionState = "ready";
     renderConnectionStatus();
+    await refreshNativeSaves();
   } catch (error) {
     showError(error);
   }
@@ -125,6 +140,9 @@ window.addEventListener("keydown", (event) => {
 saveButton.addEventListener("click", () => void exportSave());
 replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
+nativeSaveCreate.addEventListener("click", () => void createNativeSave());
+nativeSaveRefresh.addEventListener("click", () => void refreshNativeSaves());
+nativeSaveName.addEventListener("input", updateNativeSaveControls);
 clearMessages.addEventListener("click", () => {
   messageRecords.length = 0;
   renderMessages();
@@ -157,6 +175,8 @@ languageSelect.addEventListener("change", () => {
   renderConnectionStatus();
   renderInputHelp();
   renderInventory(currentInventory);
+  localizeNativeSaveControls();
+  renderNativeSaves();
   renderMessages();
 });
 window.addEventListener("beforeunload", () => {
@@ -205,14 +225,266 @@ async function importSave(): Promise<void> {
   if (!file) return;
   try {
     const snapshot = await core.load(new Uint8Array(await file.arrayBuffer()));
-    renderContentMetadata(snapshot);
-    renderer.applySnapshot(snapshot);
-    renderStatus(snapshot);
-    renderInventory(snapshot.inventory);
+    applyLoadedSnapshot(snapshot);
     addLocalizedMessage("message-save-loaded", undefined, "system");
   } catch (error) {
     showError(error);
   }
+}
+
+async function refreshNativeSaves(): Promise<void> {
+  if (nativeSaveBusy) return;
+  nativeSaveBusy = true;
+  updateNativeSaveControls();
+  try {
+    nativeSaves = await nativeSaveStorage.list();
+    renderNativeSaves();
+  } catch (error) {
+    showNativeSaveError(error);
+  } finally {
+    nativeSaveBusy = false;
+    updateNativeSaveControls();
+  }
+}
+
+async function createNativeSave(): Promise<void> {
+  const slotName = nativeSaveName.value.trim();
+  if (nativeSaveBusy || !slotName) return;
+  nativeSaveBusy = true;
+  updateNativeSaveControls();
+  try {
+    const summary = await nativeSaveStorage.save(slotName);
+    nativeSaveName.value = "";
+    replaceNativeSaveSummary(summary);
+    addLocalizedMessage("message-native-save-created", { name: summary.slotName }, "system");
+  } catch (error) {
+    showNativeSaveError(error);
+  } finally {
+    nativeSaveBusy = false;
+    updateNativeSaveControls();
+  }
+}
+
+async function overwriteNativeSave(summary: NativeSaveSummary): Promise<void> {
+  if (nativeSaveBusy) return;
+  nativeSaveBusy = true;
+  updateNativeSaveControls();
+  try {
+    const updated = await nativeSaveStorage.save(summary.slotName, summary.slotId);
+    replaceNativeSaveSummary(updated);
+    addLocalizedMessage("message-native-save-overwritten", { name: updated.slotName }, "system");
+  } catch (error) {
+    showNativeSaveError(error);
+  } finally {
+    nativeSaveBusy = false;
+    updateNativeSaveControls();
+  }
+}
+
+async function loadNativeSave(summary: NativeSaveSummary): Promise<void> {
+  if (nativeSaveBusy || busy || summary.status === "corrupt") return;
+  nativeSaveBusy = true;
+  busy = true;
+  updateNativeSaveControls();
+  try {
+    const result = await nativeSaveStorage.load(summary.slotId);
+    applyLoadedSnapshot(result.snapshot);
+    if (result.recoveryBackup === null) {
+      addLocalizedMessage("message-native-save-loaded", { name: summary.slotName }, "system");
+    } else {
+      addLocalizedMessage(
+        "message-native-save-backup-loaded",
+        { name: summary.slotName, backup: result.recoveryBackup },
+        "system",
+      );
+    }
+    await refreshNativeSavesAfterOperation();
+  } catch (error) {
+    showNativeSaveError(error);
+  } finally {
+    busy = false;
+    nativeSaveBusy = false;
+    updateNativeSaveControls();
+  }
+}
+
+async function deleteNativeSave(summary: NativeSaveSummary): Promise<void> {
+  if (
+    nativeSaveBusy ||
+    !window.confirm(localization.format("confirm-native-save-delete", { name: summary.slotName }))
+  ) {
+    return;
+  }
+  nativeSaveBusy = true;
+  updateNativeSaveControls();
+  try {
+    await nativeSaveStorage.delete(summary.slotId);
+    nativeSaves = nativeSaves.filter((save) => save.slotId !== summary.slotId);
+    renderNativeSaves();
+    addLocalizedMessage("message-native-save-deleted", { name: summary.slotName }, "system");
+  } catch (error) {
+    showNativeSaveError(error);
+  } finally {
+    nativeSaveBusy = false;
+    updateNativeSaveControls();
+  }
+}
+
+function applyLoadedSnapshot(snapshot: GameSnapshot): void {
+  core.synchronize(snapshot);
+  renderContentMetadata(snapshot);
+  renderer.applySnapshot(snapshot);
+  renderStatus(snapshot);
+  renderInventory(snapshot.inventory);
+}
+
+function replaceNativeSaveSummary(summary: NativeSaveSummary): void {
+  nativeSaves = [summary, ...nativeSaves.filter((save) => save.slotId !== summary.slotId)];
+  renderNativeSaves();
+}
+
+async function refreshNativeSavesAfterOperation(): Promise<void> {
+  nativeSaves = await nativeSaveStorage.list();
+  renderNativeSaves();
+}
+
+function renderNativeSaves(): void {
+  nativeSaveList.replaceChildren();
+  if (nativeSaves.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "native-save-empty";
+    empty.textContent = localization.format("native-save-empty");
+    nativeSaveList.append(empty);
+    updateNativeSaveControls();
+    return;
+  }
+
+  for (const summary of nativeSaves) {
+    const row = document.createElement("li");
+    row.className = "native-save-item";
+    row.dataset.slotId = summary.slotId;
+
+    const header = document.createElement("div");
+    header.className = "native-save-header";
+    const name = document.createElement("span");
+    name.className = "native-save-name";
+    name.textContent = summary.slotName;
+    name.title = summary.slotName;
+    const status = document.createElement("span");
+    status.className = `native-save-status native-save-status-${summary.status}`;
+    status.textContent = localization.format(nativeSaveStatusKey(summary.status));
+    header.append(name, status);
+
+    const metadata = document.createElement("p");
+    metadata.className = "native-save-meta";
+    metadata.textContent = nativeSaveMetadata(summary);
+
+    const actions = document.createElement("div");
+    actions.className = "native-save-actions";
+    const load = nativeSaveActionButton("load", "action-native-save-load", () =>
+      void loadNativeSave(summary),
+    );
+    load.disabled = summary.status === "corrupt" || nativeSaveBusy || busy;
+    const overwrite = nativeSaveActionButton(
+      "overwrite",
+      "action-native-save-overwrite",
+      () => void overwriteNativeSave(summary),
+    );
+    overwrite.disabled = nativeSaveBusy;
+    const remove = nativeSaveActionButton("delete", "action-native-save-delete", () =>
+      void deleteNativeSave(summary),
+    );
+    remove.disabled = nativeSaveBusy;
+    actions.append(load, overwrite, remove);
+
+    row.append(header, metadata, actions);
+    nativeSaveList.append(row);
+  }
+  updateNativeSaveControls();
+}
+
+function nativeSaveActionButton(
+  actionName: string,
+  key: MessageKey,
+  action: () => void,
+): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.nativeSaveAction = actionName;
+  button.textContent = localization.format(key);
+  button.addEventListener("click", action);
+  return button;
+}
+
+function nativeSaveStatusKey(status: NativeSaveSummary["status"]): MessageKey {
+  const keys: Record<NativeSaveSummary["status"], MessageKey> = {
+    ready: "native-save-status-ready",
+    recoverable: "native-save-status-recoverable",
+    corrupt: "native-save-status-corrupt",
+  };
+  return keys[status];
+}
+
+function nativeSaveMetadata(summary: NativeSaveSummary): string {
+  if (summary.turn === null || summary.savedAt === null) {
+    return localization.format("native-save-meta-unavailable");
+  }
+  return localization.format("native-save-meta", {
+    location: nativeSaveLocation(summary.locationKey),
+    turn: summary.turn,
+    savedAt: nativeSaveDate(summary.savedAt),
+  });
+}
+
+function nativeSaveLocation(locationKey: string | null): string {
+  return locationKey === "world-demo-original-lab-name"
+    ? localization.format("world-demo-original-lab-name")
+    : localization.format("native-save-location-unknown");
+}
+
+function nativeSaveDate(savedAt: string): string {
+  const date = new Date(savedAt);
+  return Number.isNaN(date.getTime())
+    ? localization.format("native-save-date-unknown")
+    : new Intl.DateTimeFormat(localization.locale, {
+        dateStyle: "short",
+        timeStyle: "short",
+      }).format(date);
+}
+
+function localizeNativeSaveControls(): void {
+  nativeSaveName.placeholder = localization.format("native-save-name-placeholder");
+  updateNativeSaveControls();
+}
+
+function updateNativeSaveControls(): void {
+  nativeSaveName.disabled = nativeSaveBusy;
+  nativeSaveCreate.disabled = nativeSaveBusy || nativeSaveName.value.trim().length === 0;
+  nativeSaveRefresh.disabled = nativeSaveBusy;
+  for (const button of nativeSaveList.querySelectorAll<HTMLButtonElement>("button")) {
+    const row = button.closest<HTMLElement>(".native-save-item");
+    const summary = nativeSaves.find((save) => save.slotId === row?.dataset.slotId);
+    button.disabled =
+      nativeSaveBusy ||
+      (button.dataset.nativeSaveAction === "load" &&
+        (busy || summary?.status === "corrupt"));
+  }
+}
+
+function showNativeSaveError(error: unknown): void {
+  addLocalizedMessage(
+    "message-native-save-failed",
+    { code: desktopErrorCode(error) },
+    "error",
+  );
+  console.error(error);
+}
+
+function nativeSaveErrorKey(code: string): MessageKey {
+  if (code === "native-save-name-invalid") return "native-save-error-name-invalid";
+  if (code === "native-save-not-found") return "native-save-error-not-found";
+  if (code === "native-save-invalid") return "native-save-error-corrupt";
+  return "native-save-error-unavailable";
 }
 
 async function changeTileset(): Promise<void> {
@@ -382,6 +654,11 @@ function localizedMessageArgs(
       preset: isInputPreset(preset)
         ? localization.format(inputPresetMessageKey(preset))
         : preset,
+    };
+  }
+  if (record.key === "message-native-save-failed") {
+    return {
+      reason: localization.format(nativeSaveErrorKey(String(record.args.code))),
     };
   }
   return record.args;

@@ -152,6 +152,7 @@ mod tests {
             save_schema_version: 1,
             game_version: "0.1.0".to_owned(),
             protocol_version: PROTOCOL_VERSION.to_owned(),
+            slot_name: "测试存档".to_owned(),
             created_at: "2026-07-15T00:00:00Z".to_owned(),
             saved_at: "2026-07-15T00:00:00Z".to_owned(),
             character_summary: CharacterSummary {

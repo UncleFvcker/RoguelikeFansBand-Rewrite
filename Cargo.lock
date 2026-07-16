@@ -2775,6 +2775,7 @@ dependencies = [
  "rfb-protocol",
  "rfb-replay",
  "rfb-save",
+ "serde",
  "tauri",
  "tauri-build",
  "tauri-plugin-wdio-webdriver",

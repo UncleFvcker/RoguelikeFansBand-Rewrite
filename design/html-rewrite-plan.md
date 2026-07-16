@@ -17,6 +17,7 @@
 - [Tauri 桌面端到端测试](tauri-desktop-e2e.md)
 - [Tauri Android 原生目标](android-target.md)
 - [新存档格式 v1](save-format-v1.md)
+- [桌面原生存档与诊断 v1](desktop-native-storage-v1.md)
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
 - [Fluent 本地化运行时 v1](fluent-localization-v1.md)
@@ -516,12 +517,14 @@ interface SaveGame {
 - 整图/玩家居中两种镜头模式、15×15 玩家视口、地图边缘钳制和 ResizeObserver 相机重算已建立；镜头只变换 PixiJS 世界容器，不影响 dirty cells、存档、回放或 state hash。
 - 75%–200% 五档画面缩放已接入同一相机容器；整图与玩家居中模式共用缩放，Canvas resize 不重建节点或重新提交 RenderCell。
 - 协议 1.3 已提供 Rust 权威 FOV、探索记忆和内容标签光源；前端临时 `all-visible`/阅读光已移除，记忆/隐藏格不再暴露当前物品和角色。
+- Tauri 应用私有存档目录、命名存档槽、原子替换、三份备份、损坏恢复、结构化错误和本地诊断日志已建立；手动 `.rfbsave` 导入/导出继续保留。
+- 桌面 E2E 已覆盖原生槽的新建、列表、载入后命令序列同步、覆盖和删除。
 
 下一步建议：
 
-1. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
-2. 将静态地形按 chunk 缓存为 RenderTexture，并增加视口外剔除；
-3. 扩展背包装备、丢弃和多物品选择交互；
+1. 将静态地形按 chunk 缓存为 RenderTexture，并增加视口外剔除；
+2. 扩展背包装备、丢弃和多物品选择交互；
+3. 为桌面诊断增加玩家主动触发的日志导出入口，继续避免自动上传；
 4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
 5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
 

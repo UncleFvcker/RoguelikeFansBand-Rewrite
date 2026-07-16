@@ -1,6 +1,6 @@
 # RFB 新存档格式 v1
 
-状态：P0 容器和容灾策略已确定，实现尚未开始
+状态：v1 容器、校验读写和 Windows/Tauri 原生目录事务已实现；迁移链与旧存档完整导入仍未实现
 
 ## 1. 基本决定
 
@@ -37,6 +37,7 @@ interface SaveHeaderV1 {
   saveSchemaVersion: 1;
   gameVersion: string;
   protocolVersion: string;
+  slotName: string;
   createdAt: string;
   savedAt: string;
   characterSummary: {
@@ -45,12 +46,15 @@ interface SaveHeaderV1 {
     locationKey: string;
     turn: number;
   };
-  content: ContentSetRef;
+  contentId: string;
+  contentHash: string;
   payloadEncoding: "messagepack";
 }
 ```
 
 Header 不可信，显示前需要长度限制和转义；载入是否成功以 payload 验证和迁移结果为准。
+
+`slotName` 是桌面原生槽使用的可选显示元数据。Rust 反序列化对缺失字段使用空字符串默认值，因此本字段的加入不破坏已经生成的 v1 存档；手动导出的存档当前写入空名称。桌面目录事务和恢复行为见 [桌面原生存档与诊断 v1](desktop-native-storage-v1.md)。
 
 ## 4. Payload
 
@@ -93,7 +97,7 @@ interface SavePayloadV1 {
 4. 尽平台能力执行 `fsync`；
 5. 将现有正式存档轮换为 `.bak1`；
 6. 原子 rename 临时文件为正式存档；
-7. 保留最近 3 个可配置备份；
+7. 保留最近 3 个备份；当前数量固定，未来再提供设置；
 8. 失败时保留最后一个有效正式存档。
 
 不得先删除旧存档再写新文件。临时文件清理由启动时的恢复流程处理。

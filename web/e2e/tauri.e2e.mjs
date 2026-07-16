@@ -54,9 +54,23 @@ async function main() {
     process.stderr.write(`Artifacts: ${artifactDirectory}\n`);
     process.exitCode = 1;
   } finally {
+    if (client) await cleanupNativeTestSaves(client).catch(() => undefined);
     if (client) await client.close().catch(() => undefined);
     if (child && child.exitCode === null && child.signalCode === null) child.kill();
   }
+}
+
+async function cleanupNativeTestSaves(driver) {
+  await driver.execute(`
+    window.confirm = () => true;
+    for (const row of document.querySelectorAll(".native-save-item")) {
+      if (row.querySelector(".native-save-name")?.textContent?.startsWith("E2E 原生存档 ")) {
+        row.querySelector('[data-native-save-action="delete"]')?.click();
+      }
+    }
+    return true;
+  `);
+  await delay(300);
 }
 
 async function runScenario(driver) {
@@ -165,6 +179,78 @@ async function runScenario(driver) {
   assert.match(state.inventory, /发光碎片/);
   assert.match(state.inventory, /×1/);
   assert.match(state.messages, /你将 1 个发光碎片收入了背包/);
+
+  const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
+  const nativeSaveHash = state.stateHash;
+  await driver.execute(`
+    const input = document.querySelector("#native-save-name");
+    input.value = arguments[0];
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    document.querySelector("#native-save-create").click();
+    return true;
+  `, [nativeSaveName]);
+  await driver.waitFor(
+    `return [...document.querySelectorAll(".native-save-item")].some((row) => row.querySelector(".native-save-name")?.textContent === arguments[0])`,
+    "native save creation",
+    10_000,
+    [nativeSaveName],
+  );
+  const nativeSlot = await driver.execute(`
+    const row = [...document.querySelectorAll(".native-save-item")]
+      .find((item) => item.querySelector(".native-save-name")?.textContent === arguments[0]);
+    return {
+      slotId: row.dataset.slotId,
+      status: row.querySelector(".native-save-status")?.textContent,
+      metadata: row.querySelector(".native-save-meta")?.textContent,
+    };
+  `, [nativeSaveName]);
+  assert.match(nativeSlot.slotId, /^save-[0-9]+(?:-[0-9]+)?$/);
+  assert.equal(nativeSlot.status, "可用");
+  assert.match(nativeSlot.metadata, /原创实验场/);
+  assert.match(nativeSlot.metadata, /回合 3/);
+  assert.match((await readState(driver)).messages, /已创建原生存档/);
+
+  await dispatchKey(driver, "Numpad6", "6");
+  await driver.waitFor(
+    `return document.querySelector("#position-value")?.textContent === "5, 3" && document.querySelector("#turn-value")?.textContent === "4"`,
+    "movement after native save",
+  );
+  await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]`);
+  await driver.waitFor(
+    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && !document.querySelector('[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]')?.disabled`,
+    "native save restore",
+  );
+  state = await readState(driver);
+  assert.equal(state.stateHash, nativeSaveHash);
+  assert.equal(state.canvasUnchanged, true);
+  assert.match(state.messages, /已载入原生存档/);
+
+  await dispatchKey(driver, "Numpad5", "5");
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "4"`,
+    "command sequence after native restore",
+  );
+  await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]`);
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "3" && !document.querySelector('[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="overwrite"]')?.disabled`,
+    "second native save restore",
+  );
+  await click(
+    driver,
+    `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="overwrite"]`,
+  );
+  await driver.waitFor(
+    `return document.querySelector("#message-list")?.textContent.includes("已安全覆盖原生存档")`,
+    "native save overwrite",
+  );
+  await driver.execute(`window.confirm = () => true; return true;`);
+  await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="delete"]`);
+  await driver.waitFor(
+    `return !document.querySelector('[data-slot-id="${nativeSlot.slotId}"]')`,
+    "native save deletion",
+  );
+  state = await readState(driver);
+  assert.match(state.messages, /已删除原生存档/);
 
   await driver.execute(`
     const downloads = [];
@@ -453,12 +539,12 @@ class WebDriverClient {
     return this.command("POST", "/execute/sync", { script, args });
   }
 
-  async waitFor(script, description, timeoutMs = 10_000) {
+  async waitFor(script, description, timeoutMs = 10_000, args = []) {
     const deadline = Date.now() + timeoutMs;
     let lastError;
     while (Date.now() < deadline) {
       try {
-        if (await this.execute(script)) return;
+        if (await this.execute(script, args)) return;
       } catch (error) {
         lastError = error;
       }
