@@ -343,17 +343,6 @@ pub fn append_log(path: &Path, event: &str, detail: &str) {
     }
 }
 
-pub fn install_panic_log(path: PathBuf) {
-    let previous = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |info| {
-        let location = info
-            .location()
-            .map_or_else(|| "unknown".to_owned(), |location| location.to_string());
-        append_log(&path, "panic", &location);
-        previous(info);
-    }));
-}
-
 fn validate_slot_id(slot_id: &str) -> DesktopResult<()> {
     if slot_id.is_empty()
         || slot_id.len() > 80

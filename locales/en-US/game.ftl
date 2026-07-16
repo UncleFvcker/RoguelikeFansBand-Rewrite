@@ -4,6 +4,7 @@ message-core-started = The native Tauri Rust core is running; the map and text u
 message-input-preset-changed = Movement preset changed to { $preset }.
 message-save-exported = Exported a checksummed .rfbsave file.
 message-replay-exported = Exported a diagnostic replay without save data or local paths.
+message-crash-diagnostic-created = Detected an abnormal run and automatically saved the redacted local diagnostic report “{ $file }”. The report is not uploaded automatically.
 message-save-loaded = Save validation and loading succeeded.
 message-native-save-created = Created native save “{ $name }”.
 message-native-save-overwritten = Safely overwrote native save “{ $name }”; the previous version was rotated into the backups.

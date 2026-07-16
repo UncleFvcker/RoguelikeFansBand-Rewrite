@@ -19,6 +19,7 @@
 - [Tauri Android 原生目标](android-target.md)
 - [新存档格式 v1](save-format-v1.md)
 - [桌面原生存档与诊断 v1](desktop-native-storage-v1.md)
+- [桌面崩溃诊断闭环 v1](crash-diagnostics-v1.md)
 - [授权、版权与素材迁移审计](licensing-and-assets.md)
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
 - [Fluent 本地化运行时 v1](fluent-localization-v1.md)
@@ -523,12 +524,13 @@ interface SaveGame {
 - 桌面 E2E 已覆盖原生槽的新建、列表、载入后命令序列同步、覆盖和删除。
 - PixiJS backend 已升级为 `pixi-layered-chunks-v2`：8×8 静态地形 RenderTexture、按 chunk 的五层分组、玩家居中视口外剔除和缓存重建诊断已建立。
 - 协议 1.4、state hash Schema v4 和 contract-v4 已建立；Rust 权威装备列表、装备/卸下、完整物品堆批量丢弃、HTML 多选背包和原创回声护符已进入存档/回放闭环。
+- 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 
 下一步建议：
 
-1. 为桌面诊断增加玩家主动触发的日志导出入口，继续避免自动上传；
-2. 为装备增加实际属性修正，并设计部分数量丢弃所需的稳定实例 ID 分配规则；
-3. 建立较大原创测试地图和渲染 profile，比较 chunk 大小并决定动态 sprite pooling；
+1. 为装备增加实际属性修正，并先确定部分数量丢弃所需的稳定实例 ID 分配规则；
+2. 建立较大原创测试地图和渲染 profile，比较 chunk 大小并决定动态 sprite pooling；
+3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
 5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
 

@@ -15,11 +15,15 @@ use rfb_protocol::{
 };
 use rfb_replay::ReplayRecorder;
 
+mod crash_diagnostics;
 mod native_storage;
 
+use crash_diagnostics::{
+    CrashDiagnosticStatus, CrashDiagnostics, DiagnosticMetadata, install_log_only_panic_hook,
+};
 use native_storage::{
     DesktopCommandError, DesktopResult, NativeSaveStore, NativeSaveSummary, append_log,
-    install_panic_log, validate_slot_name,
+    validate_slot_name,
 };
 
 struct GameSession {
@@ -152,10 +156,25 @@ fn native_store(app: &tauri::AppHandle) -> DesktopResult<NativeSaveStore> {
 }
 
 fn desktop_log_path(app: &tauri::AppHandle) -> DesktopResult<std::path::PathBuf> {
+    #[cfg(feature = "webdriver")]
+    if let Some(path) = std::env::var_os("RFB_E2E_LOG_PATH") {
+        return Ok(path.into());
+    }
     app.path()
         .app_log_dir()
         .map(|directory| directory.join("rfb-desktop.log"))
         .map_err(|error| DesktopCommandError::new("desktop-log-directory", error.to_string()))
+}
+
+fn crash_diagnostic_root(app: &tauri::AppHandle) -> DesktopResult<std::path::PathBuf> {
+    #[cfg(feature = "webdriver")]
+    if let Some(path) = std::env::var_os("RFB_E2E_DIAGNOSTIC_ROOT") {
+        return Ok(path.into());
+    }
+    app.path()
+        .app_log_dir()
+        .map(|directory| directory.join("diagnostics"))
+        .map_err(|error| DesktopCommandError::new("crash-diagnostic-directory", error.to_string()))
 }
 
 fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
@@ -196,6 +215,31 @@ fn load_game(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<GameSna
 #[tauri::command]
 fn export_replay(state: tauri::State<'_, AppState>) -> Result<Vec<u8>, String> {
     state.export_replay()
+}
+
+#[tauri::command]
+fn crash_diagnostic_status(
+    diagnostics: tauri::State<'_, CrashDiagnostics>,
+) -> CrashDiagnosticStatus {
+    diagnostics.status()
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn update_crash_diagnostic_context(
+    diagnostics: tauri::State<'_, CrashDiagnostics>,
+    content_id: String,
+    content_hash: String,
+    renderer_backend: String,
+) -> DesktopResult<()> {
+    diagnostics.update_context(&content_id, &content_hash, &renderer_backend)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn record_frontend_crash(
+    diagnostics: tauri::State<'_, CrashDiagnostics>,
+    kind: String,
+) -> DesktopResult<CrashDiagnosticStatus> {
+    diagnostics.record_frontend_error(&kind)
 }
 
 #[tauri::command]
@@ -309,7 +353,24 @@ pub fn run() {
             let log_path = desktop_log_path(app.handle()).map_err(|error| {
                 std::io::Error::other(format!("{}: {}", error.code, error.detail))
             })?;
-            install_panic_log(log_path.clone());
+            let metadata = DiagnosticMetadata {
+                app_version: env!("CARGO_PKG_VERSION").to_owned(),
+                protocol_version: PROTOCOL_VERSION.to_owned(),
+                operating_system: std::env::consts::OS.to_owned(),
+                architecture: std::env::consts::ARCH.to_owned(),
+            };
+            let diagnostics = crash_diagnostic_root(app.handle())
+                .and_then(|root| CrashDiagnostics::begin(root, log_path.clone(), metadata));
+            match diagnostics {
+                Ok(diagnostics) => {
+                    diagnostics.install_panic_hook();
+                    app.manage(diagnostics);
+                }
+                Err(error) => {
+                    append_log(&log_path, "crash-diagnostic-disabled", &error.code);
+                    install_log_only_panic_hook(log_path.clone());
+                }
+            }
             append_log(&log_path, "desktop-start", env!("CARGO_PKG_VERSION"));
             Ok(())
         })
@@ -320,13 +381,23 @@ pub fn run() {
             save_game,
             load_game,
             export_replay,
+            crash_diagnostic_status,
+            update_crash_diagnostic_context,
+            record_frontend_crash,
             list_native_saves,
             save_native_game,
             load_native_game,
             delete_native_save
         ])
-        .run(tauri::generate_context!())
-        .expect("failed to run RoguelikeFansBand Rewrite");
+        .build(tauri::generate_context!())
+        .expect("failed to build RoguelikeFansBand Rewrite")
+        .run(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit)
+                && let Some(diagnostics) = app.try_state::<CrashDiagnostics>()
+            {
+                diagnostics.mark_clean_exit();
+            }
+        });
 }
 
 #[cfg(test)]

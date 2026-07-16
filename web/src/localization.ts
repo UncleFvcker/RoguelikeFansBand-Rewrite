@@ -80,6 +80,7 @@ export const MESSAGE_KEYS = [
   "message-input-preset-changed",
   "message-save-exported",
   "message-replay-exported",
+  "message-crash-diagnostic-created",
   "message-save-loaded",
   "message-native-save-created",
   "message-native-save-overwritten",

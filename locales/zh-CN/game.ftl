@@ -4,6 +4,7 @@ message-core-started = Tauri 原生 Rust 核心已启动；地图与文字由不
 message-input-preset-changed = 移动键位已切换为{ $preset }。
 message-save-exported = 已导出带校验和的 .rfbsave 存档。
 message-replay-exported = 已导出不包含存档和本地路径的诊断回放。
+message-crash-diagnostic-created = 检测到异常运行，已在本机自动保存脱敏诊断报告“{ $file }”；报告不会自动上传。
 message-save-loaded = 存档校验与载入成功。
 message-native-save-created = 已创建原生存档“{ $name }”。
 message-native-save-overwritten = 已安全覆盖原生存档“{ $name }”，旧版本已轮换到备份。

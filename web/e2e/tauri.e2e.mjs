@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import process from "node:process";
@@ -12,6 +12,8 @@ const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 const repositoryDirectory = path.resolve(webDirectory, "..");
 const executable = path.join(repositoryDirectory, "target", "debug", "rfb-tauri.exe");
 const artifactDirectory = path.join(repositoryDirectory, "test-results");
+const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
+const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
 const logs = [];
 let child;
 let client;
@@ -22,10 +24,17 @@ async function main() {
   }
 
   try {
+    await rm(diagnosticDirectory, { recursive: true, force: true });
+    await rm(desktopLogPath, { force: true });
     const port = await reservePort();
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
-      env: { ...process.env, TAURI_WEBDRIVER_PORT: String(port) },
+      env: {
+        ...process.env,
+        TAURI_WEBDRIVER_PORT: String(port),
+        RFB_E2E_DIAGNOSTIC_ROOT: diagnosticDirectory,
+        RFB_E2E_LOG_PATH: desktopLogPath,
+      },
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     });
@@ -514,6 +523,19 @@ async function runScenario(driver) {
   assert.match((await readState(driver)).messages, /已导出不包含存档和本地路径的诊断回放/);
 
   await driver.execute(`
+    window.dispatchEvent(new ErrorEvent("error", { message: "synthetic E2E crash" }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.documentElement.dataset.crashDiagnosticReport?.endsWith(".rfbdiagnostic")`,
+    "automatic frontend crash diagnostic",
+  );
+  state = await readState(driver);
+  assert.equal(state.crashDiagnosticReason, "frontend-error");
+  assert.match(state.crashDiagnosticReport, /^crash-\d+(?:-\d+)?\.rfbdiagnostic$/);
+  assert.match(state.messages, /已在本机自动保存脱敏诊断报告/);
+
+  await driver.execute(`
     const select = document.querySelector("#tileset-preset");
     select.value = "image";
     select.dispatchEvent(new Event("change", { bubbles: true }));
@@ -595,6 +617,8 @@ async function readState(driver) {
       equipment: document.querySelector("#equipment-list")?.textContent,
       controls: document.querySelector("#controls-help")?.textContent,
       locale: document.documentElement.lang,
+      crashDiagnosticReport: document.documentElement.dataset.crashDiagnosticReport,
+      crashDiagnosticReason: document.documentElement.dataset.crashDiagnosticReason,
       stateHash: document.querySelector("#hash-value")?.title,
       canvasUnchanged: window.__rfbE2eCanvas === host?.querySelector("canvas"),
       messages: document.querySelector("#message-list")?.textContent,

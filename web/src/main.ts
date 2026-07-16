@@ -12,6 +12,10 @@ import { LOCALIZATION_SOURCES } from "./localization-resources";
 import { MapRenderer, type CameraMode } from "./map-renderer";
 import { parseZoomLevel, type ZoomLevel } from "./camera";
 import {
+  DesktopCrashDiagnostics,
+  type CrashDiagnosticStatus,
+} from "./crash-diagnostics";
+import {
   NativeSaveStorage,
   desktopErrorCode,
   type NativeSaveSummary,
@@ -29,10 +33,13 @@ import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
 
 const core = new TauriNativeTransport();
+const crashDiagnostics = new DesktopCrashDiagnostics();
 const nativeSaveStorage = new NativeSaveStorage();
 const renderer = new MapRenderer();
 let busy = false;
 let nativeSaveBusy = false;
+let recordingFrontendCrash = false;
+let announcedCrashReport: string | undefined;
 
 const mapHost = element<HTMLElement>("map-host");
 const connectionStatus = element<HTMLElement>("connection-status");
@@ -104,6 +111,7 @@ localizeNativeSaveControls();
 renderConnectionStatus();
 renderInputHelp();
 renderNativeSaves();
+installFrontendCrashHandlers();
 
 void start();
 
@@ -125,12 +133,14 @@ async function start(): Promise<void> {
       zoom,
     );
     renderer.applySnapshot(snapshot);
+    await synchronizeCrashDiagnosticContext(snapshot);
     renderStatus(snapshot);
     renderInventory(snapshot.inventory, snapshot.equipment);
     addLocalizedMessage("message-core-started", undefined, "system");
     announceTileset(tileset.id, tileset.warnings);
     connectionState = "ready";
     renderConnectionStatus();
+    await refreshCrashDiagnosticStatus();
     await refreshNativeSaves();
   } catch (error) {
     showError(error);
@@ -192,6 +202,52 @@ window.addEventListener("beforeunload", () => {
   renderer.destroy();
   core.dispose();
 });
+
+function installFrontendCrashHandlers(): void {
+  window.addEventListener("error", () => recordFrontendCrash("window-error"));
+  window.addEventListener("unhandledrejection", () => recordFrontendCrash("unhandled-rejection"));
+}
+
+function recordFrontendCrash(kind: "window-error" | "unhandled-rejection"): void {
+  if (recordingFrontendCrash) return;
+  recordingFrontendCrash = true;
+  void crashDiagnostics
+    .recordFrontendCrash(kind)
+    .then(announceCrashDiagnostic)
+    .catch((error: unknown) => console.error("Could not persist crash diagnostic", error))
+    .finally(() => {
+      recordingFrontendCrash = false;
+    });
+}
+
+async function synchronizeCrashDiagnosticContext(snapshot: GameSnapshot): Promise<void> {
+  try {
+    await crashDiagnostics.updateContext(
+      snapshot.contentId,
+      snapshot.contentHash,
+      mapHost.dataset.rendererBackend ?? "unknown",
+    );
+  } catch (error) {
+    console.error("Could not update crash diagnostic context", error);
+  }
+}
+
+async function refreshCrashDiagnosticStatus(): Promise<void> {
+  try {
+    announceCrashDiagnostic(await crashDiagnostics.status());
+  } catch (error) {
+    console.error("Could not read crash diagnostic status", error);
+  }
+}
+
+function announceCrashDiagnostic(status: CrashDiagnosticStatus): void {
+  const fileName = status.reportFileName;
+  if (!status.reportCreated || !fileName || announcedCrashReport === fileName) return;
+  announcedCrashReport = fileName;
+  document.documentElement.dataset.crashDiagnosticReport = fileName;
+  document.documentElement.dataset.crashDiagnosticReason = status.reason ?? "unknown";
+  addLocalizedMessage("message-crash-diagnostic-created", { file: fileName }, "system");
+}
 
 async function dispatch(command: GameCommand): Promise<void> {
   busy = true;

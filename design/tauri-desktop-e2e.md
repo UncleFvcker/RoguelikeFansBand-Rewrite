@@ -39,6 +39,7 @@
 14. 验证整图、玩家居中、跟随移动和 150% 缩放下的 9/4/6/4 个可见 chunk。
 15. 拾取第二个原创物品，通过复选框单选装备、卸下，再多选两堆物品执行一次批量丢弃；
 16. 从操作前的 `.rfbsave` 恢复背包、装备、地面物品、回合和位置，确认 UI 选择状态不进入存档。
+17. 合成 WebView `ErrorEvent`，验证前端未处理异常通过 Tauri IPC 自动生成 `.rfbdiagnostic`，并显示脱敏且不自动上传的中文提示。
 
 `MapRenderer` 在 `#map-host` 暴露只读诊断属性：最近渲染类型、最近处理格数、累计处理格数、当前 tileset ID、镜头模式、缩放、相机偏移、视口尺寸、visible/remembered/hidden 格数量，以及 terrain chunk 总数、可见数、剔除数和重建计数。这些信息不影响游戏规则、存档或状态哈希。
 
@@ -54,6 +55,8 @@ npm run e2e
 
 - `test-results/tauri-e2e.png`：当前窗口截图；
 - `test-results/tauri-e2e.log`：应用 stdout、stderr 和退出状态。
+
+WebDriver 构建还会把桌面日志和崩溃诊断目录重定向到 `test-results/`，避免强制结束测试进程时在真实应用目录留下异常退出标记。
 
 设置 `RFB_E2E_CAPTURE_SCREENSHOT=1` 时，成功场景还会写入 `test-results/tauri-e2e-success.png`，用于人工检查 chunk 接缝、tileset、光照和遮罩。
 
