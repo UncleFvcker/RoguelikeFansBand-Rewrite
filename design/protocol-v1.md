@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.5、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.6、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.5";
+  protocolVersion: "1.6";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.5 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆、装备列表、装备属性修正、每格 `itemId`，以及 Rust 权威 `visualCells`。`GameUpdate` 发送当前地面物品、背包、装备、玩家派生属性和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)。
+协议 1.6 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆、装备列表、装备属性修正、每格 `itemId`，以及 Rust 权威 `visualCells`。`PlayerDto` 输出基础/装备/最终的最大生命、攻击和防御；`EntityDto` 输出内容派生的攻击与防御。`GameUpdate` 发送当前地面物品、背包、装备、玩家派生属性和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)，战斗属性迁移见 [Contract v6 基础战斗属性迁移](contract-v6-combat-stats-migration.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

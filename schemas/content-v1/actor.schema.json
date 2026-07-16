@@ -15,6 +15,14 @@
     "$schema": {
       "type": "string"
     },
+    "attack": {
+      "format": "int32",
+      "type": "integer"
+    },
+    "defense": {
+      "format": "int32",
+      "type": "integer"
+    },
     "descriptionKey": {
       "type": "string"
     },
@@ -62,6 +70,8 @@
     "glyph",
     "level",
     "maxHp",
+    "attack",
+    "defense",
     "tags"
   ],
   "title": "ActorDefinition",

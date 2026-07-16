@@ -7,11 +7,12 @@ use rfb_contract::approval::validate_policy_file;
 #[test]
 fn committed_baseline_policy_and_waivers_are_valid() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures");
-    for version in ["v1", "v2", "v3", "v4", "v5"] {
+    for version in ["v1", "v2", "v3", "v4", "v5", "v6"] {
         let policy = root.join(format!("contract-{version}/baseline-policy.json"));
         let report = validate_policy_file(&policy).expect("baseline policy should validate");
         assert_eq!(report.policy_id, format!("rfb-contract-baseline-{version}"));
         let minimum = match version {
+            "v6" => 29,
             "v5" => 28,
             "v4" => 26,
             "v3" => 22,

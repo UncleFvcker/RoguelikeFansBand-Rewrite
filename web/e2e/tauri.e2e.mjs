@@ -155,7 +155,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.5");
+  assert.equal(state.protocolVersion, "1.6");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -170,13 +170,15 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
+    "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
   assert.equal(state.contentVisualCount, "6");
   assert.equal(state.itemCount, "2");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");
+  assert.equal(state.attack, "2");
+  assert.equal(state.defense, "1");
   assert.match(state.inventory, /背包是空的/);
 
   await dispatchKey(driver, "Numpad5", "5");
@@ -346,6 +348,8 @@ async function runScenario(driver) {
   assert.equal(state.inventoryStackCount, "2");
   assert.match(state.inventory, /回声护符/);
   assert.match(state.inventory, /可装备：护符/);
+  assert.match(state.inventory, /攻击 \+1/);
+  assert.match(state.inventory, /防御 \+1/);
   assert.match(state.inventory, /最大生命 \+4/);
 
   await driver.execute(`
@@ -366,8 +370,12 @@ async function runScenario(driver) {
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.equipmentCount, "1");
   assert.match(state.equipment, /回声护符/);
+  assert.match(state.equipment, /攻击 \+1/);
+  assert.match(state.equipment, /防御 \+1/);
   assert.match(state.equipment, /最大生命 \+4/);
   assert.match(state.health, /10 \/ 14（装备 \+4）/);
+  assert.equal(state.attack, "3（装备 +1）");
+  assert.equal(state.defense, "2（装备 +1）");
   assert.match(state.messages, /装备在护符槽位/);
 
   await click(driver, '[data-slot-id="charm"] button');
@@ -378,6 +386,8 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.inventoryStackCount, "2");
   assert.equal(state.health, "10 / 10");
+  assert.equal(state.attack, "2");
+  assert.equal(state.defense, "1");
   assert.match(state.messages, /卸下了回声护符/);
 
   await driver.execute(`
@@ -700,6 +710,8 @@ async function readState(driver) {
       turn: document.querySelector("#turn-value")?.textContent,
       position: document.querySelector("#position-value")?.textContent,
       health: document.querySelector("#hp-value")?.textContent,
+      attack: document.querySelector("#attack-value")?.textContent,
+      defense: document.querySelector("#defense-value")?.textContent,
       renderKind: host?.dataset.renderKind,
       appliedCells: host?.dataset.lastAppliedCells,
       tilesetId: host?.dataset.tilesetId,

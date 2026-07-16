@@ -2,7 +2,7 @@
 
 状态：已完成
 
-`contract-v2` 是启用真实编译内容包后的首个运行时内容基准，随后由 `contract-v3`、`contract-v4` 和 `contract-v5` 接替。`contract-v1` 至 `contract-v4` 均作为历史记录保留，不再由当前核心执行 active exact state hash 验证。
+`contract-v2` 是启用真实编译内容包后的首个运行时内容基准，随后由 `contract-v3` 至 `contract-v6` 接替。`contract-v1` 至 `contract-v5` 均作为历史记录保留，不再由当前核心执行 active exact state hash 验证。
 
 本次迁移原因：
 

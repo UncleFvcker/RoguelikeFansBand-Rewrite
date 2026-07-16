@@ -8,5 +8,7 @@
   "glyph": "*",
   "level": 1,
   "maxHp": 3,
+  "attack": 1,
+  "defense": 1,
   "tags": ["elemental", "light-source"]
 }

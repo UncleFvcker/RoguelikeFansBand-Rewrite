@@ -8,5 +8,7 @@
   "glyph": "@",
   "level": 1,
   "maxHp": 10,
+  "attack": 2,
+  "defense": 1,
   "tags": ["humanoid", "player-archetype"]
 }

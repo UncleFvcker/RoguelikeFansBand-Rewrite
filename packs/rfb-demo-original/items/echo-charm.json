@@ -8,6 +8,8 @@
   "maxStack": 1,
   "equipmentSlot": "charm",
   "modifiers": {
+    "attack": 1,
+    "defense": 1,
     "maxHp": 4
   },
   "tags": ["equipment"]

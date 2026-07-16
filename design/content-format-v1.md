@@ -114,7 +114,7 @@ rfb.terrain.wall.granite
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 五份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-物品定义可使用可选 `equipmentSlot` 稳定字符串声明装备槽，并使用 `modifiers.maxHp` 声明非负最大生命修正。可装备物品仍要求 `maxStack = 1`；可堆叠物品的拆分由核心持久化实例 ID 分配器处理。原创包 1.2.0 的回声护符使用 `charm` 槽位并提供 `maxHp +4`；槽位和属性显示名由 Fluent UI 资源提供，不写入内容实例。
+角色定义使用必需的 `attack`、`defense` 和 `maxHp` 声明基础战斗属性。物品定义可使用可选 `equipmentSlot` 稳定字符串声明装备槽，并使用 `modifiers.attack`、`modifiers.defense` 和 `modifiers.maxHp` 声明修正；攻击/防御修正允许正负值，最大生命修正当前要求非负。可装备物品仍要求 `maxStack = 1`；可堆叠物品的拆分由核心持久化实例 ID 分配器处理。原创包 1.3.0 的回声护符使用 `charm` 槽位并提供攻击 +1、防御 +1、最大生命 +4；槽位和属性显示名由 Fluent UI 资源提供，不写入内容实例。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -188,7 +188,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、一个原创怪物、一个原创物品和一个 20×20 世界；
+- 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、一个原创怪物、两个原创物品和一个 20×20 世界；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -196,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包权威状态迁移到 `contract-v3`/Schema v3，装备与批量丢弃迁移到 `contract-v4`/Schema v4，装备属性与稳定拆堆实例迁移到 `contract-v5`/Schema v5。旧版本继续作为历史记录保留。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包权威状态迁移到 `contract-v3`/Schema v3，装备与批量丢弃迁移到 `contract-v4`/Schema v4，装备属性与稳定拆堆实例迁移到 `contract-v5`/Schema v5，基础攻击/防御与权威伤害公式迁移到 `contract-v6`/Schema v6。旧版本继续作为历史记录保留。

@@ -2,7 +2,7 @@
 
 状态：已完成
 
-`contract-v4` 是加入权威装备列表、装备/卸下命令和批量丢弃后的历史 contract 基准，现已由 `contract-v5` 接替为 active。`contract-v1` 至 `contract-v4` 继续作为历史记录保留，不由当前核心执行 active exact state hash 验证。
+`contract-v4` 是加入权威装备列表、装备/卸下命令和批量丢弃后的历史 contract 基准，现已由 `contract-v6` 接替为 active。`contract-v1` 至 `contract-v5` 继续作为历史记录保留，不由当前核心执行 active exact state hash 验证。
 
 ## 1. 迁移内容
 

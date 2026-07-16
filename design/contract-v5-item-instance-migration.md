@@ -2,7 +2,7 @@
 
 状态：已完成
 
-`contract-v5` 是加入装备实际属性修正、稳定生成物品实例 ID 和部分数量丢弃后的 active contract 基准。`contract-v1` 至 `contract-v4` 继续作为历史迁移记录保留。
+`contract-v5` 是加入装备实际属性修正、稳定生成物品实例 ID 和部分数量丢弃后的历史 contract 基准，现已由 [Contract v6 基础战斗属性迁移](contract-v6-combat-stats-migration.md) 接替为 active。`contract-v1` 至 `contract-v5` 继续作为历史迁移记录保留。
 
 ## 1. 协议与规则变化
 

@@ -3,6 +3,16 @@
     "StatModifiers": {
       "additionalProperties": false,
       "properties": {
+        "attack": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "maxHp": {
           "default": 0,
           "format": "int32",
@@ -49,6 +59,8 @@
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",
       "default": {
+        "attack": 0,
+        "defense": 0,
         "maxHp": 0
       }
     },

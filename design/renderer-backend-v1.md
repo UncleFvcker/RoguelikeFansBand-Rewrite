@@ -30,7 +30,7 @@ GameSnapshot / GameUpdate
 
 ## 3. 可见性与光照
 
-Rust 从协议 1.3 起输出正式 FOV、探索记忆和逐格光照，当前协议版本为 1.5。运行模式标记为 `rust-fov-memory-v1`；`visible`、`remembered` 和 `hidden` 通过完整 `visualCells` 与增量 `changedVisualCells` 进入 RenderWorld，前端不再推断规则视野。
+Rust 从协议 1.3 起输出正式 FOV、探索记忆和逐格光照，当前协议版本为 1.6。运行模式标记为 `rust-fov-memory-v1`；`visible`、`remembered` 和 `hidden` 通过完整 `visualCells` 与增量 `changedVisualCells` 进入 RenderWorld，前端不再推断规则视野。
 
 光照模式为 `rust-content-lights-v1`：玩家光源以及带 `light-source` 标签的怪物、物品由 Rust 使用整数强度生成。探索记忆会保存，但视觉输出不进入 RNG 或 state hash。
 
@@ -69,7 +69,7 @@ Node 测试覆盖：
 - 玩家居中、四边钳制、小地图居中和整图零偏移；
 - 缩放后的中心跟随与远端边缘钳制。
 
-Windows E2E 验证协议 1.5、`pixi-layered-chunks-v3` backend ID、`visible-chunk-reuse-v1` 动态模式、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、1/2/4 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
+Windows E2E 验证协议 1.6、`pixi-layered-chunks-v3` backend ID、`visible-chunk-reuse-v1` 动态模式、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、1/2/4 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
 
 ## 7. 后续
 

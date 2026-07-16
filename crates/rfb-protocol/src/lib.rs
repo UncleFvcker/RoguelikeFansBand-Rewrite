@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.5";
+pub const PROTOCOL_VERSION: &str = "1.6";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -62,6 +62,10 @@ pub enum GameCommand {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StatModifiersDto {
+    #[serde(default)]
+    pub attack: i32,
+    #[serde(default)]
+    pub defense: i32,
     #[serde(default)]
     pub max_hp: i32,
 }
@@ -138,6 +142,14 @@ pub struct PlayerDto {
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default)]
+    pub attack: i32,
+    #[serde(default)]
+    pub base_attack: i32,
+    #[serde(default)]
+    pub defense: i32,
+    #[serde(default)]
+    pub base_defense: i32,
+    #[serde(default)]
     pub equipment_modifiers: StatModifiersDto,
 }
 
@@ -150,6 +162,10 @@ pub struct EntityDto {
     pub position: Position,
     pub hp: i32,
     pub max_hp: i32,
+    #[serde(default)]
+    pub attack: i32,
+    #[serde(default)]
+    pub defense: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -434,6 +450,10 @@ mod tests {
         assert!(typescript.contains("commandSeq: number"));
         assert!(typescript.contains("itemIds: Array<string>"));
         assert!(typescript.contains("equipmentModifiers: StatModifiersDto"));
+        assert!(typescript.contains("baseAttack: number"));
+        assert!(typescript.contains("baseDefense: number"));
+        assert!(typescript.contains("attack: number"));
+        assert!(typescript.contains("defense: number"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
 

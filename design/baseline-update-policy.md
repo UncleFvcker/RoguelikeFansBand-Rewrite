@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v5/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v4` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v6/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v5` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v5/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v6/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v5/baseline
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；背包权威状态随后建立 `contract-v3`；装备与批量丢弃建立 `contract-v4`；装备属性和稳定拆堆实例建立 `contract-v5`。迁移范围分别见[Contract v2 内容运行时迁移](contract-v2-content-migration.md)、[Contract v3 背包权威状态迁移](contract-v3-inventory-migration.md)、[Contract v4 装备与批量丢弃迁移](contract-v4-equipment-migration.md)和[Contract v5 装备属性与物品实例迁移](contract-v5-item-instance-migration.md)。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；背包权威状态随后建立 `contract-v3`；装备与批量丢弃建立 `contract-v4`；装备属性和稳定拆堆实例建立 `contract-v5`；基础攻击/防御和权威伤害公式建立 `contract-v6`。迁移范围分别见[Contract v2 内容运行时迁移](contract-v2-content-migration.md)、[Contract v3 背包权威状态迁移](contract-v3-inventory-migration.md)、[Contract v4 装备与批量丢弃迁移](contract-v4-equipment-migration.md)、[Contract v5 装备属性与物品实例迁移](contract-v5-item-instance-migration.md)和[Contract v6 基础战斗属性迁移](contract-v6-combat-stats-migration.md)。

@@ -91,6 +91,8 @@ pub struct ActorDefinition {
     pub glyph: String,
     pub level: u32,
     pub max_hp: i32,
+    pub attack: i32,
+    pub defense: i32,
     pub tags: Vec<String>,
 }
 
@@ -98,6 +100,10 @@ pub struct ActorDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StatModifiers {
+    #[serde(default)]
+    pub attack: i32,
+    #[serde(default)]
+    pub defense: i32,
     #[serde(default)]
     pub max_hp: i32,
 }
@@ -517,7 +523,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&actor.id, "actor")?;
         validate_definition_text(&actor.id, &actor.name_key, &actor.description_key)?;
         validate_glyph(&actor.id, &actor.glyph)?;
-        if actor.level > 10_000 || actor.max_hp <= 0 || actor.max_hp > 1_000_000 {
+        if actor.level > 10_000
+            || actor.max_hp <= 0
+            || actor.max_hp > 1_000_000
+            || actor.attack <= 0
+            || actor.attack > 1_000_000
+            || actor.defense < 0
+            || actor.defense > 1_000_000
+        {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
@@ -542,6 +555,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         }
         if item.modifiers.max_hp < 0
             || item.modifiers.max_hp > 1_000_000
+            || item.modifiers.attack < -1_000_000
+            || item.modifiers.attack > 1_000_000
+            || item.modifiers.defense < -1_000_000
+            || item.modifiers.defense > 1_000_000
             || (item.equipment_slot.is_none() && item.modifiers != StatModifiers::default())
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
@@ -1203,7 +1220,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.2.0");
+        assert_eq!(catalog.pack_version(), "1.3.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1216,6 +1233,12 @@ mod tests {
                 .actor("demo.actor.ember-mote")
                 .map(|actor| actor.max_hp),
             Some(3)
+        );
+        assert_eq!(
+            catalog
+                .actor("demo.actor.explorer")
+                .map(|actor| (actor.attack, actor.defense)),
+            Some((2, 1))
         );
         assert_eq!(
             catalog
@@ -1234,6 +1257,12 @@ mod tests {
                 .item("demo.item.echo-charm")
                 .map(|item| item.modifiers.max_hp),
             Some(4)
+        );
+        assert_eq!(
+            catalog
+                .item("demo.item.echo-charm")
+                .map(|item| (item.modifiers.attack, item.modifiers.defense)),
+            Some((1, 1))
         );
         assert!(catalog.world("demo.world.original-v1").is_some());
         assert_eq!(

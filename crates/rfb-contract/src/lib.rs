@@ -76,6 +76,10 @@ pub struct FinalStateAssertion {
     pub player_hp: Option<i32>,
     #[serde(default)]
     pub player_max_hp: Option<i32>,
+    #[serde(default)]
+    pub player_attack: Option<i32>,
+    #[serde(default)]
+    pub player_defense: Option<i32>,
     pub entity_count: usize,
     #[serde(default)]
     pub ground_item_count: usize,
@@ -151,6 +155,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_position: snapshot.player.position,
             player_hp: Some(snapshot.player.hp),
             player_max_hp: Some(snapshot.player.max_hp),
+            player_attack: Some(snapshot.player.attack),
+            player_defense: Some(snapshot.player.defense),
             entity_count: snapshot.entities.len(),
             ground_item_count: snapshot.items.len(),
             inventory_stack_count: snapshot.inventory.len(),

@@ -28,6 +28,7 @@ import type {
   GameSnapshot,
   GameUpdate,
   InventoryItemDto,
+  StatModifiersDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
@@ -48,6 +49,8 @@ const connectionStatus = element<HTMLElement>("connection-status");
 const messageList = element<HTMLOListElement>("message-list");
 const turnValue = element<HTMLElement>("turn-value");
 const hpValue = element<HTMLElement>("hp-value");
+const attackValue = element<HTMLElement>("attack-value");
+const defenseValue = element<HTMLElement>("defense-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
 const inventoryCount = element<HTMLElement>("inventory-count");
@@ -602,6 +605,12 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
       bonus: state.player.equipmentModifiers.maxHp,
     },
   );
+  renderCombatStat(attackValue, state.player.attack, state.player.equipmentModifiers.attack);
+  renderCombatStat(
+    defenseValue,
+    state.player.defense,
+    state.player.equipmentModifiers.defense,
+  );
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
@@ -666,7 +675,7 @@ function renderInventory(
         });
         details.append(equippable);
       }
-      appendItemModifiers(details, item.modifiers.maxHp);
+      appendItemModifiers(details, item.modifiers);
       const quantity = document.createElement("span");
       quantity.className = "inventory-quantity";
       quantity.textContent = localization.format("inventory-quantity", {
@@ -702,7 +711,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
     slot.className = "equipment-slot";
     slot.textContent = equipmentSlotName(item.slotId);
     details.append(name, slot);
-    appendItemModifiers(details, item.modifiers.maxHp);
+    appendItemModifiers(details, item.modifiers);
     const unequip = document.createElement("button");
     unequip.type = "button";
     unequip.textContent = localization.format("action-equipment-unequip");
@@ -783,12 +792,40 @@ function selectedDropQuantity(item: InventoryItemDto): number | undefined {
     : undefined;
 }
 
-function appendItemModifiers(container: HTMLElement, maxHp: number): void {
-  if (maxHp <= 0) return;
-  const modifier = document.createElement("span");
-  modifier.className = "item-modifier";
-  modifier.textContent = localization.format("item-modifier-max-hp", { value: maxHp });
-  container.append(modifier);
+function renderCombatStat(
+  element: HTMLElement,
+  value: number,
+  equipmentModifier: number,
+): void {
+  element.textContent = localization.format(
+    equipmentModifier === 0 ? "status-stat-value" : "status-stat-value-bonus",
+    {
+      value,
+      bonus: signedModifier(equipmentModifier),
+    },
+  );
+}
+
+function appendItemModifiers(
+  container: HTMLElement,
+  modifiers: StatModifiersDto,
+): void {
+  const entries: Array<[MessageKey, number]> = [
+    ["item-modifier-attack", modifiers.attack],
+    ["item-modifier-defense", modifiers.defense],
+    ["item-modifier-max-hp", modifiers.maxHp],
+  ];
+  for (const [key, value] of entries) {
+    if (value === 0) continue;
+    const modifier = document.createElement("span");
+    modifier.className = "item-modifier";
+    modifier.textContent = localization.format(key, { value: signedModifier(value) });
+    container.append(modifier);
+  }
+}
+
+function signedModifier(value: number): string {
+  return value > 0 ? `+${value}` : String(value);
 }
 
 function formatEvent(event: GameEventDto): string {

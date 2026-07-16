@@ -18,12 +18,13 @@ use thiserror::Error;
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 pub const RNG_ALGORITHM: &str = "rfb-rng-xoshiro256ss-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 2] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 3] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
+    "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f";
+    "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -312,8 +313,8 @@ impl Game {
         let entities = payload
             .entities
             .into_iter()
-            .map(actor_from_entity)
-            .collect::<Vec<_>>();
+            .map(|entity| actor_from_entity(entity, &content))
+            .collect::<Result<Vec<_>, CoreError>>()?;
         let items = payload
             .items
             .into_iter()
@@ -550,7 +551,13 @@ impl Game {
                     .position(|entity| entity.position == target)
                 {
                     changed.insert(target);
-                    let damage = 1 + i32::try_from(self.rng.bounded(2)).unwrap_or(0);
+                    let attack = self.effective_player_attack();
+                    let defense = self
+                        .content
+                        .actor(&self.entities[index].kind_id)
+                        .map_or(0, |definition| definition.defense);
+                    let roll = i32::try_from(self.rng.bounded(2)).unwrap_or(0);
+                    let damage = attack.saturating_add(roll).saturating_sub(defense).max(1);
                     let monster = &mut self.entities[index];
                     monster.hp -= damage;
                     events.push(event_with_args(
@@ -652,6 +659,10 @@ impl Game {
 
     fn player_dto(&self) -> PlayerDto {
         let equipment_modifiers = self.equipment_modifiers();
+        let definition = self
+            .content
+            .actor(&self.player.kind_id)
+            .expect("player actor definition must remain available");
         PlayerDto {
             id: self.player.id.clone(),
             kind_id: self.player.kind_id.clone(),
@@ -662,6 +673,10 @@ impl Game {
                 .max_hp
                 .saturating_add(equipment_modifiers.max_hp),
             base_max_hp: self.player.max_hp,
+            attack: self.effective_player_attack(),
+            base_attack: definition.attack,
+            defense: self.effective_player_defense(),
+            base_defense: definition.defense,
             equipment_modifiers,
         }
     }
@@ -670,12 +685,20 @@ impl Game {
         let mut entities = self
             .entities
             .iter()
-            .map(|entity| EntityDto {
-                id: entity.id.clone(),
-                kind_id: entity.kind_id.clone(),
-                position: entity.position,
-                hp: entity.hp,
-                max_hp: entity.max_hp,
+            .map(|entity| {
+                let definition = self
+                    .content
+                    .actor(&entity.kind_id)
+                    .expect("entity actor definition must remain available");
+                EntityDto {
+                    id: entity.id.clone(),
+                    kind_id: entity.kind_id.clone(),
+                    position: entity.position,
+                    hp: entity.hp,
+                    max_hp: entity.max_hp,
+                    attack: definition.attack,
+                    defense: definition.defense,
+                }
             })
             .collect::<Vec<_>>();
         entities.sort_by(|left, right| left.id.cmp(&right.id));
@@ -906,21 +929,45 @@ impl Game {
         self.content
             .item(kind_id)
             .map_or_else(StatModifiersDto::default, |definition| StatModifiersDto {
+                attack: definition.modifiers.attack,
+                defense: definition.modifiers.defense,
                 max_hp: definition.modifiers.max_hp,
             })
     }
 
     fn equipment_modifiers(&self) -> StatModifiersDto {
-        let max_hp = self.equipment.iter().fold(0_i32, |total, item| {
-            total.saturating_add(self.item_modifiers(&item.kind_id).max_hp)
-        });
-        StatModifiersDto { max_hp }
+        self.equipment
+            .iter()
+            .fold(StatModifiersDto::default(), |total, item| {
+                let item = self.item_modifiers(&item.kind_id);
+                StatModifiersDto {
+                    attack: total.attack.saturating_add(item.attack),
+                    defense: total.defense.saturating_add(item.defense),
+                    max_hp: total.max_hp.saturating_add(item.max_hp),
+                }
+            })
     }
 
     fn effective_player_max_hp(&self) -> i32 {
         self.player
             .max_hp
             .saturating_add(self.equipment_modifiers().max_hp)
+    }
+
+    fn effective_player_attack(&self) -> i32 {
+        let base = self
+            .content
+            .actor(&self.player.kind_id)
+            .map_or(0, |definition| definition.attack);
+        effective_stat(base, self.equipment_modifiers().attack)
+    }
+
+    fn effective_player_defense(&self) -> i32 {
+        let base = self
+            .content
+            .actor(&self.player.kind_id)
+            .map_or(0, |definition| definition.defense);
+        effective_stat(base, self.equipment_modifiers().defense)
     }
 
     fn clamp_player_hp_to_effective_max(&mut self) {
@@ -1277,12 +1324,22 @@ const fn position_from_content(position: ContentPosition) -> Position {
     }
 }
 
+fn effective_stat(base: i32, modifier: i32) -> i32 {
+    base.saturating_add(modifier).max(0)
+}
+
 fn actor_from_player(player: PlayerDto, content: &ContentCatalog) -> Result<Actor, CoreError> {
     let definition = content
         .actor(&player.kind_id)
         .ok_or_else(|| CoreError::UnknownActor(player.kind_id.clone()))?;
     if player.base_max_hp != 0 && player.base_max_hp != definition.max_hp {
         return Err(CoreError::InvalidSave("player base max HP is invalid"));
+    }
+    if player.base_attack != 0 && player.base_attack != definition.attack {
+        return Err(CoreError::InvalidSave("player base attack is invalid"));
+    }
+    if player.base_defense != 0 && player.base_defense != definition.defense {
+        return Err(CoreError::InvalidSave("player base defense is invalid"));
     }
     Ok(Actor {
         id: player.id,
@@ -1315,14 +1372,23 @@ fn generated_item_serial(id: &str) -> Option<u64> {
     id.strip_prefix(GENERATED_ITEM_ID_PREFIX)?.parse().ok()
 }
 
-fn actor_from_entity(entity: EntityDto) -> Actor {
-    Actor {
+fn actor_from_entity(entity: EntityDto, content: &ContentCatalog) -> Result<Actor, CoreError> {
+    let definition = content
+        .actor(&entity.kind_id)
+        .ok_or_else(|| CoreError::UnknownActor(entity.kind_id.clone()))?;
+    if entity.max_hp != definition.max_hp
+        || (entity.attack != 0 && entity.attack != definition.attack)
+        || (entity.defense != 0 && entity.defense != definition.defense)
+    {
+        return Err(CoreError::InvalidSave("entity base stats are invalid"));
+    }
+    Ok(Actor {
         id: entity.id,
         kind_id: entity.kind_id,
         position: entity.position,
         hp: entity.hp,
-        max_hp: entity.max_hp,
-    }
+        max_hp: definition.max_hp,
+    })
 }
 
 fn item_from_dto(item: ItemDto) -> Item {
@@ -1460,10 +1526,16 @@ mod tests {
         assert_eq!(snapshot.world_id, BUILT_IN_WORLD_ID);
         assert_eq!(snapshot.player.id, "demo.actor.player.1");
         assert_eq!(snapshot.player.kind_id, "demo.actor.explorer");
+        assert_eq!(snapshot.player.base_attack, 2);
+        assert_eq!(snapshot.player.attack, 2);
+        assert_eq!(snapshot.player.base_defense, 1);
+        assert_eq!(snapshot.player.defense, 1);
         assert!(snapshot.inventory.is_empty());
         assert!(snapshot.equipment.is_empty());
         assert_eq!(snapshot.items.len(), 2);
         assert_eq!(snapshot.entities[0].position, Position { x: 8, y: 5 });
+        assert_eq!(snapshot.entities[0].attack, 1);
+        assert_eq!(snapshot.entities[0].defense, 1);
         assert_eq!(shard.position, Position { x: 4, y: 3 });
         assert_eq!(
             snapshot
@@ -1598,8 +1670,50 @@ mod tests {
         assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
         assert_eq!(snapshot.player.base_max_hp, 10);
         assert_eq!(snapshot.player.max_hp, 14);
+        assert_eq!(snapshot.player.attack, 3);
+        assert_eq!(snapshot.player.defense, 2);
+        assert_eq!(snapshot.player.equipment_modifiers.attack, 1);
+        assert_eq!(snapshot.player.equipment_modifiers.defense, 1);
         assert_eq!(snapshot.player.equipment_modifiers.max_hp, 4);
         assert_eq!(restored.next_item_instance_serial, 1);
+    }
+
+    #[test]
+    fn previous_combat_content_migrates_to_current_actor_stats() {
+        let mut game = Game::new(42);
+        collect_both_demo_items(&mut game);
+        game.dispatch(command(
+            5,
+            4,
+            GameCommand::Equip {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
+        ))
+        .expect("equip should execute");
+        let mut payload = game.to_save();
+        payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[2].to_owned();
+        payload.player.attack = 0;
+        payload.player.base_attack = 0;
+        payload.player.defense = 0;
+        payload.player.base_defense = 0;
+        payload.player.equipment_modifiers.attack = 0;
+        payload.player.equipment_modifiers.defense = 0;
+        for entity in &mut payload.entities {
+            entity.attack = 0;
+            entity.defense = 0;
+        }
+        payload.equipment[0].modifiers.attack = 0;
+        payload.equipment[0].modifiers.defense = 0;
+
+        let restored = Game::from_save(payload).expect("known 1.2 content should migrate");
+        let snapshot = restored.snapshot();
+        assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
+        assert_eq!(snapshot.player.base_attack, 2);
+        assert_eq!(snapshot.player.attack, 3);
+        assert_eq!(snapshot.player.base_defense, 1);
+        assert_eq!(snapshot.player.defense, 2);
+        assert_eq!(snapshot.entities[0].attack, 1);
+        assert_eq!(snapshot.entities[0].defense, 1);
     }
 
     #[test]
@@ -1690,9 +1804,17 @@ mod tests {
         assert_eq!(equipped.inventory.len(), 1);
         assert_eq!(equipped.equipment.len(), 1);
         assert_eq!(equipped.equipment[0].slot_id, "charm");
+        assert_eq!(equipped.equipment[0].modifiers.attack, 1);
+        assert_eq!(equipped.equipment[0].modifiers.defense, 1);
         assert_eq!(equipped.equipment[0].modifiers.max_hp, 4);
         assert_eq!(equipped.player.base_max_hp, 10);
         assert_eq!(equipped.player.max_hp, 14);
+        assert_eq!(equipped.player.base_attack, 2);
+        assert_eq!(equipped.player.attack, 3);
+        assert_eq!(equipped.player.base_defense, 1);
+        assert_eq!(equipped.player.defense, 2);
+        assert_eq!(equipped.player.equipment_modifiers.attack, 1);
+        assert_eq!(equipped.player.equipment_modifiers.defense, 1);
         assert_eq!(equipped.player.equipment_modifiers.max_hp, 4);
         assert_eq!(equipped.events[0].message_key, "item-equip-success");
 
@@ -1711,7 +1833,40 @@ mod tests {
         assert!(unequipped.equipment.is_empty());
         assert_eq!(unequipped.player.hp, 10);
         assert_eq!(unequipped.player.max_hp, 10);
+        assert_eq!(unequipped.player.attack, 2);
+        assert_eq!(unequipped.player.defense, 1);
         assert_eq!(unequipped.events[0].message_key, "item-unequip-success");
+    }
+
+    #[test]
+    fn equipped_attack_modifier_changes_authoritative_melee_damage() {
+        let mut game = Game::new(42);
+        collect_both_demo_items(&mut game);
+        game.dispatch(command(
+            5,
+            4,
+            GameCommand::Equip {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
+        ))
+        .expect("equip should execute");
+        for (seq, direction) in [(6, Direction::SouthEast), (7, Direction::SouthEast)] {
+            game.dispatch(command(seq, seq - 1, GameCommand::Move { direction }))
+                .expect("path to monster should execute");
+        }
+        let update = game
+            .dispatch(command(
+                8,
+                7,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("equipped attack should execute");
+
+        assert_eq!(update.events[0].message_key, "combat-player-hit");
+        assert_eq!(update.events[0].args["damage"], "2");
+        assert_eq!(update.entities[0].hp, 1);
     }
 
     #[test]
