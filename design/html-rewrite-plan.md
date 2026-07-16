@@ -14,6 +14,7 @@
 - [Contract v5 装备属性与物品实例迁移](contract-v5-item-instance-migration.md)
 - [Contract v6 基础战斗属性迁移](contract-v6-combat-stats-migration.md)
 - [Contract v7：RFB 风格基础近战闭环](contract-v7-rfb-melee-migration.md)
+- [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
 - [内容数据格式 v1](content-format-v1.md)
@@ -426,6 +427,8 @@ interface SaveGame {
 ### 阶段 5：逐模块完成 Rust 规则核心
 
 建议顺序：内容加载 → 随机数与回放 → 地图 → 物品 → 玩家状态 → 状态效果 → 怪物 → 战斗 → 法术 → AI → 地图生成/任务。
+
+详细的系统边界、依赖顺序、内容规模和 contract-v8 之后的实施路线见 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)。实际推进以该文档的行动调度、效果管线、派生属性和知识状态四个公共底座为先，不按旧 C 文件顺序批量迁移。
 
 每完成一个 Rust 模块，都要使用固定种子、事件日志和快照与 C 版本对照。任何模块没有测试和接口隔离时，不进入大规模替换。
 

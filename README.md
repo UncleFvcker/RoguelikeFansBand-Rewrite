@@ -26,6 +26,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v5 装备属性与物品实例迁移](design/contract-v5-item-instance-migration.md)
 - [Contract v6 基础战斗属性迁移](design/contract-v6-combat-stats-migration.md)
 - [Contract v7：RFB 风格基础近战闭环](design/contract-v7-rfb-melee-migration.md)
+- [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
 - [内容数据格式 v1](design/content-format-v1.md)
