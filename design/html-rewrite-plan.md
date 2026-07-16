@@ -523,14 +523,15 @@ interface SaveGame {
 - 协议 1.3 已提供 Rust 权威 FOV、探索记忆和内容标签光源；前端临时 `all-visible`/阅读光已移除，记忆/隐藏格不再暴露当前物品和角色。
 - Tauri 应用私有存档目录、命名存档槽、原子替换、三份备份、损坏恢复、结构化错误和本地诊断日志已建立；手动 `.rfbsave` 导入/导出继续保留。
 - 桌面 E2E 已覆盖原生槽的新建、列表、载入后命令序列同步、覆盖和删除。
-- PixiJS backend 已升级为 `pixi-layered-chunks-v2`：8×8 静态地形 RenderTexture、按 chunk 的五层分组、玩家居中视口外剔除和缓存重建诊断已建立。
+- PixiJS backend 已升级为 `pixi-layered-chunks-v2`：默认 16×16 静态地形 RenderTexture、按 chunk 的五层分组、玩家居中视口外剔除和缓存重建诊断已建立。
 - 协议 1.4、state hash Schema v4 和 contract-v4 已建立；Rust 权威装备列表、装备/卸下、完整物品堆批量丢弃、HTML 多选背包和原创回声护符已进入存档/回放闭环。
 - 协议 1.5、state hash Schema v5 和 contract-v5 已建立；回声护符提供实际 `maxHp +4`，玩家基础/装备/最终属性分层输出，`generated.item.N` 分配器进入存档与回放，HTML 背包支持单堆指定数量丢弃。原创内容包升级到 1.2.0，旧 1.0.0/1.1.0 内置存档有显式迁移。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
+- 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。实测 12,288 格会预分配 86,016 个动态 Pixi 对象，因此下一步采用可见 chunk 动态视图复用，不做普通逐 sprite 池。
 
 下一步建议：
 
-1. 建立较大原创测试地图和渲染 profile，比较 chunk 大小并决定动态 sprite pooling；
+1. 实现可见 chunk 动态视图复用，把玩家居中模式的 object/actor/visibility/lighting display object 数量从地图总格数约束到可见 chunk 容量；同时为整图滚动模式定义兼容策略；
 2. 扩展基础战斗属性模型，让装备修正继续覆盖攻击、防御等规则，而不是把数值计算放到前端；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；

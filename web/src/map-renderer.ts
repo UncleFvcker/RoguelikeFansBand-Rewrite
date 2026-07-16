@@ -216,5 +216,9 @@ export class MapRenderer {
     host.dataset.totalRebuiltTerrainChunks = String(
       diagnostics.totalRebuiltTerrainChunks,
     );
+    host.dataset.rendererCellViewCount = String(diagnostics.cellViewCount);
+    host.dataset.rendererDynamicDisplayObjectCount = String(
+      diagnostics.dynamicDisplayObjectCount,
+    );
   }
 }

@@ -11,23 +11,23 @@ import {
   visibleRenderChunkIndexes,
 } from "./render-chunks.ts";
 
-test("20 by 20 maps use nine clipped 8-cell chunks", () => {
+test("20 by 20 maps use four clipped 16-cell chunks", () => {
   const layout = createRenderChunkLayout(20, 20);
-  assert.equal(layout.chunksAcross, 3);
-  assert.equal(layout.chunksDown, 3);
-  assert.equal(layout.chunks.length, 9);
+  assert.equal(layout.chunksAcross, 2);
+  assert.equal(layout.chunksDown, 2);
+  assert.equal(layout.chunks.length, 4);
   assert.deepEqual(layout.chunks.at(-1), {
-    index: 8,
-    column: 2,
-    row: 2,
+    index: 3,
+    column: 1,
+    row: 1,
     cellX: 16,
     cellY: 16,
     cellWidth: 4,
     cellHeight: 4,
   });
   assert.equal(chunkIndexForCell(0, 0, layout.chunksAcross), 0);
-  assert.equal(chunkIndexForCell(8, 7, layout.chunksAcross), 1);
-  assert.equal(chunkIndexForCell(19, 19, layout.chunksAcross), 8);
+  assert.equal(chunkIndexForCell(8, 7, layout.chunksAcross), 0);
+  assert.equal(chunkIndexForCell(19, 19, layout.chunksAcross), 3);
 });
 
 test("full-map mode keeps every chunk renderable", () => {
@@ -40,7 +40,7 @@ test("full-map mode keeps every chunk renderable", () => {
     viewportHeight: 280,
     cullingEnabled: false,
   });
-  assert.equal(visible.size, 9);
+  assert.equal(visible.size, 4);
 });
 
 test("player-centered viewport culls chunks outside the camera with one-cell overscan", () => {
@@ -53,7 +53,7 @@ test("player-centered viewport culls chunks outside the camera with one-cell ove
     viewportHeight: 420,
     cullingEnabled: true,
   });
-  assert.deepEqual([...edge], [0, 1, 3, 4]);
+  assert.deepEqual([...edge], [0]);
 
   const followed = visibleRenderChunkIndexes(layout.chunks, {
     x: -28,
@@ -63,7 +63,7 @@ test("player-centered viewport culls chunks outside the camera with one-cell ove
     viewportHeight: 420,
     cullingEnabled: true,
   });
-  assert.deepEqual([...followed], [0, 1, 2, 3, 4, 5]);
+  assert.deepEqual([...followed], [0, 1]);
 });
 
 test("culling converts the scaled viewport back into world coordinates", () => {
@@ -76,7 +76,7 @@ test("culling converts the scaled viewport back into world coordinates", () => {
     viewportHeight: 420,
     cullingEnabled: true,
   });
-  assert.deepEqual([...visible], [0, 1, 3, 4]);
+  assert.deepEqual([...visible], [0]);
 });
 
 test("terrain invalidation rebuilds only chunks whose terrain identity changed", () => {
@@ -85,20 +85,20 @@ test("terrain invalidation rebuilds only chunks whose terrain identity changed",
     terrainIds,
     [
       { index: 0, x: 0, y: 0, terrainId: "floor" },
-      { index: 8, x: 8, y: 0, terrainId: "wall" },
+      { index: 16, x: 16, y: 0, terrainId: "wall" },
     ],
-    3,
-    9,
+    2,
+    4,
     true,
   );
-  assert.deepEqual([...initial], [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual([...initial], [0, 1, 2, 3]);
 
   assert.equal(
     updateTerrainChunkState(
       terrainIds,
       [{ index: 0, x: 0, y: 0, terrainId: "floor" }],
-      3,
-      9,
+      2,
+      4,
       false,
     ).size,
     0,
@@ -107,9 +107,9 @@ test("terrain invalidation rebuilds only chunks whose terrain identity changed",
     [
       ...updateTerrainChunkState(
         terrainIds,
-        [{ index: 8, x: 8, y: 0, terrainId: "floor" }],
-        3,
-        9,
+        [{ index: 16, x: 16, y: 0, terrainId: "floor" }],
+        2,
+        4,
         false,
       ),
     ],

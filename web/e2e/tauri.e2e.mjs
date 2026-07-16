@@ -14,6 +14,7 @@ const executable = path.join(repositoryDirectory, "target", "debug", "rfb-tauri.
 const artifactDirectory = path.join(repositoryDirectory, "test-results");
 const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
 const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
+const renderProfilePath = path.join(artifactDirectory, "render-profile.json");
 const logs = [];
 let child;
 let client;
@@ -26,6 +27,7 @@ async function main() {
   try {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
+    await rm(renderProfilePath, { force: true });
     const port = await reservePort();
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -98,6 +100,7 @@ async function runScenario(driver) {
   await driver.execute(`
     localStorage.clear();
     localStorage.setItem("rfb.locale", "zh-CN");
+    localStorage.setItem("rfb.renderer-profile-enabled", "1");
     setTimeout(() => window.location.reload(), 0);
     return true;
   `);
@@ -139,12 +142,14 @@ async function runScenario(driver) {
   assert.equal(state.rendererLayerCount, "5");
   assert.equal(state.rendererLayers, "terrain,object,actor,visibility,lighting");
   assert.equal(state.terrainMode, "chunk-render-texture-v1");
-  assert.equal(state.terrainChunkSize, "8");
-  assert.equal(state.terrainChunkCount, "9");
-  assert.equal(state.visibleChunkCount, "9");
+  assert.equal(state.terrainChunkSize, "16");
+  assert.equal(state.terrainChunkCount, "4");
+  assert.equal(state.visibleChunkCount, "4");
   assert.equal(state.culledChunkCount, "0");
-  assert.equal(state.lastRebuiltTerrainChunks, "9");
-  assert.equal(state.totalRebuiltTerrainChunks, "9");
+  assert.equal(state.lastRebuiltTerrainChunks, "4");
+  assert.equal(state.totalRebuiltTerrainChunks, "4");
+  assert.equal(state.rendererCellViewCount, "400");
+  assert.equal(state.rendererDynamicDisplayObjectCount, "2800");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
   assert.equal(state.protocolVersion, "1.5");
@@ -178,7 +183,7 @@ async function runScenario(driver) {
   assert.equal(state.renderKind, "update");
   assert.equal(state.appliedCells, "0");
   assert.equal(state.lastRebuiltTerrainChunks, "0");
-  assert.equal(state.totalRebuiltTerrainChunks, "9");
+  assert.equal(state.totalRebuiltTerrainChunks, "4");
   assert.equal(state.canvasUnchanged, true);
   assert.match(state.messages, /你在寂静中停留了一回合/);
 
@@ -430,8 +435,8 @@ async function runScenario(driver) {
   assert.equal(state.cameraX, "0");
   assert.equal(state.cameraY, "0");
   assert.equal(state.viewportHeight, "420");
-  assert.equal(state.visibleChunkCount, "4");
-  assert.equal(state.culledChunkCount, "5");
+  assert.equal(state.visibleChunkCount, "1");
+  assert.equal(state.culledChunkCount, "3");
   assert.equal(state.canvasUnchanged, true);
 
   for (const x of [5, 6, 7, 8]) {
@@ -445,8 +450,8 @@ async function runScenario(driver) {
   assert.equal(state.cameraMode, "player-centered");
   assert.equal(state.cameraX, "-28");
   assert.equal(state.cameraY, "0");
-  assert.equal(state.visibleChunkCount, "6");
-  assert.equal(state.culledChunkCount, "3");
+  assert.equal(state.visibleChunkCount, "2");
+  assert.equal(state.culledChunkCount, "2");
   assert.ok(Number(state.rememberedCellCount) > 0);
   assert.equal(state.canvasUnchanged, true);
 
@@ -468,7 +473,7 @@ async function runScenario(driver) {
   assert.equal(state.zoom, "1.5");
   assert.equal(state.viewportWidth, "420");
   assert.equal(state.viewportHeight, "420");
-  assert.equal(state.visibleChunkCount, "4");
+  assert.equal(state.visibleChunkCount, "1");
   assert.equal(state.canvasUnchanged, true);
   await driver.execute(`
     const select = document.querySelector("#zoom-level");
@@ -496,7 +501,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.stateHash, hashAfterCameraMovement);
   assert.equal(state.totalAppliedCells, cellsAfterCameraMovement);
-  assert.equal(state.visibleChunkCount, "9");
+  assert.equal(state.visibleChunkCount, "4");
   await driver.execute(`
     const select = document.querySelector("#camera-mode");
     select.value = "player-centered";
@@ -533,7 +538,7 @@ async function runScenario(driver) {
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.cameraMode, "player-centered");
   assert.equal(state.cameraX, "0");
-  assert.equal(state.visibleChunkCount, "4");
+  assert.equal(state.visibleChunkCount, "1");
   assert.match(state.inventory, /发光碎片/);
   assert.match(state.messages, /存档校验与载入成功/);
 
@@ -573,9 +578,9 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.renderKind, "tileset");
   assert.equal(state.appliedCells, "400");
-  assert.equal(state.lastRebuiltTerrainChunks, "9");
-  assert.equal(state.totalRebuiltTerrainChunks, "18");
-  assert.equal(state.visibleChunkCount, "4");
+  assert.equal(state.lastRebuiltTerrainChunks, "4");
+  assert.equal(state.totalRebuiltTerrainChunks, "8");
+  assert.equal(state.visibleChunkCount, "1");
   assert.equal(state.canvasUnchanged, true);
   assert.match(state.messages, /地图外观已载入：rfb\.tileset\.image-demo/);
 
@@ -596,6 +601,71 @@ async function runScenario(driver) {
   assert.match(state.inventory, /luminous shard/);
   assert.match(state.messages, /You pick up luminous shard ×5/);
   assert.match(state.controls, /Numpad 1–9 moves in eight directions/);
+
+  await driver.execute(`
+    window.__rfbRunRendererProfile().catch(() => undefined);
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.documentElement.dataset.rendererProfileState === "complete" || document.documentElement.dataset.rendererProfileState === "error"`,
+    "large-map renderer profile",
+    120_000,
+  );
+  const profileState = await driver.execute(`
+    return {
+      state: document.documentElement.dataset.rendererProfileState,
+      error: window.__rfbRendererProfileError,
+      report: window.__rfbRendererProfileResult,
+    };
+  `);
+  assert.equal(profileState.state, "complete", profileState.error);
+  const profile = profileState.report;
+  assert.equal(profile.schemaVersion, 1);
+  assert.equal(profile.scenarioId, "rfb-render-profile-large-original-v1");
+  assert.equal(profile.rendererBackend, "pixi-layered-chunks-v2");
+  assert.equal(profile.width, 192);
+  assert.equal(profile.height, 64);
+  assert.equal(profile.cellCount, 12_288);
+  assert.equal(profile.dynamicUpdateCellCount, 256);
+  assert.equal(profile.terrainUpdateCellCount, 96);
+  assert.equal(profile.recommendation, "visible-chunk-dynamic-views");
+  assert.deepEqual(profile.runs.map((run) => run.chunkSize), [8, 16, 32]);
+  assert.deepEqual(
+    profile.runs.map((run) => run.diagnostics.terrainChunkCount),
+    [192, 48, 12],
+  );
+  for (const run of profile.runs) {
+    assert.equal(run.diagnostics.cellViewCount, 12_288);
+    assert.equal(run.diagnostics.dynamicDisplayObjectCount, 86_016);
+    assert.ok(run.diagnostics.visibleChunkCount > 0);
+    assert.ok(run.diagnostics.visibleChunkCount < run.diagnostics.terrainChunkCount);
+    assert.equal(
+      run.diagnostics.lastRebuiltTerrainChunks,
+      run.diagnostics.terrainChunkCount,
+    );
+    assert.ok(
+      run.diagnostics.totalRebuiltTerrainChunks >=
+        run.diagnostics.terrainChunkCount * 2,
+    );
+    assert.ok(run.canvasPixelWidth >= 192 * 28);
+    assert.ok(run.canvasPixelHeight >= 64 * 28);
+    assert.equal(run.frameTiming.sampleCount, 45);
+    for (const timing of [
+      run.initializeMs,
+      run.initialSnapshotMs,
+      run.cameraSweepMs,
+      run.dynamicUpdateMs,
+      run.terrainUpdateMs,
+      run.tilesetSwitchMs,
+      run.frameTiming.medianMs,
+      run.frameTiming.p95Ms,
+      run.frameTiming.maxMs,
+    ]) {
+      assert.ok(Number.isFinite(timing) && timing >= 0);
+    }
+  }
+  await mkdir(artifactDirectory, { recursive: true });
+  await writeFile(renderProfilePath, `${JSON.stringify(profile, null, 2)}\n`);
 }
 
 async function readState(driver) {
@@ -618,6 +688,8 @@ async function readState(driver) {
       culledChunkCount: host?.dataset.culledChunkCount,
       lastRebuiltTerrainChunks: host?.dataset.lastRebuiltTerrainChunks,
       totalRebuiltTerrainChunks: host?.dataset.totalRebuiltTerrainChunks,
+      rendererCellViewCount: host?.dataset.rendererCellViewCount,
+      rendererDynamicDisplayObjectCount: host?.dataset.rendererDynamicDisplayObjectCount,
       visibilityMode: host?.dataset.visibilityMode,
       lightingMode: host?.dataset.lightingMode,
       protocolVersion: host?.dataset.protocolVersion,

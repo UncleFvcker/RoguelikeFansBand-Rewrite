@@ -43,6 +43,8 @@ export interface RendererBackendDiagnostics {
   visibleChunkCount: number;
   lastRebuiltTerrainChunks: number;
   totalRebuiltTerrainChunks: number;
+  cellViewCount: number;
+  dynamicDisplayObjectCount: number;
 }
 
 export interface RendererBackend {

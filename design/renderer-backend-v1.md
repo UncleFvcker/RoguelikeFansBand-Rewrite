@@ -30,7 +30,7 @@ GameSnapshot / GameUpdate
 
 ## 3. 可见性与光照
 
-Rust 从协议 1.3 起输出正式 FOV、探索记忆和逐格光照，当前协议版本为 1.4。运行模式标记为 `rust-fov-memory-v1`；`visible`、`remembered` 和 `hidden` 通过完整 `visualCells` 与增量 `changedVisualCells` 进入 RenderWorld，前端不再推断规则视野。
+Rust 从协议 1.3 起输出正式 FOV、探索记忆和逐格光照，当前协议版本为 1.5。运行模式标记为 `rust-fov-memory-v1`；`visible`、`remembered` 和 `hidden` 通过完整 `visualCells` 与增量 `changedVisualCells` 进入 RenderWorld，前端不再推断规则视野。
 
 光照模式为 `rust-content-lights-v1`：玩家光源以及带 `light-source` 标签的怪物、物品由 Rust 使用整数强度生成。探索记忆会保存，但视觉输出不进入 RNG 或 state hash。
 
@@ -55,7 +55,7 @@ Rust 从协议 1.3 起输出正式 FOV、探索记忆和逐格光照，当前协
 
 五个视觉层共同挂在 PixiJS camera container 下。镜头移动只修改 container position，缩放只修改 container scale 并 resize 同一个 Canvas；两者都不重建 Canvas、sprite 或 tileset，也不产生新的 dirty cells。窗口或布局尺寸变化由 `ResizeObserver` 重新计算视口偏移；镜头模式、缩放和像素偏移只属于前端显示状态，不进入 Rust 核心、存档、回放或 state hash。
 
-静态 terrain 层现按 8×8 格生成 RenderTexture；object、actor、visibility 和 lighting 仍保持独立动态对象，但按相同 chunk 分组。玩家居中模式使用一格 overscan 剔除视口外 chunk；整图滚动模式保留全部 chunk。详细失效规则和诊断指标见 [静态地形 Chunk 渲染 v1](terrain-chunk-rendering-v1.md)。
+静态 terrain 层现按默认 16×16 格生成 RenderTexture；object、actor、visibility 和 lighting 仍保持独立动态对象，但按相同 chunk 分组。玩家居中模式使用一格 overscan 剔除视口外 chunk；整图滚动模式保留全部 chunk。详细失效规则和诊断指标见 [静态地形 Chunk 渲染 v1](terrain-chunk-rendering-v1.md)。
 
 ## 6. 测试
 
@@ -69,11 +69,11 @@ Node 测试覆盖：
 - 玩家居中、四边钳制、小地图居中和整图零偏移；
 - 缩放后的中心跟随与远端边缘钳制。
 
-Windows E2E 验证协议 1.5、`pixi-layered-chunks-v2` backend ID、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、4/6/9 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
+Windows E2E 验证协议 1.5、`pixi-layered-chunks-v2` backend ID、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、1/2/4 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
 
 ## 7. 后续
 
 - 增加 Effects、Interaction 和 Debug pass；
-- 使用大地图 profile 比较 chunk 大小、动态 sprite pooling 与低分辨率光照纹理；
+- 按 [大地图渲染 Profile v1](renderer-profile-v1.md) 的结论实现可见 chunk 动态视图复用；
 - 扩展实际窗口 resize、缩放、最小化恢复和截图差异测试；
-- 根据性能分析决定 sprite pooling、GPU batching 与低分辨率 light RenderTexture。
+- 复测对象规模后再决定 GPU batching 与低分辨率 light RenderTexture。

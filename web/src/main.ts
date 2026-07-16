@@ -31,6 +31,7 @@ import type {
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
+import { installRendererProfileHook } from "./render-profile";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -115,6 +116,7 @@ renderConnectionStatus();
 renderInputHelp();
 renderNativeSaves();
 installFrontendCrashHandlers();
+installRendererProfileHook();
 
 void start();
 

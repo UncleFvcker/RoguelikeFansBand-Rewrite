@@ -2,7 +2,7 @@
 
 import { MAP_CELL_SIZE, type CameraTransform } from "./camera.ts";
 
-export const TERRAIN_CHUNK_SIZE = 8;
+export const TERRAIN_CHUNK_SIZE = 16;
 export const CHUNK_CULL_MARGIN_CELLS = 1;
 
 export interface RenderChunk {

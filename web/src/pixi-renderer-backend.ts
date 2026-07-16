@@ -31,6 +31,11 @@ import { TilesetRuntime, type RuntimeTileVisual } from "./tileset-runtime";
 
 const DEFAULT_BACKGROUND = 0x090d12;
 const GRID_COLOR = 0x18212d;
+const DYNAMIC_DISPLAY_OBJECTS_PER_CELL = 7;
+
+export interface PixiRendererBackendOptions {
+  terrainChunkSize?: number;
+}
 
 interface CellView {
   itemBackground: Graphics;
@@ -75,6 +80,15 @@ export class PixiRendererBackend implements RendererBackend {
   #visibleChunkCount = 0;
   #lastRebuiltTerrainChunks = 0;
   #totalRebuiltTerrainChunks = 0;
+  readonly #terrainChunkSize: number;
+
+  constructor(options: PixiRendererBackendOptions = {}) {
+    const terrainChunkSize = options.terrainChunkSize ?? TERRAIN_CHUNK_SIZE;
+    if (!Number.isInteger(terrainChunkSize) || terrainChunkSize <= 0) {
+      throw new Error("terrain chunk size must be a positive integer");
+    }
+    this.#terrainChunkSize = terrainChunkSize;
+  }
 
   async initialize(options: BackendInitialization): Promise<TilesetChangeResult> {
     this.#host = options.host;
@@ -82,7 +96,11 @@ export class PixiRendererBackend implements RendererBackend {
     this.#height = options.height;
     this.#zoom = options.zoom ?? 1;
     this.#contentGlyphs = options.contentGlyphs;
-    this.#layout = createRenderChunkLayout(options.width, options.height);
+    this.#layout = createRenderChunkLayout(
+      options.width,
+      options.height,
+      this.#terrainChunkSize,
+    );
     this.#tileset = await TilesetRuntime.load(options.tilesetManifestUrl, options.contentGlyphs);
     await this.#application.init({
       width: options.width * MAP_CELL_SIZE * this.#zoom,
@@ -109,11 +127,14 @@ export class PixiRendererBackend implements RendererBackend {
 
   getDiagnostics(): RendererBackendDiagnostics {
     return {
-      terrainChunkSize: TERRAIN_CHUNK_SIZE,
+      terrainChunkSize: this.#terrainChunkSize,
       terrainChunkCount: this.#chunks.length,
       visibleChunkCount: this.#visibleChunkCount,
       lastRebuiltTerrainChunks: this.#lastRebuiltTerrainChunks,
       totalRebuiltTerrainChunks: this.#totalRebuiltTerrainChunks,
+      cellViewCount: this.#cells.length,
+      dynamicDisplayObjectCount:
+        this.#cells.length * DYNAMIC_DISPLAY_OBJECTS_PER_CELL,
     };
   }
 
@@ -139,6 +160,7 @@ export class PixiRendererBackend implements RendererBackend {
       layout.chunksAcross,
       this.#chunks.length,
       this.#forceTerrainRebuild,
+      this.#terrainChunkSize,
     );
 
     let applied = 0;
@@ -217,7 +239,9 @@ export class PixiRendererBackend implements RendererBackend {
     this.#cells = new Array(this.#width * this.#height);
     for (let y = 0; y < this.#height; y += 1) {
       for (let x = 0; x < this.#width; x += 1) {
-        const chunk = this.#chunks[chunkIndexForCell(x, y, layout.chunksAcross)];
+        const chunk = this.#chunks[
+          chunkIndexForCell(x, y, layout.chunksAcross, this.#terrainChunkSize)
+        ];
         if (!chunk) throw new Error("render cell resolved to a missing chunk");
         const itemBackground = new Graphics();
         const itemSymbol = cellSprite(x, y);
