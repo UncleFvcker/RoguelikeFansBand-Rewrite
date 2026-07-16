@@ -16,6 +16,8 @@ pub(crate) fn actor_from_spawn(
     kind_id: &str,
     position: ContentPosition,
     max_hp: i32,
+    speed: u16,
+    energy_need: i32,
 ) -> Actor {
     Actor {
         id: id.to_owned(),
@@ -23,6 +25,8 @@ pub(crate) fn actor_from_spawn(
         position: position_from_content(position),
         hp: max_hp,
         max_hp,
+        speed,
+        energy_need,
     }
 }
 
@@ -43,12 +47,17 @@ pub(crate) fn actor_from_player(
     if player.base_max_hp != 0 && player.base_max_hp != definition.max_hp {
         return Err(CoreError::InvalidSave("player base max HP is invalid"));
     }
+    if player.base_speed != definition.speed {
+        return Err(CoreError::InvalidSave("player base speed is invalid"));
+    }
     Ok(Actor {
         id: player.id,
         kind_id: player.kind_id,
         position: player.position,
         hp: player.hp,
         max_hp: definition.max_hp,
+        speed: player.base_speed,
+        energy_need: player.energy_need,
     })
 }
 
@@ -80,12 +89,17 @@ pub(crate) fn actor_from_entity(
     if entity.max_hp != 0 && entity.max_hp != definition.max_hp {
         return Err(CoreError::InvalidSave("entity base stats are invalid"));
     }
+    if entity.base_speed != definition.speed {
+        return Err(CoreError::InvalidSave("entity base speed is invalid"));
+    }
     Ok(Actor {
         id: entity.id,
         kind_id: entity.kind_id,
         position: entity.position,
         hp: entity.hp,
         max_hp: definition.max_hp,
+        speed: entity.base_speed,
+        energy_need: entity.energy_need,
     })
 }
 
@@ -140,6 +154,8 @@ pub(crate) fn player_to_save(player: &Actor) -> PlayerSaveDto {
         position: player.position,
         hp: player.hp,
         base_max_hp: player.max_hp,
+        base_speed: player.speed,
+        energy_need: player.energy_need,
     }
 }
 
@@ -152,6 +168,8 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             position: entity.position,
             hp: entity.hp,
             max_hp: entity.max_hp,
+            base_speed: entity.speed,
+            energy_need: entity.energy_need,
         })
         .collect::<Vec<_>>();
     entities.sort_by(|left, right| left.id.cmp(&right.id));

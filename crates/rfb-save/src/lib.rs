@@ -169,6 +169,7 @@ mod tests {
             schema_version: 1,
             revision: 0,
             turn: 0,
+            world_tick: 0,
             last_command_seq: 0,
             terrain: TerrainSaveDto {
                 width: 1,
@@ -181,6 +182,8 @@ mod tests {
                 position: Position { x: 0, y: 0 },
                 hp: 10,
                 base_max_hp: 10,
+                base_speed: 110,
+                energy_need: 0,
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

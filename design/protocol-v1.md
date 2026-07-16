@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.7、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.8、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.7";
+  protocolVersion: "1.8";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.7 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆、装备列表、装备属性修正、每格 `itemId`，以及 Rust 权威 `visualCells`。`PlayerDto` 输出基础/装备/最终的最大生命、攻击和防御，并输出内部近战能力、AC、伤害骰和 `isDead`；`EntityDto` 输出内容派生的相同基础近战信息。`GameUpdate` 发送当前地面物品、背包、装备、玩家派生属性和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)，战斗规则边界见 [Contract v7](contract-v7-rfb-melee-migration.md)。
+协议 1.8 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、`turn`、`worldTick`、内容 glyph 目录、地面物品、背包物品堆、装备列表、装备属性修正、每格 `itemId`，以及 Rust 权威 `visualCells`。`PlayerDto` 和 `EntityDto` 输出速度、距离下次行动所需能量、基础近战信息与派生属性；玩家另输出 `isDead`。`GameUpdate` 发送最新 `turn`、`worldTick`、玩家/怪物行动状态、物品状态和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)，当前行动与战斗边界见 [Contract v8](contract-v8-action-energy-tracking.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
@@ -101,7 +101,7 @@ interface GameCoreV1 {
 
 `GameCommandEnvelope` 至少包含 `commandSeq`、客户端已知的 `expectedRevision` 和一个具体命令。核心只在 revision 合法时执行会改变规则状态的命令。
 
-当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop` 和 `DropQuantity`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID。所有成功或无可操作目标的游戏命令都会消耗一个回合并产生结构化事件。
+当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop` 和 `DropQuantity`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
 
@@ -114,6 +114,7 @@ interface GameUpdate {
   baseRevision: number;
   revision: number;
   turn: number;
+  worldTick: number;
   events: GameEventDto[];
   renderDelta?: RenderDeltaDto;
   uiDelta?: UiDeltaDto;

@@ -8,6 +8,7 @@
   "glyph": "@",
   "level": 1,
   "maxHp": 10,
+  "speed": 110,
   "attack": 2,
   "defense": 1,
   "damageDice": 1,

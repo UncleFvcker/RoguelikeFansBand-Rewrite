@@ -155,7 +155,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.7");
+  assert.equal(state.protocolVersion, "1.8");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -170,7 +170,7 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b",
+    "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
   assert.equal(state.contentVisualCount, "6");
@@ -200,7 +200,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.turn, "2");
   assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "79");
+  assert.equal(state.appliedCells, "99");
   assert.equal(state.lastRebuiltTerrainChunks, "0");
   assert.equal(state.canvasUnchanged, true);
 
@@ -248,9 +248,9 @@ async function runScenario(driver) {
   assert.match(nativeSlot.metadata, /回合 3/);
   assert.match((await readState(driver)).messages, /已创建原生存档/);
 
-  await dispatchKey(driver, "Numpad6", "6");
+  await dispatchKey(driver, "Numpad2", "2");
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "5, 3" && document.querySelector("#turn-value")?.textContent === "4"`,
+    `return document.querySelector("#position-value")?.textContent === "4, 4" && document.querySelector("#turn-value")?.textContent === "4"`,
     "movement after native save",
   );
   await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]`);

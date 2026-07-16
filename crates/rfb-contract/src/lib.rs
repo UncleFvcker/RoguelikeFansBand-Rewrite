@@ -70,6 +70,8 @@ pub struct ContractAssertions {
 pub struct FinalStateAssertion {
     pub revision: u32,
     pub turn: u32,
+    #[serde(default)]
+    pub world_tick: u32,
     pub last_command_seq: u32,
     pub player_position: Position,
     #[serde(default)]
@@ -80,7 +82,13 @@ pub struct FinalStateAssertion {
     pub player_attack: Option<i32>,
     #[serde(default)]
     pub player_defense: Option<i32>,
+    #[serde(default)]
+    pub player_speed: Option<u16>,
+    #[serde(default)]
+    pub player_energy_need: Option<i32>,
     pub entity_count: usize,
+    #[serde(default)]
+    pub entities: Vec<ActorStateAssertion>,
     #[serde(default)]
     pub ground_item_count: usize,
     #[serde(default)]
@@ -90,6 +98,16 @@ pub struct FinalStateAssertion {
     #[serde(default)]
     pub next_item_instance_serial: Option<u64>,
     pub state_hash: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorStateAssertion {
+    pub id: String,
+    pub position: Position,
+    pub hp: i32,
+    pub speed: u16,
+    pub energy_need: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -152,13 +170,27 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         final_state: FinalStateAssertion {
             revision: snapshot.revision,
             turn: snapshot.turn,
+            world_tick: snapshot.world_tick,
             last_command_seq: snapshot.last_command_seq,
             player_position: snapshot.player.position,
             player_hp: Some(snapshot.player.hp),
             player_max_hp: Some(snapshot.player.max_hp),
             player_attack: Some(snapshot.player.attack),
             player_defense: Some(snapshot.player.defense),
+            player_speed: Some(snapshot.player.speed),
+            player_energy_need: Some(snapshot.player.energy_need),
             entity_count: snapshot.entities.len(),
+            entities: snapshot
+                .entities
+                .iter()
+                .map(|entity| ActorStateAssertion {
+                    id: entity.id.clone(),
+                    position: entity.position,
+                    hp: entity.hp,
+                    speed: entity.speed,
+                    energy_need: entity.energy_need,
+                })
+                .collect(),
             ground_item_count: snapshot.items.len(),
             inventory_stack_count: snapshot.inventory.len(),
             equipment_count: snapshot.equipment.len(),

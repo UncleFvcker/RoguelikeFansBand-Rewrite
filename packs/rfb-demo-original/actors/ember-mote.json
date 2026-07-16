@@ -8,6 +8,7 @@
   "glyph": "*",
   "level": 1,
   "maxHp": 3,
+  "speed": 110,
   "attack": 1,
   "defense": 1,
   "damageDice": 1,

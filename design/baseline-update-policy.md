@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v7/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v6` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v8/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v7` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v7/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v8/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v7/baseline
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；背包权威状态随后建立 `contract-v3`；装备与批量丢弃建立 `contract-v4`；装备属性和稳定拆堆实例建立 `contract-v5`；基础攻击/防御和临时权威伤害公式建立 `contract-v6`；RFB 风格基础近战、怪物反击、受伤与死亡闭环建立 `contract-v7`。迁移范围见各版本迁移文档，当前规则边界见 [Contract v7](contract-v7-rfb-melee-migration.md)。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；背包权威状态随后建立 `contract-v3`；装备与批量丢弃建立 `contract-v4`；装备属性和稳定拆堆实例建立 `contract-v5`；基础攻击/防御和临时权威伤害公式建立 `contract-v6`；RFB 风格基础近战、受伤与死亡闭环建立 `contract-v7`；行动能量、速度、世界脉冲和怪物追踪建立 `contract-v8`。迁移范围见各版本迁移文档，当前规则边界见 [Contract v8](contract-v8-action-energy-tracking.md)。

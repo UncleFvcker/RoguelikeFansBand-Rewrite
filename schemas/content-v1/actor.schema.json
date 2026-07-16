@@ -65,6 +65,13 @@
     "role": {
       "$ref": "#/$defs/ActorRole"
     },
+    "speed": {
+      "default": 110,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "tags": {
       "items": {
         "type": "string"

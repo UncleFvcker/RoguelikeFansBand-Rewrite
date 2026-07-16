@@ -10,6 +10,8 @@ pub(crate) struct Actor {
     pub(crate) position: Position,
     pub(crate) hp: i32,
     pub(crate) max_hp: i32,
+    pub(crate) speed: u16,
+    pub(crate) energy_need: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

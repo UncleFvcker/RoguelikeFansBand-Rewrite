@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.collision.interior-wall",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 8,
+      "turn": 8,
+      "worldTick": 80,
+      "lastCommandSeq": 8,
+      "playerPosition": {
+        "x": 9,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "entityCount": 0,
+      "entities": [],
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "1dd11e64d98e4b849064a40dead2d5f300617acd0eca15b6fe799a3d47681313"
+    },
+    "events": [
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "2",
+          "target": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "2",
+          "target": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.slay",
+        "messageKey": "combat-player-slay",
+        "args": {
+          "target": "demo.actor.ember-mote"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 3
+      },
+      {
+        "x": 8,
+        "y": 3
+      },
+      {
+        "x": 8,
+        "y": 3
+      },
+      {
+        "x": 9,
+        "y": 3
+      }
+    ],
+    "removedEntities": [
+      "demo.monster.ember-mote.1"
+    ],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

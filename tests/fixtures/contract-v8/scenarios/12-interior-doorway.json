@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 1,
+  "id": "movement.structure.interior-gap",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 16,
+      "turn": 16,
+      "worldTick": 160,
+      "lastCommandSeq": 16,
+      "playerPosition": {
+        "x": 12,
+        "y": 10
+      },
+      "playerHp": 8,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 11,
+            "y": 10
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100
+        }
+      ],
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "a317a0c86bbf3907482d375337aef650bca1f9b688f645181abef352cc2923ac"
+    },
+    "events": [
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.ember-mote"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 6,
+        "y": 5
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 6
+      },
+      {
+        "x": 5,
+        "y": 6
+      },
+      {
+        "x": 6,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 6
+      },
+      {
+        "x": 3,
+        "y": 7
+      },
+      {
+        "x": 4,
+        "y": 7
+      },
+      {
+        "x": 5,
+        "y": 6
+      },
+      {
+        "x": 3,
+        "y": 7
+      },
+      {
+        "x": 3,
+        "y": 8
+      },
+      {
+        "x": 3,
+        "y": 8
+      },
+      {
+        "x": 3,
+        "y": 9
+      },
+      {
+        "x": 4,
+        "y": 7
+      },
+      {
+        "x": 3,
+        "y": 8
+      },
+      {
+        "x": 3,
+        "y": 9
+      },
+      {
+        "x": 3,
+        "y": 10
+      },
+      {
+        "x": 3,
+        "y": 10
+      },
+      {
+        "x": 4,
+        "y": 10
+      },
+      {
+        "x": 3,
+        "y": 9
+      },
+      {
+        "x": 4,
+        "y": 10
+      },
+      {
+        "x": 5,
+        "y": 10
+      },
+      {
+        "x": 4,
+        "y": 10
+      },
+      {
+        "x": 5,
+        "y": 10
+      },
+      {
+        "x": 6,
+        "y": 10
+      },
+      {
+        "x": 5,
+        "y": 10
+      },
+      {
+        "x": 6,
+        "y": 10
+      },
+      {
+        "x": 7,
+        "y": 10
+      },
+      {
+        "x": 6,
+        "y": 10
+      },
+      {
+        "x": 7,
+        "y": 10
+      },
+      {
+        "x": 8,
+        "y": 10
+      },
+      {
+        "x": 7,
+        "y": 10
+      },
+      {
+        "x": 8,
+        "y": 10
+      },
+      {
+        "x": 9,
+        "y": 10
+      },
+      {
+        "x": 8,
+        "y": 10
+      },
+      {
+        "x": 9,
+        "y": 10
+      },
+      {
+        "x": 10,
+        "y": 10
+      },
+      {
+        "x": 9,
+        "y": 10
+      },
+      {
+        "x": 10,
+        "y": 10
+      },
+      {
+        "x": 11,
+        "y": 10
+      },
+      {
+        "x": 10,
+        "y": 10
+      },
+      {
+        "x": 11,
+        "y": 10
+      },
+      {
+        "x": 12,
+        "y": 10
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

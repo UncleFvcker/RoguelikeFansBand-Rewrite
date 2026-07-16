@@ -63,6 +63,7 @@ interface SavePayloadV1 {
   schemaVersion: 1;
   revision: number;
   turn: number;
+  worldTick: number;
   lastCommandSeq: number;
   terrain: TerrainSaveDto;
   player: PlayerSaveDto;
@@ -81,13 +82,13 @@ interface SavePayloadV1 {
 
 当前桌面垂直切片已经把地面 `items`、`inventory` 物品堆、`equipment` 装备列表和 `nextItemInstanceSerial` 写入 payload。存档使用独立的 `PlayerSaveDto`、`ActorSaveDto` 和物品存档 DTO，不再复用面向前端的 `PlayerDto`、`EntityDto`、`InventoryItemDto` 或 `EquipmentItemDto`。
 
-Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明确区分 `Ground(position)`、`Inventory` 和 `Equipped(slotId)`。拾取、整堆丢弃、装备与卸下只改变同一实例的位置；部分拆堆才分配新的稳定实例 ID。v1 存档线格式继续投影为 `items`、`inventory` 和 `equipment` 三个列表，以兼容现有文件和 contract-v7，但这三个列表不再对应三套核心结构体。
+Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明确区分 `Ground(position)`、`Inventory` 和 `Equipped(slotId)`。拾取、整堆丢弃、装备与卸下只改变同一实例的位置；部分拆堆才分配新的稳定实例 ID。v1 存档线格式继续投影为 `items`、`inventory` 和 `equipment` 三个列表，以兼容现有文件和 contract-v8，但这三个列表不再对应三套核心结构体。
 
-玩家存档只保存实例 ID、种类 ID、位置、当前生命和自然最大生命；怪物保存相同的运行状态。最终最大生命、攻击、防御、近战能力、AC、伤害骰、装备 modifier、死亡标志、glyph 和本地化文本均不写入新存档，而是在载入后由当前内容、装备和生命值重新派生。旧 v1 MessagePack 中多余的派生字段会由新读取器安全忽略，因此现有存档仍可载入。
+玩家存档保存实例 ID、种类 ID、位置、当前生命、自然最大生命、基础速度和当前 `energyNeed`；怪物保存相同的运行状态。最终最大生命、攻击、防御、近战能力、AC、伤害骰、装备 modifier、死亡标志、glyph 和本地化文本均不写入新存档，而是在载入后由当前内容、装备和生命值重新派生。旧 v1 存档缺失时间字段时 `worldTick` 默认为 0；缺失行动字段时玩家使用速度 110/能量 0，怪物使用速度 110/能量 100。旧 MessagePack 中多余的派生字段会由新读取器安全忽略，因此现有存档仍可载入。
 
 背包与装备项保存稳定实例 ID、内容 kind ID、数量及装备槽 ID，不保存选择复选框或 HTML 面板状态。载入后必须验证内容引用、实例 ID 唯一性、`maxStack`、槽位匹配、槽位唯一性，以及生成实例序号不能落后于任何 `generated.item.N`。旧存档缺失 `equipment` 时按空列表载入，缺失分配序号时从所有现有实例 ID 推导。玩家负生命值代表已死亡，可安全保存和重载；`isDead` 仅是协议派生字段。
 
-协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；该数组不参与 state hash，因此地图探索显示不会改变规则基准或回放检查点。当前 state hash Schema v7 使用独立的历史兼容投影，不再直接哈希当前存档 DTO；因此清理存档中的重复派生字段不会改写 contract-v7 基准。
+协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；该数组不参与 state hash，因此地图探索显示不会改变规则基准或回放检查点。当前 state hash Schema v8 使用独立的历史兼容投影，不再直接哈希当前存档 DTO；因此清理存档中的重复派生字段不会改写 contract-v8 基准。
 
 禁止保存：
 

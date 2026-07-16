@@ -9,7 +9,15 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.7";
+pub const PROTOCOL_VERSION: &str = "1.8";
+
+const fn default_actor_speed() -> u16 {
+    110
+}
+
+const fn default_monster_energy_need() -> i32 {
+    100
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -147,6 +155,10 @@ pub struct PlayerDto {
     pub position: Position,
     pub hp: i32,
     pub max_hp: i32,
+    #[serde(default = "default_actor_speed")]
+    pub speed: u16,
+    #[serde(default)]
+    pub energy_need: i32,
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default)]
@@ -178,6 +190,10 @@ pub struct EntityDto {
     pub position: Position,
     pub hp: i32,
     pub max_hp: i32,
+    #[serde(default = "default_actor_speed")]
+    pub speed: u16,
+    #[serde(default = "default_monster_energy_need")]
+    pub energy_need: i32,
     #[serde(default)]
     pub attack: i32,
     #[serde(default)]
@@ -241,6 +257,8 @@ pub struct GameSnapshot {
     pub protocol_version: String,
     pub revision: u32,
     pub turn: u32,
+    #[serde(default)]
+    pub world_tick: u32,
     pub last_command_seq: u32,
     pub width: u16,
     pub height: u16,
@@ -267,6 +285,8 @@ pub struct GameUpdate {
     pub base_revision: u32,
     pub revision: u32,
     pub turn: u32,
+    #[serde(default)]
+    pub world_tick: u32,
     pub command_seq: u32,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
@@ -364,6 +384,10 @@ pub struct PlayerSaveDto {
     pub hp: i32,
     #[serde(default)]
     pub base_max_hp: i32,
+    #[serde(default = "default_actor_speed")]
+    pub base_speed: u16,
+    #[serde(default)]
+    pub energy_need: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -375,6 +399,10 @@ pub struct ActorSaveDto {
     pub hp: i32,
     #[serde(default)]
     pub max_hp: i32,
+    #[serde(default = "default_actor_speed")]
+    pub base_speed: u16,
+    #[serde(default = "default_monster_energy_need")]
+    pub energy_need: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -409,6 +437,8 @@ pub struct SavePayloadV1 {
     pub schema_version: u16,
     pub revision: u32,
     pub turn: u32,
+    #[serde(default)]
+    pub world_tick: u32,
     pub last_command_seq: u32,
     pub terrain: TerrainSaveDto,
     pub player: PlayerSaveDto,
@@ -567,6 +597,8 @@ mod tests {
                 position: Position { x: 0, y: 0 },
                 hp: 8,
                 max_hp: 14,
+                speed: 110,
+                energy_need: 0,
                 base_max_hp: 10,
                 attack: 3,
                 base_attack: 2,
@@ -588,6 +620,8 @@ mod tests {
                 position: Position { x: 1, y: 0 },
                 hp: 3,
                 max_hp: 3,
+                speed: 110,
+                energy_need: 100,
                 attack: 1,
                 defense: 1,
                 melee_skill: 32,
@@ -652,6 +686,8 @@ mod tests {
             position: Position { x: 0, y: 0 },
             hp: 10,
             base_max_hp: 10,
+            base_speed: 110,
+            energy_need: 0,
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

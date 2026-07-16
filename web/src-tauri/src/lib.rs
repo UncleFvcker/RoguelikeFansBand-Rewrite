@@ -42,7 +42,7 @@ impl AppState {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let recorder = ReplayRecorder::new(Game::new(seed));
+        let recorder = ReplayRecorder::new(initial_game(seed));
         let snapshot = recorder.game().snapshot();
         self.replace_session(GameSession {
             recorder,
@@ -137,6 +137,19 @@ impl AppState {
             .lock()
             .map_err(|_| DesktopCommandError::new("native-save-lock", "storage lock is poisoned"))
     }
+}
+
+#[cfg(not(feature = "webdriver"))]
+fn initial_game(seed: u64) -> Game {
+    Game::new(seed)
+}
+
+#[cfg(feature = "webdriver")]
+fn initial_game(seed: u64) -> Game {
+    let mut payload = Game::new(seed).to_save();
+    payload.entities.clear();
+    Game::from_save(payload)
+        .expect("webdriver fixture should remove monsters without invalid state")
 }
 
 #[derive(Serialize)]

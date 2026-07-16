@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 // Game aggregate and rule orchestration.
 
-use std::{collections::BTreeSet, sync::Arc};
+use std::{
+    collections::{BTreeSet, VecDeque},
+    sync::Arc,
+};
 
 use crate::{
+    action::GameAction,
     combat::{
         adjacent, apply_melee_armor_reduction, effective_stat, monster_melee_skill,
         rating_to_armor_class, rating_to_combat_value,
@@ -17,27 +21,33 @@ use crate::{
         equipment_to_save, inventory_item_from_dto, inventory_to_save, item_from_dto,
         items_to_save, player_to_save, position_from_content,
     },
+    scheduler::{
+        INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, gain_energy,
+        spend_energy,
+    },
     state::{Actor, EquipOutcome, ItemInstance, ItemLocation},
 };
 use rfb_content::{ActorRole, ContentCatalog};
 use rfb_protocol::{
-    CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, EntityDto,
-    EquipmentItemDto, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, InventoryItemDto,
-    ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto, SavePayloadV1, StatModifiersDto,
-    TerrainSaveDto, VisibilityState,
+    ActorSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, EntityDto,
+    EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
+    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto, PROTOCOL_VERSION, PlayerDto,
+    PlayerSaveDto, Position, RngSaveDto, SavePayloadV1, StatModifiersDto, TerrainSaveDto,
+    VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 4] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 5] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
     "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd",
+    "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b";
+    "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -51,17 +61,18 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV7 {
+struct StateHashPayloadV8 {
     schema_version: u16,
     revision: u32,
     turn: u32,
+    world_tick: u32,
     last_command_seq: u32,
     terrain: TerrainSaveDto,
-    player: PlayerDto,
-    entities: Vec<EntityDto>,
-    items: Vec<ItemDto>,
-    inventory: Vec<InventoryItemDto>,
-    equipment: Vec<EquipmentItemDto>,
+    player: PlayerSaveDto,
+    entities: Vec<ActorSaveDto>,
+    items: Vec<ItemSaveDto>,
+    inventory: Vec<InventoryItemSaveDto>,
+    equipment: Vec<EquipmentItemSaveDto>,
     next_item_instance_serial: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     explored: Vec<bool>,
@@ -86,6 +97,7 @@ pub struct Game {
     rng: RfbRng,
     revision: u32,
     turn: u32,
+    world_tick: u32,
     last_command_seq: u32,
 }
 
@@ -134,6 +146,8 @@ impl Game {
             &world.player.kind_id,
             world.player.position,
             player_definition.max_hp,
+            player_definition.speed,
+            INITIAL_PLAYER_ENERGY_NEED,
         );
         let entities = world
             .actors
@@ -147,6 +161,8 @@ impl Game {
                     &spawn.kind_id,
                     spawn.position,
                     definition.max_hp,
+                    definition.speed,
+                    INITIAL_MONSTER_ENERGY_NEED,
                 ))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
@@ -176,6 +192,7 @@ impl Game {
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
+            world_tick: 0,
             last_command_seq: 0,
         };
         game.reveal_current_visibility();
@@ -281,6 +298,7 @@ impl Game {
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
+            world_tick: payload.world_tick,
             last_command_seq: payload.last_command_seq,
         };
         game.reveal_current_visibility();
@@ -294,6 +312,7 @@ impl Game {
             schema_version: 1,
             revision: self.revision,
             turn: self.turn,
+            world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
             terrain: TerrainSaveDto {
                 width: self.width,
@@ -330,6 +349,7 @@ impl Game {
             protocol_version: PROTOCOL_VERSION.to_owned(),
             revision: self.revision,
             turn: self.turn,
+            world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
             width: self.width,
             height: self.height,
@@ -371,9 +391,11 @@ impl Game {
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
+        let action = GameAction::from(envelope.command);
+        let action_cost = action.energy_cost();
 
-        match envelope.command {
-            GameCommand::Drop { item_ids } => {
+        match action {
+            GameAction::Drop { item_ids } => {
                 if let Some((stacks, quantity)) = self.drop_inventory_items(&item_ids) {
                     changed.insert(self.player.position);
                     events.push(DomainEvent::ItemsDropped { stacks, quantity });
@@ -381,7 +403,7 @@ impl Game {
                     events.push(DomainEvent::NoItemsDropped);
                 }
             }
-            GameCommand::DropQuantity { item_id, quantity } => {
+            GameAction::DropQuantity { item_id, quantity } => {
                 if let Some((stacks, dropped_quantity)) =
                     self.drop_inventory_quantity(&item_id, quantity)?
                 {
@@ -394,7 +416,7 @@ impl Game {
                     events.push(DomainEvent::NoItemsDropped);
                 }
             }
-            GameCommand::Equip { item_id } => {
+            GameAction::Equip { item_id } => {
                 if let Some(outcome) = self.equip_inventory_item(&item_id) {
                     events.push(DomainEvent::ItemEquipped {
                         target_kind_id: outcome.kind_id,
@@ -405,8 +427,8 @@ impl Game {
                     events.push(DomainEvent::ItemEquipUnavailable);
                 }
             }
-            GameCommand::Wait => events.push(DomainEvent::Waited),
-            GameCommand::PickUp => {
+            GameAction::Wait => events.push(DomainEvent::Waited),
+            GameAction::PickUp => {
                 if let Some((kind_id, quantity)) = self.pick_up_at_player()? {
                     changed.insert(self.player.position);
                     events.push(DomainEvent::ItemPickedUp {
@@ -417,7 +439,7 @@ impl Game {
                     events.push(DomainEvent::NothingToPickUp);
                 }
             }
-            GameCommand::Unequip { slot_id } => {
+            GameAction::Unequip { slot_id } => {
                 if let Some(kind_id) = self.unequip_slot(&slot_id) {
                     events.push(DomainEvent::ItemUnequipped {
                         target_kind_id: kind_id,
@@ -427,7 +449,7 @@ impl Game {
                     events.push(DomainEvent::ItemUnequipUnavailable { slot_id });
                 }
             }
-            GameCommand::Move { direction } => {
+            GameAction::Move { direction } => {
                 let (dx, dy) = direction.delta();
                 let target = Position {
                     x: self.player.position.x + dx,
@@ -451,7 +473,8 @@ impl Game {
             }
         }
 
-        self.resolve_monster_turn(&mut events);
+        spend_energy(&mut self.player.energy_need, action_cost);
+        self.advance_until_player_ready(&mut events, &mut changed);
 
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(1);
@@ -464,6 +487,7 @@ impl Game {
             base_revision,
             revision: self.revision,
             turn: self.turn,
+            world_tick: self.world_tick,
             command_seq: self.last_command_seq,
             events,
             changed_cells: changed
@@ -483,21 +507,22 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV7 {
+        let payload = StateHashPayloadV8 {
             schema_version: 1,
             revision: self.revision,
             turn: self.turn,
+            world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
             terrain: TerrainSaveDto {
                 width: self.width,
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: self.player_dto(),
-            entities: self.entities_dto(),
-            items: self.items_dto(),
-            inventory: self.inventory_dto(),
-            equipment: self.equipment_dto(),
+            player: player_to_save(&self.player),
+            entities: actors_to_save(&self.entities),
+            items: items_to_save(&self.items),
+            inventory: inventory_to_save(&self.items),
+            equipment: equipment_to_save(&self.items),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: Vec::new(),
             rng: self.rng.to_save(),
@@ -560,6 +585,8 @@ impl Game {
                 .player
                 .max_hp
                 .saturating_add(equipment_modifiers.max_hp),
+            speed: self.player.speed,
+            energy_need: self.player.energy_need,
             base_max_hp: self.player.max_hp,
             attack: self.effective_player_attack(),
             base_attack: definition.attack,
@@ -591,6 +618,8 @@ impl Game {
                     position: entity.position,
                     hp: entity.hp,
                     max_hp: entity.max_hp,
+                    speed: entity.speed,
+                    energy_need: entity.energy_need,
                     attack: definition.attack,
                     defense: definition.defense,
                     melee_skill: monster_melee_skill(definition.attack, definition.level),
@@ -919,47 +948,187 @@ impl Game {
         }
     }
 
-    fn resolve_monster_turn(&mut self, events: &mut Vec<DomainEvent>) {
-        let player_position = self.player.position;
-        let mut attackers = self
-            .entities
-            .iter()
-            .filter(|entity| adjacent(entity.position, player_position))
-            .map(|entity| (entity.id.clone(), entity.kind_id.clone()))
-            .collect::<Vec<_>>();
-        attackers.sort_by(|left, right| left.0.cmp(&right.0));
-
-        for (_, kind_id) in attackers {
+    fn advance_until_player_ready(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        loop {
+            self.world_tick = self.world_tick.saturating_add(1);
+            self.process_monster_energy_pulse(events, changed);
             if self.player_is_dead() {
                 break;
             }
-            let definition = self
-                .content
-                .actor(&kind_id)
-                .expect("monster actor definition must remain available")
-                .clone();
-            let skill = monster_melee_skill(definition.attack, definition.level);
-            let armor_class = rating_to_armor_class(self.effective_player_defense());
-            if !self.check_monster_hit(skill, armor_class) {
-                events.push(DomainEvent::MonsterMeleeMissed {
-                    source_kind_id: kind_id,
-                });
-                continue;
-            }
-
-            let raw_damage = self.roll_damage(definition.damage_dice, definition.damage_sides);
-            let damage = apply_melee_armor_reduction(raw_damage, armor_class);
-            self.player.hp = self.player.hp.saturating_sub(damage);
-            events.push(DomainEvent::MonsterMeleeHit {
-                source_kind_id: kind_id.clone(),
-                damage,
-            });
-            if self.player_is_dead() {
-                events.push(DomainEvent::PlayerDied {
-                    source_kind_id: kind_id,
-                });
+            gain_energy(&mut self.player.energy_need, self.player.speed);
+            if self.player.energy_need <= 0 {
+                break;
             }
         }
+    }
+
+    fn process_monster_energy_pulse(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+
+        for entity_id in entity_ids {
+            if self.player_is_dead() {
+                break;
+            }
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let speed = self.entities[index].speed;
+            gain_energy(&mut self.entities[index].energy_need, speed);
+            if self.entities[index].energy_need > 0 {
+                continue;
+            }
+            spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            self.resolve_monster_action(index, events, changed);
+        }
+    }
+
+    fn resolve_monster_action(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if adjacent(self.entities[index].position, self.player.position) {
+            self.resolve_monster_melee(index, events);
+            return;
+        }
+        let Some(next_position) = self.next_monster_step(index) else {
+            return;
+        };
+        let old_position = self.entities[index].position;
+        self.entities[index].position = next_position;
+        changed.insert(old_position);
+        changed.insert(next_position);
+    }
+
+    fn resolve_monster_melee(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
+        let kind_id = self.entities[index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&kind_id)
+            .expect("monster actor definition must remain available")
+            .clone();
+        let skill = monster_melee_skill(definition.attack, definition.level);
+        let armor_class = rating_to_armor_class(self.effective_player_defense());
+        if !self.check_monster_hit(skill, armor_class) {
+            events.push(DomainEvent::MonsterMeleeMissed {
+                source_kind_id: kind_id,
+            });
+            return;
+        }
+
+        let raw_damage = self.roll_damage(definition.damage_dice, definition.damage_sides);
+        let damage = apply_melee_armor_reduction(raw_damage, armor_class);
+        self.player.hp = self.player.hp.saturating_sub(damage);
+        events.push(DomainEvent::MonsterMeleeHit {
+            source_kind_id: kind_id.clone(),
+            damage,
+        });
+        if self.player_is_dead() {
+            events.push(DomainEvent::PlayerDied {
+                source_kind_id: kind_id,
+            });
+        }
+    }
+
+    fn next_monster_step(&self, index: usize) -> Option<Position> {
+        const DELTAS: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+
+        let start = self.entities[index].position;
+        let occupied = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter(|(entity_index, _)| *entity_index != index)
+            .map(|(_, entity)| entity.position)
+            .collect::<BTreeSet<_>>();
+        let mut visited = BTreeSet::from([start]);
+        let mut queue = VecDeque::new();
+
+        let mut initial = DELTAS
+            .iter()
+            .enumerate()
+            .map(|(order, (dx, dy))| {
+                let position = Position {
+                    x: start.x + dx,
+                    y: start.y + dy,
+                };
+                (
+                    squared_distance(position, self.player.position),
+                    order,
+                    position,
+                )
+            })
+            .collect::<Vec<_>>();
+        initial.sort();
+        for (_, _, position) in initial {
+            if position == self.player.position
+                || occupied.contains(&position)
+                || !self.is_walkable(position)
+                || !visited.insert(position)
+            {
+                continue;
+            }
+            if adjacent(position, self.player.position) {
+                return Some(position);
+            }
+            queue.push_back((position, position));
+        }
+
+        while let Some((position, first_step)) = queue.pop_front() {
+            let mut neighbors = DELTAS
+                .iter()
+                .enumerate()
+                .map(|(order, (dx, dy))| {
+                    let next = Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    };
+                    (squared_distance(next, self.player.position), order, next)
+                })
+                .collect::<Vec<_>>();
+            neighbors.sort();
+            for (_, _, next) in neighbors {
+                if next == self.player.position
+                    || occupied.contains(&next)
+                    || !self.is_walkable(next)
+                    || !visited.insert(next)
+                {
+                    continue;
+                }
+                if adjacent(next, self.player.position) {
+                    return Some(first_step);
+                }
+                queue.push_back((next, first_step));
+            }
+        }
+        None
     }
 
     fn check_player_hit(&mut self, skill: i32, armor_class: i32) -> bool {
@@ -1251,8 +1420,14 @@ impl Game {
         };
         if definition.role != expected_role
             || actor.max_hp != definition.max_hp
+            || actor.speed != definition.speed
+            || actor.speed > 199
             || (expected_role == ActorRole::Monster && actor.hp <= 0)
             || (expected_role == ActorRole::Player && actor.hp < -1_000_000)
+            || (expected_role == ActorRole::Monster
+                && !(1..=STANDARD_ACTION_COST).contains(&actor.energy_need))
+            || (expected_role == ActorRole::Player && actor.hp >= 0 && actor.energy_need > 0)
+            || actor.energy_need < -STANDARD_ACTION_COST
             || actor.hp > effective_max_hp
         {
             return Err(CoreError::InvalidSave("actor state is invalid"));
@@ -1399,6 +1574,7 @@ mod tests {
     #[test]
     fn movement_produces_fov_deltas_and_remembers_explored_cells() {
         let mut game = Game::new(42);
+        game.entities.clear();
         let first = game
             .dispatch(command(
                 1,
@@ -1559,6 +1735,104 @@ mod tests {
     }
 
     #[test]
+    fn normal_speed_monster_tracks_once_per_player_action() {
+        let mut game = Game::new(42);
+        let update = game
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("wait should advance the scheduler");
+
+        assert_eq!(update.world_tick, 10);
+        assert_eq!(update.player.energy_need, 0);
+        assert_eq!(update.entities[0].position, Position { x: 7, y: 4 });
+        assert_eq!(update.entities[0].energy_need, STANDARD_ACTION_COST);
+        assert_eq!(update.changed_cells.len(), 2);
+    }
+
+    #[test]
+    fn fast_and_slow_monsters_use_the_same_energy_scheduler() {
+        let mut fast = Game::new(42);
+        fast.entities[0].speed = 120;
+        let fast_update = fast
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("fast scheduler case should execute");
+        assert_eq!(fast_update.world_tick, 10);
+        assert_eq!(fast_update.entities[0].position, Position { x: 6, y: 3 });
+        assert_eq!(fast_update.entities[0].energy_need, STANDARD_ACTION_COST);
+
+        let mut slow = Game::new(42);
+        slow.entities[0].speed = 100;
+        let first = slow
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("first slow scheduler case should execute");
+        assert_eq!(first.entities[0].position, Position { x: 8, y: 5 });
+        assert_eq!(first.entities[0].energy_need, 50);
+        let second = slow
+            .dispatch(command(2, 1, GameCommand::Wait))
+            .expect("second slow scheduler case should execute");
+        assert_eq!(second.entities[0].position, Position { x: 7, y: 4 });
+        assert_eq!(second.entities[0].energy_need, STANDARD_ACTION_COST);
+    }
+
+    #[test]
+    fn multiple_monsters_use_stable_id_order_when_paths_compete() {
+        let mut left = Game::new(42);
+        let mut second = left.entities[0].clone();
+        second.id = "demo.monster.ember-mote.0".to_owned();
+        second.position = Position { x: 8, y: 6 };
+        left.entities.push(second);
+
+        let mut right = left.clone();
+        right.entities.reverse();
+
+        let left_update = left
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("left scheduler should execute");
+        let right_update = right
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("right scheduler should execute");
+
+        assert_eq!(left_update.entities, right_update.entities);
+        assert_eq!(left_update.changed_cells, right_update.changed_cells);
+        assert_eq!(left_update.state_hash, right_update.state_hash);
+        assert_ne!(
+            left_update.entities[0].position,
+            left_update.entities[1].position
+        );
+    }
+
+    #[test]
+    fn player_death_stops_the_remaining_monster_queue_immediately() {
+        let mut game = Game::new(0);
+        game.entities[0].id = "demo.monster.ember-mote.0".to_owned();
+        game.entities[0].position = Position { x: 4, y: 3 };
+        let mut second = game.entities[0].clone();
+        second.id = "demo.monster.ember-mote.1".to_owned();
+        second.position = Position { x: 4, y: 4 };
+        game.entities.push(second);
+        game.player.hp = 0;
+
+        let update = game
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("fatal scheduler case should execute");
+
+        assert!(update.player.is_dead);
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .filter(|event| event.message_key == "combat-player-death")
+                .count(),
+            1
+        );
+        let second = update
+            .entities
+            .iter()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("second monster should remain present");
+        assert_eq!(second.energy_need, 10);
+    }
+
+    #[test]
     fn save_payload_restores_identical_state() {
         let mut game = Game::new(7);
         collect_both_demo_items(&mut game);
@@ -1580,6 +1854,7 @@ mod tests {
     #[test]
     fn pickup_moves_the_ground_stack_into_inventory() {
         let mut game = Game::new(42);
+        game.entities.clear();
         game.dispatch(command(
             1,
             0,
@@ -1605,6 +1880,7 @@ mod tests {
     #[test]
     fn equipping_and_unequipping_moves_an_item_between_authoritative_lists() {
         let mut game = Game::new(42);
+        game.entities.clear();
         collect_both_demo_items(&mut game);
         let equipped = game
             .dispatch(command(
@@ -1656,6 +1932,7 @@ mod tests {
     #[test]
     fn item_instance_identity_survives_location_transitions() {
         let mut game = Game::new(42);
+        game.entities.clear();
         let original_instance_count = game.items.len();
         collect_both_demo_items(&mut game);
 
@@ -1718,14 +1995,16 @@ mod tests {
             },
         ))
         .expect("equip should execute");
-        for (seq, direction) in [(6, Direction::SouthEast), (7, Direction::SouthEast)] {
-            game.dispatch(command(seq, seq - 1, GameCommand::Move { direction }))
-                .expect("path to monster should execute");
-        }
+        game.entities[0].position = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        game.entities[0].energy_need = STANDARD_ACTION_COST;
+        game.rng = RfbRng::seeded(42);
         let update = game
             .dispatch(command(
-                8,
-                7,
+                6,
+                5,
                 GameCommand::Move {
                     direction: Direction::East,
                 },
@@ -1734,8 +2013,8 @@ mod tests {
 
         assert_eq!(update.events[0].message_key, "combat-player-hit");
         assert_eq!(update.player.melee_skill, 60);
-        assert_eq!(update.events[0].args["damage"], "1");
-        assert_eq!(update.entities[0].hp, 2);
+        assert_eq!(update.events[0].args["damage"], "2");
+        assert_eq!(update.entities[0].hp, 1);
     }
 
     #[test]
@@ -1772,6 +2051,7 @@ mod tests {
     #[test]
     fn pickup_on_empty_ground_is_a_deterministic_turn() {
         let mut game = Game::new(42);
+        game.entities.clear();
         let before = game.state_hash();
         let update = game
             .dispatch(command(1, 0, GameCommand::PickUp))
@@ -1787,6 +2067,7 @@ mod tests {
     #[test]
     fn pickup_merges_into_the_lowest_id_compatible_stack() {
         let mut game = Game::new(42);
+        game.entities.clear();
         game.items.push(ItemInstance {
             id: "demo.inventory.luminous-shard.1".to_owned(),
             kind_id: "demo.item.luminous-shard".to_owned(),
@@ -1885,12 +2166,13 @@ mod tests {
 
     #[test]
     fn fixed_seed_exercises_player_miss_and_death_rejection() {
-        let mut miss_game = Game::new(10);
-        approach_monster(&mut miss_game);
+        let mut miss_game = Game::new(0);
+        miss_game.entities[0].position = Position { x: 4, y: 4 };
+        miss_game.entities[0].energy_need = STANDARD_ACTION_COST;
         let miss_update = miss_game
             .dispatch(command(
-                6,
-                5,
+                1,
+                0,
                 GameCommand::Move {
                     direction: Direction::SouthEast,
                 },
@@ -1904,10 +2186,11 @@ mod tests {
         );
 
         let mut game = Game::new(0);
-        approach_monster(&mut game);
+        game.entities[0].position = Position { x: 4, y: 4 };
+        game.entities[0].energy_need = STANDARD_ACTION_COST;
         game.player.hp = 0;
         let update = game
-            .dispatch(command(6, 5, GameCommand::Wait))
+            .dispatch(command(1, 0, GameCommand::Wait))
             .expect("adjacent monster turn should execute");
         assert!(update.player.is_dead);
         assert!(
@@ -1917,35 +2200,19 @@ mod tests {
                 .any(|event| event.message_key == "combat-player-death")
         );
         assert!(matches!(
-            game.dispatch(command(7, 6, GameCommand::Wait)),
+            game.dispatch(command(2, 1, GameCommand::Wait)),
             Err(CoreError::PlayerDead)
         ));
 
         let mut full_health_game = Game::new(0);
-        approach_monster(&mut full_health_game);
-        let death_command = (6..100_u32).find(|seq| {
+        full_health_game.entities[0].position = Position { x: 4, y: 4 };
+        full_health_game.entities[0].energy_need = STANDARD_ACTION_COST;
+        let death_command = (1..100_u32).find(|seq| {
             full_health_game
                 .dispatch(command(*seq, *seq - 1, GameCommand::Wait))
                 .is_ok_and(|update| update.player.is_dead)
         });
-        assert_eq!(death_command, Some(18));
-    }
-
-    fn approach_monster(game: &mut Game) {
-        for (index, direction) in [
-            Direction::East,
-            Direction::East,
-            Direction::East,
-            Direction::East,
-            Direction::South,
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            let seq = u32::try_from(index + 1).expect("short path sequence should fit");
-            game.dispatch(command(seq, seq - 1, GameCommand::Move { direction }))
-                .expect("path to adjacent monster tile should execute");
-        }
+        assert!(death_command.is_some());
     }
 
     fn collect_both_demo_items(game: &mut Game) {

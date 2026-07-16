@@ -21,6 +21,10 @@ pub const ACTOR_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Ro
 pub const ITEM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
 
+const fn default_actor_speed() -> u16 {
+    110
+}
+
 const MAGIC: &[u8; 8] = b"RFBCONT\0";
 const CONTAINER_VERSION: u16 = 1;
 const FIXED_HEADER_LENGTH: usize = 8 + 2 + 2 + 8 + 32;
@@ -91,6 +95,8 @@ pub struct ActorDefinition {
     pub glyph: String,
     pub level: u32,
     pub max_hp: i32,
+    #[serde(default = "default_actor_speed")]
+    pub speed: u16,
     pub attack: i32,
     pub defense: i32,
     pub damage_dice: u16,
@@ -528,6 +534,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if actor.level > 10_000
             || actor.max_hp <= 0
             || actor.max_hp > 1_000_000
+            || actor.speed > 199
             || actor.attack <= 0
             || actor.attack > 1_000_000
             || actor.defense < 0
@@ -1226,7 +1233,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.4.0");
+        assert_eq!(catalog.pack_version(), "1.5.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1246,8 +1253,9 @@ mod tests {
                 actor.defense,
                 actor.damage_dice,
                 actor.damage_sides,
+                actor.speed,
             )),
-            Some((2, 1, 1, 2))
+            Some((2, 1, 1, 2, 110))
         );
         assert_eq!(
             catalog

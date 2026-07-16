@@ -153,6 +153,11 @@
           "format": "int32",
           "default": 0
         },
+        "energyNeed": {
+          "type": "integer",
+          "format": "int32",
+          "default": 100
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -181,6 +186,13 @@
         },
         "position": {
           "$ref": "#/$defs/Position"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 110,
+          "maximum": 65535,
+          "minimum": 0
         }
       },
       "required": [
@@ -477,6 +489,12 @@
         },
         "worldId": {
           "type": "string"
+        },
+        "worldTick": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
         }
       },
       "required": [
@@ -575,6 +593,12 @@
         "turn": {
           "type": "integer",
           "format": "uint32",
+          "minimum": 0
+        },
+        "worldTick": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
           "minimum": 0
         }
       },
@@ -687,6 +711,11 @@
           "format": "int32",
           "default": 0
         },
+        "energyNeed": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "equipmentModifiers": {
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
@@ -727,6 +756,13 @@
         },
         "position": {
           "$ref": "#/$defs/Position"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 110,
+          "maximum": 65535,
+          "minimum": 0
         }
       },
       "required": [
