@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { computeCameraOffset } from "./camera.ts";
+import { computeCameraOffset, parseZoomLevel } from "./camera.ts";
 
 const base = {
   mode: "player-centered",
@@ -47,4 +47,24 @@ test("full-map mode never transforms the world", () => {
     computeCameraOffset({ ...base, mode: "full-map", focus: { x: 19, y: 19 } }),
     { x: 0, y: 0 },
   );
+});
+
+test("zoom scales the world and keeps the focus math deterministic", () => {
+  assert.deepEqual(
+    computeCameraOffset({ ...base, focus: { x: 8, y: 9 }, zoom: 1.5 }),
+    { x: -147, y: -189 },
+  );
+});
+
+test("zoom still clamps the scaled world at its far edge", () => {
+  assert.deepEqual(
+    computeCameraOffset({ ...base, focus: { x: 19, y: 19 }, zoom: 1.5 }),
+    { x: -420, y: -420 },
+  );
+});
+
+test("zoom persistence accepts only supported presets", () => {
+  assert.equal(parseZoomLevel("1.25"), 1.25);
+  assert.equal(parseZoomLevel("3"), 1);
+  assert.equal(parseZoomLevel(null), 1);
 });

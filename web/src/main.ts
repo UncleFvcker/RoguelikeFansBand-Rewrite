@@ -10,6 +10,7 @@ import {
 } from "./localization";
 import { LOCALIZATION_SOURCES } from "./localization-resources";
 import { MapRenderer, type CameraMode } from "./map-renderer";
+import { parseZoomLevel, type ZoomLevel } from "./camera";
 import type {
   Direction,
   GameCommand,
@@ -41,6 +42,7 @@ const clearMessages = element<HTMLButtonElement>("clear-messages");
 const inputPresetSelect = element<HTMLSelectElement>("input-preset");
 const tilesetPresetSelect = element<HTMLSelectElement>("tileset-preset");
 const cameraModeSelect = element<HTMLSelectElement>("camera-mode");
+const zoomSelect = element<HTMLSelectElement>("zoom-level");
 const controlsHelp = element<HTMLElement>("controls-help");
 const languageSelect = element<HTMLSelectElement>("language-select");
 
@@ -59,6 +61,7 @@ type MessageRecord =
 const INPUT_PRESET_STORAGE_KEY = "rfb.input-preset";
 const TILESET_PRESET_STORAGE_KEY = "rfb.tileset-preset";
 const CAMERA_MODE_STORAGE_KEY = "rfb.camera-mode";
+const ZOOM_STORAGE_KEY = "rfb.zoom";
 const LOCALE_STORAGE_KEY = "rfb.locale";
 const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
   ascii: "/tilesets/ascii-default/tileset.json",
@@ -67,6 +70,7 @@ const TILESET_MANIFESTS: Record<TilesetPreset, string> = {
 let inputPreset = readInputPreset();
 let tilesetPreset = readTilesetPreset();
 let cameraMode = readCameraMode();
+let zoom = readZoomLevel();
 const localization = new Localization(readLocale(), LOCALIZATION_SOURCES);
 let connectionState: ConnectionState = "starting";
 let currentInventory: InventoryItemDto[] = [];
@@ -74,6 +78,7 @@ const messageRecords: MessageRecord[] = [];
 inputPresetSelect.value = inputPreset;
 tilesetPresetSelect.value = tilesetPreset;
 cameraModeSelect.value = cameraMode;
+zoomSelect.value = String(zoom);
 languageSelect.value = localization.locale;
 localization.localizeDocument();
 renderConnectionStatus();
@@ -96,6 +101,7 @@ async function start(): Promise<void> {
       contentGlyphs,
       localization.format("map-aria-label"),
       cameraMode,
+      zoom,
     );
     renderer.applySnapshot(snapshot);
     renderStatus(snapshot);
@@ -134,6 +140,12 @@ cameraModeSelect.addEventListener("change", () => {
   cameraMode = isCameraMode(cameraModeSelect.value) ? cameraModeSelect.value : "full-map";
   localStorage.setItem(CAMERA_MODE_STORAGE_KEY, cameraMode);
   renderer.setCameraMode(cameraMode);
+});
+zoomSelect.addEventListener("change", () => {
+  zoom = parseZoomLevel(zoomSelect.value);
+  zoomSelect.value = String(zoom);
+  localStorage.setItem(ZOOM_STORAGE_KEY, String(zoom));
+  renderer.setZoom(zoom);
 });
 languageSelect.addEventListener("change", () => {
   const locale = isSupportedLocale(languageSelect.value) ? languageSelect.value : "zh-CN";
@@ -443,6 +455,10 @@ function readLocale(): "en-US" | "zh-CN" {
 function readCameraMode(): CameraMode {
   const stored = localStorage.getItem(CAMERA_MODE_STORAGE_KEY);
   return isCameraMode(stored) ? stored : "full-map";
+}
+
+function readZoomLevel(): ZoomLevel {
+  return parseZoomLevel(localStorage.getItem(ZOOM_STORAGE_KEY));
 }
 
 function isCameraMode(value: string | null): value is CameraMode {

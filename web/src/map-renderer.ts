@@ -5,6 +5,7 @@ import {
   MAP_CELL_SIZE,
   PLAYER_CENTERED_VIEW_CELLS,
   type CameraMode,
+  type ZoomLevel,
 } from "./camera";
 import { PixiRendererBackend } from "./pixi-renderer-backend";
 import type { GameSnapshot, GameUpdate } from "./protocol";
@@ -16,12 +17,14 @@ import type {
 
 export { type TilesetChangeResult } from "./renderer-backend";
 export { type CameraMode } from "./camera";
+export { type ZoomLevel } from "./camera";
 
 export class MapRenderer {
   readonly #backend: RendererBackend;
   #world: RenderWorld | undefined;
   #host: HTMLElement | undefined;
   #cameraMode: CameraMode = "full-map";
+  #zoom: ZoomLevel = 1;
   #resizeObserver: ResizeObserver | undefined;
   #width = 0;
   #height = 0;
@@ -39,12 +42,14 @@ export class MapRenderer {
     contentGlyphs: Readonly<Record<string, string>>,
     canvasLabel: string,
     cameraMode: CameraMode = "full-map",
+    zoom: ZoomLevel = 1,
   ): Promise<TilesetChangeResult> {
     this.#host = host;
     this.#totalAppliedCells = 0;
     this.#width = width;
     this.#height = height;
     this.#cameraMode = cameraMode;
+    this.#zoom = zoom;
     this.#world = new RenderWorld(width, height);
     const result = await this.#backend.initialize({
       host,
@@ -53,6 +58,7 @@ export class MapRenderer {
       tilesetManifestUrl,
       contentGlyphs,
       canvasLabel,
+      zoom,
     });
     host.dataset.rendererBackend = this.#backend.id;
     host.dataset.rendererLayerCount = "5";
@@ -75,6 +81,12 @@ export class MapRenderer {
 
   setCameraMode(mode: CameraMode): void {
     this.#cameraMode = mode;
+    this.#configureViewport();
+    this.#updateCamera();
+  }
+
+  setZoom(zoom: ZoomLevel): void {
+    this.#zoom = zoom;
     this.#configureViewport();
     this.#updateCamera();
   }
@@ -113,8 +125,8 @@ export class MapRenderer {
   #configureViewport(): void {
     const host = this.#host;
     if (!host) return;
-    const worldWidth = this.#width * MAP_CELL_SIZE;
-    const worldHeight = this.#height * MAP_CELL_SIZE;
+    const worldWidth = this.#width * MAP_CELL_SIZE * this.#zoom;
+    const worldHeight = this.#height * MAP_CELL_SIZE * this.#zoom;
     const centeredWidth = Math.min(this.#width, PLAYER_CENTERED_VIEW_CELLS) * MAP_CELL_SIZE;
     const centeredHeight = Math.min(this.#height, PLAYER_CENTERED_VIEW_CELLS) * MAP_CELL_SIZE;
     host.dataset.cameraMode = this.#cameraMode;
@@ -137,10 +149,12 @@ export class MapRenderer {
       worldHeight: this.#height * MAP_CELL_SIZE,
       viewportWidth,
       viewportHeight,
+      zoom: this.#zoom,
     });
-    this.#backend.setCameraOffset(offset.x, offset.y);
+    this.#backend.setCameraTransform({ x: offset.x, y: offset.y, zoom: this.#zoom });
     host.dataset.cameraX = String(offset.x);
     host.dataset.cameraY = String(offset.y);
+    host.dataset.zoom = String(this.#zoom);
     host.dataset.viewportWidth = String(viewportWidth);
     host.dataset.viewportHeight = String(viewportHeight);
   }

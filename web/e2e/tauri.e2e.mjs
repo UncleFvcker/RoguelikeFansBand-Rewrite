@@ -87,6 +87,9 @@ async function runScenario(driver) {
     const camera = document.querySelector("#camera-mode");
     camera.value = "full-map";
     camera.dispatchEvent(new Event("change", { bubbles: true }));
+    const zoom = document.querySelector("#zoom-level");
+    zoom.value = "1";
+    zoom.dispatchEvent(new Event("change", { bubbles: true }));
     window.__rfbE2eCanvas = document.querySelector("#map-host canvas");
     return true;
   `);
@@ -111,6 +114,7 @@ async function runScenario(driver) {
   assert.equal(state.cameraY, "0");
   assert.equal(state.viewportWidth, "560");
   assert.equal(state.viewportHeight, "560");
+  assert.equal(state.zoom, "1");
   assert.equal(state.canvasUnchanged, true);
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
@@ -216,6 +220,36 @@ async function runScenario(driver) {
   assert.equal(state.cameraX, "-28");
   assert.equal(state.cameraY, "0");
   assert.equal(state.canvasUnchanged, true);
+
+  const hashBeforeZoom = state.stateHash;
+  const cellsBeforeZoom = state.totalAppliedCells;
+  await driver.execute(`
+    const select = document.querySelector("#zoom-level");
+    select.value = "1.5";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.querySelector("#map-host")?.dataset.zoom === "1.5" && document.querySelector("#map-host")?.dataset.cameraX === "-147"`,
+    "screen zoom",
+  );
+  state = await readState(driver);
+  assert.equal(state.stateHash, hashBeforeZoom);
+  assert.equal(state.totalAppliedCells, cellsBeforeZoom);
+  assert.equal(state.zoom, "1.5");
+  assert.equal(state.viewportWidth, "420");
+  assert.equal(state.viewportHeight, "420");
+  assert.equal(state.canvasUnchanged, true);
+  await driver.execute(`
+    const select = document.querySelector("#zoom-level");
+    select.value = "1";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.querySelector("#map-host")?.dataset.zoom === "1" && document.querySelector("#map-host")?.dataset.cameraX === "-28"`,
+    "zoom restore",
+  );
 
   const hashAfterCameraMovement = state.stateHash;
   const cellsAfterCameraMovement = state.totalAppliedCells;
@@ -335,6 +369,7 @@ async function readState(driver) {
       cameraY: host?.dataset.cameraY,
       viewportWidth: host?.dataset.viewportWidth,
       viewportHeight: host?.dataset.viewportHeight,
+      zoom: host?.dataset.zoom,
       contentId: host?.dataset.contentId,
       contentHash: host?.dataset.contentHash,
       worldId: host?.dataset.worldId,

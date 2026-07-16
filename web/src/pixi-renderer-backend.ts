@@ -2,7 +2,7 @@
 
 import { Application, Container, Graphics, Sprite } from "pixi.js";
 
-import { MAP_CELL_SIZE } from "./camera";
+import { MAP_CELL_SIZE, type CameraTransform } from "./camera";
 import { ensureContrast } from "./render-color";
 import type {
   BackendInitialization,
@@ -42,16 +42,18 @@ export class PixiRendererBackend implements RendererBackend {
   #host: HTMLElement | undefined;
   #width = 0;
   #height = 0;
+  #zoom: CameraTransform["zoom"] = 1;
 
   async initialize(options: BackendInitialization): Promise<TilesetChangeResult> {
     this.#host = options.host;
     this.#width = options.width;
     this.#height = options.height;
+    this.#zoom = options.zoom ?? 1;
     this.#contentGlyphs = options.contentGlyphs;
     this.#tileset = await TilesetRuntime.load(options.tilesetManifestUrl, options.contentGlyphs);
     await this.#application.init({
-      width: options.width * MAP_CELL_SIZE,
-      height: options.height * MAP_CELL_SIZE,
+      width: options.width * MAP_CELL_SIZE * this.#zoom,
+      height: options.height * MAP_CELL_SIZE * this.#zoom,
       background: "#090d12",
       antialias: false,
       resolution: window.devicePixelRatio,
@@ -59,6 +61,7 @@ export class PixiRendererBackend implements RendererBackend {
     });
     this.#application.canvas.setAttribute("aria-label", options.canvasLabel);
     options.host.replaceChildren(this.#application.canvas);
+    this.#camera.scale.set(this.#zoom);
     this.#application.stage.addChild(this.#camera);
     this.#camera.addChild(
       this.#terrainLayer,
@@ -71,8 +74,16 @@ export class PixiRendererBackend implements RendererBackend {
     return this.#tilesetResult();
   }
 
-  setCameraOffset(x: number, y: number): void {
-    this.#camera.position.set(x, y);
+  setCameraTransform(transform: CameraTransform): void {
+    if (this.#zoom !== transform.zoom) {
+      this.#zoom = transform.zoom;
+      this.#application.renderer.resize(
+        this.#width * MAP_CELL_SIZE * this.#zoom,
+        this.#height * MAP_CELL_SIZE * this.#zoom,
+      );
+    }
+    this.#camera.scale.set(this.#zoom);
+    this.#camera.position.set(transform.x, transform.y);
   }
 
   applyCells(cells: readonly RenderCell[]): number {

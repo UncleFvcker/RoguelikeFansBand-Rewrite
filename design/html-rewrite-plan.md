@@ -514,6 +514,7 @@ interface SaveGame {
 - 玩家阅读光使用独立 buffer 与有限 dirty footprint，glyph 绘制加入对比度保护；
 - 当前可见性明确为 `all-visible`，记忆/隐藏 mask 仅建立接口，尚未替代未来 Rust 权威 FOV。
 - 整图/玩家居中两种镜头模式、15×15 玩家视口、地图边缘钳制和 ResizeObserver 相机重算已建立；镜头只变换 PixiJS 世界容器，不影响 dirty cells、存档、回放或 state hash。
+- 75%–200% 五档画面缩放已接入同一相机容器；整图与玩家居中模式共用缩放，Canvas resize 不重建节点或重新提交 RenderCell。
 
 下一步建议：
 

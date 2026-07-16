@@ -51,7 +51,9 @@ GameSnapshot / GameUpdate
 - `full-map`：保持当前整图 Canvas 和窄窗口滚动行为；
 - `player-centered`：使用约 15×15 格视口，玩家远离边缘时保持在视口中心，接近地图边缘时钳制世界偏移，避免显示地图外空白。
 
-五个视觉层共同挂在 PixiJS camera container 下。镜头移动只修改 container position，不重建 Canvas、sprite 或 tileset，也不产生新的 dirty cells。窗口或布局尺寸变化由 `ResizeObserver` 重新计算视口偏移；镜头模式和像素偏移只属于前端显示状态，不进入 Rust 核心、存档、回放或 state hash。
+画面缩放提供 75%、100%、125%、150% 和 200% 五档，并与镜头模式一样写入本地前端设置。整图模式按比例改变整张地图尺寸；玩家居中模式保持 420×420 视口，缩放改变视口内可见的地图格数量。
+
+五个视觉层共同挂在 PixiJS camera container 下。镜头移动只修改 container position，缩放只修改 container scale 并 resize 同一个 Canvas；两者都不重建 Canvas、sprite 或 tileset，也不产生新的 dirty cells。窗口或布局尺寸变化由 `ResizeObserver` 重新计算视口偏移；镜头模式、缩放和像素偏移只属于前端显示状态，不进入 Rust 核心、存档、回放或 state hash。
 
 ## 6. 测试
 
@@ -62,9 +64,10 @@ Node 测试覆盖：
 - 地形、物品和角色语义层同时存在；
 - 玩家移动只产生有限且无重复的光照 dirty cells；
 - 记忆 mask 使用独立 delta；
-- 玩家居中、四边钳制、小地图居中和整图零偏移。
+- 玩家居中、四边钳制、小地图居中和整图零偏移；
+- 缩放后的中心跟随与远端边缘钳制。
 
-Windows E2E 验证 backend ID、五层顺序、90 格移动更新、0 格等待更新、1 格拾取更新、400 格 tileset 重绘，以及语言/tileset/镜头切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、移动后的相机偏移、边缘钳制，以及镜头切换不改变 state hash 或累计 applied cells。
+Windows E2E 验证 backend ID、五层顺序、90 格移动更新、0 格等待更新、1 格拾取更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制，以及视觉设置不改变 state hash 或累计 applied cells。
 
 ## 7. 后续
 
