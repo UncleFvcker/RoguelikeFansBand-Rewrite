@@ -28,6 +28,9 @@ export interface CameraOffset {
 
 export interface CameraTransform extends CameraOffset {
   zoom: ZoomLevel;
+  viewportWidth: number;
+  viewportHeight: number;
+  cullingEnabled: boolean;
 }
 
 export function computeCameraOffset(options: CameraOffsetOptions): CameraOffset {

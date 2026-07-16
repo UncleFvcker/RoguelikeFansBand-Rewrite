@@ -23,6 +23,7 @@
 - [Fluent 本地化运行时 v1](fluent-localization-v1.md)
 - [桌面分层 RendererBackend v1](renderer-backend-v1.md)
 - [Rust 权威可见性与光照 v1](visibility-lighting-v1.md)
+- [静态地形 Chunk 渲染 v1](terrain-chunk-rendering-v1.md)
 
 本文档是 Rust/Tauri 重构的长期入口。以后每次实现阶段性功能时，应同步更新“当前进度”“接口版本”和“未决问题”，不要让架构约定只存在于聊天记录中。
 
@@ -519,12 +520,13 @@ interface SaveGame {
 - 协议 1.3 已提供 Rust 权威 FOV、探索记忆和内容标签光源；前端临时 `all-visible`/阅读光已移除，记忆/隐藏格不再暴露当前物品和角色。
 - Tauri 应用私有存档目录、命名存档槽、原子替换、三份备份、损坏恢复、结构化错误和本地诊断日志已建立；手动 `.rfbsave` 导入/导出继续保留。
 - 桌面 E2E 已覆盖原生槽的新建、列表、载入后命令序列同步、覆盖和删除。
+- PixiJS backend 已升级为 `pixi-layered-chunks-v2`：8×8 静态地形 RenderTexture、按 chunk 的五层分组、玩家居中视口外剔除和缓存重建诊断已建立。
 
 下一步建议：
 
-1. 将静态地形按 chunk 缓存为 RenderTexture，并增加视口外剔除；
-2. 扩展背包装备、丢弃和多物品选择交互；
-3. 为桌面诊断增加玩家主动触发的日志导出入口，继续避免自动上传；
+1. 扩展背包装备、丢弃和多物品选择交互；
+2. 为桌面诊断增加玩家主动触发的日志导出入口，继续避免自动上传；
+3. 建立较大原创测试地图和渲染 profile，比较 chunk 大小并决定动态 sprite pooling；
 4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
 5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
 

@@ -35,8 +35,10 @@
 10. 创建桌面原生命名存档槽，验证地点、回合和状态摘要；移动后载入并恢复 state hash；
 11. 原生载入后继续派发命令，验证 TypeScript command sequence/revision 与 Rust 会话同步；
 12. 覆盖并删除原生槽，同时保留手动 `.rfbsave` 导入/导出场景。
+13. 验证 8×8 terrain chunk 初始重建、普通 dirty update 零重建、tileset 全量失效和累计重建计数；
+14. 验证整图、玩家居中、跟随移动和 150% 缩放下的 9/4/6/4 个可见 chunk。
 
-`MapRenderer` 在 `#map-host` 暴露只读诊断属性：最近渲染类型、最近处理格数、累计处理格数、当前 tileset ID、镜头模式、缩放、相机偏移、视口尺寸，以及 visible/remembered/hidden 格数量。这些信息不影响游戏规则、存档或状态哈希。
+`MapRenderer` 在 `#map-host` 暴露只读诊断属性：最近渲染类型、最近处理格数、累计处理格数、当前 tileset ID、镜头模式、缩放、相机偏移、视口尺寸、visible/remembered/hidden 格数量，以及 terrain chunk 总数、可见数、剔除数和重建计数。这些信息不影响游戏规则、存档或状态哈希。
 
 ## 4. 本地运行与诊断
 
@@ -50,6 +52,8 @@ npm run e2e
 
 - `test-results/tauri-e2e.png`：当前窗口截图；
 - `test-results/tauri-e2e.log`：应用 stdout、stderr 和退出状态。
+
+设置 `RFB_E2E_CAPTURE_SCREENSHOT=1` 时，成功场景还会写入 `test-results/tauri-e2e-success.png`，用于人工检查 chunk 接缝、tileset、光照和遮罩。
 
 该目录已被 Git 忽略，CI 仅在失败时上传。
 

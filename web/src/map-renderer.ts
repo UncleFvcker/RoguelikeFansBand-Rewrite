@@ -63,6 +63,7 @@ export class MapRenderer {
     host.dataset.rendererBackend = this.#backend.id;
     host.dataset.rendererLayerCount = "5";
     host.dataset.rendererLayers = "terrain,object,actor,visibility,lighting";
+    host.dataset.terrainMode = "chunk-render-texture-v1";
     host.dataset.visibilityMode = "rust-fov-memory-v1";
     host.dataset.lightingMode = "rust-content-lights-v1";
     this.#configureViewport();
@@ -95,6 +96,7 @@ export class MapRenderer {
     const result = await this.#backend.setTileset(tilesetManifestUrl);
     const appliedCells = this.#backend.applyCells(this.#requireWorld().allCells());
     this.#recordRender("tileset", appliedCells, result.id);
+    this.#recordBackendDiagnostics();
     return result;
   }
 
@@ -153,12 +155,20 @@ export class MapRenderer {
       viewportHeight,
       zoom: this.#zoom,
     });
-    this.#backend.setCameraTransform({ x: offset.x, y: offset.y, zoom: this.#zoom });
+    this.#backend.setCameraTransform({
+      x: offset.x,
+      y: offset.y,
+      zoom: this.#zoom,
+      viewportWidth,
+      viewportHeight,
+      cullingEnabled: this.#cameraMode === "player-centered",
+    });
     host.dataset.cameraX = String(offset.x);
     host.dataset.cameraY = String(offset.y);
     host.dataset.zoom = String(this.#zoom);
     host.dataset.viewportWidth = String(viewportWidth);
     host.dataset.viewportHeight = String(viewportHeight);
+    this.#recordBackendDiagnostics();
   }
 
   #requireWorld(): RenderWorld {
@@ -188,5 +198,23 @@ export class MapRenderer {
     host.dataset.visibleCellCount = String(counts.visible);
     host.dataset.rememberedCellCount = String(counts.remembered);
     host.dataset.hiddenCellCount = String(counts.hidden);
+  }
+
+  #recordBackendDiagnostics(): void {
+    const host = this.#host;
+    if (!host) return;
+    const diagnostics = this.#backend.getDiagnostics();
+    host.dataset.terrainChunkSize = String(diagnostics.terrainChunkSize);
+    host.dataset.terrainChunkCount = String(diagnostics.terrainChunkCount);
+    host.dataset.visibleChunkCount = String(diagnostics.visibleChunkCount);
+    host.dataset.culledChunkCount = String(
+      diagnostics.terrainChunkCount - diagnostics.visibleChunkCount,
+    );
+    host.dataset.lastRebuiltTerrainChunks = String(
+      diagnostics.lastRebuiltTerrainChunks,
+    );
+    host.dataset.totalRebuiltTerrainChunks = String(
+      diagnostics.totalRebuiltTerrainChunks,
+    );
   }
 }

@@ -33,6 +33,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Fluent 本地化运行时 v1](design/fluent-localization-v1.md)
 - [桌面分层 RendererBackend v1](design/renderer-backend-v1.md)
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
+- [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
 当前原创规则契约位于 [`tests/fixtures/contract-v3/scenarios`](tests/fixtures/contract-v3/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 和 `contract-v2` 作为历史基准保留。
 
@@ -59,7 +60,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、地面物品拾取、HTML 背包、三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
+Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、基础战斗、地面物品拾取、HTML 背包、三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层使用 8×8 RenderTexture chunk，玩家居中镜头会剔除视口外的五层 chunk；动态规则 dirty cells 与静态缓存失效相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
 ### 本地验证
 
@@ -139,7 +140,7 @@ cd web
 npm run e2e
 ```
 
-测试覆盖 Rust 权威 FOV/光照增量、地图局部更新、Canvas/HTML 消息分层、镜头与缩放、地面物品拾取、HTML 背包、原生存档槽的新建/载入/覆盖/删除、手动存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。
+测试覆盖 Rust 权威 FOV/光照增量、地图局部更新、terrain chunk 缓存/失效/视口剔除、Canvas/HTML 消息分层、镜头与缩放、地面物品拾取、HTML 背包、原生存档槽的新建/载入/覆盖/删除、手动存档导出与恢复、回放导出和 tileset 热切换；失败时会在仓库根目录的 `test-results/` 生成截图和日志。
 
 Tauri Android ARM64 Debug APK 构建链也已经建立，Windows 本地可运行：
 

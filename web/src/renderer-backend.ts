@@ -37,8 +37,17 @@ export interface TilesetChangeResult {
   warnings: readonly TilesetWarning[];
 }
 
+export interface RendererBackendDiagnostics {
+  terrainChunkSize: number;
+  terrainChunkCount: number;
+  visibleChunkCount: number;
+  lastRebuiltTerrainChunks: number;
+  totalRebuiltTerrainChunks: number;
+}
+
 export interface RendererBackend {
   readonly id: string;
+  getDiagnostics(): RendererBackendDiagnostics;
   initialize(options: BackendInitialization): Promise<TilesetChangeResult>;
   applyCells(cells: readonly RenderCell[]): number;
   setCameraTransform(transform: CameraTransform): void;
