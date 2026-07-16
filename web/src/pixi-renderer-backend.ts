@@ -32,6 +32,7 @@ import { TilesetRuntime, type RuntimeTileVisual } from "./tileset-runtime";
 const DEFAULT_BACKGROUND = 0x090d12;
 const GRID_COLOR = 0x18212d;
 const DYNAMIC_DISPLAY_OBJECTS_PER_CELL = 7;
+const MAX_SPARE_DYNAMIC_VIEWS_PER_SHAPE = 1;
 
 export interface PixiRendererBackendOptions {
   terrainChunkSize?: number;
@@ -47,18 +48,25 @@ interface CellView {
   darkness: Graphics;
 }
 
-interface ChunkView {
+interface TerrainChunkView {
   descriptor: RenderChunk;
   terrainSprite: Sprite;
   terrainTexture?: Texture;
+}
+
+interface DynamicChunkView {
+  descriptorIndex?: number;
+  cellWidth: number;
+  cellHeight: number;
   objectLayer: Container;
   actorLayer: Container;
   visibilityLayer: Container;
   lightingLayer: Container;
+  cells: CellView[];
 }
 
 export class PixiRendererBackend implements RendererBackend {
-  readonly id = "pixi-layered-chunks-v2";
+  readonly id = "pixi-layered-chunks-v3";
   readonly #application = new Application();
   readonly #camera = new Container();
   readonly #terrainLayer = new Container();
@@ -66,9 +74,13 @@ export class PixiRendererBackend implements RendererBackend {
   readonly #actorLayer = new Container();
   readonly #visibilityLayer = new Container();
   readonly #lightingLayer = new Container();
+  readonly #activeDynamicViews = new Map<number, DynamicChunkView>();
+  readonly #dynamicViewPools = new Map<string, DynamicChunkView[]>();
+  readonly #allocatedDynamicViews = new Set<DynamicChunkView>();
+  readonly #terrainChunkSize: number;
   #layout: RenderChunkLayout | undefined;
-  #chunks: ChunkView[] = [];
-  #cells: CellView[] = [];
+  #chunks: TerrainChunkView[] = [];
+  #renderCells: Array<RenderCell | undefined> = [];
   #terrainIds: Array<string | undefined> = [];
   #tileset: TilesetRuntime | undefined;
   #contentGlyphs: Readonly<Record<string, string>> = {};
@@ -80,7 +92,6 @@ export class PixiRendererBackend implements RendererBackend {
   #visibleChunkCount = 0;
   #lastRebuiltTerrainChunks = 0;
   #totalRebuiltTerrainChunks = 0;
-  readonly #terrainChunkSize: number;
 
   constructor(options: PixiRendererBackendOptions = {}) {
     const terrainChunkSize = options.terrainChunkSize ?? TERRAIN_CHUNK_SIZE;
@@ -121,20 +132,26 @@ export class PixiRendererBackend implements RendererBackend {
       this.#visibilityLayer,
       this.#lightingLayer,
     );
-    this.#createChunksAndCells();
+    this.#createTerrainChunks();
     return this.#tilesetResult();
   }
 
   getDiagnostics(): RendererBackendDiagnostics {
+    const cellViewCount = [...this.#allocatedDynamicViews].reduce(
+      (total, view) => total + view.cells.length,
+      0,
+    );
     return {
       terrainChunkSize: this.#terrainChunkSize,
       terrainChunkCount: this.#chunks.length,
       visibleChunkCount: this.#visibleChunkCount,
       lastRebuiltTerrainChunks: this.#lastRebuiltTerrainChunks,
       totalRebuiltTerrainChunks: this.#totalRebuiltTerrainChunks,
-      cellViewCount: this.#cells.length,
-      dynamicDisplayObjectCount:
-        this.#cells.length * DYNAMIC_DISPLAY_OBJECTS_PER_CELL,
+      activeDynamicChunkCount: this.#activeDynamicViews.size,
+      pooledDynamicChunkCount:
+        this.#allocatedDynamicViews.size - this.#activeDynamicViews.size,
+      cellViewCount,
+      dynamicDisplayObjectCount: cellViewCount * DYNAMIC_DISPLAY_OBJECTS_PER_CELL,
     };
   }
 
@@ -165,9 +182,24 @@ export class PixiRendererBackend implements RendererBackend {
 
     let applied = 0;
     for (const cell of cells) {
-      const view = this.#cells[cell.index];
-      if (!view || !this.#tileset) continue;
-      this.#applyDynamicCell(view, cell, this.#tileset);
+      if (cell.index < 0 || cell.index >= this.#renderCells.length) continue;
+      this.#renderCells[cell.index] = cell;
+      const chunkIndex = chunkIndexForCell(
+        cell.x,
+        cell.y,
+        layout.chunksAcross,
+        this.#terrainChunkSize,
+      );
+      const view = this.#activeDynamicViews.get(chunkIndex);
+      const chunk = this.#chunks[chunkIndex];
+      if (view && chunk && this.#tileset) {
+        const localX = cell.x - chunk.descriptor.cellX;
+        const localY = cell.y - chunk.descriptor.cellY;
+        const cellView = view.cells[localY * view.cellWidth + localX];
+        if (cellView) {
+          this.#applyDynamicCell(cellView, cell, this.#tileset, localX, localY);
+        }
+      }
       applied += 1;
     }
 
@@ -194,18 +226,21 @@ export class PixiRendererBackend implements RendererBackend {
   }
 
   destroy(): void {
+    for (const view of [...this.#allocatedDynamicViews]) this.#destroyDynamicView(view);
     for (const chunk of this.#chunks) chunk.terrainTexture?.destroy(true);
     this.#tileset?.destroy();
     this.#tileset = undefined;
     this.#layout = undefined;
     this.#chunks = [];
-    this.#cells = [];
+    this.#renderCells = [];
     this.#terrainIds = [];
+    this.#activeDynamicViews.clear();
+    this.#dynamicViewPools.clear();
     this.#host = undefined;
     this.#application.destroy(true, { children: true });
   }
 
-  #createChunksAndCells(): void {
+  #createTerrainChunks(): void {
     const layout = this.#layout;
     if (!layout) throw new Error("render chunk layout is not initialized");
     this.#chunks = layout.chunks.map((descriptor) => {
@@ -216,45 +251,41 @@ export class PixiRendererBackend implements RendererBackend {
       );
       terrainSprite.width = descriptor.cellWidth * MAP_CELL_SIZE;
       terrainSprite.height = descriptor.cellHeight * MAP_CELL_SIZE;
-      const objectLayer = new Container();
-      const actorLayer = new Container();
-      const visibilityLayer = new Container();
-      const lightingLayer = new Container();
+      terrainSprite.visible = false;
       this.#terrainLayer.addChild(terrainSprite);
-      this.#objectLayer.addChild(objectLayer);
-      this.#actorLayer.addChild(actorLayer);
-      this.#visibilityLayer.addChild(visibilityLayer);
-      this.#lightingLayer.addChild(lightingLayer);
-      return {
-        descriptor,
-        terrainSprite,
-        objectLayer,
-        actorLayer,
-        visibilityLayer,
-        lightingLayer,
-      };
+      return { descriptor, terrainSprite };
     });
-    this.#visibleChunkCount = this.#chunks.length;
+    this.#visibleChunkCount = 0;
     this.#terrainIds = new Array(this.#width * this.#height);
-    this.#cells = new Array(this.#width * this.#height);
-    for (let y = 0; y < this.#height; y += 1) {
-      for (let x = 0; x < this.#width; x += 1) {
-        const chunk = this.#chunks[
-          chunkIndexForCell(x, y, layout.chunksAcross, this.#terrainChunkSize)
-        ];
-        if (!chunk) throw new Error("render cell resolved to a missing chunk");
+    this.#renderCells = new Array(this.#width * this.#height);
+  }
+
+  #createDynamicView(cellWidth: number, cellHeight: number): DynamicChunkView {
+    const objectLayer = new Container({ visible: false });
+    const actorLayer = new Container({ visible: false });
+    const visibilityLayer = new Container({ visible: false });
+    const lightingLayer = new Container({ visible: false });
+    this.#objectLayer.addChild(objectLayer);
+    this.#actorLayer.addChild(actorLayer);
+    this.#visibilityLayer.addChild(visibilityLayer);
+    this.#lightingLayer.addChild(lightingLayer);
+    const cells: CellView[] = [];
+    for (let localY = 0; localY < cellHeight; localY += 1) {
+      for (let localX = 0; localX < cellWidth; localX += 1) {
         const itemBackground = new Graphics();
-        const itemSymbol = cellSprite(x, y);
+        const itemSymbol = cellSprite(localX, localY);
         const actorBackground = new Graphics();
-        const actorSymbol = cellSprite(x, y);
+        const actorSymbol = cellSprite(localX, localY);
         const visibilityMask = new Graphics();
         const lightColor = new Graphics();
         const darkness = new Graphics();
-        chunk.objectLayer.addChild(itemBackground, itemSymbol);
-        chunk.actorLayer.addChild(actorBackground, actorSymbol);
-        chunk.visibilityLayer.addChild(visibilityMask);
-        chunk.lightingLayer.addChild(lightColor, darkness);
-        this.#cells[y * this.#width + x] = {
+        itemSymbol.visible = false;
+        actorSymbol.visible = false;
+        objectLayer.addChild(itemBackground, itemSymbol);
+        actorLayer.addChild(actorBackground, actorSymbol);
+        visibilityLayer.addChild(visibilityMask);
+        lightingLayer.addChild(lightColor, darkness);
+        cells.push({
           itemBackground,
           itemSymbol,
           actorBackground,
@@ -262,26 +293,115 @@ export class PixiRendererBackend implements RendererBackend {
           visibilityMask,
           lightColor,
           darkness,
-        };
+        });
+      }
+    }
+    const view = {
+      cellWidth,
+      cellHeight,
+      objectLayer,
+      actorLayer,
+      visibilityLayer,
+      lightingLayer,
+      cells,
+    };
+    this.#allocatedDynamicViews.add(view);
+    return view;
+  }
+
+  #assignDynamicView(chunkIndex: number): void {
+    const chunk = this.#chunks[chunkIndex];
+    if (!chunk || this.#activeDynamicViews.has(chunkIndex)) return;
+    const { descriptor } = chunk;
+    const poolKey = dynamicViewPoolKey(descriptor.cellWidth, descriptor.cellHeight);
+    const pool = this.#dynamicViewPools.get(poolKey);
+    const view = pool?.pop() ?? this.#createDynamicView(
+      descriptor.cellWidth,
+      descriptor.cellHeight,
+    );
+    view.descriptorIndex = chunkIndex;
+    const x = descriptor.cellX * MAP_CELL_SIZE;
+    const y = descriptor.cellY * MAP_CELL_SIZE;
+    for (const layer of dynamicViewLayers(view)) {
+      layer.position.set(x, y);
+      layer.visible = true;
+    }
+    this.#activeDynamicViews.set(chunkIndex, view);
+    this.#renderDynamicChunk(view, descriptor);
+  }
+
+  #releaseDynamicView(chunkIndex: number): void {
+    const view = this.#activeDynamicViews.get(chunkIndex);
+    if (!view) return;
+    this.#activeDynamicViews.delete(chunkIndex);
+    view.descriptorIndex = undefined;
+    for (const layer of dynamicViewLayers(view)) layer.visible = false;
+    const poolKey = dynamicViewPoolKey(view.cellWidth, view.cellHeight);
+    const pool = this.#dynamicViewPools.get(poolKey) ?? [];
+    pool.push(view);
+    this.#dynamicViewPools.set(poolKey, pool);
+  }
+
+  #trimDynamicViewPools(): void {
+    for (const [poolKey, pool] of this.#dynamicViewPools) {
+      while (pool.length > MAX_SPARE_DYNAMIC_VIEWS_PER_SHAPE) {
+        const view = pool.pop();
+        if (view) this.#destroyDynamicView(view);
+      }
+      if (pool.length === 0) this.#dynamicViewPools.delete(poolKey);
+    }
+  }
+
+  #destroyDynamicView(view: DynamicChunkView): void {
+    this.#allocatedDynamicViews.delete(view);
+    for (const layer of dynamicViewLayers(view)) layer.destroy({ children: true });
+  }
+
+  #renderDynamicChunk(view: DynamicChunkView, descriptor: RenderChunk): void {
+    const tileset = this.#tileset;
+    if (!tileset) return;
+    for (let localY = 0; localY < descriptor.cellHeight; localY += 1) {
+      for (let localX = 0; localX < descriptor.cellWidth; localX += 1) {
+        const cellView = view.cells[localY * view.cellWidth + localX];
+        if (!cellView) continue;
+        const worldX = descriptor.cellX + localX;
+        const worldY = descriptor.cellY + localY;
+        const cell = this.#renderCells[worldY * this.#width + worldX];
+        if (cell) this.#applyDynamicCell(cellView, cell, tileset, localX, localY);
+        else resetCellView(cellView);
       }
     }
   }
 
-  #applyDynamicCell(view: CellView, cell: RenderCell, tileset: TilesetRuntime): void {
+  #applyDynamicCell(
+    view: CellView,
+    cell: RenderCell,
+    tileset: TilesetRuntime,
+    localX: number,
+    localY: number,
+  ): void {
     const terrain = tileset.resolve(cell.terrainId);
     const item = cell.itemKindId ? tileset.resolve(cell.itemKindId) : undefined;
     const actor = cell.actorKindId ? tileset.resolve(cell.actorKindId) : undefined;
     const terrainBackground = terrain.background ?? DEFAULT_BACKGROUND;
-    applyLayerVisual(view.itemBackground, view.itemSymbol, cell, item, terrainBackground);
+    applyLayerVisual(
+      view.itemBackground,
+      view.itemSymbol,
+      localX,
+      localY,
+      item,
+      terrainBackground,
+    );
     applyLayerVisual(
       view.actorBackground,
       view.actorSymbol,
-      cell,
+      localX,
+      localY,
       actor,
       item?.background ?? terrainBackground,
     );
-    drawVisibility(view.visibilityMask, cell);
-    drawLighting(view.lightColor, view.darkness, cell);
+    drawVisibility(view.visibilityMask, localX, localY, cell);
+    drawLighting(view.lightColor, view.darkness, localX, localY, cell);
   }
 
   #rebuildTerrainChunk(chunkIndex: number): void {
@@ -328,13 +448,15 @@ export class PixiRendererBackend implements RendererBackend {
     const visible = visibleRenderChunkIndexes(layout.chunks, transform);
     this.#visibleChunkCount = visible.size;
     for (const chunk of this.#chunks) {
-      const chunkVisible = visible.has(chunk.descriptor.index);
-      chunk.terrainSprite.visible = chunkVisible;
-      chunk.objectLayer.visible = chunkVisible;
-      chunk.actorLayer.visible = chunkVisible;
-      chunk.visibilityLayer.visible = chunkVisible;
-      chunk.lightingLayer.visible = chunkVisible;
+      chunk.terrainSprite.visible = visible.has(chunk.descriptor.index);
     }
+    for (const chunkIndex of [...this.#activeDynamicViews.keys()]) {
+      if (!visible.has(chunkIndex)) this.#releaseDynamicView(chunkIndex);
+    }
+    for (const chunkIndex of [...visible].sort((left, right) => left - right)) {
+      this.#assignDynamicView(chunkIndex);
+    }
+    this.#trimDynamicViewPools();
   }
 
   #tilesetResult(): TilesetChangeResult {
@@ -342,6 +464,29 @@ export class PixiRendererBackend implements RendererBackend {
     if (!tileset) throw new Error("tileset runtime is not initialized");
     return { id: tileset.manifest.id, warnings: tileset.warnings };
   }
+}
+
+function dynamicViewPoolKey(cellWidth: number, cellHeight: number): string {
+  return `${cellWidth}x${cellHeight}`;
+}
+
+function dynamicViewLayers(view: DynamicChunkView): Container[] {
+  return [
+    view.objectLayer,
+    view.actorLayer,
+    view.visibilityLayer,
+    view.lightingLayer,
+  ];
+}
+
+function resetCellView(view: CellView): void {
+  view.itemBackground.clear();
+  view.actorBackground.clear();
+  view.visibilityMask.clear();
+  view.lightColor.clear();
+  view.darkness.clear();
+  view.itemSymbol.visible = false;
+  view.actorSymbol.visible = false;
 }
 
 function cellSprite(x: number, y: number): Sprite {
@@ -355,7 +500,8 @@ function cellSprite(x: number, y: number): Sprite {
 function applyLayerVisual(
   background: Graphics,
   sprite: Sprite,
-  cell: RenderCell,
+  cellX: number,
+  cellY: number,
   visual: RuntimeTileVisual | undefined,
   inheritedBackground: number,
 ): void {
@@ -366,7 +512,7 @@ function applyLayerVisual(
   }
   const layerBackground = visual.background ?? inheritedBackground;
   if (visual.background === undefined) background.clear();
-  else drawBackground(background, cell, layerBackground);
+  else drawBackground(background, cellX, cellY, layerBackground);
   applyVisual(sprite, visual, layerBackground);
 }
 
@@ -391,36 +537,42 @@ function drawTerrainBackground(
     .stroke({ color: GRID_COLOR, width: 1, alpha: 0.55 });
 }
 
-function drawBackground(graphics: Graphics, cell: RenderCell, color: number): void {
+function drawBackground(
+  graphics: Graphics,
+  cellX: number,
+  cellY: number,
+  color: number,
+): void {
   graphics
     .clear()
-    .rect(
-      cell.x * MAP_CELL_SIZE,
-      cell.y * MAP_CELL_SIZE,
-      MAP_CELL_SIZE,
-      MAP_CELL_SIZE,
-    )
+    .rect(cellX * MAP_CELL_SIZE, cellY * MAP_CELL_SIZE, MAP_CELL_SIZE, MAP_CELL_SIZE)
     .fill(color);
 }
 
-function drawVisibility(graphics: Graphics, cell: RenderCell): void {
+function drawVisibility(
+  graphics: Graphics,
+  cellX: number,
+  cellY: number,
+  cell: RenderCell,
+): void {
   graphics.clear();
   if (cell.visibility === "visible") return;
   const color = cell.visibility === "remembered" ? 0x12213a : 0x000000;
   const alpha = cell.visibility === "remembered" ? 0.58 : 1;
   graphics
-    .rect(
-      cell.x * MAP_CELL_SIZE,
-      cell.y * MAP_CELL_SIZE,
-      MAP_CELL_SIZE,
-      MAP_CELL_SIZE,
-    )
+    .rect(cellX * MAP_CELL_SIZE, cellY * MAP_CELL_SIZE, MAP_CELL_SIZE, MAP_CELL_SIZE)
     .fill({ color, alpha });
 }
 
-function drawLighting(lightColor: Graphics, darkness: Graphics, cell: RenderCell): void {
-  const x = cell.x * MAP_CELL_SIZE;
-  const y = cell.y * MAP_CELL_SIZE;
+function drawLighting(
+  lightColor: Graphics,
+  darkness: Graphics,
+  cellX: number,
+  cellY: number,
+  cell: RenderCell,
+): void {
+  const x = cellX * MAP_CELL_SIZE;
+  const y = cellY * MAP_CELL_SIZE;
   const intensity = Math.max(0, Math.min(1, cell.light.intensity));
   lightColor.clear();
   darkness.clear();

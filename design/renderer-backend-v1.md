@@ -1,6 +1,6 @@
 # 桌面分层 RendererBackend v1
 
-状态：PixiJS 分层 backend v2 已实现，包含静态地形 chunk 缓存与视口剔除
+状态：PixiJS 分层 backend v3 已实现，包含静态地形 chunk 缓存与可见 chunk 动态视图复用
 
 ## 1. 目标与边界
 
@@ -55,7 +55,7 @@ Rust 从协议 1.3 起输出正式 FOV、探索记忆和逐格光照，当前协
 
 五个视觉层共同挂在 PixiJS camera container 下。镜头移动只修改 container position，缩放只修改 container scale 并 resize 同一个 Canvas；两者都不重建 Canvas、sprite 或 tileset，也不产生新的 dirty cells。窗口或布局尺寸变化由 `ResizeObserver` 重新计算视口偏移；镜头模式、缩放和像素偏移只属于前端显示状态，不进入 Rust 核心、存档、回放或 state hash。
 
-静态 terrain 层现按默认 16×16 格生成 RenderTexture；object、actor、visibility 和 lighting 仍保持独立动态对象，但按相同 chunk 分组。玩家居中模式使用一格 overscan 剔除视口外 chunk；整图滚动模式保留全部 chunk。详细失效规则和诊断指标见 [静态地形 Chunk 渲染 v1](terrain-chunk-rendering-v1.md)。
+静态 terrain 层现按默认 16×16 格生成 RenderTexture。后端保存每格最新 `RenderCell`，object、actor、visibility 和 lighting 只为当前可见 chunk 创建动态视图；镜头跨 chunk 时按尺寸复用整组视图并重新绑定局部坐标。玩家居中模式使用一格 overscan，整图滚动模式则挂载全部 chunk，保证原有滚动行为。详细失效规则和诊断指标见 [静态地形 Chunk 渲染 v1](terrain-chunk-rendering-v1.md)。
 
 ## 6. 测试
 
@@ -69,11 +69,11 @@ Node 测试覆盖：
 - 玩家居中、四边钳制、小地图居中和整图零偏移；
 - 缩放后的中心跟随与远端边缘钳制。
 
-Windows E2E 验证协议 1.5、`pixi-layered-chunks-v2` backend ID、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、1/2/4 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
+Windows E2E 验证协议 1.5、`pixi-layered-chunks-v3` backend ID、`visible-chunk-reuse-v1` 动态模式、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、1/2/4 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
 
 ## 7. 后续
 
 - 增加 Effects、Interaction 和 Debug pass；
-- 按 [大地图渲染 Profile v1](renderer-profile-v1.md) 的结论实现可见 chunk 动态视图复用；
+- 为整图滚动模式增加滚动矩形虚拟化，避免超大地图在整图模式挂载全部动态视图；
 - 扩展实际窗口 resize、缩放、最小化恢复和截图差异测试；
 - 复测对象规模后再决定 GPU batching 与低分辨率 light RenderTexture。

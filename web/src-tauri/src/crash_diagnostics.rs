@@ -518,7 +518,7 @@ mod tests {
         let first = CrashDiagnostics::begin(root.clone(), log_path.clone(), metadata())
             .expect("first session should start");
         first
-            .update_context("content.demo", "abcdef", "pixi-layered-chunks-v2")
+            .update_context("content.demo", "abcdef", "pixi-layered-chunks-v3")
             .expect("context should persist");
         drop(first);
 
@@ -535,7 +535,7 @@ mod tests {
         assert_eq!(report.content_id.as_deref(), Some("content.demo"));
         assert_eq!(
             report.renderer_backend.as_deref(),
-            Some("pixi-layered-chunks-v2")
+            Some("pixi-layered-chunks-v3")
         );
         second.mark_clean_exit();
         let _ = fs::remove_dir_all(root);

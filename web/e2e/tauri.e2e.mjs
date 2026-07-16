@@ -138,10 +138,11 @@ async function runScenario(driver) {
   assert.equal(state.renderKind, "snapshot");
   assert.equal(state.appliedCells, "400");
   assert.equal(state.tilesetId, "rfb.tileset.ascii-default");
-  assert.equal(state.rendererBackend, "pixi-layered-chunks-v2");
+  assert.equal(state.rendererBackend, "pixi-layered-chunks-v3");
   assert.equal(state.rendererLayerCount, "5");
   assert.equal(state.rendererLayers, "terrain,object,actor,visibility,lighting");
   assert.equal(state.terrainMode, "chunk-render-texture-v1");
+  assert.equal(state.dynamicViewMode, "visible-chunk-reuse-v1");
   assert.equal(state.terrainChunkSize, "16");
   assert.equal(state.terrainChunkCount, "4");
   assert.equal(state.visibleChunkCount, "4");
@@ -150,6 +151,8 @@ async function runScenario(driver) {
   assert.equal(state.totalRebuiltTerrainChunks, "4");
   assert.equal(state.rendererCellViewCount, "400");
   assert.equal(state.rendererDynamicDisplayObjectCount, "2800");
+  assert.equal(state.activeDynamicChunkCount, "4");
+  assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
   assert.equal(state.protocolVersion, "1.5");
@@ -622,23 +625,44 @@ async function runScenario(driver) {
   const profile = profileState.report;
   assert.equal(profile.schemaVersion, 1);
   assert.equal(profile.scenarioId, "rfb-render-profile-large-original-v1");
-  assert.equal(profile.rendererBackend, "pixi-layered-chunks-v2");
+  assert.equal(profile.rendererBackend, "pixi-layered-chunks-v3");
+  assert.equal(profile.dynamicViewMode, "visible-chunk-reuse-v1");
   assert.equal(profile.width, 192);
   assert.equal(profile.height, 64);
   assert.equal(profile.cellCount, 12_288);
   assert.equal(profile.dynamicUpdateCellCount, 256);
   assert.equal(profile.terrainUpdateCellCount, 96);
-  assert.equal(profile.recommendation, "visible-chunk-dynamic-views");
+  assert.equal(profile.estimatedFullMapDynamicDisplayObjectCount, 86_016);
+  assert.equal(profile.recommendation, "retain-visible-chunk-dynamic-views");
   assert.deepEqual(profile.runs.map((run) => run.chunkSize), [8, 16, 32]);
   assert.deepEqual(
     profile.runs.map((run) => run.diagnostics.terrainChunkCount),
     [192, 48, 12],
   );
+  assert.deepEqual(
+    profile.runs.map((run) => run.diagnostics.activeDynamicChunkCount),
+    [16, 4, 4],
+  );
+  assert.deepEqual(
+    profile.runs.map((run) => run.diagnostics.cellViewCount),
+    [1024, 1024, 4096],
+  );
+  assert.deepEqual(
+    profile.runs.map((run) => run.diagnostics.dynamicDisplayObjectCount),
+    [7168, 7168, 28_672],
+  );
   for (const run of profile.runs) {
-    assert.equal(run.diagnostics.cellViewCount, 12_288);
-    assert.equal(run.diagnostics.dynamicDisplayObjectCount, 86_016);
     assert.ok(run.diagnostics.visibleChunkCount > 0);
     assert.ok(run.diagnostics.visibleChunkCount < run.diagnostics.terrainChunkCount);
+    assert.equal(
+      run.diagnostics.activeDynamicChunkCount,
+      run.diagnostics.visibleChunkCount,
+    );
+    assert.equal(run.diagnostics.pooledDynamicChunkCount, 0);
+    assert.ok(
+      run.diagnostics.dynamicDisplayObjectCount <
+        profile.estimatedFullMapDynamicDisplayObjectCount,
+    );
     assert.equal(
       run.diagnostics.lastRebuiltTerrainChunks,
       run.diagnostics.terrainChunkCount,
@@ -652,6 +676,7 @@ async function runScenario(driver) {
     assert.equal(run.frameTiming.sampleCount, 45);
     for (const timing of [
       run.initializeMs,
+      run.initialCameraMs,
       run.initialSnapshotMs,
       run.cameraSweepMs,
       run.dynamicUpdateMs,
@@ -682,12 +707,15 @@ async function readState(driver) {
       rendererLayerCount: host?.dataset.rendererLayerCount,
       rendererLayers: host?.dataset.rendererLayers,
       terrainMode: host?.dataset.terrainMode,
+      dynamicViewMode: host?.dataset.dynamicViewMode,
       terrainChunkSize: host?.dataset.terrainChunkSize,
       terrainChunkCount: host?.dataset.terrainChunkCount,
       visibleChunkCount: host?.dataset.visibleChunkCount,
       culledChunkCount: host?.dataset.culledChunkCount,
       lastRebuiltTerrainChunks: host?.dataset.lastRebuiltTerrainChunks,
       totalRebuiltTerrainChunks: host?.dataset.totalRebuiltTerrainChunks,
+      activeDynamicChunkCount: host?.dataset.activeDynamicChunkCount,
+      pooledDynamicChunkCount: host?.dataset.pooledDynamicChunkCount,
       rendererCellViewCount: host?.dataset.rendererCellViewCount,
       rendererDynamicDisplayObjectCount: host?.dataset.rendererDynamicDisplayObjectCount,
       visibilityMode: host?.dataset.visibilityMode,

@@ -41,7 +41,7 @@
 16. 单选装备回声护符，验证最大生命从 10 提升到 14 和 `maxHp +4` 文本；卸下后恢复 10，再多选两堆物品执行整堆批量丢弃；
 17. 从操作前的 `.rfbsave` 恢复背包、装备、地面物品、回合和位置，确认 UI 选择状态和数量输入不进入存档；
 18. 合成 WebView `ErrorEvent`，验证前端未处理异常通过 Tauri IPC 自动生成 `.rfbdiagnostic`，并显示脱敏且不自动上传的中文提示。
-19. 显式启用开发诊断钩子，运行 192×64 原创大地图 profile，对比 8/16/32 格 chunk，校验 12,288 个 cell view、86,016 个动态 display object 和有限值性能结果。
+19. 显式启用开发诊断钩子，运行 192×64 原创大地图 profile，对比 8/16/32 格 chunk；校验整图理论值 86,016 个动态 display object 在可见 chunk 复用后分别降到 7,168、7,168 和 28,672，并验证 active/pooled chunk 与有限值性能结果。
 
 `MapRenderer` 在 `#map-host` 暴露只读诊断属性：最近渲染类型、最近处理格数、累计处理格数、当前 tileset ID、镜头模式、缩放、相机偏移、视口尺寸、visible/remembered/hidden 格数量，以及 terrain chunk 总数、可见数、剔除数和重建计数。这些信息不影响游戏规则、存档或状态哈希。
 

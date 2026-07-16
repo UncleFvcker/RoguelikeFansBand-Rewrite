@@ -64,6 +64,7 @@ export class MapRenderer {
     host.dataset.rendererLayerCount = "5";
     host.dataset.rendererLayers = "terrain,object,actor,visibility,lighting";
     host.dataset.terrainMode = "chunk-render-texture-v1";
+    host.dataset.dynamicViewMode = "visible-chunk-reuse-v1";
     host.dataset.visibilityMode = "rust-fov-memory-v1";
     host.dataset.lightingMode = "rust-content-lights-v1";
     this.#configureViewport();
@@ -215,6 +216,12 @@ export class MapRenderer {
     );
     host.dataset.totalRebuiltTerrainChunks = String(
       diagnostics.totalRebuiltTerrainChunks,
+    );
+    host.dataset.activeDynamicChunkCount = String(
+      diagnostics.activeDynamicChunkCount,
+    );
+    host.dataset.pooledDynamicChunkCount = String(
+      diagnostics.pooledDynamicChunkCount,
     );
     host.dataset.rendererCellViewCount = String(diagnostics.cellViewCount);
     host.dataset.rendererDynamicDisplayObjectCount = String(

@@ -29,6 +29,7 @@ const PROFILE_GLYPHS: Readonly<Record<string, string>> = {
 export interface RendererProfileRun {
   chunkSize: number;
   initializeMs: number;
+  initialCameraMs: number;
   initialSnapshotMs: number;
   cameraSweepMs: number;
   dynamicUpdateMs: number;
@@ -43,16 +44,20 @@ export interface RendererProfileRun {
 export interface RendererProfileReport {
   schemaVersion: 1;
   scenarioId: "rfb-render-profile-large-original-v1";
-  rendererBackend: "pixi-layered-chunks-v2";
+  rendererBackend: "pixi-layered-chunks-v3";
+  dynamicViewMode: "visible-chunk-reuse-v1";
   width: number;
   height: number;
   cellCount: number;
   dynamicUpdateCellCount: number;
   terrainUpdateCellCount: number;
+  estimatedFullMapDynamicDisplayObjectCount: number;
   devicePixelRatio: number;
   userAgent: string;
   runs: RendererProfileRun[];
-  recommendation: "visible-chunk-dynamic-views" | "retain-preallocated-dynamic-views";
+  recommendation:
+    | "retain-visible-chunk-dynamic-views"
+    | "investigate-dynamic-view-regression";
 }
 
 declare global {
@@ -103,22 +108,25 @@ export async function runRendererProfile(): Promise<RendererProfileReport> {
   const dynamicDisplayObjectCount = Math.max(
     ...runs.map((run) => run.diagnostics.dynamicDisplayObjectCount),
   );
+  const estimatedFullMapDynamicDisplayObjectCount = initialCells.length * 7;
   return {
     schemaVersion: 1,
     scenarioId: "rfb-render-profile-large-original-v1",
-    rendererBackend: "pixi-layered-chunks-v2",
+    rendererBackend: "pixi-layered-chunks-v3",
+    dynamicViewMode: "visible-chunk-reuse-v1",
     width: RENDER_PROFILE_WIDTH,
     height: RENDER_PROFILE_HEIGHT,
     cellCount: initialCells.length,
     dynamicUpdateCellCount: dynamicUpdates.length,
     terrainUpdateCellCount: terrainUpdates.length,
+    estimatedFullMapDynamicDisplayObjectCount,
     devicePixelRatio: window.devicePixelRatio,
     userAgent: navigator.userAgent,
     runs,
     recommendation:
-      dynamicDisplayObjectCount >= 50_000
-        ? "visible-chunk-dynamic-views"
-        : "retain-preallocated-dynamic-views",
+      dynamicDisplayObjectCount < estimatedFullMapDynamicDisplayObjectCount
+        ? "retain-visible-chunk-dynamic-views"
+        : "investigate-dynamic-view-regression",
   };
 }
 
@@ -144,11 +152,14 @@ async function profileChunkSize(
     initialized = true;
     const initializeMs = elapsedMilliseconds(initializeStart);
 
+    const initialCameraStart = performance.now();
+    backend.setCameraTransform(centeredCameraTransform());
+    const initialCameraMs = elapsedMilliseconds(initialCameraStart);
+
     const snapshotStart = performance.now();
     backend.applyCells(initialCells);
     const initialSnapshotMs = elapsedMilliseconds(snapshotStart);
 
-    backend.setCameraTransform(centeredCameraTransform());
     const cameraStart = performance.now();
     for (let step = 0; step < 32; step += 1) {
       backend.setCameraTransform(sweptCameraTransform(step, 32));
@@ -176,6 +187,7 @@ async function profileChunkSize(
     return {
       chunkSize,
       initializeMs,
+      initialCameraMs,
       initialSnapshotMs,
       cameraSweepMs,
       dynamicUpdateMs,

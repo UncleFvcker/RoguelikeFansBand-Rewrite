@@ -42,7 +42,7 @@
   "architecture": "x86_64",
   "contentId": "rfb.demo.original-v1",
   "contentHash": "...",
-  "rendererBackend": "pixi-layered-chunks-v2",
+  "rendererBackend": "pixi-layered-chunks-v3",
   "previousSessionStartedAtUnixMs": 0,
   "panicLocation": null,
   "logTail": []
