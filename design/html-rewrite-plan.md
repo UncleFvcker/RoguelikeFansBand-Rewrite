@@ -21,6 +21,7 @@
 - [本地化与中文文本重构计划](localization-rewrite-plan.md)
 - [Fluent 本地化运行时 v1](fluent-localization-v1.md)
 - [桌面分层 RendererBackend v1](renderer-backend-v1.md)
+- [Rust 权威可见性与光照 v1](visibility-lighting-v1.md)
 
 本文档是 Rust/Tauri 重构的长期入口。以后每次实现阶段性功能时，应同步更新“当前进度”“接口版本”和“未决问题”，不要让架构约定只存在于聊天记录中。
 
@@ -504,7 +505,7 @@ interface SaveGame {
 - Tauri Android Gradle/Kotlin 工程、ARM64 Rust target 和 Debug APK 构建链；
 - Android CI 可重复构建并上传未签名调试 APK。
 - `.rfbcontent` 运行时解码、稳定内容索引和内容驱动的世界创建；
-- 协议 1.2 内容视觉目录、地图物品、背包 DTO 和真实 content/world 身份；
+- 协议 1.3 包含内容视觉目录、地图物品、背包 DTO、真实 content/world 身份和权威视觉格；
 - contract-v2 与 state hash Schema v2 基准迁移，contract-v1 历史保留。
 - `PickUp` 拾取命令、确定性堆叠、HTML 背包面板和存档/回放闭环；
 - contract-v3 与 state hash Schema v3 基准迁移，新增成功/空地拾取场景。
@@ -512,14 +513,14 @@ interface SaveGame {
 - 消息历史、背包、内容名称、按键提示和主要桌面 UI 已移除业务文案硬编码。
 - `RendererBackend`/`PixiRendererBackend`、RenderWorld 和地形/物品/角色/可见性/光照五层已建立；
 - 玩家阅读光使用独立 buffer 与有限 dirty footprint，glyph 绘制加入对比度保护；
-- 当前可见性明确为 `all-visible`，记忆/隐藏 mask 仅建立接口，尚未替代未来 Rust 权威 FOV。
 - 整图/玩家居中两种镜头模式、15×15 玩家视口、地图边缘钳制和 ResizeObserver 相机重算已建立；镜头只变换 PixiJS 世界容器，不影响 dirty cells、存档、回放或 state hash。
 - 75%–200% 五档画面缩放已接入同一相机容器；整图与玩家居中模式共用缩放，Canvas resize 不重建节点或重新提交 RenderCell。
+- 协议 1.3 已提供 Rust 权威 FOV、探索记忆和内容标签光源；前端临时 `all-visible`/阅读光已移除，记忆/隐藏格不再暴露当前物品和角色。
 
 下一步建议：
 
-1. 由 Rust 协议提供正式可见性/记忆状态和玩法光源，替换前端临时 `all-visible`/阅读光策略；
-2. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
+1. 建立桌面原生存档目录、文件选择、日志与崩溃诊断；
+2. 将静态地形按 chunk 缓存为 RenderTexture，并增加视口外剔除；
 3. 扩展背包装备、丢弃和多物品选择交互；
 4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
 5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。

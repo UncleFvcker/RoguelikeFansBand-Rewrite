@@ -7,9 +7,10 @@ use std::{
 
 use rfb_content::{ActorRole, ContentCatalog, ContentError, ContentPosition};
 use rfb_protocol::{
-    CellDto, ContentVisualDto, EntityDto, GameCommand, GameCommandEnvelope, GameEventDto,
-    GameSnapshot, GameUpdate, InventoryItemDto, ItemDto, PROTOCOL_VERSION, PlayerDto, Position,
-    RngSaveDto, SavePayloadV1, TerrainSaveDto,
+    CellDto, CellLightDto, CellVisualDto, ContentVisualDto, EntityDto, GameCommand,
+    GameCommandEnvelope, GameEventDto, GameSnapshot, GameUpdate, InventoryItemDto, ItemDto,
+    PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto, SavePayloadV1, TerrainSaveDto,
+    VisibilityState,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -19,6 +20,14 @@ pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 pub const RNG_ALGORITHM: &str = "rfb-rng-xoshiro256ss-v1";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
+const VISIBILITY_RADIUS: i32 = 8;
+const AMBIENT_LIGHT: u8 = 28;
+const PLAYER_LIGHT_RADIUS: i32 = 6;
+const ACTOR_LIGHT_RADIUS: i32 = 5;
+const ITEM_LIGHT_RADIUS: i32 = 4;
+const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
+const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
+const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct Actor {
@@ -133,6 +142,7 @@ pub struct Game {
     entities: Vec<Actor>,
     items: Vec<Item>,
     inventory: Vec<InventoryItem>,
+    explored: Vec<bool>,
     rng: RfbRng,
     revision: u32,
     turn: u32,
@@ -210,7 +220,7 @@ impl Game {
                 quantity: spawn.quantity,
             })
             .collect();
-        let game = Self {
+        let mut game = Self {
             content,
             world_id: world_id.to_owned(),
             width,
@@ -220,11 +230,13 @@ impl Game {
             entities,
             items,
             inventory: Vec::new(),
+            explored: vec![false; usize::from(width) * usize::from(height)],
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
             last_command_seq: 0,
         };
+        game.reveal_current_visibility();
         game.validate_state()?;
         Ok(game)
     }
@@ -277,7 +289,15 @@ impl Game {
             .into_iter()
             .map(inventory_item_from_dto)
             .collect();
-        let game = Self {
+        let mut explored = payload.explored;
+        if explored.is_empty() {
+            explored = vec![false; expected_len];
+        } else if explored.len() != expected_len {
+            return Err(CoreError::InvalidSave(
+                "exploration memory dimensions are invalid",
+            ));
+        }
+        let mut game = Self {
             content,
             world_id: payload.world_id,
             width: payload.terrain.width,
@@ -287,11 +307,13 @@ impl Game {
             entities,
             items,
             inventory,
+            explored,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
             last_command_seq: payload.last_command_seq,
         };
+        game.reveal_current_visibility();
         game.validate_state()?;
         Ok(game)
     }
@@ -312,6 +334,7 @@ impl Game {
             entities: self.entities_dto(),
             items: self.items_dto(),
             inventory: self.inventory_dto(),
+            explored: self.explored.clone(),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
@@ -330,6 +353,7 @@ impl Game {
                 }));
             }
         }
+        let visual_cells = self.visual_cells();
         GameSnapshot {
             protocol_version: PROTOCOL_VERSION.to_owned(),
             revision: self.revision,
@@ -338,6 +362,7 @@ impl Game {
             width: self.width,
             height: self.height,
             cells,
+            visual_cells,
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
@@ -366,6 +391,7 @@ impl Game {
         }
 
         let base_revision = self.revision;
+        let previous_visuals = self.visual_cells();
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
@@ -430,6 +456,8 @@ impl Game {
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(1);
         self.revision = self.revision.saturating_add(1);
+        self.reveal_current_visibility();
+        let changed_visual_cells = self.changed_visual_cells(&previous_visuals);
 
         Ok(GameUpdate {
             base_revision,
@@ -441,6 +469,7 @@ impl Game {
                 .into_iter()
                 .map(|position| self.cell_dto(position))
                 .collect(),
+            changed_visual_cells,
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
@@ -452,7 +481,9 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let bytes = rmp_serde::to_vec_named(&self.to_save())
+        let mut payload = self.to_save();
+        payload.explored.clear();
+        let bytes = rmp_serde::to_vec_named(&payload)
             .expect("serializing the internal save state should not fail");
         let digest = Sha256::digest(bytes);
         format!("{digest:x}")
@@ -624,6 +655,105 @@ impl Game {
         }
     }
 
+    fn visual_cells(&self) -> Vec<CellVisualDto> {
+        let mut visuals = Vec::with_capacity(self.terrain.len());
+        for y in 0..self.height {
+            for x in 0..self.width {
+                visuals.push(self.cell_visual(Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                }));
+            }
+        }
+        visuals
+    }
+
+    fn changed_visual_cells(&self, previous: &[CellVisualDto]) -> Vec<CellVisualDto> {
+        self.visual_cells()
+            .into_iter()
+            .zip(previous.iter())
+            .filter_map(|(current, before)| (current != *before).then_some(current))
+            .collect()
+    }
+
+    fn cell_visual(&self, position: Position) -> CellVisualDto {
+        let index = self.index(position).expect("validated visual position");
+        CellVisualDto {
+            position,
+            visibility: if self.is_visible(position) {
+                VisibilityState::Visible
+            } else if self.explored[index] {
+                VisibilityState::Remembered
+            } else {
+                VisibilityState::Hidden
+            },
+            light: self.light_at(position),
+        }
+    }
+
+    fn reveal_current_visibility(&mut self) {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                if self.is_visible(position) {
+                    let index = self.index(position).expect("visibility position is valid");
+                    self.explored[index] = true;
+                }
+            }
+        }
+    }
+
+    fn is_visible(&self, position: Position) -> bool {
+        if squared_distance(self.player.position, position) > VISIBILITY_RADIUS * VISIBILITY_RADIUS
+        {
+            return false;
+        }
+        has_line_of_sight(self, self.player.position, position)
+    }
+
+    fn light_at(&self, position: Position) -> CellLightDto {
+        let mut strongest = (0_u8, PLAYER_LIGHT_COLOR);
+        let player_boost =
+            source_intensity(self.player.position, position, PLAYER_LIGHT_RADIUS, 72);
+        if player_boost > strongest.0 {
+            strongest = (player_boost, PLAYER_LIGHT_COLOR);
+        }
+
+        for entity in &self.entities {
+            let Some(definition) = self.content.actor(&entity.kind_id) else {
+                continue;
+            };
+            if !definition.tags.iter().any(|tag| tag == "light-source") {
+                continue;
+            }
+            let boost = source_intensity(entity.position, position, ACTOR_LIGHT_RADIUS, 64);
+            if boost > strongest.0 {
+                strongest = (boost, ACTOR_LIGHT_COLOR);
+            }
+        }
+
+        for item in &self.items {
+            let Some(definition) = self.content.item(&item.kind_id) else {
+                continue;
+            };
+            if !definition.tags.iter().any(|tag| tag == "light-source") {
+                continue;
+            }
+            let boost = source_intensity(item.position, position, ITEM_LIGHT_RADIUS, 52);
+            if boost > strongest.0 {
+                strongest = (boost, ITEM_LIGHT_COLOR);
+            }
+        }
+
+        CellLightDto {
+            color: strongest.1,
+            intensity: AMBIENT_LIGHT.saturating_add(strongest.0),
+        }
+    }
+
     fn terrain_at(&self, position: Position) -> &str {
         &self.terrain[self.index(position).expect("validated map position")]
     }
@@ -646,6 +776,11 @@ impl Game {
     }
 
     fn validate_state(&self) -> Result<(), CoreError> {
+        if self.explored.len() != self.terrain.len() {
+            return Err(CoreError::InvalidSave(
+                "exploration memory dimensions are invalid",
+            ));
+        }
         for terrain_id in &self.terrain {
             if self.content.terrain(terrain_id).is_none() {
                 return Err(CoreError::UnknownTerrain(terrain_id.clone()));
@@ -709,6 +844,59 @@ impl Game {
             return Err(CoreError::InvalidSave("actor state is invalid"));
         }
         Ok(())
+    }
+}
+
+fn squared_distance(left: Position, right: Position) -> i32 {
+    let dx = left.x - right.x;
+    let dy = left.y - right.y;
+    dx * dx + dy * dy
+}
+
+fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8) -> u8 {
+    let distance = squared_distance(source, target);
+    let radius_squared = radius * radius;
+    if distance > radius_squared {
+        return 0;
+    }
+    let remaining = radius_squared - distance;
+    u8::try_from(
+        (u32::from(maximum) * u32::try_from(remaining).unwrap_or(0))
+            / u32::try_from(radius_squared).unwrap_or(1),
+    )
+    .unwrap_or(maximum)
+}
+
+fn has_line_of_sight(game: &Game, from: Position, to: Position) -> bool {
+    let mut x = from.x;
+    let mut y = from.y;
+    let dx = (to.x - from.x).abs();
+    let dy = (to.y - from.y).abs();
+    let step_x = if from.x < to.x { 1 } else { -1 };
+    let step_y = if from.y < to.y { 1 } else { -1 };
+    let mut error = dx - dy;
+
+    loop {
+        if x == to.x && y == to.y {
+            return true;
+        }
+        if !(x == from.x && y == from.y)
+            && game
+                .index(Position { x, y })
+                .and_then(|index| game.content.terrain(&game.terrain[index]))
+                .is_some_and(|terrain| terrain.blocks_sight)
+        {
+            return false;
+        }
+        let double_error = error * 2;
+        if double_error > -dy {
+            error -= dy;
+            x += step_x;
+        }
+        if double_error < dx {
+            error += dx;
+            y += step_y;
+        }
     }
 }
 
@@ -823,7 +1011,7 @@ pub enum CoreError {
 
 #[cfg(test)]
 mod tests {
-    use rfb_protocol::{Direction, GameCommand, GameCommandEnvelope};
+    use rfb_protocol::{Direction, GameCommand, GameCommandEnvelope, VisibilityState};
 
     use super::*;
 
@@ -833,6 +1021,14 @@ mod tests {
             expected_revision: revision,
             command,
         }
+    }
+
+    fn visual_at(snapshot: &GameSnapshot, position: Position) -> CellVisualDto {
+        *snapshot
+            .visual_cells
+            .iter()
+            .find(|visual| visual.position == position)
+            .expect("snapshot should contain every visual cell")
     }
 
     #[test]
@@ -869,6 +1065,78 @@ mod tests {
                 .iter()
                 .any(|visual| visual.id == "demo.item.luminous-shard" && visual.glyph == "!")
         );
+        assert_eq!(snapshot.visual_cells.len(), snapshot.cells.len());
+        assert_eq!(
+            visual_at(&snapshot, snapshot.player.position).visibility,
+            VisibilityState::Visible
+        );
+        assert_eq!(
+            visual_at(&snapshot, Position { x: 19, y: 19 }).visibility,
+            VisibilityState::Hidden
+        );
+        assert_eq!(
+            visual_at(&snapshot, Position { x: 8, y: 5 }).light.color,
+            ACTOR_LIGHT_COLOR
+        );
+    }
+
+    #[test]
+    fn movement_produces_fov_deltas_and_remembers_explored_cells() {
+        let mut game = Game::new(42);
+        let first = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("movement should execute");
+        assert!(!first.changed_visual_cells.is_empty());
+        let snapshot = game.snapshot();
+        assert_eq!(
+            visual_at(&snapshot, Position { x: 11, y: 3 }).visibility,
+            VisibilityState::Visible
+        );
+        assert_eq!(
+            visual_at(&snapshot, Position { x: 12, y: 3 }).visibility,
+            VisibilityState::Hidden
+        );
+
+        for seq in 2..=7 {
+            game.dispatch(command(
+                seq,
+                seq - 1,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("eastward exploration should execute");
+        }
+        assert_eq!(
+            visual_at(&game.snapshot(), Position { x: 1, y: 3 }).visibility,
+            VisibilityState::Remembered
+        );
+    }
+
+    #[test]
+    fn exploration_memory_does_not_change_authoritative_state_hash() {
+        let mut game = Game::new(42);
+        let before = game.state_hash();
+        game.explored.fill(true);
+        assert_eq!(game.state_hash(), before);
+    }
+
+    #[test]
+    fn malformed_exploration_memory_is_rejected() {
+        let mut payload = Game::new(42).to_save();
+        payload.explored.pop();
+        assert!(matches!(
+            Game::from_save(payload),
+            Err(CoreError::InvalidSave(
+                "exploration memory dimensions are invalid"
+            ))
+        ));
     }
 
     #[test]

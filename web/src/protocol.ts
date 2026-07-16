@@ -11,6 +11,12 @@ export type Position = { x: number, y: number, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, };
 
+export type VisibilityState = "visible" | "remembered" | "hidden";
+
+export type CellLightDto = { color: number, intensity: number, };
+
+export type CellVisualDto = { position: Position, visibility: VisibilityState, light: CellLightDto, };
+
 export type ContentVisualDto = { id: string, glyph: string, };
 
 export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, };
@@ -23,7 +29,7 @@ export type InventoryItemDto = { id: string, kindId: string, quantity: number, }
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, };
 
-export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
+export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
 
-export type GameUpdate = { baseRevision: number, revision: number, turn: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, removedEntities: Array<string>, stateHash: string, };
+export type GameUpdate = { baseRevision: number, revision: number, turn: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, changedVisualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, removedEntities: Array<string>, stateHash: string, };
 

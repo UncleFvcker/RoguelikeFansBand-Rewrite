@@ -107,8 +107,13 @@ async function runScenario(driver) {
   assert.equal(state.rendererBackend, "pixi-layered-v1");
   assert.equal(state.rendererLayerCount, "5");
   assert.equal(state.rendererLayers, "terrain,object,actor,visibility,lighting");
-  assert.equal(state.visibilityMode, "all-visible");
-  assert.equal(state.lightingMode, "presentation-player-v1");
+  assert.equal(state.visibilityMode, "rust-fov-memory-v1");
+  assert.equal(state.lightingMode, "rust-content-lights-v1");
+  assert.equal(state.protocolVersion, "1.3");
+  assert.equal(state.visualCellCount, "400");
+  assert.ok(Number(state.visibleCellCount) > 0);
+  assert.equal(state.rememberedCellCount, "0");
+  assert.ok(Number(state.hiddenCellCount) > 0);
   assert.equal(state.cameraMode, "full-map");
   assert.equal(state.cameraX, "0");
   assert.equal(state.cameraY, "0");
@@ -144,7 +149,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.turn, "2");
   assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "90");
+  assert.equal(state.appliedCells, "79");
   assert.equal(state.canvasUnchanged, true);
 
   await dispatchKey(driver, "KeyG", "g");
@@ -219,6 +224,7 @@ async function runScenario(driver) {
   assert.equal(state.cameraMode, "player-centered");
   assert.equal(state.cameraX, "-28");
   assert.equal(state.cameraY, "0");
+  assert.ok(Number(state.rememberedCellCount) > 0);
   assert.equal(state.canvasUnchanged, true);
 
   const hashBeforeZoom = state.stateHash;
@@ -364,6 +370,11 @@ async function readState(driver) {
       rendererLayers: host?.dataset.rendererLayers,
       visibilityMode: host?.dataset.visibilityMode,
       lightingMode: host?.dataset.lightingMode,
+      protocolVersion: host?.dataset.protocolVersion,
+      visualCellCount: host?.dataset.visualCellCount,
+      visibleCellCount: host?.dataset.visibleCellCount,
+      rememberedCellCount: host?.dataset.rememberedCellCount,
+      hiddenCellCount: host?.dataset.hiddenCellCount,
       cameraMode: host?.dataset.cameraMode,
       cameraX: host?.dataset.cameraX,
       cameraY: host?.dataset.cameraY,

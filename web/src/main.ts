@@ -250,10 +250,12 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
+  mapHost.dataset.protocolVersion = snapshot.protocolVersion;
   mapHost.dataset.contentId = snapshot.contentId;
   mapHost.dataset.contentHash = snapshot.contentHash;
   mapHost.dataset.worldId = snapshot.worldId;
   mapHost.dataset.contentVisualCount = String(snapshot.contentVisuals.length);
+  mapHost.dataset.visualCellCount = String(snapshot.visualCells.length);
 }
 
 function renderInventory(inventory: InventoryItemDto[]): void {

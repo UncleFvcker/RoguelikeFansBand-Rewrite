@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.2、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.3、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.2";
+  protocolVersion: "1.3";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.2 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆和每格 `itemId`。`GameUpdate` 发送当前地面物品与背包状态；内容视觉目录只在全量快照发送。
+协议 1.3 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、内容 glyph 目录、地面物品、背包物品堆、每格 `itemId`，以及 Rust 权威 `visualCells`。`GameUpdate` 发送当前地面物品、背包状态和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

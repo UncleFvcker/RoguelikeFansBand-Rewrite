@@ -47,6 +47,45 @@
         "terrainId"
       ]
     },
+    "CellLightDto": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "intensity": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "color",
+        "intensity"
+      ]
+    },
+    "CellVisualDto": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "$ref": "#/$defs/CellLightDto"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "visibility": {
+          "$ref": "#/$defs/VisibilityState"
+        }
+      },
+      "required": [
+        "position",
+        "visibility",
+        "light"
+      ]
+    },
     "ContentVisualDto": {
       "type": "object",
       "properties": {
@@ -262,6 +301,13 @@
           "format": "uint32",
           "minimum": 0
         },
+        "visualCells": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CellVisualDto"
+          }
+        },
         "width": {
           "type": "integer",
           "format": "uint16",
@@ -303,6 +349,13 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/CellDto"
+          }
+        },
+        "changedVisualCells": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CellVisualDto"
           }
         },
         "commandSeq": {
@@ -462,6 +515,14 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "VisibilityState": {
+      "type": "string",
+      "enum": [
+        "visible",
+        "remembered",
+        "hidden"
       ]
     }
   }

@@ -184,6 +184,7 @@ mod tests {
             entities: Vec::<EntityDto>::new(),
             items: Vec::<ItemDto>::new(),
             inventory: Vec::<InventoryItemDto>::new(),
+            explored: vec![true],
             rng: RngSaveDto {
                 algorithm: "rfb-rng-xoshiro256ss-v1".to_owned(),
                 state: [1, 2, 3, 4],

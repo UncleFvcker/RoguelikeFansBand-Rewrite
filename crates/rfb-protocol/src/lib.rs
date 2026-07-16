@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.2";
+pub const PROTOCOL_VERSION: &str = "1.3";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -74,6 +74,32 @@ pub struct CellDto {
     pub terrain_id: String,
     pub item_id: Option<String>,
     pub actor_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum VisibilityState {
+    Visible,
+    Remembered,
+    Hidden,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CellLightDto {
+    pub color: u32,
+    pub intensity: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CellVisualDto {
+    pub position: Position,
+    pub visibility: VisibilityState,
+    pub light: CellLightDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -145,6 +171,8 @@ pub struct GameSnapshot {
     pub width: u16,
     pub height: u16,
     pub cells: Vec<CellDto>,
+    #[serde(default)]
+    pub visual_cells: Vec<CellVisualDto>,
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
@@ -166,6 +194,8 @@ pub struct GameUpdate {
     pub command_seq: u32,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
+    #[serde(default)]
+    pub changed_visual_cells: Vec<CellVisualDto>,
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
@@ -206,6 +236,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameCommandEnvelope);
     push_declaration!(Position);
     push_declaration!(CellDto);
+    push_declaration!(VisibilityState);
+    push_declaration!(CellLightDto);
+    push_declaration!(CellVisualDto);
     push_declaration!(ContentVisualDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityDto);
@@ -255,6 +288,8 @@ pub struct SavePayloadV1 {
     pub items: Vec<ItemDto>,
     #[serde(default)]
     pub inventory: Vec<InventoryItemDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub explored: Vec<bool>,
     pub rng: RngSaveDto,
     pub content_id: String,
     pub content_hash: String,

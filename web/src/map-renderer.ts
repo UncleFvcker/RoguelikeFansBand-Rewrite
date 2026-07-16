@@ -63,8 +63,8 @@ export class MapRenderer {
     host.dataset.rendererBackend = this.#backend.id;
     host.dataset.rendererLayerCount = "5";
     host.dataset.rendererLayers = "terrain,object,actor,visibility,lighting";
-    host.dataset.visibilityMode = "all-visible";
-    host.dataset.lightingMode = "presentation-player-v1";
+    host.dataset.visibilityMode = "rust-fov-memory-v1";
+    host.dataset.lightingMode = "rust-content-lights-v1";
     this.#configureViewport();
     if (typeof ResizeObserver !== "undefined") {
       this.#resizeObserver = new ResizeObserver(() => this.#updateCamera());
@@ -102,6 +102,7 @@ export class MapRenderer {
     const cells = this.#requireWorld().applySnapshot(snapshot);
     const appliedCells = this.#backend.applyCells(cells);
     this.#recordRender("snapshot", appliedCells);
+    this.#recordVisualState();
     this.#updateCamera();
   }
 
@@ -109,6 +110,7 @@ export class MapRenderer {
     const cells = this.#requireWorld().applyUpdate(update);
     const appliedCells = this.#backend.applyCells(cells);
     this.#recordRender("update", appliedCells);
+    this.#recordVisualState();
     this.#updateCamera();
   }
 
@@ -176,5 +178,15 @@ export class MapRenderer {
     host.dataset.lastAppliedCells = String(appliedCells);
     host.dataset.totalAppliedCells = String(this.#totalAppliedCells);
     if (tilesetId) host.dataset.tilesetId = tilesetId;
+  }
+
+  #recordVisualState(): void {
+    const host = this.#host;
+    const world = this.#world;
+    if (!host || !world) return;
+    const counts = world.visibilityCounts;
+    host.dataset.visibleCellCount = String(counts.visible);
+    host.dataset.rememberedCellCount = String(counts.remembered);
+    host.dataset.hiddenCellCount = String(counts.hidden);
   }
 }

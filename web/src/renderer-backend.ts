@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { CameraTransform } from "./camera";
+import type { VisibilityState } from "./protocol";
 import type { TilesetWarning } from "./tileset-runtime";
 
-export type CellVisibility = "visible" | "remembered" | "hidden";
+export type CellVisibility = VisibilityState;
 
 export interface CellLight {
   color: number;

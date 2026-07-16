@@ -2,6 +2,7 @@
 
 import type {
   CellDto,
+  CellVisualDto,
   EntityDto,
   GameSnapshot,
   GameUpdate,
@@ -9,17 +10,16 @@ import type {
   PlayerDto,
   Position,
 } from "./protocol";
-import type { CellVisibility, RenderCell } from "./renderer-backend";
+import type { CellLight, CellVisibility, RenderCell } from "./renderer-backend";
 
-const PRESENTATION_LIGHT_RADIUS = 6;
-const PRESENTATION_LIGHT_COLOR = 0xffd7a3;
-const AMBIENT_LIGHT = 0.5;
+const DEFAULT_LIGHT: CellLight = { color: 0xffffff, intensity: 0 };
 
 export class RenderWorld {
   readonly #width: number;
   readonly #height: number;
   readonly #cells: Array<CellDto | undefined>;
   readonly #visibility: CellVisibility[];
+  readonly #lights: CellLight[];
   readonly #entityKinds = new Map<string, string>();
   #playerPosition: Position = { x: 0, y: 0 };
 
@@ -27,23 +27,31 @@ export class RenderWorld {
     this.#width = width;
     this.#height = height;
     this.#cells = new Array(width * height);
-    this.#visibility = new Array<CellVisibility>(width * height).fill("visible");
+    this.#visibility = new Array<CellVisibility>(width * height).fill("hidden");
+    this.#lights = new Array<CellLight>(width * height).fill(DEFAULT_LIGHT);
   }
 
   get playerPosition(): Position {
     return { ...this.#playerPosition };
   }
 
+  get visibilityCounts(): Readonly<Record<CellVisibility, number>> {
+    const counts: Record<CellVisibility, number> = { visible: 0, remembered: 0, hidden: 0 };
+    for (const visibility of this.#visibility) counts[visibility] += 1;
+    return counts;
+  }
+
   applySnapshot(snapshot: GameSnapshot): RenderCell[] {
     this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items);
     this.#playerPosition = snapshot.player.position;
-    this.#visibility.fill("visible");
+    this.#visibility.fill("hidden");
+    this.#lights.fill(DEFAULT_LIGHT);
     for (const cell of snapshot.cells) this.#storeCell(cell);
+    for (const visual of snapshot.visualCells) this.#storeVisual(visual);
     return this.allCells();
   }
 
   applyUpdate(update: GameUpdate): RenderCell[] {
-    const previousPlayerPosition = this.#playerPosition;
     this.#syncEntityKinds(update.player, update.entities, update.items);
     this.#playerPosition = update.player.position;
     const dirty = new Set<number>();
@@ -51,9 +59,9 @@ export class RenderWorld {
       const index = this.#storeCell(cell);
       if (index !== undefined) dirty.add(index);
     }
-    if (!samePosition(previousPlayerPosition, this.#playerPosition)) {
-      this.#addLightFootprint(dirty, previousPlayerPosition);
-      this.#addLightFootprint(dirty, this.#playerPosition);
+    for (const visual of update.changedVisualCells) {
+      const index = this.#storeVisual(visual);
+      if (index !== undefined) dirty.add(index);
     }
     return [...dirty]
       .sort((left, right) => left - right)
@@ -97,41 +105,40 @@ export class RenderWorld {
     return index;
   }
 
+  #storeVisual(visual: CellVisualDto): number | undefined {
+    const index = this.#index(visual.position);
+    if (index === undefined) return undefined;
+    this.#visibility[index] = visual.visibility;
+    this.#lights[index] = {
+      color: visual.light.color,
+      intensity: Math.max(0, Math.min(1, visual.light.intensity / 100)),
+    };
+    return index;
+  }
+
   #composeCell(index: number): RenderCell[] {
     const cell = this.#cells[index];
     if (!cell) return [];
     const x = index % this.#width;
     const y = Math.floor(index / this.#width);
+    const visibility = this.#visibility[index] ?? "hidden";
+    const occupantsVisible = visibility === "visible";
     return [
       {
         index,
         x,
         y,
         terrainId: cell.terrainId,
-        ...(cell.itemId
+        ...(occupantsVisible && cell.itemId
           ? { itemKindId: this.#entityKinds.get(cell.itemId) ?? cell.itemId }
           : {}),
-        ...(cell.actorId
+        ...(occupantsVisible && cell.actorId
           ? { actorKindId: this.#entityKinds.get(cell.actorId) ?? cell.actorId }
           : {}),
-        visibility: this.#visibility[index] ?? "visible",
-        light: presentationLight(this.#playerPosition, { x, y }),
+        visibility,
+        light: this.#lights[index] ?? DEFAULT_LIGHT,
       },
     ];
-  }
-
-  #addLightFootprint(dirty: Set<number>, center: Position): void {
-    const minimumX = Math.max(0, center.x - PRESENTATION_LIGHT_RADIUS);
-    const maximumX = Math.min(this.#width - 1, center.x + PRESENTATION_LIGHT_RADIUS);
-    const minimumY = Math.max(0, center.y - PRESENTATION_LIGHT_RADIUS);
-    const maximumY = Math.min(this.#height - 1, center.y + PRESENTATION_LIGHT_RADIUS);
-    for (let y = minimumY; y <= maximumY; y += 1) {
-      for (let x = minimumX; x <= maximumX; x += 1) {
-        if (Math.hypot(x - center.x, y - center.y) <= PRESENTATION_LIGHT_RADIUS) {
-          dirty.add(y * this.#width + x);
-        }
-      }
-    }
   }
 
   #index(position: Position): number | undefined {
@@ -145,17 +152,4 @@ export class RenderWorld {
     }
     return position.y * this.#width + position.x;
   }
-}
-
-export function presentationLight(player: Position, cell: Position) {
-  const distance = Math.hypot(cell.x - player.x, cell.y - player.y);
-  const normalized = Math.max(0, 1 - distance / PRESENTATION_LIGHT_RADIUS);
-  return {
-    color: PRESENTATION_LIGHT_COLOR,
-    intensity: AMBIENT_LIGHT + (1 - AMBIENT_LIGHT) * normalized * normalized,
-  };
-}
-
-function samePosition(left: Position, right: Position): boolean {
-  return left.x === right.x && left.y === right.y;
 }

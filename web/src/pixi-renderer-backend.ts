@@ -228,7 +228,7 @@ function drawVisibility(graphics: Graphics, cell: RenderCell): void {
   graphics.clear();
   if (cell.visibility === "visible") return;
   const color = cell.visibility === "remembered" ? 0x12213a : 0x000000;
-  const alpha = cell.visibility === "remembered" ? 0.58 : 0.94;
+  const alpha = cell.visibility === "remembered" ? 0.58 : 1;
   graphics
     .rect(
       cell.x * MAP_CELL_SIZE,
