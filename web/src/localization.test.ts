@@ -32,6 +32,10 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
   assert.equal(localization.format("inventory-stack-count", { count: 1 }), "1 stack");
   assert.equal(localization.format("inventory-stack-count", { count: 2 }), "2 stacks");
   assert.equal(
+    localization.format("message-item-drop-success", { stacks: 1, quantity: 2 }),
+    "You drop 1 stack containing 2 items.",
+  );
+  assert.equal(
     localization.format("message-item-pickup-success", {
       target: "luminous shard",
       quantity: 3,

@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "id": "item.unequip.charm",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "equip",
+        "itemId": "demo.item.echo-charm.1"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "unequip",
+        "slotId": "charm"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 6,
+      "turn": 6,
+      "lastCommandSeq": 6,
+      "playerPosition": {
+        "x": 5,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "entityCount": 1,
+      "groundItemCount": 0,
+      "inventoryStackCount": 2,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "79b28f7ac6f1b38707a2e234738af0371895b694ce477345b7b683531af54f87"
+    },
+    "events": [
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "5",
+          "target": "demo.item.luminous-shard"
+        }
+      },
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "1",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "item.equip",
+        "messageKey": "item-equip-success",
+        "args": {
+          "slot": "charm",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "item.unequip",
+        "messageKey": "item-unequip-success",
+        "args": {
+          "slot": "charm",
+          "target": "demo.item.echo-charm"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

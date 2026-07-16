@@ -72,6 +72,10 @@ pub struct FinalStateAssertion {
     pub turn: u32,
     pub last_command_seq: u32,
     pub player_position: Position,
+    #[serde(default)]
+    pub player_hp: Option<i32>,
+    #[serde(default)]
+    pub player_max_hp: Option<i32>,
     pub entity_count: usize,
     #[serde(default)]
     pub ground_item_count: usize,
@@ -79,6 +83,8 @@ pub struct FinalStateAssertion {
     pub inventory_stack_count: usize,
     #[serde(default)]
     pub equipment_count: usize,
+    #[serde(default)]
+    pub next_item_instance_serial: Option<u64>,
     pub state_hash: String,
 }
 
@@ -143,10 +149,13 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             turn: snapshot.turn,
             last_command_seq: snapshot.last_command_seq,
             player_position: snapshot.player.position,
+            player_hp: Some(snapshot.player.hp),
+            player_max_hp: Some(snapshot.player.max_hp),
             entity_count: snapshot.entities.len(),
             ground_item_count: snapshot.items.len(),
             inventory_stack_count: snapshot.inventory.len(),
             equipment_count: snapshot.equipment.len(),
+            next_item_instance_serial: Some(game.to_save().next_item_instance_serial),
             state_hash: snapshot.state_hash,
         },
         events,

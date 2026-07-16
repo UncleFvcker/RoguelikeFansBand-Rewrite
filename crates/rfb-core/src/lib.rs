@@ -9,8 +9,8 @@ use rfb_content::{ActorRole, ContentCatalog, ContentError, ContentPosition};
 use rfb_protocol::{
     CellDto, CellLightDto, CellVisualDto, ContentVisualDto, EntityDto, EquipmentItemDto,
     GameCommand, GameCommandEnvelope, GameEventDto, GameSnapshot, GameUpdate, InventoryItemDto,
-    ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto, SavePayloadV1, TerrainSaveDto,
-    VisibilityState,
+    ItemDto, PROTOCOL_VERSION, PlayerDto, Position, RngSaveDto, SavePayloadV1, StatModifiersDto,
+    TerrainSaveDto, VisibilityState,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -18,10 +18,12 @@ use thiserror::Error;
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
 pub const RNG_ALGORITHM: &str = "rfb-rng-xoshiro256ss-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASH: &str =
-    "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025";
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 2] = [
+    "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
+    "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
+];
 const BUILT_IN_CONTENT_HASH: &str =
-    "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc";
+    "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -32,6 +34,7 @@ const ITEM_LIGHT_RADIUS: i32 = 4;
 const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
 const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
 const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
+const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct Actor {
@@ -161,6 +164,7 @@ pub struct Game {
     items: Vec<Item>,
     inventory: Vec<InventoryItem>,
     equipment: Vec<EquipmentItem>,
+    next_item_instance_serial: u64,
     explored: Vec<bool>,
     rng: RfbRng,
     revision: u32,
@@ -238,7 +242,9 @@ impl Game {
                 position: position_from_content(spawn.position),
                 quantity: spawn.quantity,
             })
-            .collect();
+            .collect::<Vec<_>>();
+        let next_item_instance_serial =
+            derive_next_item_instance_serial(&player, &entities, &items, &[], &[])?;
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
@@ -250,6 +256,7 @@ impl Game {
             items,
             inventory: Vec::new(),
             equipment: Vec::new(),
+            next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             rng: RfbRng::seeded(seed),
             revision: 0,
@@ -279,7 +286,7 @@ impl Game {
             || (payload.content_hash != content.content_hash()
                 && !(content.pack_id() == "rfb.demo.original-v1"
                     && content.content_hash() == BUILT_IN_CONTENT_HASH
-                    && payload.content_hash == PREVIOUS_BUILT_IN_CONTENT_HASH))
+                    && PREVIOUS_BUILT_IN_CONTENT_HASHES.contains(&payload.content_hash.as_str())))
         {
             return Err(CoreError::ContentMismatch);
         }
@@ -301,13 +308,17 @@ impl Game {
                     .ok_or_else(|| CoreError::UnknownTerrain(id.clone()))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
-        let player = actor_from_player(payload.player);
+        let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
             .into_iter()
             .map(actor_from_entity)
             .collect::<Vec<_>>();
-        let items = payload.items.into_iter().map(item_from_dto).collect();
+        let items = payload
+            .items
+            .into_iter()
+            .map(item_from_dto)
+            .collect::<Vec<_>>();
         let inventory = payload
             .inventory
             .into_iter()
@@ -318,6 +329,17 @@ impl Game {
             .into_iter()
             .map(|item| equipment_item_from_dto(item, &content))
             .collect::<Result<Vec<_>, CoreError>>()?;
+        let derived_next_item_instance_serial =
+            derive_next_item_instance_serial(&player, &entities, &items, &inventory, &equipment)?;
+        let next_item_instance_serial = if payload.next_item_instance_serial == 0 {
+            derived_next_item_instance_serial
+        } else if payload.next_item_instance_serial < derived_next_item_instance_serial {
+            return Err(CoreError::InvalidSave(
+                "item instance allocator is behind existing IDs",
+            ));
+        } else {
+            payload.next_item_instance_serial
+        };
         let mut explored = payload.explored;
         if explored.is_empty() {
             explored = vec![false; expected_len];
@@ -337,6 +359,7 @@ impl Game {
             items,
             inventory,
             equipment,
+            next_item_instance_serial,
             explored,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
@@ -365,6 +388,7 @@ impl Game {
             items: self.items_dto(),
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
+            next_item_instance_serial: self.next_item_instance_serial,
             explored: self.explored.clone(),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
@@ -438,6 +462,23 @@ impl Game {
                         [
                             ("stacks", stacks.to_string()),
                             ("quantity", quantity.to_string()),
+                        ],
+                    ));
+                } else {
+                    events.push(event("item.drop.none", "item-drop-none"));
+                }
+            }
+            GameCommand::DropQuantity { item_id, quantity } => {
+                if let Some((stacks, dropped_quantity)) =
+                    self.drop_inventory_quantity(&item_id, quantity)?
+                {
+                    changed.insert(self.player.position);
+                    events.push(event_with_args(
+                        "item.drop",
+                        "item-drop-success",
+                        [
+                            ("stacks", stacks.to_string()),
+                            ("quantity", dropped_quantity.to_string()),
                         ],
                     ));
                 } else {
@@ -610,12 +651,18 @@ impl Game {
     }
 
     fn player_dto(&self) -> PlayerDto {
+        let equipment_modifiers = self.equipment_modifiers();
         PlayerDto {
             id: self.player.id.clone(),
             kind_id: self.player.kind_id.clone(),
             position: self.player.position,
             hp: self.player.hp,
-            max_hp: self.player.max_hp,
+            max_hp: self
+                .player
+                .max_hp
+                .saturating_add(equipment_modifiers.max_hp),
+            base_max_hp: self.player.max_hp,
+            equipment_modifiers,
         }
     }
 
@@ -662,6 +709,7 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .and_then(|definition| definition.equipment_slot.clone()),
+                modifiers: self.item_modifiers(&item.kind_id),
             })
             .collect::<Vec<_>>();
         inventory.sort_by(|left, right| left.id.cmp(&right.id));
@@ -677,6 +725,7 @@ impl Game {
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
                 slot_id: item.slot_id.clone(),
+                modifiers: self.item_modifiers(&item.kind_id),
             })
             .collect::<Vec<_>>();
         equipment.sort_by(|left, right| left.slot_id.cmp(&right.slot_id));
@@ -715,6 +764,39 @@ impl Game {
         Some((stacks, quantity))
     }
 
+    fn drop_inventory_quantity(
+        &mut self,
+        item_id: &str,
+        quantity: u32,
+    ) -> Result<Option<(usize, u64)>, CoreError> {
+        let Some(index) = self.inventory.iter().position(|item| item.id == item_id) else {
+            return Ok(None);
+        };
+        if quantity == 0 || quantity > self.inventory[index].quantity {
+            return Ok(None);
+        }
+        let dropped = if quantity == self.inventory[index].quantity {
+            let item = self.inventory.remove(index);
+            Item {
+                id: item.id,
+                kind_id: item.kind_id,
+                position: self.player.position,
+                quantity,
+            }
+        } else {
+            let id = self.allocate_item_instance_id()?;
+            self.inventory[index].quantity -= quantity;
+            Item {
+                id,
+                kind_id: self.inventory[index].kind_id.clone(),
+                position: self.player.position,
+                quantity,
+            }
+        };
+        self.items.push(dropped);
+        Ok(Some((1, u64::from(quantity))))
+    }
+
     fn equip_inventory_item(&mut self, item_id: &str) -> Option<EquipOutcome> {
         let inventory_index = self.inventory.iter().position(|item| item.id == item_id)?;
         let carried = &self.inventory[inventory_index];
@@ -748,6 +830,7 @@ impl Game {
             quantity: item.quantity,
             slot_id: slot_id.clone(),
         });
+        self.clamp_player_hp_to_effective_max();
         Some(EquipOutcome {
             kind_id,
             slot_id,
@@ -767,6 +850,7 @@ impl Game {
             kind_id: item.kind_id,
             quantity: item.quantity,
         });
+        self.clamp_player_hp_to_effective_max();
         Some(kind_id)
     }
 
@@ -816,6 +900,51 @@ impl Game {
             });
         }
         Ok(Some((item.kind_id, item.quantity)))
+    }
+
+    fn item_modifiers(&self, kind_id: &str) -> StatModifiersDto {
+        self.content
+            .item(kind_id)
+            .map_or_else(StatModifiersDto::default, |definition| StatModifiersDto {
+                max_hp: definition.modifiers.max_hp,
+            })
+    }
+
+    fn equipment_modifiers(&self) -> StatModifiersDto {
+        let max_hp = self.equipment.iter().fold(0_i32, |total, item| {
+            total.saturating_add(self.item_modifiers(&item.kind_id).max_hp)
+        });
+        StatModifiersDto { max_hp }
+    }
+
+    fn effective_player_max_hp(&self) -> i32 {
+        self.player
+            .max_hp
+            .saturating_add(self.equipment_modifiers().max_hp)
+    }
+
+    fn clamp_player_hp_to_effective_max(&mut self) {
+        self.player.hp = self.player.hp.min(self.effective_player_max_hp());
+    }
+
+    fn allocate_item_instance_id(&mut self) -> Result<String, CoreError> {
+        loop {
+            let serial = self.next_item_instance_serial;
+            let next = serial.checked_add(1).ok_or(CoreError::ItemIdExhausted)?;
+            let candidate = format!("{GENERATED_ITEM_ID_PREFIX}{serial}");
+            self.next_item_instance_serial = next;
+            if !self.instance_id_exists(&candidate) {
+                return Ok(candidate);
+            }
+        }
+    }
+
+    fn instance_id_exists(&self, candidate: &str) -> bool {
+        self.player.id == candidate
+            || self.entities.iter().any(|entity| entity.id == candidate)
+            || self.items.iter().any(|item| item.id == candidate)
+            || self.inventory.iter().any(|item| item.id == candidate)
+            || self.equipment.iter().any(|item| item.id == candidate)
     }
 
     fn content_visuals(&self) -> Vec<ContentVisualDto> {
@@ -1034,6 +1163,20 @@ impl Game {
                 return Err(CoreError::InvalidSave("equipment item state is invalid"));
             }
         }
+        if self.next_item_instance_serial == 0
+            || self.next_item_instance_serial
+                < derive_next_item_instance_serial(
+                    &self.player,
+                    &self.entities,
+                    &self.items,
+                    &self.inventory,
+                    &self.equipment,
+                )?
+        {
+            return Err(CoreError::InvalidSave(
+                "item instance allocator is behind existing IDs",
+            ));
+        }
         Ok(())
     }
 
@@ -1042,10 +1185,15 @@ impl Game {
             .content
             .actor(&actor.kind_id)
             .ok_or_else(|| CoreError::UnknownActor(actor.kind_id.clone()))?;
+        let effective_max_hp = if expected_role == ActorRole::Player {
+            self.effective_player_max_hp()
+        } else {
+            actor.max_hp
+        };
         if definition.role != expected_role
             || actor.max_hp != definition.max_hp
             || actor.hp <= 0
-            || actor.hp > actor.max_hp
+            || actor.hp > effective_max_hp
         {
             return Err(CoreError::InvalidSave("actor state is invalid"));
         }
@@ -1129,14 +1277,42 @@ const fn position_from_content(position: ContentPosition) -> Position {
     }
 }
 
-fn actor_from_player(player: PlayerDto) -> Actor {
-    Actor {
+fn actor_from_player(player: PlayerDto, content: &ContentCatalog) -> Result<Actor, CoreError> {
+    let definition = content
+        .actor(&player.kind_id)
+        .ok_or_else(|| CoreError::UnknownActor(player.kind_id.clone()))?;
+    if player.base_max_hp != 0 && player.base_max_hp != definition.max_hp {
+        return Err(CoreError::InvalidSave("player base max HP is invalid"));
+    }
+    Ok(Actor {
         id: player.id,
         kind_id: player.kind_id,
         position: player.position,
         hp: player.hp,
-        max_hp: player.max_hp,
-    }
+        max_hp: definition.max_hp,
+    })
+}
+
+fn derive_next_item_instance_serial(
+    player: &Actor,
+    entities: &[Actor],
+    items: &[Item],
+    inventory: &[InventoryItem],
+    equipment: &[EquipmentItem],
+) -> Result<u64, CoreError> {
+    let maximum = std::iter::once(player.id.as_str())
+        .chain(entities.iter().map(|entity| entity.id.as_str()))
+        .chain(items.iter().map(|item| item.id.as_str()))
+        .chain(inventory.iter().map(|item| item.id.as_str()))
+        .chain(equipment.iter().map(|item| item.id.as_str()))
+        .filter_map(generated_item_serial)
+        .max()
+        .unwrap_or(0);
+    maximum.checked_add(1).ok_or(CoreError::ItemIdExhausted)
+}
+
+fn generated_item_serial(id: &str) -> Option<u64> {
+    id.strip_prefix(GENERATED_ITEM_ID_PREFIX)?.parse().ok()
 }
 
 fn actor_from_entity(entity: EntityDto) -> Actor {
@@ -1240,6 +1416,8 @@ pub enum CoreError {
     UnknownActor(String),
     #[error("content set does not define item {0}")]
     UnknownItem(String),
+    #[error("generated item instance ID space is exhausted")]
+    ItemIdExhausted,
     #[error("invalid save: {0}")]
     InvalidSave(&'static str),
     #[error(transparent)]
@@ -1378,7 +1556,7 @@ mod tests {
     #[test]
     fn previous_built_in_content_hash_migrates_without_spawning_new_items() {
         let mut payload = Game::new(42).to_save();
-        payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASH.to_owned();
+        payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[0].to_owned();
         payload
             .items
             .retain(|item| item.kind_id != "demo.item.echo-charm");
@@ -1393,6 +1571,35 @@ mod tests {
                 .iter()
                 .all(|item| item.kind_id != "demo.item.echo-charm")
         );
+    }
+
+    #[test]
+    fn previous_equipment_content_migrates_to_derived_modifiers() {
+        let mut game = Game::new(42);
+        collect_both_demo_items(&mut game);
+        game.dispatch(command(
+            5,
+            4,
+            GameCommand::Equip {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
+        ))
+        .expect("equip should execute");
+        let mut payload = game.to_save();
+        payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[1].to_owned();
+        payload.player.base_max_hp = 0;
+        payload.player.max_hp = 10;
+        payload.player.equipment_modifiers = StatModifiersDto::default();
+        payload.equipment[0].modifiers = StatModifiersDto::default();
+        payload.next_item_instance_serial = 0;
+
+        let restored = Game::from_save(payload).expect("known 1.1 content should migrate");
+        let snapshot = restored.snapshot();
+        assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
+        assert_eq!(snapshot.player.base_max_hp, 10);
+        assert_eq!(snapshot.player.max_hp, 14);
+        assert_eq!(snapshot.player.equipment_modifiers.max_hp, 4);
+        assert_eq!(restored.next_item_instance_serial, 1);
     }
 
     #[test]
@@ -1459,7 +1666,7 @@ mod tests {
         assert_eq!(update.items.len(), 1);
         assert_eq!(update.inventory.len(), 1);
         assert_eq!(update.inventory[0].id, "demo.item.luminous-shard.1");
-        assert_eq!(update.inventory[0].quantity, 1);
+        assert_eq!(update.inventory[0].quantity, 5);
         assert_eq!(update.changed_cells.len(), 1);
         assert_eq!(update.changed_cells[0].position, Position { x: 4, y: 3 });
         assert_eq!(update.changed_cells[0].item_id, None);
@@ -1483,7 +1690,13 @@ mod tests {
         assert_eq!(equipped.inventory.len(), 1);
         assert_eq!(equipped.equipment.len(), 1);
         assert_eq!(equipped.equipment[0].slot_id, "charm");
+        assert_eq!(equipped.equipment[0].modifiers.max_hp, 4);
+        assert_eq!(equipped.player.base_max_hp, 10);
+        assert_eq!(equipped.player.max_hp, 14);
+        assert_eq!(equipped.player.equipment_modifiers.max_hp, 4);
         assert_eq!(equipped.events[0].message_key, "item-equip-success");
+
+        game.player.hp = 14;
 
         let unequipped = game
             .dispatch(command(
@@ -1496,6 +1709,8 @@ mod tests {
             .expect("unequipping should execute");
         assert_eq!(unequipped.inventory.len(), 2);
         assert!(unequipped.equipment.is_empty());
+        assert_eq!(unequipped.player.hp, 10);
+        assert_eq!(unequipped.player.max_hp, 10);
         assert_eq!(unequipped.events[0].message_key, "item-unequip-success");
     }
 
@@ -1527,7 +1742,7 @@ mod tests {
         assert_eq!(update.changed_cells.len(), 1);
         assert_eq!(update.events[0].message_key, "item-drop-success");
         assert_eq!(update.events[0].args["stacks"], "2");
-        assert_eq!(update.events[0].args["quantity"], "2");
+        assert_eq!(update.events[0].args["quantity"], "6");
     }
 
     #[test]
@@ -1565,9 +1780,63 @@ mod tests {
             .dispatch(command(2, 1, GameCommand::PickUp))
             .expect("pickup should execute");
 
-        assert_eq!(update.inventory.len(), 1);
+        assert_eq!(update.inventory.len(), 2);
         assert_eq!(update.inventory[0].id, "demo.inventory.luminous-shard.1");
         assert_eq!(update.inventory[0].quantity, 20);
+        assert_eq!(update.inventory[1].id, "demo.item.luminous-shard.1");
+        assert_eq!(update.inventory[1].quantity, 4);
+    }
+
+    #[test]
+    fn partial_drop_allocates_stable_ids_and_survives_save_round_trip() {
+        let mut game = Game::new(42);
+        game.dispatch(command(
+            1,
+            0,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        ))
+        .expect("move should execute");
+        game.dispatch(command(2, 1, GameCommand::PickUp))
+            .expect("pickup should execute");
+        let first_drop = game
+            .dispatch(command(
+                3,
+                2,
+                GameCommand::DropQuantity {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    quantity: 2,
+                },
+            ))
+            .expect("partial drop should execute");
+
+        assert_eq!(first_drop.inventory[0].quantity, 3);
+        assert!(first_drop.items.iter().any(|item| {
+            item.id == "generated.item.1"
+                && item.quantity == 2
+                && item.position == Position { x: 4, y: 3 }
+        }));
+        assert_eq!(game.next_item_instance_serial, 2);
+
+        let mut restored = Game::from_save(game.to_save()).expect("save should preserve allocator");
+        let second_drop = restored
+            .dispatch(command(
+                4,
+                3,
+                GameCommand::DropQuantity {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    quantity: 1,
+                },
+            ))
+            .expect("second partial drop should execute");
+        assert!(
+            second_drop
+                .items
+                .iter()
+                .any(|item| item.id == "generated.item.2" && item.quantity == 1)
+        );
+        assert_eq!(restored.next_item_instance_serial, 3);
     }
 
     #[test]

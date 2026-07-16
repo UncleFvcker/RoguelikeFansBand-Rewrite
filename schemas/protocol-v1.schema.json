@@ -152,6 +152,12 @@
         "kindId": {
           "type": "string"
         },
+        "modifiers": {
+          "$ref": "#/$defs/StatModifiersDto",
+          "default": {
+            "maxHp": 0
+          }
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -187,6 +193,28 @@
           "required": [
             "type",
             "itemIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "drop-quantity"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
           ]
         },
         {
@@ -531,6 +559,12 @@
         "kindId": {
           "type": "string"
         },
+        "modifiers": {
+          "$ref": "#/$defs/StatModifiersDto",
+          "default": {
+            "maxHp": 0
+          }
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -571,6 +605,17 @@
     "PlayerDto": {
       "type": "object",
       "properties": {
+        "baseMaxHp": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "equipmentModifiers": {
+          "$ref": "#/$defs/StatModifiersDto",
+          "default": {
+            "maxHp": 0
+          }
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -613,6 +658,16 @@
         "x",
         "y"
       ]
+    },
+    "StatModifiersDto": {
+      "type": "object",
+      "properties": {
+        "maxHp": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        }
+      }
     },
     "VisibilityState": {
       "type": "string",

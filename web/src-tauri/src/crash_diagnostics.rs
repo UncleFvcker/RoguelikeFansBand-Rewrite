@@ -504,7 +504,7 @@ mod tests {
     fn metadata() -> DiagnosticMetadata {
         DiagnosticMetadata {
             app_version: "0.1.0".to_owned(),
-            protocol_version: "1.4".to_owned(),
+            protocol_version: "1.5".to_owned(),
             operating_system: "windows".to_owned(),
             architecture: "x86_64".to_owned(),
         }

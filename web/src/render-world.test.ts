@@ -87,7 +87,7 @@ test("remembered and hidden cells do not expose current occupants", () => {
 
 function snapshotFixture() {
   return {
-    protocolVersion: "1.4",
+    protocolVersion: "1.5",
     revision: 0,
     turn: 0,
     lastCommandSeq: 0,

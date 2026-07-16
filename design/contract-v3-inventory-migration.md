@@ -2,7 +2,7 @@
 
 状态：已完成
 
-`contract-v3` 是加入拾取命令和背包权威状态后的历史基准，现已由 `contract-v4` 接替为 active。`contract-v1` 至 `contract-v3` 均保留用于迁移审计，不由当前核心执行 active exact state hash 验证。
+`contract-v3` 是加入拾取命令和背包权威状态后的历史基准，现已由 `contract-v5` 接替为 active。`contract-v1` 至 `contract-v4` 均保留用于迁移审计，不由当前核心执行 active exact state hash 验证。
 
 本次迁移原因：
 

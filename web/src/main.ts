@@ -40,6 +40,7 @@ let busy = false;
 let nativeSaveBusy = false;
 let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
+let dropQuantityItemId: string | undefined;
 
 const mapHost = element<HTMLElement>("map-host");
 const connectionStatus = element<HTMLElement>("connection-status");
@@ -52,6 +53,7 @@ const inventoryCount = element<HTMLElement>("inventory-count");
 const inventorySelectionCount = element<HTMLElement>("inventory-selection-count");
 const inventoryEquip = element<HTMLButtonElement>("inventory-equip");
 const inventoryDrop = element<HTMLButtonElement>("inventory-drop");
+const inventoryDropQuantity = element<HTMLInputElement>("inventory-drop-quantity");
 const inventoryList = element<HTMLUListElement>("inventory-list");
 const equipmentList = element<HTMLUListElement>("equipment-list");
 const nativeSaveName = element<HTMLInputElement>("native-save-name");
@@ -96,6 +98,7 @@ let cameraMode = readCameraMode();
 let zoom = readZoomLevel();
 const localization = new Localization(readLocale(), LOCALIZATION_SOURCES);
 let connectionState: ConnectionState = "starting";
+let currentStatus: GameSnapshot | GameUpdate | undefined;
 let currentInventory: InventoryItemDto[] = [];
 let currentEquipment: EquipmentItemDto[] = [];
 const selectedInventoryIds = new Set<string>();
@@ -162,6 +165,7 @@ nativeSaveRefresh.addEventListener("click", () => void refreshNativeSaves());
 nativeSaveName.addEventListener("input", updateNativeSaveControls);
 inventoryEquip.addEventListener("click", () => void equipSelectedInventoryItem());
 inventoryDrop.addEventListener("click", () => void dropSelectedInventoryItems());
+inventoryDropQuantity.addEventListener("input", updateInventoryActions);
 clearMessages.addEventListener("click", () => {
   messageRecords.length = 0;
   renderMessages();
@@ -192,6 +196,7 @@ languageSelect.addEventListener("change", () => {
   languageSelect.value = locale;
   renderer.setCanvasLabel(localization.format("map-aria-label"));
   renderConnectionStatus();
+  if (currentStatus) renderStatus(currentStatus);
   renderInputHelp();
   renderInventory(currentInventory, currentEquipment);
   localizeNativeSaveControls();
@@ -583,8 +588,18 @@ async function changeTileset(): Promise<void> {
 }
 
 function renderStatus(state: GameSnapshot | GameUpdate): void {
+  currentStatus = state;
   turnValue.textContent = String(state.turn);
-  hpValue.textContent = `${state.player.hp} / ${state.player.maxHp}`;
+  hpValue.textContent = localization.format(
+    state.player.equipmentModifiers.maxHp > 0
+      ? "status-health-value-bonus"
+      : "status-health-value",
+    {
+      hp: state.player.hp,
+      maxHp: state.player.maxHp,
+      bonus: state.player.equipmentModifiers.maxHp,
+    },
+  );
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
@@ -649,6 +664,7 @@ function renderInventory(
         });
         details.append(equippable);
       }
+      appendItemModifiers(details, item.modifiers.maxHp);
       const quantity = document.createElement("span");
       quantity.className = "inventory-quantity";
       quantity.textContent = localization.format("inventory-quantity", {
@@ -684,6 +700,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
     slot.className = "equipment-slot";
     slot.textContent = equipmentSlotName(item.slotId);
     details.append(name, slot);
+    appendItemModifiers(details, item.modifiers.maxHp);
     const unequip = document.createElement("button");
     unequip.type = "button";
     unequip.textContent = localization.format("action-equipment-unequip");
@@ -701,10 +718,18 @@ async function equipSelectedInventoryItem(): Promise<void> {
 }
 
 async function dropSelectedInventoryItems(): Promise<void> {
-  const itemIds = selectedInventoryItems()
-    .map((item) => item.id)
-    .sort();
-  if (busy || itemIds.length === 0) return;
+  const selected = selectedInventoryItems();
+  if (busy || selected.length === 0) return;
+  const [item] = selected;
+  if (selected.length === 1 && item) {
+    const quantity = selectedDropQuantity(item);
+    if (quantity === undefined) return;
+    if (quantity < item.quantity) {
+      await dispatch({ type: "drop-quantity", itemId: item.id, quantity });
+      return;
+    }
+  }
+  const itemIds = selected.map((item) => item.id).sort();
   await dispatch({ type: "drop", itemIds });
 }
 
@@ -723,7 +748,22 @@ function updateInventoryActions(): void {
     count: selected.length,
   });
   inventoryEquip.disabled = busy || selected.length !== 1 || !selected[0]?.equipmentSlot;
-  inventoryDrop.disabled = busy || selected.length === 0;
+  const [item] = selected;
+  if (selected.length === 1 && item) {
+    if (dropQuantityItemId !== item.id) {
+      dropQuantityItemId = item.id;
+      inventoryDropQuantity.value = String(item.quantity);
+    }
+    inventoryDropQuantity.min = "1";
+    inventoryDropQuantity.max = String(item.quantity);
+    inventoryDropQuantity.disabled = busy;
+    inventoryDrop.disabled = busy || selectedDropQuantity(item) === undefined;
+  } else {
+    dropQuantityItemId = undefined;
+    inventoryDropQuantity.value = "";
+    inventoryDropQuantity.disabled = true;
+    inventoryDrop.disabled = busy || selected.length === 0;
+  }
   for (const checkbox of inventoryList.querySelectorAll<HTMLInputElement>(
     'input[type="checkbox"]',
   )) {
@@ -732,6 +772,21 @@ function updateInventoryActions(): void {
   for (const button of equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
     button.disabled = busy;
   }
+}
+
+function selectedDropQuantity(item: InventoryItemDto): number | undefined {
+  const quantity = Number(inventoryDropQuantity.value);
+  return Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= item.quantity
+    ? quantity
+    : undefined;
+}
+
+function appendItemModifiers(container: HTMLElement, maxHp: number): void {
+  if (maxHp <= 0) return;
+  const modifier = document.createElement("span");
+  modifier.className = "item-modifier";
+  modifier.textContent = localization.format("item-modifier-max-hp", { value: maxHp });
+  container.append(modifier);
 }
 
 function formatEvent(event: GameEventDto): string {

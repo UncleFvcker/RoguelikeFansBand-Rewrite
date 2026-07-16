@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 4;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 5;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -563,6 +563,47 @@ mod tests {
         assert_eq!(final_game.snapshot().items.len(), 2);
         let verification = verify(&replay, initial).expect("inventory action replay should verify");
         assert_eq!(verification.commands_verified, 7);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn partial_drop_allocator_round_trips_through_replay() {
+        let initial = Game::new(42);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        for command in [
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::PickUp,
+            GameCommand::DropQuantity {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+                quantity: 2,
+            },
+            GameCommand::DropQuantity {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+                quantity: 1,
+            },
+        ] {
+            recorder.dispatch(command).expect("command should execute");
+        }
+        let (final_game, replay) = recorder.finish();
+        let snapshot = final_game.snapshot();
+
+        assert!(
+            snapshot
+                .items
+                .iter()
+                .any(|item| item.id == "generated.item.1")
+        );
+        assert!(
+            snapshot
+                .items
+                .iter()
+                .any(|item| item.id == "generated.item.2")
+        );
+        assert_eq!(snapshot.inventory[0].quantity, 2);
+        let verification = verify(&replay, initial).expect("partial drop replay should verify");
+        assert_eq!(verification.commands_verified, 4);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 

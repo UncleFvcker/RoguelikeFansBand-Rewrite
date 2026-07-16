@@ -94,6 +94,14 @@ pub struct ActorDefinition {
     pub tags: Vec<String>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StatModifiers {
+    #[serde(default)]
+    pub max_hp: i32,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -108,6 +116,8 @@ pub struct ItemDefinition {
     pub max_stack: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
+    #[serde(default)]
+    pub modifiers: StatModifiers,
     pub tags: Vec<String>,
 }
 
@@ -529,6 +539,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             && (item.max_stack != 1 || validate_equipment_slot(slot).is_err())
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
+        }
+        if item.modifiers.max_hp < 0
+            || item.modifiers.max_hp > 1_000_000
+            || (item.equipment_slot.is_none() && item.modifiers != StatModifiers::default())
+        {
+            return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
@@ -1106,6 +1122,8 @@ pub enum ContentError {
     InvalidItemStack(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
     InvalidEquipmentSlot(String),
+    #[error("item stat modifiers are invalid or require an equipment slot: {0}")]
+    InvalidItemModifiers(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1185,7 +1203,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.1.0");
+        assert_eq!(catalog.pack_version(), "1.2.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1210,6 +1228,12 @@ mod tests {
                 .item("demo.item.echo-charm")
                 .and_then(|item| item.equipment_slot.as_deref()),
             Some("charm")
+        );
+        assert_eq!(
+            catalog
+                .item("demo.item.echo-charm")
+                .map(|item| item.modifiers.max_hp),
+            Some(4)
         );
         assert!(catalog.world("demo.world.original-v1").is_some());
         assert_eq!(
@@ -1260,6 +1284,18 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidEquipmentSlot(_))
+        ));
+
+        let mut invalid = artifact.content;
+        let shard = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.luminous-shard")
+            .expect("fixture should contain the shard");
+        shard.modifiers.max_hp = 1;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemModifiers(_))
         ));
     }
 

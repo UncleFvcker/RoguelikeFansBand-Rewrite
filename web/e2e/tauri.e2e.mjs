@@ -147,7 +147,7 @@ async function runScenario(driver) {
   assert.equal(state.totalRebuiltTerrainChunks, "9");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.4");
+  assert.equal(state.protocolVersion, "1.5");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -162,7 +162,7 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
+    "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
   assert.equal(state.contentVisualCount, "6");
@@ -205,8 +205,8 @@ async function runScenario(driver) {
   assert.equal(state.itemCount, "1");
   assert.equal(state.inventoryStackCount, "1");
   assert.match(state.inventory, /发光碎片/);
-  assert.match(state.inventory, /×1/);
-  assert.match(state.messages, /你将 1 个发光碎片收入了背包/);
+  assert.match(state.inventory, /×5/);
+  assert.match(state.messages, /你将 5 个发光碎片收入了背包/);
 
   const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
   const nativeSaveHash = state.stateHash;
@@ -305,23 +305,45 @@ async function runScenario(driver) {
   assert.ok(download.size > 100, `save is unexpectedly small: ${download.size}`);
   assert.match((await readState(driver)).messages, /已导出带校验和的 \.rfbsave 存档/);
 
+  await driver.execute(`
+    const row = document.querySelector('[data-item-id="demo.item.luminous-shard.1"]');
+    row.querySelector('input[type="checkbox"]').click();
+    const quantity = document.querySelector("#inventory-drop-quantity");
+    quantity.value = "2";
+    quantity.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  `);
+  await click(driver, "#inventory-drop");
+  await driver.waitFor(
+    `return document.querySelector("#turn-value")?.textContent === "4" && document.querySelector('[data-item-id="demo.item.luminous-shard.1"] .inventory-quantity')?.textContent === "×3"`,
+    "partial stack drop",
+  );
+  state = await readState(driver);
+  assert.equal(state.itemCount, "2");
+  assert.equal(state.inventoryStackCount, "1");
+  assert.match(state.messages, /丢下了 1 堆物品，共 2 件/);
+
   await dispatchKey(driver, "Numpad6", "6");
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "5, 3" && document.querySelector("#turn-value")?.textContent === "4"`,
+    `return document.querySelector("#position-value")?.textContent === "5, 3" && document.querySelector("#turn-value")?.textContent === "5"`,
     "movement to equippable item",
   );
   await dispatchKey(driver, "KeyG", "g");
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "5" && document.querySelector("#inventory-count")?.textContent === "2 堆"`,
+    `return document.querySelector("#turn-value")?.textContent === "6" && document.querySelector("#inventory-count")?.textContent === "2 堆"`,
     "second item pickup",
   );
   state = await readState(driver);
-  assert.equal(state.itemCount, "0");
+  assert.equal(state.itemCount, "1");
   assert.equal(state.inventoryStackCount, "2");
   assert.match(state.inventory, /回声护符/);
   assert.match(state.inventory, /可装备：护符/);
+  assert.match(state.inventory, /最大生命 \+4/);
 
   await driver.execute(`
+    for (const checkbox of document.querySelectorAll('#inventory-list input[type="checkbox"]')) {
+      if (checkbox.checked) checkbox.click();
+    }
     const row = document.querySelector('[data-item-id="demo.item.echo-charm.1"]');
     const checkbox = row.querySelector('input[type="checkbox"]');
     checkbox.click();
@@ -329,22 +351,25 @@ async function runScenario(driver) {
   `);
   await click(driver, "#inventory-equip");
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "6" && document.querySelector("#map-host")?.dataset.equipmentCount === "1"`,
+    `return document.querySelector("#turn-value")?.textContent === "7" && document.querySelector("#map-host")?.dataset.equipmentCount === "1"`,
     "equipment action",
   );
   state = await readState(driver);
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.equipmentCount, "1");
   assert.match(state.equipment, /回声护符/);
+  assert.match(state.equipment, /最大生命 \+4/);
+  assert.match(state.health, /10 \/ 14（装备 \+4）/);
   assert.match(state.messages, /装备在护符槽位/);
 
   await click(driver, '[data-slot-id="charm"] button');
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "7" && document.querySelector("#map-host")?.dataset.equipmentCount === "0"`,
+    `return document.querySelector("#turn-value")?.textContent === "8" && document.querySelector("#map-host")?.dataset.equipmentCount === "0"`,
     "unequipment action",
   );
   state = await readState(driver);
   assert.equal(state.inventoryStackCount, "2");
+  assert.equal(state.health, "10 / 10");
   assert.match(state.messages, /卸下了回声护符/);
 
   await driver.execute(`
@@ -359,13 +384,13 @@ async function runScenario(driver) {
   );
   await click(driver, "#inventory-drop");
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "8" && document.querySelector("#inventory-count")?.textContent === "0 堆"`,
+    `return document.querySelector("#turn-value")?.textContent === "9" && document.querySelector("#inventory-count")?.textContent === "0 堆"`,
     "batch item drop",
   );
   state = await readState(driver);
-  assert.equal(state.itemCount, "2");
+  assert.equal(state.itemCount, "3");
   assert.equal(state.inventoryStackCount, "0");
-  assert.match(state.messages, /丢下了 2 堆物品，共 2 件/);
+  assert.match(state.messages, /丢下了 2 堆物品，共 4 件/);
 
   await driver.execute(`
     const saved = window.__rfbE2eDownloads.find((item) => item.fileName.endsWith(".rfbsave"));
@@ -569,7 +594,7 @@ async function runScenario(driver) {
   assert.equal(state.stateHash, hashBeforeLanguageSwitch);
   assert.equal(state.canvasUnchanged, true);
   assert.match(state.inventory, /luminous shard/);
-  assert.match(state.messages, /You pick up luminous shard ×1/);
+  assert.match(state.messages, /You pick up luminous shard ×5/);
   assert.match(state.controls, /Numpad 1–9 moves in eight directions/);
 }
 
@@ -579,6 +604,7 @@ async function readState(driver) {
     return {
       turn: document.querySelector("#turn-value")?.textContent,
       position: document.querySelector("#position-value")?.textContent,
+      health: document.querySelector("#hp-value")?.textContent,
       renderKind: host?.dataset.renderKind,
       appliedCells: host?.dataset.lastAppliedCells,
       tilesetId: host?.dataset.tilesetId,

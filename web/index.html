@@ -94,7 +94,11 @@
             </div>
             <div class="inventory-actions">
               <span id="inventory-selection-count"></span>
-              <div>
+              <div class="inventory-action-controls">
+                <label class="inventory-drop-quantity" for="inventory-drop-quantity">
+                  <span data-l10n-id="inventory-drop-quantity-label"></span>
+                  <input id="inventory-drop-quantity" type="number" min="1" step="1" inputmode="numeric" />
+                </label>
                 <button id="inventory-equip" type="button" data-l10n-id="action-inventory-equip"></button>
                 <button id="inventory-drop" type="button" data-l10n-id="action-inventory-drop"></button>
               </div>

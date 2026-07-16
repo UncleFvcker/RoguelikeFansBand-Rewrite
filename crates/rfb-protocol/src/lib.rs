@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.4";
+pub const PROTOCOL_VERSION: &str = "1.5";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
@@ -50,11 +50,20 @@ impl Direction {
 )]
 pub enum GameCommand {
     Drop { item_ids: Vec<String> },
+    DropQuantity { item_id: String, quantity: u32 },
     Equip { item_id: String },
     Move { direction: Direction },
     PickUp,
     Unequip { slot_id: String },
     Wait,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct StatModifiersDto {
+    #[serde(default)]
+    pub max_hp: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -126,6 +135,10 @@ pub struct PlayerDto {
     pub position: Position,
     pub hp: i32,
     pub max_hp: i32,
+    #[serde(default)]
+    pub base_max_hp: i32,
+    #[serde(default)]
+    pub equipment_modifiers: StatModifiersDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -158,6 +171,8 @@ pub struct InventoryItemDto {
     pub quantity: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
+    #[serde(default)]
+    pub modifiers: StatModifiersDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -168,6 +183,8 @@ pub struct EquipmentItemDto {
     pub kind_id: String,
     pub quantity: u32,
     pub slot_id: String,
+    #[serde(default)]
+    pub modifiers: StatModifiersDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -257,6 +274,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(Direction);
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
+    push_declaration!(StatModifiersDto);
     push_declaration!(Position);
     push_declaration!(CellDto);
     push_declaration!(VisibilityState);
@@ -314,6 +332,8 @@ pub struct SavePayloadV1 {
     pub inventory: Vec<InventoryItemDto>,
     #[serde(default)]
     pub equipment: Vec<EquipmentItemDto>,
+    #[serde(default)]
+    pub next_item_instance_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub explored: Vec<bool>,
     pub rng: RngSaveDto,
@@ -385,6 +405,10 @@ mod tests {
             GameCommand::Drop {
                 item_ids: vec!["demo.item.echo-charm.1".to_owned()],
             },
+            GameCommand::DropQuantity {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+                quantity: 2,
+            },
             GameCommand::Wait,
         ]
         .into_iter()
@@ -409,6 +433,7 @@ mod tests {
         assert!(typescript.contains("actorId: string | null"));
         assert!(typescript.contains("commandSeq: number"));
         assert!(typescript.contains("itemIds: Array<string>"));
+        assert!(typescript.contains("equipmentModifiers: StatModifiersDto"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
 

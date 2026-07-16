@@ -3,9 +3,11 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "equip", itemId: string, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
+
+export type StatModifiersDto = { maxHp: number, };
 
 export type Position = { x: number, y: number, };
 
@@ -19,15 +21,15 @@ export type CellVisualDto = { position: Position, visibility: VisibilityState, l
 
 export type ContentVisualDto = { id: string, glyph: string, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, };
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, baseMaxHp: number, equipmentModifiers: StatModifiersDto, };
 
 export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, };
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 
-export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, };
+export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, modifiers: StatModifiersDto, };
 
-export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, };
+export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, };
 

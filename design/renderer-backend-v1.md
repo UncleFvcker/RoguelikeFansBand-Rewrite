@@ -69,7 +69,7 @@ Node 测试覆盖：
 - 玩家居中、四边钳制、小地图居中和整图零偏移；
 - 缩放后的中心跟随与远端边缘钳制。
 
-Windows E2E 验证协议 1.4、`pixi-layered-chunks-v2` backend ID、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、4/6/9 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
+Windows E2E 验证协议 1.5、`pixi-layered-chunks-v2` backend ID、五层顺序、400 个初始权威视觉格、79 格移动更新、0 格等待更新、1 格拾取/丢弃更新、400 格 tileset 重绘，以及语言/tileset/镜头/缩放切换时 Canvas 保持不变。镜头 E2E 还验证 420×420 玩家视口、150% 缩放后的相机偏移、边缘钳制、4/6/9 个可见 chunk，以及视觉设置不改变 state hash 或累计 applied cells。
 
 ## 7. 后续
 

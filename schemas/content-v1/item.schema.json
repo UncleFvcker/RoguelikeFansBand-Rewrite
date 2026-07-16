@@ -1,4 +1,17 @@
 {
+  "$defs": {
+    "StatModifiers": {
+      "additionalProperties": false,
+      "properties": {
+        "maxHp": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
@@ -32,6 +45,12 @@
       "format": "uint32",
       "minimum": 0,
       "type": "integer"
+    },
+    "modifiers": {
+      "$ref": "#/$defs/StatModifiers",
+      "default": {
+        "maxHp": 0
+      }
     },
     "nameKey": {
       "type": "string"

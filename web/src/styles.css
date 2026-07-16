@@ -218,7 +218,31 @@ h1 {
 
 .inventory-actions > div {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.45rem;
+}
+
+.inventory-drop-quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.inventory-drop-quantity input {
+  width: 3.7rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid rgb(103 137 168 / 28%);
+  border-radius: 5px;
+  background: #111a24;
+  color: #c8d5e3;
+  font: inherit;
+}
+
+.inventory-drop-quantity input:disabled {
+  opacity: 0.45;
 }
 
 .inventory-actions > span {
@@ -276,6 +300,11 @@ h1 {
 
 .inventory-equippable {
   color: #9d8bd7;
+  font-size: 0.7rem;
+}
+
+.item-modifier {
+  color: #d6b56f;
   font-size: 0.7rem;
 }
 

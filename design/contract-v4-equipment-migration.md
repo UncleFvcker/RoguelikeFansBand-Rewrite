@@ -2,7 +2,7 @@
 
 状态：已完成
 
-`contract-v4` 是加入权威装备列表、装备/卸下命令和批量丢弃后的 active contract 基准。`contract-v1` 至 `contract-v3` 继续作为历史记录保留，不由当前核心执行 active exact state hash 验证。
+`contract-v4` 是加入权威装备列表、装备/卸下命令和批量丢弃后的历史 contract 基准，现已由 `contract-v5` 接替为 active。`contract-v1` 至 `contract-v4` 继续作为历史记录保留，不由当前核心执行 active exact state hash 验证。
 
 ## 1. 迁移内容
 
@@ -15,7 +15,7 @@
 - HTML 背包加入复选框、多选计数、装备所选、丢弃所选和独立装备列表；
 - 批量丢弃一次移动所选完整物品堆，并只产生一个权威命令和一次回合推进。
 
-装备目前只建立身份、槽位、存档与交互闭环，尚未增加属性加成。丢弃当前只支持完整物品堆；部分数量拆分需要独立的稳定实例 ID 分配规则，留待后续版本。
+本版本中的装备尚未增加属性加成，丢弃也只支持完整物品堆。这两个限制已在[Contract v5 装备属性与物品实例迁移](contract-v5-item-instance-migration.md)中解决。
 
 ## 2. 兼容性
 

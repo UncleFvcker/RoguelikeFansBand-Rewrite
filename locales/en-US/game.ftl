@@ -32,6 +32,10 @@ message-item-equip-swap = You unequip { $replaced } and equip { $target } in the
 message-item-equip-unavailable = The selected item cannot be equipped right now.
 message-item-unequip-success = You unequip { $target } from the { $slot } slot.
 message-item-unequip-none = There is nothing to unequip from the { $slot } slot.
-message-item-drop-success = You drop { $stacks } stacks containing { $quantity } items.
+message-item-drop-success =
+    { $stacks ->
+        [one] You drop 1 stack containing { $quantity } items.
+       *[other] You drop { $stacks } stacks containing { $quantity } items.
+    }
 message-item-drop-none = None of the selected items can be dropped.
 message-unknown-event = [{ $key }]
