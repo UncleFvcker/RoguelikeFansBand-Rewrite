@@ -277,6 +277,12 @@
             "toHit": 0
           }
         },
+        "meleeRoutine": {
+          "$ref": "#/$defs/MeleeRoutineDto",
+          "default": {
+            "blows": []
+          }
+        },
         "meleeSkill": {
           "type": "integer",
           "format": "int32",
@@ -847,6 +853,40 @@
         "kindId",
         "position",
         "quantity"
+      ]
+    },
+    "MeleeBlowDto": {
+      "type": "object",
+      "properties": {
+        "damage": {
+          "$ref": "#/$defs/DamageDiceDto"
+        },
+        "methodId": {
+          "type": "string"
+        },
+        "toHit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "methodId",
+        "toHit",
+        "damage"
+      ]
+    },
+    "MeleeRoutineDto": {
+      "type": "object",
+      "properties": {
+        "blows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MeleeBlowDto"
+          }
+        }
+      },
+      "required": [
+        "blows"
       ]
     },
     "PlayerDto": {

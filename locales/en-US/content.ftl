@@ -10,5 +10,7 @@ actor-demo-acid-seep-name = caustic seep
 actor-demo-storm-spark-name = storm spark
 actor-demo-frost-wisp-name = frost wisp
 actor-demo-venom-spore-name = venom spore
+actor-demo-echo-hound-name = echo hound
+actor-demo-echo-hound-description = A resonant beast that bites and rakes in sequence.
 actor-unknown-name = unknown entity
 world-demo-original-lab-name = Original Lab

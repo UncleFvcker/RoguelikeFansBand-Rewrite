@@ -114,7 +114,7 @@ rfb.terrain.wall.granite
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 五份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的 `attack`、`defense`、`maxHp`、`damageDice`、`damageSides` 和 `speed` 声明基础战斗与行动属性，并以 `damageType` 声明物理、酸、电、火、冷或毒近战。物品可声明 `equipmentSlot`、属性 modifier，以及仅供不可堆叠 `weapon` 使用的 `meleeProfile`（攻击次数、命中/伤害修正、伤害骰和类型）。原创包 1.8.0 的回声刃提供双击档案；回声护符继续提供攻击 +1、防御 +1、最大生命 +4。
+角色定义使用必需的基础战斗字段，并可为怪物声明 `meleeRoutine.blows`；每个 blow 包含稳定 method ID、命中修正、伤害骰和类型，列表限制为 1–8 项。未声明 routine 时由既有伤害字段构造单击 fallback。物品可声明仅供不可堆叠 `weapon` 使用的 `meleeProfile`。原创包 1.9.0 的回声猎犬提供物理撕咬与冷属性抓击。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -196,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 以 1.8.0 内容包增加武器 `meleeProfile`。state hash Schema 仍为 v9，精确内容 hash 随内容包更新。旧版本继续作为历史记录保留。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 以 1.8.0 增加武器 `meleeProfile`，contract-v13 以 1.9.0 增加怪物 `meleeRoutine`。state hash Schema 仍为 v9。

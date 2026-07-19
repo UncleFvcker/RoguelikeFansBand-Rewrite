@@ -97,6 +97,25 @@ pub enum ActorDamageType {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MeleeBlowDefinition {
+    pub method_id: String,
+    pub to_hit: i32,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MeleeRoutineDefinition {
+    pub blows: Vec<MeleeBlowDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -116,6 +135,8 @@ pub struct ActorDefinition {
     pub damage_sides: u16,
     #[serde(default)]
     pub damage_type: ActorDamageType,
+    #[serde(default)]
+    pub melee_routine: Option<MeleeRoutineDefinition>,
     pub tags: Vec<String>,
 }
 
@@ -575,6 +596,23 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || actor.damage_sides > 10_000
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
+        }
+        if let Some(routine) = &actor.melee_routine {
+            if actor.role != ActorRole::Monster
+                || routine.blows.is_empty()
+                || routine.blows.len() > 8
+                || routine.blows.iter().any(|blow| {
+                    validate_id(&blow.method_id).is_err()
+                        || blow.to_hit < -1_000_000
+                        || blow.to_hit > 1_000_000
+                        || blow.damage_dice == 0
+                        || blow.damage_dice > 100
+                        || blow.damage_sides == 0
+                        || blow.damage_sides > 10_000
+                })
+            {
+                return Err(ContentError::InvalidMeleeRoutine(actor.id.clone()));
+            }
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
         insert_definition_id(&mut all_ids, &actor.id)?;
@@ -1194,6 +1232,8 @@ pub enum ContentError {
     DuplicateDefinitionId(String),
     #[error("actor stats are outside supported limits: {0}")]
     InvalidActorStats(String),
+    #[error("actor melee routine is invalid or requires the monster role: {0}")]
+    InvalidMeleeRoutine(String),
     #[error("item stack limit is outside supported limits: {0}")]
     InvalidItemStack(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
@@ -1269,7 +1309,7 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
-        assert_eq!(first.content.actors.len(), 6);
+        assert_eq!(first.content.actors.len(), 7);
         assert_eq!(first.content.items.len(), 3);
         assert_eq!(first.content.worlds.len(), 1);
     }
@@ -1281,7 +1321,18 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.8.0");
+        assert_eq!(catalog.pack_version(), "1.9.0");
+        assert_eq!(
+            catalog
+                .actor("demo.actor.echo-hound")
+                .and_then(|actor| actor.melee_routine.as_ref())
+                .map(|routine| routine
+                    .blows
+                    .iter()
+                    .map(|blow| blow.method_id.as_str())
+                    .collect::<Vec<_>>()),
+            Some(vec!["rfb.blow.echo-bite", "rfb.blow.echo-rake"])
+        );
         assert_eq!(
             catalog
                 .item("demo.item.echo-blade")
@@ -1415,6 +1466,40 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidAttackProfile(_))
+        ));
+    }
+
+    #[test]
+    fn melee_routines_require_monsters_and_valid_blow_profiles() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let mut invalid = artifact.content.clone();
+        let hound = invalid
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-hound")
+            .expect("fixture should contain the echo hound");
+        hound.role = ActorRole::Player;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidMeleeRoutine(_))
+        ));
+
+        let mut invalid = artifact.content;
+        let hound = invalid
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-hound")
+            .expect("fixture should contain the echo hound");
+        hound
+            .melee_routine
+            .as_mut()
+            .expect("hound should have a melee routine")
+            .blows[0]
+            .damage_dice = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidMeleeRoutine(_))
         ));
     }
 

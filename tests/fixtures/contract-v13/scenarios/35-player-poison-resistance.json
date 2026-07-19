@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "id": "status.player.poison-resistance",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0x000000000000002a",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [
+      {
+        "kindId": "rfb.status.poison",
+        "intensity": 2,
+        "remainingTicks": 3,
+        "sourceId": "demo.monster.ember-mote.1"
+      }
+    ],
+    "playerResistances": [
+      {
+        "damageType": "poison",
+        "level": "resistant"
+      }
+    ],
+    "entityEffects": []
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 7,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerStatuses": [],
+      "playerResistances": [
+        {
+          "damageType": "poison",
+          "level": "resistant"
+        }
+      ],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 7,
+            "y": 4
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 3,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "9864908ac8a5239332e9896939fd6cd6fb273a6ec722dd15ab3c69d17ae2f1e4"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "status.player-damage",
+        "messageKey": "status-player-damage",
+        "args": {
+          "damage": "1",
+          "status": "rfb.status.poison"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
+            "finalDamage": 1,
+            "damageType": "poison",
+            "resistance": "resistant"
+          }
+        }
+      },
+      {
+        "kind": "status.player-damage",
+        "messageKey": "status-player-damage",
+        "args": {
+          "damage": "1",
+          "status": "rfb.status.poison"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
+            "finalDamage": 1,
+            "damageType": "poison",
+            "resistance": "resistant"
+          }
+        }
+      },
+      {
+        "kind": "status.player-damage",
+        "messageKey": "status-player-damage",
+        "args": {
+          "damage": "1",
+          "status": "rfb.status.poison"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
+            "finalDamage": 1,
+            "damageType": "poison",
+            "resistance": "resistant"
+          }
+        }
+      },
+      {
+        "kind": "status.player-expired",
+        "messageKey": "status-player-expired",
+        "args": {
+          "status": "rfb.status.poison"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "9864908ac8a5239332e9896939fd6cd6fb273a6ec722dd15ab3c69d17ae2f1e4"
+  }
+}

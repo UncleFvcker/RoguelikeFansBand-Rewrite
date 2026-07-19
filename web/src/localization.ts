@@ -151,6 +151,8 @@ export const MESSAGE_KEYS = [
   "actor-demo-storm-spark-name",
   "actor-demo-frost-wisp-name",
   "actor-demo-venom-spore-name",
+  "actor-demo-echo-hound-name",
+  "actor-demo-echo-hound-description",
   "actor-unknown-name",
   "status-poison-name",
   "status-bleeding-name",

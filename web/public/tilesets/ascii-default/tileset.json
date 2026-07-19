@@ -26,6 +26,10 @@
       "foreground": "#ff9b5e",
       "background": "#47251c"
     },
+    "demo.actor.echo-hound": {
+      "foreground": "#b8d8ff",
+      "background": "#1c2947"
+    },
     "demo.item.luminous-shard": {
       "foreground": "#f6e58d",
       "background": "#2f2b19"

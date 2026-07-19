@@ -1045,6 +1045,9 @@ function contentName(id: string | undefined): string {
   if (id === "demo.actor.venom-spore") {
     return localization.format("actor-demo-venom-spore-name");
   }
+  if (id === "demo.actor.echo-hound") {
+    return localization.format("actor-demo-echo-hound-name");
+  }
   return localization.format(
     id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",
   );

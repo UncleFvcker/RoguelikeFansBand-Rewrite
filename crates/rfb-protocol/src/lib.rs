@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.12";
+pub const PROTOCOL_VERSION: &str = "1.13";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -110,6 +110,22 @@ impl Default for AttackProfileDto {
             source_item_id: None,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MeleeBlowDto {
+    pub method_id: String,
+    pub to_hit: i32,
+    pub damage: DamageDiceDto,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MeleeRoutineDto {
+    pub blows: Vec<MeleeBlowDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -304,6 +320,8 @@ pub struct EntityDto {
     #[serde(default)]
     pub melee_profile: AttackProfileDto,
     #[serde(default)]
+    pub melee_routine: MeleeRoutineDto,
+    #[serde(default)]
     pub statuses: Vec<StatusDto>,
 }
 
@@ -442,6 +460,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(StatModifiersDto);
     push_declaration!(DamageDiceDto);
     push_declaration!(AttackProfileDto);
+    push_declaration!(MeleeBlowDto);
+    push_declaration!(MeleeRoutineDto);
     push_declaration!(Position);
     push_declaration!(CellDto);
     push_declaration!(VisibilityState);
@@ -794,6 +814,7 @@ mod tests {
                     damage_type: DamageTypeDto::Physical,
                 },
                 melee_profile: AttackProfileDto::default(),
+                melee_routine: MeleeRoutineDto::default(),
                 statuses: Vec::new(),
             }],
             items: vec![ItemDto {

@@ -49,13 +49,16 @@ pub(crate) enum DomainEvent {
     },
     MonsterMeleeMissed {
         source_kind_id: String,
+        method_id: Option<String>,
     },
     MonsterMeleeHit {
         source_kind_id: String,
+        method_id: Option<String>,
         damage: DamageOutcome,
     },
     PlayerDied {
         source_kind_id: String,
+        method_id: Option<String>,
         damage: DamageOutcome,
     },
     PlayerStatusDamaged {
@@ -184,35 +187,49 @@ impl DomainEvent {
                     resolution: damage.into(),
                 },
             ),
-            Self::MonsterMeleeMissed { source_kind_id } => dto(
-                "combat.monster-miss",
-                "combat-monster-miss",
-                [("source", source_kind_id)],
+            Self::MonsterMeleeMissed {
+                source_kind_id,
+                method_id,
+            } => with_method(
+                dto(
+                    "combat.monster-miss",
+                    "combat-monster-miss",
+                    [("source", source_kind_id)],
+                ),
+                method_id,
             ),
             Self::MonsterMeleeHit {
                 source_kind_id,
+                method_id,
                 damage,
-            } => dto_with_outcome(
-                "combat.monster-hit",
-                "combat-monster-hit",
-                [
-                    ("source", source_kind_id),
-                    ("damage", damage.applied.to_string()),
-                ],
-                GameEventOutcomeDto::Damage {
-                    resolution: damage.into(),
-                },
+            } => with_method(
+                dto_with_outcome(
+                    "combat.monster-hit",
+                    "combat-monster-hit",
+                    [
+                        ("source", source_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                method_id,
             ),
             Self::PlayerDied {
                 source_kind_id,
+                method_id,
                 damage,
-            } => dto_with_outcome(
-                "combat.player-death",
-                "combat-player-death",
-                [("source", source_kind_id)],
-                GameEventOutcomeDto::Death {
-                    resolution: damage.into(),
-                },
+            } => with_method(
+                dto_with_outcome(
+                    "combat.player-death",
+                    "combat-player-death",
+                    [("source", source_kind_id)],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
+                method_id,
             ),
             Self::PlayerStatusDamaged {
                 status_kind_id,
@@ -320,6 +337,13 @@ fn dto_with_outcome<const N: usize>(
     event
 }
 
+fn with_method(mut event: GameEventDto, method_id: Option<String>) -> GameEventDto {
+    if let Some(method_id) = method_id {
+        event.args.insert("method".to_owned(), method_id);
+    }
+    event
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -357,6 +381,7 @@ mod tests {
     fn numeric_domain_values_are_formatted_only_at_the_dto_boundary() {
         let event = DomainEvent::MonsterMeleeHit {
             source_kind_id: "demo.actor.monster".to_owned(),
+            method_id: None,
             damage: damage(7),
         }
         .into_dto();
@@ -377,6 +402,7 @@ mod tests {
             DomainEvent::MoveBlocked,
             DomainEvent::PlayerDied {
                 source_kind_id: "demo.actor.monster".to_owned(),
+                method_id: None,
                 damage: damage(7),
             },
         ]);

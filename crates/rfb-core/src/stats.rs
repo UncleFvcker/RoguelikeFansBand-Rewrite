@@ -56,6 +56,48 @@ pub struct DerivedStat {
     pub contributions: Vec<StatContribution>,
 }
 
+impl DerivedStat {
+    #[must_use]
+    pub fn with_modifier(
+        &self,
+        layer: StatLayer,
+        source_id: impl Into<String>,
+        amount: i32,
+        bounds: StatBounds,
+    ) -> Self {
+        let mut contributions = self.contributions.clone();
+        contributions.push(StatContribution {
+            source_id: source_id.into(),
+            origin_id: None,
+            layer,
+            priority: layer.priority(),
+            amount,
+        });
+        contributions.sort_by(|left, right| {
+            (
+                left.priority,
+                left.layer,
+                left.source_id.as_str(),
+                left.origin_id.as_deref(),
+            )
+                .cmp(&(
+                    right.priority,
+                    right.layer,
+                    right.source_id.as_str(),
+                    right.origin_id.as_deref(),
+                ))
+        });
+        Self {
+            kind: self.kind,
+            value: self
+                .value
+                .saturating_add(amount)
+                .clamp(bounds.minimum, bounds.maximum),
+            contributions,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct StatBounds {
     minimum: i32,

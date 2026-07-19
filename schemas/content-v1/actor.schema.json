@@ -17,6 +17,56 @@
         "monster"
       ],
       "type": "string"
+    },
+    "MeleeBlowDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "methodId": {
+          "type": "string"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "methodId",
+        "toHit",
+        "damageDice",
+        "damageSides"
+      ],
+      "type": "object"
+    },
+    "MeleeRoutineDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "blows": {
+          "items": {
+            "$ref": "#/$defs/MeleeBlowDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "blows"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
@@ -73,6 +123,17 @@
     "maxHp": {
       "format": "int32",
       "type": "integer"
+    },
+    "meleeRoutine": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MeleeRoutineDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "nameKey": {
       "type": "string"

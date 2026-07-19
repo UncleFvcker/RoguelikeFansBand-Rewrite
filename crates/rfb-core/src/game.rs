@@ -40,14 +40,14 @@ use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
     DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
     GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto,
-    PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, RngSaveDto, SavePayloadV1,
-    StatModifiersDto, TerrainSaveDto, VisibilityState,
+    MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position,
+    RngSaveDto, SavePayloadV1, StatModifiersDto, TerrainSaveDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 8] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 9] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -56,9 +56,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 8] = [
     "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69",
     "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53",
     "12ba3295dfa8a9884bc7464a78b7dbb9cded01409ff22777db02df85d1aabed7",
+    "dc371da0d48375a811a6421f1ccaa2e1310daa7aab856f852388f7da1a04c2b5",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "dc371da0d48375a811a6421f1ccaa2e1310daa7aab856f852388f7da1a04c2b5";
+    "6449bc9fa8717d7f6ffc4a2a9643c8e40d20f04c196fa80f23bec2823de8e3d5";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -667,6 +668,7 @@ impl Game {
                         },
                         source_item_id: None,
                     },
+                    melee_routine: actor_melee_routine_dto(definition),
                     statuses: entity
                         .statuses
                         .iter()
@@ -1402,46 +1404,57 @@ impl Game {
         let attacker = self.actor_derived_stats(&self.entities[index], &definition, false);
         let target = self.player_derived_stats();
         let armor_class = target.armor_class.value;
-        if !resolve_check(
-            &mut self.rng,
-            CheckContext {
-                kind: CheckKind::MeleeHit,
-                actor_id: self.entities[index].id.clone(),
-                target_id: Some(self.player.id.clone()),
-                ability: attacker.melee_skill,
-                difficulty: target.armor_class,
-            },
-        )
-        .succeeded()
-        {
-            events.push(DomainEvent::MonsterMeleeMissed {
-                source_kind_id: kind_id,
-            });
-            return;
-        }
+        for blow in resolved_melee_blows(&definition) {
+            let ability = attacker.melee_skill.with_modifier(
+                StatLayer::Base,
+                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
+                blow.to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::MeleeHit,
+                    actor_id: self.entities[index].id.clone(),
+                    target_id: Some(self.player.id.clone()),
+                    ability,
+                    difficulty: target.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::MonsterMeleeMissed {
+                    source_kind_id: kind_id.clone(),
+                    method_id: blow.method_id,
+                });
+                continue;
+            }
 
-        let raw_damage = self.roll_damage(definition.damage_dice, definition.damage_sides);
-        let damage_type = DamageType::from(definition.damage_type);
-        let prepared_damage = if damage_type == DamageType::Physical {
-            apply_melee_armor_reduction(raw_damage, armor_class)
-        } else {
-            raw_damage
-        };
-        let resistance = self.player.resistances.level(damage_type);
-        let damage = resolve_damage(
-            DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
-            resistance,
-        );
-        self.player.hp = self.player.hp.saturating_sub(damage.applied);
-        events.push(DomainEvent::MonsterMeleeHit {
-            source_kind_id: kind_id.clone(),
-            damage,
-        });
-        if self.player_is_dead() {
-            events.push(DomainEvent::PlayerDied {
-                source_kind_id: kind_id,
+            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
+            let prepared_damage = if blow.damage_type == DamageType::Physical {
+                apply_melee_armor_reduction(raw_damage, armor_class)
+            } else {
+                raw_damage
+            };
+            let resistance = self.player.resistances.level(blow.damage_type);
+            let damage = resolve_damage(
+                DamagePacket::after_armor(raw_damage, prepared_damage, blow.damage_type),
+                resistance,
+            );
+            self.player.hp = self.player.hp.saturating_sub(damage.applied);
+            events.push(DomainEvent::MonsterMeleeHit {
+                source_kind_id: kind_id.clone(),
+                method_id: blow.method_id.clone(),
                 damage,
             });
+            if self.player_is_dead() {
+                events.push(DomainEvent::PlayerDied {
+                    source_kind_id: kind_id.clone(),
+                    method_id: blow.method_id,
+                    damage,
+                });
+                break;
+            }
         }
     }
 
@@ -1852,6 +1865,60 @@ struct ResolvedAttackProfile {
     damage_sides: u16,
     damage_type: DamageType,
     source_item_id: Option<String>,
+}
+
+struct ResolvedMeleeBlow {
+    method_id: Option<String>,
+    to_hit: i32,
+    damage_dice: u16,
+    damage_sides: u16,
+    damage_type: DamageType,
+}
+
+fn resolved_melee_blows(definition: &rfb_content::ActorDefinition) -> Vec<ResolvedMeleeBlow> {
+    definition.melee_routine.as_ref().map_or_else(
+        || {
+            vec![ResolvedMeleeBlow {
+                method_id: None,
+                to_hit: 0,
+                damage_dice: definition.damage_dice,
+                damage_sides: definition.damage_sides,
+                damage_type: DamageType::from(definition.damage_type),
+            }]
+        },
+        |routine| {
+            routine
+                .blows
+                .iter()
+                .map(|blow| ResolvedMeleeBlow {
+                    method_id: Some(blow.method_id.clone()),
+                    to_hit: blow.to_hit,
+                    damage_dice: blow.damage_dice,
+                    damage_sides: blow.damage_sides,
+                    damage_type: DamageType::from(blow.damage_type),
+                })
+                .collect()
+        },
+    )
+}
+
+fn actor_melee_routine_dto(definition: &rfb_content::ActorDefinition) -> MeleeRoutineDto {
+    MeleeRoutineDto {
+        blows: resolved_melee_blows(definition)
+            .into_iter()
+            .map(|blow| MeleeBlowDto {
+                method_id: blow
+                    .method_id
+                    .unwrap_or_else(|| "rfb.blow.innate".to_owned()),
+                to_hit: blow.to_hit,
+                damage: DamageDiceDto {
+                    dice: blow.damage_dice,
+                    sides: blow.damage_sides,
+                    damage_type: blow.damage_type.into(),
+                },
+            })
+            .collect(),
+    }
 }
 
 impl ResolvedAttackProfile {
@@ -2287,6 +2354,25 @@ mod tests {
 
         assert_eq!(resisted_damage, normal_damage - normal_damage / 2);
         assert_eq!(resistant.player.hp, 10 - resisted_damage);
+    }
+
+    #[test]
+    fn content_driven_monster_routine_resolves_blows_in_declared_order() {
+        let mut game = Game::new(0);
+        game.entities[0].kind_id = "demo.actor.echo-hound".to_owned();
+        let routine = game.snapshot().entities[0].melee_routine.clone();
+
+        assert_eq!(routine.blows.len(), 2);
+        assert_eq!(routine.blows[0].method_id, "rfb.blow.echo-bite");
+        assert_eq!(routine.blows[1].method_id, "rfb.blow.echo-rake");
+
+        let mut events = Vec::new();
+        game.resolve_monster_melee(0, &mut events);
+        let projected = project_events(events);
+
+        assert_eq!(projected.len(), 2);
+        assert_eq!(projected[0].args["method"], "rfb.blow.echo-bite");
+        assert_eq!(projected[1].args["method"], "rfb.blow.echo-rake");
     }
 
     #[test]

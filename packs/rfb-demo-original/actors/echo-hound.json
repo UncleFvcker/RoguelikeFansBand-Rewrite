@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.echo-hound",
+  "role": "monster",
+  "nameKey": "actor-demo-echo-hound-name",
+  "descriptionKey": "actor-demo-echo-hound-description",
+  "glyph": "h",
+  "level": 1,
+  "maxHp": 3,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "meleeRoutine": {
+    "blows": [
+      {
+        "methodId": "rfb.blow.echo-bite",
+        "toHit": 20,
+        "damageDice": 1,
+        "damageSides": 1,
+        "damageType": "physical"
+      },
+      {
+        "methodId": "rfb.blow.echo-rake",
+        "toHit": 20,
+        "damageDice": 1,
+        "damageSides": 1,
+        "damageType": "cold"
+      }
+    ]
+  },
+  "tags": ["beast"]
+}

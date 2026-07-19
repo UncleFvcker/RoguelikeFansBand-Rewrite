@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v12/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v11` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v13/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v12` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v12/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v13/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v12/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续依次建立背包、装备、基础战斗、行动调度、状态抗性和结构化伤害边界；武器 `AttackProfile` 与玩家多段近战建立 `contract-v12`。当前规则边界见 [Contract v12](contract-v12-weapon-attack-profile.md)。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续依次建立背包、装备、基础战斗、行动调度、状态抗性和结构化伤害边界；武器 `AttackProfile` 与玩家多段近战建立 `contract-v12`，怪物 `MeleeRoutine` 建立 `contract-v13`。当前规则边界见 [Contract v13](contract-v13-monster-melee-routines.md)。
