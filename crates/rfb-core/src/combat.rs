@@ -37,7 +37,3 @@ pub(crate) fn apply_melee_armor_reduction(damage: i32, armor_class: i32) -> i32 
         MELEE_MAXIMUM_DAMAGE_REDUCTION.saturating_mul(armor_class) / MELEE_MAXIMUM_ARMOR_CLASS;
     damage.saturating_mul(100 - reduction) / 100
 }
-
-pub(crate) fn effective_stat(base: i32, modifier: i32) -> i32 {
-    base.saturating_add(modifier).max(0)
-}

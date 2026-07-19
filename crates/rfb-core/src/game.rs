@@ -9,9 +9,10 @@ use std::{
 use crate::resistance::DamageType;
 use crate::{
     action::GameAction,
+    check::{CheckContext, CheckKind, resolve_check},
     combat::{
-        adjacent, apply_melee_armor_reduction, effective_stat, monster_melee_skill,
-        rating_to_armor_class, rating_to_combat_value,
+        adjacent, apply_melee_armor_reduction, monster_melee_skill, rating_to_armor_class,
+        rating_to_combat_value,
     },
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
@@ -32,6 +33,7 @@ use crate::{
         spend_energy,
     },
     state::{Actor, EquipOutcome, ItemInstance, ItemLocation},
+    stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
 use rfb_content::{ActorRole, ContentCatalog};
 use rfb_protocol::{
@@ -579,6 +581,7 @@ impl Game {
     }
 
     fn player_dto(&self) -> PlayerDto {
+        let stats = self.player_derived_stats();
         let equipment_modifiers = self.equipment_modifiers();
         let definition = self
             .content
@@ -589,19 +592,16 @@ impl Game {
             kind_id: self.player.kind_id.clone(),
             position: self.player.position,
             hp: self.player.hp,
-            max_hp: self
-                .player
-                .max_hp
-                .saturating_add(equipment_modifiers.max_hp),
-            speed: effective_actor_speed(&self.player),
+            max_hp: stats.max_hp.value,
+            speed: derived_speed(&stats.speed),
             energy_need: self.player.energy_need,
             base_max_hp: self.player.max_hp,
-            attack: self.effective_player_attack(),
+            attack: stats.attack.value,
             base_attack: definition.attack,
-            defense: self.effective_player_defense(),
+            defense: stats.defense.value,
             base_defense: definition.defense,
-            melee_skill: rating_to_combat_value(self.effective_player_attack()),
-            armor_class: rating_to_armor_class(self.effective_player_defense()),
+            melee_skill: stats.melee_skill.value,
+            armor_class: stats.armor_class.value,
             melee_damage: DamageDiceDto {
                 dice: definition.damage_dice,
                 sides: definition.damage_sides,
@@ -628,18 +628,19 @@ impl Game {
                     .content
                     .actor(&entity.kind_id)
                     .expect("entity actor definition must remain available");
+                let stats = self.actor_derived_stats(entity, definition, false);
                 EntityDto {
                     id: entity.id.clone(),
                     kind_id: entity.kind_id.clone(),
                     position: entity.position,
                     hp: entity.hp,
                     max_hp: entity.max_hp,
-                    speed: effective_actor_speed(entity),
+                    speed: derived_speed(&stats.speed),
                     energy_need: entity.energy_need,
-                    attack: definition.attack,
-                    defense: definition.defense,
-                    melee_skill: monster_melee_skill(definition.attack, definition.level),
-                    armor_class: rating_to_armor_class(definition.defense),
+                    attack: stats.attack.value,
+                    defense: stats.defense.value,
+                    melee_skill: stats.melee_skill.value,
+                    armor_class: stats.armor_class.value,
                     melee_damage: DamageDiceDto {
                         dice: definition.damage_dice,
                         sides: definition.damage_sides,
@@ -901,25 +902,120 @@ impl Game {
     }
 
     fn effective_player_max_hp(&self) -> i32 {
-        self.player
-            .max_hp
-            .saturating_add(self.equipment_modifiers().max_hp)
+        self.player_derived_stats().max_hp.value
     }
 
-    fn effective_player_attack(&self) -> i32 {
-        let base = self
+    fn player_derived_stats(&self) -> ActorDerivedStats {
+        let definition = self
             .content
             .actor(&self.player.kind_id)
-            .map_or(0, |definition| definition.attack);
-        effective_stat(base, self.equipment_modifiers().attack)
+            .expect("player actor definition must remain available");
+        self.actor_derived_stats(&self.player, definition, true)
     }
 
-    fn effective_player_defense(&self) -> i32 {
-        let base = self
-            .content
-            .actor(&self.player.kind_id)
-            .map_or(0, |definition| definition.defense);
-        effective_stat(base, self.equipment_modifiers().defense)
+    fn actor_derived_stats(
+        &self,
+        actor: &Actor,
+        definition: &rfb_content::ActorDefinition,
+        include_equipment: bool,
+    ) -> ActorDerivedStats {
+        let mut pipeline = DerivedStatsPipeline::new();
+        let base_source = definition.id.as_str();
+        pipeline.add(StatKind::MaxHp, StatLayer::Base, base_source, actor.max_hp);
+        pipeline.add(
+            StatKind::Attack,
+            StatLayer::Base,
+            base_source,
+            definition.attack,
+        );
+        pipeline.add(
+            StatKind::Defense,
+            StatLayer::Base,
+            base_source,
+            definition.defense,
+        );
+        pipeline.add(
+            StatKind::Speed,
+            StatLayer::Base,
+            base_source,
+            i32::from(actor.speed),
+        );
+        pipeline.add(
+            StatKind::MeleeSkill,
+            StatLayer::Base,
+            base_source,
+            if definition.role == ActorRole::Monster {
+                monster_melee_skill(definition.attack, definition.level)
+            } else {
+                rating_to_combat_value(definition.attack)
+            },
+        );
+        pipeline.add(
+            StatKind::ArmorClass,
+            StatLayer::Base,
+            base_source,
+            rating_to_armor_class(definition.defense),
+        );
+
+        if include_equipment {
+            for item in self
+                .items
+                .iter()
+                .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
+            {
+                let modifiers = self.item_modifiers(&item.kind_id);
+                add_equipment_stat(&mut pipeline, StatKind::MaxHp, &item.id, modifiers.max_hp);
+                add_equipment_stat(&mut pipeline, StatKind::Attack, &item.id, modifiers.attack);
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::Defense,
+                    &item.id,
+                    modifiers.defense,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::MeleeSkill,
+                    &item.id,
+                    rating_to_combat_value(modifiers.attack),
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::ArmorClass,
+                    &item.id,
+                    rating_to_armor_class(modifiers.defense),
+                );
+            }
+        }
+
+        for status in &actor.statuses {
+            let amount = i32::from(status.intensity).saturating_mul(10);
+            if status.kind_id == STATUS_HASTE {
+                pipeline.add_with_origin(
+                    StatKind::Speed,
+                    StatLayer::Status,
+                    &status.kind_id,
+                    status.source_id.clone(),
+                    amount,
+                );
+            } else if status.kind_id == STATUS_SLOW {
+                pipeline.add_with_origin(
+                    StatKind::Speed,
+                    StatLayer::Status,
+                    &status.kind_id,
+                    status.source_id.clone(),
+                    amount.saturating_neg(),
+                );
+            }
+        }
+
+        ActorDerivedStats {
+            max_hp: pipeline.resolve(StatKind::MaxHp, StatBounds::UNBOUNDED),
+            attack: pipeline.resolve(StatKind::Attack, StatBounds::NON_NEGATIVE),
+            defense: pipeline.resolve(StatKind::Defense, StatBounds::NON_NEGATIVE),
+            speed: pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED),
+            melee_skill: pipeline.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
+            armor_class: pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
+        }
     }
 
     fn player_is_dead(&self) -> bool {
@@ -938,9 +1034,21 @@ impl Game {
             .expect("monster actor definition must remain available")
             .clone();
         let target_kind = self.entities[index].kind_id.clone();
-        let skill = rating_to_combat_value(self.effective_player_attack());
-        let armor_class = rating_to_armor_class(definition.defense);
-        if !self.check_player_hit(skill, armor_class) {
+        let attacker = self.player_derived_stats();
+        let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+        if attacker.melee_skill.value <= 0
+            || !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::MeleeHit,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(self.entities[index].id.clone()),
+                    ability: attacker.melee_skill,
+                    difficulty: target.armor_class,
+                },
+            )
+            .succeeded()
+        {
             events.push(DomainEvent::PlayerMeleeMissed {
                 target_kind_id: target_kind,
             });
@@ -990,7 +1098,7 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            let speed = effective_actor_speed(&self.player);
+            let speed = derived_speed(&self.player_derived_stats().speed);
             gain_energy(&mut self.player.energy_need, speed);
             if self.player.energy_need <= 0 {
                 break;
@@ -1087,7 +1195,15 @@ impl Game {
             else {
                 continue;
             };
-            let speed = effective_actor_speed(&self.entities[index]);
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("monster actor definition must remain available");
+            let speed = derived_speed(
+                &self
+                    .actor_derived_stats(&self.entities[index], definition, false)
+                    .speed,
+            );
             gain_energy(&mut self.entities[index].energy_need, speed);
             if self.entities[index].energy_need > 0 {
                 continue;
@@ -1123,9 +1239,21 @@ impl Game {
             .actor(&kind_id)
             .expect("monster actor definition must remain available")
             .clone();
-        let skill = monster_melee_skill(definition.attack, definition.level);
-        let armor_class = rating_to_armor_class(self.effective_player_defense());
-        if !self.check_monster_hit(skill, armor_class) {
+        let attacker = self.actor_derived_stats(&self.entities[index], &definition, false);
+        let target = self.player_derived_stats();
+        let armor_class = target.armor_class.value;
+        if !resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::MeleeHit,
+                actor_id: self.entities[index].id.clone(),
+                target_id: Some(self.player.id.clone()),
+                ability: attacker.melee_skill,
+                difficulty: target.armor_class,
+            },
+        )
+        .succeeded()
+        {
             events.push(DomainEvent::MonsterMeleeMissed {
                 source_kind_id: kind_id,
             });
@@ -1238,29 +1366,6 @@ impl Game {
             }
         }
         None
-    }
-
-    fn check_player_hit(&mut self, skill: i32, armor_class: i32) -> bool {
-        if skill <= 0 {
-            return false;
-        }
-        self.check_hit(skill, armor_class)
-    }
-
-    fn check_monster_hit(&mut self, skill: i32, armor_class: i32) -> bool {
-        self.check_hit(skill, armor_class)
-    }
-
-    fn check_hit(&mut self, skill: i32, armor_class: i32) -> bool {
-        let percentile = self.rng.bounded(100);
-        if percentile < 10 {
-            return percentile < 5;
-        }
-        if skill <= 0 {
-            return false;
-        }
-        let threshold = armor_class.max(0).saturating_mul(3) / 4;
-        i32::try_from(self.rng.bounded(skill as u64)).unwrap_or(i32::MAX) >= threshold
     }
 
     fn roll_damage(&mut self, dice: u16, sides: u16) -> i32 {
@@ -1567,6 +1672,30 @@ struct StatusDamageTick {
     outcome: DamageOutcome,
 }
 
+struct ActorDerivedStats {
+    max_hp: DerivedStat,
+    attack: DerivedStat,
+    defense: DerivedStat,
+    speed: DerivedStat,
+    melee_skill: DerivedStat,
+    armor_class: DerivedStat,
+}
+
+fn add_equipment_stat(
+    pipeline: &mut DerivedStatsPipeline,
+    kind: StatKind,
+    source_id: &str,
+    amount: i32,
+) {
+    if amount != 0 {
+        pipeline.add(kind, StatLayer::Equipment, source_id, amount);
+    }
+}
+
+fn derived_speed(speed: &DerivedStat) -> u16 {
+    u16::try_from(speed.value).expect("derived actor speed must fit u16")
+}
+
 fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorStatusTick {
     let periodic = actor
         .statuses
@@ -1615,19 +1744,6 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
         expired,
         fatal_damage,
     }
-}
-
-fn effective_actor_speed(actor: &Actor) -> u16 {
-    let mut speed = i32::from(actor.speed);
-    for status in &actor.statuses {
-        let modifier = i32::from(status.intensity).saturating_mul(10);
-        if status.kind_id == STATUS_HASTE {
-            speed = speed.saturating_add(modifier);
-        } else if status.kind_id == STATUS_SLOW {
-            speed = speed.saturating_sub(modifier);
-        }
-    }
-    u16::try_from(speed.clamp(0, 199)).expect("clamped speed must fit u16")
 }
 
 fn squared_distance(left: Position, right: Position) -> i32 {
@@ -1691,6 +1807,7 @@ pub fn load_built_in_content() -> Result<Arc<ContentCatalog>, CoreError> {
 
 #[cfg(test)]
 mod tests {
+    use crate::effect::StatusInstance;
     use rfb_protocol::{
         DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, ResistanceLevelDto,
         ResistanceSaveDto, StatusSaveDto, VisibilityState,
@@ -2305,6 +2422,43 @@ mod tests {
         assert_eq!(unequipped.player.attack, 2);
         assert_eq!(unequipped.player.defense, 1);
         assert_eq!(unequipped.events[0].message_key, "item-unequip-success");
+    }
+
+    #[test]
+    fn player_derived_stats_retain_equipment_and_status_sources() {
+        let mut game = Game::new(42);
+        game.entities.clear();
+        collect_both_demo_items(&mut game);
+        game.dispatch(command(
+            5,
+            4,
+            GameCommand::Equip {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
+        ))
+        .expect("equipping should execute");
+        game.player.statuses.push(StatusInstance {
+            kind_id: STATUS_HASTE.to_owned(),
+            intensity: 2,
+            remaining_ticks: 3,
+            source_id: Some("demo.item.temporary-tonic.1".to_owned()),
+        });
+
+        let stats = game.player_derived_stats();
+
+        assert_eq!(stats.attack.value, 3);
+        assert_eq!(stats.speed.value, 130);
+        assert!(stats.attack.contributions.iter().any(|contribution| {
+            contribution.layer == StatLayer::Equipment
+                && contribution.source_id == "demo.item.echo-charm.1"
+                && contribution.amount == 1
+        }));
+        assert!(stats.speed.contributions.iter().any(|contribution| {
+            contribution.layer == StatLayer::Status
+                && contribution.source_id == STATUS_HASTE
+                && contribution.origin_id.as_deref() == Some("demo.item.temporary-tonic.1")
+                && contribution.amount == 20
+        }));
     }
 
     #[test]
