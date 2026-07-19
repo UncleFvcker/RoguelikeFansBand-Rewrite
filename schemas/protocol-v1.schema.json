@@ -1033,6 +1033,18 @@
           "format": "int32",
           "default": 0
         },
+        "carriedWeightTenthsPound": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
+        "carryCapacityTenthsPound": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
         "defense": {
           "type": "integer",
           "format": "int32",

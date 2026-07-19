@@ -65,6 +65,7 @@ damage-type-fire-name = fire
 damage-type-cold-name = cold
 damage-type-poison-name = poison
 message-item-pickup-success = You pick up { $target } ×{ $quantity }.
+message-item-pickup-over-capacity = You cannot pick up { $target } ×{ $quantity }: { $currentWeight } + { $pickupWeight } exceeds your { $capacity } lb carrying limit.
 message-item-pickup-none = There is nothing here to pick up.
 message-item-equip-success = You equip { $target } in the { $slot } slot.
 message-item-equip-swap = You unequip { $replaced } and equip { $target } in the { $slot } slot.

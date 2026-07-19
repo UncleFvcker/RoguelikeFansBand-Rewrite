@@ -111,6 +111,10 @@ pub struct FinalStateAssertion {
     #[serde(default)]
     pub player_energy_need: Option<i32>,
     #[serde(default)]
+    pub player_carried_weight_tenths_pound: Option<u32>,
+    #[serde(default)]
+    pub player_carry_capacity_tenths_pound: Option<u32>,
+    #[serde(default)]
     pub player_statuses: Vec<StatusDto>,
     #[serde(default)]
     pub player_resistances: Vec<ResistanceDto>,
@@ -233,6 +237,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_defense: Some(snapshot.player.defense),
             player_speed: Some(snapshot.player.speed),
             player_energy_need: Some(snapshot.player.energy_need),
+            player_carried_weight_tenths_pound: Some(snapshot.player.carried_weight_tenths_pound),
+            player_carry_capacity_tenths_pound: Some(snapshot.player.carry_capacity_tenths_pound),
             player_statuses: snapshot.player.statuses.clone(),
             player_resistances: snapshot.player.resistances.clone(),
             entity_count: snapshot.entities.len(),

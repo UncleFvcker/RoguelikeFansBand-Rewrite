@@ -43,6 +43,13 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         quantity: u32,
     },
+    ItemPickupOverCapacity {
+        target_kind_id: String,
+        quantity: u32,
+        current_weight: u32,
+        pickup_weight: u32,
+        capacity: u32,
+    },
     NothingToPickUp,
     ItemUnequipped {
         target_kind_id: String,
@@ -204,6 +211,23 @@ impl DomainEvent {
                 [
                     ("target", target_kind_id),
                     ("quantity", quantity.to_string()),
+                ],
+            ),
+            Self::ItemPickupOverCapacity {
+                target_kind_id,
+                quantity,
+                current_weight,
+                pickup_weight,
+                capacity,
+            } => dto(
+                "item.pickup.over-capacity",
+                "item-pickup-over-capacity",
+                [
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
+                    ("currentWeight", current_weight.to_string()),
+                    ("pickupWeight", pickup_weight.to_string()),
+                    ("capacity", capacity.to_string()),
                 ],
             ),
             Self::NothingToPickUp => dto_without_args("item.pickup.none", "item-pickup-none"),

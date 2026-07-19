@@ -65,6 +65,7 @@ damage-type-fire-name = 火焰
 damage-type-cold-name = 寒冷
 damage-type-poison-name = 毒素
 message-item-pickup-success = 你将 { $quantity } 个{ $target }收入了背包。
+message-item-pickup-over-capacity = 你无法拾取 { $quantity } 个{ $target }：当前 { $currentWeight } 磅加上 { $pickupWeight } 磅，超过了 { $capacity } 磅的携带上限。
 message-item-pickup-none = 脚下没有可以拾取的物品。
 message-item-equip-success = 你将{ $target }装备在{ $slot }槽位。
 message-item-equip-swap = 你卸下了{ $replaced }，并将{ $target }装备在{ $slot }槽位。

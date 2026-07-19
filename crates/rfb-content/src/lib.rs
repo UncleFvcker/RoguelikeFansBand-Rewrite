@@ -134,6 +134,8 @@ pub struct ActorDefinition {
     pub damage_dice: u16,
     pub damage_sides: u16,
     #[serde(default)]
+    pub carry_capacity_tenths_pound: u32,
+    #[serde(default)]
     pub damage_type: ActorDamageType,
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
@@ -629,6 +631,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || actor.damage_sides > 10_000
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
+        }
+        if (actor.role == ActorRole::Player
+            && (actor.carry_capacity_tenths_pound == 0
+                || actor.carry_capacity_tenths_pound > 1_000_000))
+            || (actor.role == ActorRole::Monster && actor.carry_capacity_tenths_pound != 0)
+        {
+            return Err(ContentError::InvalidActorCarryCapacity(actor.id.clone()));
         }
         if let Some(routine) = &actor.melee_routine
             && (actor.role != ActorRole::Monster
@@ -1317,6 +1326,8 @@ pub enum ContentError {
     DuplicateDefinitionId(String),
     #[error("actor stats are outside supported limits: {0}")]
     InvalidActorStats(String),
+    #[error("actor carry capacity is invalid for its role: {0}")]
+    InvalidActorCarryCapacity(String),
     #[error("actor melee routine is invalid or requires the monster role: {0}")]
     InvalidMeleeRoutine(String),
     #[error("item stack limit is outside supported limits: {0}")]
@@ -1414,7 +1425,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.13.0");
+        assert_eq!(catalog.pack_version(), "1.14.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1471,8 +1482,9 @@ mod tests {
                 actor.damage_dice,
                 actor.damage_sides,
                 actor.speed,
+                actor.carry_capacity_tenths_pound,
             )),
-            Some((2, 1, 1, 2, 110))
+            Some((2, 1, 1, 2, 110, 100))
         );
         assert_eq!(
             catalog
@@ -1642,6 +1654,35 @@ mod tests {
     }
 
     #[test]
+    fn player_carry_capacity_is_positive_and_monsters_cannot_declare_one() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let mut invalid = artifact.content.clone();
+        let player = invalid
+            .actors
+            .iter_mut()
+            .find(|actor| actor.role == ActorRole::Player)
+            .expect("fixture should contain a player actor");
+        player.carry_capacity_tenths_pound = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidActorCarryCapacity(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let monster = invalid
+            .actors
+            .iter_mut()
+            .find(|actor| actor.role == ActorRole::Monster)
+            .expect("fixture should contain a monster actor");
+        monster.carry_capacity_tenths_pound = 1;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidActorCarryCapacity(_))
+        ));
+    }
+
+    #[test]
     fn melee_routines_require_monsters_and_valid_blow_profiles() {
         let artifact =
             compile_pack_dir(&original_pack_path()).expect("original pack should compile");
@@ -1652,6 +1693,7 @@ mod tests {
             .find(|actor| actor.id == "demo.actor.echo-hound")
             .expect("fixture should contain the echo hound");
         hound.role = ActorRole::Player;
+        hound.carry_capacity_tenths_pound = 100;
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidMeleeRoutine(_))

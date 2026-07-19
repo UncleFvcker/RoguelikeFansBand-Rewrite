@@ -13,6 +13,7 @@
   "defense": 1,
   "damageDice": 1,
   "damageSides": 2,
+  "carryCapacityTenthsPound": 100,
   "damageType": "physical",
   "tags": ["humanoid", "player-archetype"]
 }

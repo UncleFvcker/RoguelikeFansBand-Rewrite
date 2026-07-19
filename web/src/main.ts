@@ -699,6 +699,12 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   mapHost.dataset.itemCount = String(state.items.length);
   mapHost.dataset.inventoryStackCount = String(state.inventory.length);
   mapHost.dataset.equipmentCount = String(state.equipment.length);
+  mapHost.dataset.carriedWeightTenthsPound = String(
+    state.player.carriedWeightTenthsPound,
+  );
+  mapHost.dataset.carryCapacityTenthsPound = String(
+    state.player.carryCapacityTenthsPound,
+  );
   mapHost.dataset.playerStatusCount = String(state.player.statuses.length);
   updateInventoryActions();
   renderTargeting();
@@ -723,9 +729,16 @@ function renderInventory(
   for (const itemId of selectedInventoryIds) {
     if (!availableIds.has(itemId)) selectedInventoryIds.delete(itemId);
   }
-  inventoryCount.textContent = localization.format("inventory-stack-count", {
+  const stacks = localization.format("inventory-stack-count", {
     count: inventory.length,
   });
+  inventoryCount.textContent = currentStatus
+    ? localization.format("inventory-weight-summary", {
+        stacks,
+        weight: formatTenthsPound(currentStatus.player.carriedWeightTenthsPound),
+        capacity: formatTenthsPound(currentStatus.player.carryCapacityTenthsPound),
+      })
+    : stacks;
   inventoryList.replaceChildren();
   if (inventory.length === 0) {
     const empty = document.createElement("li");
@@ -914,6 +927,16 @@ function signedModifier(value: number): string {
   return value > 0 ? `+${value}` : String(value);
 }
 
+function formatTenthsPound(value: number): string {
+  return `${Math.trunc(value / 10)}.${Math.abs(value % 10)}`;
+}
+
+function formatTenthsPoundArgument(value: string | undefined): string {
+  if (value === undefined) return "?";
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? formatTenthsPound(parsed) : "?";
+}
+
 function formatEvent(event: GameEventDto): string {
   switch (event.messageKey) {
     case "game-wait":
@@ -1000,6 +1023,14 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-pickup-success", {
         target: contentName(event.args.target),
         quantity: event.args.quantity ?? "?",
+      });
+    case "item-pickup-over-capacity":
+      return localization.format("message-item-pickup-over-capacity", {
+        target: contentName(event.args.target),
+        quantity: event.args.quantity ?? "?",
+        currentWeight: formatTenthsPoundArgument(event.args.currentWeight),
+        pickupWeight: formatTenthsPoundArgument(event.args.pickupWeight),
+        capacity: formatTenthsPoundArgument(event.args.capacity),
       });
     case "item-pickup-none":
       return localization.format("message-item-pickup-none");

@@ -48,7 +48,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 13] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 14] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -62,9 +62,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 13] = [
     "ce3d3810b9be824f20230d83d5978dbb555f5766813b5ac43c059be0e6293fe0",
     "cb56a8e9dd6d7280b38fe4e388fc0f7ce08fd4a40cef2c8886907e3c662ffc96",
     "87e77fccea2c1ea40a6d952abf8d0b38d286c049b34b73f0da93f00288d1c2ae",
+    "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf";
+    "479728aa3cead56c7dbf886a1beb4a9f20b5034085da8836cb82f2191246e979";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -469,17 +470,29 @@ impl Game {
                 )?;
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
-            GameAction::PickUp => {
-                if let Some((kind_id, quantity)) = self.pick_up_at_player()? {
+            GameAction::PickUp => match self.pick_up_at_player()? {
+                PickUpOutcome::Picked { kind_id, quantity } => {
                     changed.insert(self.player.position);
                     events.push(DomainEvent::ItemPickedUp {
                         target_kind_id: kind_id,
                         quantity,
                     });
-                } else {
-                    events.push(DomainEvent::NothingToPickUp);
                 }
-            }
+                PickUpOutcome::OverCapacity {
+                    kind_id,
+                    quantity,
+                    current_weight,
+                    pickup_weight,
+                    capacity,
+                } => events.push(DomainEvent::ItemPickupOverCapacity {
+                    target_kind_id: kind_id,
+                    quantity,
+                    current_weight,
+                    pickup_weight,
+                    capacity,
+                }),
+                PickUpOutcome::Nothing => events.push(DomainEvent::NothingToPickUp),
+            },
             GameAction::Unequip { slot_id } => {
                 if let Some(kind_id) = self.unequip_slot(&slot_id) {
                     events.push(DomainEvent::ItemUnequipped {
@@ -634,6 +647,8 @@ impl Game {
             max_hp: stats.max_hp.value,
             speed: derived_speed(&stats.speed),
             energy_need: self.player.energy_need,
+            carried_weight_tenths_pound: self.carried_weight_tenths_pound(),
+            carry_capacity_tenths_pound: definition.carry_capacity_tenths_pound,
             base_max_hp: self.player.max_hp,
             attack: stats.attack.value,
             base_attack: definition.attack,
@@ -890,7 +905,7 @@ impl Game {
         Some(kind_id)
     }
 
-    fn pick_up_at_player(&mut self) -> Result<Option<(String, u32)>, CoreError> {
+    fn pick_up_at_player(&mut self) -> Result<PickUpOutcome, CoreError> {
         let Some(index) = self
             .items
             .iter()
@@ -899,16 +914,33 @@ impl Game {
             .min_by(|(_, left), (_, right)| left.id.cmp(&right.id))
             .map(|(index, _)| index)
         else {
-            return Ok(None);
+            return Ok(PickUpOutcome::Nothing);
         };
 
         let kind_id = self.items[index].kind_id.clone();
-        let max_stack = self
+        let definition = self
             .content
             .item(&kind_id)
-            .ok_or_else(|| CoreError::UnknownItem(kind_id.clone()))?
-            .max_stack;
+            .ok_or_else(|| CoreError::UnknownItem(kind_id.clone()))?;
+        let max_stack = definition.max_stack;
         let original_quantity = self.items[index].quantity;
+        let current_weight = self.carried_weight_tenths_pound();
+        let pickup_weight =
+            u32::from(definition.weight_tenths_pound).saturating_mul(original_quantity);
+        let capacity = self
+            .content
+            .actor(&self.player.kind_id)
+            .expect("player actor definition must remain available")
+            .carry_capacity_tenths_pound;
+        if current_weight.saturating_add(pickup_weight) > capacity {
+            return Ok(PickUpOutcome::OverCapacity {
+                kind_id,
+                quantity: original_quantity,
+                current_weight,
+                pickup_weight,
+                capacity,
+            });
+        }
         let mut remaining = original_quantity;
         let mut stack_indices = self
             .items
@@ -937,7 +969,10 @@ impl Game {
             self.items[index].quantity = remaining;
             self.items[index].location = ItemLocation::Inventory;
         }
-        Ok(Some((kind_id, original_quantity)))
+        Ok(PickUpOutcome::Picked {
+            kind_id,
+            quantity: original_quantity,
+        })
     }
 
     fn item_modifiers(&self, kind_id: &str) -> StatModifiersDto {
@@ -1016,6 +1051,18 @@ impl Game {
         self.content
             .item(kind_id)
             .map_or(0, |definition| definition.weight_tenths_pound)
+    }
+
+    fn carried_weight_tenths_pound(&self) -> u32 {
+        self.items
+            .iter()
+            .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+            .fold(0_u32, |total, item| {
+                total.saturating_add(
+                    u32::from(self.item_weight_tenths_pound(&item.kind_id))
+                        .saturating_mul(item.quantity),
+                )
+            })
     }
 
     fn item_throw_profile(&self, item: &ItemInstance) -> Option<ThrowProfileDto> {
@@ -2427,6 +2474,21 @@ struct ResolvedThrowProfile {
     damage_type: DamageType,
 }
 
+enum PickUpOutcome {
+    Picked {
+        kind_id: String,
+        quantity: u32,
+    },
+    OverCapacity {
+        kind_id: String,
+        quantity: u32,
+        current_weight: u32,
+        pickup_weight: u32,
+        capacity: u32,
+    },
+    Nothing,
+}
+
 fn throw_range(weight_tenths_pound: u16) -> u16 {
     (BASE_THROW_RANGE_BUDGET / weight_tenths_pound.max(1)).clamp(MIN_THROW_RANGE, MAX_THROW_RANGE)
 }
@@ -3230,10 +3292,50 @@ mod tests {
         assert_eq!(update.inventory.len(), 1);
         assert_eq!(update.inventory[0].id, "demo.item.luminous-shard.1");
         assert_eq!(update.inventory[0].quantity, 5);
+        assert_eq!(update.player.carried_weight_tenths_pound, 50);
+        assert_eq!(update.player.carry_capacity_tenths_pound, 100);
         assert_eq!(update.changed_cells.len(), 1);
         assert_eq!(update.changed_cells[0].position, Position { x: 4, y: 3 });
         assert_eq!(update.changed_cells[0].item_id, None);
         assert_eq!(update.events[0].message_key, "item-pickup-success");
+    }
+
+    #[test]
+    fn pickup_over_capacity_rejects_the_whole_ground_stack() {
+        let mut game = Game::new(42);
+        game.entities.clear();
+        game.player.position = Position { x: 6, y: 4 };
+        for kind_id in [
+            "demo.item.luminous-shard",
+            "demo.item.echo-charm",
+            "demo.item.echo-blade",
+            "demo.item.resonance-sling",
+        ] {
+            game.items
+                .iter_mut()
+                .find(|item| item.kind_id == kind_id)
+                .expect("carried fixture item should exist")
+                .location = ItemLocation::Inventory;
+        }
+        assert_eq!(game.carried_weight_tenths_pound(), 100);
+
+        let update = game
+            .dispatch(command(1, 0, GameCommand::PickUp))
+            .expect("over-capacity pickup should resolve as an action");
+
+        let event = &update.events[0];
+        assert_eq!(event.kind, "item.pickup.over-capacity");
+        assert_eq!(event.args["target"], "demo.item.resonance-pellet");
+        assert_eq!(event.args["quantity"], "6");
+        assert_eq!(event.args["currentWeight"], "100");
+        assert_eq!(event.args["pickupWeight"], "12");
+        assert_eq!(event.args["capacity"], "100");
+        assert_eq!(update.player.carried_weight_tenths_pound, 100);
+        assert!(update.items.iter().any(|item| {
+            item.id == "demo.item.resonance-pellet.1"
+                && item.quantity == 6
+                && item.position == Position { x: 6, y: 4 }
+        }));
     }
 
     #[test]
@@ -3266,6 +3368,7 @@ mod tests {
         assert_eq!(equipped.player.equipment_modifiers.attack, 1);
         assert_eq!(equipped.player.equipment_modifiers.defense, 1);
         assert_eq!(equipped.player.equipment_modifiers.max_hp, 4);
+        assert_eq!(equipped.player.carried_weight_tenths_pound, 55);
         assert_eq!(equipped.events[0].message_key, "item-equip-success");
 
         game.player.hp = 14;
@@ -3281,6 +3384,7 @@ mod tests {
             .expect("unequipping should execute");
         assert_eq!(unequipped.inventory.len(), 2);
         assert!(unequipped.equipment.is_empty());
+        assert_eq!(unequipped.player.carried_weight_tenths_pound, 55);
         assert_eq!(unequipped.player.hp, 10);
         assert_eq!(unequipped.player.max_hp, 10);
         assert_eq!(unequipped.player.attack, 2);
@@ -3971,28 +4075,21 @@ mod tests {
         let mut game = Game::new(42);
         game.entities.clear();
         game.items.push(ItemInstance {
-            id: "demo.inventory.luminous-shard.1".to_owned(),
-            kind_id: "demo.item.luminous-shard".to_owned(),
+            id: "demo.inventory.resonance-pellet.1".to_owned(),
+            kind_id: "demo.item.resonance-pellet".to_owned(),
             quantity: 19,
             location: ItemLocation::Inventory,
         });
-        game.dispatch(command(
-            1,
-            0,
-            GameCommand::Move {
-                direction: Direction::East,
-            },
-        ))
-        .expect("move should execute");
+        game.player.position = Position { x: 6, y: 4 };
         let update = game
-            .dispatch(command(2, 1, GameCommand::PickUp))
+            .dispatch(command(1, 0, GameCommand::PickUp))
             .expect("pickup should execute");
 
         assert_eq!(update.inventory.len(), 2);
-        assert_eq!(update.inventory[0].id, "demo.inventory.luminous-shard.1");
+        assert_eq!(update.inventory[0].id, "demo.inventory.resonance-pellet.1");
         assert_eq!(update.inventory[0].quantity, 20);
-        assert_eq!(update.inventory[1].id, "demo.item.luminous-shard.1");
-        assert_eq!(update.inventory[1].quantity, 4);
+        assert_eq!(update.inventory[1].id, "demo.item.resonance-pellet.1");
+        assert_eq!(update.inventory[1].quantity, 5);
     }
 
     #[test]

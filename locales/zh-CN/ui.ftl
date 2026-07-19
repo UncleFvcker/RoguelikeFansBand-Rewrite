@@ -46,6 +46,7 @@ status-position = 位置
 status-hash = 状态哈希
 panel-inventory-title = HTML 背包层
 inventory-stack-count = { $count } 堆
+inventory-weight-summary = { $stacks } · { $weight } / { $capacity } 磅
 inventory-empty = 背包是空的。站在物品上按 G 拾取。
 inventory-quantity = ×{ $quantity }
 inventory-selected-count = 已选择 { $count } 堆

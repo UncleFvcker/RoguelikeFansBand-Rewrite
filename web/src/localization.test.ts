@@ -32,6 +32,14 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
   assert.equal(localization.format("inventory-stack-count", { count: 1 }), "1 stack");
   assert.equal(localization.format("inventory-stack-count", { count: 2 }), "2 stacks");
   assert.equal(
+    localization.format("inventory-weight-summary", {
+      stacks: "2 stacks",
+      weight: "9.7",
+      capacity: "10.0",
+    }),
+    "2 stacks · 9.7 / 10.0 lb",
+  );
+  assert.equal(
     localization.format("message-item-drop-success", { stacks: 1, quantity: 2 }),
     "You drop 1 stack containing 2 items.",
   );
@@ -45,6 +53,14 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
 
   localization.setLocale("zh-CN");
   assert.equal(localization.format("inventory-stack-count", { count: 2 }), "2 堆");
+  assert.equal(
+    localization.format("inventory-weight-summary", {
+      stacks: "2 堆",
+      weight: "9.7",
+      capacity: "10.0",
+    }),
+    "2 堆 · 9.7 / 10.0 磅",
+  );
   assert.equal(
     localization.format("message-item-pickup-success", {
       target: "发光碎片",

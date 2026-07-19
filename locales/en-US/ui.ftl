@@ -50,6 +50,7 @@ inventory-stack-count =
         [one] 1 stack
        *[other] { $count } stacks
     }
+inventory-weight-summary = { $stacks } · { $weight } / { $capacity } lb
 inventory-empty = Your inventory is empty. Stand on an item and press G to pick it up.
 inventory-quantity = ×{ $quantity }
 inventory-selected-count = { $count } selected

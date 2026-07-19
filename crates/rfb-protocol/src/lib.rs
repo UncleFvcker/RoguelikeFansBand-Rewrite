@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.18";
+pub const PROTOCOL_VERSION: &str = "1.19";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -355,6 +355,10 @@ pub struct PlayerDto {
     pub speed: u16,
     #[serde(default)]
     pub energy_need: i32,
+    #[serde(default)]
+    pub carried_weight_tenths_pound: u32,
+    #[serde(default)]
+    pub carry_capacity_tenths_pound: u32,
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default)]
@@ -897,6 +901,8 @@ mod tests {
                 max_hp: 14,
                 speed: 110,
                 energy_need: 0,
+                carried_weight_tenths_pound: 5,
+                carry_capacity_tenths_pound: 100,
                 base_max_hp: 10,
                 attack: 3,
                 base_attack: 2,

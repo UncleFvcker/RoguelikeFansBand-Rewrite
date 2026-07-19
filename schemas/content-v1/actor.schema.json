@@ -80,6 +80,12 @@
       "format": "int32",
       "type": "integer"
     },
+    "carryCapacityTenthsPound": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
     "damageDice": {
       "format": "uint16",
       "maximum": 65535,

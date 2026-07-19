@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.18、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.19、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.18";
+  protocolVersion: "1.19";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -85,6 +85,8 @@ interface ProtocolEnvelope<T> {
 协议 1.17 保持 DTO 结构不变，新增弹药破损/落地事件语义并固定其 RNG 顺序；版本升级用于拒绝以 1.16 规则解释新的确定性回放。当前规则边界见 [Contract v17](contract-v17-ammunition-recovery.md)。
 
 协议 1.18 新增 `ThrowProfileDto`，背包和装备物品输出整数重量、确定性射程及可选投掷攻击 profile；投掷命中、伤害和死亡继续通过既有结构化 outcome 与 trace 表达。当前规则边界见 [Contract v18](contract-v18-thrown-attacks.md)。
+
+协议 1.19 在 `PlayerDto` 输出权威携带总重和内容容量，并新增整堆拾取超限事件；显示层只格式化整数磅十分位，不重新计算规则重量。当前规则边界见 [Contract v19](contract-v19-inventory-capacity.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
