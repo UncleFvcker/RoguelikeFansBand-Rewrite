@@ -123,6 +123,7 @@ pub(crate) fn item_from_dto(item: ItemSaveDto) -> ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
+        quality: item.quality,
         affix_ids: item.affix_ids,
         location: ItemLocation::Ground(item.position),
     }
@@ -139,6 +140,7 @@ pub(crate) fn inventory_item_from_dto(
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
+        quality: item.quality,
         affix_ids: item.affix_ids,
         location: ItemLocation::Inventory,
     })
@@ -158,6 +160,7 @@ pub(crate) fn equipment_item_from_dto(
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
+        quality: item.quality,
         affix_ids: item.affix_ids,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
@@ -269,6 +272,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 kind_id: item.kind_id.clone(),
                 position: *position,
                 quantity: item.quantity,
+                quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
             })
         })
@@ -288,6 +292,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
+                quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
             })
         })
@@ -308,6 +313,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
                 slot_id: slot_id.clone(),
+                quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
             })
         })

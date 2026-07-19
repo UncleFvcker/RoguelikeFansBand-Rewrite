@@ -20,4 +20,4 @@
 
 ## 后续
 
-Stage D 的后续切片已由 [contract-v21](contract-v21-consumable-use-action.md) 建立内容驱动的消耗品与可观察 `aware`，并由 [contract-v22](contract-v22-instance-affix-knowledge.md) 建立实例级词条知识。随后扩展伪鉴定和完整鉴定；掉落表与程序化地牢仍排在物品知识闭环之后。
+Stage D 的后续切片已由 [contract-v21](contract-v21-consumable-use-action.md) 建立内容驱动消耗品，由 [contract-v22](contract-v22-instance-affix-knowledge.md) 建立实例词条，并由 [contract-v23](contract-v23-item-appraisal.md) 建立质量鉴别与完整识别。下一步进入掉落表；程序化地牢仍排在物品知识闭环之后。

@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "appraise", itemId: string, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -63,11 +63,15 @@ export type ItemDto = { id: string, kindId: string, displayNameKey: string, know
 
 export type ItemKnowledgeDto = "unknown" | "tried" | "aware";
 
+export type ItemQualityDto = "ordinary" | "fine" | "exceptional";
+
+export type ItemIdentificationDto = "unexamined" | "appraised" | "identified";
+
 export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: StatModifiersDto, };
 
-export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
-export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 

@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.22 / contract-v22
+状态：长期规则实现路线；当前基线为协议 1.23 / contract-v23
 
 ## 1. 目的与边界
 
@@ -151,7 +151,7 @@ flowchart TD
 | 装备 | 多槽位、身体模板、双持/双手、箭袋、负重 | 部分建立 | `BodyPlan` 决定槽位；箭袋和特殊包作为容器组件，不在装备代码硬编码 |
 | 物品生成 | 基础种类、等级、质量、随机加值、稀有度和掉落主题 | 未建立 | `LootContext` + 加权生成表；生成步骤和 RNG 顺序进入专门 contract |
 | Ego、神器与随机神器 | 模板词条、固定神器、随机能力、诅咒和重铸 | 部分建立 | contract-v22 已建立基础物品与实例 affix 分层；后续增加 unique、诅咒与随机能力，随机神器保存生成结果，不依赖未来内容表重算 |
-| 鉴定与感知 | aware、tried、伪鉴定、已知 flag、诅咒发现 | 部分建立 | contract-v22 已分离实例词条真值和已知属性投影，并以首次装备触发发现；下一步扩展伪鉴定、完整鉴定与诅咒知识 |
+| 鉴定与感知 | aware、tried、伪鉴定、已知 flag、诅咒发现 | 部分建立 | contract-v23 已建立 unexamined/appraised/identified：鉴别只公开质量，装备公开完整词条；后续扩展鉴定来源与诅咒知识 |
 | 词条学习 | 使用或受击后发现抗性、克制、激活等 | 部分建立 | contract-v22 已以首次装备产生稳定发现事件并保存实例知识；后续扩展到使用、受击与逐项发现 |
 | 自动拾取与铭文 | 条件匹配、自动鉴定、销毁、拾取和铭文 | 未建立 | 后期实现结构化规则 AST 和可视化编辑器；不继续使用依赖本地化名称的文本匹配 |
 | 锻造、炼金与重铸 | 附魔、品牌、打造、材料和神器重铸 | 未建立 | 在物品实例/affix/能力系统稳定后实现，作为服务或职业能力调用同一物品变换 API |
@@ -326,7 +326,7 @@ crates/rfb-core/src/
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品。当前 active baseline 位于阶段 D 的 contract-v22，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
+当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品。当前 active baseline 位于阶段 D 的 contract-v23，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -352,7 +352,7 @@ crates/rfb-core/src/
 
 目标：建立可以承载 RFB 装备构筑的物品闭环。
 
-当前进度：contract-v22 已完成实例级 affix 真值、首次装备发现、防泄漏 DTO 与存档知识校验。内容包为 1.17.0，active baseline 共 59 个 exact fixtures，save v1 / state hash Schema v11。下一步建立伪鉴定与完整鉴定，再进入掉落表。详细边界见 [Contract v22](contract-v22-instance-affix-knowledge.md)。
+当前进度：contract-v23 已完成实例质量、背包鉴别、装备完整识别、防泄漏 DTO 与旧存档迁移。内容包为 1.18.0，active baseline 共 60 个 exact fixtures，save v1 / state hash Schema v12。下一步进入内容驱动掉落表和确定性生成。详细边界见 [Contract v23](contract-v23-item-appraisal.md)。
 
 实现：
 
@@ -471,7 +471,7 @@ crates/rfb-core/src/
    - 射击与投掷均已复用既有 `DamagePacket` / effect pipeline；
    - 延后：返回武器、药水破裂、鼠标预览和动画事件。
 
-阶段 D 已由 contract-v22 完成背包重量/容量、种类级 aware/tried、未知名称投影、内容驱动消耗品以及实例级词条知识。下一步进入伪鉴定、完整鉴定与掉落；程序化地牢排在物品闭环之后。
+阶段 D 已由 contract-v23 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条和鉴别状态机。下一步进入内容驱动掉落；程序化地牢排在物品闭环之后。
 
 ## 9. 内容迁移策略
 

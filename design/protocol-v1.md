@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.22、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.23、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.22";
+  protocolVersion: "1.23";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -90,7 +90,7 @@ interface ProtocolEnvelope<T> {
 
 协议 1.20 新增 `ItemKnowledgeDto`，物品 DTO 输出核心决定的 `displayNameKey` 和 unknown/tried/aware 状态；未 aware 的背包/装备项不投影隐藏 modifier 与攻击 profile。当前规则边界见 [Contract v20](contract-v20-item-knowledge.md)。
 
-协议 1.22 新增实例词条存档真值、`ItemPropertyKnowledgeSaveDto`、玩家可见的 `knownProperties` 与词条发现事件；核心只投影已经发现的词条，真实修正始终参与权威规则计算。当前规则边界见 [Contract v22](contract-v22-instance-affix-knowledge.md)。
+协议 1.23 新增 `Appraise`、实例质量、鉴别级别与扩展后的 `ItemPropertyKnowledgeSaveDto`。`appraised` 只公开质量，`identified` 才公开完整词条；真实修正始终参与权威规则计算。当前规则边界见 [Contract v23](contract-v23-item-appraisal.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

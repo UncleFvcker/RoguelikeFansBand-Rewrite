@@ -41,6 +41,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v20：物品知识与未知名称投影](design/contract-v20-item-knowledge.md)
 - [Contract v21：消耗品 UseAction 与可观察鉴定](design/contract-v21-consumable-use-action.md)
 - [Contract v22：实例词条与知识投影](design/contract-v22-instance-affix-knowledge.md)
+- [Contract v23：物品鉴别与完整识别](design/contract-v23-item-appraisal.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [核心协议 v1](design/protocol-v1.md)
@@ -57,7 +58,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v22/scenarios`](tests/fixtures/contract-v22/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v21` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v23/scenarios`](tests/fixtures/contract-v23/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v22` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -82,11 +83,11 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-协议 1.22 / contract-v22 已建立实例级 affix 真值、首次装备发现、存档知识校验与防泄漏 DTO。active baseline 共 59 个 exact fixtures。原创内容包为 1.17.0；存档继续为 v1，state hash 升至 Schema v11。完整边界见 [Contract v22 说明](design/contract-v22-instance-affix-knowledge.md)。
+协议 1.23 / contract-v23 已建立实例质量、背包鉴别、装备完整识别与防泄漏投影。active baseline 共 60 个 exact fixtures。原创内容包为 1.18.0；存档继续为 v1，state hash 升至 Schema v12。完整边界见 [Contract v23 说明](design/contract-v23-item-appraisal.md)。
 
-阶段 D 的种类级知识、消耗品和实例级词条纵切已经建立。下一规则切片进入伪鉴定与完整鉴定；鼠标点选、路径预览和投射物动画留在后续前端切片。
+阶段 D 的种类级知识、消耗品、实例词条与鉴别状态机已经建立。下一规则切片进入内容驱动掉落表；鼠标点选、路径预览和投射物动画留在后续前端切片。
 
-Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 根据内容定义与装备权威派生，回声护符提供攻击 +1、防御 +1、最大生命 +4。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
+Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
 ### 本地验证
 
@@ -156,10 +157,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v22/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v23/baseline-policy.json
 ```
 
-当前 59 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 60 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

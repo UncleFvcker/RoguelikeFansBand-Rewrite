@@ -324,6 +324,10 @@
         "id": {
           "type": "string"
         },
+        "identification": {
+          "$ref": "#/$defs/ItemIdentificationDto",
+          "default": "unexamined"
+        },
         "kindId": {
           "type": "string"
         },
@@ -365,6 +369,16 @@
             }
           ]
         },
+        "quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemQualityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -400,6 +414,22 @@
     },
     "GameCommand": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "appraise"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -953,6 +983,10 @@
         "id": {
           "type": "string"
         },
+        "identification": {
+          "$ref": "#/$defs/ItemIdentificationDto",
+          "default": "unexamined"
+        },
         "kindId": {
           "type": "string"
         },
@@ -988,6 +1022,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/ProjectileProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemQualityDto"
             },
             {
               "type": "null"
@@ -1060,6 +1104,14 @@
         "quantity"
       ]
     },
+    "ItemIdentificationDto": {
+      "type": "string",
+      "enum": [
+        "unexamined",
+        "appraised",
+        "identified"
+      ]
+    },
     "ItemKnowledgeDto": {
       "type": "string",
       "enum": [
@@ -1089,6 +1141,14 @@
       "required": [
         "affixId",
         "nameKey"
+      ]
+    },
+    "ItemQualityDto": {
+      "type": "string",
+      "enum": [
+        "ordinary",
+        "fine",
+        "exceptional"
       ]
     },
     "MeleeBlowDto": {

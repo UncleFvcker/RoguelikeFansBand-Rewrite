@@ -2,9 +2,9 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v11：哈希输入覆盖运行时内容包 ID/hash、world ID、战斗状态、带稳定 affix 引用的物品实例、按稳定 ID 排序的种类知识与实例词条知识、RNG、世界脉冲和命令序号。contract-v22 因新增实例词条真值与知识状态而显式升级 Schema。
+当前 state hash Schema 为 v12：哈希输入覆盖运行时内容包 ID/hash、world ID、战斗状态、带质量和稳定 affix 引用的物品实例、按稳定 ID 排序的种类知识与实例鉴别知识、RNG、世界脉冲和命令序号。contract-v23 因新增质量真值与鉴别级别而显式升级 Schema。
 
-state hash 与正式存档 DTO 已解耦。Schema v11 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v12 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 

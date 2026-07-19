@@ -3,7 +3,8 @@
 use std::collections::BTreeMap;
 
 use rfb_protocol::{
-    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, Position, ProjectileTraceDto,
+    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, Position,
+    ProjectileTraceDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -29,6 +30,11 @@ impl From<ProjectileTrace> for ProjectileTraceDto {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    ItemAppraised {
+        target_kind_id: String,
+        quality: ItemQualityDto,
+    },
+    ItemAppraiseUnavailable,
     ItemsDropped {
         stacks: usize,
         quantity: u64,
@@ -180,6 +186,20 @@ pub(crate) enum DomainEvent {
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
         match self {
+            Self::ItemAppraised {
+                target_kind_id,
+                quality,
+            } => dto(
+                "item.appraise",
+                "item-appraise-success",
+                [
+                    ("target", target_kind_id),
+                    ("quality", item_quality_id(quality).to_owned()),
+                ],
+            ),
+            Self::ItemAppraiseUnavailable => {
+                dto_without_args("item.appraise.none", "item-appraise-unavailable")
+            }
             Self::ItemsDropped { stacks, quantity } => dto(
                 "item.drop",
                 "item-drop-success",
@@ -571,6 +591,14 @@ impl DomainEvent {
                 },
             ),
         }
+    }
+}
+
+fn item_quality_id(quality: ItemQualityDto) -> &'static str {
+    match quality {
+        ItemQualityDto::Ordinary => "ordinary",
+        ItemQualityDto::Fine => "fine",
+        ItemQualityDto::Exceptional => "exceptional",
     }
 }
 

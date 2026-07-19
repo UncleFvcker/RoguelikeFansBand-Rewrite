@@ -42,6 +42,14 @@
       ],
       "type": "object"
     },
+    "ItemQuality": {
+      "enum": [
+        "ordinary",
+        "fine",
+        "exceptional"
+      ],
+      "type": "string"
+    },
     "ItemSpawn": {
       "additionalProperties": false,
       "properties": {
@@ -60,6 +68,10 @@
         },
         "position": {
           "$ref": "#/$defs/ContentPosition"
+        },
+        "quality": {
+          "$ref": "#/$defs/ItemQuality",
+          "default": "ordinary"
         },
         "quantity": {
           "format": "uint32",

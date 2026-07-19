@@ -73,6 +73,7 @@ const hashValue = element<HTMLElement>("hash-value");
 const inventoryCount = element<HTMLElement>("inventory-count");
 const inventorySelectionCount = element<HTMLElement>("inventory-selection-count");
 const inventoryUse = element<HTMLButtonElement>("inventory-use");
+const inventoryAppraise = element<HTMLButtonElement>("inventory-appraise");
 const inventoryEquip = element<HTMLButtonElement>("inventory-equip");
 const inventoryDrop = element<HTMLButtonElement>("inventory-drop");
 const inventoryDropQuantity = element<HTMLInputElement>("inventory-drop-quantity");
@@ -217,6 +218,7 @@ nativeSaveCreate.addEventListener("click", () => void createNativeSave());
 nativeSaveRefresh.addEventListener("click", () => void refreshNativeSaves());
 nativeSaveName.addEventListener("input", updateNativeSaveControls);
 inventoryUse.addEventListener("click", () => void useSelectedInventoryItem());
+inventoryAppraise.addEventListener("click", () => void appraiseSelectedInventoryItem());
 inventoryEquip.addEventListener("click", () => void equipSelectedInventoryItem());
 inventoryDrop.addEventListener("click", () => void dropSelectedInventoryItems());
 inventoryDropQuantity.addEventListener("input", updateInventoryActions);
@@ -777,6 +779,7 @@ function renderInventory(
         details.append(equippable);
       }
       appendItemModifiers(details, item.modifiers);
+      appendItemQuality(details, item.quality);
       appendKnownItemProperties(details, item.knownProperties);
       const quantity = document.createElement("span");
       quantity.className = "inventory-quantity";
@@ -814,6 +817,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
     slot.textContent = equipmentSlotName(item.slotId);
     details.append(name, slot);
     appendItemModifiers(details, item.modifiers);
+    appendItemQuality(details, item.quality);
     appendKnownItemProperties(details, item.knownProperties);
     const unequip = document.createElement("button");
     unequip.type = "button";
@@ -829,6 +833,12 @@ async function equipSelectedInventoryItem(): Promise<void> {
   const selected = selectedInventoryItems();
   if (busy || selected.length !== 1 || !selected[0]?.equipmentSlot) return;
   await dispatch({ type: "equip", itemId: selected[0].id });
+}
+
+async function appraiseSelectedInventoryItem(): Promise<void> {
+  const selected = selectedInventoryItems();
+  if (busy || selected.length !== 1 || selected[0]?.identification !== "unexamined") return;
+  await dispatch({ type: "appraise", itemId: selected[0].id });
 }
 
 async function useSelectedInventoryItem(): Promise<void> {
@@ -870,6 +880,8 @@ function updateInventoryActions(): void {
   inventoryEquip.disabled =
     busy || playerDead || selected.length !== 1 || !selected[0]?.equipmentSlot;
   inventoryUse.disabled = busy || playerDead || selected.length !== 1 || !selected[0]?.usable;
+  inventoryAppraise.disabled =
+    busy || playerDead || selected.length !== 1 || selected[0]?.identification !== "unexamined";
   const [item] = selected;
   if (selected.length === 1 && item) {
     if (dropQuantityItemId !== item.id) {
@@ -947,6 +959,19 @@ function appendKnownItemProperties(
     });
     container.append(label);
   }
+}
+
+function appendItemQuality(
+  container: HTMLElement,
+  quality: InventoryItemDto["quality"],
+): void {
+  if (!quality) return;
+  const label = document.createElement("span");
+  label.className = "item-quality";
+  label.textContent = localization.format("item-quality-label", {
+    quality: itemQualityName(quality),
+  });
+  container.append(label);
 }
 
 function signedModifier(value: number): string {
@@ -1081,6 +1106,13 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-equip-unavailable":
       return localization.format("message-item-equip-unavailable");
+    case "item-appraise-success":
+      return localization.format("message-item-appraise-success", {
+        target: visibleItemNameForKind(event.args.target),
+        quality: itemQualityName(event.args.quality),
+      });
+    case "item-appraise-unavailable":
+      return localization.format("message-item-appraise-unavailable");
     case "item-property-discovered":
       return localization.format("message-item-property-discovered", {
         target: visibleItemNameForKind(event.args.target),
@@ -1288,6 +1320,19 @@ function itemPropertyName(nameKey: string | undefined): string {
     return localization.format(nameKey);
   }
   return localization.format("item-unknown-name");
+}
+
+function itemQualityName(quality: string | undefined): string {
+  switch (quality) {
+    case "ordinary":
+      return localization.format("item-quality-ordinary");
+    case "fine":
+      return localization.format("item-quality-fine");
+    case "exceptional":
+      return localization.format("item-quality-exceptional");
+    default:
+      return "?";
+  }
 }
 
 function equipmentSlotName(slotId: string | undefined): string {

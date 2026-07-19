@@ -20,4 +20,4 @@
 
 ## 后续
 
-Stage D 的实例级物品属性与知识投影已由 [contract-v22](contract-v22-instance-affix-knowledge.md) 建立，使“知道基础种类”和“知道这个具体实例的词条”成为两个独立层次；之后再实现伪鉴定与完整鉴定。掉落表与程序化地牢继续排在实例物品闭环之后。
+Stage D 的实例级物品属性已由 [contract-v22](contract-v22-instance-affix-knowledge.md) 建立，质量鉴别与完整识别已由 [contract-v23](contract-v23-item-appraisal.md) 建立。下一步进入内容驱动掉落表；程序化地牢继续排在物品闭环之后。

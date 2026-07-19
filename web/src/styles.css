@@ -359,6 +359,11 @@ h1 {
   font-size: 0.7rem;
 }
 
+.item-quality {
+  color: #9d8bd7;
+  font-size: 0.7rem;
+}
+
 .inventory-empty {
   border-bottom: 0;
   color: #64788c;

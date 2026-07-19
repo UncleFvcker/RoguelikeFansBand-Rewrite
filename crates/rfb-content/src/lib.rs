@@ -285,6 +285,16 @@ pub struct ActorSpawn {
     pub position: ContentPosition,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemQuality {
+    #[default]
+    Ordinary,
+    Fine,
+    Exceptional,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -293,6 +303,8 @@ pub struct ItemSpawn {
     pub kind_id: String,
     pub position: ContentPosition,
     pub quantity: u32,
+    #[serde(default)]
+    pub quality: ItemQuality,
     #[serde(default)]
     pub affix_ids: Vec<String>,
 }
@@ -937,7 +949,12 @@ fn validate_world(
         }
         item.affix_ids.sort();
         let mut seen_affixes = BTreeSet::new();
-        if (!item.affix_ids.is_empty() && (*max_stack != 1 || !equippable || item.quantity != 1))
+        if (item.quality != ItemQuality::Ordinary && (*max_stack != 1 || item.quantity != 1))
+            || (!item.affix_ids.is_empty()
+                && (*max_stack != 1
+                    || !equippable
+                    || item.quantity != 1
+                    || item.quality == ItemQuality::Ordinary))
             || item.affix_ids.iter().any(|affix_id| {
                 !affix_ids.contains(affix_id) || !seen_affixes.insert(affix_id.as_str())
             })
@@ -1548,7 +1565,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.17.0");
+        assert_eq!(catalog.pack_version(), "1.18.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1653,8 +1670,11 @@ mod tests {
                     .items
                     .iter()
                     .find(|item| item.kind_id == "demo.item.echo-charm")
-                    .map(|item| item.affix_ids.as_slice())),
-            Some(["demo.affix.harmonic-edge".to_owned()].as_slice())
+                    .map(|item| (item.quality, item.affix_ids.as_slice()))),
+            Some((
+                ItemQuality::Fine,
+                ["demo.affix.harmonic-edge".to_owned()].as_slice()
+            ))
         );
         assert!(catalog.world("demo.world.original-v1").is_some());
         assert_eq!(
@@ -1783,6 +1803,18 @@ mod tests {
             .find(|item| item.kind_id == "demo.item.echo-charm")
             .expect("fixture should contain the charm");
         charm.affix_ids.push("demo.affix.harmonic-edge".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemAffixes(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let shard = invalid.worlds[0]
+            .items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("fixture should contain the shard");
+        shard.quality = ItemQuality::Fine;
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemAffixes(_))

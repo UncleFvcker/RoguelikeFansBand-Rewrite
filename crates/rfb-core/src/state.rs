@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::Position;
+use rfb_protocol::{ItemQualityDto, Position};
 use serde::{Deserialize, Serialize};
 
 use crate::{effect::StatusInstance, resistance::ResistanceProfile};
@@ -30,6 +30,7 @@ pub(crate) struct ItemInstance {
     pub(crate) id: String,
     pub(crate) kind_id: String,
     pub(crate) quantity: u32,
+    pub(crate) quality: ItemQualityDto,
     pub(crate) affix_ids: Vec<String>,
     pub(crate) location: ItemLocation,
 }

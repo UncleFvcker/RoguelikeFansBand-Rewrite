@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.22";
+pub const PROTOCOL_VERSION: &str = "1.23";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -17,6 +17,10 @@ const fn default_actor_speed() -> u16 {
 
 const fn default_monster_energy_need() -> i32 {
     100
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -57,6 +61,9 @@ impl Direction {
     rename_all_fields = "camelCase"
 )]
 pub enum GameCommand {
+    Appraise {
+        item_id: String,
+    },
     Drop {
         item_ids: Vec<String>,
     },
@@ -456,6 +463,26 @@ pub enum ItemKnowledgeDto {
     Aware,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemQualityDto {
+    #[default]
+    Ordinary,
+    Fine,
+    Exceptional,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemIdentificationDto {
+    #[default]
+    Unexamined,
+    Appraised,
+    Identified,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -485,6 +512,10 @@ pub struct InventoryItemDto {
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default)]
+    pub identification: ItemIdentificationDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quality: Option<ItemQualityDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub known_properties: Vec<ItemPropertyDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -511,6 +542,10 @@ pub struct EquipmentItemDto {
     pub slot_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default)]
+    pub identification: ItemIdentificationDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quality: Option<ItemQualityDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub known_properties: Vec<ItemPropertyDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -644,6 +679,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
     push_declaration!(ItemKnowledgeDto);
+    push_declaration!(ItemQualityDto);
+    push_declaration!(ItemIdentificationDto);
     push_declaration!(ItemPropertyDto);
     push_declaration!(InventoryItemDto);
     push_declaration!(EquipmentItemDto);
@@ -739,6 +776,8 @@ pub struct ItemSaveDto {
     pub kind_id: String,
     pub position: Position,
     pub quantity: u32,
+    #[serde(default)]
+    pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
 }
@@ -749,6 +788,8 @@ pub struct InventoryItemSaveDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default)]
+    pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
 }
@@ -760,6 +801,8 @@ pub struct EquipmentItemSaveDto {
     pub kind_id: String,
     pub quantity: u32,
     pub slot_id: String,
+    #[serde(default)]
+    pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
 }
@@ -778,6 +821,10 @@ pub struct ItemKnowledgeSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemPropertyKnowledgeSaveDto {
     pub item_id: String,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub appraised: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub identified: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub known_affix_ids: Vec<String>,
 }
@@ -900,6 +947,9 @@ mod tests {
     #[test]
     fn command_messagepack_round_trip() {
         for (index, command) in [
+            GameCommand::Appraise {
+                item_id: "demo.item.echo-charm.1".to_owned(),
+            },
             GameCommand::Move {
                 direction: Direction::SouthEast,
             },
@@ -1053,6 +1103,8 @@ mod tests {
                     defense: 1,
                     max_hp: 4,
                 },
+                identification: ItemIdentificationDto::Unexamined,
+                quality: None,
                 known_properties: Vec::new(),
                 melee_profile: None,
                 projectile_profile: None,
@@ -1071,6 +1123,8 @@ mod tests {
                     defense: 1,
                     max_hp: 4,
                 },
+                identification: ItemIdentificationDto::Unexamined,
+                quality: None,
                 known_properties: Vec::new(),
                 melee_profile: None,
                 projectile_profile: None,
@@ -1099,6 +1153,7 @@ mod tests {
         assert!(decoded.item_knowledge.is_empty());
         assert!(decoded.item_property_knowledge.is_empty());
         assert!(decoded.inventory[0].affix_ids.is_empty());
+        assert_eq!(decoded.inventory[0].quality, ItemQualityDto::Ordinary);
     }
 
     #[test]

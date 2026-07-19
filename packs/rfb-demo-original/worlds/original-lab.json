@@ -51,6 +51,7 @@
       "kindId": "demo.item.echo-charm",
       "position": { "x": 5, "y": 3 },
       "quantity": 1,
+      "quality": "fine",
       "affixIds": ["demo.affix.harmonic-edge"]
     },
     {

@@ -6,6 +6,9 @@ use crate::scheduler::STANDARD_ACTION_COST;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
+    Appraise {
+        item_id: String,
+    },
     Move {
         direction: Direction,
     },
@@ -48,6 +51,7 @@ impl GameAction {
 impl From<GameCommand> for GameAction {
     fn from(command: GameCommand) -> Self {
         match command {
+            GameCommand::Appraise { item_id } => Self::Appraise { item_id },
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Wait => Self::Wait,
             GameCommand::PickUp => Self::PickUp,
