@@ -35,6 +35,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v14：权威 projectile 与发射器基础](design/contract-v14-projectile-foundation.md)
 - [Contract v15：弹药事务与投掷落点](design/contract-v15-ammunition-throwing.md)
 - [Contract v16：核心目标选择与非八方向轨迹](design/contract-v16-target-selection.md)
+- [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
@@ -75,9 +76,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-协议 1.16 / contract-v16 已建立核心声明的方向/格子/实体目标规格、稳定 `TargetSelection` 和非八方向整数轨迹。active baseline 共 53 个 exact fixtures。原创内容包继续为 1.11.0；存档继续为 v1，state hash Schema 继续为 v9。完整边界见 [Contract v16 说明](design/contract-v16-target-selection.md)。
+协议 1.16 / contract-v16 已建立核心声明的方向/格子/实体目标规格、稳定 `TargetSelection` 和非八方向整数轨迹；前端已通过键盘/按钮目标模式、相机同步准星和 `FireTarget` 接入该规格。active baseline 共 53 个 exact fixtures。原创内容包继续为 1.11.0；存档继续为 v1，state hash Schema 继续为 v9。完整边界见 [Contract v16 说明](design/contract-v16-target-selection.md)和[前端目标模式 v1](design/frontend-targeting-v1.md)。
 
-下一切片把目标规格接入前端目标模式和输入命令，再继续弹药破损/回收与投掷命中伤害。
+下一规则切片继续弹药破损/回收与投掷命中伤害；鼠标点选、路径预览和投射物动画留在后续前端切片。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 根据内容定义与装备权威派生，回声护符提供攻击 +1、防御 +1、最大生命 +4。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 

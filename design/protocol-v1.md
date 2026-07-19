@@ -80,7 +80,7 @@ interface ProtocolEnvelope<T> {
 
 协议 1.15 新增 `Throw { itemId, direction }`、发射器 `ammoKindId` 与显式 `landing`。射击弹药扣减和投掷实例移动都在核心中原子执行。当前规则边界见 [Contract v15](contract-v15-ammunition-throwing.md)。
 
-协议 1.16 新增 `TargetSpecDto`、`TargetSelection` 和 `FireTarget`。核心声明方向/格子/实体选择模式与射程，非八方向格子或实体目标使用确定性整数路径。当前规则边界见 [Contract v16](contract-v16-target-selection.md)。
+协议 1.16 新增 `TargetSpecDto`、`TargetSelection` 和 `FireTarget`。核心声明方向/格子/实体选择模式与射程，非八方向格子或实体目标使用确定性整数路径；前端目标模式消费该规格并只在确认时提交稳定选择。当前规则边界见 [Contract v16](contract-v16-target-selection.md)和[前端目标模式 v1](frontend-targeting-v1.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

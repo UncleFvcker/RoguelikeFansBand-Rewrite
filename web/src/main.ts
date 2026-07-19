@@ -10,7 +10,7 @@ import {
 } from "./localization";
 import { LOCALIZATION_SOURCES } from "./localization-resources";
 import { MapRenderer, type CameraMode } from "./map-renderer";
-import { parseZoomLevel, type ZoomLevel } from "./camera";
+import { MAP_CELL_SIZE, parseZoomLevel, type ZoomLevel } from "./camera";
 import {
   DesktopCrashDiagnostics,
   type CrashDiagnosticStatus,
@@ -35,6 +35,12 @@ import type {
 import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
 import { installRendererProfileHook } from "./render-profile";
+import {
+  beginTargeting,
+  moveTargetCursor,
+  targetSelectionAtCursor,
+  type TargetingState,
+} from "./targeting";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -46,8 +52,14 @@ let nativeSaveBusy = false;
 let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
 let dropQuantityItemId: string | undefined;
+let targeting: TargetingState | undefined;
+let mapWidth = 0;
+let mapHeight = 0;
 
 const mapHost = element<HTMLElement>("map-host");
+const targetCursor = element<HTMLElement>("target-cursor");
+const targetModeToggle = element<HTMLButtonElement>("target-mode-toggle");
+const targetModeStatus = element<HTMLElement>("target-mode-status");
 const connectionStatus = element<HTMLElement>("connection-status");
 const messageList = element<HTMLOListElement>("message-list");
 const turnValue = element<HTMLElement>("turn-value");
@@ -121,6 +133,7 @@ localization.localizeDocument();
 localizeNativeSaveControls();
 renderConnectionStatus();
 renderInputHelp();
+renderTargeting();
 renderNativeSaves();
 installFrontendCrashHandlers();
 installRendererProfileHook();
@@ -130,6 +143,8 @@ void start();
 async function start(): Promise<void> {
   try {
     const snapshot = await core.initialize("42");
+    mapWidth = snapshot.width;
+    mapHeight = snapshot.height;
     const contentGlyphs = Object.fromEntries(
       snapshot.contentVisuals.map((visual) => [visual.id, visual.glyph]),
     );
@@ -144,6 +159,7 @@ async function start(): Promise<void> {
       cameraMode,
       zoom,
     );
+    mapHost.append(targetCursor);
     renderer.applySnapshot(snapshot);
     await synchronizeCrashDiagnosticContext(snapshot);
     renderStatus(snapshot);
@@ -160,10 +176,36 @@ async function start(): Promise<void> {
 }
 
 window.addEventListener("keydown", (event) => {
+  if (busy || playerDead || isTextInput(event.target)) return;
+  if (targeting) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cancelTargeting();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void confirmTargeting();
+      return;
+    }
+    const direction = directionForKeyboardEvent(event);
+    if (direction) {
+      event.preventDefault();
+      targeting = moveTargetCursor(targeting, direction, mapWidth, mapHeight);
+      renderTargeting();
+    }
+    return;
+  }
+  if (event.key.toLowerCase() === "f") {
+    event.preventDefault();
+    startTargeting();
+    return;
+  }
   const command = commandForKeyboardEvent(event);
-  if (!command || busy || playerDead || isTextInput(event.target)) return;
-  event.preventDefault();
-  void dispatch(command);
+  if (command) {
+    event.preventDefault();
+    void dispatch(command);
+  }
 });
 
 saveButton.addEventListener("click", () => void exportSave());
@@ -175,6 +217,10 @@ nativeSaveName.addEventListener("input", updateNativeSaveControls);
 inventoryEquip.addEventListener("click", () => void equipSelectedInventoryItem());
 inventoryDrop.addEventListener("click", () => void dropSelectedInventoryItems());
 inventoryDropQuantity.addEventListener("input", updateInventoryActions);
+targetModeToggle.addEventListener("click", () => {
+  if (targeting) cancelTargeting();
+  else startTargeting();
+});
 clearMessages.addEventListener("click", () => {
   messageRecords.length = 0;
   renderMessages();
@@ -190,12 +236,14 @@ cameraModeSelect.addEventListener("change", () => {
   cameraMode = isCameraMode(cameraModeSelect.value) ? cameraModeSelect.value : "full-map";
   localStorage.setItem(CAMERA_MODE_STORAGE_KEY, cameraMode);
   renderer.setCameraMode(cameraMode);
+  renderTargeting();
 });
 zoomSelect.addEventListener("change", () => {
   zoom = parseZoomLevel(zoomSelect.value);
   zoomSelect.value = String(zoom);
   localStorage.setItem(ZOOM_STORAGE_KEY, String(zoom));
   renderer.setZoom(zoom);
+  renderTargeting();
 });
 languageSelect.addEventListener("change", () => {
   const locale = isSupportedLocale(languageSelect.value) ? languageSelect.value : "zh-CN";
@@ -207,6 +255,7 @@ languageSelect.addEventListener("change", () => {
   renderConnectionStatus();
   if (currentStatus) renderStatus(currentStatus);
   renderInputHelp();
+  renderTargeting();
   renderInventory(currentInventory, currentEquipment);
   localizeNativeSaveControls();
   renderNativeSaves();
@@ -216,6 +265,7 @@ window.addEventListener("beforeunload", () => {
   renderer.destroy();
   core.dispose();
 });
+window.addEventListener("resize", () => requestAnimationFrame(renderTargeting));
 
 function installFrontendCrashHandlers(): void {
   window.addEventListener("error", () => recordFrontendCrash("window-error"));
@@ -267,6 +317,7 @@ async function dispatch(command: GameCommand): Promise<void> {
   if (playerDead) return;
   busy = true;
   updateInventoryActions();
+  renderTargeting();
   try {
     const update = await core.dispatch(command);
     renderer.applyUpdate(update);
@@ -278,6 +329,7 @@ async function dispatch(command: GameCommand): Promise<void> {
   } finally {
     busy = false;
     updateInventoryActions();
+    renderTargeting();
   }
 }
 
@@ -415,6 +467,9 @@ async function deleteNativeSave(summary: NativeSaveSummary): Promise<void> {
 }
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
+  cancelTargeting(false);
+  mapWidth = snapshot.width;
+  mapHeight = snapshot.height;
   core.synchronize(snapshot);
   renderContentMetadata(snapshot);
   renderer.applySnapshot(snapshot);
@@ -600,6 +655,14 @@ async function changeTileset(): Promise<void> {
 function renderStatus(state: GameSnapshot | GameUpdate): void {
   currentStatus = state;
   playerDead = state.player.isDead;
+  if (
+    targeting &&
+    (targeting.origin.x !== state.player.position.x ||
+      targeting.origin.y !== state.player.position.y ||
+      !state.player.projectileProfile)
+  ) {
+    cancelTargeting(false);
+  }
   document.documentElement.dataset.playerState = playerDead ? "dead" : "alive";
   turnValue.textContent = String(state.turn);
   hpValue.textContent = localization.format(
@@ -638,6 +701,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   mapHost.dataset.equipmentCount = String(state.equipment.length);
   mapHost.dataset.playerStatusCount = String(state.player.statuses.length);
   updateInventoryActions();
+  renderTargeting();
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
@@ -1201,24 +1265,105 @@ function downloadBytes(bytes: Uint8Array, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
+function startTargeting(): void {
+  if (busy || playerDead || !currentStatus) return;
+  const next = beginTargeting(
+    currentStatus.player.position,
+    currentStatus.player.projectileProfile?.targetSpec,
+  );
+  if (!next) {
+    addLocalizedMessage("message-target-mode-unavailable", undefined, "system");
+    renderTargeting();
+    return;
+  }
+  targeting = next;
+  addLocalizedMessage("message-target-mode-started", undefined, "system");
+  renderTargeting();
+}
+
+function cancelTargeting(announce = true): void {
+  if (!targeting) return;
+  targeting = undefined;
+  if (announce) addLocalizedMessage("message-target-mode-cancelled", undefined, "system");
+  renderTargeting();
+}
+
+async function confirmTargeting(): Promise<void> {
+  const state = targeting;
+  const status = currentStatus;
+  if (!state || !status || busy || playerDead) return;
+  const target = targetSelectionAtCursor(state, status.entities);
+  if (!target) {
+    addLocalizedMessage("message-target-selection-invalid", undefined, "system");
+    return;
+  }
+  cancelTargeting(false);
+  await dispatch({ type: "fire-target", target });
+}
+
+function renderTargeting(): void {
+  const available = Boolean(
+    currentStatus &&
+      beginTargeting(
+        currentStatus.player.position,
+        currentStatus.player.projectileProfile?.targetSpec,
+      ),
+  );
+  targetModeToggle.textContent = localization.format(
+    targeting ? "action-target-cancel" : "action-target-start",
+  );
+  targetModeToggle.setAttribute("aria-pressed", targeting ? "true" : "false");
+  targetModeToggle.disabled = busy || playerDead || (!targeting && !available);
+  mapHost.dataset.targeting = targeting ? "true" : "false";
+  targetCursor.hidden = !targeting;
+  if (!targeting) {
+    targetModeStatus.textContent = localization.format(
+      available ? "target-status-ready" : "target-status-unavailable",
+    );
+    delete mapHost.dataset.targetX;
+    delete mapHost.dataset.targetY;
+    return;
+  }
+
+  const { cursor, spec } = targeting;
+  const cameraX = Number(mapHost.dataset.cameraX ?? 0);
+  const cameraY = Number(mapHost.dataset.cameraY ?? 0);
+  const renderedCellSize = MAP_CELL_SIZE * zoom;
+  targetCursor.style.left = `${cameraX + cursor.x * renderedCellSize}px`;
+  targetCursor.style.top = `${cameraY + cursor.y * renderedCellSize}px`;
+  targetCursor.style.width = `${renderedCellSize}px`;
+  targetCursor.style.height = `${renderedCellSize}px`;
+  mapHost.dataset.targetX = String(cursor.x);
+  mapHost.dataset.targetY = String(cursor.y);
+  targetModeStatus.textContent = localization.format("target-status-active", {
+    x: cursor.x,
+    y: cursor.y,
+    range: spec.range,
+  });
+}
+
 function commandForKeyboardEvent(event: KeyboardEvent): GameCommand | undefined {
   const key = event.key.toLowerCase();
   if (key === "g") return { type: "pick-up" };
+  const direction = directionForKeyboardEvent(event);
   if (inputPreset === "numpad") {
-    const direction = NUMPAD_DIRECTIONS[event.code];
     if (event.code === "Numpad5") return { type: "wait" };
     return direction ? { type: "move", direction } : undefined;
   }
 
   if (inputPreset === "vi") {
-    const direction = VI_DIRECTIONS[key];
     if (key === ".") return { type: "wait" };
     return direction ? { type: "move", direction } : undefined;
   }
 
-  const direction = WASD_DIRECTIONS[key];
   if (key === " ") return { type: "wait" };
   return direction ? { type: "move", direction } : undefined;
+}
+
+function directionForKeyboardEvent(event: KeyboardEvent): Direction | undefined {
+  if (inputPreset === "numpad") return NUMPAD_DIRECTIONS[event.code];
+  const key = event.key.toLowerCase();
+  return inputPreset === "vi" ? VI_DIRECTIONS[key] : WASD_DIRECTIONS[key];
 }
 
 function isTextInput(target: EventTarget | null): boolean {

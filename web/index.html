@@ -29,8 +29,14 @@
             <span data-l10n-id="panel-map-title"></span>
             <span id="connection-status" class="status-pill"></span>
           </div>
-          <div id="map-host" class="map-host"></div>
+          <div id="map-host" class="map-host">
+            <div id="target-cursor" class="target-cursor" aria-hidden="true" hidden></div>
+          </div>
           <div class="input-toolbar">
+            <div class="target-controls">
+              <button id="target-mode-toggle" type="button"></button>
+              <span id="target-mode-status" aria-live="polite"></span>
+            </div>
             <label for="input-preset">
               <span data-l10n-id="settings-input-label"></span>
               <select id="input-preset">

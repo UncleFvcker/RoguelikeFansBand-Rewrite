@@ -111,6 +111,7 @@ h1 {
 }
 
 .map-host {
+  position: relative;
   width: var(--map-world-width);
   height: var(--map-world-height);
   max-width: calc(100vw - 3rem);
@@ -128,12 +129,57 @@ h1 {
   display: block;
 }
 
+.target-cursor {
+  position: absolute;
+  z-index: 10;
+  box-sizing: border-box;
+  border: 3px solid #ffe66d;
+  border-radius: 5px;
+  background: rgb(255 230 109 / 16%);
+  box-shadow:
+    0 0 0 1px rgb(16 21 29 / 90%),
+    0 0 12px rgb(255 230 109 / 75%);
+  pointer-events: none;
+}
+
+.map-host[data-targeting="true"] canvas {
+  cursor: crosshair;
+}
+
 .input-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem 0.85rem;
+}
+
+.target-controls {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.2rem;
+}
+
+.target-controls button {
+  border: 1px solid #59758f;
+  border-radius: 7px;
+  padding: 0.42rem 0.75rem;
+  color: #e8f4ff;
+  background: #183047;
+  font: inherit;
+  cursor: pointer;
+}
+
+.target-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.target-controls span {
+  color: #aabed1;
+  font-size: 0.84rem;
 }
 
 .input-toolbar label {
