@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "id": "status.fear.player-melee-blocked",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerHp": null,
+    "playerStatuses": [
+      {
+        "kindId": "rfb.status.fear",
+        "intensity": 2,
+        "remainingTicks": 20,
+        "sourceId": "demo.monster.ember-mote.1"
+      }
+    ],
+    "playerResistances": [],
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": {
+          "x": 4,
+          "y": 3
+        },
+        "hp": null,
+        "energyNeed": null,
+        "statuses": [
+          {
+            "kindId": "rfb.status.slow",
+            "intensity": 10,
+            "remainingTicks": 20
+          }
+        ],
+        "resistances": []
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 0,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [
+        {
+          "kindId": "rfb.status.fear",
+          "intensity": 2,
+          "remainingTicks": 10
+        }
+      ],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 4,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 10,
+          "energyNeed": 90,
+          "statuses": [
+            {
+              "kindId": "rfb.status.slow",
+              "intensity": 10,
+              "remainingTicks": 10
+            }
+          ]
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "itemKnowledge": [],
+      "nextItemInstanceSerial": 1,
+      "stateHash": "cbde493899c6ab95e58618034dc23eeba0f3543a1041294410029b10513deddc"
+    },
+    "events": [
+      {
+        "kind": "status.fear-blocked",
+        "messageKey": "status-fear-blocked",
+        "args": {
+          "status": "rfb.status.fear"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "cbde493899c6ab95e58618034dc23eeba0f3543a1041294410029b10513deddc"
+  }
+}

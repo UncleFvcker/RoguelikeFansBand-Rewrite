@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.20";
+pub const PROTOCOL_VERSION: &str = "1.21";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -80,6 +80,9 @@ pub enum GameCommand {
     Throw {
         item_id: String,
         direction: Direction,
+    },
+    UseItem {
+        item_id: String,
     },
     Unequip {
         slot_id: String,
@@ -331,6 +334,15 @@ pub struct DamageResolutionDto {
 pub enum GameEventOutcomeDto {
     Damage { resolution: DamageResolutionDto },
     Death { resolution: DamageResolutionDto },
+    Heal { resolution: HealingResolutionDto },
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct HealingResolutionDto {
+    pub requested: i32,
+    pub applied: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -454,6 +466,8 @@ pub struct InventoryItemDto {
     pub display_name_key: String,
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
+    #[serde(default)]
+    pub usable: bool,
     pub quantity: u32,
     #[serde(default)]
     pub weight_tenths_pound: u16,
@@ -609,6 +623,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ResistanceLevelDto);
     push_declaration!(ResistanceDto);
     push_declaration!(DamageResolutionDto);
+    push_declaration!(HealingResolutionDto);
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
     push_declaration!(PlayerDto);
@@ -883,6 +898,9 @@ mod tests {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
                 direction: Direction::North,
             },
+            GameCommand::UseItem {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+            },
             GameCommand::Wait,
         ]
         .into_iter()
@@ -995,6 +1013,7 @@ mod tests {
                 kind_id: "demo.item.charm".to_owned(),
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
+                usable: false,
                 quantity: 1,
                 weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),

@@ -195,6 +195,25 @@ pub struct ThrowProfileDefinition {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum ItemUseEffectDefinition {
+    Heal { amount: u32 },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemUseActionDefinition {
+    pub effect: ItemUseEffectDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDefinition {
     #[serde(rename = "$schema")]
@@ -218,6 +237,8 @@ pub struct ItemDefinition {
     pub projectile_profile: Option<ProjectileProfileDefinition>,
     #[serde(default)]
     pub throw_profile: Option<ThrowProfileDefinition>,
+    #[serde(default)]
+    pub use_action: Option<ItemUseActionDefinition>,
     #[serde(default)]
     pub break_chance_percent: u8,
     pub tags: Vec<String>,
@@ -742,6 +763,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 || profile.damage_sides > 10_000)
         {
             return Err(ContentError::InvalidThrowProfile(item.id.clone()));
+        }
+        if let Some(action) = &item.use_action {
+            let valid_effect = match action.effect {
+                ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
+            };
+            if item.equipment_slot.is_some() || !valid_effect {
+                return Err(ContentError::InvalidItemUseAction(item.id.clone()));
+            }
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
@@ -1356,6 +1385,8 @@ pub enum ContentError {
     InvalidProjectileProfile(String),
     #[error("item throw profile is invalid: {0}")]
     InvalidThrowProfile(String),
+    #[error("item use action is invalid: {0}")]
+    InvalidItemUseAction(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1435,7 +1466,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.15.0");
+        assert_eq!(catalog.pack_version(), "1.16.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1502,6 +1533,13 @@ mod tests {
                 .map(|item| item.max_stack),
             Some(20)
         );
+        assert!(matches!(
+            catalog
+                .item("demo.item.luminous-shard")
+                .and_then(|item| item.use_action.as_ref())
+                .map(|action| &action.effect),
+            Some(ItemUseEffectDefinition::Heal { amount: 4 })
+        ));
         assert_eq!(
             catalog
                 .item("demo.item.echo-charm")
@@ -1617,6 +1655,20 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemAppearance(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let shard = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.luminous-shard")
+            .expect("fixture should contain the usable shard");
+        shard.use_action = Some(ItemUseActionDefinition {
+            effect: ItemUseEffectDefinition::Heal { amount: 0 },
+        });
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
         ));
 
         let mut invalid = artifact.content.clone();

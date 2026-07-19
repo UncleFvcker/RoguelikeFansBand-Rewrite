@@ -56,6 +56,7 @@ item-modifier-max-hp = 最大生命 { $value }
 item-modifier-attack = 攻击 { $value }
 item-modifier-defense = 防御 { $value }
 action-inventory-equip = 装备所选
+action-inventory-use = 使用所选
 action-inventory-drop = 丢弃所选
 panel-equipment-title = 装备
 equipment-empty = 当前没有装备物品。

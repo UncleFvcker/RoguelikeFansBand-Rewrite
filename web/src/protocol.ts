@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -49,7 +49,9 @@ export type ResistanceDto = { damageType: DamageTypeDto, level: ResistanceLevelD
 
 export type DamageResolutionDto = { rawDamage: number, armorReduction: number, resistanceAdjustment: number, finalDamage: number, damageType: DamageTypeDto, resistance: ResistanceLevelDto, };
 
-export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, };
+export type HealingResolutionDto = { requested: number, applied: number, };
+
+export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
@@ -61,7 +63,7 @@ export type ItemDto = { id: string, kindId: string, displayNameKey: string, know
 
 export type ItemKnowledgeDto = "unknown" | "tried" | "aware";
 
-export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 

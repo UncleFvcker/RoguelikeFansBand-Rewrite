@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "id": "status.monster.poison-death",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0x000000000000002a",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerHp": null,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": null,
+        "hp": null,
+        "energyNeed": null,
+        "statuses": [
+          {
+            "kindId": "rfb.status.poison",
+            "intensity": 3,
+            "remainingTicks": 1,
+            "sourceId": "demo.player.1"
+          }
+        ],
+        "resistances": []
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 0,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 0,
+      "entities": [],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "itemKnowledge": [],
+      "nextItemInstanceSerial": 1,
+      "stateHash": "5b55433cb738cea63f76bde0c80062739056aa12941ac8e84f3c0020ed557568"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "status.entity-damage",
+        "messageKey": "status-entity-damage",
+        "args": {
+          "damage": "3",
+          "status": "rfb.status.poison",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 3,
+            "damageType": "poison",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "status.entity-expired",
+        "messageKey": "status-entity-expired",
+        "args": {
+          "status": "rfb.status.poison",
+          "target": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "status.entity-death",
+        "messageKey": "status-entity-death",
+        "args": {
+          "status": "rfb.status.poison",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "death",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 3,
+            "damageType": "poison",
+            "resistance": "normal"
+          }
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 8,
+        "y": 5
+      }
+    ],
+    "removedEntities": [
+      "demo.monster.ember-mote.1"
+    ],
+    "errors": [],
+    "saveRoundTripStateHash": "5b55433cb738cea63f76bde0c80062739056aa12941ac8e84f3c0020ed557568"
+  }
+}

@@ -15,5 +15,11 @@
     "damageSides": 3,
     "damageType": "physical"
   },
-  "tags": ["crystal", "light-source"]
+  "useAction": {
+    "effect": {
+      "type": "heal",
+      "amount": 4
+    }
+  },
+  "tags": ["consumable", "crystal", "light-source"]
 }

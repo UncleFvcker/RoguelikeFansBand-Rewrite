@@ -60,6 +60,7 @@ item-modifier-max-hp = Max health { $value }
 item-modifier-attack = Attack { $value }
 item-modifier-defense = Defense { $value }
 action-inventory-equip = Equip
+action-inventory-use = Use
 action-inventory-drop = Drop
 panel-equipment-title = Equipment
 equipment-empty = Nothing is currently equipped.

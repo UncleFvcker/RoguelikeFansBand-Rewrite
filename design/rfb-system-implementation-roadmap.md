@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.20 / contract-v20
+状态：长期规则实现路线；当前基线为协议 1.21 / contract-v21
 
 ## 1. 目的与边界
 
@@ -139,7 +139,7 @@ flowchart TD
 | 学习与熟练 | 等级、法力、失败率、学习数量、熟练度和遗忘 | 未建立 | `AbilityBook` 保存已学能力和熟练；失败率由统一施法上下文计算 |
 | 目标选择 | 自身、方向、格子、怪物、范围、投射、锥形等 | 部分建立 | contract-v16 已由核心声明方向/格子/实体 `TargetSpec` 并接收稳定 `TargetSelection`，前端目标模式 v1 已接入键盘准星和确认/取消；下一步扩展鼠标预览、自身、范围和锥形 |
 | 效果执行 | 伤害、治疗、传送、召唤、侦测、地形改变、附魔等 | 已建立基础版 | `EffectSpec` 已支持伤害、治疗和状态添加/移除并返回结构化结果；传送、召唤、侦测、地形改变和附魔继续扩展同一组合器 |
-| 消耗品 | 食物、药水、卷轴 | 未建立 | 物品的 `UseAction` 引用 effect；识别、堆叠消耗和回合成本在同一事务结算 |
+| 消耗品 | 食物、药水、卷轴 | 部分建立 | contract-v21 已让 `UseAction` 引用首个治疗 effect，并在同一事务结算堆叠消耗、回合成本、结构化结果与可观察鉴定；后续增加状态、目标和多 effect 组合 |
 | 魔杖/法杖/魔棒 | 设备难度、充能、SP、失败、词条和专精 | 未建立 | `DeviceState` 保存当前/最大能量和 effect；设备技能只进入统一失败率计算 |
 | 装备激活 | 神器和装备的主动能力及冷却 | 未建立 | 装备实例保存 cooldown；激活本身仍是 ability/effect，不创建第二套施法系统 |
 
@@ -151,7 +151,7 @@ flowchart TD
 | 装备 | 多槽位、身体模板、双持/双手、箭袋、负重 | 部分建立 | `BodyPlan` 决定槽位；箭袋和特殊包作为容器组件，不在装备代码硬编码 |
 | 物品生成 | 基础种类、等级、质量、随机加值、稀有度和掉落主题 | 未建立 | `LootContext` + 加权生成表；生成步骤和 RNG 顺序进入专门 contract |
 | Ego、神器与随机神器 | 模板词条、固定神器、随机能力、诅咒和重铸 | 未建立 | 基础物品、affix、unique definition 分层；随机神器保存生成结果，不依赖未来内容表重算 |
-| 鉴定与感知 | aware、tried、伪鉴定、已知 flag、诅咒发现 | 部分建立 | contract-v20 已将种类级 `ItemKnowledge` 与实例分离，建立 unknown/tried/aware、未知外观名称和防泄漏 DTO；下一步由真实消耗品效果触发 aware，再扩展实例级词条知识 |
+| 鉴定与感知 | aware、tried、伪鉴定、已知 flag、诅咒发现 | 部分建立 | contract-v21 已在种类级 unknown/tried/aware 和防泄漏 DTO 上加入可观察效果触发 aware；下一步分离实例级属性知识，再扩展伪鉴定与完整鉴定 |
 | 词条学习 | 使用或受击后发现抗性、克制、激活等 | 未建立 | 规则事件产生 `KnowledgeDiscovery`；知识状态按角色保存 |
 | 自动拾取与铭文 | 条件匹配、自动鉴定、销毁、拾取和铭文 | 未建立 | 后期实现结构化规则 AST 和可视化编辑器；不继续使用依赖本地化名称的文本匹配 |
 | 锻造、炼金与重铸 | 附魔、品牌、打造、材料和神器重铸 | 未建立 | 在物品实例/affix/能力系统稳定后实现，作为服务或职业能力调用同一物品变换 API |
@@ -326,7 +326,7 @@ crates/rfb-core/src/
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v18 已在这些原语上完成投掷攻击。当前 active baseline 已进入阶段 D 的 contract-v20，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
+当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品。当前 active baseline 位于阶段 D 的 contract-v21，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -352,7 +352,7 @@ crates/rfb-core/src/
 
 目标：建立可以承载 RFB 装备构筑的物品闭环。
 
-当前进度：contract-v20 已完成种类级 `ItemKnowledge`、unknown/tried/aware、未知外观名称、防泄漏 DTO、存档迁移和 HTML 名称消费。内容包为 1.15.0，active baseline 共 57 个 exact fixtures，save v1 继续使用，state hash 升至 Schema v10。下一步建立第一个内容驱动的消耗品 `UseAction`，由可观察效果触发 aware。详细边界见 [Contract v20](contract-v20-item-knowledge.md)。
+当前进度：contract-v21 已完成内容驱动的消耗品 `UseAction`、单件原子消耗、结构化治疗结果、HTML 使用入口与可观察效果触发 aware。内容包为 1.16.0，active baseline 共 58 个 exact fixtures，save v1 / state hash Schema v10 不变。下一步分离实例级物品属性与知识投影。详细边界见 [Contract v21](contract-v21-consumable-use-action.md)。
 
 实现：
 
@@ -471,7 +471,7 @@ crates/rfb-core/src/
    - 射击与投掷均已复用既有 `DamagePacket` / effect pipeline；
    - 延后：返回武器、药水破裂、鼠标预览和动画事件。
 
-阶段 D 已由 contract-v20 完成背包重量/容量以及种类级 aware/tried 物品知识和未知名称投影。下一步建立内容驱动的消耗品 `UseAction` 与可观察效果带来的 aware 发现，再进入实例级词条鉴定与掉落；程序化地牢排在物品闭环之后。
+阶段 D 已由 contract-v21 完成背包重量/容量、种类级 aware/tried、未知名称投影和首个内容驱动消耗品。下一步分离实例级物品属性与知识投影，再进入伪鉴定、完整鉴定与掉落；程序化地牢排在物品闭环之后。
 
 ## 9. 内容迁移策略
 

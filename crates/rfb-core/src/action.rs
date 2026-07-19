@@ -24,6 +24,9 @@ pub(crate) enum GameAction {
         item_id: String,
         direction: Direction,
     },
+    UseItem {
+        item_id: String,
+    },
     Unequip {
         slot_id: String,
     },
@@ -52,6 +55,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::Fire { direction } => Self::Fire { direction },
             GameCommand::FireTarget { target } => Self::FireTarget { target },
             GameCommand::Throw { item_id, direction } => Self::Throw { item_id, direction },
+            GameCommand::UseItem { item_id } => Self::UseItem { item_id },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },
             GameCommand::DropQuantity { item_id, quantity } => {

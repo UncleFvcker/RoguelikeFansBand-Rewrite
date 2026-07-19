@@ -71,6 +71,7 @@ const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
 const inventoryCount = element<HTMLElement>("inventory-count");
 const inventorySelectionCount = element<HTMLElement>("inventory-selection-count");
+const inventoryUse = element<HTMLButtonElement>("inventory-use");
 const inventoryEquip = element<HTMLButtonElement>("inventory-equip");
 const inventoryDrop = element<HTMLButtonElement>("inventory-drop");
 const inventoryDropQuantity = element<HTMLInputElement>("inventory-drop-quantity");
@@ -214,6 +215,7 @@ loadInput.addEventListener("change", () => void importSave());
 nativeSaveCreate.addEventListener("click", () => void createNativeSave());
 nativeSaveRefresh.addEventListener("click", () => void refreshNativeSaves());
 nativeSaveName.addEventListener("input", updateNativeSaveControls);
+inventoryUse.addEventListener("click", () => void useSelectedInventoryItem());
 inventoryEquip.addEventListener("click", () => void equipSelectedInventoryItem());
 inventoryDrop.addEventListener("click", () => void dropSelectedInventoryItems());
 inventoryDropQuantity.addEventListener("input", updateInventoryActions);
@@ -826,6 +828,12 @@ async function equipSelectedInventoryItem(): Promise<void> {
   await dispatch({ type: "equip", itemId: selected[0].id });
 }
 
+async function useSelectedInventoryItem(): Promise<void> {
+  const selected = selectedInventoryItems();
+  if (busy || selected.length !== 1 || !selected[0]?.usable) return;
+  await dispatch({ type: "use-item", itemId: selected[0].id });
+}
+
 async function dropSelectedInventoryItems(): Promise<void> {
   const selected = selectedInventoryItems();
   if (busy || selected.length === 0) return;
@@ -858,6 +866,7 @@ function updateInventoryActions(): void {
   });
   inventoryEquip.disabled =
     busy || playerDead || selected.length !== 1 || !selected[0]?.equipmentSlot;
+  inventoryUse.disabled = busy || playerDead || selected.length !== 1 || !selected[0]?.usable;
   const [item] = selected;
   if (selected.length === 1 && item) {
     if (dropQuantityItemId !== item.id) {
@@ -1069,6 +1078,17 @@ function formatEvent(event: GameEventDto): string {
         stacks: event.args.stacks ?? "?",
         quantity: event.args.quantity ?? "?",
       });
+    case "item-use-heal":
+      return localization.format("message-item-use-heal", {
+        target: visibleItemName(event.args.nameKey, event.args.target),
+        amount: event.args.amount ?? "?",
+      });
+    case "item-use-no-effect":
+      return localization.format("message-item-use-no-effect", {
+        target: visibleItemName(event.args.nameKey, event.args.target),
+      });
+    case "item-use-unavailable":
+      return localization.format("message-item-use-unavailable");
     case "item-thrown":
       return localization.format("message-item-thrown", {
         target: visibleItemNameForKind(event.args.target),
@@ -1153,7 +1173,10 @@ function formatMonsterDamageEvent(event: GameEventDto): string {
 }
 
 function damageResolution(event: GameEventDto): DamageResolutionDto | undefined {
-  return event.outcome?.resolution;
+  const outcome = event.outcome;
+  return outcome?.type === "damage" || outcome?.type === "death"
+    ? outcome.resolution
+    : undefined;
 }
 
 function damageTypeName(damageType: DamageTypeDto): string {
@@ -1207,7 +1230,10 @@ function contentName(id: string | undefined): string {
   );
 }
 
-function visibleItemName(displayNameKey: string, fallbackKindId: string | undefined): string {
+function visibleItemName(
+  displayNameKey: string | undefined,
+  fallbackKindId: string | undefined,
+): string {
   switch (displayNameKey) {
     case "item-demo-luminous-shard-name":
     case "item-demo-unfamiliar-shard-name":

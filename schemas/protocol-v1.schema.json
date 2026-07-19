@@ -534,6 +534,22 @@
         {
           "type": "object",
           "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "use-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "slotId": {
               "type": "string"
             },
@@ -653,6 +669,22 @@
             "type": {
               "type": "string",
               "const": "death"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/HealingResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "heal"
             }
           },
           "required": [
@@ -881,6 +913,23 @@
         "stateHash"
       ]
     },
+    "HealingResolutionDto": {
+      "type": "object",
+      "properties": {
+        "applied": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "requested": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "requested",
+        "applied"
+      ]
+    },
     "InventoryItemDto": {
       "type": "object",
       "properties": {
@@ -947,6 +996,10 @@
               "type": "null"
             }
           ]
+        },
+        "usable": {
+          "type": "boolean",
+          "default": false
         },
         "weightTenthsPound": {
           "type": "integer",

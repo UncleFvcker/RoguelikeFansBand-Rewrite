@@ -2,7 +2,9 @@
 
 use std::collections::BTreeMap;
 
-use rfb_protocol::{GameEventDto, GameEventOutcomeDto, Position, ProjectileTraceDto};
+use rfb_protocol::{
+    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, Position, ProjectileTraceDto,
+};
 
 use crate::effect::DamageOutcome;
 
@@ -109,6 +111,13 @@ pub(crate) enum DomainEvent {
         trace: ProjectileTrace,
     },
     ItemThrowUnavailable,
+    ItemUsed {
+        source_kind_id: String,
+        display_name_key: String,
+        requested: i32,
+        applied: i32,
+    },
+    ItemUseUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
     },
@@ -372,6 +381,34 @@ impl DomainEvent {
             ),
             Self::ItemThrowUnavailable => {
                 dto_without_args("item.throw-unavailable", "item-throw-unavailable")
+            }
+            Self::ItemUsed {
+                source_kind_id,
+                display_name_key,
+                requested,
+                applied,
+            } => dto_with_outcome(
+                if applied > 0 {
+                    "item.use-heal"
+                } else {
+                    "item.use-no-effect"
+                },
+                if applied > 0 {
+                    "item-use-heal"
+                } else {
+                    "item-use-no-effect"
+                },
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("amount", applied.to_string()),
+                ],
+                GameEventOutcomeDto::Heal {
+                    resolution: HealingResolutionDto { requested, applied },
+                },
+            ),
+            Self::ItemUseUnavailable => {
+                dto_without_args("item.use-unavailable", "item-use-unavailable")
             }
             Self::PlayerMeleeMissed { target_kind_id } => dto(
                 "combat.miss",

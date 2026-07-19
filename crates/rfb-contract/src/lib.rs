@@ -46,6 +46,8 @@ pub enum Determinism {
 pub struct Preconditions {
     pub world: String,
     #[serde(default)]
+    pub player_hp: Option<i32>,
+    #[serde(default)]
     pub player_statuses: Vec<StatusSaveDto>,
     #[serde(default)]
     pub player_resistances: Vec<ResistanceSaveDto>,
@@ -167,6 +169,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     validate_fixture(fixture)?;
     let seed = parse_seed(&fixture.seed)?;
     let mut payload = Game::new(seed).to_save();
+    if let Some(player_hp) = fixture.preconditions.player_hp {
+        payload.player.hp = player_hp;
+    }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
     for effects in &fixture.preconditions.entity_effects {

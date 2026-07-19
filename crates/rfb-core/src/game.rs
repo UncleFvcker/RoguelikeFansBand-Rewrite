@@ -35,7 +35,7 @@ use crate::{
     state::{Actor, EquipOutcome, ItemInstance, ItemLocation},
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
-use rfb_content::{ActorRole, ContentCatalog};
+use rfb_content::{ActorRole, ContentCatalog, ItemUseEffectDefinition};
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
     DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
@@ -49,7 +49,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 15] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 16] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -65,9 +65,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 15] = [
     "87e77fccea2c1ea40a6d952abf8d0b38d286c049b34b73f0da93f00288d1c2ae",
     "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf",
     "479728aa3cead56c7dbf886a1beb4a9f20b5034085da8836cb82f2191246e979",
+    "43b38c37bc03ae81f8fe1e5a3f3c8afeba47921ff05321011bc227fb5813387f",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "43b38c37bc03ae81f8fe1e5a3f3c8afeba47921ff05321011bc227fb5813387f";
+    "419260921954602e9b707dd8c260f80ad3ff1ad0504ea2dfbde739ec64ca2d54";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -477,6 +478,9 @@ impl Game {
                     &mut removed_entities,
                 )?;
             }
+            GameAction::UseItem { item_id } => {
+                self.use_inventory_item(&item_id, &mut events);
+            }
             GameAction::Wait => events.push(DomainEvent::Waited),
             GameAction::PickUp => match self.pick_up_at_player()? {
                 PickUpOutcome::Picked { kind_id, quantity } => {
@@ -772,6 +776,10 @@ impl Game {
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
+                    usable: self
+                        .content
+                        .item(&item.kind_id)
+                        .is_some_and(|definition| definition.use_action.is_some()),
                     quantity: item.quantity,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
@@ -1044,6 +1052,18 @@ impl Game {
                 .entry(kind_id.to_owned())
                 .or_default()
                 .tried = true;
+        }
+    }
+
+    fn mark_item_aware(&mut self, kind_id: &str) {
+        if self
+            .content
+            .item(kind_id)
+            .is_some_and(|definition| definition.appearance_name_key.is_some())
+        {
+            let knowledge = self.item_knowledge.entry(kind_id.to_owned()).or_default();
+            knowledge.tried = true;
+            knowledge.aware = true;
         }
     }
 
@@ -1822,6 +1842,61 @@ impl Game {
                 location: ItemLocation::Inventory,
             }))
         }
+    }
+
+    fn use_inventory_item(&mut self, item_id: &str, events: &mut Vec<DomainEvent>) {
+        let Some(index) = self.items.iter().position(|item| {
+            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
+        }) else {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return;
+        };
+        let kind_id = self.items[index].kind_id.clone();
+        let Some(action) = self
+            .content
+            .item(&kind_id)
+            .and_then(|definition| definition.use_action.clone())
+        else {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return;
+        };
+
+        if self.items[index].quantity == 1 {
+            self.items.remove(index);
+        } else {
+            self.items[index].quantity -= 1;
+        }
+        self.mark_item_tried(&kind_id);
+
+        let (requested, applied) = match action.effect {
+            ItemUseEffectDefinition::Heal { amount } => {
+                let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
+                let max_hp = self.effective_player_max_hp();
+                let player = &mut self.player;
+                let outcome = apply_effect(
+                    &mut EffectTarget {
+                        hp: &mut player.hp,
+                        max_hp,
+                        resistances: &player.resistances,
+                        statuses: &mut player.statuses,
+                    },
+                    EffectSpec::Heal { amount },
+                );
+                let EffectOutcome::Healed { requested, applied } = outcome else {
+                    unreachable!("healing effects must produce healing outcomes");
+                };
+                (requested, applied)
+            }
+        };
+        if applied > 0 {
+            self.mark_item_aware(&kind_id);
+        }
+        events.push(DomainEvent::ItemUsed {
+            display_name_key: self.item_display_name_key(&kind_id),
+            source_kind_id: kind_id,
+            requested,
+            applied,
+        });
     }
 
     fn player_is_dead(&self) -> bool {
@@ -2846,8 +2921,8 @@ pub fn load_built_in_content() -> Result<Arc<ContentCatalog>, CoreError> {
 mod tests {
     use crate::effect::StatusInstance;
     use rfb_protocol::{
-        DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, ResistanceLevelDto,
-        ResistanceSaveDto, StatusSaveDto, VisibilityState,
+        DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, GameEventOutcomeDto,
+        ResistanceLevelDto, ResistanceSaveDto, StatusSaveDto, VisibilityState,
     };
 
     use super::*;
@@ -4207,6 +4282,124 @@ mod tests {
             Game::from_save(invalid),
             Err(CoreError::InvalidSave("item knowledge state is invalid"))
         ));
+    }
+
+    #[test]
+    fn observable_item_use_consumes_one_heals_and_marks_the_kind_aware() {
+        let mut game = Game::new(42);
+        game.entities.clear();
+        game.player.hp = 3;
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo usable stack should exist")
+            .location = ItemLocation::Inventory;
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::UseItem {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                },
+            ))
+            .expect("using a healing item should execute");
+
+        assert_eq!(update.player.hp, 7);
+        let shard = update
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("the remaining stack should stay carried");
+        assert_eq!(shard.quantity, 4);
+        assert!(shard.usable);
+        assert_eq!(shard.knowledge, ItemKnowledgeDto::Aware);
+        assert_eq!(shard.display_name_key, "item-demo-luminous-shard-name");
+        assert!(shard.throw_profile.is_some());
+        assert_eq!(update.events[0].kind, "item.use-heal");
+        assert_eq!(
+            update.events[0].args["nameKey"],
+            "item-demo-luminous-shard-name"
+        );
+        assert!(matches!(
+            update.events[0].outcome,
+            Some(GameEventOutcomeDto::Heal { resolution })
+                if resolution.requested == 4 && resolution.applied == 4
+        ));
+        let restored = Game::from_save(game.to_save()).expect("aware use result should reload");
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn unobservable_item_use_consumes_one_but_only_marks_the_kind_tried() {
+        let mut game = Game::new(42);
+        game.entities.clear();
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo usable stack should exist")
+            .location = ItemLocation::Inventory;
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::UseItem {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                },
+            ))
+            .expect("using an item at full health should execute");
+
+        assert_eq!(update.player.hp, 10);
+        let shard = update
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("the remaining stack should stay carried");
+        assert_eq!(shard.quantity, 4);
+        assert_eq!(shard.knowledge, ItemKnowledgeDto::Tried);
+        assert_eq!(shard.display_name_key, "item-demo-unfamiliar-shard-name");
+        assert!(shard.throw_profile.is_none());
+        assert_eq!(update.events[0].kind, "item.use-no-effect");
+        assert_eq!(
+            update.events[0].args["nameKey"],
+            "item-demo-unfamiliar-shard-name"
+        );
+        assert!(matches!(
+            update.events[0].outcome,
+            Some(GameEventOutcomeDto::Heal { resolution })
+                if resolution.requested == 4 && resolution.applied == 0
+        ));
+    }
+
+    #[test]
+    fn unusable_inventory_item_is_not_consumed_or_added_to_knowledge() {
+        let mut game = Game::new(42);
+        game.entities.clear();
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.echo-charm")
+            .expect("demo non-consumable should exist")
+            .location = ItemLocation::Inventory;
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::UseItem {
+                    item_id: "demo.item.echo-charm.1".to_owned(),
+                },
+            ))
+            .expect("an unavailable use attempt should remain a valid action");
+
+        assert_eq!(update.events[0].kind, "item.use-unavailable");
+        assert!(
+            update
+                .inventory
+                .iter()
+                .any(|item| item.id == "demo.item.echo-charm.1" && item.quantity == 1)
+        );
+        assert!(game.to_save().item_knowledge.is_empty());
     }
 
     #[test]

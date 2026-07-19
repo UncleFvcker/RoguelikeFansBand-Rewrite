@@ -54,6 +54,41 @@
       ],
       "type": "object"
     },
+    "ItemUseActionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "effect": {
+          "$ref": "#/$defs/ItemUseEffectDefinition"
+        }
+      },
+      "required": [
+        "effect"
+      ],
+      "type": "object"
+    },
+    "ItemUseEffectDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "heal",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "amount"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "ProjectileProfileDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -250,6 +285,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/ThrowProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "useAction": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ItemUseActionDefinition"
         },
         {
           "type": "null"

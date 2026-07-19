@@ -78,6 +78,9 @@ message-item-drop-success =
        *[other] You drop { $stacks } stacks containing { $quantity } items.
     }
 message-item-drop-none = None of the selected items can be dropped.
+message-item-use-heal = You use { $target } and recover { $amount } HP.
+message-item-use-no-effect = You use { $target }, but notice no effect.
+message-item-use-unavailable = The selected item cannot be used right now.
 message-item-thrown = You throw { $target }.
 message-throw-miss = Your { $source } misses { $target }.
 message-throw-hit = Your { $source } hits { $target } for { $damage } damage.

@@ -563,6 +563,29 @@ mod tests {
     }
 
     #[test]
+    fn consumable_use_round_trips_through_replay() {
+        let initial = Game::new(42);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        for command in [
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::PickUp,
+            GameCommand::UseItem {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+            },
+        ] {
+            recorder.dispatch(command).expect("command should execute");
+        }
+        let (final_game, replay) = recorder.finish();
+
+        assert_eq!(final_game.snapshot().inventory[0].quantity, 4);
+        let verification = verify(&replay, initial).expect("item use replay should verify");
+        assert_eq!(verification.commands_verified, 3);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
     fn target_selection_round_trips_through_replay() {
         let initial = Game::new(42);
         let mut recorder = ReplayRecorder::new(initial.clone());

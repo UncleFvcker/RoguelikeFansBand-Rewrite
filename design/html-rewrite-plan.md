@@ -27,6 +27,7 @@
 - [Contract v18：投掷攻击与重量射程](contract-v18-thrown-attacks.md)
 - [Contract v19：携带重量与拾取容量](contract-v19-inventory-capacity.md)
 - [Contract v20：物品知识与未知名称投影](contract-v20-item-knowledge.md)
+- [Contract v21：消耗品 UseAction 与可观察鉴定](contract-v21-consumable-use-action.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -561,12 +562,13 @@ interface SaveGame {
 - 协议 1.18 和 contract-v18 已建立；内容包 1.13.0 为物品声明整数磅十分位重量与可选投掷 profile，重量决定 2–10 格射程，投掷独立完成命中、伤害和权威落点事务。active baseline 共 55 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 协议 1.19 和 contract-v19 已建立；内容包 1.14.0 为玩家声明整数携带容量，核心汇总背包/装备重量并原子拒绝超限整堆拾取，HTML 背包显示权威总重/容量。active baseline 共 56 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 协议 1.20 和 contract-v20 已建立；内容包 1.15.0 为可伪装物品声明外观名称，核心保存种类级 unknown/tried/aware 知识并决定名称和隐藏 profile 投影，HTML 只消费 `displayNameKey`。active baseline 共 57 个 exact fixtures，save v1 新增可选知识字段，state hash 升至 Schema v10。
+- 协议 1.21 和 contract-v21 已建立；内容包 1.16.0 为发光碎片声明首个治疗 `UseAction`，核心原子消耗单件并按实际治疗结果更新 tried/aware，HTML 通过 `usable` 提供使用入口。active baseline 共 58 个 exact fixtures，save v1 / state hash Schema v10 不变。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage D，建立第一个内容驱动的消耗品 `UseAction`，由可观察效果触发 aware；返回武器、药水破裂、鼠标点选、路径预览和投射物动画按内容需求后补；
+1. 继续 Stage D，分离实例级物品属性与知识投影，再扩展伪鉴定和完整鉴定；返回武器、药水破裂、鼠标点选、路径预览和投射物动画按内容需求后补；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。
