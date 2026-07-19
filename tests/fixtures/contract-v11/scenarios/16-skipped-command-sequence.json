@@ -56,7 +56,7 @@
       "inventoryStackCount": 0,
       "equipmentCount": 0,
       "nextItemInstanceSerial": 1,
-      "stateHash": "dcd14e6d7eafc843b82b7d0a6b89f320e8b9878b85da3f39c80ab8558ae3ac6c"
+      "stateHash": "c44b588a6160a14f52bfaa0bee3908262e8b3d0a583581dfe4309ddccd8c16be"
     },
     "events": [],
     "changedCells": [],
@@ -65,7 +65,7 @@
       {
         "step": 1,
         "kind": "command-sequence",
-        "stateHash": "dcd14e6d7eafc843b82b7d0a6b89f320e8b9878b85da3f39c80ab8558ae3ac6c"
+        "stateHash": "c44b588a6160a14f52bfaa0bee3908262e8b3d0a583581dfe4309ddccd8c16be"
       }
     ],
     "saveRoundTripStateHash": null

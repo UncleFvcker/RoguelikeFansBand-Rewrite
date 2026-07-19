@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.frost-wisp",
+  "role": "monster",
+  "nameKey": "actor-demo-frost-wisp-name",
+  "descriptionKey": "actor-demo-frost-wisp-description",
+  "glyph": "o",
+  "level": 1,
+  "maxHp": 3,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "cold",
+  "tags": ["elemental"]
+}

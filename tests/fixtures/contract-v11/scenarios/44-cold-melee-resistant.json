@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "combat.elemental.fire-immune",
+  "id": "combat.elemental.cold-resistant",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "0",
@@ -9,13 +9,14 @@
     "playerStatuses": [],
     "playerResistances": [
       {
-        "damageType": "fire",
-        "level": "immune"
+        "damageType": "cold",
+        "level": "resistant"
       }
     ],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
+        "kindId": "demo.actor.frost-wisp",
         "position": {
           "x": 4,
           "y": 3
@@ -47,7 +48,7 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 10,
+      "playerHp": 9,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -56,8 +57,8 @@
       "playerStatuses": [],
       "playerResistances": [
         {
-          "damageType": "fire",
-          "level": "immune"
+          "damageType": "cold",
+          "level": "resistant"
         }
       ],
       "entityCount": 1,
@@ -78,7 +79,7 @@
       "inventoryStackCount": 0,
       "equipmentCount": 0,
       "nextItemInstanceSerial": 1,
-      "stateHash": "a9e8b1e1d5514691b3c0b49ffda2631ae4e58231e27cecacd283a8b4d136be7d"
+      "stateHash": "883d9beb8dfaf03ca9ab57a660d7ec65c0a8eb1cdd3175c2454c23497c060e42"
     },
     "events": [
       {
@@ -90,18 +91,18 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "0",
-          "source": "demo.actor.ember-mote"
+          "damage": "1",
+          "source": "demo.actor.frost-wisp"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
             "rawDamage": 2,
             "armorReduction": 0,
-            "resistanceAdjustment": 2,
-            "finalDamage": 0,
-            "damageType": "fire",
-            "resistance": "immune"
+            "resistanceAdjustment": 1,
+            "finalDamage": 1,
+            "damageType": "cold",
+            "resistance": "resistant"
           }
         }
       }
@@ -109,6 +110,6 @@
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "a9e8b1e1d5514691b3c0b49ffda2631ae4e58231e27cecacd283a8b4d136be7d"
+    "saveRoundTripStateHash": "883d9beb8dfaf03ca9ab57a660d7ec65c0a8eb1cdd3175c2454c23497c060e42"
   }
 }

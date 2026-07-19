@@ -1236,7 +1236,7 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
-        assert_eq!(first.content.actors.len(), 2);
+        assert_eq!(first.content.actors.len(), 6);
         assert_eq!(first.content.items.len(), 2);
         assert_eq!(first.content.worlds.len(), 1);
     }
@@ -1248,7 +1248,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.6.0");
+        assert_eq!(catalog.pack_version(), "1.7.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog

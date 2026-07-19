@@ -93,7 +93,7 @@
       "inventoryStackCount": 0,
       "equipmentCount": 0,
       "nextItemInstanceSerial": 1,
-      "stateHash": "00a41c20774011d9af5940a26cca17043cad80b6811c48fcc16f4ec146ebed0b"
+      "stateHash": "dbff5fff25baa51da9b40ee28c69ba0db06ee53266b36957f2f20ae4541a1d72"
     },
     "events": [
       {
@@ -230,6 +230,6 @@
       "demo.monster.ember-mote.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "00a41c20774011d9af5940a26cca17043cad80b6811c48fcc16f4ec146ebed0b"
+    "saveRoundTripStateHash": "dbff5fff25baa51da9b40ee28c69ba0db06ee53266b36957f2f20ae4541a1d72"
   }
 }

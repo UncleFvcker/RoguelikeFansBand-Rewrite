@@ -45,16 +45,17 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 6] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 7] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
     "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd",
     "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b",
     "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69",
+    "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53";
+    "12ba3295dfa8a9884bc7464a78b7dbb9cded01409ff22777db02df85d1aabed7";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -2008,22 +2009,24 @@ mod tests {
 
     #[test]
     fn previous_built_in_content_hash_migrates_without_spawning_new_items() {
-        let mut payload = Game::new(42).to_save();
-        payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[0].to_owned();
-        payload
-            .items
-            .retain(|item| item.kind_id != "demo.item.echo-charm");
-
-        let restored = Game::from_save(payload).expect("known previous content should migrate");
-        let snapshot = restored.snapshot();
-        assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
-        assert_eq!(snapshot.items.len(), 1);
-        assert!(
-            snapshot
+        for previous_hash in PREVIOUS_BUILT_IN_CONTENT_HASHES {
+            let mut payload = Game::new(42).to_save();
+            payload.content_hash = previous_hash.to_owned();
+            payload
                 .items
-                .iter()
-                .all(|item| item.kind_id != "demo.item.echo-charm")
-        );
+                .retain(|item| item.kind_id != "demo.item.echo-charm");
+
+            let restored = Game::from_save(payload).expect("known previous content should migrate");
+            let snapshot = restored.snapshot();
+            assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
+            assert_eq!(snapshot.items.len(), 1);
+            assert!(
+                snapshot
+                    .items
+                    .iter()
+                    .all(|item| item.kind_id != "demo.item.echo-charm")
+            );
+        }
     }
 
     #[test]

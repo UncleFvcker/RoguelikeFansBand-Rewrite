@@ -4,7 +4,7 @@
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "contractSchemaVersion": 1,
   "normalizationSchemaVersion": 1,
-  "minimumFixtureCount": 41,
+  "minimumFixtureCount": 45,
   "fixtureDirectory": "scenarios",
   "waiverDirectory": "waivers",
   "minimumApprovals": 1,

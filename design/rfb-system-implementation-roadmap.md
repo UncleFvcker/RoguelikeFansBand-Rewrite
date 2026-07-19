@@ -326,7 +326,7 @@ crates/rfb-core/src/
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：contract-v11 已在 v10 的流血与元素近战基础上保留完整伤害/死亡结算 outcome；协议 1.11 明确输出原始伤害、物理减伤、抗性调整、最终伤害、类型和等级，active baseline 扩展到 41 个 exact fixtures。内容包继续为 1.6.0，state hash Schema 继续为 v9。下一步为其他基础元素增加实际入口，并建立派生属性/检定管线后实现眩晕和恐惧。详细边界见 [Contract v11](contract-v11-structured-damage-events.md)。
+当前进度：contract-v11 已在 v10 的流血与元素近战基础上保留完整伤害/死亡结算 outcome；协议 1.11 明确输出原始伤害、物理减伤、抗性调整、最终伤害、类型和等级。原创内容包 1.7.0 已为酸、电、火、冷、毒提供独立攻击来源，active baseline 扩展到 45 个 exact fixtures，state hash Schema 继续为 v9。下一步建立派生属性/检定管线后实现眩晕和恐惧。详细边界见 [Contract v11](contract-v11-structured-damage-events.md)。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -449,7 +449,7 @@ crates/rfb-core/src/
 
 1. **contract-v11：继续完成阶段 B 与检定接口**
    - 已完成：伤害类型、抗性结果和死亡结算进入强类型领域/协议事件；
-   - 为酸、电、冷、毒增加原创怪物、环境或能力入口；
+   - 已完成：为酸、电、冷、毒增加原创怪物近战入口；
    - 建立带来源的派生属性与基础检定管线；
    - 在检定接口上实现眩晕能力削弱和恐惧行动限制。
 2. **contract-v12：武器与多 blow 战斗**

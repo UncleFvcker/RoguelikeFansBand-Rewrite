@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.storm-spark",
+  "role": "monster",
+  "nameKey": "actor-demo-storm-spark-name",
+  "descriptionKey": "actor-demo-storm-spark-description",
+  "glyph": "*",
+  "level": 1,
+  "maxHp": 3,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "electricity",
+  "tags": ["elemental"]
+}

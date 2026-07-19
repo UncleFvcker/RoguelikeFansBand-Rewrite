@@ -114,7 +114,7 @@ rfb.terrain.wall.granite
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 五份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的 `attack`、`defense`、`maxHp`、`damageDice`、`damageSides` 和 `speed` 声明基础战斗与行动属性，并以 `damageType` 声明物理、酸、电、火、冷或毒近战；旧内容缺失时默认为物理。`attack`/`defense` 是内容评级，由核心稳定映射为近战能力与 AC；伤害骰只接受正整数并逐骰使用权威 RNG；`speed` 为 0–199 的整数。物品定义可使用可选 `equipmentSlot` 和属性 modifier。原创包 1.6.0 的余烬微光使用火焰近战，回声护符继续提供攻击 +1、防御 +1、最大生命 +4。
+角色定义使用必需的 `attack`、`defense`、`maxHp`、`damageDice`、`damageSides` 和 `speed` 声明基础战斗与行动属性，并以 `damageType` 声明物理、酸、电、火、冷或毒近战；旧内容缺失时默认为物理。`attack`/`defense` 是内容评级，由核心稳定映射为近战能力与 AC；伤害骰只接受正整数并逐骰使用权威 RNG；`speed` 为 0–199 的整数。物品定义可使用可选 `equipmentSlot` 和属性 modifier。原创包 1.7.0 的腐蚀渗滴、风暴火花、发光微粒、霜息和毒孢分别提供酸、电、火、冷、毒近战入口；回声护符继续提供攻击 +1、防御 +1、最大生命 +4。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -196,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v10 为角色内容增加 `damageType`，原创内容包升级到 1.6.0；contract-v11 只扩展协议事件，不改变内容格式或 hash。state hash Schema 仍为 v9。旧版本继续作为历史记录保留。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v10 为角色内容增加 `damageType`，原创内容包升级到 1.6.0；contract-v11 先扩展结构化伤害事件，再以 1.7.0 内容包补齐酸、电、冷、毒近战来源。state hash Schema 仍为 v9，精确内容 hash 随内容包更新。旧版本继续作为历史记录保留。

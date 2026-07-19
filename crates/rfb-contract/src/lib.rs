@@ -56,6 +56,8 @@ pub struct Preconditions {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct EntityEffectsPrecondition {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind_id: Option<String>,
     #[serde(default)]
     pub position: Option<Position>,
     #[serde(default)]
@@ -166,6 +168,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             .iter_mut()
             .find(|entity| entity.id == effects.id)
             .ok_or_else(|| ContractError::UnknownEntityPrecondition(effects.id.clone()))?;
+        if let Some(kind_id) = &effects.kind_id {
+            entity.kind_id.clone_from(kind_id);
+        }
         if let Some(position) = effects.position {
             entity.position = position;
         }

@@ -90,7 +90,7 @@
       "inventoryStackCount": 0,
       "equipmentCount": 0,
       "nextItemInstanceSerial": 1,
-      "stateHash": "40764b3ddc44c3ee6d7495d1ca96dc2b696e6a8c37821a237ad5e398c89ecb52"
+      "stateHash": "2c09ebd933826747fe82b7ea1d655b5a9829f82f4a28e393a5033a1ece313502"
     },
     "events": [
       {
@@ -211,6 +211,6 @@
     ],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "40764b3ddc44c3ee6d7495d1ca96dc2b696e6a8c37821a237ad5e398c89ecb52"
+    "saveRoundTripStateHash": "2c09ebd933826747fe82b7ea1d655b5a9829f82f4a28e393a5033a1ece313502"
   }
 }

@@ -14,7 +14,7 @@ fn committed_baseline_policy_and_waivers_are_valid() {
         let report = validate_policy_file(&policy).expect("baseline policy should validate");
         assert_eq!(report.policy_id, format!("rfb-contract-baseline-{version}"));
         let minimum = match version {
-            "v11" => 41,
+            "v11" => 45,
             "v10" => 39,
             "v9" => 36,
             "v7" | "v8" => 32,

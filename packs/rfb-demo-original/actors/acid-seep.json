@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.acid-seep",
+  "role": "monster",
+  "nameKey": "actor-demo-acid-seep-name",
+  "descriptionKey": "actor-demo-acid-seep-description",
+  "glyph": "~",
+  "level": 1,
+  "maxHp": 3,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "acid",
+  "tags": ["elemental"]
+}

@@ -6,19 +6,32 @@
   "seed": "0",
   "preconditions": {
     "world": "demo.world.original-v1",
+    "playerStatuses": [],
     "playerResistances": [
-      { "damageType": "fire", "level": "vulnerable" }
+      {
+        "damageType": "fire",
+        "level": "vulnerable"
+      }
     ],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
-        "position": { "x": 4, "y": 3 }
+        "position": {
+          "x": 4,
+          "y": 3
+        },
+        "hp": null,
+        "energyNeed": null,
+        "statuses": [],
+        "resistances": []
       }
     ]
   },
   "commands": [
     {
-      "command": { "type": "wait" },
+      "command": {
+        "type": "wait"
+      },
       "commandSeq": null,
       "expectedRevision": null
     }
@@ -30,7 +43,10 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "playerPosition": { "x": 3, "y": 3 },
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
       "playerHp": 7,
       "playerMaxHp": 10,
       "playerAttack": 2,
@@ -39,13 +55,19 @@
       "playerEnergyNeed": 0,
       "playerStatuses": [],
       "playerResistances": [
-        { "damageType": "fire", "level": "vulnerable" }
+        {
+          "damageType": "fire",
+          "level": "vulnerable"
+        }
       ],
       "entityCount": 1,
       "entities": [
         {
           "id": "demo.monster.ember-mote.1",
-          "position": { "x": 4, "y": 3 },
+          "position": {
+            "x": 4,
+            "y": 3
+          },
           "hp": 3,
           "speed": 110,
           "energyNeed": 100,
@@ -56,14 +78,21 @@
       "inventoryStackCount": 0,
       "equipmentCount": 0,
       "nextItemInstanceSerial": 1,
-      "stateHash": "5aa2b4a0bfdc1ad721c928a80a950841efe778d0c0a229fa8ebf5b16a9921648"
+      "stateHash": "28600c51544329aacb3a3061a252dbc589872b080e9658e9d0db56d4081c508b"
     },
     "events": [
-      { "kind": "turn.wait", "messageKey": "game-wait", "args": {} },
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
       {
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
-        "args": { "damage": "3", "source": "demo.actor.ember-mote" },
+        "args": {
+          "damage": "3",
+          "source": "demo.actor.ember-mote"
+        },
         "outcome": {
           "type": "damage",
           "resolution": {
@@ -80,6 +109,6 @@
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "5aa2b4a0bfdc1ad721c928a80a950841efe778d0c0a229fa8ebf5b16a9921648"
+    "saveRoundTripStateHash": "28600c51544329aacb3a3061a252dbc589872b080e9658e9d0db56d4081c508b"
   }
 }

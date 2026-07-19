@@ -1026,6 +1026,18 @@ function contentName(id: string | undefined): string {
   if (id === "demo.actor.ember-mote") {
     return localization.format("actor-demo-ember-mote-name");
   }
+  if (id === "demo.actor.acid-seep") {
+    return localization.format("actor-demo-acid-seep-name");
+  }
+  if (id === "demo.actor.storm-spark") {
+    return localization.format("actor-demo-storm-spark-name");
+  }
+  if (id === "demo.actor.frost-wisp") {
+    return localization.format("actor-demo-frost-wisp-name");
+  }
+  if (id === "demo.actor.venom-spore") {
+    return localization.format("actor-demo-venom-spore-name");
+  }
   return localization.format(
     id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",
   );

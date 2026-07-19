@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.venom-spore",
+  "role": "monster",
+  "nameKey": "actor-demo-venom-spore-name",
+  "descriptionKey": "actor-demo-venom-spore-description",
+  "glyph": ",",
+  "level": 1,
+  "maxHp": 3,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "poison",
+  "tags": ["elemental"]
+}
