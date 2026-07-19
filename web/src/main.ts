@@ -21,6 +21,8 @@ import {
   type NativeSaveSummary,
 } from "./native-save-storage";
 import type {
+  DamageResolutionDto,
+  DamageTypeDto,
   Direction,
   EquipmentItemDto,
   GameCommand,
@@ -855,10 +857,7 @@ function formatEvent(event: GameEventDto): string {
     case "game-move-blocked":
       return localization.format("message-move-blocked");
     case "combat-player-hit":
-      return localization.format("message-combat-hit", {
-        target: contentName(event.args.target),
-        damage: event.args.damage ?? "?",
-      });
+      return formatPlayerDamageEvent(event);
     case "combat-player-slay":
       return localization.format("message-combat-slay", {
         target: contentName(event.args.target),
@@ -872,10 +871,7 @@ function formatEvent(event: GameEventDto): string {
         source: contentName(event.args.source),
       });
     case "combat-monster-hit":
-      return localization.format("message-combat-monster-hit", {
-        source: contentName(event.args.source),
-        damage: event.args.damage ?? "?",
-      });
+      return formatMonsterDamageEvent(event);
     case "combat-player-death":
       return localization.format("message-combat-player-death", {
         source: contentName(event.args.source),
@@ -948,6 +944,76 @@ function formatEvent(event: GameEventDto): string {
     default:
       return localization.format("message-unknown-event", { key: event.messageKey });
   }
+}
+
+function formatPlayerDamageEvent(event: GameEventDto): string {
+  const target = contentName(event.args.target);
+  const resolution = damageResolution(event);
+  if (!resolution) {
+    return localization.format("message-combat-hit", {
+      target,
+      damage: event.args.damage ?? "?",
+    });
+  }
+  const args = {
+    target,
+    damage: resolution.finalDamage,
+    type: damageTypeName(resolution.damageType),
+    adjustment: Math.abs(resolution.resistanceAdjustment),
+  };
+  if (resolution.resistance === "immune") {
+    return localization.format("message-combat-hit-immune", args);
+  }
+  if (resolution.resistanceAdjustment > 0) {
+    return localization.format("message-combat-hit-resisted", args);
+  }
+  if (resolution.resistanceAdjustment < 0) {
+    return localization.format("message-combat-hit-amplified", args);
+  }
+  return localization.format("message-combat-hit", args);
+}
+
+function formatMonsterDamageEvent(event: GameEventDto): string {
+  const source = contentName(event.args.source);
+  const resolution = damageResolution(event);
+  if (!resolution) {
+    return localization.format("message-combat-monster-hit", {
+      source,
+      damage: event.args.damage ?? "?",
+    });
+  }
+  const args = {
+    source,
+    damage: resolution.finalDamage,
+    type: damageTypeName(resolution.damageType),
+    adjustment: Math.abs(resolution.resistanceAdjustment),
+  };
+  if (resolution.resistance === "immune") {
+    return localization.format("message-combat-monster-hit-immune", args);
+  }
+  if (resolution.resistanceAdjustment > 0) {
+    return localization.format("message-combat-monster-hit-resisted", args);
+  }
+  if (resolution.resistanceAdjustment < 0) {
+    return localization.format("message-combat-monster-hit-amplified", args);
+  }
+  return localization.format("message-combat-monster-hit", args);
+}
+
+function damageResolution(event: GameEventDto): DamageResolutionDto | undefined {
+  return event.outcome?.resolution;
+}
+
+function damageTypeName(damageType: DamageTypeDto): string {
+  const keys: Record<DamageTypeDto, MessageKey> = {
+    physical: "damage-type-physical-name",
+    acid: "damage-type-acid-name",
+    electricity: "damage-type-electricity-name",
+    fire: "damage-type-fire-name",
+    cold: "damage-type-cold-name",
+    poison: "damage-type-poison-name",
+  };
+  return localization.format(keys[damageType]);
 }
 
 function contentName(id: string | undefined): string {

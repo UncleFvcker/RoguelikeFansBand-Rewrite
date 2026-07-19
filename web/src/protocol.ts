@@ -29,6 +29,10 @@ export type ResistanceLevelDto = "vulnerable" | "normal" | "resistant" | "strong
 
 export type ResistanceDto = { damageType: DamageTypeDto, level: ResistanceLevelDto, };
 
+export type DamageResolutionDto = { rawDamage: number, armorReduction: number, resistanceAdjustment: number, finalDamage: number, damageType: DamageTypeDto, resistance: ResistanceLevelDto, };
+
+export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, };
+
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
 export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
@@ -41,7 +45,7 @@ export type InventoryItemDto = { id: string, kindId: string, quantity: number, e
 
 export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, };
 
-export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, };
+export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, };
 
 export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, worldTick: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
 

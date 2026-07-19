@@ -196,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v10 为角色内容增加 `damageType`，原创内容包升级到 1.6.0；state hash Schema 仍为 v9，因为精确 content hash 已决定该规则。旧版本继续作为历史记录保留。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v10 为角色内容增加 `damageType`，原创内容包升级到 1.6.0；contract-v11 只扩展协议事件，不改变内容格式或 hash。state hash Schema 仍为 v9。旧版本继续作为历史记录保留。

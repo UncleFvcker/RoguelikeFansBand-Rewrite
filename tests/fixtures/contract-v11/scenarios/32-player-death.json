@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 1,
+  "id": "combat.player.death-and-command-rejection",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": []
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 8,
+      "turn": 8,
+      "worldTick": 80,
+      "lastCommandSeq": 8,
+      "playerPosition": {
+        "x": 5,
+        "y": 4
+      },
+      "playerHp": -1,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 10,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 6,
+            "y": 3
+          },
+          "hp": 1,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 2,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+    },
+    "events": [
+      {
+        "kind": "combat.miss",
+        "messageKey": "combat-player-miss",
+        "args": {
+          "target": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "2",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "3",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 3,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.player-death",
+        "messageKey": "combat-player-death",
+        "args": {
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "death",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 4
+      }
+    ],
+    "removedEntities": [],
+    "errors": [
+      {
+        "step": 9,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 10,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 11,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 12,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 13,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 14,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 15,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 16,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 17,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 18,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      },
+      {
+        "step": 19,
+        "kind": "player-dead",
+        "stateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+      }
+    ],
+    "saveRoundTripStateHash": "b2f7b4303d66d024e91b64beb0b3307f9c0a68b67932ab67d246a8e3f6e3416e"
+  }
+}

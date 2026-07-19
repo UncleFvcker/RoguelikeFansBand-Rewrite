@@ -126,6 +126,41 @@
         "sides"
       ]
     },
+    "DamageResolutionDto": {
+      "type": "object",
+      "properties": {
+        "armorReduction": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "finalDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "rawDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "resistance": {
+          "$ref": "#/$defs/ResistanceLevelDto"
+        },
+        "resistanceAdjustment": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "rawDamage",
+        "armorReduction",
+        "resistanceAdjustment",
+        "finalDamage",
+        "damageType",
+        "resistance"
+      ]
+    },
     "DamageTypeDto": {
       "type": "string",
       "enum": [
@@ -413,12 +448,58 @@
         },
         "messageKey": {
           "type": "string"
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameEventOutcomeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "kind",
         "messageKey",
         "args"
+      ]
+    },
+    "GameEventOutcomeDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/DamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "damage"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/DamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "death"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        }
       ]
     },
     "GameSnapshot": {

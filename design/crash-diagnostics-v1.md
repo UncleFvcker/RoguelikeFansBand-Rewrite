@@ -37,7 +37,7 @@
   "generatedAtUnixMs": 0,
   "reason": "unclean-exit",
   "appVersion": "0.1.0",
-  "protocolVersion": "1.10",
+  "protocolVersion": "1.11",
   "operatingSystem": "windows",
   "architecture": "x86_64",
   "contentId": "rfb.demo.original-v1",

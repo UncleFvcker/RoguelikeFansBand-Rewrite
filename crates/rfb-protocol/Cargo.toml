@@ -17,6 +17,9 @@ serde_json = { workspace = true, optional = true }
 thiserror.workspace = true
 ts-rs = { workspace = true, optional = true }
 
+[dev-dependencies]
+serde_json.workspace = true
+
 [[bin]]
 name = "generate-bindings"
 path = "src/bin/generate-bindings.rs"

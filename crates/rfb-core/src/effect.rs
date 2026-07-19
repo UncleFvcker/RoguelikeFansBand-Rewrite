@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
-use rfb_protocol::{StatusDto, StatusSaveDto};
+use rfb_protocol::{DamageResolutionDto, StatusDto, StatusSaveDto};
 
 pub const STATUS_HASTE: &str = "rfb.status.haste";
 pub const STATUS_SLOW: &str = "rfb.status.slow";
@@ -11,17 +11,55 @@ pub const STATUS_BLEEDING: &str = "rfb.status.bleeding";
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {
     pub amount: i32,
+    pub armor_reduction: i32,
     pub damage_type: DamageType,
+}
+
+impl DamagePacket {
+    #[must_use]
+    pub const fn new(amount: i32, damage_type: DamageType) -> Self {
+        Self {
+            amount,
+            armor_reduction: 0,
+            damage_type,
+        }
+    }
+
+    #[must_use]
+    pub fn after_armor(amount: i32, prepared_amount: i32, damage_type: DamageType) -> Self {
+        let raw_damage = amount.max(0);
+        let prepared_damage = prepared_amount.clamp(0, raw_damage);
+        Self {
+            amount: raw_damage,
+            armor_reduction: raw_damage.saturating_sub(prepared_damage),
+            damage_type,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamageOutcome {
+    pub raw: i32,
+    pub armor_reduction: i32,
     pub requested: i32,
     pub applied: i32,
     /// Positive values were prevented; negative values were added by vulnerability.
     pub resistance_delta: i32,
     pub damage_type: DamageType,
     pub resistance: ResistanceLevel,
+}
+
+impl From<DamageOutcome> for DamageResolutionDto {
+    fn from(value: DamageOutcome) -> Self {
+        Self {
+            raw_damage: value.raw,
+            armor_reduction: value.armor_reduction,
+            resistance_adjustment: value.resistance_delta,
+            final_damage: value.applied,
+            damage_type: value.damage_type.into(),
+            resistance: value.resistance.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -109,7 +147,9 @@ pub struct EffectTarget<'a> {
 
 #[must_use]
 pub fn resolve_damage(packet: DamagePacket, resistance: ResistanceLevel) -> DamageOutcome {
-    let requested = packet.amount.max(0);
+    let raw = packet.amount.max(0);
+    let armor_reduction = packet.armor_reduction.clamp(0, raw);
+    let requested = raw.saturating_sub(armor_reduction);
     let reduction = i64::from(resistance.reduction_percent());
     let prevented = i64::from(requested).saturating_mul(reduction) / 100;
     let applied = i64::from(requested)
@@ -117,6 +157,8 @@ pub fn resolve_damage(packet: DamagePacket, resistance: ResistanceLevel) -> Dama
         .clamp(0, i64::from(i32::MAX)) as i32;
 
     DamageOutcome {
+        raw,
+        armor_reduction,
         requested,
         applied,
         resistance_delta: requested.saturating_sub(applied),
@@ -246,6 +288,7 @@ mod tests {
     fn elemental_resistance_uses_deterministic_integer_reduction() {
         let packet = DamagePacket {
             amount: 10,
+            armor_reduction: 0,
             damage_type: DamageType::Fire,
         };
 
@@ -264,6 +307,7 @@ mod tests {
             resolve_damage(
                 DamagePacket {
                     amount: 1,
+                    armor_reduction: 0,
                     damage_type: DamageType::Fire,
                 },
                 ResistanceLevel::Resistant,
@@ -271,6 +315,20 @@ mod tests {
             .applied,
             1
         );
+    }
+
+    #[test]
+    fn armor_and_resistance_reductions_remain_separate_in_the_outcome() {
+        let outcome = resolve_damage(
+            DamagePacket::after_armor(10, 7, DamageType::Physical),
+            ResistanceLevel::Resistant,
+        );
+
+        assert_eq!(outcome.raw, 10);
+        assert_eq!(outcome.armor_reduction, 3);
+        assert_eq!(outcome.requested, 7);
+        assert_eq!(outcome.resistance_delta, 3);
+        assert_eq!(outcome.applied, 4);
     }
 
     #[test]
@@ -319,12 +377,15 @@ mod tests {
             &mut target,
             EffectSpec::Damage(DamagePacket {
                 amount: 7,
+                armor_reduction: 0,
                 damage_type: DamageType::Poison,
             }),
         );
         assert_eq!(
             outcome,
             EffectOutcome::Damage(DamageOutcome {
+                raw: 7,
+                armor_reduction: 0,
                 requested: 7,
                 applied: 4,
                 resistance_delta: 3,

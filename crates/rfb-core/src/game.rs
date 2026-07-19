@@ -14,8 +14,9 @@ use crate::{
         rating_to_armor_class, rating_to_combat_value,
     },
     effect::{
-        DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING, STATUS_HASTE,
-        STATUS_POISON, STATUS_SLOW, advance_status_ticks, apply_effect, resolve_damage,
+        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
+        STATUS_HASTE, STATUS_POISON, STATUS_SLOW, advance_status_ticks, apply_effect,
+        resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, project_events},
@@ -956,15 +957,8 @@ impl Game {
         );
         let damage_type = DamageType::from(player_definition.damage_type);
         let resistance = self.entities[index].resistances.level(damage_type);
-        let damage = resolve_damage(
-            DamagePacket {
-                amount: rolled_damage,
-                damage_type,
-            },
-            resistance,
-        )
-        .applied;
-        self.entities[index].hp = self.entities[index].hp.saturating_sub(damage);
+        let damage = resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
+        self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
         events.push(DomainEvent::PlayerMeleeHit {
             target_kind_id: target_kind,
             damage,
@@ -974,6 +968,7 @@ impl Game {
             removed_entities.push(removed.id);
             events.push(DomainEvent::PlayerSlew {
                 target_kind_id: removed.kind_id,
+                damage,
             });
         }
     }
@@ -1012,14 +1007,17 @@ impl Game {
         for damage in player_tick.damage {
             events.push(DomainEvent::PlayerStatusDamaged {
                 status_kind_id: damage.status_kind_id,
-                damage: damage.amount,
+                damage: damage.outcome,
             });
         }
         for status_kind_id in player_tick.expired {
             events.push(DomainEvent::PlayerStatusExpired { status_kind_id });
         }
-        if let Some(status_kind_id) = player_tick.fatal_status {
-            events.push(DomainEvent::PlayerDiedFromStatus { status_kind_id });
+        if let Some(damage) = player_tick.fatal_damage {
+            events.push(DomainEvent::PlayerDiedFromStatus {
+                status_kind_id: damage.status_kind_id,
+                damage: damage.outcome,
+            });
             return;
         }
 
@@ -1043,7 +1041,7 @@ impl Game {
                 events.push(DomainEvent::EntityStatusDamaged {
                     target_kind_id: target_kind_id.clone(),
                     status_kind_id: damage.status_kind_id,
-                    damage: damage.amount,
+                    damage: damage.outcome,
                 });
             }
             for status_kind_id in tick.expired {
@@ -1052,13 +1050,14 @@ impl Game {
                     status_kind_id,
                 });
             }
-            if let Some(status_kind_id) = tick.fatal_status {
+            if let Some(damage) = tick.fatal_damage {
                 let removed = self.entities.remove(index);
                 changed.insert(removed.position);
                 removed_entities.push(removed.id);
                 events.push(DomainEvent::EntityDiedFromStatus {
                     target_kind_id,
-                    status_kind_id,
+                    status_kind_id: damage.status_kind_id,
+                    damage: damage.outcome,
                 });
             }
         }
@@ -1141,14 +1140,10 @@ impl Game {
         };
         let resistance = self.player.resistances.level(damage_type);
         let damage = resolve_damage(
-            DamagePacket {
-                amount: prepared_damage,
-                damage_type,
-            },
+            DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
-        )
-        .applied;
-        self.player.hp = self.player.hp.saturating_sub(damage);
+        );
+        self.player.hp = self.player.hp.saturating_sub(damage.applied);
         events.push(DomainEvent::MonsterMeleeHit {
             source_kind_id: kind_id.clone(),
             damage,
@@ -1156,6 +1151,7 @@ impl Game {
         if self.player_is_dead() {
             events.push(DomainEvent::PlayerDied {
                 source_kind_id: kind_id,
+                damage,
             });
         }
     }
@@ -1561,12 +1557,13 @@ impl Game {
 struct ActorStatusTick {
     damage: Vec<StatusDamageTick>,
     expired: Vec<String>,
-    fatal_status: Option<String>,
+    fatal_damage: Option<StatusDamageTick>,
 }
 
+#[derive(Clone)]
 struct StatusDamageTick {
     status_kind_id: String,
-    amount: i32,
+    outcome: DamageOutcome,
 }
 
 fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorStatusTick {
@@ -1587,7 +1584,7 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
         })
         .collect::<Vec<_>>();
     let mut damage = Vec::new();
-    let mut fatal_status = None;
+    let mut fatal_damage = None;
     for (status_kind_id, amount, damage_type) in periodic {
         let mut target = EffectTarget {
             hp: &mut actor.hp,
@@ -1597,19 +1594,17 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
         };
         let EffectOutcome::Damage(outcome) = apply_effect(
             &mut target,
-            EffectSpec::Damage(DamagePacket {
-                amount,
-                damage_type,
-            }),
+            EffectSpec::Damage(DamagePacket::new(amount, damage_type)),
         ) else {
             unreachable!("damage effects must produce damage outcomes");
         };
-        damage.push(StatusDamageTick {
+        let damage_tick = StatusDamageTick {
             status_kind_id: status_kind_id.clone(),
-            amount: outcome.applied,
-        });
+            outcome,
+        };
+        damage.push(damage_tick.clone());
         if actor.hp < 0 || (lethal_at_zero && actor.hp == 0) {
-            fatal_status = Some(status_kind_id);
+            fatal_damage = Some(damage_tick);
             break;
         }
     }
@@ -1617,7 +1612,7 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
     ActorStatusTick {
         damage,
         expired,
-        fatal_status,
+        fatal_damage,
     }
 }
 
@@ -1959,8 +1954,8 @@ mod tests {
                 let mut events = Vec::new();
                 game.resolve_monster_melee(0, &mut events);
                 events.into_iter().find_map(|event| match event {
-                    DomainEvent::MonsterMeleeHit { damage, .. } if damage >= 2 => {
-                        Some((seed, damage))
+                    DomainEvent::MonsterMeleeHit { damage, .. } if damage.applied >= 2 => {
+                        Some((seed, damage.applied))
                     }
                     _ => None,
                 })
@@ -1978,7 +1973,7 @@ mod tests {
         let resisted_damage = events
             .into_iter()
             .find_map(|event| match event {
-                DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage),
+                DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage.applied),
                 _ => None,
             })
             .expect("the same seed should preserve the hit result");

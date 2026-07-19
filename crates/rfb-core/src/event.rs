@@ -2,7 +2,9 @@
 
 use std::collections::BTreeMap;
 
-use rfb_protocol::GameEventDto;
+use rfb_protocol::{GameEventDto, GameEventOutcomeDto};
+
+use crate::effect::DamageOutcome;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
@@ -36,29 +38,31 @@ pub(crate) enum DomainEvent {
     },
     PlayerMeleeHit {
         target_kind_id: String,
-        damage: i32,
+        damage: DamageOutcome,
     },
     PlayerSlew {
         target_kind_id: String,
+        damage: DamageOutcome,
     },
     MonsterMeleeMissed {
         source_kind_id: String,
     },
     MonsterMeleeHit {
         source_kind_id: String,
-        damage: i32,
+        damage: DamageOutcome,
     },
     PlayerDied {
         source_kind_id: String,
+        damage: DamageOutcome,
     },
     PlayerStatusDamaged {
         status_kind_id: String,
-        damage: i32,
+        damage: DamageOutcome,
     },
     EntityStatusDamaged {
         target_kind_id: String,
         status_kind_id: String,
-        damage: i32,
+        damage: DamageOutcome,
     },
     PlayerStatusExpired {
         status_kind_id: String,
@@ -69,10 +73,12 @@ pub(crate) enum DomainEvent {
     },
     PlayerDiedFromStatus {
         status_kind_id: String,
+        damage: DamageOutcome,
     },
     EntityDiedFromStatus {
         target_kind_id: String,
         status_kind_id: String,
+        damage: DamageOutcome,
     },
 }
 
@@ -148,15 +154,27 @@ impl DomainEvent {
             Self::PlayerMeleeHit {
                 target_kind_id,
                 damage,
-            } => dto(
+            } => dto_with_outcome(
                 "combat.hit",
                 "combat-player-hit",
-                [("target", target_kind_id), ("damage", damage.to_string())],
+                [
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
             ),
-            Self::PlayerSlew { target_kind_id } => dto(
+            Self::PlayerSlew {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
                 "combat.slay",
                 "combat-player-slay",
                 [("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
             Self::MonsterMeleeMissed { source_kind_id } => dto(
                 "combat.monster-miss",
@@ -166,36 +184,57 @@ impl DomainEvent {
             Self::MonsterMeleeHit {
                 source_kind_id,
                 damage,
-            } => dto(
+            } => dto_with_outcome(
                 "combat.monster-hit",
                 "combat-monster-hit",
-                [("source", source_kind_id), ("damage", damage.to_string())],
+                [
+                    ("source", source_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
             ),
-            Self::PlayerDied { source_kind_id } => dto(
+            Self::PlayerDied {
+                source_kind_id,
+                damage,
+            } => dto_with_outcome(
                 "combat.player-death",
                 "combat-player-death",
                 [("source", source_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
             Self::PlayerStatusDamaged {
                 status_kind_id,
                 damage,
-            } => dto(
+            } => dto_with_outcome(
                 "status.player-damage",
                 "status-player-damage",
-                [("status", status_kind_id), ("damage", damage.to_string())],
+                [
+                    ("status", status_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
             ),
             Self::EntityStatusDamaged {
                 target_kind_id,
                 status_kind_id,
                 damage,
-            } => dto(
+            } => dto_with_outcome(
                 "status.entity-damage",
                 "status-entity-damage",
                 [
                     ("target", target_kind_id),
                     ("status", status_kind_id),
-                    ("damage", damage.to_string()),
+                    ("damage", damage.applied.to_string()),
                 ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
             ),
             Self::PlayerStatusExpired { status_kind_id } => dto(
                 "status.player-expired",
@@ -210,18 +249,28 @@ impl DomainEvent {
                 "status-entity-expired",
                 [("target", target_kind_id), ("status", status_kind_id)],
             ),
-            Self::PlayerDiedFromStatus { status_kind_id } => dto(
+            Self::PlayerDiedFromStatus {
+                status_kind_id,
+                damage,
+            } => dto_with_outcome(
                 "status.player-death",
                 "status-player-death",
                 [("status", status_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
             Self::EntityDiedFromStatus {
                 target_kind_id,
                 status_kind_id,
-            } => dto(
+                damage,
+            } => dto_with_outcome(
                 "status.entity-death",
                 "status-entity-death",
                 [("target", target_kind_id), ("status", status_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
         }
     }
@@ -236,6 +285,7 @@ fn dto_without_args(kind: &str, message_key: &str) -> GameEventDto {
         kind: kind.to_owned(),
         message_key: message_key.to_owned(),
         args: BTreeMap::new(),
+        outcome: None,
     }
 }
 
@@ -247,12 +297,37 @@ fn dto<const N: usize>(kind: &str, message_key: &str, args: [(&str, String); N])
             .into_iter()
             .map(|(key, value)| (key.to_owned(), value))
             .collect(),
+        outcome: None,
     }
+}
+
+fn dto_with_outcome<const N: usize>(
+    kind: &str,
+    message_key: &str,
+    args: [(&str, String); N],
+    outcome: GameEventOutcomeDto,
+) -> GameEventDto {
+    let mut event = dto(kind, message_key, args);
+    event.outcome = Some(outcome);
+    event
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::resistance::{DamageType, ResistanceLevel};
+
+    fn damage(applied: i32) -> DamageOutcome {
+        DamageOutcome {
+            raw: applied,
+            armor_reduction: 0,
+            requested: applied,
+            applied,
+            resistance_delta: 0,
+            damage_type: DamageType::Physical,
+            resistance: ResistanceLevel::Normal,
+        }
+    }
 
     #[test]
     fn typed_events_project_to_the_existing_protocol_contract() {
@@ -274,12 +349,17 @@ mod tests {
     fn numeric_domain_values_are_formatted_only_at_the_dto_boundary() {
         let event = DomainEvent::MonsterMeleeHit {
             source_kind_id: "demo.actor.monster".to_owned(),
-            damage: 7,
+            damage: damage(7),
         }
         .into_dto();
 
         assert_eq!(event.args["source"], "demo.actor.monster");
         assert_eq!(event.args["damage"], "7");
+        let Some(GameEventOutcomeDto::Damage { resolution }) = event.outcome else {
+            panic!("damage events should preserve their structured resolution");
+        };
+        assert_eq!(resolution.raw_damage, 7);
+        assert_eq!(resolution.final_damage, 7);
     }
 
     #[test]
@@ -289,6 +369,7 @@ mod tests {
             DomainEvent::MoveBlocked,
             DomainEvent::PlayerDied {
                 source_kind_id: "demo.actor.monster".to_owned(),
+                damage: damage(7),
             },
         ]);
 

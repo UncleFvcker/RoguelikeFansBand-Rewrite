@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.10";
+pub const PROTOCOL_VERSION: &str = "1.11";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -180,6 +180,30 @@ pub struct ResistanceDto {
     pub level: ResistanceLevelDto,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DamageResolutionDto {
+    pub raw_damage: i32,
+    pub armor_reduction: i32,
+    pub resistance_adjustment: i32,
+    pub final_damage: i32,
+    pub damage_type: DamageTypeDto,
+    pub resistance: ResistanceLevelDto,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum GameEventOutcomeDto {
+    Damage { resolution: DamageResolutionDto },
+    Death { resolution: DamageResolutionDto },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -297,6 +321,8 @@ pub struct GameEventDto {
     pub kind: String,
     pub message_key: String,
     pub args: BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outcome: Option<GameEventOutcomeDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -392,6 +418,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(DamageTypeDto);
     push_declaration!(ResistanceLevelDto);
     push_declaration!(ResistanceDto);
+    push_declaration!(DamageResolutionDto);
+    push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityDto);
@@ -655,6 +683,22 @@ mod tests {
                 from_msgpack(&encoded).expect("command should decode");
             assert_eq!(decoded, envelope);
         }
+    }
+
+    #[test]
+    fn legacy_game_event_without_outcome_remains_compatible() {
+        let legacy = serde_json::json!({
+            "kind": "wait",
+            "messageKey": "event-wait",
+            "args": {}
+        });
+
+        let event: GameEventDto =
+            serde_json::from_value(legacy).expect("legacy event should decode");
+        assert_eq!(event.outcome, None);
+
+        let encoded = serde_json::to_value(&event).expect("event should encode");
+        assert_eq!(encoded.get("outcome"), None);
     }
 
     #[test]
