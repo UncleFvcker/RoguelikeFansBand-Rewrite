@@ -8,6 +8,7 @@ pub enum StatKind {
     Speed,
     MeleeSkill,
     ArmorClass,
+    ActionDifficulty,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

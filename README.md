@@ -70,9 +70,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-协议 1.11 / contract-v11 已为所有伤害与死亡事件增加类型化 outcome，酸、电、火、冷、毒均已有内容驱动的实际近战入口；带来源的 `DerivedStatsPipeline` 已接管最大生命、攻防、速度、近战能力和 AC，玩家与怪物近战命中统一输出结构化 `CheckResult`。45 个 exact fixtures 保持既有 RNG 与规则结果。内容包为 1.7.0，存档和 state hash Schema 没有变化。完整边界见 [Contract v11 说明](design/contract-v11-structured-damage-events.md)。
+协议 1.11 / contract-v11 已为所有伤害与死亡事件增加类型化 outcome，酸、电、火、冷、毒均已有内容驱动的实际近战入口；带来源的 `DerivedStatsPipeline` 已接管最大生命、攻防、速度、近战能力和 AC，玩家与怪物近战命中统一输出结构化 `CheckResult`。眩晕会削弱近战能力，恐惧可通过行动检定阻止近战。active baseline 共 47 个 exact fixtures。内容包为 1.7.0，存档和 state hash Schema 没有变化。完整边界见 [Contract v11 说明](design/contract-v11-structured-damage-events.md)。
 
-contract-v11 接下来在新接口上实现眩晕与恐惧；随后由 contract-v12 承接武器 `AttackProfile`、玩家攻击次数和怪物多 blow，避免继续复用已经落地的版本编号。
+下一规则里程碑由 contract-v12 承接武器 `AttackProfile`、玩家攻击次数和怪物多 blow；远程与投掷留给后续 projectile contract。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 根据内容定义与装备权威派生，回声护符提供攻击 +1、防御 +1、最大生命 +4。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -147,7 +147,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v11/baseline-policy.json
 ```
 
-当前 45 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 47 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

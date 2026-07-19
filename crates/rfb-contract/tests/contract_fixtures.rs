@@ -18,8 +18,8 @@ fn committed_contract_fixtures_pass() {
         .collect::<Vec<_>>();
     paths.sort();
     assert!(
-        paths.len() >= 45,
-        "the active contract baseline requires at least 45 committed fixtures"
+        paths.len() >= 47,
+        "the active contract baseline requires at least 47 committed fixtures"
     );
 
     let fixtures = paths

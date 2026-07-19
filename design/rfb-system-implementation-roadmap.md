@@ -114,7 +114,7 @@ flowchart TD
 
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
-| 基础状态 | 加速、减速、失明、混乱、恐惧、中毒、流血、眩晕、麻痹等 | 部分建立 | `StatusInstance { kindId, intensity, remainingTicks, sourceId }`、三种叠加策略、加速/减速、毒与流血已进入存档/回放；眩晕和恐惧等待检定接口 |
+| 基础状态 | 加速、减速、失明、混乱、恐惧、中毒、流血、眩晕、麻痹等 | 部分建立 | `StatusInstance { kindId, intensity, remainingTicks, sourceId }`、三种叠加策略、加速/减速、毒、流血、眩晕和恐惧已进入存档/回放；后续补失明、混乱与麻痹 |
 | 抗性 | 基础元素、高级元素、免疫、弱点、临时抗性 | 部分建立 | 稀疏 `ResistanceProfile` 和弱点/普通/抗性/强抗/免疫等级已建立；火焰近战已接入，其他元素等待实际规则入口和来源合并 |
 | 增益与防御 | 祝福、英雄、护盾、无敌、反射、灵体等 | 未建立 | 通过 effect pipeline 改写命中、伤害或行动许可；优先组合拦截器，不在 `take_damage` 中持续加分支 |
 | 饥饿与恢复 | 食物、自然回复、休息、环境伤害和周期性扣血 | 未建立 | 第一版可延后饥饿，但世界 tick、恢复和持续伤害接口必须先建立 |
@@ -128,7 +128,7 @@ flowchart TD
 | 怪物近战 | 最多四组 blow，每组包含方法和多个效果 | 部分建立 | 内容定义 `MeleeRoutine`，每个 blow 可含命中能力、伤害骰和 effect 列表；按顺序中断于死亡/位移 |
 | 射击 | 弓倍率、弹药、射程、命中、暴击、弹药破损与返回 | 未建立 | 通用 projectile 行动；武器、弹药、发射器分别贡献 profile；前端只负责目标选择和动画 |
 | 投掷 | 物品重量、投掷技能、返回武器和药水破裂 | 未建立 | 与 projectile 共用轨迹，命中与落点规则独立；物品实例位置变化保持原子性 |
-| 战斗特殊规则 | 反击、光环、背刺、姿态、骑乘、恐惧阻止攻击 | 未建立 | 使用明确的 combat phases 和 rule feature 优先级，禁止任意递归调用完整攻击命令 |
+| 战斗特殊规则 | 反击、光环、背刺、姿态、骑乘、恐惧阻止攻击 | 部分建立 | 恐惧已通过行动检定阻止主动近战；其余规则使用明确的 combat phases 和 rule feature 优先级，禁止任意递归调用完整攻击命令 |
 | 伤害与死亡 | 多种伤害类型、减伤、死亡原因、怪物击杀和掉落 | 部分建立 | `DamagePacket`、确定性抗性结算、物理 AC、元素伤害和状态死亡已建立；下一步统一 `DeathOutcome` 与伤害/抗性领域事件，供击杀、任务、经验和掉落订阅 |
 
 ### 4.7 法术、能力、设备与效果
@@ -326,7 +326,7 @@ crates/rfb-core/src/
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：contract-v11 已在 v10 的流血与元素近战基础上保留完整伤害/死亡结算 outcome；原创内容包 1.7.0 已为酸、电、火、冷、毒提供独立攻击来源。`DerivedStatsPipeline` 已接管最大生命、攻防、速度、近战能力和 AC，装备与状态贡献保留稳定来源；`CheckContext/CheckResult` 已统一玩家与怪物命中检定。active baseline 保持 45 个 exact fixtures，state hash Schema 继续为 v9。下一步在公共接口上实现眩晕和恐惧。详细边界见 [Contract v11](contract-v11-structured-damage-events.md)。
+当前进度：contract-v11 已在 v10 的流血与元素近战基础上保留完整伤害/死亡结算 outcome；原创内容包 1.7.0 已为酸、电、火、冷、毒提供独立攻击来源。`DerivedStatsPipeline` 已接管最大生命、攻防、速度、近战能力和 AC，装备与状态贡献保留稳定来源；`CheckContext/CheckResult` 已统一玩家与怪物命中及恐惧行动检定。眩晕能力削弱与恐惧近战限制进入 active baseline，共 47 个 exact fixtures，state hash Schema 继续为 v9。下一步由 contract-v12 建立武器 `AttackProfile`、玩家攻击次数和怪物多 blow。详细边界见 [Contract v11](contract-v11-structured-damage-events.md)。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -451,7 +451,7 @@ crates/rfb-core/src/
    - 已完成：伤害类型、抗性结果和死亡结算进入强类型领域/协议事件；
    - 已完成：为酸、电、冷、毒增加原创怪物近战入口；
    - 已完成：建立带来源的派生属性与基础检定管线；
-   - 在检定接口上实现眩晕能力削弱和恐惧行动限制。
+   - 已完成：在检定接口上实现眩晕能力削弱和恐惧行动限制。
 2. **contract-v12：武器与多 blow 战斗**
    - 统一 `AttackProfile` 与武器实例命中、伤害和骰子；
    - 玩家攻击次数和稳定中断顺序；

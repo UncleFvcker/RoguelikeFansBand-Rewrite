@@ -16,8 +16,8 @@ use crate::{
     },
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
-        STATUS_HASTE, STATUS_POISON, STATUS_SLOW, advance_status_ticks, apply_effect,
-        resolve_damage,
+        STATUS_FEAR, STATUS_HASTE, STATUS_POISON, STATUS_SLOW, STATUS_STUN, advance_status_ticks,
+        apply_effect, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, project_events},
@@ -473,7 +473,13 @@ impl Game {
                     .position(|entity| entity.position == target)
                 {
                     changed.insert(target);
-                    self.resolve_player_melee(index, &mut events, &mut removed_entities);
+                    if self.player_fear_blocks_melee(index) {
+                        events.push(DomainEvent::PlayerFearBlocked {
+                            status_kind_id: STATUS_FEAR.to_owned(),
+                        });
+                    } else {
+                        self.resolve_player_melee(index, &mut events, &mut removed_entities);
+                    }
                 } else {
                     let old_position = self.player.position;
                     self.player.position = target;
@@ -1006,6 +1012,17 @@ impl Game {
                     amount.saturating_neg(),
                 );
             }
+            if status.kind_id == STATUS_STUN {
+                pipeline.add_with_origin(
+                    StatKind::MeleeSkill,
+                    StatLayer::Status,
+                    &status.kind_id,
+                    status.source_id.clone(),
+                    i32::from(status.intensity)
+                        .saturating_mul(10)
+                        .saturating_neg(),
+                );
+            }
         }
 
         ActorDerivedStats {
@@ -1020,6 +1037,39 @@ impl Game {
 
     fn player_is_dead(&self) -> bool {
         self.player.hp < 0
+    }
+
+    fn player_fear_blocks_melee(&mut self, target_index: usize) -> bool {
+        let Some(fear) = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_FEAR)
+            .cloned()
+        else {
+            return false;
+        };
+        let ability = self.player_derived_stats().melee_skill;
+        let mut difficulty = DerivedStatsPipeline::new();
+        difficulty.add_with_origin(
+            StatKind::ActionDifficulty,
+            StatLayer::Status,
+            &fear.kind_id,
+            fear.source_id,
+            i32::from(fear.intensity).saturating_mul(40),
+        );
+        !resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::FearAction,
+                actor_id: self.player.id.clone(),
+                target_id: Some(self.entities[target_index].id.clone()),
+                ability,
+                difficulty: difficulty
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        )
+        .succeeded()
     }
 
     fn resolve_player_melee(
@@ -2443,11 +2493,21 @@ mod tests {
             remaining_ticks: 3,
             source_id: Some("demo.item.temporary-tonic.1".to_owned()),
         });
+        game.player.statuses.push(StatusInstance {
+            kind_id: STATUS_STUN.to_owned(),
+            intensity: 2,
+            remaining_ticks: 3,
+            source_id: Some("demo.monster.impact.1".to_owned()),
+        });
+        game.player
+            .statuses
+            .sort_by(|left, right| left.kind_id.cmp(&right.kind_id));
 
         let stats = game.player_derived_stats();
 
         assert_eq!(stats.attack.value, 3);
         assert_eq!(stats.speed.value, 130);
+        assert_eq!(stats.melee_skill.value, 40);
         assert!(stats.attack.contributions.iter().any(|contribution| {
             contribution.layer == StatLayer::Equipment
                 && contribution.source_id == "demo.item.echo-charm.1"
@@ -2459,6 +2519,49 @@ mod tests {
                 && contribution.origin_id.as_deref() == Some("demo.item.temporary-tonic.1")
                 && contribution.amount == 20
         }));
+        assert!(stats.melee_skill.contributions.iter().any(|contribution| {
+            contribution.layer == StatLayer::Status
+                && contribution.source_id == STATUS_STUN
+                && contribution.origin_id.as_deref() == Some("demo.monster.impact.1")
+                && contribution.amount == -20
+        }));
+    }
+
+    #[test]
+    fn fear_check_can_consume_a_melee_action_without_attacking() {
+        let mut game = Game::new(0);
+        game.entities[0].position = Position { x: 4, y: 3 };
+        game.entities[0].statuses.push(StatusInstance {
+            kind_id: STATUS_SLOW.to_owned(),
+            intensity: 10,
+            remaining_ticks: 20,
+            source_id: None,
+        });
+        game.player.statuses.push(StatusInstance {
+            kind_id: STATUS_FEAR.to_owned(),
+            intensity: 2,
+            remaining_ticks: 20,
+            source_id: Some("demo.monster.ember-mote.1".to_owned()),
+        });
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("fear-blocked action should still execute");
+
+        assert_eq!(update.player.position, Position { x: 3, y: 3 });
+        assert_eq!(update.entities[0].hp, 3);
+        assert_eq!(update.turn, 1);
+        assert_eq!(update.player.statuses[0].kind_id, STATUS_FEAR);
+        assert_eq!(update.player.statuses[0].remaining_ticks, 10);
+        assert_eq!(game.rng.draw_counter, 2);
+        assert_eq!(update.events.len(), 1);
+        assert_eq!(update.events[0].message_key, "status-fear-blocked");
     }
 
     #[test]

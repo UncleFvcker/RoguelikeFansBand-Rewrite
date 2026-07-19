@@ -905,6 +905,10 @@ function formatEvent(event: GameEventDto): string {
         target: contentName(event.args.target),
         status: statusName(event.args.status),
       });
+    case "status-fear-blocked":
+      return localization.format("message-status-fear-blocked", {
+        status: statusName(event.args.status),
+      });
     case "item-pickup-success":
       return localization.format("message-item-pickup-success", {
         target: contentName(event.args.target),
@@ -1060,6 +1064,12 @@ function statusName(statusId: string | undefined): string {
   }
   if (statusId === "rfb.status.slow") {
     return localization.format("status-slow-name");
+  }
+  if (statusId === "rfb.status.stun") {
+    return localization.format("status-stun-name");
+  }
+  if (statusId === "rfb.status.fear") {
+    return localization.format("status-fear-name");
   }
   return localization.format("status-unknown-name");
 }

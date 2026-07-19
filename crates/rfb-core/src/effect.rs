@@ -7,6 +7,8 @@ pub const STATUS_HASTE: &str = "rfb.status.haste";
 pub const STATUS_SLOW: &str = "rfb.status.slow";
 pub const STATUS_POISON: &str = "rfb.status.poison";
 pub const STATUS_BLEEDING: &str = "rfb.status.bleeding";
+pub const STATUS_STUN: &str = "rfb.status.stun";
+pub const STATUS_FEAR: &str = "rfb.status.fear";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

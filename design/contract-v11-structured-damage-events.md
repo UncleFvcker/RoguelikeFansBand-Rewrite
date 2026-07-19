@@ -47,7 +47,7 @@ DamageResolutionDto {
 
 - 协议：`1.11`；
 - active baseline：`contract-v11`；
-- exact fixtures：45；
+- exact fixtures：47；
 - 内容包：`1.7.0`；
 - state hash Schema：继续为 v9；
 - contract-v1 至 v10 原样保留为历史基准。
@@ -56,7 +56,9 @@ contract-v11 从 v10 迁移全部 39 个场景，并新增：
 
 - 火焰近战遇到弱点，验证负 `resistanceAdjustment`；
 - 火焰近战遇到强抗，验证稳定整数减伤；
-- 腐蚀渗滴、风暴火花、霜息和毒孢的近战分别验证酸、电、冷、毒的内容定义、抗性结算与结构化 outcome。
+- 腐蚀渗滴、风暴火花、霜息和毒孢的近战分别验证酸、电、冷、毒的内容定义、抗性结算与结构化 outcome；
+- 眩晕将近战能力削减至零并令攻击失败；
+- 恐惧检定失败会消耗行动、保留位置并产生明确事件。
 
 原有普通、抗性、免疫、毒、流血和死亡场景现在同时断言类型化 damage/death outcome。
 
@@ -73,9 +75,14 @@ contract-v11 从 v10 迁移全部 39 个场景，并新增：
 
 ## 6. 通用检定
 
-`CheckContext` 记录检定种类、行动者、目标、带来源的 ability 与 difficulty；`CheckResult` 记录自动成功/失败或普通成功/失败、百分骰、可选对抗骰和最终阈值。现有玩家与怪物近战命中已经统一走该接口，RNG 抽取顺序和 45 个 exact fixtures 均保持不变。
+`CheckContext` 记录检定种类、行动者、目标、带来源的 ability 与 difficulty；`CheckResult` 记录自动成功/失败或普通成功/失败、百分骰、可选对抗骰和最终阈值。玩家与怪物近战命中及恐惧行动限制统一走该接口；没有恐惧时，既有近战 RNG 抽取顺序保持不变。
 
-## 7. 后续
+## 7. 眩晕与恐惧
 
-1. 在派生属性接口上实现眩晕能力削弱；
-2. 在检定接口上实现恐惧行动限制。
+- `rfb.status.stun` 每级通过状态层贡献降低 10 点近战能力，最终值不低于 0；来源同时保留状态 kind 和施加者实例 ID。
+- `rfb.status.fear` 只限制主动近战，不阻止等待、移动到空地或物品操作。攻击前以近战能力对抗每级 40 点行动难度；失败仍消耗正常行动成本并推进状态衰减，但不会移动或伤害目标。
+- 恐惧阻止事件使用 `status-fear-blocked`，前端通过 Fluent 输出中英文消息。
+
+## 8. 后续
+
+contract-v12 建立武器 `AttackProfile`、玩家攻击次数和怪物多 blow；远程与投掷由后续 projectile contract 承接。

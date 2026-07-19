@@ -36,6 +36,9 @@ pub(crate) enum DomainEvent {
     PlayerMeleeMissed {
         target_kind_id: String,
     },
+    PlayerFearBlocked {
+        status_kind_id: String,
+    },
     PlayerMeleeHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -150,6 +153,11 @@ impl DomainEvent {
                 "combat.miss",
                 "combat-player-miss",
                 [("target", target_kind_id)],
+            ),
+            Self::PlayerFearBlocked { status_kind_id } => dto(
+                "status.fear-blocked",
+                "status-fear-blocked",
+                [("status", status_kind_id)],
             ),
             Self::PlayerMeleeHit {
                 target_kind_id,
