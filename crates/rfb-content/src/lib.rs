@@ -182,6 +182,18 @@ pub struct ProjectileProfileDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ThrowProfileDefinition {
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -190,6 +202,7 @@ pub struct ItemDefinition {
     pub name_key: String,
     pub description_key: String,
     pub glyph: String,
+    pub weight_tenths_pound: u16,
     pub max_stack: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
@@ -199,6 +212,8 @@ pub struct ItemDefinition {
     pub melee_profile: Option<AttackProfileDefinition>,
     #[serde(default)]
     pub projectile_profile: Option<ProjectileProfileDefinition>,
+    #[serde(default)]
+    pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
     pub break_chance_percent: u8,
     pub tags: Vec<String>,
@@ -643,6 +658,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&item.id, "item")?;
         validate_definition_text(&item.id, &item.name_key, &item.description_key)?;
         validate_glyph(&item.id, &item.glyph)?;
+        if item.weight_tenths_pound == 0 || item.weight_tenths_pound > 10_000 {
+            return Err(ContentError::InvalidItemWeight(item.id.clone()));
+        }
         if item.max_stack == 0 || item.max_stack > 1_000_000 {
             return Err(ContentError::InvalidItemStack(item.id.clone()));
         }
@@ -695,6 +713,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 || profile.damage_sides > 10_000)
         {
             return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
+        }
+        if let Some(profile) = &item.throw_profile
+            && (profile.to_hit < -1_000_000
+                || profile.to_hit > 1_000_000
+                || profile.to_damage < -1_000_000
+                || profile.to_damage > 1_000_000
+                || profile.damage_dice == 0
+                || profile.damage_dice > 100
+                || profile.damage_sides == 0
+                || profile.damage_sides > 10_000)
+        {
+            return Err(ContentError::InvalidThrowProfile(item.id.clone()));
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
@@ -1291,6 +1321,8 @@ pub enum ContentError {
     InvalidMeleeRoutine(String),
     #[error("item stack limit is outside supported limits: {0}")]
     InvalidItemStack(String),
+    #[error("item weight is outside supported limits: {0}")]
+    InvalidItemWeight(String),
     #[error("item break chance is outside 0..=100 percent: {0}")]
     InvalidItemBreakChance(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
@@ -1301,6 +1333,8 @@ pub enum ContentError {
     InvalidAttackProfile(String),
     #[error("item projectile profile is invalid or requires the launcher slot: {0}")]
     InvalidProjectileProfile(String),
+    #[error("item throw profile is invalid: {0}")]
+    InvalidThrowProfile(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1380,7 +1414,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.12.0");
+        assert_eq!(catalog.pack_version(), "1.13.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1537,6 +1571,34 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemBreakChance(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let shard = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.luminous-shard")
+            .expect("fixture should contain the throwable shard");
+        shard.weight_tenths_pound = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemWeight(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let shard = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.luminous-shard")
+            .expect("fixture should contain the throwable shard");
+        shard
+            .throw_profile
+            .as_mut()
+            .expect("shard should have a throw profile")
+            .damage_dice = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidThrowProfile(_))
         ));
 
         let mut invalid = artifact.content.clone();

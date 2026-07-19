@@ -5,6 +5,7 @@
   "nameKey": "item-demo-echo-charm-name",
   "descriptionKey": "item-demo-echo-charm-description",
   "glyph": "\"",
+  "weightTenthsPound": 5,
   "maxStack": 1,
   "equipmentSlot": "charm",
   "modifiers": {

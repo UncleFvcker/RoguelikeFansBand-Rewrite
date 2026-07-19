@@ -84,6 +84,23 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         trace: ProjectileTrace,
     },
+    ItemThrowMissed {
+        source_kind_id: String,
+        target_kind_id: String,
+        trace: ProjectileTrace,
+    },
+    ItemThrowHit {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    ItemThrowSlew {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
     ItemThrowUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
@@ -279,6 +296,54 @@ impl DomainEvent {
                 trace,
             } => with_trace(
                 dto("item.thrown", "item-thrown", [("target", target_kind_id)]),
+                trace,
+            ),
+            Self::ItemThrowMissed {
+                source_kind_id,
+                target_kind_id,
+                trace,
+            } => with_trace(
+                dto(
+                    "combat.throw-miss",
+                    "throw-miss",
+                    [("source", source_kind_id), ("target", target_kind_id)],
+                ),
+                trace,
+            ),
+            Self::ItemThrowHit {
+                source_kind_id,
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "combat.throw-hit",
+                    "throw-hit",
+                    [
+                        ("source", source_kind_id),
+                        ("target", target_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
+            Self::ItemThrowSlew {
+                source_kind_id,
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "combat.throw-slay",
+                    "throw-slay",
+                    [("source", source_kind_id), ("target", target_kind_id)],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
                 trace,
             ),
             Self::ItemThrowUnavailable => {

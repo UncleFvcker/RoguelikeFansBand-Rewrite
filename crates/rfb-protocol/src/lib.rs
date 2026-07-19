@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.17";
+pub const PROTOCOL_VERSION: &str = "1.18";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -192,6 +192,17 @@ pub struct ProjectileProfileDto {
     pub ammo_kind_id: String,
     #[serde(default)]
     pub target_spec: TargetSpecDto,
+    pub source_item_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ThrowProfileDto {
+    pub range: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage: DamageDiceDto,
     pub source_item_id: String,
 }
 
@@ -423,6 +434,8 @@ pub struct InventoryItemDto {
     pub kind_id: String,
     pub quantity: u32,
     #[serde(default)]
+    pub weight_tenths_pound: u16,
+    #[serde(default)]
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
@@ -430,6 +443,8 @@ pub struct InventoryItemDto {
     pub melee_profile: Option<AttackProfileDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub projectile_profile: Option<ProjectileProfileDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub throw_profile: Option<ThrowProfileDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -439,6 +454,8 @@ pub struct EquipmentItemDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default)]
+    pub weight_tenths_pound: u16,
     pub slot_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
@@ -446,6 +463,8 @@ pub struct EquipmentItemDto {
     pub melee_profile: Option<AttackProfileDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub projectile_profile: Option<ProjectileProfileDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub throw_profile: Option<ThrowProfileDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -552,6 +571,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetSpecDto);
     push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);
+    push_declaration!(ThrowProfileDto);
     push_declaration!(ProjectileTraceDto);
     push_declaration!(Position);
     push_declaration!(CellDto);
@@ -931,6 +951,7 @@ mod tests {
                 id: "demo.item.inventory.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
                 quantity: 1,
+                weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),
                 modifiers: StatModifiersDto {
                     attack: 1,
@@ -939,11 +960,13 @@ mod tests {
                 },
                 melee_profile: None,
                 projectile_profile: None,
+                throw_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
                 id: "demo.item.equipment.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
                 quantity: 1,
+                weight_tenths_pound: 5,
                 slot_id: "charm".to_owned(),
                 modifiers: StatModifiersDto {
                     attack: 1,
@@ -952,6 +975,7 @@ mod tests {
                 },
                 melee_profile: None,
                 projectile_profile: None,
+                throw_profile: None,
             }],
             next_item_instance_serial: 4,
             explored: vec![true],

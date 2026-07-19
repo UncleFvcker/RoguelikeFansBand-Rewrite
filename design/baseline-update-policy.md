@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v17/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v16` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v18/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v17` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v17/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v18/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v17/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；武器多段近战建立 `contract-v12`，怪物 `MeleeRoutine` 建立 `contract-v13`，权威 projectile 基础建立 `contract-v14`，弹药与投掷实例事务建立 `contract-v15`，目标选择建立 `contract-v16`，弹药破损/回收建立 `contract-v17`。当前规则边界见 [Contract v17](contract-v17-ammunition-recovery.md)。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；武器多段近战建立 `contract-v12`，怪物 `MeleeRoutine` 建立 `contract-v13`，权威 projectile 基础建立 `contract-v14`，弹药与投掷实例事务建立 `contract-v15`，目标选择建立 `contract-v16`，弹药破损/回收建立 `contract-v17`，重量射程与投掷攻击建立 `contract-v18`。当前规则边界见 [Contract v18](contract-v18-thrown-attacks.md)。

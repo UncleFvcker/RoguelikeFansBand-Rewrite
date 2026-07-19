@@ -121,6 +121,42 @@
         }
       },
       "type": "object"
+    },
+    "ThrowProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "toDamage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "toHit",
+        "toDamage",
+        "damageDice",
+        "damageSides"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
@@ -202,6 +238,23 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "throwProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ThrowProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "weightTenthsPound": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
     }
   },
   "required": [
@@ -211,6 +264,7 @@
     "nameKey",
     "descriptionKey",
     "glyph",
+    "weightTenthsPound",
     "maxStack",
     "tags"
   ],

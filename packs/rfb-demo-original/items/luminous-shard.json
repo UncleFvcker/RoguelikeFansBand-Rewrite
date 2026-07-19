@@ -5,6 +5,14 @@
   "nameKey": "item-demo-luminous-shard-name",
   "descriptionKey": "item-demo-luminous-shard-description",
   "glyph": "!",
+  "weightTenthsPound": 10,
   "maxStack": 20,
+  "throwProfile": {
+    "toHit": 30,
+    "toDamage": 0,
+    "damageDice": 1,
+    "damageSides": 3,
+    "damageType": "physical"
+  },
   "tags": ["crystal", "light-source"]
 }

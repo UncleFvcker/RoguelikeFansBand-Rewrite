@@ -5,6 +5,7 @@
   "nameKey": "item-demo-echo-blade-name",
   "descriptionKey": "item-demo-echo-blade-description",
   "glyph": "/",
+  "weightTenthsPound": 30,
   "maxStack": 1,
   "equipmentSlot": "weapon",
   "meleeProfile": {

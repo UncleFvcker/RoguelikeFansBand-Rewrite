@@ -25,6 +25,8 @@ export type TargetSelection = { "type": "direction", direction: Direction, } | {
 
 export type ProjectileProfileDto = { range: number, toHit: number, toDamage: number, damage: DamageDiceDto, ammoKindId: string, targetSpec: TargetSpecDto, sourceItemId: string, };
 
+export type ThrowProfileDto = { range: number, toHit: number, toDamage: number, damage: DamageDiceDto, sourceItemId: string, };
+
 export type ProjectileTraceDto = { origin: Position, impact: Position, landing: Position, traversed: Array<Position>, };
 
 export type Position = { x: number, y: number, };
@@ -57,9 +59,9 @@ export type EntityDto = { id: string, kindId: string, position: Position, hp: nu
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 
-export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
-export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, };
+export type EquipmentItemDto = { id: string, kindId: string, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 

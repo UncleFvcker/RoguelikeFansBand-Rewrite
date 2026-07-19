@@ -358,6 +358,23 @@
         },
         "slotId": {
           "type": "string"
+        },
+        "throwProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThrowProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weightTenthsPound": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
         }
       },
       "required": [
@@ -904,6 +921,23 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "throwProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThrowProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weightTenthsPound": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
         }
       },
       "required": [
@@ -1346,6 +1380,38 @@
         "modes",
         "range",
         "requiresLineOfEffect"
+      ]
+    },
+    "ThrowProfileDto": {
+      "type": "object",
+      "properties": {
+        "damage": {
+          "$ref": "#/$defs/DamageDiceDto"
+        },
+        "range": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "sourceItemId": {
+          "type": "string"
+        },
+        "toDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "toHit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "range",
+        "toHit",
+        "toDamage",
+        "damage",
+        "sourceItemId"
       ]
     },
     "VisibilityState": {

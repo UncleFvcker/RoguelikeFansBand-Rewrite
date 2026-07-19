@@ -10,6 +10,7 @@ pub enum StatKind {
     MeleeAttacks,
     MeleeDamageBonus,
     RangedSkill,
+    ThrowingSkill,
     ArmorClass,
     ActionDifficulty,
 }

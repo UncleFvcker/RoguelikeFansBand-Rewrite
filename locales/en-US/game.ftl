@@ -78,5 +78,8 @@ message-item-drop-success =
     }
 message-item-drop-none = None of the selected items can be dropped.
 message-item-thrown = You throw { $target }.
+message-throw-miss = Your { $source } misses { $target }.
+message-throw-hit = Your { $source } hits { $target } for { $damage } damage.
+message-throw-slay = Your { $source } destroys { $target }.
 message-item-throw-unavailable = The selected item cannot be thrown right now.
 message-unknown-event = [{ $key }]

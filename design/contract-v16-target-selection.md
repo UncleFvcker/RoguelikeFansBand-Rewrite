@@ -17,4 +17,4 @@
 
 ## 后续
 
-核心声明的规格已由[前端目标模式 v1](frontend-targeting-v1.md)接入键盘/按钮输入、准星和 `FireTarget`；弹药破损/回收已由 [contract-v17](contract-v17-ammunition-recovery.md) 承接。投掷命中与伤害仍在后续规则切片实现。
+核心声明的规格已由[前端目标模式 v1](frontend-targeting-v1.md)接入键盘/按钮输入、准星和 `FireTarget`；弹药破损/回收已由 [contract-v17](contract-v17-ammunition-recovery.md) 承接，投掷命中、伤害与重量射程已由 [contract-v18](contract-v18-thrown-attacks.md) 完成。

@@ -42,13 +42,13 @@ use rfb_protocol::{
     GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto,
     MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position,
     ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TerrainSaveDto, VisibilityState,
+    TargetSelection, TargetSpecDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 12] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 13] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -61,13 +61,16 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 12] = [
     "6449bc9fa8717d7f6ffc4a2a9643c8e40d20f04c196fa80f23bec2823de8e3d5",
     "ce3d3810b9be824f20230d83d5978dbb555f5766813b5ac43c059be0e6293fe0",
     "cb56a8e9dd6d7280b38fe4e388fc0f7ce08fd4a40cef2c8886907e3c662ffc96",
+    "87e77fccea2c1ea40a6d952abf8d0b38d286c049b34b73f0da93f00288d1c2ae",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "87e77fccea2c1ea40a6d952abf8d0b38d286c049b34b73f0da93f00288d1c2ae";
+    "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
-const THROW_RANGE: u16 = 4;
+const BASE_THROW_RANGE_BUDGET: u16 = 50;
+const MIN_THROW_RANGE: u16 = 2;
+const MAX_THROW_RANGE: u16 = 10;
 const AMBIENT_LIGHT: u8 = 28;
 const PLAYER_LIGHT_RADIUS: i32 = 6;
 const ACTOR_LIGHT_RADIUS: i32 = 5;
@@ -457,7 +460,13 @@ impl Game {
                 &mut removed_entities,
             )?,
             GameAction::Throw { item_id, direction } => {
-                self.throw_inventory_item(&item_id, direction, &mut events, &mut changed)?;
+                self.throw_inventory_item(
+                    &item_id,
+                    direction,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
             GameAction::PickUp => {
@@ -736,6 +745,7 @@ impl Game {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     quantity: item.quantity,
+                    weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
                         .content
                         .item(&item.kind_id)
@@ -743,6 +753,7 @@ impl Game {
                     modifiers: self.item_modifiers(&item.kind_id),
                     melee_profile: self.item_melee_profile(item),
                     projectile_profile: self.item_projectile_profile(item),
+                    throw_profile: self.item_throw_profile(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -762,10 +773,12 @@ impl Game {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     quantity: item.quantity,
+                    weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.item_modifiers(&item.kind_id),
                     melee_profile: self.item_melee_profile(item),
                     projectile_profile: self.item_projectile_profile(item),
+                    throw_profile: self.item_throw_profile(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -999,6 +1012,30 @@ impl Game {
             })
     }
 
+    fn item_weight_tenths_pound(&self, kind_id: &str) -> u16 {
+        self.content
+            .item(kind_id)
+            .map_or(0, |definition| definition.weight_tenths_pound)
+    }
+
+    fn item_throw_profile(&self, item: &ItemInstance) -> Option<ThrowProfileDto> {
+        let definition = self.content.item(&item.kind_id)?;
+        definition
+            .throw_profile
+            .as_ref()
+            .map(|profile| ThrowProfileDto {
+                range: throw_range(definition.weight_tenths_pound),
+                to_hit: profile.to_hit,
+                to_damage: profile.to_damage,
+                damage: DamageDiceDto {
+                    dice: profile.damage_dice,
+                    sides: profile.damage_sides,
+                    damage_type: DamageType::from(profile.damage_type).into(),
+                },
+                source_item_id: item.id.clone(),
+            })
+    }
+
     fn player_projectile_profile(&self) -> Option<ResolvedProjectileProfile> {
         self.items.iter().find_map(|item| {
             let ItemLocation::Equipped { slot_id } = &item.location else {
@@ -1131,6 +1168,12 @@ impl Game {
             base_source,
             rating_to_combat_value(definition.attack),
         );
+        pipeline.add(
+            StatKind::ThrowingSkill,
+            StatLayer::Base,
+            base_source,
+            rating_to_combat_value(definition.attack),
+        );
 
         if include_equipment {
             for item in self
@@ -1227,6 +1270,15 @@ impl Game {
                         .saturating_mul(10)
                         .saturating_neg(),
                 );
+                pipeline.add_with_origin(
+                    StatKind::ThrowingSkill,
+                    StatLayer::Status,
+                    &status.kind_id,
+                    status.source_id.clone(),
+                    i32::from(status.intensity)
+                        .saturating_mul(10)
+                        .saturating_neg(),
+                );
             }
         }
 
@@ -1240,6 +1292,7 @@ impl Game {
             melee_attacks: pipeline.resolve(StatKind::MeleeAttacks, StatBounds::NON_NEGATIVE),
             melee_damage_bonus: pipeline.resolve(StatKind::MeleeDamageBonus, StatBounds::UNBOUNDED),
             ranged_skill: pipeline.resolve(StatKind::RangedSkill, StatBounds::NON_NEGATIVE),
+            throwing_skill: pipeline.resolve(StatKind::ThrowingSkill, StatBounds::NON_NEGATIVE),
         }
     }
 
@@ -1493,37 +1546,135 @@ impl Game {
         direction: rfb_protocol::Direction,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let Some(index) = self.items.iter().position(|item| {
+        let Some(item) = self.items.iter().find(|item| {
             item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
         }) else {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .expect("throwable item definition must remain available");
+        let range = throw_range(definition.weight_tenths_pound);
+        let profile = definition
+            .throw_profile
+            .as_ref()
+            .map(|profile| ResolvedThrowProfile {
+                to_hit: profile.to_hit,
+                to_damage: profile.to_damage,
+                damage_dice: profile.damage_dice,
+                damage_sides: profile.damage_sides,
+                damage_type: DamageType::from(profile.damage_type),
+            });
+        let Some(mut thrown) = self.take_inventory_item(item_id)? else {
+            events.push(DomainEvent::ItemThrowUnavailable);
+            return Ok(());
+        };
+        let source_kind_id = thrown.kind_id.clone();
         let path = self
-            .projectile_path(&TargetSelection::Direction { direction }, THROW_RANGE)
+            .projectile_path(&TargetSelection::Direction { direction }, range)
             .expect("direction targeting must always produce a path");
-        let (trace, _) = self.trace_projectile_path(path);
+        let (trace, target_index) = self.trace_projectile_path(path);
         let landing = trace.landing;
-        let target_kind_id = self.items[index].kind_id.clone();
+        if let (Some(profile), Some(index)) = (profile, target_index) {
+            let target_definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("throw target definition must remain available")
+                .clone();
+            let target_kind_id = target_definition.id.clone();
+            let attacker = self.player_derived_stats();
+            let target = self.actor_derived_stats(&self.entities[index], &target_definition, false);
+            let ability = attacker.throwing_skill.with_modifier(
+                StatLayer::Equipment,
+                &thrown.id,
+                profile.to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+            changed.insert(self.entities[index].position);
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::ThrowHit,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(self.entities[index].id.clone()),
+                    ability,
+                    difficulty: target.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::ItemThrowMissed {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id,
+                    trace: trace.clone(),
+                });
+            } else {
+                let raw_damage = self
+                    .roll_damage(profile.damage_dice, profile.damage_sides)
+                    .saturating_add(profile.to_damage)
+                    .max(0);
+                let prepared = if profile.damage_type == DamageType::Physical {
+                    apply_melee_armor_reduction(raw_damage, target.armor_class.value)
+                } else {
+                    raw_damage
+                };
+                let resistance = self.entities[index].resistances.level(profile.damage_type);
+                let damage = resolve_damage(
+                    DamagePacket::after_armor(raw_damage, prepared, profile.damage_type),
+                    resistance,
+                );
+                self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
+                events.push(DomainEvent::ItemThrowHit {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target_kind_id.clone(),
+                    damage,
+                    trace: trace.clone(),
+                });
+                if self.entities[index].hp <= 0 {
+                    let removed = self.entities.remove(index);
+                    removed_entities.push(removed.id);
+                    events.push(DomainEvent::ItemThrowSlew {
+                        source_kind_id: source_kind_id.clone(),
+                        target_kind_id,
+                        damage,
+                        trace: trace.clone(),
+                    });
+                }
+            }
+        } else {
+            events.push(DomainEvent::ItemThrown {
+                target_kind_id: source_kind_id,
+                trace,
+            });
+        }
+        thrown.location = ItemLocation::Ground(landing);
+        self.items.push(thrown);
+        changed.insert(landing);
+        Ok(())
+    }
+
+    fn take_inventory_item(&mut self, item_id: &str) -> Result<Option<ItemInstance>, CoreError> {
+        let Some(index) = self.items.iter().position(|item| {
+            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
+        }) else {
+            return Ok(None);
+        };
         if self.items[index].quantity == 1 {
-            self.items[index].location = ItemLocation::Ground(landing);
+            Ok(Some(self.items.remove(index)))
         } else {
             let id = self.allocate_item_instance_id()?;
             self.items[index].quantity -= 1;
-            self.items.push(ItemInstance {
+            Ok(Some(ItemInstance {
                 id,
-                kind_id: target_kind_id.clone(),
+                kind_id: self.items[index].kind_id.clone(),
                 quantity: 1,
-                location: ItemLocation::Ground(landing),
-            });
+                location: ItemLocation::Inventory,
+            }))
         }
-        changed.insert(landing);
-        events.push(DomainEvent::ItemThrown {
-            target_kind_id,
-            trace,
-        });
-        Ok(())
     }
 
     fn player_is_dead(&self) -> bool {
@@ -2233,6 +2384,7 @@ struct ActorDerivedStats {
     melee_attacks: DerivedStat,
     melee_damage_bonus: DerivedStat,
     ranged_skill: DerivedStat,
+    throwing_skill: DerivedStat,
 }
 
 #[derive(Clone)]
@@ -2264,6 +2416,19 @@ struct ResolvedProjectileProfile {
     ammo_kind_id: String,
     ammo_break_chance_percent: u8,
     source_item_id: String,
+}
+
+#[derive(Clone)]
+struct ResolvedThrowProfile {
+    to_hit: i32,
+    to_damage: i32,
+    damage_dice: u16,
+    damage_sides: u16,
+    damage_type: DamageType,
+}
+
+fn throw_range(weight_tenths_pound: u16) -> u16 {
+    (BASE_THROW_RANGE_BUDGET / weight_tenths_pound.max(1)).clamp(MIN_THROW_RANGE, MAX_THROW_RANGE)
 }
 
 fn projectile_target_spec(range: u16) -> TargetSpecDto {
@@ -3664,6 +3829,88 @@ mod tests {
                 && item.kind_id == "demo.item.luminous-shard"
                 && item.quantity == 1
                 && item.position == Position { x: 10, y: 3 }
+        }));
+    }
+
+    #[test]
+    fn throwable_profile_uses_weight_range_and_resolves_damage() {
+        let mut game = Game::new(0);
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo throwable stack should exist")
+            .location = ItemLocation::Inventory;
+        game.entities[0].position = Position { x: 6, y: 3 };
+        game.entities[0].hp = 10;
+        let inventory = game.snapshot().inventory;
+        let shard = inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("throwable should be projected into inventory");
+        assert_eq!(shard.weight_tenths_pound, 10);
+        assert_eq!(
+            shard
+                .throw_profile
+                .as_ref()
+                .expect("shard should expose its throw profile")
+                .range,
+            5
+        );
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Throw {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    direction: Direction::East,
+                },
+            ))
+            .expect("throw attack should execute");
+
+        let hit = update
+            .events
+            .iter()
+            .find(|event| event.kind == "combat.throw-hit")
+            .expect("throw hit should be emitted");
+        assert_eq!(hit.args["source"], "demo.item.luminous-shard");
+        assert_eq!(hit.args["target"], "demo.actor.ember-mote");
+        assert_eq!(hit.args["damage"], "1");
+        assert_eq!(update.entities[0].hp, 9);
+        assert_eq!(update.inventory[0].quantity, 4);
+        assert!(update.items.iter().any(|item| {
+            item.id == "generated.item.1"
+                && item.kind_id == "demo.item.luminous-shard"
+                && item.position == Position { x: 6, y: 3 }
+        }));
+    }
+
+    #[test]
+    fn missed_throw_still_lands_at_the_collided_target() {
+        let mut game = Game::new(3);
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo throwable stack should exist")
+            .location = ItemLocation::Inventory;
+        game.entities[0].position = Position { x: 6, y: 3 };
+        game.entities[0].hp = 10;
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Throw {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    direction: Direction::East,
+                },
+            ))
+            .expect("missed throw should execute");
+
+        assert_eq!(update.events[0].kind, "combat.throw-miss");
+        assert_eq!(update.entities[0].hp, 10);
+        assert!(update.items.iter().any(|item| {
+            item.kind_id == "demo.item.luminous-shard" && item.position == Position { x: 6, y: 3 }
         }));
     }
 
