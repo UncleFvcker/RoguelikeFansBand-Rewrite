@@ -445,6 +445,22 @@
         {
           "type": "object",
           "properties": {
+            "target": {
+              "$ref": "#/$defs/TargetSelection"
+            },
+            "type": {
+              "type": "string",
+              "const": "fire-target"
+            }
+          },
+          "required": [
+            "type",
+            "target"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -1124,6 +1140,14 @@
         "sourceItemId": {
           "type": "string"
         },
+        "targetSpec": {
+          "$ref": "#/$defs/TargetSpecDto",
+          "default": {
+            "modes": [],
+            "range": 0,
+            "requiresLineOfEffect": false
+          }
+        },
         "toDamage": {
           "type": "integer",
           "format": "int32"
@@ -1237,6 +1261,91 @@
         "kindId",
         "intensity",
         "remainingTicks"
+      ]
+    },
+    "TargetModeDto": {
+      "type": "string",
+      "enum": [
+        "direction",
+        "position",
+        "entity"
+      ]
+    },
+    "TargetSelection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "direction"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "position"
+            }
+          },
+          "required": [
+            "type",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "entity"
+            }
+          },
+          "required": [
+            "type",
+            "entityId"
+          ]
+        }
+      ]
+    },
+    "TargetSpecDto": {
+      "type": "object",
+      "properties": {
+        "modes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TargetModeDto"
+          }
+        },
+        "range": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "requiresLineOfEffect": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "modes",
+        "range",
+        "requiresLineOfEffect"
       ]
     },
     "VisibilityState": {

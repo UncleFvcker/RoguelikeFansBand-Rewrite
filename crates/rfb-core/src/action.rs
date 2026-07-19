@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::{Direction, GameCommand};
+use rfb_protocol::{Direction, GameCommand, TargetSelection};
 
 use crate::scheduler::STANDARD_ACTION_COST;
 
@@ -16,6 +16,9 @@ pub(crate) enum GameAction {
     },
     Fire {
         direction: Direction,
+    },
+    FireTarget {
+        target: TargetSelection,
     },
     Throw {
         item_id: String,
@@ -47,6 +50,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Equip { item_id } => Self::Equip { item_id },
             GameCommand::Fire { direction } => Self::Fire { direction },
+            GameCommand::FireTarget { target } => Self::FireTarget { target },
             GameCommand::Throw { item_id, direction } => Self::Throw { item_id, direction },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },

@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "id": "item.unequip.charm",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": []
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "equip",
+        "itemId": "demo.item.echo-charm.1"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "unequip",
+        "slotId": "charm"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": false,
+  "assertions": {
+    "finalState": {
+      "revision": 6,
+      "turn": 6,
+      "worldTick": 60,
+      "lastCommandSeq": 6,
+      "playerPosition": {
+        "x": 5,
+        "y": 3
+      },
+      "playerHp": 4,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 6,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 3,
+      "inventoryStackCount": 2,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "374b5a1b0ccd0675e6c972da3974e8617ff8fadbd8ba36ada3a30f5a79908d17"
+    },
+    "events": [
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "5",
+          "target": "demo.item.luminous-shard"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "3",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 3,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "1",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "item.equip",
+        "messageKey": "item-equip-success",
+        "args": {
+          "slot": "charm",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "1",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "item.unequip",
+        "messageKey": "item-unequip-success",
+        "args": {
+          "slot": "charm",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "fire",
+            "resistance": "normal"
+          }
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": null
+  }
+}

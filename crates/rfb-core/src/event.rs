@@ -56,6 +56,7 @@ pub(crate) enum DomainEvent {
     ProjectileAmmoUnavailable {
         ammo_kind_id: String,
     },
+    ProjectileTargetUnavailable,
     ProjectileLanded {
         trace: ProjectileTrace,
     },
@@ -204,6 +205,10 @@ impl DomainEvent {
                 "combat.projectile-ammo-unavailable",
                 "projectile-ammo-unavailable",
                 [("target", ammo_kind_id)],
+            ),
+            Self::ProjectileTargetUnavailable => dto_without_args(
+                "combat.projectile-target-unavailable",
+                "projectile-target-unavailable",
             ),
             Self::ProjectileLanded { trace } => with_trace(
                 dto_without_args("combat.projectile-landed", "projectile-landed"),

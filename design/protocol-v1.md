@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.15、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.16、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.15";
+  protocolVersion: "1.16";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -79,6 +79,8 @@ interface ProtocolEnvelope<T> {
 协议 1.14 新增方向 `Fire` 命令、`ProjectileProfileDto` 和 `ProjectileTraceDto`。射击事件明确输出起点、落点和逐格轨迹，并继续复用结构化伤害 outcome。当前规则边界见 [Contract v14](contract-v14-projectile-foundation.md)。
 
 协议 1.15 新增 `Throw { itemId, direction }`、发射器 `ammoKindId` 与显式 `landing`。射击弹药扣减和投掷实例移动都在核心中原子执行。当前规则边界见 [Contract v15](contract-v15-ammunition-throwing.md)。
+
+协议 1.16 新增 `TargetSpecDto`、`TargetSelection` 和 `FireTarget`。核心声明方向/格子/实体选择模式与射程，非八方向格子或实体目标使用确定性整数路径。当前规则边界见 [Contract v16](contract-v16-target-selection.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
@@ -103,7 +105,7 @@ interface GameCoreV1 {
 
 `GameCommandEnvelope` 至少包含 `commandSeq`、客户端已知的 `expectedRevision` 和一个具体命令。核心只在 revision 合法时执行会改变规则状态的命令。
 
-当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
+当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
 

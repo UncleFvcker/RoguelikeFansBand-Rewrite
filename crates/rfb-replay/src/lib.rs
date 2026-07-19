@@ -563,6 +563,24 @@ mod tests {
     }
 
     #[test]
+    fn target_selection_round_trips_through_replay() {
+        let initial = Game::new(42);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::FireTarget {
+                target: rfb_protocol::TargetSelection::Position {
+                    position: rfb_protocol::Position { x: 4, y: 3 },
+                },
+            })
+            .expect("targeted fire command should execute");
+        let (final_game, replay) = recorder.finish();
+
+        let verification = verify(&replay, initial).expect("target selection replay should verify");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
     fn equipment_and_batch_drop_round_trip_through_replay() {
         let initial = Game::new(42);
         let mut recorder = ReplayRecorder::new(initial.clone());

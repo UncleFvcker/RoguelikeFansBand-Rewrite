@@ -882,6 +882,8 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-projectile-ammo-unavailable", {
         target: contentName(event.args.target),
       });
+    case "projectile-target-unavailable":
+      return localization.format("message-projectile-target-unavailable");
     case "projectile-landed":
       return localization.format("message-projectile-landed");
     case "projectile-miss":

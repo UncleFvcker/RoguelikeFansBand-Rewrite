@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "save.round-trip.initial-state",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0x0123456789abcdef",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": []
+  },
+  "commands": [],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 0,
+      "turn": 0,
+      "worldTick": 0,
+      "lastCommandSeq": 0,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 8,
+            "y": 5
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "e094b35b7ce24d5998432f1198bf0c7be266de579bee5c63f2717d51c912286f"
+    },
+    "events": [],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "e094b35b7ce24d5998432f1198bf0c7be266de579bee5c63f2717d51c912286f"
+  }
+}

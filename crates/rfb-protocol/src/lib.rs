@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.15";
+pub const PROTOCOL_VERSION: &str = "1.16";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -69,6 +69,9 @@ pub enum GameCommand {
     },
     Fire {
         direction: Direction,
+    },
+    FireTarget {
+        target: TargetSelection,
     },
     Move {
         direction: Direction,
@@ -146,6 +149,37 @@ pub struct MeleeRoutineDto {
     pub blows: Vec<MeleeBlowDto>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum TargetModeDto {
+    Direction,
+    Position,
+    Entity,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TargetSpecDto {
+    pub modes: Vec<TargetModeDto>,
+    pub range: u16,
+    pub requires_line_of_effect: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum TargetSelection {
+    Direction { direction: Direction },
+    Position { position: Position },
+    Entity { entity_id: String },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -156,6 +190,8 @@ pub struct ProjectileProfileDto {
     pub damage: DamageDiceDto,
     #[serde(default)]
     pub ammo_kind_id: String,
+    #[serde(default)]
+    pub target_spec: TargetSpecDto,
     pub source_item_id: String,
 }
 
@@ -512,6 +548,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(AttackProfileDto);
     push_declaration!(MeleeBlowDto);
     push_declaration!(MeleeRoutineDto);
+    push_declaration!(TargetModeDto);
+    push_declaration!(TargetSpecDto);
+    push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);
     push_declaration!(ProjectileTraceDto);
     push_declaration!(Position);
@@ -775,6 +814,11 @@ mod tests {
             },
             GameCommand::Fire {
                 direction: Direction::East,
+            },
+            GameCommand::FireTarget {
+                target: TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
             },
             GameCommand::Throw {
                 item_id: "demo.item.luminous-shard.1".to_owned(),

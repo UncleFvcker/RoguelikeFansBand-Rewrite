@@ -37,6 +37,7 @@ message-combat-monster-hit-immune = 你免疫了{ $source }的{ $type }攻击。
 message-combat-player-death = 你倒在了{ $source }的攻击下。
 message-projectile-unavailable = 你没有装备发射器。
 message-projectile-ammo-unavailable = 你没有可供发射的{ $target }。
+message-projectile-target-unavailable = 这次射击无法瞄准该目标。
 message-projectile-landed = 你的射击没有命中目标。
 message-projectile-miss = 你的射击没有击中{ $target }。
 message-projectile-hit = 你的射击击中了{ $target }，造成 { $damage } 点伤害。

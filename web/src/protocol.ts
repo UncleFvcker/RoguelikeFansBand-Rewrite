@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -17,7 +17,13 @@ export type MeleeBlowDto = { methodId: string, toHit: number, damage: DamageDice
 
 export type MeleeRoutineDto = { blows: Array<MeleeBlowDto>, };
 
-export type ProjectileProfileDto = { range: number, toHit: number, toDamage: number, damage: DamageDiceDto, ammoKindId: string, sourceItemId: string, };
+export type TargetModeDto = "direction" | "position" | "entity";
+
+export type TargetSpecDto = { modes: Array<TargetModeDto>, range: number, requiresLineOfEffect: boolean, };
+
+export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, };
+
+export type ProjectileProfileDto = { range: number, toHit: number, toDamage: number, damage: DamageDiceDto, ammoKindId: string, targetSpec: TargetSpecDto, sourceItemId: string, };
 
 export type ProjectileTraceDto = { origin: Position, impact: Position, landing: Position, traversed: Array<Position>, };
 

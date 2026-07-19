@@ -41,8 +41,8 @@ use rfb_protocol::{
     DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
     GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto,
     MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position,
-    ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TerrainSaveDto,
-    VisibilityState,
+    ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
+    TargetSelection, TargetSpecDto, TerrainSaveDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -444,7 +444,13 @@ impl Game {
                 }
             }
             GameAction::Fire { direction } => self.resolve_player_projectile(
-                direction,
+                TargetSelection::Direction { direction },
+                &mut events,
+                &mut changed,
+                &mut removed_entities,
+            ),
+            GameAction::FireTarget { target } => self.resolve_player_projectile(
+                target,
                 &mut events,
                 &mut changed,
                 &mut removed_entities,
@@ -987,6 +993,7 @@ impl Game {
                     damage_type: DamageType::from(profile.damage_type).into(),
                 },
                 ammo_kind_id: profile.ammo_kind_id.clone(),
+                target_spec: projectile_target_spec(profile.range),
                 source_item_id: item.id.clone(),
             })
     }
@@ -1230,7 +1237,7 @@ impl Game {
 
     fn resolve_player_projectile(
         &mut self,
-        direction: rfb_protocol::Direction,
+        target: TargetSelection,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1239,13 +1246,17 @@ impl Game {
             events.push(DomainEvent::ProjectileUnavailable);
             return;
         };
+        let Some(path) = self.projectile_path(&target, profile.range) else {
+            events.push(DomainEvent::ProjectileTargetUnavailable);
+            return;
+        };
         if !self.consume_inventory_item_kind(&profile.ammo_kind_id) {
             events.push(DomainEvent::ProjectileAmmoUnavailable {
                 ammo_kind_id: profile.ammo_kind_id,
             });
             return;
         }
-        let (trace, target_index) = self.trace_projectile(direction, profile.range);
+        let (trace, target_index) = self.trace_projectile_path(path);
         let Some(index) = target_index else {
             events.push(DomainEvent::ProjectileLanded { trace });
             return;
@@ -1308,22 +1319,74 @@ impl Game {
         }
     }
 
-    fn trace_projectile(
-        &self,
-        direction: rfb_protocol::Direction,
-        range: u16,
-    ) -> (ProjectileTrace, Option<usize>) {
+    fn projectile_path(&self, target: &TargetSelection, range: u16) -> Option<Vec<Position>> {
         let origin = self.player.position;
-        let (dx, dy) = direction.delta();
+        match target {
+            TargetSelection::Direction { direction } => {
+                let (dx, dy) = direction.delta();
+                Some(
+                    (1..=range)
+                        .map(|step| Position {
+                            x: origin.x + dx * i32::from(step),
+                            y: origin.y + dy * i32::from(step),
+                        })
+                        .collect(),
+                )
+            }
+            TargetSelection::Position { position } => {
+                self.targeted_projectile_path(*position, range)
+            }
+            TargetSelection::Entity { entity_id } => {
+                let position = self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == *entity_id)
+                    .map(|entity| entity.position)?;
+                self.targeted_projectile_path(position, range)
+            }
+        }
+    }
+
+    fn targeted_projectile_path(&self, target: Position, range: u16) -> Option<Vec<Position>> {
+        let origin = self.player.position;
+        if target == origin
+            || self.index(target).is_none()
+            || !self.is_visible(target)
+            || origin.x.abs_diff(target.x).max(origin.y.abs_diff(target.y)) > u32::from(range)
+        {
+            return None;
+        }
+
+        let mut x = origin.x;
+        let mut y = origin.y;
+        let dx = (target.x - x).abs();
+        let sx = if x < target.x { 1 } else { -1 };
+        let dy = -(target.y - y).abs();
+        let sy = if y < target.y { 1 } else { -1 };
+        let mut error = dx + dy;
+        let mut path = Vec::new();
+        while x != target.x || y != target.y {
+            let doubled = error.saturating_mul(2);
+            if doubled >= dy {
+                error += dy;
+                x += sx;
+            }
+            if doubled <= dx {
+                error += dx;
+                y += sy;
+            }
+            path.push(Position { x, y });
+        }
+        Some(path)
+    }
+
+    fn trace_projectile_path(&self, path: Vec<Position>) -> (ProjectileTrace, Option<usize>) {
+        let origin = self.player.position;
         let mut impact = origin;
         let mut landing = origin;
         let mut traversed = Vec::new();
         let mut target_index = None;
-        for step in 1..=range {
-            let position = Position {
-                x: origin.x + dx * i32::from(step),
-                y: origin.y + dy * i32::from(step),
-            };
+        for position in path {
             impact = position;
             if self.index(position).is_none() || !self.is_walkable(position) {
                 break;
@@ -1386,7 +1449,10 @@ impl Game {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
-        let (trace, _) = self.trace_projectile(direction, THROW_RANGE);
+        let path = self
+            .projectile_path(&TargetSelection::Direction { direction }, THROW_RANGE)
+            .expect("direction targeting must always produce a path");
+        let (trace, _) = self.trace_projectile_path(path);
         let landing = trace.landing;
         let target_kind_id = self.items[index].kind_id.clone();
         if self.items[index].quantity == 1 {
@@ -2148,6 +2214,18 @@ struct ResolvedProjectileProfile {
     source_item_id: String,
 }
 
+fn projectile_target_spec(range: u16) -> TargetSpecDto {
+    TargetSpecDto {
+        modes: vec![
+            TargetModeDto::Direction,
+            TargetModeDto::Position,
+            TargetModeDto::Entity,
+        ],
+        range,
+        requires_line_of_effect: true,
+    }
+}
+
 impl ResolvedProjectileProfile {
     fn to_dto(&self) -> ProjectileProfileDto {
         ProjectileProfileDto {
@@ -2160,6 +2238,7 @@ impl ResolvedProjectileProfile {
                 damage_type: self.damage_type.into(),
             },
             ammo_kind_id: self.ammo_kind_id.clone(),
+            target_spec: projectile_target_spec(self.range),
             source_item_id: self.source_item_id.clone(),
         }
     }
@@ -3296,6 +3375,116 @@ mod tests {
                 .iter()
                 .any(|item| { item.kind_id == "demo.item.resonance-pellet" && item.quantity == 6 })
         );
+    }
+
+    #[test]
+    fn entity_targeting_uses_a_stable_off_axis_line() {
+        let mut game = Game::new(0);
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.resonance-sling")
+            .expect("demo launcher should exist")
+            .location = ItemLocation::Equipped {
+            slot_id: "launcher".to_owned(),
+        };
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.resonance-pellet")
+            .expect("demo ammunition should exist")
+            .location = ItemLocation::Inventory;
+        game.entities[0].position = Position { x: 9, y: 5 };
+        game.entities[0].hp = 10;
+        let expected_path = vec![
+            Position { x: 4, y: 3 },
+            Position { x: 5, y: 4 },
+            Position { x: 6, y: 4 },
+            Position { x: 7, y: 4 },
+            Position { x: 8, y: 5 },
+            Position { x: 9, y: 5 },
+        ];
+        assert_eq!(
+            game.projectile_path(
+                &TargetSelection::Position {
+                    position: Position { x: 9, y: 5 },
+                },
+                6,
+            ),
+            Some(expected_path.clone())
+        );
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::FireTarget {
+                    target: TargetSelection::Entity {
+                        entity_id: "demo.monster.ember-mote.1".to_owned(),
+                    },
+                },
+            ))
+            .expect("targeted projectile action should execute");
+
+        let projectile = update
+            .events
+            .iter()
+            .find(|event| event.kind == "combat.projectile-hit")
+            .expect("targeted projectile should hit");
+        let trace = projectile.trace.as_ref().expect("trace should exist");
+        assert_eq!(trace.impact, Position { x: 9, y: 5 });
+        assert_eq!(trace.traversed, expected_path);
+        let target_spec = update
+            .player
+            .projectile_profile
+            .as_ref()
+            .expect("equipped launcher profile should exist")
+            .target_spec
+            .clone();
+        assert_eq!(target_spec.range, 6);
+        assert_eq!(
+            target_spec.modes,
+            [
+                TargetModeDto::Direction,
+                TargetModeDto::Position,
+                TargetModeDto::Entity,
+            ]
+        );
+    }
+
+    #[test]
+    fn invalid_entity_target_preserves_ammunition_and_rng() {
+        let mut game = Game::new(0);
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.resonance-sling")
+            .expect("demo launcher should exist")
+            .location = ItemLocation::Equipped {
+            slot_id: "launcher".to_owned(),
+        };
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.resonance-pellet")
+            .expect("demo ammunition should exist")
+            .location = ItemLocation::Inventory;
+        let rng_draws = game.rng_draw_counter();
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::FireTarget {
+                    target: TargetSelection::Entity {
+                        entity_id: "demo.monster.missing.1".to_owned(),
+                    },
+                },
+            ))
+            .expect("invalid target should produce a deterministic event");
+
+        assert_eq!(
+            update.events[0].kind,
+            "combat.projectile-target-unavailable"
+        );
+        assert_eq!(game.rng_draw_counter(), rng_draws);
+        assert_eq!(update.inventory[0].quantity, 6);
     }
 
     #[test]

@@ -126,6 +126,7 @@ export const MESSAGE_KEYS = [
   "message-combat-player-death",
   "message-projectile-unavailable",
   "message-projectile-ammo-unavailable",
+  "message-projectile-target-unavailable",
   "message-projectile-landed",
   "message-projectile-miss",
   "message-projectile-hit",

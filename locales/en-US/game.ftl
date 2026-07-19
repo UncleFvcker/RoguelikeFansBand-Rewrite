@@ -37,6 +37,7 @@ message-combat-monster-hit-immune = You are immune to { $source }'s { $type } at
 message-combat-player-death = You fall to { $source }.
 message-projectile-unavailable = You have no launcher equipped.
 message-projectile-ammo-unavailable = You have no { $target } to fire.
+message-projectile-target-unavailable = That target cannot be reached by this shot.
 message-projectile-landed = Your shot reaches no target.
 message-projectile-miss = Your shot misses { $target }.
 message-projectile-hit = Your shot hits { $target } for { $damage } damage.
