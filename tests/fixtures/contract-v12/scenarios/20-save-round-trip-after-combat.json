@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "id": "save.round-trip.after-combat",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": []
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south-east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south-east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 7,
+      "turn": 7,
+      "worldTick": 70,
+      "lastCommandSeq": 7,
+      "playerPosition": {
+        "x": 7,
+        "y": 6
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 0,
+      "entities": [],
+      "groundItemCount": 3,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "0999f5a5db79cb371734882ff54e6849d379a00b37cf310037be2ecdc732e89e"
+    },
+    "events": [
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "2",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.ember-mote"
+        }
+      },
+      {
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
+        "args": {
+          "damage": "2",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "combat.slay",
+        "messageKey": "combat-player-slay",
+        "args": {
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "death",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 5
+      },
+      {
+        "x": 6,
+        "y": 5
+      },
+      {
+        "x": 7,
+        "y": 6
+      }
+    ],
+    "removedEntities": [
+      "demo.monster.ember-mote.1"
+    ],
+    "errors": [],
+    "saveRoundTripStateHash": "0999f5a5db79cb371734882ff54e6849d379a00b37cf310037be2ecdc732e89e"
+  }
+}

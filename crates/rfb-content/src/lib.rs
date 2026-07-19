@@ -134,6 +134,19 @@ pub struct StatModifiers {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AttackProfileDefinition {
+    pub attacks: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -147,6 +160,8 @@ pub struct ItemDefinition {
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiers,
+    #[serde(default)]
+    pub melee_profile: Option<AttackProfileDefinition>,
     pub tags: Vec<String>,
 }
 
@@ -590,6 +605,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || (item.equipment_slot.is_none() && item.modifiers != StatModifiers::default())
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
+        }
+        if let Some(profile) = &item.melee_profile
+            && (item.max_stack != 1
+                || item.equipment_slot.as_deref() != Some("weapon")
+                || profile.attacks == 0
+                || profile.attacks > 8
+                || profile.to_hit < -1_000_000
+                || profile.to_hit > 1_000_000
+                || profile.to_damage < -1_000_000
+                || profile.to_damage > 1_000_000
+                || profile.damage_dice == 0
+                || profile.damage_dice > 100
+                || profile.damage_sides == 0
+                || profile.damage_sides > 10_000)
+        {
+            return Err(ContentError::InvalidAttackProfile(item.id.clone()));
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
@@ -1169,6 +1200,8 @@ pub enum ContentError {
     InvalidEquipmentSlot(String),
     #[error("item stat modifiers are invalid or require an equipment slot: {0}")]
     InvalidItemModifiers(String),
+    #[error("item attack profile is invalid or requires the weapon slot: {0}")]
+    InvalidAttackProfile(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1237,7 +1270,7 @@ mod tests {
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
         assert_eq!(first.content.actors.len(), 6);
-        assert_eq!(first.content.items.len(), 2);
+        assert_eq!(first.content.items.len(), 3);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -1248,7 +1281,14 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.7.0");
+        assert_eq!(catalog.pack_version(), "1.8.0");
+        assert_eq!(
+            catalog
+                .item("demo.item.echo-blade")
+                .and_then(|item| item.melee_profile.as_ref())
+                .map(|profile| (profile.attacks, profile.to_hit, profile.to_damage)),
+            Some((2, 10, 1))
+        );
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1353,7 +1393,7 @@ mod tests {
             Err(ContentError::InvalidEquipmentSlot(_))
         ));
 
-        let mut invalid = artifact.content;
+        let mut invalid = artifact.content.clone();
         let shard = invalid
             .items
             .iter_mut()
@@ -1363,6 +1403,18 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemModifiers(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let blade = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.echo-blade")
+            .expect("fixture should contain the blade");
+        blade.equipment_slot = Some("charm".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidAttackProfile(_))
         ));
     }
 

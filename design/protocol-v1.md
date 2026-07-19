@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.11、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.12、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.11";
+  protocolVersion: "1.12";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.11 延续 1.10 的状态、抗性和 `DamageDiceDto.damageType`，并为伤害/死亡事件增加可选 `GameEventOutcomeDto`。`DamageResolutionDto` 明确输出原始伤害、物理减伤、抗性调整、最终伤害、伤害类型和本次使用的抗性等级；非伤害事件省略 outcome。完整真实抗性 profile 仍不向普通 UI 暴露。当前规则边界见 [Contract v11](contract-v11-structured-damage-events.md)。
+协议 1.12 新增 `AttackProfileDto`，输出攻击次数、命中/伤害修正、伤害骰与来源装备实例；旧 `meleeDamage` 暂时保留兼容。伤害/死亡事件继续携带 1.11 建立的结构化 outcome。当前规则边界见 [Contract v12](contract-v12-weapon-attack-profile.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

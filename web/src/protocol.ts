@@ -11,6 +11,8 @@ export type StatModifiersDto = { attack: number, defense: number, maxHp: number,
 
 export type DamageDiceDto = { dice: number, sides: number, damageType: DamageTypeDto, };
 
+export type AttackProfileDto = { attacks: number, toHit: number, toDamage: number, damage: DamageDiceDto, sourceItemId?: string | null, };
+
 export type Position = { x: number, y: number, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, };
@@ -35,15 +37,15 @@ export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResoluti
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, statuses: Array<StatusDto>, };
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, statuses: Array<StatusDto>, };
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 
-export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, modifiers: StatModifiersDto, };
+export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, };
 
-export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, };
+export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, };
 

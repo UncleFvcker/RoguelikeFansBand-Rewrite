@@ -37,17 +37,17 @@ use crate::{
 };
 use rfb_content::{ActorRole, ContentCatalog};
 use rfb_protocol::{
-    ActorSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, EntityDto,
-    EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
-    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto, PROTOCOL_VERSION, PlayerDto,
-    PlayerSaveDto, Position, RngSaveDto, SavePayloadV1, StatModifiersDto, TerrainSaveDto,
-    VisibilityState,
+    ActorSaveDto, AttackProfileDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
+    DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
+    GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto,
+    PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, RngSaveDto, SavePayloadV1,
+    StatModifiersDto, TerrainSaveDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 7] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 8] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -55,9 +55,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 7] = [
     "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b",
     "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69",
     "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53",
+    "12ba3295dfa8a9884bc7464a78b7dbb9cded01409ff22777db02df85d1aabed7",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "12ba3295dfa8a9884bc7464a78b7dbb9cded01409ff22777db02df85d1aabed7";
+    "dc371da0d48375a811a6421f1ccaa2e1310daa7aab856f852388f7da1a04c2b5";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -588,6 +589,8 @@ impl Game {
 
     fn player_dto(&self) -> PlayerDto {
         let stats = self.player_derived_stats();
+        let melee_profile = self.player_melee_profile(&stats);
+        let melee_profile_dto = melee_profile.to_dto();
         let equipment_modifiers = self.equipment_modifiers();
         let definition = self
             .content
@@ -609,10 +612,11 @@ impl Game {
             melee_skill: stats.melee_skill.value,
             armor_class: stats.armor_class.value,
             melee_damage: DamageDiceDto {
-                dice: definition.damage_dice,
-                sides: definition.damage_sides,
-                damage_type: DamageType::from(definition.damage_type).into(),
+                dice: melee_profile.damage_dice,
+                sides: melee_profile.damage_sides,
+                damage_type: melee_profile.damage_type.into(),
             },
+            melee_profile: melee_profile_dto,
             is_dead: self.player_is_dead(),
             equipment_modifiers,
             statuses: self
@@ -651,6 +655,17 @@ impl Game {
                         dice: definition.damage_dice,
                         sides: definition.damage_sides,
                         damage_type: DamageType::from(definition.damage_type).into(),
+                    },
+                    melee_profile: AttackProfileDto {
+                        attacks: 1,
+                        to_hit: 0,
+                        to_damage: 0,
+                        damage: DamageDiceDto {
+                            dice: definition.damage_dice,
+                            sides: definition.damage_sides,
+                            damage_type: DamageType::from(definition.damage_type).into(),
+                        },
+                        source_item_id: None,
                     },
                     statuses: entity
                         .statuses
@@ -701,6 +716,7 @@ impl Game {
                         .item(&item.kind_id)
                         .and_then(|definition| definition.equipment_slot.clone()),
                     modifiers: self.item_modifiers(&item.kind_id),
+                    melee_profile: self.item_melee_profile(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -722,6 +738,7 @@ impl Game {
                     quantity: item.quantity,
                     slot_id: slot_id.clone(),
                     modifiers: self.item_modifiers(&item.kind_id),
+                    melee_profile: self.item_melee_profile(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -919,6 +936,72 @@ impl Game {
         self.actor_derived_stats(&self.player, definition, true)
     }
 
+    fn item_melee_profile(&self, item: &ItemInstance) -> Option<AttackProfileDto> {
+        self.content
+            .item(&item.kind_id)
+            .and_then(|definition| definition.melee_profile.as_ref())
+            .map(|profile| AttackProfileDto {
+                attacks: profile.attacks,
+                to_hit: profile.to_hit,
+                to_damage: profile.to_damage,
+                damage: DamageDiceDto {
+                    dice: profile.damage_dice,
+                    sides: profile.damage_sides,
+                    damage_type: DamageType::from(profile.damage_type).into(),
+                },
+                source_item_id: Some(item.id.clone()),
+            })
+    }
+
+    fn player_melee_profile(&self, stats: &ActorDerivedStats) -> ResolvedAttackProfile {
+        let definition = self
+            .content
+            .actor(&self.player.kind_id)
+            .expect("player actor definition must remain available");
+        let equipped_weapon = self.items.iter().find_map(|item| {
+            let ItemLocation::Equipped { slot_id } = &item.location else {
+                return None;
+            };
+            if slot_id != "weapon" {
+                return None;
+            }
+            self.content
+                .item(&item.kind_id)
+                .and_then(|definition| definition.melee_profile.as_ref())
+                .map(|profile| (item.id.clone(), profile))
+        });
+        let (source_item_id, dice, sides, damage_type, to_hit) = equipped_weapon.map_or_else(
+            || {
+                (
+                    None,
+                    definition.damage_dice,
+                    definition.damage_sides,
+                    definition.damage_type,
+                    0,
+                )
+            },
+            |(item_id, profile)| {
+                (
+                    Some(item_id),
+                    profile.damage_dice,
+                    profile.damage_sides,
+                    profile.damage_type,
+                    profile.to_hit,
+                )
+            },
+        );
+        ResolvedAttackProfile {
+            attacks: u16::try_from(stats.melee_attacks.value)
+                .expect("derived melee attack count must fit u16"),
+            to_hit,
+            to_damage: stats.melee_damage_bonus.value,
+            damage_dice: dice,
+            damage_sides: sides,
+            damage_type: DamageType::from(damage_type),
+            source_item_id,
+        }
+    }
+
     fn actor_derived_stats(
         &self,
         actor: &Actor,
@@ -962,6 +1045,8 @@ impl Game {
             base_source,
             rating_to_armor_class(definition.defense),
         );
+        pipeline.add(StatKind::MeleeAttacks, StatLayer::Base, base_source, 1);
+        pipeline.add(StatKind::MeleeDamageBonus, StatLayer::Base, base_source, 0);
 
         if include_equipment {
             for item in self
@@ -990,6 +1075,30 @@ impl Game {
                     &item.id,
                     rating_to_armor_class(modifiers.defense),
                 );
+                if let Some(profile) = self
+                    .content
+                    .item(&item.kind_id)
+                    .and_then(|definition| definition.melee_profile.as_ref())
+                {
+                    add_equipment_stat(
+                        &mut pipeline,
+                        StatKind::MeleeAttacks,
+                        &item.id,
+                        i32::from(profile.attacks).saturating_sub(1),
+                    );
+                    add_equipment_stat(
+                        &mut pipeline,
+                        StatKind::MeleeSkill,
+                        &item.id,
+                        profile.to_hit,
+                    );
+                    add_equipment_stat(
+                        &mut pipeline,
+                        StatKind::MeleeDamageBonus,
+                        &item.id,
+                        profile.to_damage,
+                    );
+                }
             }
         }
 
@@ -1032,6 +1141,8 @@ impl Game {
             speed: pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED),
             melee_skill: pipeline.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
             armor_class: pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
+            melee_attacks: pipeline.resolve(StatKind::MeleeAttacks, StatBounds::NON_NEGATIVE),
+            melee_damage_bonus: pipeline.resolve(StatKind::MeleeDamageBonus, StatBounds::UNBOUNDED),
         }
     }
 
@@ -1086,49 +1197,48 @@ impl Game {
         let target_kind = self.entities[index].kind_id.clone();
         let attacker = self.player_derived_stats();
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        if attacker.melee_skill.value <= 0
-            || !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(self.entities[index].id.clone()),
-                    ability: attacker.melee_skill,
-                    difficulty: target.armor_class,
-                },
-            )
-            .succeeded()
-        {
-            events.push(DomainEvent::PlayerMeleeMissed {
-                target_kind_id: target_kind,
-            });
-            return;
-        }
+        let profile = self.player_melee_profile(&attacker);
+        for _ in 0..profile.attacks {
+            if attacker.melee_skill.value <= 0
+                || !resolve_check(
+                    &mut self.rng,
+                    CheckContext {
+                        kind: CheckKind::MeleeHit,
+                        actor_id: self.player.id.clone(),
+                        target_id: Some(self.entities[index].id.clone()),
+                        ability: attacker.melee_skill.clone(),
+                        difficulty: target.armor_class.clone(),
+                    },
+                )
+                .succeeded()
+            {
+                events.push(DomainEvent::PlayerMeleeMissed {
+                    target_kind_id: target_kind.clone(),
+                });
+                continue;
+            }
 
-        let player_definition = self
-            .content
-            .actor(&self.player.kind_id)
-            .expect("player actor definition must remain available")
-            .clone();
-        let rolled_damage = self.roll_damage(
-            player_definition.damage_dice,
-            player_definition.damage_sides,
-        );
-        let damage_type = DamageType::from(player_definition.damage_type);
-        let resistance = self.entities[index].resistances.level(damage_type);
-        let damage = resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
-        self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-        events.push(DomainEvent::PlayerMeleeHit {
-            target_kind_id: target_kind,
-            damage,
-        });
-        if self.entities[index].hp <= 0 {
-            let removed = self.entities.remove(index);
-            removed_entities.push(removed.id);
-            events.push(DomainEvent::PlayerSlew {
-                target_kind_id: removed.kind_id,
+            let rolled_damage = self
+                .roll_damage(profile.damage_dice, profile.damage_sides)
+                .saturating_add(profile.to_damage)
+                .max(0);
+            let damage_type = profile.damage_type;
+            let resistance = self.entities[index].resistances.level(damage_type);
+            let damage = resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
+            self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
+            events.push(DomainEvent::PlayerMeleeHit {
+                target_kind_id: target_kind.clone(),
                 damage,
             });
+            if self.entities[index].hp <= 0 {
+                let removed = self.entities.remove(index);
+                removed_entities.push(removed.id);
+                events.push(DomainEvent::PlayerSlew {
+                    target_kind_id: removed.kind_id,
+                    damage,
+                });
+                break;
+            }
         }
     }
 
@@ -1729,6 +1839,35 @@ struct ActorDerivedStats {
     speed: DerivedStat,
     melee_skill: DerivedStat,
     armor_class: DerivedStat,
+    melee_attacks: DerivedStat,
+    melee_damage_bonus: DerivedStat,
+}
+
+#[derive(Clone)]
+struct ResolvedAttackProfile {
+    attacks: u16,
+    to_hit: i32,
+    to_damage: i32,
+    damage_dice: u16,
+    damage_sides: u16,
+    damage_type: DamageType,
+    source_item_id: Option<String>,
+}
+
+impl ResolvedAttackProfile {
+    fn to_dto(&self) -> AttackProfileDto {
+        AttackProfileDto {
+            attacks: self.attacks,
+            to_hit: self.to_hit,
+            to_damage: self.to_damage,
+            damage: DamageDiceDto {
+                dice: self.damage_dice,
+                sides: self.damage_sides,
+                damage_type: self.damage_type.into(),
+            },
+            source_item_id: self.source_item_id.clone(),
+        }
+    }
 }
 
 fn add_equipment_stat(
@@ -1909,7 +2048,7 @@ mod tests {
         assert_eq!(snapshot.player.defense, 1);
         assert!(snapshot.inventory.is_empty());
         assert!(snapshot.equipment.is_empty());
-        assert_eq!(snapshot.items.len(), 2);
+        assert_eq!(snapshot.items.len(), 3);
         assert_eq!(snapshot.entities[0].position, Position { x: 8, y: 5 });
         assert_eq!(snapshot.entities[0].attack, 1);
         assert_eq!(snapshot.entities[0].defense, 1);
@@ -2179,20 +2318,17 @@ mod tests {
         for previous_hash in PREVIOUS_BUILT_IN_CONTENT_HASHES {
             let mut payload = Game::new(42).to_save();
             payload.content_hash = previous_hash.to_owned();
-            payload
-                .items
-                .retain(|item| item.kind_id != "demo.item.echo-charm");
+            payload.items.retain(|item| {
+                item.kind_id != "demo.item.echo-charm" && item.kind_id != "demo.item.echo-blade"
+            });
 
             let restored = Game::from_save(payload).expect("known previous content should migrate");
             let snapshot = restored.snapshot();
             assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
             assert_eq!(snapshot.items.len(), 1);
-            assert!(
-                snapshot
-                    .items
-                    .iter()
-                    .all(|item| item.kind_id != "demo.item.echo-charm")
-            );
+            assert!(snapshot.items.iter().all(|item| {
+                item.kind_id != "demo.item.echo-charm" && item.kind_id != "demo.item.echo-blade"
+            }));
         }
     }
 
@@ -2412,7 +2548,7 @@ mod tests {
             .dispatch(command(2, 1, GameCommand::PickUp))
             .expect("pickup should execute");
 
-        assert_eq!(update.items.len(), 1);
+        assert_eq!(update.items.len(), 2);
         assert_eq!(update.inventory.len(), 1);
         assert_eq!(update.inventory[0].id, "demo.item.luminous-shard.1");
         assert_eq!(update.inventory[0].quantity, 5);
@@ -2653,6 +2789,48 @@ mod tests {
     }
 
     #[test]
+    fn equipped_weapon_profile_drives_two_stable_player_attacks() {
+        let mut game = Game::new(42);
+        let weapon = game
+            .items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.echo-blade")
+            .expect("demo weapon should exist");
+        weapon.location = ItemLocation::Equipped {
+            slot_id: "weapon".to_owned(),
+        };
+        let snapshot = game.snapshot();
+        let profile = snapshot.player.melee_profile;
+
+        assert_eq!(profile.attacks, 2);
+        assert_eq!(profile.to_hit, 10);
+        assert_eq!(profile.to_damage, 1);
+        assert_eq!(profile.damage.dice, 1);
+        assert_eq!(profile.damage.sides, 2);
+        assert_eq!(
+            profile.source_item_id.as_deref(),
+            Some("demo.item.echo-blade.1")
+        );
+        assert_eq!(snapshot.equipment[0].melee_profile, Some(profile));
+
+        let mut events = Vec::new();
+        let mut removed = Vec::new();
+        game.resolve_player_melee(0, &mut events, &mut removed);
+
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(
+                    event,
+                    DomainEvent::PlayerMeleeHit { .. } | DomainEvent::PlayerMeleeMissed { .. }
+                ))
+                .count(),
+            2
+        );
+        assert!(removed.is_empty());
+    }
+
+    #[test]
     fn dropping_multiple_selected_stacks_is_atomic_and_deterministic() {
         let mut game = Game::new(42);
         collect_both_demo_items(&mut game);
@@ -2670,11 +2848,12 @@ mod tests {
             .expect("batch drop should execute");
 
         assert!(update.inventory.is_empty());
-        assert_eq!(update.items.len(), 2);
+        assert_eq!(update.items.len(), 3);
         assert!(
             update
                 .items
                 .iter()
+                .filter(|item| item.kind_id != "demo.item.echo-blade")
                 .all(|item| item.position == Position { x: 5, y: 3 })
         );
         assert_eq!(update.changed_cells.len(), 1);

@@ -18,6 +18,7 @@
 - [Contract v9：状态、抗性与效果管线](contract-v9-status-resistance-effects.md)
 - [Contract v10：流血与内容驱动元素近战](contract-v10-bleeding-elemental-melee.md)
 - [Contract v11：结构化伤害事件、派生属性与检定底座](contract-v11-structured-damage-events.md)
+- [Contract v12：武器 AttackProfile 与玩家多段近战](contract-v12-weapon-attack-profile.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
@@ -541,12 +542,13 @@ interface SaveGame {
 - 协议 1.9、state hash Schema v9 和 contract-v9 已建立；玩家/怪物状态、玩家抗性、加速/减速派生速度、毒素 tick、过期和持续伤害死亡已进入存档/回放闭环。active baseline 共 36 个 exact fixtures，内容包继续使用 1.5.0。
 - 协议 1.10 和 contract-v10 已建立；流血周期伤害、内容驱动近战伤害类型、火焰抗性/免疫已经进入规则闭环。内容包升级到 1.6.0，state hash Schema 继续为 v9，active baseline 共 39 个 exact fixtures。
 - 协议 1.11 和 contract-v11 已建立；伤害/死亡事件携带结构化 outcome，内容包 1.7.0 为酸、电、火、冷、毒提供独立近战来源；来源可追踪的派生属性管线与结构化检定结果已接管现有装备、速度和近战命中，眩晕能力削弱与恐惧行动限制已接入。active baseline 共 47 个 exact fixtures，state hash Schema 继续为 v9。
+- 协议 1.12 和 contract-v12 已建立；内容包 1.8.0 新增回声刃及武器 `AttackProfile`，玩家多段近战按稳定顺序逐击并在死亡后立即中断。active baseline 共 48 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. contract-v12 进入完整基础战斗：建立武器 `AttackProfile`、命中/伤害修正、玩家攻击次数和怪物多 blow；远程与投掷由后续 projectile contract 承接；
+1. 继续 contract-v12：建立怪物 `MeleeRoutine` / 多 blow；远程与投掷由后续 projectile contract 承接；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

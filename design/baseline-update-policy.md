@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v11/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v10` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v12/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v11` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v11/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v12/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v11/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；背包权威状态随后建立 `contract-v3`；装备与批量丢弃建立 `contract-v4`；装备属性和稳定拆堆实例建立 `contract-v5`；基础攻击/防御和临时权威伤害公式建立 `contract-v6`；RFB 风格基础近战、受伤与死亡闭环建立 `contract-v7`；行动能量、速度、世界脉冲和怪物追踪建立 `contract-v8`；状态、抗性和毒素 tick 建立 `contract-v9`；流血与内容驱动元素近战建立 `contract-v10`；结构化伤害事件、派生属性与检定底座建立 `contract-v11`。当前规则边界见 [Contract v11](contract-v11-structured-damage-events.md)。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续依次建立背包、装备、基础战斗、行动调度、状态抗性和结构化伤害边界；武器 `AttackProfile` 与玩家多段近战建立 `contract-v12`。当前规则边界见 [Contract v12](contract-v12-weapon-attack-profile.md)。

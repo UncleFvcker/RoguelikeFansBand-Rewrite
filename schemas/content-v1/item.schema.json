@@ -1,5 +1,59 @@
 {
   "$defs": {
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
+      ],
+      "type": "string"
+    },
+    "AttackProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "attacks": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "toDamage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "attacks",
+        "toHit",
+        "toDamage",
+        "damageDice",
+        "damageSides"
+      ],
+      "type": "object"
+    },
     "StatModifiers": {
       "additionalProperties": false,
       "properties": {
@@ -55,6 +109,17 @@
       "format": "uint32",
       "minimum": 0,
       "type": "integer"
+    },
+    "meleeProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AttackProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",

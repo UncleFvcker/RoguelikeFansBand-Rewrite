@@ -1027,6 +1027,9 @@ function contentName(id: string | undefined): string {
   if (id === "demo.item.echo-charm") {
     return localization.format("item-demo-echo-charm-name");
   }
+  if (id === "demo.item.echo-blade") {
+    return localization.format("item-demo-echo-blade-name");
+  }
   if (id === "demo.actor.ember-mote") {
     return localization.format("actor-demo-ember-mote-name");
   }

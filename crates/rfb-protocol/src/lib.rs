@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.11";
+pub const PROTOCOL_VERSION: &str = "1.12";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -86,6 +86,30 @@ pub struct DamageDiceDto {
     pub sides: u16,
     #[serde(default)]
     pub damage_type: DamageTypeDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AttackProfileDto {
+    pub attacks: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage: DamageDiceDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_item_id: Option<String>,
+}
+
+impl Default for AttackProfileDto {
+    fn default() -> Self {
+        Self {
+            attacks: 1,
+            to_hit: 0,
+            to_damage: 0,
+            damage: DamageDiceDto::default(),
+            source_item_id: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -243,6 +267,8 @@ pub struct PlayerDto {
     #[serde(default)]
     pub melee_damage: DamageDiceDto,
     #[serde(default)]
+    pub melee_profile: AttackProfileDto,
+    #[serde(default)]
     pub is_dead: bool,
     #[serde(default)]
     pub equipment_modifiers: StatModifiersDto,
@@ -276,6 +302,8 @@ pub struct EntityDto {
     #[serde(default)]
     pub melee_damage: DamageDiceDto,
     #[serde(default)]
+    pub melee_profile: AttackProfileDto,
+    #[serde(default)]
     pub statuses: Vec<StatusDto>,
 }
 
@@ -300,6 +328,8 @@ pub struct InventoryItemDto {
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub melee_profile: Option<AttackProfileDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -312,6 +342,8 @@ pub struct EquipmentItemDto {
     pub slot_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub melee_profile: Option<AttackProfileDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -409,6 +441,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
     push_declaration!(DamageDiceDto);
+    push_declaration!(AttackProfileDto);
     push_declaration!(Position);
     push_declaration!(CellDto);
     push_declaration!(VisibilityState);
@@ -733,6 +766,7 @@ mod tests {
                     sides: 2,
                     damage_type: DamageTypeDto::Physical,
                 },
+                melee_profile: AttackProfileDto::default(),
                 is_dead: false,
                 equipment_modifiers: StatModifiersDto {
                     attack: 1,
@@ -759,6 +793,7 @@ mod tests {
                     sides: 2,
                     damage_type: DamageTypeDto::Physical,
                 },
+                melee_profile: AttackProfileDto::default(),
                 statuses: Vec::new(),
             }],
             items: vec![ItemDto {
@@ -777,6 +812,7 @@ mod tests {
                     defense: 1,
                     max_hp: 4,
                 },
+                melee_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
                 id: "demo.item.equipment.1".to_owned(),
@@ -788,6 +824,7 @@ mod tests {
                     defense: 1,
                     max_hp: 4,
                 },
+                melee_profile: None,
             }],
             next_item_instance_serial: 4,
             explored: vec![true],

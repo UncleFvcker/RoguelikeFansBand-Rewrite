@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.11 / contract-v11
+状态：长期规则实现路线；当前基线为协议 1.12 / contract-v12
 
 ## 1. 目的与边界
 
@@ -107,7 +107,7 @@ flowchart TD
 | 六维属性 | 力量、智力、智慧、敏捷、体质、魅力及损伤/恢复 | 未建立 | `AttributeSet` 保存自然值；装备、状态和形态仅提供 modifier，不覆盖基础值 |
 | 生命/法力等资源 | HP、SP、生命倍率、职业特殊资源 | 部分建立 | 通用 `ResourcePool`，核心内置 HP/MP；怒气、专注、鲜血等通过稳定资源 ID 扩展 |
 | 技能 | 近战、射击、投掷、潜行、感知、搜索、解除、设备等 | 未建立 | `SkillSet` 使用稳定 skill ID；等级成长通过曲线计算，不保存可重算的最终值 |
-| 派生属性 | AC、速度、命中、伤害、攻击次数、抗性、感知等多来源叠加 | 已建立基础版 | `DerivedStatsPipeline` 已按基础 → 种族 → 职业 → 性格 → 装备 → 状态 → 姿态 → 环境排序并保留来源；当前覆盖最大生命、攻防、速度、近战能力和 AC，后续扩展攻击次数、抗性和感知 |
+| 派生属性 | AC、速度、命中、伤害、攻击次数、抗性、感知等多来源叠加 | 已建立基础版 | `DerivedStatsPipeline` 已按基础 → 种族 → 职业 → 性格 → 装备 → 状态 → 姿态 → 环境排序并保留来源；当前覆盖最大生命、攻防、速度、近战能力、AC、攻击次数和近战伤害修正，后续扩展抗性和感知 |
 | 装备限制 | 双持、双手、空手、护甲负重、施法妨碍、异形装备槽 | 部分建立 | `BodyPlan` + `EquipmentSlotRule` + `EncumbranceRule`，装备合法性和数值派生分开 |
 
 ### 4.5 状态、抗性与持续效果
@@ -124,7 +124,7 @@ flowchart TD
 
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
-| 玩家近战 | 命中、武器骰、攻击次数、暴击、斩味、品牌、克制、吸血等 | 部分建立 | contract-v7 已有基础命中/AC/伤害骰，v8 接入统一调度，v9/v10 接入 `DamagePacket`、抗性与元素类型；contract-v12 再迁移武器 profile、攻击次数与 on-hit effect |
+| 玩家近战 | 命中、武器骰、攻击次数、暴击、斩味、品牌、克制、吸血等 | 部分建立 | contract-v12 已建立武器 `AttackProfile`、命中/伤害修正、稳定攻击次数与死亡中断；下一步增加 on-hit effect、暴击与品牌 |
 | 怪物近战 | 最多四组 blow，每组包含方法和多个效果 | 部分建立 | 内容定义 `MeleeRoutine`，每个 blow 可含命中能力、伤害骰和 effect 列表；按顺序中断于死亡/位移 |
 | 射击 | 弓倍率、弹药、射程、命中、暴击、弹药破损与返回 | 未建立 | 通用 projectile 行动；武器、弹药、发射器分别贡献 profile；前端只负责目标选择和动画 |
 | 投掷 | 物品重量、投掷技能、返回武器和药水破裂 | 未建立 | 与 projectile 共用轨迹，命中与落点规则独立；物品实例位置变化保持原子性 |
@@ -326,7 +326,7 @@ crates/rfb-core/src/
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：contract-v11 已在 v10 的流血与元素近战基础上保留完整伤害/死亡结算 outcome；原创内容包 1.7.0 已为酸、电、火、冷、毒提供独立攻击来源。`DerivedStatsPipeline` 已接管最大生命、攻防、速度、近战能力和 AC，装备与状态贡献保留稳定来源；`CheckContext/CheckResult` 已统一玩家与怪物命中及恐惧行动检定。眩晕能力削弱与恐惧近战限制进入 active baseline，共 47 个 exact fixtures，state hash Schema 继续为 v9。下一步由 contract-v12 建立武器 `AttackProfile`、玩家攻击次数和怪物多 blow。详细边界见 [Contract v11](contract-v11-structured-damage-events.md)。
+当前进度：contract-v12 已建立内容驱动的武器 `AttackProfile`、命中/伤害修正和稳定玩家攻击次数；目标死亡后立即中断剩余攻击，恐惧仍按整次行动检定。原创内容包 1.8.0 新增双击回声刃，active baseline 共 48 个 exact fixtures，save v1 / state hash Schema v9 不变。下一步继续怪物 `MeleeRoutine` / 多 blow。详细边界见 [Contract v12](contract-v12-weapon-attack-profile.md)。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -447,14 +447,14 @@ crates/rfb-core/src/
 
 当前最合适的执行顺序：
 
-1. **contract-v11：继续完成阶段 B 与检定接口**
+1. **contract-v11：继续完成阶段 B 与检定接口（已完成）**
    - 已完成：伤害类型、抗性结果和死亡结算进入强类型领域/协议事件；
    - 已完成：为酸、电、冷、毒增加原创怪物近战入口；
    - 已完成：建立带来源的派生属性与基础检定管线；
    - 已完成：在检定接口上实现眩晕能力削弱和恐惧行动限制。
 2. **contract-v12：武器与多 blow 战斗**
-   - 统一 `AttackProfile` 与武器实例命中、伤害和骰子；
-   - 玩家攻击次数和稳定中断顺序；
+   - 已完成：统一 `AttackProfile` 与武器实例命中、伤害和骰子；
+   - 已完成：玩家攻击次数和稳定中断顺序；
    - 怪物 `MeleeRoutine` / blow 列表；
    - `DeathOutcome`、死亡/掉落订阅边界和 on-hit effect。
 3. **contract-v13：射击、投掷与 projectile**

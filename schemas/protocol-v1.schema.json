@@ -20,6 +20,40 @@
     "update"
   ],
   "$defs": {
+    "AttackProfileDto": {
+      "type": "object",
+      "properties": {
+        "attacks": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "damage": {
+          "$ref": "#/$defs/DamageDiceDto"
+        },
+        "sourceItemId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "toHit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "attacks",
+        "toHit",
+        "toDamage",
+        "damage"
+      ]
+    },
     "CellDto": {
       "type": "object",
       "properties": {
@@ -230,6 +264,19 @@
             "sides": 0
           }
         },
+        "meleeProfile": {
+          "$ref": "#/$defs/AttackProfileDto",
+          "default": {
+            "attacks": 1,
+            "damage": {
+              "damageType": "physical",
+              "dice": 0,
+              "sides": 0
+            },
+            "toDamage": 0,
+            "toHit": 0
+          }
+        },
         "meleeSkill": {
           "type": "integer",
           "format": "int32",
@@ -269,6 +316,16 @@
         },
         "kindId": {
           "type": "string"
+        },
+        "meleeProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AttackProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "modifiers": {
           "$ref": "#/$defs/StatModifiersDto",
@@ -737,6 +794,16 @@
         "kindId": {
           "type": "string"
         },
+        "meleeProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AttackProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "modifiers": {
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
@@ -852,6 +919,19 @@
             "damageType": "physical",
             "dice": 0,
             "sides": 0
+          }
+        },
+        "meleeProfile": {
+          "$ref": "#/$defs/AttackProfileDto",
+          "default": {
+            "attacks": 1,
+            "damage": {
+              "damageType": "physical",
+              "dice": 0,
+              "sides": 0
+            },
+            "toDamage": 0,
+            "toHit": 0
           }
         },
         "meleeSkill": {

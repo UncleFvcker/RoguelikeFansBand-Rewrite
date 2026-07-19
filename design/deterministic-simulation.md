@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v9：哈希输入覆盖运行时内容包 ID/hash、world ID、玩家与怪物战斗状态、基础速度、剩余行动能量、状态、抗性、物品、RNG、玩家行动数、世界脉冲和命令序号。active contract-v11 增加结构化伤害 outcome，并将内容包升级到 1.7.0 以补齐五种元素近战来源；内容 hash 已进入既有 v9 投影，没有新增权威字段，因此不虚增 state hash Schema。Schema v1-v8 只作为历史基准保留。
+当前 state hash Schema 为 v9：哈希输入覆盖运行时内容包 ID/hash、world ID、玩家与怪物战斗状态、基础速度、剩余行动能量、状态、抗性、物品、RNG、玩家行动数、世界脉冲和命令序号。active contract-v12 的武器档案由已哈希的内容包与已保存的装备实例派生，没有新增权威字段，因此不虚增 state hash Schema。Schema v1-v8 只作为历史基准保留。
 
 state hash 与正式存档 DTO 已解耦。Schema v9 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 v9 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 

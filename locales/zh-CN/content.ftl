@@ -2,6 +2,8 @@
 
 item-demo-luminous-shard-name = 发光碎片
 item-demo-echo-charm-name = 回声护符
+item-demo-echo-blade-name = 回声刃
+item-demo-echo-blade-description = 一柄能连续斩击两次的共鸣短刃。
 item-unknown-name = 未知物品
 actor-demo-ember-mote-name = 发光微粒
 actor-demo-acid-seep-name = 腐蚀渗滴

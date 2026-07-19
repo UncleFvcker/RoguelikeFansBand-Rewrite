@@ -2,6 +2,8 @@
 
 item-demo-luminous-shard-name = luminous shard
 item-demo-echo-charm-name = echo charm
+item-demo-echo-blade-name = echo blade
+item-demo-echo-blade-description = A resonant blade that lands two quick cuts.
 item-unknown-name = unknown item
 actor-demo-ember-mote-name = glowing mote
 actor-demo-acid-seep-name = caustic seep

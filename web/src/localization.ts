@@ -143,6 +143,8 @@ export const MESSAGE_KEYS = [
   "message-unknown-event",
   "item-demo-luminous-shard-name",
   "item-demo-echo-charm-name",
+  "item-demo-echo-blade-name",
+  "item-demo-echo-blade-description",
   "item-unknown-name",
   "actor-demo-ember-mote-name",
   "actor-demo-acid-seep-name",

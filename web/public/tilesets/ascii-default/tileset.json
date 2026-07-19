@@ -29,6 +29,10 @@
     "demo.item.luminous-shard": {
       "foreground": "#f6e58d",
       "background": "#2f2b19"
+    },
+    "demo.item.echo-blade": {
+      "foreground": "#a9dcff",
+      "background": "#182b3a"
     }
   },
   "fallback": {

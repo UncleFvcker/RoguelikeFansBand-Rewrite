@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.echo-blade",
+  "nameKey": "item-demo-echo-blade-name",
+  "descriptionKey": "item-demo-echo-blade-description",
+  "glyph": "/",
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 2,
+    "toHit": 10,
+    "toDamage": 1,
+    "damageDice": 1,
+    "damageSides": 2,
+    "damageType": "physical"
+  },
+  "tags": ["equipment", "weapon"]
+}

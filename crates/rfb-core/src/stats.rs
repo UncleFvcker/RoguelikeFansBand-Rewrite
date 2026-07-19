@@ -7,6 +7,8 @@ pub enum StatKind {
     Defense,
     Speed,
     MeleeSkill,
+    MeleeAttacks,
+    MeleeDamageBonus,
     ArmorClass,
     ActionDifficulty,
 }

@@ -52,7 +52,7 @@
 │  └─ saves/
 └─ screenshots/
 
-tests/fixtures/contract-v11/
+tests/fixtures/contract-v12/
 ├─ baseline-policy.json
 ├─ waivers/
 │  └─ README.md
@@ -98,7 +98,7 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 
 ## 4. 场景格式
 
-每个场景使用稳定 ID。当前 active `contract-v11` 的输入部分包含：
+每个场景使用稳定 ID。当前 active `contract-v12` 的输入部分包含：
 
 ```json
 {
@@ -117,8 +117,8 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 `rfb-contract` 执行命令后精确比较最终 revision、turn、command sequence、玩家位置、生命/最大生命、攻击、防御、实体数量、地面物品数、背包堆数、装备数、下一物品实例序号、事件顺序、changed cells、删除实体、结构化错误、state hash 和可选存档回环 hash。提交的 fixture 必须包含断言；`observe` 命令只输出实际观察结果，不会自动改写或批量刷新 golden：
 
 ```powershell
-cargo run -p rfb-contract -- observe tests/fixtures/contract-v11/scenarios/01-move-north.json
-cargo run -p rfb-contract -- verify tests/fixtures/contract-v11/scenarios/01-move-north.json
+cargo run -p rfb-contract -- observe tests/fixtures/contract-v12/scenarios/01-move-north.json
+cargo run -p rfb-contract -- verify tests/fixtures/contract-v12/scenarios/01-move-north.json
 ```
 
 场景不能依赖屏幕坐标、数组下标或本地化后的名称定位对象。对象使用稳定测试 ID；显示文本单独由本地化测试验证。
