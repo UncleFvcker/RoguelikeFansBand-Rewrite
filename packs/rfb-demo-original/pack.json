@@ -2,9 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/pack.schema.json",
   "formatVersion": 1,
   "id": "rfb.demo.original-v1",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "titleKey": "pack-demo-original-title",
   "dependencies": [],
   "loadAfter": [],
-  "contentRoots": ["actors", "items", "terrain", "worlds"]
+  "contentRoots": ["actors", "affixes", "items", "terrain", "worlds"]
 }

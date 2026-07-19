@@ -19,6 +19,7 @@ pub const PACK_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Rog
 pub const TERRAIN_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json";
 pub const ACTOR_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json";
 pub const ITEM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json";
+pub const AFFIX_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
 
 const fn default_actor_speed() -> u16 {
@@ -32,7 +33,7 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 4] = ["actors", "items", "terrain", "worlds"];
+const SUPPORTED_ROOTS: [&str; 5] = ["actors", "affixes", "items", "terrain", "worlds"];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -152,6 +153,21 @@ pub struct StatModifiers {
     pub defense: i32,
     #[serde(default)]
     pub max_hp: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AffixDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    #[serde(default)]
+    pub modifiers: StatModifiers,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -277,6 +293,8 @@ pub struct ItemSpawn {
     pub kind_id: String,
     pub position: ContentPosition,
     pub quantity: u32,
+    #[serde(default)]
+    pub affix_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -310,6 +328,7 @@ pub struct CompiledContentV1 {
     pub load_after: Vec<String>,
     pub terrain: Vec<TerrainDefinition>,
     pub actors: Vec<ActorDefinition>,
+    pub affixes: Vec<AffixDefinition>,
     pub items: Vec<ItemDefinition>,
     pub worlds: Vec<WorldDefinition>,
 }
@@ -328,6 +347,7 @@ pub struct ContentCatalog {
     content_hash: String,
     terrain: BTreeMap<String, TerrainDefinition>,
     actors: BTreeMap<String, ActorDefinition>,
+    affixes: BTreeMap<String, AffixDefinition>,
     items: BTreeMap<String, ItemDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
 }
@@ -340,6 +360,7 @@ pub struct ContentSummary {
     pub content_hash: String,
     pub terrain_count: usize,
     pub actor_count: usize,
+    pub affix_count: usize,
     pub item_count: usize,
     pub world_count: usize,
 }
@@ -362,6 +383,7 @@ impl CompiledArtifact {
             content_hash: self.content_hash.clone(),
             terrain_count: self.content.terrain.len(),
             actor_count: self.content.actors.len(),
+            affix_count: self.content.affixes.len(),
             item_count: self.content.items.len(),
             world_count: self.content.worlds.len(),
         }
@@ -387,6 +409,11 @@ impl ContentCatalog {
                 .collect(),
             actors: content
                 .actors
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            affixes: content
+                .affixes
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -438,6 +465,11 @@ impl ContentCatalog {
     }
 
     #[must_use]
+    pub fn affix(&self, id: &str) -> Option<&AffixDefinition> {
+        self.affixes.get(id)
+    }
+
+    #[must_use]
     pub fn world(&self, id: &str) -> Option<&WorldDefinition> {
         self.worlds.get(id)
     }
@@ -486,6 +518,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         load_after: manifest.load_after,
         terrain: load_root(root, "terrain", &roots, &mut budget)?,
         actors: load_root(root, "actors", &roots, &mut budget)?,
+        affixes: load_root(root, "affixes", &roots, &mut budget)?,
         items: load_root(root, "items", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };
@@ -615,6 +648,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .terrain
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.actors.sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .affixes
+        .sort_by(|left, right| left.id.cmp(&right.id));
     content.items.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
 
@@ -681,6 +717,28 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         normalize_tags(&actor.id, &mut actor.tags)?;
         insert_definition_id(&mut all_ids, &actor.id)?;
         actor_roles.insert(actor.id.clone(), actor.role);
+    }
+
+    let mut affix_ids = BTreeSet::new();
+    for affix in &mut content.affixes {
+        require_schema(&affix.schema, AFFIX_SCHEMA, &affix.id)?;
+        require_format_version(affix.format_version, &affix.id)?;
+        validate_definition_id(&affix.id, "affix")?;
+        validate_definition_text(&affix.id, &affix.name_key, &affix.description_key)?;
+        let modifiers = &affix.modifiers;
+        if modifiers == &StatModifiers::default()
+            || modifiers.max_hp < -1_000_000
+            || modifiers.max_hp > 1_000_000
+            || modifiers.attack < -1_000_000
+            || modifiers.attack > 1_000_000
+            || modifiers.defense < -1_000_000
+            || modifiers.defense > 1_000_000
+        {
+            return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+        }
+        normalize_tags(&affix.id, &mut affix.tags)?;
+        insert_definition_id(&mut all_ids, &affix.id)?;
+        affix_ids.insert(affix.id.clone());
     }
 
     let mut item_limits = BTreeMap::new();
@@ -774,7 +832,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
-        item_limits.insert(item.id.clone(), item.max_stack);
+        item_limits.insert(
+            item.id.clone(),
+            (item.max_stack, item.equipment_slot.is_some()),
+        );
     }
 
     for item in &content.items {
@@ -808,6 +869,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             &terrain_walkability,
             &actor_roles,
             &item_limits,
+            &affix_ids,
         )?;
     }
     Ok(())
@@ -818,7 +880,8 @@ fn validate_world(
     terrain_ids: &BTreeSet<String>,
     terrain_walkability: &BTreeMap<String, bool>,
     actor_roles: &BTreeMap<String, ActorRole>,
-    item_limits: &BTreeMap<String, u32>,
+    item_limits: &BTreeMap<String, (u32, bool)>,
+    affix_ids: &BTreeSet<String>,
 ) -> Result<(), ContentError> {
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
@@ -857,12 +920,12 @@ fn validate_world(
     world
         .items
         .sort_by(|left, right| left.instance_id.cmp(&right.instance_id));
-    for item in &world.items {
+    for item in &mut world.items {
         validate_id(&item.instance_id)?;
         if !instance_ids.insert(item.instance_id.clone()) {
             return Err(ContentError::DuplicateInstanceId(item.instance_id.clone()));
         }
-        let max_stack =
+        let (max_stack, equippable) =
             item_limits
                 .get(&item.kind_id)
                 .ok_or_else(|| ContentError::DanglingReference {
@@ -871,6 +934,15 @@ fn validate_world(
                 })?;
         if item.quantity == 0 || item.quantity > *max_stack {
             return Err(ContentError::InvalidItemQuantity(item.instance_id.clone()));
+        }
+        item.affix_ids.sort();
+        let mut seen_affixes = BTreeSet::new();
+        if (!item.affix_ids.is_empty() && (*max_stack != 1 || !equippable || item.quantity != 1))
+            || item.affix_ids.iter().any(|affix_id| {
+                !affix_ids.contains(affix_id) || !seen_affixes.insert(affix_id.as_str())
+            })
+        {
+            return Err(ContentError::InvalidItemAffixes(item.instance_id.clone()));
         }
         validate_position(item.position, world.width, world.height, &world.id)?;
     }
@@ -1279,6 +1351,11 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
         )?,
         schema_document("item.schema.json", ITEM_SCHEMA, schema_for!(ItemDefinition))?,
         schema_document(
+            "affix.schema.json",
+            AFFIX_SCHEMA,
+            schema_for!(AffixDefinition),
+        )?,
+        schema_document(
             "world.schema.json",
             WORLD_SCHEMA,
             schema_for!(WorldDefinition),
@@ -1387,6 +1464,8 @@ pub enum ContentError {
     InvalidThrowProfile(String),
     #[error("item use action is invalid: {0}")]
     InvalidItemUseAction(String),
+    #[error("affix stat modifiers are invalid: {0}")]
+    InvalidAffixModifiers(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1405,6 +1484,8 @@ pub enum ContentError {
     InvalidTerrainOverride(String),
     #[error("item spawn quantity is invalid: {0}")]
     InvalidItemQuantity(String),
+    #[error("item spawn affix references are invalid: {0}")]
+    InvalidItemAffixes(String),
     #[error("compiled content metadata is invalid")]
     InvalidCompiledMetadata,
     #[error("compiled content payload exceeds the 32 MiB limit: {0} bytes")]
@@ -1455,6 +1536,7 @@ mod tests {
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
         assert_eq!(first.content.actors.len(), 7);
+        assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
         assert_eq!(first.content.worlds.len(), 1);
     }
@@ -1466,7 +1548,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.16.0");
+        assert_eq!(catalog.pack_version(), "1.17.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1557,6 +1639,22 @@ mod tests {
                 .item("demo.item.echo-charm")
                 .map(|item| (item.modifiers.attack, item.modifiers.defense)),
             Some((1, 1))
+        );
+        assert_eq!(
+            catalog
+                .affix("demo.affix.harmonic-edge")
+                .map(|affix| affix.modifiers.attack),
+            Some(1)
+        );
+        assert_eq!(
+            catalog
+                .world("demo.world.original-v1")
+                .and_then(|world| world
+                    .items
+                    .iter()
+                    .find(|item| item.kind_id == "demo.item.echo-charm")
+                    .map(|item| item.affix_ids.as_slice())),
+            Some(["demo.affix.harmonic-edge".to_owned()].as_slice())
         );
         assert!(catalog.world("demo.world.original-v1").is_some());
         assert_eq!(
@@ -1669,6 +1767,25 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemUseAction(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        invalid.affixes[0].modifiers = StatModifiers::default();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidAffixModifiers(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let charm = invalid.worlds[0]
+            .items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.echo-charm")
+            .expect("fixture should contain the charm");
+        charm.affix_ids.push("demo.affix.harmonic-edge".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemAffixes(_))
         ));
 
         let mut invalid = artifact.content.clone();

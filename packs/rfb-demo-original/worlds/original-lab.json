@@ -50,7 +50,8 @@
       "instanceId": "demo.item.echo-charm.1",
       "kindId": "demo.item.echo-charm",
       "position": { "x": 5, "y": 3 },
-      "quantity": 1
+      "quantity": 1,
+      "affixIds": ["demo.affix.harmonic-edge"]
     },
     {
       "instanceId": "demo.item.echo-blade.1",

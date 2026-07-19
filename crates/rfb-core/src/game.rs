@@ -40,16 +40,16 @@ use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
     DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
     GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemKnowledgeDto,
-    ItemKnowledgeSaveDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto,
-    PlayerSaveDto, Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto,
-    TargetModeDto, TargetSelection, TargetSpecDto, TerrainSaveDto, ThrowProfileDto,
-    VisibilityState,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemSaveDto, MeleeBlowDto,
+    MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 16] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 17] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -66,9 +66,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 16] = [
     "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf",
     "479728aa3cead56c7dbf886a1beb4a9f20b5034085da8836cb82f2191246e979",
     "43b38c37bc03ae81f8fe1e5a3f3c8afeba47921ff05321011bc227fb5813387f",
+    "419260921954602e9b707dd8c260f80ad3ff1ad0504ea2dfbde739ec64ca2d54",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "419260921954602e9b707dd8c260f80ad3ff1ad0504ea2dfbde739ec64ca2d54";
+    "130f0f9fbddbdb12d7742d222e2e4deceabddb51810834c264da45678e15d474";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -85,7 +86,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV10 {
+struct StateHashPayloadV11 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -98,6 +99,7 @@ struct StateHashPayloadV10 {
     inventory: Vec<InventoryItemSaveDto>,
     equipment: Vec<EquipmentItemSaveDto>,
     item_knowledge: Vec<ItemKnowledgeSaveDto>,
+    item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     next_item_instance_serial: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     explored: Vec<bool>,
@@ -118,6 +120,7 @@ pub struct Game {
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
+    item_property_knowledge: BTreeMap<String, BTreeSet<String>>,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     rng: RfbRng,
@@ -199,6 +202,7 @@ impl Game {
                 id: spawn.instance_id.clone(),
                 kind_id: spawn.kind_id.clone(),
                 quantity: spawn.quantity,
+                affix_ids: spawn.affix_ids.clone(),
                 location: ItemLocation::Ground(position_from_content(spawn.position)),
             })
             .collect::<Vec<_>>();
@@ -214,6 +218,7 @@ impl Game {
             entities,
             items,
             item_knowledge: BTreeMap::new(),
+            item_property_knowledge: BTreeMap::new(),
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             rng: RfbRng::seeded(seed),
@@ -312,6 +317,8 @@ impl Game {
             ));
         }
         let item_knowledge = item_knowledge_from_save(payload.item_knowledge, &content)?;
+        let item_property_knowledge =
+            item_property_knowledge_from_save(payload.item_property_knowledge, &items, &content)?;
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -322,6 +329,7 @@ impl Game {
             entities,
             items,
             item_knowledge,
+            item_property_knowledge,
             next_item_instance_serial,
             explored,
             rng: RfbRng::from_save(&payload.rng)?,
@@ -354,6 +362,7 @@ impl Game {
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
             item_knowledge: self.item_knowledge_to_save(),
+            item_property_knowledge: self.item_property_knowledge_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: self.explored.clone(),
             rng: self.rng.to_save(),
@@ -448,11 +457,25 @@ impl Game {
             }
             GameAction::Equip { item_id } => {
                 if let Some(outcome) = self.equip_inventory_item(&item_id) {
+                    let discovered_affix_ids = outcome.discovered_affix_ids.clone();
+                    let equipped_kind_id = outcome.kind_id.clone();
                     events.push(DomainEvent::ItemEquipped {
                         target_kind_id: outcome.kind_id,
                         slot_id: outcome.slot_id,
                         replaced_kind_id: outcome.replaced_kind_id,
                     });
+                    for affix_id in discovered_affix_ids {
+                        let property_name_key = self
+                            .content
+                            .affix(&affix_id)
+                            .expect("equipped affix must remain available")
+                            .name_key
+                            .clone();
+                        events.push(DomainEvent::ItemPropertyDiscovered {
+                            target_kind_id: equipped_kind_id.clone(),
+                            property_name_key,
+                        });
+                    }
                 } else {
                     events.push(DomainEvent::ItemEquipUnavailable);
                 }
@@ -579,8 +602,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV10 {
-            schema_version: 10,
+        let payload = StateHashPayloadV11 {
+            schema_version: 11,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -596,6 +619,7 @@ impl Game {
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
             item_knowledge: self.item_knowledge_to_save(),
+            item_property_knowledge: self.item_property_knowledge_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: Vec::new(),
             rng: self.rng.to_save(),
@@ -786,7 +810,8 @@ impl Game {
                         .content
                         .item(&item.kind_id)
                         .and_then(|definition| definition.equipment_slot.clone()),
-                    modifiers: self.visible_item_modifiers(&item.kind_id),
+                    modifiers: self.visible_item_modifiers(item),
+                    known_properties: self.known_item_properties(item),
                     melee_profile: self.visible_item_melee_profile(item),
                     projectile_profile: self.visible_item_projectile_profile(item),
                     throw_profile: self.visible_item_throw_profile(item),
@@ -813,7 +838,8 @@ impl Game {
                     quantity: item.quantity,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
-                    modifiers: self.visible_item_modifiers(&item.kind_id),
+                    modifiers: self.visible_item_modifiers(item),
+                    known_properties: self.known_item_properties(item),
                     melee_profile: self.visible_item_melee_profile(item),
                     projectile_profile: self.visible_item_projectile_profile(item),
                     throw_profile: self.visible_item_throw_profile(item),
@@ -869,6 +895,7 @@ impl Game {
                 id,
                 kind_id,
                 quantity,
+                affix_ids: Vec::new(),
                 location: ItemLocation::Ground(self.player.position),
             });
         }
@@ -904,14 +931,29 @@ impl Game {
                 kind_id
             });
         let kind_id = self.items[inventory_index].kind_id.clone();
+        let item_instance_id = self.items[inventory_index].id.clone();
+        let affix_ids = self.items[inventory_index].affix_ids.clone();
         self.items[inventory_index].location = ItemLocation::Equipped {
             slot_id: slot_id.clone(),
         };
         self.clamp_player_hp_to_effective_max();
+        let discovered_affix_ids = if affix_ids.is_empty() {
+            Vec::new()
+        } else {
+            let known = self
+                .item_property_knowledge
+                .entry(item_instance_id)
+                .or_default();
+            affix_ids
+                .into_iter()
+                .filter(|affix_id| known.insert(affix_id.clone()))
+                .collect()
+        };
         Some(EquipOutcome {
             kind_id,
             slot_id,
             replaced_kind_id,
+            discovered_affix_ids,
         })
     }
 
@@ -998,7 +1040,7 @@ impl Game {
         })
     }
 
-    fn item_modifiers(&self, kind_id: &str) -> StatModifiersDto {
+    fn item_base_modifiers(&self, kind_id: &str) -> StatModifiersDto {
         self.content
             .item(kind_id)
             .map_or_else(StatModifiersDto::default, |definition| StatModifiersDto {
@@ -1006,6 +1048,23 @@ impl Game {
                 defense: definition.modifiers.defense,
                 max_hp: definition.modifiers.max_hp,
             })
+    }
+
+    fn item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
+        item.affix_ids.iter().fold(
+            self.item_base_modifiers(&item.kind_id),
+            |total, affix_id| {
+                let affix = self
+                    .content
+                    .affix(affix_id)
+                    .expect("item affix must remain available");
+                StatModifiersDto {
+                    attack: total.attack.saturating_add(affix.modifiers.attack),
+                    defense: total.defense.saturating_add(affix.modifiers.defense),
+                    max_hp: total.max_hp.saturating_add(affix.modifiers.max_hp),
+                }
+            },
+        )
     }
 
     fn item_knowledge_dto(&self, kind_id: &str) -> ItemKnowledgeDto {
@@ -1067,12 +1126,46 @@ impl Game {
         }
     }
 
-    fn visible_item_modifiers(&self, kind_id: &str) -> StatModifiersDto {
-        if self.item_knowledge_dto(kind_id) == ItemKnowledgeDto::Aware {
-            self.item_modifiers(kind_id)
-        } else {
-            StatModifiersDto::default()
+    fn visible_item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
+        if self.item_knowledge_dto(&item.kind_id) != ItemKnowledgeDto::Aware {
+            return StatModifiersDto::default();
         }
+        let known = self.item_property_knowledge.get(&item.id);
+        item.affix_ids.iter().fold(
+            self.item_base_modifiers(&item.kind_id),
+            |total, affix_id| {
+                let Some(affix) = known
+                    .filter(|ids| ids.contains(affix_id))
+                    .and_then(|_| self.content.affix(affix_id))
+                else {
+                    return total;
+                };
+                StatModifiersDto {
+                    attack: total.attack.saturating_add(affix.modifiers.attack),
+                    defense: total.defense.saturating_add(affix.modifiers.defense),
+                    max_hp: total.max_hp.saturating_add(affix.modifiers.max_hp),
+                }
+            },
+        )
+    }
+
+    fn known_item_properties(&self, item: &ItemInstance) -> Vec<ItemPropertyDto> {
+        self.item_property_knowledge
+            .get(&item.id)
+            .into_iter()
+            .flatten()
+            .filter_map(|affix_id| {
+                self.content.affix(affix_id).map(|affix| ItemPropertyDto {
+                    affix_id: affix.id.clone(),
+                    name_key: affix.name_key.clone(),
+                    modifiers: StatModifiersDto {
+                        attack: affix.modifiers.attack,
+                        defense: affix.modifiers.defense,
+                        max_hp: affix.modifiers.max_hp,
+                    },
+                })
+            })
+            .collect()
     }
 
     fn visible_item_melee_profile(&self, item: &ItemInstance) -> Option<AttackProfileDto> {
@@ -1104,12 +1197,23 @@ impl Game {
             .collect()
     }
 
+    fn item_property_knowledge_to_save(&self) -> Vec<ItemPropertyKnowledgeSaveDto> {
+        self.item_property_knowledge
+            .iter()
+            .filter(|(_, affix_ids)| !affix_ids.is_empty())
+            .map(|(item_id, affix_ids)| ItemPropertyKnowledgeSaveDto {
+                item_id: item_id.clone(),
+                known_affix_ids: affix_ids.iter().cloned().collect(),
+            })
+            .collect()
+    }
+
     fn equipment_modifiers(&self) -> StatModifiersDto {
         self.items
             .iter()
             .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
             .fold(StatModifiersDto::default(), |total, item| {
-                let item = self.item_modifiers(&item.kind_id);
+                let item = self.item_modifiers(item);
                 StatModifiersDto {
                     attack: total.attack.saturating_add(item.attack),
                     defense: total.defense.saturating_add(item.defense),
@@ -1347,7 +1451,7 @@ impl Game {
                 .iter()
                 .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
             {
-                let modifiers = self.item_modifiers(&item.kind_id);
+                let modifiers = self.item_modifiers(item);
                 add_equipment_stat(&mut pipeline, StatKind::MaxHp, &item.id, modifiers.max_hp);
                 add_equipment_stat(&mut pipeline, StatKind::Attack, &item.id, modifiers.attack);
                 add_equipment_stat(
@@ -1678,6 +1782,7 @@ impl Game {
                 id,
                 kind_id: kind_id.to_owned(),
                 quantity: 1,
+                affix_ids: Vec::new(),
                 location: ItemLocation::Inventory,
             }))
         }
@@ -1839,6 +1944,7 @@ impl Game {
                 id,
                 kind_id: self.items[index].kind_id.clone(),
                 quantity: 1,
+                affix_ids: Vec::new(),
                 location: ItemLocation::Inventory,
             }))
         }
@@ -2509,7 +2615,19 @@ impl Game {
                 .content
                 .item(&item.kind_id)
                 .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+            let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
+                && item
+                    .affix_ids
+                    .iter()
+                    .all(|affix_id| self.content.affix(affix_id).is_some())
+                && (item.affix_ids.is_empty()
+                    || (definition.max_stack == 1
+                        && definition.equipment_slot.is_some()
+                        && item.quantity == 1));
             let common_valid = instance_ids.insert(item.id.clone()) && item.quantity != 0;
+            if !affixes_are_valid {
+                return Err(CoreError::InvalidSave("item affix state is invalid"));
+            }
             match &item.location {
                 ItemLocation::Ground(position) => {
                     if !common_valid
@@ -2525,14 +2643,36 @@ impl Game {
                     }
                 }
                 ItemLocation::Equipped { slot_id } => {
+                    let all_affixes_known = item.affix_ids.iter().all(|affix_id| {
+                        self.item_property_knowledge
+                            .get(&item.id)
+                            .is_some_and(|known| known.contains(affix_id))
+                    });
                     if !common_valid
                         || item.quantity != 1
                         || definition.equipment_slot.as_deref() != Some(slot_id.as_str())
                         || !equipment_slots.insert(slot_id.clone())
+                        || !all_affixes_known
                     {
                         return Err(CoreError::InvalidSave("equipment item state is invalid"));
                     }
                 }
+            }
+        }
+        for (item_id, known_affix_ids) in &self.item_property_knowledge {
+            let Some(item) = self.items.iter().find(|item| &item.id == item_id) else {
+                return Err(CoreError::InvalidSave(
+                    "item property knowledge state is invalid",
+                ));
+            };
+            if known_affix_ids.is_empty()
+                || known_affix_ids
+                    .iter()
+                    .any(|affix_id| !item.affix_ids.contains(affix_id))
+            {
+                return Err(CoreError::InvalidSave(
+                    "item property knowledge state is invalid",
+                ));
             }
         }
         if self.next_item_instance_serial == 0
@@ -2677,6 +2817,35 @@ fn item_knowledge_from_save(
                 .is_some()
         {
             return Err(CoreError::InvalidSave("item knowledge state is invalid"));
+        }
+    }
+    Ok(knowledge)
+}
+
+fn item_property_knowledge_from_save(
+    entries: Vec<ItemPropertyKnowledgeSaveDto>,
+    items: &[ItemInstance],
+    content: &ContentCatalog,
+) -> Result<BTreeMap<String, BTreeSet<String>>, CoreError> {
+    let mut knowledge = BTreeMap::new();
+    for entry in entries {
+        let Some(item) = items.iter().find(|item| item.id == entry.item_id) else {
+            return Err(CoreError::InvalidSave(
+                "item property knowledge state is invalid",
+            ));
+        };
+        let known_affix_count = entry.known_affix_ids.len();
+        let known_affix_ids = entry.known_affix_ids.into_iter().collect::<BTreeSet<_>>();
+        if known_affix_ids.is_empty()
+            || known_affix_ids.len() != known_affix_count
+            || known_affix_ids.iter().any(|affix_id| {
+                !item.affix_ids.contains(affix_id) || content.affix(affix_id).is_none()
+            })
+            || knowledge.insert(entry.item_id, known_affix_ids).is_some()
+        {
+            return Err(CoreError::InvalidSave(
+                "item property knowledge state is invalid",
+            ));
         }
     }
     Ok(knowledge)
@@ -3302,9 +3471,9 @@ mod tests {
         assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
         assert_eq!(snapshot.player.base_max_hp, 10);
         assert_eq!(snapshot.player.max_hp, 14);
-        assert_eq!(snapshot.player.attack, 3);
+        assert_eq!(snapshot.player.attack, 4);
         assert_eq!(snapshot.player.defense, 2);
-        assert_eq!(snapshot.player.equipment_modifiers.attack, 1);
+        assert_eq!(snapshot.player.equipment_modifiers.attack, 2);
         assert_eq!(snapshot.player.equipment_modifiers.defense, 1);
         assert_eq!(snapshot.player.equipment_modifiers.max_hp, 4);
         assert_eq!(restored.next_item_instance_serial, 1);
@@ -3329,7 +3498,7 @@ mod tests {
         let snapshot = restored.snapshot();
         assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
         assert_eq!(snapshot.player.base_attack, 2);
-        assert_eq!(snapshot.player.attack, 3);
+        assert_eq!(snapshot.player.attack, 4);
         assert_eq!(snapshot.player.base_defense, 1);
         assert_eq!(snapshot.player.defense, 2);
         assert_eq!(snapshot.entities[0].attack, 1);
@@ -3551,6 +3720,15 @@ mod tests {
         let mut game = Game::new(42);
         game.entities.clear();
         collect_both_demo_items(&mut game);
+        let carried = game.snapshot();
+        let charm = carried
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-charm")
+            .expect("collected charm should be in inventory");
+        assert_eq!(charm.modifiers.attack, 1);
+        assert!(charm.known_properties.is_empty());
+        assert!(game.to_save().item_property_knowledge.is_empty());
         let equipped = game
             .dispatch(command(
                 5,
@@ -3564,20 +3742,38 @@ mod tests {
         assert_eq!(equipped.inventory.len(), 1);
         assert_eq!(equipped.equipment.len(), 1);
         assert_eq!(equipped.equipment[0].slot_id, "charm");
-        assert_eq!(equipped.equipment[0].modifiers.attack, 1);
+        assert_eq!(equipped.equipment[0].modifiers.attack, 2);
         assert_eq!(equipped.equipment[0].modifiers.defense, 1);
         assert_eq!(equipped.equipment[0].modifiers.max_hp, 4);
         assert_eq!(equipped.player.base_max_hp, 10);
         assert_eq!(equipped.player.max_hp, 14);
         assert_eq!(equipped.player.base_attack, 2);
-        assert_eq!(equipped.player.attack, 3);
+        assert_eq!(equipped.player.attack, 4);
         assert_eq!(equipped.player.base_defense, 1);
         assert_eq!(equipped.player.defense, 2);
-        assert_eq!(equipped.player.equipment_modifiers.attack, 1);
+        assert_eq!(equipped.player.equipment_modifiers.attack, 2);
         assert_eq!(equipped.player.equipment_modifiers.defense, 1);
         assert_eq!(equipped.player.equipment_modifiers.max_hp, 4);
         assert_eq!(equipped.player.carried_weight_tenths_pound, 55);
         assert_eq!(equipped.events[0].message_key, "item-equip-success");
+        assert_eq!(equipped.events[1].message_key, "item-property-discovered");
+        assert_eq!(equipped.equipment[0].known_properties.len(), 1);
+        assert_eq!(
+            equipped.equipment[0].known_properties[0].affix_id,
+            "demo.affix.harmonic-edge"
+        );
+        let saved = game.to_save();
+        assert_eq!(saved.item_property_knowledge.len(), 1);
+        let restored = Game::from_save(saved.clone()).expect("affix knowledge should round trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        let mut invalid = saved;
+        invalid.item_property_knowledge[0].known_affix_ids = vec!["demo.affix.missing".to_owned()];
+        assert!(matches!(
+            Game::from_save(invalid),
+            Err(CoreError::InvalidSave(
+                "item property knowledge state is invalid"
+            ))
+        ));
 
         game.player.hp = 14;
 
@@ -3631,13 +3827,13 @@ mod tests {
 
         let stats = game.player_derived_stats();
 
-        assert_eq!(stats.attack.value, 3);
+        assert_eq!(stats.attack.value, 4);
         assert_eq!(stats.speed.value, 130);
-        assert_eq!(stats.melee_skill.value, 40);
+        assert_eq!(stats.melee_skill.value, 60);
         assert!(stats.attack.contributions.iter().any(|contribution| {
             contribution.layer == StatLayer::Equipment
                 && contribution.source_id == "demo.item.echo-charm.1"
-                && contribution.amount == 1
+                && contribution.amount == 2
         }));
         assert!(stats.speed.contributions.iter().any(|contribution| {
             contribution.layer == StatLayer::Status
@@ -3773,7 +3969,7 @@ mod tests {
             .expect("equipped attack should execute");
 
         assert_eq!(update.events[0].message_key, "combat-player-hit");
-        assert_eq!(update.player.melee_skill, 60);
+        assert_eq!(update.player.melee_skill, 80);
         assert_eq!(update.events[0].args["damage"], "2");
         assert_eq!(update.entities[0].hp, 1);
     }
@@ -4491,6 +4687,7 @@ mod tests {
             id: "demo.inventory.resonance-pellet.1".to_owned(),
             kind_id: "demo.item.resonance-pellet".to_owned(),
             quantity: 19,
+            affix_ids: Vec::new(),
             location: ItemLocation::Inventory,
         });
         game.player.position = Position { x: 6, y: 4 };

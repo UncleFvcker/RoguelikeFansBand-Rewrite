@@ -331,6 +331,12 @@
           "$ref": "#/$defs/ItemKnowledgeDto",
           "default": "aware"
         },
+        "knownProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemPropertyDto"
+          }
+        },
         "meleeProfile": {
           "anyOf": [
             {
@@ -954,6 +960,12 @@
           "$ref": "#/$defs/ItemKnowledgeDto",
           "default": "aware"
         },
+        "knownProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemPropertyDto"
+          }
+        },
         "meleeProfile": {
           "anyOf": [
             {
@@ -1054,6 +1066,29 @@
         "unknown",
         "tried",
         "aware"
+      ]
+    },
+    "ItemPropertyDto": {
+      "type": "object",
+      "properties": {
+        "affixId": {
+          "type": "string"
+        },
+        "modifiers": {
+          "$ref": "#/$defs/StatModifiersDto",
+          "default": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0
+          }
+        },
+        "nameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "affixId",
+        "nameKey"
       ]
     },
     "MeleeBlowDto": {

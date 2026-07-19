@@ -28,6 +28,7 @@
 - [Contract v19：携带重量与拾取容量](contract-v19-inventory-capacity.md)
 - [Contract v20：物品知识与未知名称投影](contract-v20-item-knowledge.md)
 - [Contract v21：消耗品 UseAction 与可观察鉴定](contract-v21-consumable-use-action.md)
+- [Contract v22：实例词条与知识投影](contract-v22-instance-affix-knowledge.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -563,6 +564,7 @@ interface SaveGame {
 - 协议 1.19 和 contract-v19 已建立；内容包 1.14.0 为玩家声明整数携带容量，核心汇总背包/装备重量并原子拒绝超限整堆拾取，HTML 背包显示权威总重/容量。active baseline 共 56 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 协议 1.20 和 contract-v20 已建立；内容包 1.15.0 为可伪装物品声明外观名称，核心保存种类级 unknown/tried/aware 知识并决定名称和隐藏 profile 投影，HTML 只消费 `displayNameKey`。active baseline 共 57 个 exact fixtures，save v1 新增可选知识字段，state hash 升至 Schema v10。
 - 协议 1.21 和 contract-v21 已建立；内容包 1.16.0 为发光碎片声明首个治疗 `UseAction`，核心原子消耗单件并按实际治疗结果更新 tried/aware，HTML 通过 `usable` 提供使用入口。active baseline 共 58 个 exact fixtures，save v1 / state hash Schema v10 不变。
+- 协议 1.22 和 contract-v22 已建立；内容包 1.17.0 新增独立 affix 根与固定实例引用，核心首次装备时发现词条，HTML 只渲染 `knownProperties`。active baseline 共 59 个 exact fixtures，save v1 / state hash Schema v11。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 

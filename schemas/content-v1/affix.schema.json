@@ -1,0 +1,72 @@
+{
+  "$defs": {
+    "StatModifiers": {
+      "additionalProperties": false,
+      "properties": {
+        "attack": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "maxHp": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "modifiers": {
+      "$ref": "#/$defs/StatModifiers",
+      "default": {
+        "attack": 0,
+        "defense": 0,
+        "maxHp": 0
+      }
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "tags"
+  ],
+  "title": "AffixDefinition",
+  "type": "object"
+}

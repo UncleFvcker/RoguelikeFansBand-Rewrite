@@ -45,6 +45,13 @@
     "ItemSpawn": {
       "additionalProperties": false,
       "properties": {
+        "affixIds": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "instanceId": {
           "type": "string"
         },

@@ -30,6 +30,7 @@ import type {
   GameSnapshot,
   GameUpdate,
   InventoryItemDto,
+  ItemPropertyDto,
   StatModifiersDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
@@ -776,6 +777,7 @@ function renderInventory(
         details.append(equippable);
       }
       appendItemModifiers(details, item.modifiers);
+      appendKnownItemProperties(details, item.knownProperties);
       const quantity = document.createElement("span");
       quantity.className = "inventory-quantity";
       quantity.textContent = localization.format("inventory-quantity", {
@@ -812,6 +814,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
     slot.textContent = equipmentSlotName(item.slotId);
     details.append(name, slot);
     appendItemModifiers(details, item.modifiers);
+    appendKnownItemProperties(details, item.knownProperties);
     const unequip = document.createElement("button");
     unequip.type = "button";
     unequip.textContent = localization.format("action-equipment-unequip");
@@ -929,6 +932,20 @@ function appendItemModifiers(
     modifier.className = "item-modifier";
     modifier.textContent = localization.format(key, { value: signedModifier(value) });
     container.append(modifier);
+  }
+}
+
+function appendKnownItemProperties(
+  container: HTMLElement,
+  properties: ItemPropertyDto[] | undefined,
+): void {
+  for (const property of properties ?? []) {
+    const label = document.createElement("span");
+    label.className = "item-property";
+    label.textContent = localization.format("item-property-label", {
+      property: itemPropertyName(property.nameKey),
+    });
+    container.append(label);
   }
 }
 
@@ -1064,6 +1081,11 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-equip-unavailable":
       return localization.format("message-item-equip-unavailable");
+    case "item-property-discovered":
+      return localization.format("message-item-property-discovered", {
+        target: visibleItemNameForKind(event.args.target),
+        property: itemPropertyName(event.args.propertyNameKey),
+      });
     case "item-unequip-success":
       return localization.format("message-item-unequip-success", {
         target: visibleItemNameForKind(event.args.target),
@@ -1259,6 +1281,13 @@ function visibleItemNameForKind(kindId: string | undefined): string {
     return localization.format("item-demo-unfamiliar-shard-name");
   }
   return contentName(kindId);
+}
+
+function itemPropertyName(nameKey: string | undefined): string {
+  if (nameKey === "affix-demo-harmonic-edge-name") {
+    return localization.format(nameKey);
+  }
+  return localization.format("item-unknown-name");
 }
 
 function equipmentSlotName(slotId: string | undefined): string {

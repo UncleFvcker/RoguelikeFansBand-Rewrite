@@ -70,6 +70,7 @@ message-item-pickup-none = 脚下没有可以拾取的物品。
 message-item-equip-success = 你将{ $target }装备在{ $slot }槽位。
 message-item-equip-swap = 你卸下了{ $replaced }，并将{ $target }装备在{ $slot }槽位。
 message-item-equip-unavailable = 所选物品现在无法装备。
+message-item-property-discovered = 装备{ $target }时，你发现了它的“{ $property }”词条。
 message-item-unequip-success = 你从{ $slot }槽位卸下了{ $target }。
 message-item-unequip-none = { $slot }槽位没有可以卸下的物品。
 message-item-drop-success = 你丢下了 { $stacks } 堆物品，共 { $quantity } 件。

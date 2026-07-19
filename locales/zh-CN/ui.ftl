@@ -54,6 +54,7 @@ inventory-equippable = 可装备：{ $slot }
 inventory-drop-quantity-label = 数量
 item-modifier-max-hp = 最大生命 { $value }
 item-modifier-attack = 攻击 { $value }
+item-property-label = 词条：{ $property }
 item-modifier-defense = 防御 { $value }
 action-inventory-equip = 装备所选
 action-inventory-use = 使用所选

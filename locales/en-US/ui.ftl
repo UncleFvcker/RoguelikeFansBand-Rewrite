@@ -58,6 +58,7 @@ inventory-equippable = Equippable: { $slot }
 inventory-drop-quantity-label = Quantity
 item-modifier-max-hp = Max health { $value }
 item-modifier-attack = Attack { $value }
+item-property-label = Property: { $property }
 item-modifier-defense = Defense { $value }
 action-inventory-equip = Equip
 action-inventory-use = Use

@@ -40,6 +40,10 @@ pub(crate) enum DomainEvent {
         replaced_kind_id: Option<String>,
     },
     ItemEquipUnavailable,
+    ItemPropertyDiscovered {
+        target_kind_id: String,
+        property_name_key: String,
+    },
     Waited,
     ItemPickedUp {
         target_kind_id: String,
@@ -210,6 +214,17 @@ impl DomainEvent {
             Self::ItemEquipUnavailable => {
                 dto_without_args("item.equip.none", "item-equip-unavailable")
             }
+            Self::ItemPropertyDiscovered {
+                target_kind_id,
+                property_name_key,
+            } => dto(
+                "item.property-discovered",
+                "item-property-discovered",
+                [
+                    ("target", target_kind_id),
+                    ("propertyNameKey", property_name_key),
+                ],
+            ),
             Self::Waited => dto_without_args("turn.wait", "game-wait"),
             Self::ItemPickedUp {
                 target_kind_id,

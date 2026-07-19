@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, ItemKnowledgeSaveDto,
-    PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto,
-    StatusSaveDto,
+    ItemPropertyKnowledgeSaveDto, PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto,
+    SaveHeaderV1, StatusDto, StatusSaveDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -132,6 +132,8 @@ pub struct FinalStateAssertion {
     pub equipment_count: usize,
     #[serde(default)]
     pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
+    #[serde(default)]
+    pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: Option<u64>,
     pub state_hash: String,
@@ -267,6 +269,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             inventory_stack_count: snapshot.inventory.len(),
             equipment_count: snapshot.equipment.len(),
             item_knowledge: save.item_knowledge,
+            item_property_knowledge: save.item_property_knowledge,
             next_item_instance_serial: Some(save.next_item_instance_serial),
             state_hash: snapshot.state_hash,
         },

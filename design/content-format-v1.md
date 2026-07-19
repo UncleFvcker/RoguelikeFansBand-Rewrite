@@ -20,6 +20,7 @@
 packs/base/
 ├─ pack.json
 ├─ actors/
+├─ affixes/
 ├─ items/
 ├─ terrain/
 ├─ worlds/
@@ -27,7 +28,7 @@ packs/base/
 └─ assets/
 ```
 
-当前 v1 编译器先实现 `actors`、`items`、`terrain` 和 `worlds` 四个严格类型根。后续怪物能力、职业、种族、法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
+当前 v1 编译器实现 `actors`、`affixes`、`items`、`terrain` 和 `worlds` 五个严格类型根。后续怪物能力、职业、种族、法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
 
 `pack.json`：
 
@@ -112,9 +113,9 @@ rfb.terrain.wall.granite
 - 定义、tag、spawn 和地形覆盖的规范化排序；
 - `RFBCONT\0`、MessagePack payload、长度和 SHA-256 校验；
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
-- 五份提交到 `schemas/content-v1/` 的 JSON Schema。
+- 六份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，怪物该字段保持为零。怪物可声明 `meleeRoutine.blows`；每个 blow 包含稳定 method ID、命中修正、伤害骰和类型，列表限制为 1–8 项。未声明 routine 时由既有伤害字段构造单击 fallback。物品必须以 `weightTenthsPound` 声明整数重量，并可声明仅供不可堆叠 `weapon` 使用的 `meleeProfile`、仅供不可堆叠 `launcher` 使用的 `projectileProfile`，或通用 `throwProfile`。发射器通过 `ammoKindId` 引用可堆叠且带 `ammunition` tag 的弹药；`breakChancePercent` 声明 0–100 的撞击破损概率。物品可声明不同于真实名称的 `appearanceNameKey`，供未 aware 的可见投影使用；非装备物品可通过 `useAction.effect` 声明消耗效果，当前首个 effect 为 1–1,000,000 的整数治疗。原创包 1.16.0 覆盖首个射击、投掷、携带容量、物品知识与消耗品闭环。
+角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，怪物该字段保持为零。怪物可声明 `meleeRoutine.blows`；每个 blow 包含稳定 method ID、命中修正、伤害骰和类型，列表限制为 1–8 项。未声明 routine 时由既有伤害字段构造单击 fallback。物品必须以 `weightTenthsPound` 声明整数重量，并可声明仅供不可堆叠 `weapon` 使用的 `meleeProfile`、仅供不可堆叠 `launcher` 使用的 `projectileProfile`，或通用 `throwProfile`。发射器通过 `ammoKindId` 引用可堆叠且带 `ammunition` tag 的弹药；`breakChancePercent` 声明 0–100 的撞击破损概率。物品可声明不同于真实名称的 `appearanceNameKey`，供未 aware 的可见投影使用；非装备物品可通过 `useAction.effect` 声明消耗效果。独立 `AffixDefinition` 声明实例修正，世界中仅数量为一、不可堆叠且可装备的实例可用 `affixIds` 引用。原创包 1.17.0 覆盖首个固定词条与发现闭环。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -196,4 +197,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 以 1.8.0 增加武器 `meleeProfile`，contract-v13 以 1.9.0 增加怪物 `meleeRoutine`，contract-v14 以 1.10.0 增加发射器 `projectileProfile`，contract-v15 以 1.11.0 增加稳定弹药引用，contract-v17 以 1.12.0 增加 `breakChancePercent`，contract-v18 以 1.13.0 增加整数重量和 `throwProfile`，contract-v19 以 1.14.0 增加玩家 `carryCapacityTenthsPound`，contract-v20 以 1.15.0 增加物品 `appearanceNameKey`，contract-v21 以 1.16.0 增加物品 `useAction` 与首个治疗 effect。物品知识权威状态使 state hash 保持 Schema v10。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 以 1.8.0 增加武器 `meleeProfile`，contract-v13 以 1.9.0 增加怪物 `meleeRoutine`，contract-v14 以 1.10.0 增加发射器 `projectileProfile`，contract-v15 以 1.11.0 增加稳定弹药引用，contract-v17 以 1.12.0 增加 `breakChancePercent`，contract-v18 以 1.13.0 增加整数重量和 `throwProfile`，contract-v19 以 1.14.0 增加玩家 `carryCapacityTenthsPound`，contract-v20 以 1.15.0 增加物品 `appearanceNameKey`，contract-v21 以 1.16.0 增加物品 `useAction` 与首个治疗 effect，contract-v22 以 1.17.0 增加 affix 根和实例引用。实例词条知识使 state hash 升至 Schema v11。

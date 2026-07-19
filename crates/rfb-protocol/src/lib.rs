@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.21";
+pub const PROTOCOL_VERSION: &str = "1.22";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -459,6 +459,16 @@ pub enum ItemKnowledgeDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct ItemPropertyDto {
+    pub affix_id: String,
+    pub name_key: String,
+    #[serde(default)]
+    pub modifiers: StatModifiersDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
     pub id: String,
     pub kind_id: String,
@@ -475,6 +485,8 @@ pub struct InventoryItemDto {
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub known_properties: Vec<ItemPropertyDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub melee_profile: Option<AttackProfileDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -499,6 +511,8 @@ pub struct EquipmentItemDto {
     pub slot_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub known_properties: Vec<ItemPropertyDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub melee_profile: Option<AttackProfileDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -630,6 +644,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
     push_declaration!(ItemKnowledgeDto);
+    push_declaration!(ItemPropertyDto);
     push_declaration!(InventoryItemDto);
     push_declaration!(EquipmentItemDto);
     push_declaration!(GameEventDto);
@@ -724,6 +739,8 @@ pub struct ItemSaveDto {
     pub kind_id: String,
     pub position: Position,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -732,6 +749,8 @@ pub struct InventoryItemSaveDto {
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -741,6 +760,8 @@ pub struct EquipmentItemSaveDto {
     pub kind_id: String,
     pub quantity: u32,
     pub slot_id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -751,6 +772,14 @@ pub struct ItemKnowledgeSaveDto {
     pub tried: bool,
     #[serde(default)]
     pub aware: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ItemPropertyKnowledgeSaveDto {
+    pub item_id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub known_affix_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -773,6 +802,8 @@ pub struct SavePayloadV1 {
     pub equipment: Vec<EquipmentItemSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1022,6 +1053,7 @@ mod tests {
                     defense: 1,
                     max_hp: 4,
                 },
+                known_properties: Vec::new(),
                 melee_profile: None,
                 projectile_profile: None,
                 throw_profile: None,
@@ -1039,6 +1071,7 @@ mod tests {
                     defense: 1,
                     max_hp: 4,
                 },
+                known_properties: Vec::new(),
                 melee_profile: None,
                 projectile_profile: None,
                 throw_profile: None,
@@ -1064,6 +1097,8 @@ mod tests {
         assert_eq!(decoded.inventory[0].kind_id, "demo.item.charm");
         assert_eq!(decoded.equipment[0].slot_id, "charm");
         assert!(decoded.item_knowledge.is_empty());
+        assert!(decoded.item_property_knowledge.is_empty());
+        assert!(decoded.inventory[0].affix_ids.is_empty());
     }
 
     #[test]

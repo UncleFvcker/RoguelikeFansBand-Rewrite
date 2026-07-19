@@ -30,6 +30,7 @@ pub(crate) struct ItemInstance {
     pub(crate) id: String,
     pub(crate) kind_id: String,
     pub(crate) quantity: u32,
+    pub(crate) affix_ids: Vec<String>,
     pub(crate) location: ItemLocation,
 }
 
@@ -37,4 +38,5 @@ pub(crate) struct EquipOutcome {
     pub(crate) kind_id: String,
     pub(crate) slot_id: String,
     pub(crate) replaced_kind_id: Option<String>,
+    pub(crate) discovered_affix_ids: Vec<String>,
 }

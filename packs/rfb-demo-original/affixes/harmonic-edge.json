@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "demo.affix.harmonic-edge",
+  "nameKey": "affix-demo-harmonic-edge-name",
+  "descriptionKey": "affix-demo-harmonic-edge-description",
+  "modifiers": {
+    "attack": 1
+  },
+  "tags": ["offense"]
+}
