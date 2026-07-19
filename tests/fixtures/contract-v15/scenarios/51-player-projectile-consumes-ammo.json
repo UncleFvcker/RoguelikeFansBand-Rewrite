@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "id": "combat.projectile.launcher-consumes-ammo",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": { "x": 9, "y": 4 },
+        "hp": 3,
+        "energyNeed": 100,
+        "statuses": [
+          { "kindId": "rfb.status.slow", "intensity": 10, "remainingTicks": 100, "sourceId": null }
+        ]
+      }
+    ]
+  },
+  "commands": [
+    { "command": { "type": "move", "direction": "east" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "move", "direction": "east" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "move", "direction": "south-east" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "pick-up" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "pick-up" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "equip", "itemId": "demo.item.resonance-sling.1" }, "commandSeq": null, "expectedRevision": null },
+    { "command": { "type": "fire", "direction": "east" }, "commandSeq": null, "expectedRevision": null }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 7, "turn": 7, "worldTick": 70, "lastCommandSeq": 7,
+      "playerPosition": { "x": 6, "y": 4 },
+      "playerHp": 10, "playerMaxHp": 10, "playerAttack": 2, "playerDefense": 1,
+      "playerSpeed": 110, "playerEnergyNeed": 0,
+      "playerStatuses": [], "playerResistances": [], "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1", "position": { "x": 9, "y": 4 },
+          "hp": 2, "speed": 10, "energyNeed": 30,
+          "statuses": [{ "kindId": "rfb.status.slow", "intensity": 10, "remainingTicks": 30 }]
+        }
+      ],
+      "groundItemCount": 3, "inventoryStackCount": 1, "equipmentCount": 1,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "3c8928bc3b08a116757791543e9a998b279c3c689ad0c414ec46b4ba594824bc"
+    },
+    "events": [
+      { "kind": "item.pickup", "messageKey": "item-pickup-success", "args": { "quantity": "6", "target": "demo.item.resonance-pellet" } },
+      { "kind": "item.pickup", "messageKey": "item-pickup-success", "args": { "quantity": "1", "target": "demo.item.resonance-sling" } },
+      { "kind": "item.equip", "messageKey": "item-equip-success", "args": { "slot": "launcher", "target": "demo.item.resonance-sling" } },
+      {
+        "kind": "combat.projectile-hit", "messageKey": "projectile-hit",
+        "args": { "damage": "1", "target": "demo.actor.ember-mote" },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2, "armorReduction": 1, "resistanceAdjustment": 0,
+            "finalDamage": 1, "damageType": "physical", "resistance": "normal"
+          }
+        },
+        "trace": {
+          "origin": { "x": 6, "y": 4 }, "impact": { "x": 9, "y": 4 },
+          "landing": { "x": 9, "y": 4 },
+          "traversed": [{ "x": 7, "y": 4 }, { "x": 8, "y": 4 }, { "x": 9, "y": 4 }]
+        }
+      }
+    ],
+    "changedCells": [
+      { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 4, "y": 3 },
+      { "x": 5, "y": 3 }, { "x": 5, "y": 3 }, { "x": 6, "y": 4 },
+      { "x": 6, "y": 4 }, { "x": 6, "y": 4 }, { "x": 9, "y": 4 }
+    ],
+    "removedEntities": [], "errors": [],
+    "saveRoundTripStateHash": "3c8928bc3b08a116757791543e9a998b279c3c689ad0c414ec46b4ba594824bc"
+  }
+}

@@ -473,6 +473,26 @@
         {
           "type": "object",
           "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "throw"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "slotId": {
               "type": "string"
             },
@@ -1088,6 +1108,10 @@
     "ProjectileProfileDto": {
       "type": "object",
       "properties": {
+        "ammoKindId": {
+          "type": "string",
+          "default": ""
+        },
         "damage": {
           "$ref": "#/$defs/DamageDiceDto"
         },
@@ -1122,6 +1146,13 @@
       "properties": {
         "impact": {
           "$ref": "#/$defs/Position"
+        },
+        "landing": {
+          "$ref": "#/$defs/Position",
+          "default": {
+            "x": 0,
+            "y": 0
+          }
         },
         "origin": {
           "$ref": "#/$defs/Position"

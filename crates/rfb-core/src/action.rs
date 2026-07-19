@@ -6,14 +6,31 @@ use crate::scheduler::STANDARD_ACTION_COST;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
-    Move { direction: Direction },
+    Move {
+        direction: Direction,
+    },
     Wait,
     PickUp,
-    Equip { item_id: String },
-    Fire { direction: Direction },
-    Unequip { slot_id: String },
-    Drop { item_ids: Vec<String> },
-    DropQuantity { item_id: String, quantity: u32 },
+    Equip {
+        item_id: String,
+    },
+    Fire {
+        direction: Direction,
+    },
+    Throw {
+        item_id: String,
+        direction: Direction,
+    },
+    Unequip {
+        slot_id: String,
+    },
+    Drop {
+        item_ids: Vec<String>,
+    },
+    DropQuantity {
+        item_id: String,
+        quantity: u32,
+    },
 }
 
 impl GameAction {
@@ -30,6 +47,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Equip { item_id } => Self::Equip { item_id },
             GameCommand::Fire { direction } => Self::Fire { direction },
+            GameCommand::Throw { item_id, direction } => Self::Throw { item_id, direction },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },
             GameCommand::DropQuantity { item_id, quantity } => {

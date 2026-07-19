@@ -176,6 +176,7 @@ pub struct ProjectileProfileDefinition {
     pub damage_sides: u16,
     #[serde(default)]
     pub damage_type: ActorDamageType,
+    pub ammo_kind_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -694,6 +695,25 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
         item_limits.insert(item.id.clone(), item.max_stack);
+    }
+
+    for item in &content.items {
+        let Some(profile) = &item.projectile_profile else {
+            continue;
+        };
+        let Some(ammo) = content
+            .items
+            .iter()
+            .find(|candidate| candidate.id == profile.ammo_kind_id)
+        else {
+            return Err(ContentError::DanglingReference {
+                owner: item.id.clone(),
+                target: profile.ammo_kind_id.clone(),
+            });
+        };
+        if ammo.max_stack <= 1 || !ammo.tags.iter().any(|tag| tag == "ammunition") {
+            return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
+        }
     }
 
     for world in &mut content.worlds {
@@ -1343,7 +1363,7 @@ mod tests {
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
         assert_eq!(first.content.actors.len(), 7);
-        assert_eq!(first.content.items.len(), 4);
+        assert_eq!(first.content.items.len(), 5);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -1354,7 +1374,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.10.0");
+        assert_eq!(catalog.pack_version(), "1.11.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1377,8 +1397,13 @@ mod tests {
             catalog
                 .item("demo.item.resonance-sling")
                 .and_then(|item| item.projectile_profile.as_ref())
-                .map(|profile| (profile.range, profile.to_hit, profile.to_damage)),
-            Some((6, 30, 1))
+                .map(|profile| (
+                    profile.range,
+                    profile.to_hit,
+                    profile.to_damage,
+                    profile.ammo_kind_id.as_str(),
+                )),
+            Some((6, 30, 1, "demo.item.resonance-pellet"))
         );
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
@@ -1518,6 +1543,21 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidProjectileProfile(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-sling")
+            .expect("fixture should contain the sling")
+            .projectile_profile
+            .as_mut()
+            .expect("sling should have a projectile profile")
+            .ammo_kind_id = "demo.item.missing-ammunition".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::DanglingReference { .. })
         ));
     }
 

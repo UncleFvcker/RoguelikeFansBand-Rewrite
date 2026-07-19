@@ -524,10 +524,41 @@ mod tests {
             .expect("pickup should execute");
         let (final_game, replay) = recorder.finish();
 
-        assert_eq!(final_game.snapshot().items.len(), 3);
+        assert_eq!(final_game.snapshot().items.len(), 4);
         assert_eq!(final_game.snapshot().inventory.len(), 1);
         let verification = verify(&replay, initial).expect("pickup replay should verify");
         assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn thrown_item_transaction_round_trips_through_replay() {
+        let initial = Game::new(42);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        for command in [
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::PickUp,
+            GameCommand::Throw {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+                direction: Direction::East,
+            },
+        ] {
+            recorder.dispatch(command).expect("command should execute");
+        }
+        let (final_game, replay) = recorder.finish();
+
+        assert_eq!(final_game.snapshot().inventory[0].quantity, 4);
+        assert!(
+            final_game
+                .snapshot()
+                .items
+                .iter()
+                .any(|item| item.id == "generated.item.1" && item.quantity == 1)
+        );
+        let verification = verify(&replay, initial).expect("throw replay should verify");
+        assert_eq!(verification.commands_verified, 3);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 
@@ -563,7 +594,7 @@ mod tests {
 
         assert!(final_game.snapshot().inventory.is_empty());
         assert!(final_game.snapshot().equipment.is_empty());
-        assert_eq!(final_game.snapshot().items.len(), 4);
+        assert_eq!(final_game.snapshot().items.len(), 5);
         let verification = verify(&replay, initial).expect("inventory action replay should verify");
         assert_eq!(verification.commands_verified, 7);
         assert_eq!(verification.final_state_hash, final_game.state_hash());

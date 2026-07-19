@@ -36,6 +36,7 @@ message-combat-monster-hit-amplified = { $source } hits you for { $damage } { $t
 message-combat-monster-hit-immune = You are immune to { $source }'s { $type } attack.
 message-combat-player-death = You fall to { $source }.
 message-projectile-unavailable = You have no launcher equipped.
+message-projectile-ammo-unavailable = You have no { $target } to fire.
 message-projectile-landed = Your shot reaches no target.
 message-projectile-miss = Your shot misses { $target }.
 message-projectile-hit = Your shot hits { $target } for { $damage } damage.
@@ -73,4 +74,6 @@ message-item-drop-success =
        *[other] You drop { $stacks } stacks containing { $quantity } items.
     }
 message-item-drop-none = None of the selected items can be dropped.
+message-item-thrown = You throw { $target }.
+message-item-throw-unavailable = The selected item cannot be thrown right now.
 message-unknown-event = [{ $key }]

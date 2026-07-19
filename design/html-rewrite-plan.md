@@ -21,6 +21,7 @@
 - [Contract v12：武器 AttackProfile 与玩家多段近战](contract-v12-weapon-attack-profile.md)
 - [Contract v13：怪物 MeleeRoutine 与稳定 blow 顺序](contract-v13-monster-melee-routines.md)
 - [Contract v14：权威 projectile 与发射器基础](contract-v14-projectile-foundation.md)
+- [Contract v15：弹药事务与投掷落点](contract-v15-ammunition-throwing.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
@@ -547,12 +548,13 @@ interface SaveGame {
 - 协议 1.12 和 contract-v12 已建立；内容包 1.8.0 新增回声刃及武器 `AttackProfile`，玩家多段近战按稳定顺序逐击并在死亡后立即中断。active baseline 共 48 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 协议 1.13 和 contract-v13 已建立；内容包 1.9.0 新增回声猎犬及怪物 `MeleeRoutine`，逐 blow 独立命中/伤害、method 事件参数和死亡中断已闭环。active baseline 共 49 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 协议 1.14 和 contract-v14 已建立；内容包 1.10.0 新增共鸣投射器及发射器 `projectileProfile`，方向射击、权威直线轨迹、边界/墙壁/首目标碰撞和结构化 trace 已闭环。active baseline 共 50 个 exact fixtures，save v1 / state hash Schema v9 不变。
+- 协议 1.15 和 contract-v15 已建立；内容包 1.11.0 新增共鸣弹丸与稳定 `ammoKindId`，射击弹药消费、碰撞/落点分离和单件投掷实例事务已闭环。active baseline 共 52 个 exact fixtures，save v1 / state hash Schema v9 不变。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 在 contract-v14 的轨迹原语上增加弹药实例事务与投掷落点，并复用现有检定和伤害结算；
+1. 建立目标选择协议，并在现有轨迹原语上增加弹药破损/回收与投掷命中伤害；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

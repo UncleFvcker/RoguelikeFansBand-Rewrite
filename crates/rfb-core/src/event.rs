@@ -10,6 +10,7 @@ use crate::effect::DamageOutcome;
 pub(crate) struct ProjectileTrace {
     pub(crate) origin: Position,
     pub(crate) impact: Position,
+    pub(crate) landing: Position,
     pub(crate) traversed: Vec<Position>,
 }
 
@@ -18,6 +19,7 @@ impl From<ProjectileTrace> for ProjectileTraceDto {
         Self {
             origin: trace.origin,
             impact: trace.impact,
+            landing: trace.landing,
             traversed: trace.traversed,
         }
     }
@@ -51,6 +53,9 @@ pub(crate) enum DomainEvent {
     },
     MoveBlocked,
     ProjectileUnavailable,
+    ProjectileAmmoUnavailable {
+        ammo_kind_id: String,
+    },
     ProjectileLanded {
         trace: ProjectileTrace,
     },
@@ -68,6 +73,11 @@ pub(crate) enum DomainEvent {
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
+    ItemThrown {
+        target_kind_id: String,
+        trace: ProjectileTrace,
+    },
+    ItemThrowUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
     },
@@ -190,6 +200,11 @@ impl DomainEvent {
             Self::ProjectileUnavailable => {
                 dto_without_args("combat.projectile-unavailable", "projectile-unavailable")
             }
+            Self::ProjectileAmmoUnavailable { ammo_kind_id } => dto(
+                "combat.projectile-ammo-unavailable",
+                "projectile-ammo-unavailable",
+                [("target", ammo_kind_id)],
+            ),
             Self::ProjectileLanded { trace } => with_trace(
                 dto_without_args("combat.projectile-landed", "projectile-landed"),
                 trace,
@@ -238,6 +253,16 @@ impl DomainEvent {
                 ),
                 trace,
             ),
+            Self::ItemThrown {
+                target_kind_id,
+                trace,
+            } => with_trace(
+                dto("item.thrown", "item-thrown", [("target", target_kind_id)]),
+                trace,
+            ),
+            Self::ItemThrowUnavailable => {
+                dto_without_args("item.throw-unavailable", "item-throw-unavailable")
+            }
             Self::PlayerMeleeMissed { target_kind_id } => dto(
                 "combat.miss",
                 "combat-player-miss",

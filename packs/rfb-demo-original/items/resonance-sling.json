@@ -13,7 +13,8 @@
     "toDamage": 1,
     "damageDice": 1,
     "damageSides": 2,
-    "damageType": "physical"
+    "damageType": "physical",
+    "ammoKindId": "demo.item.resonance-pellet"
   },
   "tags": ["equipment", "launcher"]
 }

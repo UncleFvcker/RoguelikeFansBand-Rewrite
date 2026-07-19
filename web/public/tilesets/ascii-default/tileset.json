@@ -41,6 +41,10 @@
     "demo.item.resonance-sling": {
       "foreground": "#9ee7d8",
       "background": "#17312f"
+    },
+    "demo.item.resonance-pellet": {
+      "foreground": "#d5f4ee",
+      "background": "#213633"
     }
   },
   "fallback": {

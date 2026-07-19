@@ -57,6 +57,9 @@
     "ProjectileProfileDefinition": {
       "additionalProperties": false,
       "properties": {
+        "ammoKindId": {
+          "type": "string"
+        },
         "damageDice": {
           "format": "uint16",
           "maximum": 65535,
@@ -93,7 +96,8 @@
         "toHit",
         "toDamage",
         "damageDice",
-        "damageSides"
+        "damageSides",
+        "ammoKindId"
       ],
       "type": "object"
     },

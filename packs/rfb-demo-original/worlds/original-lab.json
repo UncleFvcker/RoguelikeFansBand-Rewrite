@@ -63,6 +63,12 @@
       "kindId": "demo.item.resonance-sling",
       "position": { "x": 6, "y": 4 },
       "quantity": 1
+    },
+    {
+      "instanceId": "demo.item.resonance-pellet.1",
+      "kindId": "demo.item.resonance-pellet",
+      "position": { "x": 6, "y": 4 },
+      "quantity": 6
     }
   ]
 }

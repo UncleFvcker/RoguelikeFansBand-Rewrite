@@ -48,7 +48,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 10] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 11] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -59,12 +59,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 10] = [
     "12ba3295dfa8a9884bc7464a78b7dbb9cded01409ff22777db02df85d1aabed7",
     "dc371da0d48375a811a6421f1ccaa2e1310daa7aab856f852388f7da1a04c2b5",
     "6449bc9fa8717d7f6ffc4a2a9643c8e40d20f04c196fa80f23bec2823de8e3d5",
+    "ce3d3810b9be824f20230d83d5978dbb555f5766813b5ac43c059be0e6293fe0",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "ce3d3810b9be824f20230d83d5978dbb555f5766813b5ac43c059be0e6293fe0";
+    "cb56a8e9dd6d7280b38fe4e388fc0f7ce08fd4a40cef2c8886907e3c662ffc96";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
+const THROW_RANGE: u16 = 4;
 const AMBIENT_LIGHT: u8 = 28;
 const PLAYER_LIGHT_RADIUS: i32 = 6;
 const ACTOR_LIGHT_RADIUS: i32 = 5;
@@ -447,6 +449,9 @@ impl Game {
                 &mut changed,
                 &mut removed_entities,
             ),
+            GameAction::Throw { item_id, direction } => {
+                self.throw_inventory_item(&item_id, direction, &mut events, &mut changed)?;
+            }
             GameAction::Wait => events.push(DomainEvent::Waited),
             GameAction::PickUp => {
                 if let Some((kind_id, quantity)) = self.pick_up_at_player()? {
@@ -981,6 +986,7 @@ impl Game {
                     sides: profile.damage_sides,
                     damage_type: DamageType::from(profile.damage_type).into(),
                 },
+                ammo_kind_id: profile.ammo_kind_id.clone(),
                 source_item_id: item.id.clone(),
             })
     }
@@ -1004,6 +1010,7 @@ impl Game {
                     damage_dice: profile.damage_dice,
                     damage_sides: profile.damage_sides,
                     damage_type: DamageType::from(profile.damage_type),
+                    ammo_kind_id: profile.ammo_kind_id.clone(),
                     source_item_id: item.id.clone(),
                 })
         })
@@ -1232,35 +1239,13 @@ impl Game {
             events.push(DomainEvent::ProjectileUnavailable);
             return;
         };
-        let origin = self.player.position;
-        let (dx, dy) = direction.delta();
-        let mut impact = origin;
-        let mut traversed = Vec::new();
-        let mut target_index = None;
-        for step in 1..=profile.range {
-            let position = Position {
-                x: origin.x + dx * i32::from(step),
-                y: origin.y + dy * i32::from(step),
-            };
-            impact = position;
-            if self.index(position).is_none() || !self.is_walkable(position) {
-                break;
-            }
-            traversed.push(position);
-            if let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.position == position)
-            {
-                target_index = Some(index);
-                break;
-            }
+        if !self.consume_inventory_item_kind(&profile.ammo_kind_id) {
+            events.push(DomainEvent::ProjectileAmmoUnavailable {
+                ammo_kind_id: profile.ammo_kind_id,
+            });
+            return;
         }
-        let trace = ProjectileTrace {
-            origin,
-            impact,
-            traversed,
-        };
+        let (trace, target_index) = self.trace_projectile(direction, profile.range);
         let Some(index) = target_index else {
             events.push(DomainEvent::ProjectileLanded { trace });
             return;
@@ -1321,6 +1306,107 @@ impl Game {
                 trace,
             });
         }
+    }
+
+    fn trace_projectile(
+        &self,
+        direction: rfb_protocol::Direction,
+        range: u16,
+    ) -> (ProjectileTrace, Option<usize>) {
+        let origin = self.player.position;
+        let (dx, dy) = direction.delta();
+        let mut impact = origin;
+        let mut landing = origin;
+        let mut traversed = Vec::new();
+        let mut target_index = None;
+        for step in 1..=range {
+            let position = Position {
+                x: origin.x + dx * i32::from(step),
+                y: origin.y + dy * i32::from(step),
+            };
+            impact = position;
+            if self.index(position).is_none() || !self.is_walkable(position) {
+                break;
+            }
+            landing = position;
+            traversed.push(position);
+            if let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.position == position)
+            {
+                target_index = Some(index);
+                break;
+            }
+        }
+        (
+            ProjectileTrace {
+                origin,
+                impact,
+                landing,
+                traversed,
+            },
+            target_index,
+        )
+    }
+
+    fn consume_inventory_item_kind(&mut self, kind_id: &str) -> bool {
+        let Some(index) = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| {
+                item.kind_id == kind_id
+                    && item.location == ItemLocation::Inventory
+                    && item.quantity > 0
+            })
+            .min_by(|(_, left), (_, right)| left.id.cmp(&right.id))
+            .map(|(index, _)| index)
+        else {
+            return false;
+        };
+        if self.items[index].quantity == 1 {
+            self.items.remove(index);
+        } else {
+            self.items[index].quantity -= 1;
+        }
+        true
+    }
+
+    fn throw_inventory_item(
+        &mut self,
+        item_id: &str,
+        direction: rfb_protocol::Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let Some(index) = self.items.iter().position(|item| {
+            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
+        }) else {
+            events.push(DomainEvent::ItemThrowUnavailable);
+            return Ok(());
+        };
+        let (trace, _) = self.trace_projectile(direction, THROW_RANGE);
+        let landing = trace.landing;
+        let target_kind_id = self.items[index].kind_id.clone();
+        if self.items[index].quantity == 1 {
+            self.items[index].location = ItemLocation::Ground(landing);
+        } else {
+            let id = self.allocate_item_instance_id()?;
+            self.items[index].quantity -= 1;
+            self.items.push(ItemInstance {
+                id,
+                kind_id: target_kind_id.clone(),
+                quantity: 1,
+                location: ItemLocation::Ground(landing),
+            });
+        }
+        changed.insert(landing);
+        events.push(DomainEvent::ItemThrown {
+            target_kind_id,
+            trace,
+        });
+        Ok(())
     }
 
     fn player_is_dead(&self) -> bool {
@@ -2058,6 +2144,7 @@ struct ResolvedProjectileProfile {
     damage_dice: u16,
     damage_sides: u16,
     damage_type: DamageType,
+    ammo_kind_id: String,
     source_item_id: String,
 }
 
@@ -2072,6 +2159,7 @@ impl ResolvedProjectileProfile {
                 sides: self.damage_sides,
                 damage_type: self.damage_type.into(),
             },
+            ammo_kind_id: self.ammo_kind_id.clone(),
             source_item_id: self.source_item_id.clone(),
         }
     }
@@ -2317,7 +2405,7 @@ mod tests {
         assert_eq!(snapshot.player.defense, 1);
         assert!(snapshot.inventory.is_empty());
         assert!(snapshot.equipment.is_empty());
-        assert_eq!(snapshot.items.len(), 4);
+        assert_eq!(snapshot.items.len(), 5);
         assert_eq!(snapshot.entities[0].position, Position { x: 8, y: 5 });
         assert_eq!(snapshot.entities[0].attack, 1);
         assert_eq!(snapshot.entities[0].defense, 1);
@@ -2610,6 +2698,7 @@ mod tests {
                 item.kind_id != "demo.item.echo-charm"
                     && item.kind_id != "demo.item.echo-blade"
                     && item.kind_id != "demo.item.resonance-sling"
+                    && item.kind_id != "demo.item.resonance-pellet"
             });
 
             let restored = Game::from_save(payload).expect("known previous content should migrate");
@@ -2620,6 +2709,7 @@ mod tests {
                 item.kind_id != "demo.item.echo-charm"
                     && item.kind_id != "demo.item.echo-blade"
                     && item.kind_id != "demo.item.resonance-sling"
+                    && item.kind_id != "demo.item.resonance-pellet"
             }));
         }
     }
@@ -2840,7 +2930,7 @@ mod tests {
             .dispatch(command(2, 1, GameCommand::PickUp))
             .expect("pickup should execute");
 
-        assert_eq!(update.items.len(), 3);
+        assert_eq!(update.items.len(), 4);
         assert_eq!(update.inventory.len(), 1);
         assert_eq!(update.inventory[0].id, "demo.item.luminous-shard.1");
         assert_eq!(update.inventory[0].quantity, 5);
@@ -3132,6 +3222,11 @@ mod tests {
             .location = ItemLocation::Equipped {
             slot_id: "launcher".to_owned(),
         };
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.resonance-pellet")
+            .expect("demo ammunition should exist")
+            .location = ItemLocation::Inventory;
         game.entities[0].position = Position { x: 7, y: 3 };
         game.entities[0].hp = 10;
 
@@ -3156,9 +3251,91 @@ mod tests {
             .expect("projectile trace should exist");
         assert_eq!(trace.origin, Position { x: 3, y: 3 });
         assert_eq!(trace.impact, Position { x: 7, y: 3 });
+        assert_eq!(trace.landing, Position { x: 7, y: 3 });
         assert_eq!(trace.traversed.len(), 4);
         assert_eq!(projectile.kind, "combat.projectile-hit");
         assert!(update.entities[0].hp < 10);
+        assert_eq!(
+            update
+                .inventory
+                .iter()
+                .find(|item| item.kind_id == "demo.item.resonance-pellet")
+                .map(|item| item.quantity),
+            Some(5)
+        );
+    }
+
+    #[test]
+    fn launcher_without_inventory_ammunition_does_not_advance_rng() {
+        let mut game = Game::new(0);
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.resonance-sling")
+            .expect("demo launcher should exist")
+            .location = ItemLocation::Equipped {
+            slot_id: "launcher".to_owned(),
+        };
+        let rng_draws = game.rng_draw_counter();
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Fire {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("unavailable fire action should execute deterministically");
+
+        assert_eq!(update.events[0].kind, "combat.projectile-ammo-unavailable");
+        assert_eq!(game.rng_draw_counter(), rng_draws);
+        assert!(update.inventory.is_empty());
+        assert!(
+            update
+                .items
+                .iter()
+                .any(|item| { item.kind_id == "demo.item.resonance-pellet" && item.quantity == 6 })
+        );
+    }
+
+    #[test]
+    fn throwing_one_item_splits_the_stack_and_lands_before_a_wall() {
+        let mut game = Game::new(0);
+        game.player.position = Position { x: 10, y: 3 };
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo throwable stack should exist")
+            .location = ItemLocation::Inventory;
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Throw {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    direction: Direction::East,
+                },
+            ))
+            .expect("throw action should execute");
+
+        let thrown = update
+            .events
+            .iter()
+            .find(|event| event.kind == "item.thrown")
+            .expect("throw event should be emitted");
+        let trace = thrown.trace.as_ref().expect("throw trace should exist");
+        assert_eq!(trace.origin, Position { x: 10, y: 3 });
+        assert_eq!(trace.impact, Position { x: 11, y: 3 });
+        assert_eq!(trace.landing, Position { x: 10, y: 3 });
+        assert!(trace.traversed.is_empty());
+        assert_eq!(update.inventory[0].quantity, 4);
+        assert!(update.items.iter().any(|item| {
+            item.id == "generated.item.1"
+                && item.kind_id == "demo.item.luminous-shard"
+                && item.quantity == 1
+                && item.position == Position { x: 10, y: 3 }
+        }));
     }
 
     #[test]
@@ -3179,7 +3356,7 @@ mod tests {
             .expect("batch drop should execute");
 
         assert!(update.inventory.is_empty());
-        assert_eq!(update.items.len(), 4);
+        assert_eq!(update.items.len(), 5);
         assert!(
             update
                 .items
@@ -3187,6 +3364,7 @@ mod tests {
                 .filter(|item| {
                     item.kind_id != "demo.item.echo-blade"
                         && item.kind_id != "demo.item.resonance-sling"
+                        && item.kind_id != "demo.item.resonance-pellet"
                 })
                 .all(|item| item.position == Position { x: 5, y: 3 })
         );

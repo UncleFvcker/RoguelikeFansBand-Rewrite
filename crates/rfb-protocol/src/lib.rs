@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.14";
+pub const PROTOCOL_VERSION: &str = "1.15";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -57,13 +57,30 @@ impl Direction {
     rename_all_fields = "camelCase"
 )]
 pub enum GameCommand {
-    Drop { item_ids: Vec<String> },
-    DropQuantity { item_id: String, quantity: u32 },
-    Equip { item_id: String },
-    Fire { direction: Direction },
-    Move { direction: Direction },
+    Drop {
+        item_ids: Vec<String>,
+    },
+    DropQuantity {
+        item_id: String,
+        quantity: u32,
+    },
+    Equip {
+        item_id: String,
+    },
+    Fire {
+        direction: Direction,
+    },
+    Move {
+        direction: Direction,
+    },
     PickUp,
-    Unequip { slot_id: String },
+    Throw {
+        item_id: String,
+        direction: Direction,
+    },
+    Unequip {
+        slot_id: String,
+    },
     Wait,
 }
 
@@ -137,6 +154,8 @@ pub struct ProjectileProfileDto {
     pub to_hit: i32,
     pub to_damage: i32,
     pub damage: DamageDiceDto,
+    #[serde(default)]
+    pub ammo_kind_id: String,
     pub source_item_id: String,
 }
 
@@ -146,6 +165,8 @@ pub struct ProjectileProfileDto {
 pub struct ProjectileTraceDto {
     pub origin: Position,
     pub impact: Position,
+    #[serde(default)]
+    pub landing: Position,
     pub traversed: Vec<Position>,
 }
 
@@ -751,6 +772,13 @@ mod tests {
             GameCommand::DropQuantity {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
                 quantity: 2,
+            },
+            GameCommand::Fire {
+                direction: Direction::East,
+            },
+            GameCommand::Throw {
+                item_id: "demo.item.luminous-shard.1".to_owned(),
+                direction: Direction::North,
             },
             GameCommand::Wait,
         ]
