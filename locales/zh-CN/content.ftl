@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
 item-demo-luminous-shard-name = 发光碎片
+item-demo-unfamiliar-shard-name = 陌生的浅色碎片
 item-demo-echo-charm-name = 回声护符
 item-demo-echo-blade-name = 回声刃
 item-demo-echo-blade-description = 一柄能连续斩击两次的共鸣短刃。

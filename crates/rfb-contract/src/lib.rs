@@ -4,8 +4,9 @@ use std::collections::BTreeSet;
 
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
-    CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, PROTOCOL_VERSION, Position,
-    ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto,
+    CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, ItemKnowledgeSaveDto,
+    PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto,
+    StatusSaveDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -128,6 +129,8 @@ pub struct FinalStateAssertion {
     #[serde(default)]
     pub equipment_count: usize,
     #[serde(default)]
+    pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
+    #[serde(default)]
     pub next_item_instance_serial: Option<u64>,
     pub state_hash: String,
 }
@@ -219,6 +222,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     }
 
     let snapshot = game.snapshot();
+    let save = game.to_save();
     let save_round_trip_state_hash = fixture
         .save_round_trip
         .then(|| save_round_trip(&game))
@@ -257,7 +261,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             ground_item_count: snapshot.items.len(),
             inventory_stack_count: snapshot.inventory.len(),
             equipment_count: snapshot.equipment.len(),
-            next_item_instance_serial: Some(game.to_save().next_item_instance_serial),
+            item_knowledge: save.item_knowledge,
+            next_item_instance_serial: Some(save.next_item_instance_serial),
             state_hash: snapshot.state_hash,
         },
         events,

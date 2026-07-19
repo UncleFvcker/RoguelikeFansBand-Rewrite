@@ -166,6 +166,13 @@
     "$schema": {
       "type": "string"
     },
+    "appearanceNameKey": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "breakChancePercent": {
       "default": 0,
       "format": "uint8",

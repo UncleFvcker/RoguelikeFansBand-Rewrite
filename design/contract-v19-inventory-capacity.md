@@ -19,4 +19,4 @@
 
 ## 后续
 
-Stage D 下一切片建立 `ItemKnowledge` 的 aware/tried 状态与未知名称投影，确保规则和 UI 都不能泄露尚未识别的物品信息；身体槽位、箭袋和负重惩罚在对应系统切片继续扩展。
+Stage D 的下一切片已由 [contract-v20](contract-v20-item-knowledge.md) 建立种类级 `ItemKnowledge`、aware/tried 状态与未知名称投影；身体槽位、箭袋和负重惩罚在对应系统切片继续扩展。

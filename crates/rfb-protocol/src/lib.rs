@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.19";
+pub const PROTOCOL_VERSION: &str = "1.20";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -426,8 +426,22 @@ pub struct EntityDto {
 pub struct ItemDto {
     pub id: String,
     pub kind_id: String,
+    #[serde(default)]
+    pub display_name_key: String,
+    #[serde(default)]
+    pub knowledge: ItemKnowledgeDto,
     pub position: Position,
     pub quantity: u32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemKnowledgeDto {
+    Unknown,
+    Tried,
+    #[default]
+    Aware,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -436,6 +450,10 @@ pub struct ItemDto {
 pub struct InventoryItemDto {
     pub id: String,
     pub kind_id: String,
+    #[serde(default)]
+    pub display_name_key: String,
+    #[serde(default)]
+    pub knowledge: ItemKnowledgeDto,
     pub quantity: u32,
     #[serde(default)]
     pub weight_tenths_pound: u16,
@@ -457,6 +475,10 @@ pub struct InventoryItemDto {
 pub struct EquipmentItemDto {
     pub id: String,
     pub kind_id: String,
+    #[serde(default)]
+    pub display_name_key: String,
+    #[serde(default)]
+    pub knowledge: ItemKnowledgeDto,
     pub quantity: u32,
     #[serde(default)]
     pub weight_tenths_pound: u16,
@@ -592,6 +614,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(PlayerDto);
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
+    push_declaration!(ItemKnowledgeDto);
     push_declaration!(InventoryItemDto);
     push_declaration!(EquipmentItemDto);
     push_declaration!(GameEventDto);
@@ -707,6 +730,16 @@ pub struct EquipmentItemSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ItemKnowledgeSaveDto {
+    pub kind_id: String,
+    #[serde(default)]
+    pub tried: bool,
+    #[serde(default)]
+    pub aware: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
     pub schema_version: u16,
     pub revision: u32,
@@ -723,6 +756,8 @@ pub struct SavePayloadV1 {
     pub inventory: Vec<InventoryItemSaveDto>,
     #[serde(default)]
     pub equipment: Vec<EquipmentItemSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -950,12 +985,16 @@ mod tests {
             items: vec![ItemDto {
                 id: "demo.item.ground.1".to_owned(),
                 kind_id: "demo.item.shard".to_owned(),
+                display_name_key: "item-demo-shard-name".to_owned(),
+                knowledge: ItemKnowledgeDto::Aware,
                 position: Position { x: 0, y: 0 },
                 quantity: 2,
             }],
             inventory: vec![InventoryItemDto {
                 id: "demo.item.inventory.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
+                display_name_key: "item-demo-charm-name".to_owned(),
+                knowledge: ItemKnowledgeDto::Aware,
                 quantity: 1,
                 weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),
@@ -971,6 +1010,8 @@ mod tests {
             equipment: vec![EquipmentItemDto {
                 id: "demo.item.equipment.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
+                display_name_key: "item-demo-charm-name".to_owned(),
+                knowledge: ItemKnowledgeDto::Aware,
                 quantity: 1,
                 weight_tenths_pound: 5,
                 slot_id: "charm".to_owned(),
@@ -1003,6 +1044,7 @@ mod tests {
         assert_eq!(decoded.entities[0].max_hp, 3);
         assert_eq!(decoded.inventory[0].kind_id, "demo.item.charm");
         assert_eq!(decoded.equipment[0].slot_id, "charm");
+        assert!(decoded.item_knowledge.is_empty());
     }
 
     #[test]

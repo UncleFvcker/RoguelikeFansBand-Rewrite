@@ -57,11 +57,13 @@ export type PlayerDto = { id: string, kindId: string, position: Position, hp: nu
 
 export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, };
 
-export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
+export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, position: Position, quantity: number, };
 
-export type InventoryItemDto = { id: string, kindId: string, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type ItemKnowledgeDto = "unknown" | "tried" | "aware";
 
-export type EquipmentItemDto = { id: string, kindId: string, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+
+export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 

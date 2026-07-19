@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "id": "combat.throw.profile-hit",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": {
+          "x": 7,
+          "y": 3
+        },
+        "hp": 3,
+        "energyNeed": 100,
+        "statuses": [
+          {
+            "kindId": "rfb.status.slow",
+            "intensity": 10,
+            "remainingTicks": 100
+          }
+        ],
+        "resistances": []
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "throw",
+        "itemId": "demo.item.luminous-shard.1",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 3,
+      "turn": 3,
+      "worldTick": 30,
+      "lastCommandSeq": 3,
+      "playerPosition": {
+        "x": 4,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 40,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 7,
+            "y": 3
+          },
+          "hp": 2,
+          "speed": 10,
+          "energyNeed": 70,
+          "statuses": [
+            {
+              "kindId": "rfb.status.slow",
+              "intensity": 10,
+              "remainingTicks": 70
+            }
+          ]
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 1,
+      "equipmentCount": 0,
+      "itemKnowledge": [
+        {
+          "kindId": "demo.item.luminous-shard",
+          "tried": true,
+          "aware": false
+        }
+      ],
+      "nextItemInstanceSerial": 2,
+      "stateHash": "11a331d11003f09dd157bc80bd0a3bc6c97c62d1f22f2831cd351dd07d952cfe"
+    },
+    "events": [
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "5",
+          "target": "demo.item.luminous-shard"
+        }
+      },
+      {
+        "kind": "combat.throw-hit",
+        "messageKey": "throw-hit",
+        "args": {
+          "damage": "1",
+          "source": "demo.item.luminous-shard",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 1,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        },
+        "trace": {
+          "origin": {
+            "x": 4,
+            "y": 3
+          },
+          "impact": {
+            "x": 7,
+            "y": 3
+          },
+          "landing": {
+            "x": 7,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            }
+          ]
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "11a331d11003f09dd157bc80bd0a3bc6c97c62d1f22f2831cd351dd07d952cfe"
+  }
+}

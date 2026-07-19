@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
 item-demo-luminous-shard-name = luminous shard
+item-demo-unfamiliar-shard-name = unfamiliar pale shard
 item-demo-echo-charm-name = echo charm
 item-demo-echo-blade-name = echo blade
 item-demo-echo-blade-description = A resonant blade that lands two quick cuts.

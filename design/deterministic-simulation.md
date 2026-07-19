@@ -2,9 +2,9 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v9：哈希输入覆盖运行时内容包 ID/hash、world ID、战斗状态、物品、RNG、世界脉冲和命令序号。active contract-v19 的容量来自锁定内容，携带重量由现有物品位置与数量重算；超重拒绝不产生新权威状态，因此不虚增 state hash Schema。
+当前 state hash Schema 为 v10：哈希输入覆盖运行时内容包 ID/hash、world ID、战斗状态、物品、按稳定 kind ID 排序的物品知识、RNG、世界脉冲和命令序号。active contract-v20 的 `ItemKnowledge` 会改变玩家可见规则投影，因此作为新权威状态显式进入哈希。
 
-state hash 与正式存档 DTO 已解耦。Schema v9 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 v9 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v10 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 v10 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 

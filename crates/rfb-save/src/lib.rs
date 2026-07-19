@@ -191,6 +191,7 @@ mod tests {
             items: Vec::<ItemSaveDto>::new(),
             inventory: Vec::<InventoryItemSaveDto>::new(),
             equipment: Vec::new(),
+            item_knowledge: Vec::new(),
             next_item_instance_serial: 1,
             explored: vec![true],
             rng: RngSaveDto {

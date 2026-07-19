@@ -167,6 +167,7 @@ export const MESSAGE_KEYS = [
   "message-item-throw-unavailable",
   "message-unknown-event",
   "item-demo-luminous-shard-name",
+  "item-demo-unfamiliar-shard-name",
   "item-demo-echo-charm-name",
   "item-demo-echo-blade-name",
   "item-demo-echo-blade-description",

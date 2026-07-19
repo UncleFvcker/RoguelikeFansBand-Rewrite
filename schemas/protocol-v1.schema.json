@@ -317,11 +317,19 @@
     "EquipmentItemDto": {
       "type": "object",
       "properties": {
+        "displayNameKey": {
+          "type": "string",
+          "default": ""
+        },
         "id": {
           "type": "string"
         },
         "kindId": {
           "type": "string"
+        },
+        "knowledge": {
+          "$ref": "#/$defs/ItemKnowledgeDto",
+          "default": "aware"
         },
         "meleeProfile": {
           "anyOf": [
@@ -876,6 +884,10 @@
     "InventoryItemDto": {
       "type": "object",
       "properties": {
+        "displayNameKey": {
+          "type": "string",
+          "default": ""
+        },
         "equipmentSlot": {
           "type": [
             "string",
@@ -888,6 +900,10 @@
         },
         "kindId": {
           "type": "string"
+        },
+        "knowledge": {
+          "$ref": "#/$defs/ItemKnowledgeDto",
+          "default": "aware"
         },
         "meleeProfile": {
           "anyOf": [
@@ -949,11 +965,19 @@
     "ItemDto": {
       "type": "object",
       "properties": {
+        "displayNameKey": {
+          "type": "string",
+          "default": ""
+        },
         "id": {
           "type": "string"
         },
         "kindId": {
           "type": "string"
+        },
+        "knowledge": {
+          "$ref": "#/$defs/ItemKnowledgeDto",
+          "default": "aware"
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -969,6 +993,14 @@
         "kindId",
         "position",
         "quantity"
+      ]
+    },
+    "ItemKnowledgeDto": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "tried",
+        "aware"
       ]
     },
     "MeleeBlowDto": {

@@ -202,6 +202,8 @@ pub struct ItemDefinition {
     pub format_version: u16,
     pub id: String,
     pub name_key: String,
+    #[serde(default)]
+    pub appearance_name_key: Option<String>,
     pub description_key: String,
     pub glyph: String,
     pub weight_tenths_pound: u16,
@@ -666,6 +668,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         require_format_version(item.format_version, &item.id)?;
         validate_definition_id(&item.id, "item")?;
         validate_definition_text(&item.id, &item.name_key, &item.description_key)?;
+        if let Some(appearance_name_key) = &item.appearance_name_key {
+            validate_message_key(appearance_name_key)?;
+            if appearance_name_key == &item.name_key {
+                return Err(ContentError::InvalidItemAppearance(item.id.clone()));
+            }
+        }
         validate_glyph(&item.id, &item.glyph)?;
         if item.weight_tenths_pound == 0 || item.weight_tenths_pound > 10_000 {
             return Err(ContentError::InvalidItemWeight(item.id.clone()));
@@ -1334,6 +1342,8 @@ pub enum ContentError {
     InvalidItemStack(String),
     #[error("item weight is outside supported limits: {0}")]
     InvalidItemWeight(String),
+    #[error("item appearance must use a distinct valid message key: {0}")]
+    InvalidItemAppearance(String),
     #[error("item break chance is outside 0..=100 percent: {0}")]
     InvalidItemBreakChance(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
@@ -1425,7 +1435,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.14.0");
+        assert_eq!(catalog.pack_version(), "1.15.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1595,6 +1605,18 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemWeight(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let shard = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.luminous-shard")
+            .expect("fixture should contain the throwable shard");
+        shard.appearance_name_key = Some(shard.name_key.clone());
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemAppearance(_))
         ));
 
         let mut invalid = artifact.content.clone();

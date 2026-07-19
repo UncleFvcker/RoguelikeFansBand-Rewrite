@@ -3,6 +3,7 @@
   "formatVersion": 1,
   "id": "demo.item.luminous-shard",
   "nameKey": "item-demo-luminous-shard-name",
+  "appearanceNameKey": "item-demo-unfamiliar-shard-name",
   "descriptionKey": "item-demo-luminous-shard-description",
   "glyph": "!",
   "weightTenthsPound": 10,

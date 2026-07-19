@@ -763,7 +763,7 @@ function renderInventory(
       details.className = "inventory-item-details";
       const name = document.createElement("span");
       name.className = "inventory-item-name";
-      name.textContent = contentName(item.kindId);
+      name.textContent = visibleItemName(item.displayNameKey, item.kindId);
       details.append(name);
       if (item.equipmentSlot) {
         const equippable = document.createElement("span");
@@ -804,7 +804,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
     const details = document.createElement("span");
     details.className = "equipment-item-details";
     const name = document.createElement("span");
-    name.textContent = contentName(item.kindId);
+    name.textContent = visibleItemName(item.displayNameKey, item.kindId);
     const slot = document.createElement("span");
     slot.className = "equipment-slot";
     slot.textContent = equipmentSlotName(item.slotId);
@@ -967,7 +967,7 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-projectile-unavailable");
     case "projectile-ammo-unavailable":
       return localization.format("message-projectile-ammo-unavailable", {
-        target: contentName(event.args.target),
+        target: visibleItemNameForKind(event.args.target),
       });
     case "projectile-target-unavailable":
       return localization.format("message-projectile-target-unavailable");
@@ -985,6 +985,14 @@ function formatEvent(event: GameEventDto): string {
     case "projectile-slay":
       return localization.format("message-projectile-slay", {
         target: contentName(event.args.target),
+      });
+    case "projectile-ammo-recovered":
+      return localization.format("message-projectile-ammo-recovered", {
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "projectile-ammo-broken":
+      return localization.format("message-projectile-ammo-broken", {
+        target: visibleItemNameForKind(event.args.target),
       });
     case "status-player-damage":
       return localization.format("message-status-player-damage", {
@@ -1021,12 +1029,12 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-pickup-success":
       return localization.format("message-item-pickup-success", {
-        target: contentName(event.args.target),
+        target: visibleItemNameForKind(event.args.target),
         quantity: event.args.quantity ?? "?",
       });
     case "item-pickup-over-capacity":
       return localization.format("message-item-pickup-over-capacity", {
-        target: contentName(event.args.target),
+        target: visibleItemNameForKind(event.args.target),
         quantity: event.args.quantity ?? "?",
         currentWeight: formatTenthsPoundArgument(event.args.currentWeight),
         pickupWeight: formatTenthsPoundArgument(event.args.pickupWeight),
@@ -1036,20 +1044,20 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-pickup-none");
     case "item-equip-success":
       return localization.format("message-item-equip-success", {
-        target: contentName(event.args.target),
+        target: visibleItemNameForKind(event.args.target),
         slot: equipmentSlotName(event.args.slot),
       });
     case "item-equip-swap":
       return localization.format("message-item-equip-swap", {
-        target: contentName(event.args.target),
-        replaced: contentName(event.args.replaced),
+        target: visibleItemNameForKind(event.args.target),
+        replaced: visibleItemNameForKind(event.args.replaced),
         slot: equipmentSlotName(event.args.slot),
       });
     case "item-equip-unavailable":
       return localization.format("message-item-equip-unavailable");
     case "item-unequip-success":
       return localization.format("message-item-unequip-success", {
-        target: contentName(event.args.target),
+        target: visibleItemNameForKind(event.args.target),
         slot: equipmentSlotName(event.args.slot),
       });
     case "item-unequip-none":
@@ -1063,6 +1071,22 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-thrown":
       return localization.format("message-item-thrown", {
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "throw-miss":
+      return localization.format("message-throw-miss", {
+        source: visibleItemNameForKind(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "throw-hit":
+      return localization.format("message-throw-hit", {
+        source: visibleItemNameForKind(event.args.source),
+        target: contentName(event.args.target),
+        damage: event.args.damage ?? "?",
+      });
+    case "throw-slay":
+      return localization.format("message-throw-slay", {
+        source: visibleItemNameForKind(event.args.source),
         target: contentName(event.args.target),
       });
     case "item-throw-unavailable":
@@ -1181,6 +1205,34 @@ function contentName(id: string | undefined): string {
   return localization.format(
     id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",
   );
+}
+
+function visibleItemName(displayNameKey: string, fallbackKindId: string | undefined): string {
+  switch (displayNameKey) {
+    case "item-demo-luminous-shard-name":
+    case "item-demo-unfamiliar-shard-name":
+    case "item-demo-echo-charm-name":
+    case "item-demo-echo-blade-name":
+    case "item-demo-resonance-sling-name":
+    case "item-demo-resonance-pellet-name":
+    case "item-unknown-name":
+      return localization.format(displayNameKey);
+    default:
+      return contentName(fallbackKindId);
+  }
+}
+
+function visibleItemNameForKind(kindId: string | undefined): string {
+  if (!kindId) return localization.format("item-unknown-name");
+  const projected =
+    currentInventory.find((item) => item.kindId === kindId) ??
+    currentEquipment.find((item) => item.kindId === kindId) ??
+    currentStatus?.items.find((item) => item.kindId === kindId);
+  if (projected) return visibleItemName(projected.displayNameKey, kindId);
+  if (kindId === "demo.item.luminous-shard") {
+    return localization.format("item-demo-unfamiliar-shard-name");
+  }
+  return contentName(kindId);
 }
 
 function equipmentSlotName(slotId: string | undefined): string {

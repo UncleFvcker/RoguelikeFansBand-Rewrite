@@ -2,7 +2,7 @@
 // Game aggregate and rule orchestration.
 
 use std::{
-    collections::{BTreeSet, VecDeque},
+    collections::{BTreeMap, BTreeSet, VecDeque},
     sync::Arc,
 };
 
@@ -39,16 +39,17 @@ use rfb_content::{ActorRole, ContentCatalog};
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
     DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
-    GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemSaveDto,
-    MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position,
-    ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto,
+    PlayerSaveDto, Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto,
+    TargetModeDto, TargetSelection, TargetSpecDto, TerrainSaveDto, ThrowProfileDto,
+    VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 14] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 15] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -63,9 +64,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 14] = [
     "cb56a8e9dd6d7280b38fe4e388fc0f7ce08fd4a40cef2c8886907e3c662ffc96",
     "87e77fccea2c1ea40a6d952abf8d0b38d286c049b34b73f0da93f00288d1c2ae",
     "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf",
+    "479728aa3cead56c7dbf886a1beb4a9f20b5034085da8836cb82f2191246e979",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "479728aa3cead56c7dbf886a1beb4a9f20b5034085da8836cb82f2191246e979";
+    "43b38c37bc03ae81f8fe1e5a3f3c8afeba47921ff05321011bc227fb5813387f";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -82,7 +84,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV9 {
+struct StateHashPayloadV10 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -94,6 +96,7 @@ struct StateHashPayloadV9 {
     items: Vec<ItemSaveDto>,
     inventory: Vec<InventoryItemSaveDto>,
     equipment: Vec<EquipmentItemSaveDto>,
+    item_knowledge: Vec<ItemKnowledgeSaveDto>,
     next_item_instance_serial: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     explored: Vec<bool>,
@@ -113,6 +116,7 @@ pub struct Game {
     player: Actor,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
+    item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     rng: RfbRng,
@@ -208,6 +212,7 @@ impl Game {
             player,
             entities,
             items,
+            item_knowledge: BTreeMap::new(),
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             rng: RfbRng::seeded(seed),
@@ -305,6 +310,7 @@ impl Game {
                 "exploration memory dimensions are invalid",
             ));
         }
+        let item_knowledge = item_knowledge_from_save(payload.item_knowledge, &content)?;
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -314,6 +320,7 @@ impl Game {
             player,
             entities,
             items,
+            item_knowledge,
             next_item_instance_serial,
             explored,
             rng: RfbRng::from_save(&payload.rng)?,
@@ -345,6 +352,7 @@ impl Game {
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
+            item_knowledge: self.item_knowledge_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: self.explored.clone(),
             rng: self.rng.to_save(),
@@ -567,8 +575,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV9 {
-            schema_version: 9,
+        let payload = StateHashPayloadV10 {
+            schema_version: 10,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -583,6 +591,7 @@ impl Game {
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
+            item_knowledge: self.item_knowledge_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: Vec::new(),
             rng: self.rng.to_save(),
@@ -739,6 +748,8 @@ impl Game {
                 Some(ItemDto {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&item.kind_id),
+                    knowledge: self.item_knowledge_dto(&item.kind_id),
                     position: *position,
                     quantity: item.quantity,
                 })
@@ -759,16 +770,18 @@ impl Game {
                 Some(InventoryItemDto {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&item.kind_id),
+                    knowledge: self.item_knowledge_dto(&item.kind_id),
                     quantity: item.quantity,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
                         .content
                         .item(&item.kind_id)
                         .and_then(|definition| definition.equipment_slot.clone()),
-                    modifiers: self.item_modifiers(&item.kind_id),
-                    melee_profile: self.item_melee_profile(item),
-                    projectile_profile: self.item_projectile_profile(item),
-                    throw_profile: self.item_throw_profile(item),
+                    modifiers: self.visible_item_modifiers(&item.kind_id),
+                    melee_profile: self.visible_item_melee_profile(item),
+                    projectile_profile: self.visible_item_projectile_profile(item),
+                    throw_profile: self.visible_item_throw_profile(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -787,13 +800,15 @@ impl Game {
                 Some(EquipmentItemDto {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&item.kind_id),
+                    knowledge: self.item_knowledge_dto(&item.kind_id),
                     quantity: item.quantity,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
-                    modifiers: self.item_modifiers(&item.kind_id),
-                    melee_profile: self.item_melee_profile(item),
-                    projectile_profile: self.item_projectile_profile(item),
-                    throw_profile: self.item_throw_profile(item),
+                    modifiers: self.visible_item_modifiers(&item.kind_id),
+                    melee_profile: self.visible_item_melee_profile(item),
+                    projectile_profile: self.visible_item_projectile_profile(item),
+                    throw_profile: self.visible_item_throw_profile(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -983,6 +998,90 @@ impl Game {
                 defense: definition.modifiers.defense,
                 max_hp: definition.modifiers.max_hp,
             })
+    }
+
+    fn item_knowledge_dto(&self, kind_id: &str) -> ItemKnowledgeDto {
+        let Some(definition) = self.content.item(kind_id) else {
+            return ItemKnowledgeDto::Unknown;
+        };
+        if definition.appearance_name_key.is_none() {
+            return ItemKnowledgeDto::Aware;
+        }
+        self.item_knowledge
+            .get(kind_id)
+            .map_or(ItemKnowledgeDto::Unknown, |knowledge| {
+                if knowledge.aware {
+                    ItemKnowledgeDto::Aware
+                } else if knowledge.tried {
+                    ItemKnowledgeDto::Tried
+                } else {
+                    ItemKnowledgeDto::Unknown
+                }
+            })
+    }
+
+    fn item_display_name_key(&self, kind_id: &str) -> String {
+        let Some(definition) = self.content.item(kind_id) else {
+            return "item-unknown-name".to_owned();
+        };
+        if self.item_knowledge_dto(kind_id) == ItemKnowledgeDto::Aware {
+            definition.name_key.clone()
+        } else {
+            definition
+                .appearance_name_key
+                .clone()
+                .unwrap_or_else(|| definition.name_key.clone())
+        }
+    }
+
+    fn mark_item_tried(&mut self, kind_id: &str) {
+        if self
+            .content
+            .item(kind_id)
+            .is_some_and(|definition| definition.appearance_name_key.is_some())
+        {
+            self.item_knowledge
+                .entry(kind_id.to_owned())
+                .or_default()
+                .tried = true;
+        }
+    }
+
+    fn visible_item_modifiers(&self, kind_id: &str) -> StatModifiersDto {
+        if self.item_knowledge_dto(kind_id) == ItemKnowledgeDto::Aware {
+            self.item_modifiers(kind_id)
+        } else {
+            StatModifiersDto::default()
+        }
+    }
+
+    fn visible_item_melee_profile(&self, item: &ItemInstance) -> Option<AttackProfileDto> {
+        (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+            .then(|| self.item_melee_profile(item))
+            .flatten()
+    }
+
+    fn visible_item_projectile_profile(&self, item: &ItemInstance) -> Option<ProjectileProfileDto> {
+        (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+            .then(|| self.item_projectile_profile(item))
+            .flatten()
+    }
+
+    fn visible_item_throw_profile(&self, item: &ItemInstance) -> Option<ThrowProfileDto> {
+        (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+            .then(|| self.item_throw_profile(item))
+            .flatten()
+    }
+
+    fn item_knowledge_to_save(&self) -> Vec<ItemKnowledgeSaveDto> {
+        self.item_knowledge
+            .iter()
+            .map(|(kind_id, knowledge)| ItemKnowledgeSaveDto {
+                kind_id: kind_id.clone(),
+                tried: knowledge.tried,
+                aware: knowledge.aware,
+            })
+            .collect()
     }
 
     fn equipment_modifiers(&self) -> StatModifiersDto {
@@ -1621,6 +1720,7 @@ impl Game {
             return Ok(());
         };
         let source_kind_id = thrown.kind_id.clone();
+        self.mark_item_tried(&source_kind_id);
         let path = self
             .projectile_path(&TargetSelection::Direction { direction }, range)
             .expect("direction targeting must always produce a path");
@@ -2472,6 +2572,39 @@ struct ResolvedThrowProfile {
     damage_dice: u16,
     damage_sides: u16,
     damage_type: DamageType,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ItemKnowledgeState {
+    tried: bool,
+    aware: bool,
+}
+
+fn item_knowledge_from_save(
+    entries: Vec<ItemKnowledgeSaveDto>,
+    content: &ContentCatalog,
+) -> Result<BTreeMap<String, ItemKnowledgeState>, CoreError> {
+    let mut knowledge = BTreeMap::new();
+    for entry in entries {
+        let valid_kind = content
+            .item(&entry.kind_id)
+            .is_some_and(|definition| definition.appearance_name_key.is_some());
+        if !valid_kind
+            || !entry.tried
+            || knowledge
+                .insert(
+                    entry.kind_id,
+                    ItemKnowledgeState {
+                        tried: entry.tried,
+                        aware: entry.aware,
+                    },
+                )
+                .is_some()
+        {
+            return Err(CoreError::InvalidSave("item knowledge state is invalid"));
+        }
+    }
+    Ok(knowledge)
 }
 
 enum PickUpOutcome {
@@ -3939,6 +4072,13 @@ mod tests {
     #[test]
     fn throwable_profile_uses_weight_range_and_resolves_damage() {
         let mut game = Game::new(0);
+        game.item_knowledge.insert(
+            "demo.item.luminous-shard".to_owned(),
+            ItemKnowledgeState {
+                tried: true,
+                aware: true,
+            },
+        );
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.luminous-shard")
@@ -3987,6 +4127,86 @@ mod tests {
                 && item.kind_id == "demo.item.luminous-shard"
                 && item.position == Position { x: 6, y: 3 }
         }));
+    }
+
+    #[test]
+    fn throwing_an_unknown_item_marks_the_kind_tried_and_preserves_its_appearance() {
+        let mut game = Game::new(42);
+        game.entities.clear();
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo unknown stack should exist")
+            .location = ItemLocation::Inventory;
+        let before = game.snapshot();
+        let shard = before
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("unknown shard should be projected");
+        assert_eq!(shard.knowledge, ItemKnowledgeDto::Unknown);
+        assert_eq!(shard.display_name_key, "item-demo-unfamiliar-shard-name");
+        assert!(shard.throw_profile.is_none());
+
+        let update = game
+            .dispatch(command(
+                1,
+                0,
+                GameCommand::Throw {
+                    item_id: "demo.item.luminous-shard.1".to_owned(),
+                    direction: Direction::North,
+                },
+            ))
+            .expect("throwing an unknown item should execute");
+
+        let remaining = update
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("remaining stack should stay carried");
+        assert_eq!(remaining.knowledge, ItemKnowledgeDto::Tried);
+        assert_eq!(
+            remaining.display_name_key,
+            "item-demo-unfamiliar-shard-name"
+        );
+        assert!(remaining.throw_profile.is_none());
+        assert_eq!(game.to_save().item_knowledge.len(), 1);
+        let restored = Game::from_save(game.to_save()).expect("tried knowledge should reload");
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn aware_item_knowledge_reveals_the_true_name_and_profile_after_reload() {
+        let mut game = Game::new(7);
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("demo unknown stack should exist")
+            .location = ItemLocation::Inventory;
+        let mut payload = game.to_save();
+        payload.item_knowledge = vec![ItemKnowledgeSaveDto {
+            kind_id: "demo.item.luminous-shard".to_owned(),
+            tried: true,
+            aware: true,
+        }];
+
+        let restored = Game::from_save(payload).expect("aware knowledge should load");
+        let shard = restored
+            .snapshot()
+            .inventory
+            .into_iter()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("aware shard should be projected");
+        assert_eq!(shard.knowledge, ItemKnowledgeDto::Aware);
+        assert_eq!(shard.display_name_key, "item-demo-luminous-shard-name");
+        assert!(shard.throw_profile.is_some());
+
+        let mut invalid = restored.to_save();
+        invalid.item_knowledge[0].tried = false;
+        assert!(matches!(
+            Game::from_save(invalid),
+            Err(CoreError::InvalidSave("item knowledge state is invalid"))
+        ));
     }
 
     #[test]
