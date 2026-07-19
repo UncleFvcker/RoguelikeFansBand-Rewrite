@@ -114,7 +114,7 @@ rfb.terrain.wall.granite
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 五份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的 `attack`、`defense`、`maxHp`、`damageDice`、`damageSides` 和 `speed` 声明基础战斗与行动属性。`attack`/`defense` 是内容评级，由核心稳定映射为近战能力与 AC；伤害骰只接受正整数并逐骰使用权威 RNG；`speed` 为 0–199 的整数，由核心原创分段曲线换算为每个世界脉冲获得的能量。物品定义可使用可选 `equipmentSlot` 稳定字符串声明装备槽，并使用 `modifiers.attack`、`modifiers.defense` 和 `modifiers.maxHp` 声明修正；攻击/防御修正允许正负值，最大生命修正当前要求非负。可装备物品仍要求 `maxStack = 1`；可堆叠物品的拆分由核心持久化实例 ID 分配器处理。原创包 1.5.0 的回声护符使用 `charm` 槽位并提供攻击 +1、防御 +1、最大生命 +4；槽位和属性显示名由 Fluent UI 资源提供，不写入内容实例。
+角色定义使用必需的 `attack`、`defense`、`maxHp`、`damageDice`、`damageSides` 和 `speed` 声明基础战斗与行动属性，并以 `damageType` 声明物理、酸、电、火、冷或毒近战；旧内容缺失时默认为物理。`attack`/`defense` 是内容评级，由核心稳定映射为近战能力与 AC；伤害骰只接受正整数并逐骰使用权威 RNG；`speed` 为 0–199 的整数。物品定义可使用可选 `equipmentSlot` 和属性 modifier。原创包 1.6.0 的余烬微光使用火焰近战，回声护符继续提供攻击 +1、防御 +1、最大生命 +4。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -196,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包权威状态迁移到 `contract-v3`/Schema v3，装备与批量丢弃迁移到 `contract-v4`/Schema v4，装备属性与稳定拆堆实例迁移到 `contract-v5`/Schema v5，基础攻击/防御与临时权威伤害公式迁移到 `contract-v6`/Schema v6，RFB 风格命中、伤害骰、受伤与死亡闭环迁移到 `contract-v7`/Schema v7，角色速度与能量调度迁移到 `contract-v8`/Schema v8。旧版本继续作为历史记录保留。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v10 为角色内容增加 `damageType`，原创内容包升级到 1.6.0；state hash Schema 仍为 v9，因为精确 content hash 已决定该规则。旧版本继续作为历史记录保留。

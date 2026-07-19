@@ -2,9 +2,9 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v8：哈希输入覆盖运行时内容包 ID/hash、world ID、玩家与怪物战斗状态、速度、剩余行动能量、地面/背包/装备物品、实例分配序号、RNG、玩家行动数、世界脉冲和命令序号。Schema v1-v7 与 contract-v1-v7 只作为历史基准保留，不再用于当前核心的 active 精确验证。
+当前 state hash Schema 为 v9：哈希输入覆盖运行时内容包 ID/hash、world ID、玩家与怪物战斗状态、基础速度、剩余行动能量、状态、抗性、物品、RNG、玩家行动数、世界脉冲和命令序号。active contract-v10 的伤害类型由精确 content hash 决定，因此本次内容/协议升级不需要虚增 state hash Schema。Schema v1-v8 只作为历史基准保留。
 
-state hash 与正式存档 DTO 已解耦。Schema v8 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 v8 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v9 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 v9 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 
@@ -68,7 +68,7 @@ interface ReplayV1 {
   contentHash: string;
   initialSaveHash: string;
   rngAlgorithm: string;
-  stateHashSchemaVersion: 8;
+  stateHashSchemaVersion: 9;
   commands: ReplayCommand[];
   checkpoints: ReplayCheckpoint[];
 }

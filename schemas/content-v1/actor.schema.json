@@ -1,5 +1,16 @@
 {
   "$defs": {
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
+      ],
+      "type": "string"
+    },
     "ActorRole": {
       "enum": [
         "player",
@@ -30,6 +41,10 @@
       "maximum": 65535,
       "minimum": 0,
       "type": "integer"
+    },
+    "damageType": {
+      "$ref": "#/$defs/ActorDamageType",
+      "default": "physical"
     },
     "defense": {
       "format": "int32",

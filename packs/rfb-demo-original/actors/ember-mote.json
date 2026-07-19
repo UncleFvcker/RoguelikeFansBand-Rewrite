@@ -13,5 +13,6 @@
   "defense": 1,
   "damageDice": 1,
   "damageSides": 3,
+  "damageType": "fire",
   "tags": ["elemental", "light-source"]
 }

@@ -51,6 +51,29 @@ pub(crate) enum DomainEvent {
     PlayerDied {
         source_kind_id: String,
     },
+    PlayerStatusDamaged {
+        status_kind_id: String,
+        damage: i32,
+    },
+    EntityStatusDamaged {
+        target_kind_id: String,
+        status_kind_id: String,
+        damage: i32,
+    },
+    PlayerStatusExpired {
+        status_kind_id: String,
+    },
+    EntityStatusExpired {
+        target_kind_id: String,
+        status_kind_id: String,
+    },
+    PlayerDiedFromStatus {
+        status_kind_id: String,
+    },
+    EntityDiedFromStatus {
+        target_kind_id: String,
+        status_kind_id: String,
+    },
 }
 
 impl DomainEvent {
@@ -152,6 +175,53 @@ impl DomainEvent {
                 "combat.player-death",
                 "combat-player-death",
                 [("source", source_kind_id)],
+            ),
+            Self::PlayerStatusDamaged {
+                status_kind_id,
+                damage,
+            } => dto(
+                "status.player-damage",
+                "status-player-damage",
+                [("status", status_kind_id), ("damage", damage.to_string())],
+            ),
+            Self::EntityStatusDamaged {
+                target_kind_id,
+                status_kind_id,
+                damage,
+            } => dto(
+                "status.entity-damage",
+                "status-entity-damage",
+                [
+                    ("target", target_kind_id),
+                    ("status", status_kind_id),
+                    ("damage", damage.to_string()),
+                ],
+            ),
+            Self::PlayerStatusExpired { status_kind_id } => dto(
+                "status.player-expired",
+                "status-player-expired",
+                [("status", status_kind_id)],
+            ),
+            Self::EntityStatusExpired {
+                target_kind_id,
+                status_kind_id,
+            } => dto(
+                "status.entity-expired",
+                "status-entity-expired",
+                [("target", target_kind_id), ("status", status_kind_id)],
+            ),
+            Self::PlayerDiedFromStatus { status_kind_id } => dto(
+                "status.player-death",
+                "status-player-death",
+                [("status", status_kind_id)],
+            ),
+            Self::EntityDiedFromStatus {
+                target_kind_id,
+                status_kind_id,
+            } => dto(
+                "status.entity-death",
+                "status-entity-death",
+                [("target", target_kind_id), ("status", status_kind_id)],
             ),
         }
     }

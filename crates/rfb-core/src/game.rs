@@ -6,11 +6,16 @@ use std::{
     sync::Arc,
 };
 
+use crate::resistance::DamageType;
 use crate::{
     action::GameAction,
     combat::{
         adjacent, apply_melee_armor_reduction, effective_stat, monster_melee_skill,
         rating_to_armor_class, rating_to_combat_value,
+    },
+    effect::{
+        DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING, STATUS_HASTE,
+        STATUS_POISON, STATUS_SLOW, advance_status_ticks, apply_effect, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, project_events},
@@ -39,15 +44,16 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 5] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 6] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
     "36bdba260173b9ba7477e85b886c134affed0369aa4f7a485e59e4408e618ebd",
     "d0537220f093719e623b51bf589dd0a3d8a67ccdc534a1502adcebe094120e9b",
+    "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69";
+    "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -61,7 +67,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV8 {
+struct StateHashPayloadV9 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -474,7 +480,7 @@ impl Game {
         }
 
         spend_energy(&mut self.player.energy_need, action_cost);
-        self.advance_until_player_ready(&mut events, &mut changed);
+        self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities);
 
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(1);
@@ -507,8 +513,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV8 {
-            schema_version: 1,
+        let payload = StateHashPayloadV9 {
+            schema_version: 9,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -585,7 +591,7 @@ impl Game {
                 .player
                 .max_hp
                 .saturating_add(equipment_modifiers.max_hp),
-            speed: self.player.speed,
+            speed: effective_actor_speed(&self.player),
             energy_need: self.player.energy_need,
             base_max_hp: self.player.max_hp,
             attack: self.effective_player_attack(),
@@ -597,9 +603,17 @@ impl Game {
             melee_damage: DamageDiceDto {
                 dice: definition.damage_dice,
                 sides: definition.damage_sides,
+                damage_type: DamageType::from(definition.damage_type).into(),
             },
             is_dead: self.player_is_dead(),
             equipment_modifiers,
+            statuses: self
+                .player
+                .statuses
+                .iter()
+                .map(crate::effect::StatusInstance::to_dto)
+                .collect(),
+            resistances: self.player.resistances.to_dtos(),
         }
     }
 
@@ -618,7 +632,7 @@ impl Game {
                     position: entity.position,
                     hp: entity.hp,
                     max_hp: entity.max_hp,
-                    speed: entity.speed,
+                    speed: effective_actor_speed(entity),
                     energy_need: entity.energy_need,
                     attack: definition.attack,
                     defense: definition.defense,
@@ -627,7 +641,13 @@ impl Game {
                     melee_damage: DamageDiceDto {
                         dice: definition.damage_dice,
                         sides: definition.damage_sides,
+                        damage_type: DamageType::from(definition.damage_type).into(),
                     },
+                    statuses: entity
+                        .statuses
+                        .iter()
+                        .map(crate::effect::StatusInstance::to_dto)
+                        .collect(),
                 }
             })
             .collect::<Vec<_>>();
@@ -930,10 +950,20 @@ impl Game {
             .actor(&self.player.kind_id)
             .expect("player actor definition must remain available")
             .clone();
-        let damage = self.roll_damage(
+        let rolled_damage = self.roll_damage(
             player_definition.damage_dice,
             player_definition.damage_sides,
         );
+        let damage_type = DamageType::from(player_definition.damage_type);
+        let resistance = self.entities[index].resistances.level(damage_type);
+        let damage = resolve_damage(
+            DamagePacket {
+                amount: rolled_damage,
+                damage_type,
+            },
+            resistance,
+        )
+        .applied;
         self.entities[index].hp = self.entities[index].hp.saturating_sub(damage);
         events.push(DomainEvent::PlayerMeleeHit {
             target_kind_id: target_kind,
@@ -952,16 +982,84 @@ impl Game {
         &mut self,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
     ) {
         loop {
             self.world_tick = self.world_tick.saturating_add(1);
+            self.process_status_tick(events, changed, removed_entities);
+            if self.player_is_dead() {
+                break;
+            }
             self.process_monster_energy_pulse(events, changed);
             if self.player_is_dead() {
                 break;
             }
-            gain_energy(&mut self.player.energy_need, self.player.speed);
+            let speed = effective_actor_speed(&self.player);
+            gain_energy(&mut self.player.energy_need, speed);
             if self.player.energy_need <= 0 {
                 break;
+            }
+        }
+    }
+
+    fn process_status_tick(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let player_tick = process_actor_status_tick(&mut self.player, false);
+        for damage in player_tick.damage {
+            events.push(DomainEvent::PlayerStatusDamaged {
+                status_kind_id: damage.status_kind_id,
+                damage: damage.amount,
+            });
+        }
+        for status_kind_id in player_tick.expired {
+            events.push(DomainEvent::PlayerStatusExpired { status_kind_id });
+        }
+        if let Some(status_kind_id) = player_tick.fatal_status {
+            events.push(DomainEvent::PlayerDiedFromStatus { status_kind_id });
+            return;
+        }
+
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+        for entity_id in entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let tick = process_actor_status_tick(&mut self.entities[index], true);
+            for damage in tick.damage {
+                events.push(DomainEvent::EntityStatusDamaged {
+                    target_kind_id: target_kind_id.clone(),
+                    status_kind_id: damage.status_kind_id,
+                    damage: damage.amount,
+                });
+            }
+            for status_kind_id in tick.expired {
+                events.push(DomainEvent::EntityStatusExpired {
+                    target_kind_id: target_kind_id.clone(),
+                    status_kind_id,
+                });
+            }
+            if let Some(status_kind_id) = tick.fatal_status {
+                let removed = self.entities.remove(index);
+                changed.insert(removed.position);
+                removed_entities.push(removed.id);
+                events.push(DomainEvent::EntityDiedFromStatus {
+                    target_kind_id,
+                    status_kind_id,
+                });
             }
         }
     }
@@ -989,7 +1087,7 @@ impl Game {
             else {
                 continue;
             };
-            let speed = self.entities[index].speed;
+            let speed = effective_actor_speed(&self.entities[index]);
             gain_energy(&mut self.entities[index].energy_need, speed);
             if self.entities[index].energy_need > 0 {
                 continue;
@@ -1035,7 +1133,21 @@ impl Game {
         }
 
         let raw_damage = self.roll_damage(definition.damage_dice, definition.damage_sides);
-        let damage = apply_melee_armor_reduction(raw_damage, armor_class);
+        let damage_type = DamageType::from(definition.damage_type);
+        let prepared_damage = if damage_type == DamageType::Physical {
+            apply_melee_armor_reduction(raw_damage, armor_class)
+        } else {
+            raw_damage
+        };
+        let resistance = self.player.resistances.level(damage_type);
+        let damage = resolve_damage(
+            DamagePacket {
+                amount: prepared_damage,
+                damage_type,
+            },
+            resistance,
+        )
+        .applied;
         self.player.hp = self.player.hp.saturating_sub(damage);
         events.push(DomainEvent::MonsterMeleeHit {
             source_kind_id: kind_id.clone(),
@@ -1418,10 +1530,20 @@ impl Game {
         } else {
             actor.max_hp
         };
+        let statuses_are_valid = actor.statuses.iter().all(|status| {
+            status.intensity > 0
+                && status.remaining_ticks > 0
+                && !status.kind_id.is_empty()
+                && status.kind_id.len() <= 128
+        }) && actor
+            .statuses
+            .windows(2)
+            .all(|window| window[0].kind_id < window[1].kind_id);
         if definition.role != expected_role
             || actor.max_hp != definition.max_hp
             || actor.speed != definition.speed
             || actor.speed > 199
+            || !statuses_are_valid
             || (expected_role == ActorRole::Monster && actor.hp <= 0)
             || (expected_role == ActorRole::Player && actor.hp < -1_000_000)
             || (expected_role == ActorRole::Monster
@@ -1434,6 +1556,82 @@ impl Game {
         }
         Ok(())
     }
+}
+
+struct ActorStatusTick {
+    damage: Vec<StatusDamageTick>,
+    expired: Vec<String>,
+    fatal_status: Option<String>,
+}
+
+struct StatusDamageTick {
+    status_kind_id: String,
+    amount: i32,
+}
+
+fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorStatusTick {
+    let periodic = actor
+        .statuses
+        .iter()
+        .filter_map(|status| {
+            let damage_type = match status.kind_id.as_str() {
+                STATUS_BLEEDING => DamageType::Physical,
+                STATUS_POISON => DamageType::Poison,
+                _ => return None,
+            };
+            Some((
+                status.kind_id.clone(),
+                i32::from(status.intensity),
+                damage_type,
+            ))
+        })
+        .collect::<Vec<_>>();
+    let mut damage = Vec::new();
+    let mut fatal_status = None;
+    for (status_kind_id, amount, damage_type) in periodic {
+        let mut target = EffectTarget {
+            hp: &mut actor.hp,
+            max_hp: actor.max_hp,
+            resistances: &actor.resistances,
+            statuses: &mut actor.statuses,
+        };
+        let EffectOutcome::Damage(outcome) = apply_effect(
+            &mut target,
+            EffectSpec::Damage(DamagePacket {
+                amount,
+                damage_type,
+            }),
+        ) else {
+            unreachable!("damage effects must produce damage outcomes");
+        };
+        damage.push(StatusDamageTick {
+            status_kind_id: status_kind_id.clone(),
+            amount: outcome.applied,
+        });
+        if actor.hp < 0 || (lethal_at_zero && actor.hp == 0) {
+            fatal_status = Some(status_kind_id);
+            break;
+        }
+    }
+    let expired = advance_status_ticks(&mut actor.statuses, 1);
+    ActorStatusTick {
+        damage,
+        expired,
+        fatal_status,
+    }
+}
+
+fn effective_actor_speed(actor: &Actor) -> u16 {
+    let mut speed = i32::from(actor.speed);
+    for status in &actor.statuses {
+        let modifier = i32::from(status.intensity).saturating_mul(10);
+        if status.kind_id == STATUS_HASTE {
+            speed = speed.saturating_add(modifier);
+        } else if status.kind_id == STATUS_SLOW {
+            speed = speed.saturating_sub(modifier);
+        }
+    }
+    u16::try_from(speed.clamp(0, 199)).expect("clamped speed must fit u16")
 }
 
 fn squared_distance(left: Position, right: Position) -> i32 {
@@ -1497,7 +1695,10 @@ pub fn load_built_in_content() -> Result<Arc<ContentCatalog>, CoreError> {
 
 #[cfg(test)]
 mod tests {
-    use rfb_protocol::{Direction, GameCommand, GameCommandEnvelope, VisibilityState};
+    use rfb_protocol::{
+        DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, ResistanceLevelDto,
+        ResistanceSaveDto, StatusSaveDto, VisibilityState,
+    };
 
     use super::*;
 
@@ -1529,6 +1730,14 @@ mod tests {
         assert_eq!(snapshot.content_id, "rfb.demo.original-v1");
         assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
         assert_eq!(snapshot.world_id, BUILT_IN_WORLD_ID);
+        assert_eq!(
+            snapshot.player.melee_damage.damage_type,
+            DamageTypeDto::Physical
+        );
+        assert_eq!(
+            snapshot.entities[0].melee_damage.damage_type,
+            DamageTypeDto::Fire
+        );
         assert_eq!(snapshot.player.id, "demo.actor.player.1");
         assert_eq!(snapshot.player.kind_id, "demo.actor.explorer");
         assert_eq!(snapshot.player.base_attack, 2);
@@ -1629,6 +1838,177 @@ mod tests {
                 "exploration memory dimensions are invalid"
             ))
         ));
+    }
+
+    #[test]
+    fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
+        let mut haste_payload = Game::new(42).to_save();
+        haste_payload.player.statuses = vec![StatusSaveDto {
+            kind_id: STATUS_HASTE.to_owned(),
+            intensity: 1,
+            remaining_ticks: 20,
+            source_id: None,
+        }];
+        let mut haste = Game::from_save(haste_payload).expect("haste setup should load");
+        assert_eq!(haste.snapshot().player.speed, 120);
+        let haste_update = haste
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("hasted wait should execute");
+        assert_eq!(haste_update.world_tick, 5);
+        assert_eq!(haste_update.player.speed, 120);
+        assert_eq!(haste.to_save().player.base_speed, 110);
+        assert_eq!(haste_update.player.statuses[0].remaining_ticks, 15);
+
+        let mut slow_payload = Game::new(42).to_save();
+        slow_payload.player.statuses = vec![StatusSaveDto {
+            kind_id: STATUS_SLOW.to_owned(),
+            intensity: 1,
+            remaining_ticks: 40,
+            source_id: None,
+        }];
+        let mut slow = Game::from_save(slow_payload).expect("slow setup should load");
+        let slow_update = slow
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("slowed wait should execute");
+        assert_eq!(slow_update.world_tick, 20);
+        assert_eq!(slow_update.player.speed, 100);
+        assert_eq!(slow_update.player.statuses[0].remaining_ticks, 20);
+    }
+
+    #[test]
+    fn poison_uses_resistance_then_expires_and_round_trips() {
+        let mut payload = Game::new(42).to_save();
+        payload.player.statuses = vec![StatusSaveDto {
+            kind_id: STATUS_POISON.to_owned(),
+            intensity: 2,
+            remaining_ticks: 3,
+            source_id: Some("demo.actor.ember-mote.1".to_owned()),
+        }];
+        payload.player.resistances = vec![ResistanceSaveDto {
+            damage_type: DamageTypeDto::Poison,
+            level: ResistanceLevelDto::Resistant,
+        }];
+        let mut game = Game::from_save(payload).expect("poison setup should load");
+        let update = game
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("poisoned wait should execute");
+
+        assert_eq!(update.player.hp, 7);
+        assert!(update.player.statuses.is_empty());
+        assert_eq!(update.player.resistances.len(), 1);
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .filter(|event| event.message_key == "status-player-damage")
+                .count(),
+            3
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == "status-player-expired")
+        );
+        let restored = Game::from_save(game.to_save()).expect("status save should restore");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn bleeding_ticks_as_physical_damage_in_stable_status_order() {
+        let mut payload = Game::new(42).to_save();
+        payload.player.statuses = vec![
+            StatusSaveDto {
+                kind_id: STATUS_POISON.to_owned(),
+                intensity: 1,
+                remaining_ticks: 1,
+                source_id: None,
+            },
+            StatusSaveDto {
+                kind_id: STATUS_BLEEDING.to_owned(),
+                intensity: 2,
+                remaining_ticks: 2,
+                source_id: None,
+            },
+        ];
+        let mut game = Game::from_save(payload).expect("bleeding setup should load");
+        let update = game
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("bleeding wait should execute");
+
+        assert_eq!(update.player.hp, 5);
+        assert!(update.player.statuses.is_empty());
+        let damage_statuses = update
+            .events
+            .iter()
+            .filter(|event| event.message_key == "status-player-damage")
+            .map(|event| event.args["status"].as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            damage_statuses,
+            [STATUS_BLEEDING, STATUS_POISON, STATUS_BLEEDING]
+        );
+    }
+
+    #[test]
+    fn content_driven_fire_melee_uses_the_player_resistance_profile() {
+        let (seed, normal_damage) = (0_u64..1_000)
+            .find_map(|seed| {
+                let mut game = Game::new(42);
+                game.rng = RfbRng::seeded(seed);
+                let mut events = Vec::new();
+                game.resolve_monster_melee(0, &mut events);
+                events.into_iter().find_map(|event| match event {
+                    DomainEvent::MonsterMeleeHit { damage, .. } if damage >= 2 => {
+                        Some((seed, damage))
+                    }
+                    _ => None,
+                })
+            })
+            .expect("a deterministic seed should produce a fire hit of at least two damage");
+
+        let mut resistant = Game::new(42);
+        resistant.player.resistances.set(
+            DamageType::Fire,
+            crate::resistance::ResistanceLevel::Resistant,
+        );
+        resistant.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+        resistant.resolve_monster_melee(0, &mut events);
+        let resisted_damage = events
+            .into_iter()
+            .find_map(|event| match event {
+                DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage),
+                _ => None,
+            })
+            .expect("the same seed should preserve the hit result");
+
+        assert_eq!(resisted_damage, normal_damage - normal_damage / 2);
+        assert_eq!(resistant.player.hp, 10 - resisted_damage);
+    }
+
+    #[test]
+    fn lethal_monster_status_removes_the_entity_before_energy_actions() {
+        let mut payload = Game::new(42).to_save();
+        payload.entities[0].statuses = vec![StatusSaveDto {
+            kind_id: STATUS_POISON.to_owned(),
+            intensity: 3,
+            remaining_ticks: 1,
+            source_id: Some("demo.player.1".to_owned()),
+        }];
+        let mut game = Game::from_save(payload).expect("monster poison setup should load");
+        let update = game
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("wait should process monster poison");
+
+        assert!(update.entities.is_empty());
+        assert_eq!(update.removed_entities, ["demo.monster.ember-mote.1"]);
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == "status-entity-death")
+        );
     }
 
     #[test]

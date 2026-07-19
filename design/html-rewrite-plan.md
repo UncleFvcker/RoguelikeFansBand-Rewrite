@@ -15,6 +15,8 @@
 - [Contract v6 基础战斗属性迁移](contract-v6-combat-stats-migration.md)
 - [Contract v7：RFB 风格基础近战闭环](contract-v7-rfb-melee-migration.md)
 - [Contract v8：行动能量、速度与怪物追踪](contract-v8-action-energy-tracking.md)
+- [Contract v9：状态、抗性与效果管线](contract-v9-status-resistance-effects.md)
+- [Contract v10：流血与内容驱动元素近战](contract-v10-bleeding-elemental-melee.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
 - [确定性模拟、随机数与回放](deterministic-simulation.md)
@@ -535,16 +537,18 @@ interface SaveGame {
 - 协议 1.6、state hash Schema v6 和 contract-v6 已建立；角色内容定义提供基础攻击/防御，装备修正扩展到攻击、防御和最大生命，玩家撞击怪物的伤害由 Rust 使用 `max(1, attack + rng(0..1) - defense)` 权威结算。原创内容包升级到 1.3.0，并显式迁移 1.2.0 内置存档。
 - 协议 1.7、state hash Schema v7 和 contract-v7 已建立；玩家/怪物近战使用 RFB 风格 5% 自动命中/失误、攻击能力对抗 AC、内容伤害骰和普通物理 AC 减伤。邻接怪物在玩家回合末按稳定顺序反击，玩家受伤、负生命死亡、死亡事件、存档/回放和死亡后命令拒绝已经闭环。原创内容包升级到 1.4.0，并显式兼容 1.3.0 内置存档。
 - 协议 1.8、state hash Schema v8 和 contract-v8 已建立；`GameAction`、标准行动成本、原创整数速度曲线、`worldTick`、稳定怪物调度、八方向 BFS 追踪和死亡队列中断已进入存档/回放闭环。原创内容包升级到 1.5.0，并显式兼容 1.0.0–1.4.0 的已知内置内容 hash。
+- 协议 1.9、state hash Schema v9 和 contract-v9 已建立；玩家/怪物状态、玩家抗性、加速/减速派生速度、毒素 tick、过期和持续伤害死亡已进入存档/回放闭环。active baseline 共 36 个 exact fixtures，内容包继续使用 1.5.0。
+- 协议 1.10 和 contract-v10 已建立；流血周期伤害、内容驱动近战伤害类型、火焰抗性/免疫已经进入规则闭环。内容包升级到 1.6.0，state hash Schema 继续为 v9，active baseline 共 39 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 进入 contract-v9：先建立状态、抗性和效果管线，首批覆盖毒、流血、眩晕、恐惧、加速、减速及基础元素抗性；多段 blow、武器扩展和远程战斗在该公共效果底座稳定后继续；
-2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
-3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
-4. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；
-5. Android 保留编译 CI，真机、触屏和生命周期测试暂缓。
+1. 进入 contract-v11 收尾阶段 B：让领域事件携带伤害类型与抗性结果，为酸、电、冷、毒增加实际入口，并建立带来源的派生属性与检定接口；随后在该接口上实现眩晕与恐惧；
+2. contract-v12 进入完整基础战斗：建立武器 `AttackProfile`、命中/伤害修正、玩家攻击次数和怪物多 blow；远程与投掷由后续 projectile contract 承接；
+3. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
+4. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
+5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。
 
 每完成一个阶段，都应在本文件更新：
 

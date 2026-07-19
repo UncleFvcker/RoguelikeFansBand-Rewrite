@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::BTreeSet;
+
 use crate::{
+    effect::StatusInstance,
     error::CoreError,
+    resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{Actor, ItemInstance, ItemLocation},
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
     ActorSaveDto, EquipmentItemSaveDto, InventoryItemSaveDto, ItemSaveDto, PlayerSaveDto, Position,
+    ResistanceSaveDto, StatusSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -27,6 +32,8 @@ pub(crate) fn actor_from_spawn(
         max_hp,
         speed,
         energy_need,
+        statuses: Vec::new(),
+        resistances: ResistanceProfile::default(),
     }
 }
 
@@ -50,6 +57,8 @@ pub(crate) fn actor_from_player(
     if player.base_speed != definition.speed {
         return Err(CoreError::InvalidSave("player base speed is invalid"));
     }
+    let statuses = statuses_from_save(player.statuses)?;
+    let resistances = resistances_from_save(player.resistances)?;
     Ok(Actor {
         id: player.id,
         kind_id: player.kind_id,
@@ -58,6 +67,8 @@ pub(crate) fn actor_from_player(
         max_hp: definition.max_hp,
         speed: player.base_speed,
         energy_need: player.energy_need,
+        statuses,
+        resistances,
     })
 }
 
@@ -92,6 +103,8 @@ pub(crate) fn actor_from_entity(
     if entity.base_speed != definition.speed {
         return Err(CoreError::InvalidSave("entity base speed is invalid"));
     }
+    let statuses = statuses_from_save(entity.statuses)?;
+    let resistances = resistances_from_save(entity.resistances)?;
     Ok(Actor {
         id: entity.id,
         kind_id: entity.kind_id,
@@ -100,6 +113,8 @@ pub(crate) fn actor_from_entity(
         max_hp: definition.max_hp,
         speed: entity.base_speed,
         energy_need: entity.energy_need,
+        statuses,
+        resistances,
     })
 }
 
@@ -156,6 +171,12 @@ pub(crate) fn player_to_save(player: &Actor) -> PlayerSaveDto {
         base_max_hp: player.max_hp,
         base_speed: player.speed,
         energy_need: player.energy_need,
+        statuses: player
+            .statuses
+            .iter()
+            .map(StatusInstance::to_save_dto)
+            .collect(),
+        resistances: player.resistances.to_save_dtos(),
     }
 }
 
@@ -170,10 +191,67 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             max_hp: entity.max_hp,
             base_speed: entity.speed,
             energy_need: entity.energy_need,
+            statuses: entity
+                .statuses
+                .iter()
+                .map(StatusInstance::to_save_dto)
+                .collect(),
+            resistances: entity.resistances.to_save_dtos(),
         })
         .collect::<Vec<_>>();
     entities.sort_by(|left, right| left.id.cmp(&right.id));
     entities
+}
+
+fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInstance>, CoreError> {
+    statuses.sort_by(|left, right| left.kind_id.cmp(&right.kind_id));
+    let mut seen = BTreeSet::new();
+    statuses
+        .into_iter()
+        .map(|status| {
+            if !valid_rule_id(&status.kind_id)
+                || !seen.insert(status.kind_id.clone())
+                || status.intensity == 0
+                || status.remaining_ticks == 0
+                || status
+                    .source_id
+                    .as_deref()
+                    .is_some_and(|source| source.is_empty() || source.len() > 128)
+            {
+                return Err(CoreError::InvalidSave("actor status state is invalid"));
+            }
+            Ok(StatusInstance {
+                kind_id: status.kind_id,
+                intensity: status.intensity,
+                remaining_ticks: status.remaining_ticks,
+                source_id: status.source_id,
+            })
+        })
+        .collect()
+}
+
+fn resistances_from_save(
+    resistances: Vec<ResistanceSaveDto>,
+) -> Result<ResistanceProfile, CoreError> {
+    let mut profile = ResistanceProfile::default();
+    let mut seen = BTreeSet::new();
+    for resistance in resistances {
+        let damage_type = DamageType::from(resistance.damage_type);
+        let level = ResistanceLevel::from(resistance.level);
+        if !seen.insert(damage_type) || level == ResistanceLevel::Normal {
+            return Err(CoreError::InvalidSave("actor resistance state is invalid"));
+        }
+        profile.set(damage_type, level);
+    }
+    Ok(profile)
+}
+
+fn valid_rule_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 128
+        && id.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
+        })
 }
 
 pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {

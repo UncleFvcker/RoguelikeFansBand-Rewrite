@@ -1,6 +1,6 @@
 # Contract v7：RFB 风格基础近战闭环
 
-状态：active contract baseline
+状态：历史 contract baseline；已由 contract-v8 接替
 
 ## 1. 参考边界
 

@@ -2,9 +2,11 @@
 
 mod action;
 mod combat;
+pub mod effect;
 mod error;
 mod event;
 mod game;
+pub mod resistance;
 mod rng;
 mod save;
 mod scheduler;

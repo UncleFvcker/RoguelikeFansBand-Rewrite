@@ -3,7 +3,9 @@
 use rfb_protocol::Position;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+use crate::{effect::StatusInstance, resistance::ResistanceProfile};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Actor {
     pub(crate) id: String,
     pub(crate) kind_id: String,
@@ -12,6 +14,8 @@ pub(crate) struct Actor {
     pub(crate) max_hp: i32,
     pub(crate) speed: u16,
     pub(crate) energy_need: i32,
+    pub(crate) statuses: Vec<StatusInstance>,
+    pub(crate) resistances: ResistanceProfile,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

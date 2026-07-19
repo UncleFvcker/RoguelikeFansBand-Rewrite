@@ -1,6 +1,6 @@
 # Contract v8：行动能量、速度与怪物追踪
 
-状态：active contract baseline
+状态：历史 contract baseline；已由 contract-v9 接替
 
 ## 1. 目标
 

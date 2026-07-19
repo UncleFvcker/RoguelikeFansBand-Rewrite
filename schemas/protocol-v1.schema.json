@@ -104,6 +104,10 @@
     "DamageDiceDto": {
       "type": "object",
       "properties": {
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto",
+          "default": "physical"
+        },
         "dice": {
           "type": "integer",
           "format": "uint16",
@@ -120,6 +124,17 @@
       "required": [
         "dice",
         "sides"
+      ]
+    },
+    "DamageTypeDto": {
+      "type": "string",
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
       ]
     },
     "Direction": {
@@ -175,6 +190,7 @@
         "meleeDamage": {
           "$ref": "#/$defs/DamageDiceDto",
           "default": {
+            "damageType": "physical",
             "dice": 0,
             "sides": 0
           }
@@ -193,6 +209,13 @@
           "default": 110,
           "maximum": 65535,
           "minimum": 0
+        },
+        "statuses": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/StatusDto"
+          }
         }
       },
       "required": [
@@ -745,6 +768,7 @@
         "meleeDamage": {
           "$ref": "#/$defs/DamageDiceDto",
           "default": {
+            "damageType": "physical",
             "dice": 0,
             "sides": 0
           }
@@ -757,12 +781,26 @@
         "position": {
           "$ref": "#/$defs/Position"
         },
+        "resistances": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
         "speed": {
           "type": "integer",
           "format": "uint16",
           "default": 110,
           "maximum": 65535,
           "minimum": 0
+        },
+        "statuses": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/StatusDto"
+          }
         }
       },
       "required": [
@@ -790,6 +828,31 @@
         "y"
       ]
     },
+    "ResistanceDto": {
+      "type": "object",
+      "properties": {
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "level": {
+          "$ref": "#/$defs/ResistanceLevelDto"
+        }
+      },
+      "required": [
+        "damageType",
+        "level"
+      ]
+    },
+    "ResistanceLevelDto": {
+      "type": "string",
+      "enum": [
+        "vulnerable",
+        "normal",
+        "resistant",
+        "strong",
+        "immune"
+      ]
+    },
     "StatModifiersDto": {
       "type": "object",
       "properties": {
@@ -809,6 +872,30 @@
           "default": 0
         }
       }
+    },
+    "StatusDto": {
+      "type": "object",
+      "properties": {
+        "intensity": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "remainingTicks": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kindId",
+        "intensity",
+        "remainingTicks"
+      ]
     },
     "VisibilityState": {
       "type": "string",

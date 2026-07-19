@@ -441,7 +441,7 @@ mod tests {
         let replay = decode_replay(&state.export_replay().expect("replay should encode"))
             .expect("replay should decode");
         let verification =
-            verify_replay(&replay, Game::new(42)).expect("exported replay should verify");
+            verify_replay(&replay, initial_game(42)).expect("exported replay should verify");
         let restored = AppState::default()
             .load(&bytes)
             .expect("save should restore in a new native session");

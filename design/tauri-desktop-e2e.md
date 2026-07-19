@@ -24,6 +24,7 @@
 固定种子 `42` 的单一场景依次验证：
 
 1. 初始快照绘制 400 格，地图 Canvas 与 HTML 状态/消息分别存在；
+   同时验证协议 1.10 的玩家状态列表为空且 HTML 状态层显示“无”；
 2. 小键盘 5 等待后回合增加、消息写入 HTML 列表、地图更新 0 格；
 3. 小键盘 6 东移后位置变化，合并规则格与 Rust 权威 FOV/光照增量后更新 99 格；
 4. 导出 `.rfbsave`，校验文件名、非空字节和成功消息；
@@ -60,6 +61,8 @@ npm run e2e
 - `test-results/render-profile.json`：成功场景生成的大地图 profile Schema v1。
 
 WebDriver 构建还会把桌面日志和崩溃诊断目录重定向到 `test-results/`，避免强制结束测试进程时在真实应用目录留下异常退出标记。
+
+E2E 启动的 WebView2 固定追加 `--disable-gpu`，使用软件合成避免桌面会话中共享 GPU 通道偶发挂起。测试仍覆盖真实 PixiJS/WebView2/Tauri 跨层链路；`render-profile.json` 用于同一 CI 环境内比较对象数量、缓存行为和性能趋势，不作为玩家机器 GPU 性能基准。
 
 设置 `RFB_E2E_CAPTURE_SCREENSHOT=1` 时，成功场景还会写入 `test-results/tauri-e2e-success.png`，用于人工检查 chunk 接缝、tileset、光照和遮罩。
 

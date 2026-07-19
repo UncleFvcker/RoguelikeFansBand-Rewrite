@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, PROTOCOL_VERSION, Position,
-    SaveHeaderV1,
+    ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -44,6 +44,28 @@ pub enum Determinism {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Preconditions {
     pub world: String,
+    #[serde(default)]
+    pub player_statuses: Vec<StatusSaveDto>,
+    #[serde(default)]
+    pub player_resistances: Vec<ResistanceSaveDto>,
+    #[serde(default)]
+    pub entity_effects: Vec<EntityEffectsPrecondition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EntityEffectsPrecondition {
+    pub id: String,
+    #[serde(default)]
+    pub position: Option<Position>,
+    #[serde(default)]
+    pub hp: Option<i32>,
+    #[serde(default)]
+    pub energy_need: Option<i32>,
+    #[serde(default)]
+    pub statuses: Vec<StatusSaveDto>,
+    #[serde(default)]
+    pub resistances: Vec<ResistanceSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,6 +108,10 @@ pub struct FinalStateAssertion {
     pub player_speed: Option<u16>,
     #[serde(default)]
     pub player_energy_need: Option<i32>,
+    #[serde(default)]
+    pub player_statuses: Vec<StatusDto>,
+    #[serde(default)]
+    pub player_resistances: Vec<ResistanceDto>,
     pub entity_count: usize,
     #[serde(default)]
     pub entities: Vec<ActorStateAssertion>,
@@ -108,6 +134,8 @@ pub struct ActorStateAssertion {
     pub hp: i32,
     pub speed: u16,
     pub energy_need: i32,
+    #[serde(default)]
+    pub statuses: Vec<StatusDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -129,7 +157,28 @@ pub enum CommandErrorKind {
 pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, ContractError> {
     validate_fixture(fixture)?;
     let seed = parse_seed(&fixture.seed)?;
-    let mut game = Game::new(seed);
+    let mut payload = Game::new(seed).to_save();
+    payload.player.statuses = fixture.preconditions.player_statuses.clone();
+    payload.player.resistances = fixture.preconditions.player_resistances.clone();
+    for effects in &fixture.preconditions.entity_effects {
+        let entity = payload
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == effects.id)
+            .ok_or_else(|| ContractError::UnknownEntityPrecondition(effects.id.clone()))?;
+        if let Some(position) = effects.position {
+            entity.position = position;
+        }
+        if let Some(hp) = effects.hp {
+            entity.hp = hp;
+        }
+        if let Some(energy_need) = effects.energy_need {
+            entity.energy_need = energy_need;
+        }
+        entity.statuses = effects.statuses.clone();
+        entity.resistances = effects.resistances.clone();
+    }
+    let mut game = Game::from_save(payload)?;
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
     let mut removed_entities = Vec::new();
@@ -179,6 +228,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_defense: Some(snapshot.player.defense),
             player_speed: Some(snapshot.player.speed),
             player_energy_need: Some(snapshot.player.energy_need),
+            player_statuses: snapshot.player.statuses.clone(),
+            player_resistances: snapshot.player.resistances.clone(),
             entity_count: snapshot.entities.len(),
             entities: snapshot
                 .entities
@@ -189,6 +240,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                     hp: entity.hp,
                     speed: entity.speed,
                     energy_need: entity.energy_need,
+                    statuses: entity.statuses.clone(),
                 })
                 .collect(),
             ground_item_count: snapshot.items.len(),
@@ -309,6 +361,8 @@ pub enum ContractError {
     UnknownWorld(String),
     #[error("contract fixture ID cannot be empty")]
     EmptyId,
+    #[error("contract fixture references unknown entity precondition {0}")]
+    UnknownEntityPrecondition(String),
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

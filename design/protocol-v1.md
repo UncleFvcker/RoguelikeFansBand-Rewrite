@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.8、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.10、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.8";
+  protocolVersion: "1.10";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.8 的初始 `GameSnapshot` 包含 `contentId`、`contentHash`、`worldId`、`turn`、`worldTick`、内容 glyph 目录、地面物品、背包物品堆、装备列表、装备属性修正、每格 `itemId`，以及 Rust 权威 `visualCells`。`PlayerDto` 和 `EntityDto` 输出速度、距离下次行动所需能量、基础近战信息与派生属性；玩家另输出 `isDead`。`GameUpdate` 发送最新 `turn`、`worldTick`、玩家/怪物行动状态、物品状态和 `changedVisualCells`；内容视觉目录只在全量快照发送。可见性、探索记忆和整数光照的规则见[权威可见性与光照 v1](visibility-lighting-v1.md)，当前行动与战斗边界见 [Contract v8](contract-v8-action-energy-tracking.md)。
+协议 1.10 延续 1.9 的状态/抗性 DTO，并为 `DamageDiceDto` 增加 `damageType`。玩家和可见怪物的近战 profile 因此能明确区分物理与元素伤害；怪物隐藏抗性仍不向普通 UI 暴露。当前规则边界见 [Contract v10](contract-v10-bleeding-elemental-melee.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；

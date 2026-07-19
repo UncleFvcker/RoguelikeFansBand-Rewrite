@@ -9,7 +9,7 @@ export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number
 
 export type StatModifiersDto = { attack: number, defense: number, maxHp: number, };
 
-export type DamageDiceDto = { dice: number, sides: number, };
+export type DamageDiceDto = { dice: number, sides: number, damageType: DamageTypeDto, };
 
 export type Position = { x: number, y: number, };
 
@@ -23,9 +23,17 @@ export type CellVisualDto = { position: Position, visibility: VisibilityState, l
 
 export type ContentVisualDto = { id: string, glyph: string, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, isDead: boolean, equipmentModifiers: StatModifiersDto, };
+export type DamageTypeDto = "physical" | "acid" | "electricity" | "fire" | "cold" | "poison";
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, };
+export type ResistanceLevelDto = "vulnerable" | "normal" | "resistant" | "strong" | "immune";
+
+export type ResistanceDto = { damageType: DamageTypeDto, level: ResistanceLevelDto, };
+
+export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
+
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
+
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, statuses: Array<StatusDto>, };
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 

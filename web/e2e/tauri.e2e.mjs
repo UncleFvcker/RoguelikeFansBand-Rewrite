@@ -33,6 +33,12 @@ async function main() {
       cwd: repositoryDirectory,
       env: {
         ...process.env,
+        WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: [
+          process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS,
+          "--disable-gpu",
+        ]
+          .filter(Boolean)
+          .join(" "),
         TAURI_WEBDRIVER_PORT: String(port),
         RFB_E2E_DIAGNOSTIC_ROOT: diagnosticDirectory,
         RFB_E2E_LOG_PATH: desktopLogPath,
@@ -155,7 +161,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.8");
+  assert.equal(state.protocolVersion, "1.10");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -170,13 +176,15 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "e597eb10e3eec454ea78e8ad4e874a8ef41732c6f497083f4fb698d9a1935c69",
+    "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
   assert.equal(state.contentVisualCount, "6");
   assert.equal(state.itemCount, "2");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");
+  assert.equal(state.playerStatusCount, "0");
+  assert.equal(state.effects, "无");
   assert.equal(state.attack, "2");
   assert.equal(state.defense, "1");
   assert.match(state.inventory, /背包是空的/);
@@ -750,9 +758,11 @@ async function readState(driver) {
       itemCount: host?.dataset.itemCount,
       inventoryStackCount: host?.dataset.inventoryStackCount,
       equipmentCount: host?.dataset.equipmentCount,
+      playerStatusCount: host?.dataset.playerStatusCount,
       totalAppliedCells: host?.dataset.totalAppliedCells,
       inventory: document.querySelector("#inventory-list")?.textContent,
       equipment: document.querySelector("#equipment-list")?.textContent,
+      effects: document.querySelector("#effects-value")?.textContent,
       controls: document.querySelector("#controls-help")?.textContent,
       locale: document.documentElement.lang,
       crashDiagnosticReport: document.documentElement.dataset.crashDiagnosticReport,

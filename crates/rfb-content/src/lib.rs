@@ -81,6 +81,19 @@ pub enum ActorRole {
     Monster,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ActorDamageType {
+    #[default]
+    Physical,
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+    Poison,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -101,6 +114,8 @@ pub struct ActorDefinition {
     pub defense: i32,
     pub damage_dice: u16,
     pub damage_sides: u16,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
     pub tags: Vec<String>,
 }
 
@@ -1233,7 +1248,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.5.0");
+        assert_eq!(catalog.pack_version(), "1.6.0");
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
             catalog
@@ -1246,6 +1261,12 @@ mod tests {
                 .actor("demo.actor.ember-mote")
                 .map(|actor| actor.max_hp),
             Some(3)
+        );
+        assert_eq!(
+            catalog
+                .actor("demo.actor.ember-mote")
+                .map(|actor| actor.damage_type),
+            Some(ActorDamageType::Fire)
         );
         assert_eq!(
             catalog.actor("demo.actor.explorer").map(|actor| (

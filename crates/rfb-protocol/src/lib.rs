@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.8";
+pub const PROTOCOL_VERSION: &str = "1.10";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -84,6 +84,8 @@ pub struct StatModifiersDto {
 pub struct DamageDiceDto {
     pub dice: u16,
     pub sides: u16,
+    #[serde(default)]
+    pub damage_type: DamageTypeDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -146,6 +148,47 @@ pub struct ContentVisualDto {
     pub glyph: String,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum DamageTypeDto {
+    #[default]
+    Physical,
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+    Poison,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ResistanceLevelDto {
+    Vulnerable,
+    Normal,
+    Resistant,
+    Strong,
+    Immune,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResistanceDto {
+    pub damage_type: DamageTypeDto,
+    pub level: ResistanceLevelDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct StatusDto {
+    pub kind_id: String,
+    pub intensity: u16,
+    pub remaining_ticks: u32,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -179,6 +222,10 @@ pub struct PlayerDto {
     pub is_dead: bool,
     #[serde(default)]
     pub equipment_modifiers: StatModifiersDto,
+    #[serde(default)]
+    pub statuses: Vec<StatusDto>,
+    #[serde(default)]
+    pub resistances: Vec<ResistanceDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -204,6 +251,8 @@ pub struct EntityDto {
     pub armor_class: i32,
     #[serde(default)]
     pub melee_damage: DamageDiceDto,
+    #[serde(default)]
+    pub statuses: Vec<StatusDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -340,6 +389,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(CellLightDto);
     push_declaration!(CellVisualDto);
     push_declaration!(ContentVisualDto);
+    push_declaration!(DamageTypeDto);
+    push_declaration!(ResistanceLevelDto);
+    push_declaration!(ResistanceDto);
+    push_declaration!(StatusDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
@@ -388,6 +441,10 @@ pub struct PlayerSaveDto {
     pub base_speed: u16,
     #[serde(default)]
     pub energy_need: i32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub statuses: Vec<StatusSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resistances: Vec<ResistanceSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -403,6 +460,27 @@ pub struct ActorSaveDto {
     pub base_speed: u16,
     #[serde(default = "default_monster_energy_need")]
     pub energy_need: i32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub statuses: Vec<StatusSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resistances: Vec<ResistanceSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StatusSaveDto {
+    pub kind_id: String,
+    pub intensity: u16,
+    pub remaining_ticks: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ResistanceSaveDto {
+    pub damage_type: DamageTypeDto,
+    pub level: ResistanceLevelDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -606,13 +684,19 @@ mod tests {
                 base_defense: 1,
                 melee_skill: 60,
                 armor_class: 20,
-                melee_damage: DamageDiceDto { dice: 1, sides: 2 },
+                melee_damage: DamageDiceDto {
+                    dice: 1,
+                    sides: 2,
+                    damage_type: DamageTypeDto::Physical,
+                },
                 is_dead: false,
                 equipment_modifiers: StatModifiersDto {
                     attack: 1,
                     defense: 1,
                     max_hp: 4,
                 },
+                statuses: Vec::new(),
+                resistances: Vec::new(),
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -626,7 +710,12 @@ mod tests {
                 defense: 1,
                 melee_skill: 32,
                 armor_class: 10,
-                melee_damage: DamageDiceDto { dice: 1, sides: 2 },
+                melee_damage: DamageDiceDto {
+                    dice: 1,
+                    sides: 2,
+                    damage_type: DamageTypeDto::Physical,
+                },
+                statuses: Vec::new(),
             }],
             items: vec![ItemDto {
                 id: "demo.item.ground.1".to_owned(),
@@ -688,6 +777,8 @@ mod tests {
             base_max_hp: 10,
             base_speed: 110,
             energy_need: 0,
+            statuses: Vec::new(),
+            resistances: Vec::new(),
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

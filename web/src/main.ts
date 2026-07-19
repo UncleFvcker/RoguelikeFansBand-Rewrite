@@ -52,6 +52,7 @@ const turnValue = element<HTMLElement>("turn-value");
 const hpValue = element<HTMLElement>("hp-value");
 const attackValue = element<HTMLElement>("attack-value");
 const defenseValue = element<HTMLElement>("defense-value");
+const effectsValue = element<HTMLElement>("effects-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
 const inventoryCount = element<HTMLElement>("inventory-count");
@@ -615,12 +616,25 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.defense,
     state.player.equipmentModifiers.defense,
   );
+  effectsValue.textContent =
+    state.player.statuses.length === 0
+      ? localization.format("status-effects-none")
+      : state.player.statuses
+          .map((status) =>
+            localization.format("status-effect-entry", {
+              status: statusName(status.kindId),
+              intensity: status.intensity,
+              ticks: status.remainingTicks,
+            }),
+          )
+          .join(" · ");
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
   mapHost.dataset.itemCount = String(state.items.length);
   mapHost.dataset.inventoryStackCount = String(state.inventory.length);
   mapHost.dataset.equipmentCount = String(state.equipment.length);
+  mapHost.dataset.playerStatusCount = String(state.player.statuses.length);
   updateInventoryActions();
 }
 
@@ -866,6 +880,35 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-combat-player-death", {
         source: contentName(event.args.source),
       });
+    case "status-player-damage":
+      return localization.format("message-status-player-damage", {
+        status: statusName(event.args.status),
+        damage: event.args.damage ?? "?",
+      });
+    case "status-entity-damage":
+      return localization.format("message-status-entity-damage", {
+        target: contentName(event.args.target),
+        status: statusName(event.args.status),
+        damage: event.args.damage ?? "?",
+      });
+    case "status-player-expired":
+      return localization.format("message-status-player-expired", {
+        status: statusName(event.args.status),
+      });
+    case "status-entity-expired":
+      return localization.format("message-status-entity-expired", {
+        target: contentName(event.args.target),
+        status: statusName(event.args.status),
+      });
+    case "status-player-death":
+      return localization.format("message-status-player-death", {
+        status: statusName(event.args.status),
+      });
+    case "status-entity-death":
+      return localization.format("message-status-entity-death", {
+        target: contentName(event.args.target),
+        status: statusName(event.args.status),
+      });
     case "item-pickup-success":
       return localization.format("message-item-pickup-success", {
         target: contentName(event.args.target),
@@ -925,6 +968,22 @@ function contentName(id: string | undefined): string {
 function equipmentSlotName(slotId: string | undefined): string {
   if (slotId === "charm") return localization.format("equipment-slot-charm");
   return localization.format("equipment-slot-unknown", { slot: slotId ?? "?" });
+}
+
+function statusName(statusId: string | undefined): string {
+  if (statusId === "rfb.status.bleeding") {
+    return localization.format("status-bleeding-name");
+  }
+  if (statusId === "rfb.status.poison") {
+    return localization.format("status-poison-name");
+  }
+  if (statusId === "rfb.status.haste") {
+    return localization.format("status-haste-name");
+  }
+  if (statusId === "rfb.status.slow") {
+    return localization.format("status-slow-name");
+  }
+  return localization.format("status-unknown-name");
 }
 
 function addLocalizedMessage(

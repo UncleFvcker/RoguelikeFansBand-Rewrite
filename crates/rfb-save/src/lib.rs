@@ -184,6 +184,8 @@ mod tests {
                 base_max_hp: 10,
                 base_speed: 110,
                 energy_need: 0,
+                statuses: Vec::new(),
+                resistances: Vec::new(),
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),
