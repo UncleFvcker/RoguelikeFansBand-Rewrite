@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "id": "status.player.haste-scheduler",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0x000000000000002a",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [
+      {
+        "kindId": "rfb.status.haste",
+        "intensity": 1,
+        "remainingTicks": 20
+      }
+    ],
+    "playerResistances": [],
+    "entityEffects": []
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 5,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 120,
+      "playerEnergyNeed": 0,
+      "playerStatuses": [
+        {
+          "kindId": "rfb.status.haste",
+          "intensity": 1,
+          "remainingTicks": 15
+        }
+      ],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 8,
+            "y": 5
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 50,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "18076a93fddaec2ffb638fec7e1cbff89dc9c0ed6b0ac6eb3830239e30c5e2c4"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      }
+    ],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "18076a93fddaec2ffb638fec7e1cbff89dc9c0ed6b0ac6eb3830239e30c5e2c4"
+  }
+}

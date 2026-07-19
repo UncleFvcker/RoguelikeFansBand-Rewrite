@@ -140,6 +140,8 @@ export const MESSAGE_KEYS = [
   "message-projectile-miss",
   "message-projectile-hit",
   "message-projectile-slay",
+  "message-projectile-ammo-recovered",
+  "message-projectile-ammo-broken",
   "message-status-player-damage",
   "message-status-entity-damage",
   "message-status-player-expired",

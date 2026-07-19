@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "id": "status.player.bleeding-order",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerStatuses": [
+      {
+        "kindId": "rfb.status.poison",
+        "intensity": 1,
+        "remainingTicks": 1
+      },
+      {
+        "kindId": "rfb.status.bleeding",
+        "intensity": 2,
+        "remainingTicks": 2
+      }
+    ],
+    "playerResistances": [],
+    "entityEffects": []
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 5,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 7,
+            "y": 4
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "nextItemInstanceSerial": 1,
+      "stateHash": "8dad1e34f98a80739bd59b53f41016d08e58e395576969f3ab9547fc5f4bca54"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "status.player-damage",
+        "messageKey": "status-player-damage",
+        "args": {
+          "damage": "2",
+          "status": "rfb.status.bleeding"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "status.player-damage",
+        "messageKey": "status-player-damage",
+        "args": {
+          "damage": "1",
+          "status": "rfb.status.poison"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 1,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 1,
+            "damageType": "poison",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "status.player-expired",
+        "messageKey": "status-player-expired",
+        "args": {
+          "status": "rfb.status.poison"
+        }
+      },
+      {
+        "kind": "status.player-damage",
+        "messageKey": "status-player-damage",
+        "args": {
+          "damage": "2",
+          "status": "rfb.status.bleeding"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 2,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 2,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
+        }
+      },
+      {
+        "kind": "status.player-expired",
+        "messageKey": "status-player-expired",
+        "args": {
+          "status": "rfb.status.bleeding"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "8dad1e34f98a80739bd59b53f41016d08e58e395576969f3ab9547fc5f4bca54"
+  }
+}

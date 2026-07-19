@@ -130,6 +130,13 @@
     "$schema": {
       "type": "string"
     },
+    "breakChancePercent": {
+      "default": 0,
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
+    },
     "descriptionKey": {
       "type": "string"
     },

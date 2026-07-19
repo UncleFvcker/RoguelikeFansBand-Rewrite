@@ -199,6 +199,8 @@ pub struct ItemDefinition {
     pub melee_profile: Option<AttackProfileDefinition>,
     #[serde(default)]
     pub projectile_profile: Option<ProjectileProfileDefinition>,
+    #[serde(default)]
+    pub break_chance_percent: u8,
     pub tags: Vec<String>,
 }
 
@@ -613,8 +615,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
-        if let Some(routine) = &actor.melee_routine {
-            if actor.role != ActorRole::Monster
+        if let Some(routine) = &actor.melee_routine
+            && (actor.role != ActorRole::Monster
                 || routine.blows.is_empty()
                 || routine.blows.len() > 8
                 || routine.blows.iter().any(|blow| {
@@ -625,10 +627,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         || blow.damage_dice > 100
                         || blow.damage_sides == 0
                         || blow.damage_sides > 10_000
-                })
-            {
-                return Err(ContentError::InvalidMeleeRoutine(actor.id.clone()));
-            }
+                }))
+        {
+            return Err(ContentError::InvalidMeleeRoutine(actor.id.clone()));
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
         insert_definition_id(&mut all_ids, &actor.id)?;
@@ -644,6 +645,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_glyph(&item.id, &item.glyph)?;
         if item.max_stack == 0 || item.max_stack > 1_000_000 {
             return Err(ContentError::InvalidItemStack(item.id.clone()));
+        }
+        if item.break_chance_percent > 100 {
+            return Err(ContentError::InvalidItemBreakChance(item.id.clone()));
         }
         if let Some(slot) = &item.equipment_slot
             && (item.max_stack != 1 || validate_equipment_slot(slot).is_err())
@@ -1287,6 +1291,8 @@ pub enum ContentError {
     InvalidMeleeRoutine(String),
     #[error("item stack limit is outside supported limits: {0}")]
     InvalidItemStack(String),
+    #[error("item break chance is outside 0..=100 percent: {0}")]
+    InvalidItemBreakChance(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
     InvalidEquipmentSlot(String),
     #[error("item stat modifiers are invalid or require an equipment slot: {0}")]
@@ -1374,7 +1380,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.11.0");
+        assert_eq!(catalog.pack_version(), "1.12.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1519,6 +1525,18 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemModifiers(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let pellet = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-pellet")
+            .expect("fixture should contain the ammunition");
+        pellet.break_chance_percent = 101;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemBreakChance(_))
         ));
 
         let mut invalid = artifact.content.clone();

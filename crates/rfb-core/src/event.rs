@@ -74,6 +74,12 @@ pub(crate) enum DomainEvent {
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
+    ProjectileAmmoRecovered {
+        ammo_kind_id: String,
+    },
+    ProjectileAmmoBroken {
+        ammo_kind_id: String,
+    },
     ItemThrown {
         target_kind_id: String,
         trace: ProjectileTrace,
@@ -257,6 +263,16 @@ impl DomainEvent {
                     },
                 ),
                 trace,
+            ),
+            Self::ProjectileAmmoRecovered { ammo_kind_id } => dto(
+                "combat.projectile-ammo-recovered",
+                "projectile-ammo-recovered",
+                [("target", ammo_kind_id)],
+            ),
+            Self::ProjectileAmmoBroken { ammo_kind_id } => dto(
+                "combat.projectile-ammo-broken",
+                "projectile-ammo-broken",
+                [("target", ammo_kind_id)],
             ),
             Self::ItemThrown {
                 target_kind_id,

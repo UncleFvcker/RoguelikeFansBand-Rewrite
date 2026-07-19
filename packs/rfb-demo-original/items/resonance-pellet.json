@@ -6,5 +6,6 @@
   "descriptionKey": "item-demo-resonance-pellet-description",
   "glyph": "*",
   "maxStack": 20,
+  "breakChancePercent": 10,
   "tags": ["ammunition"]
 }
