@@ -168,6 +168,19 @@ pub struct AttackProfileDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProjectileProfileDefinition {
+    pub range: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage_dice: u16,
+    pub damage_sides: u16,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -183,6 +196,8 @@ pub struct ItemDefinition {
     pub modifiers: StatModifiers,
     #[serde(default)]
     pub melee_profile: Option<AttackProfileDefinition>,
+    #[serde(default)]
+    pub projectile_profile: Option<ProjectileProfileDefinition>,
     pub tags: Vec<String>,
 }
 
@@ -659,6 +674,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 || profile.damage_sides > 10_000)
         {
             return Err(ContentError::InvalidAttackProfile(item.id.clone()));
+        }
+        if let Some(profile) = &item.projectile_profile
+            && (item.max_stack != 1
+                || item.equipment_slot.as_deref() != Some("launcher")
+                || profile.range == 0
+                || profile.range > 32
+                || profile.to_hit < -1_000_000
+                || profile.to_hit > 1_000_000
+                || profile.to_damage < -1_000_000
+                || profile.to_damage > 1_000_000
+                || profile.damage_dice == 0
+                || profile.damage_dice > 100
+                || profile.damage_sides == 0
+                || profile.damage_sides > 10_000)
+        {
+            return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
@@ -1242,6 +1273,8 @@ pub enum ContentError {
     InvalidItemModifiers(String),
     #[error("item attack profile is invalid or requires the weapon slot: {0}")]
     InvalidAttackProfile(String),
+    #[error("item projectile profile is invalid or requires the launcher slot: {0}")]
+    InvalidProjectileProfile(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("content reference from {owner} to {target} is unresolved")]
@@ -1310,7 +1343,7 @@ mod tests {
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 2);
         assert_eq!(first.content.actors.len(), 7);
-        assert_eq!(first.content.items.len(), 3);
+        assert_eq!(first.content.items.len(), 4);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -1321,7 +1354,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.9.0");
+        assert_eq!(catalog.pack_version(), "1.10.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1339,6 +1372,13 @@ mod tests {
                 .and_then(|item| item.melee_profile.as_ref())
                 .map(|profile| (profile.attacks, profile.to_hit, profile.to_damage)),
             Some((2, 10, 1))
+        );
+        assert_eq!(
+            catalog
+                .item("demo.item.resonance-sling")
+                .and_then(|item| item.projectile_profile.as_ref())
+                .map(|profile| (profile.range, profile.to_hit, profile.to_damage)),
+            Some((6, 30, 1))
         );
         assert_eq!(catalog.content_hash(), artifact.content_hash);
         assert_eq!(
@@ -1466,6 +1506,18 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidAttackProfile(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let sling = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-sling")
+            .expect("fixture should contain the sling");
+        sling.equipment_slot = Some("weapon".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidProjectileProfile(_))
         ));
     }
 

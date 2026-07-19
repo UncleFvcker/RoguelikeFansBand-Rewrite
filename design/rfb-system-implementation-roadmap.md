@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.13 / contract-v13
+状态：长期规则实现路线；当前基线为协议 1.14 / contract-v14
 
 ## 1. 目的与边界
 
@@ -126,7 +126,7 @@ flowchart TD
 | --- | --- | --- | --- |
 | 玩家近战 | 命中、武器骰、攻击次数、暴击、斩味、品牌、克制、吸血等 | 部分建立 | contract-v12 已建立武器 `AttackProfile`、命中/伤害修正、稳定攻击次数与死亡中断；下一步增加 on-hit effect、暴击与品牌 |
 | 怪物近战 | 最多四组 blow，每组包含方法和多个效果 | 部分建立 | contract-v13 已建立内容驱动的 `MeleeRoutine`、method ID、逐 blow 命中/伤害与死亡中断；下一步为 blow 增加 effect 列表和位移中断 |
-| 射击 | 弓倍率、弹药、射程、命中、暴击、弹药破损与返回 | 未建立 | 通用 projectile 行动；武器、弹药、发射器分别贡献 profile；前端只负责目标选择和动画 |
+| 射击 | 弓倍率、弹药、射程、命中、暴击、弹药破损与返回 | 部分建立 | contract-v14 已建立方向射击、发射器 profile、权威轨迹和首目标碰撞；下一步增加弹药实例、目标选择和破损/回收 |
 | 投掷 | 物品重量、投掷技能、返回武器和药水破裂 | 未建立 | 与 projectile 共用轨迹，命中与落点规则独立；物品实例位置变化保持原子性 |
 | 战斗特殊规则 | 反击、光环、背刺、姿态、骑乘、恐惧阻止攻击 | 部分建立 | 恐惧已通过行动检定阻止主动近战；其余规则使用明确的 combat phases 和 rule feature 优先级，禁止任意递归调用完整攻击命令 |
 | 伤害与死亡 | 多种伤害类型、减伤、死亡原因、怪物击杀和掉落 | 部分建立 | `DamagePacket`、确定性抗性结算、物理 AC、元素伤害和状态死亡已建立；下一步统一 `DeathOutcome` 与伤害/抗性领域事件，供击杀、任务、经验和掉落订阅 |
@@ -326,7 +326,7 @@ crates/rfb-core/src/
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：contract-v13 已建立内容驱动的怪物 `MeleeRoutine`、method ID、逐 blow 独立命中/伤害和死亡中断；原创内容包 1.9.0 新增回声猎犬。active baseline 共 49 个 exact fixtures，save v1 / state hash Schema v9 不变。下一步由 contract-v14 建立 projectile、射击与投掷。详细边界见 [Contract v13](contract-v13-monster-melee-routines.md)。
+当前进度：contract-v14 已建立方向射击、内容驱动发射器、权威直线轨迹和首目标碰撞；原创内容包 1.10.0 新增共鸣投射器。active baseline 共 50 个 exact fixtures，save v1 / state hash Schema v9 不变。下一步增加弹药实例事务与投掷落点。详细边界见 [Contract v14](contract-v14-projectile-foundation.md)。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 

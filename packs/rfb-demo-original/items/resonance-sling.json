@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.resonance-sling",
+  "nameKey": "item-demo-resonance-sling-name",
+  "descriptionKey": "item-demo-resonance-sling-description",
+  "glyph": "}",
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "projectileProfile": {
+    "range": 6,
+    "toHit": 30,
+    "toDamage": 1,
+    "damageDice": 1,
+    "damageSides": 2,
+    "damageType": "physical"
+  },
+  "tags": ["equipment", "launcher"]
+}

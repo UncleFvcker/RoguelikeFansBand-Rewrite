@@ -10,6 +10,7 @@ pub(crate) enum GameAction {
     Wait,
     PickUp,
     Equip { item_id: String },
+    Fire { direction: Direction },
     Unequip { slot_id: String },
     Drop { item_ids: Vec<String> },
     DropQuantity { item_id: String, quantity: u32 },
@@ -28,6 +29,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::Wait => Self::Wait,
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Equip { item_id } => Self::Equip { item_id },
+            GameCommand::Fire { direction } => Self::Fire { direction },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },
             GameCommand::DropQuantity { item_id, quantity } => {

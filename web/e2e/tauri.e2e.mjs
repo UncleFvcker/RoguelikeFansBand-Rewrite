@@ -161,7 +161,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.13");
+  assert.equal(state.protocolVersion, "1.14");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -176,11 +176,11 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "ee3446edab3354c091bd1edc6e0b5e8d478fd090767fee6796614d9372286a53",
+    "ce3d3810b9be824f20230d83d5978dbb555f5766813b5ac43c059be0e6293fe0",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.contentVisualCount, "6");
-  assert.equal(state.itemCount, "2");
+  assert.equal(state.contentVisualCount, "13");
+  assert.equal(state.itemCount, "4");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");
   assert.equal(state.playerStatusCount, "0");
@@ -220,7 +220,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.renderKind, "update");
   assert.equal(state.appliedCells, "1");
-  assert.equal(state.itemCount, "1");
+  assert.equal(state.itemCount, "3");
   assert.equal(state.inventoryStackCount, "1");
   assert.match(state.inventory, /发光碎片/);
   assert.match(state.inventory, /×5/);
@@ -337,7 +337,7 @@ async function runScenario(driver) {
     "partial stack drop",
   );
   state = await readState(driver);
-  assert.equal(state.itemCount, "2");
+  assert.equal(state.itemCount, "4");
   assert.equal(state.inventoryStackCount, "1");
   assert.match(state.messages, /丢下了 1 堆物品，共 2 件/);
 
@@ -352,7 +352,7 @@ async function runScenario(driver) {
     "second item pickup",
   );
   state = await readState(driver);
-  assert.equal(state.itemCount, "1");
+  assert.equal(state.itemCount, "3");
   assert.equal(state.inventoryStackCount, "2");
   assert.match(state.inventory, /回声护符/);
   assert.match(state.inventory, /可装备：护符/);
@@ -414,7 +414,7 @@ async function runScenario(driver) {
     "batch item drop",
   );
   state = await readState(driver);
-  assert.equal(state.itemCount, "3");
+  assert.equal(state.itemCount, "5");
   assert.equal(state.inventoryStackCount, "0");
   assert.match(state.messages, /丢下了 2 堆物品，共 4 件/);
 
@@ -432,7 +432,7 @@ async function runScenario(driver) {
     "inventory action save reset",
   );
   state = await readState(driver);
-  assert.equal(state.itemCount, "1");
+  assert.equal(state.itemCount, "3");
   assert.equal(state.equipmentCount, "0");
   assert.equal(state.canvasUnchanged, true);
 
@@ -555,7 +555,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.renderKind, "snapshot");
   assert.equal(state.appliedCells, "400");
-  assert.equal(state.itemCount, "1");
+  assert.equal(state.itemCount, "3");
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.cameraMode, "player-centered");
   assert.equal(state.cameraX, "0");

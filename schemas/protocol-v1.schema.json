@@ -341,6 +341,16 @@
             "maxHp": 0
           }
         },
+        "projectileProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectileProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -414,6 +424,22 @@
           "required": [
             "type",
             "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "fire"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
           ]
         },
         {
@@ -516,6 +542,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/GameEventOutcomeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectileTraceDto"
             },
             {
               "type": "null"
@@ -818,6 +854,16 @@
             "maxHp": 0
           }
         },
+        "projectileProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectileProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -982,6 +1028,16 @@
         "position": {
           "$ref": "#/$defs/Position"
         },
+        "projectileProfile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectileProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "resistances": {
           "type": "array",
           "default": [],
@@ -1027,6 +1083,60 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "ProjectileProfileDto": {
+      "type": "object",
+      "properties": {
+        "damage": {
+          "$ref": "#/$defs/DamageDiceDto"
+        },
+        "range": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "sourceItemId": {
+          "type": "string"
+        },
+        "toDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "toHit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "range",
+        "toHit",
+        "toDamage",
+        "damage",
+        "sourceItemId"
+      ]
+    },
+    "ProjectileTraceDto": {
+      "type": "object",
+      "properties": {
+        "impact": {
+          "$ref": "#/$defs/Position"
+        },
+        "origin": {
+          "$ref": "#/$defs/Position"
+        },
+        "traversed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        }
+      },
+      "required": [
+        "origin",
+        "impact",
+        "traversed"
       ]
     },
     "ResistanceDto": {

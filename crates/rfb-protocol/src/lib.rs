@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.13";
+pub const PROTOCOL_VERSION: &str = "1.14";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -60,6 +60,7 @@ pub enum GameCommand {
     Drop { item_ids: Vec<String> },
     DropQuantity { item_id: String, quantity: u32 },
     Equip { item_id: String },
+    Fire { direction: Direction },
     Move { direction: Direction },
     PickUp,
     Unequip { slot_id: String },
@@ -126,6 +127,26 @@ pub struct MeleeBlowDto {
 #[serde(rename_all = "camelCase")]
 pub struct MeleeRoutineDto {
     pub blows: Vec<MeleeBlowDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectileProfileDto {
+    pub range: u16,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub damage: DamageDiceDto,
+    pub source_item_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectileTraceDto {
+    pub origin: Position,
+    pub impact: Position,
+    pub traversed: Vec<Position>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -284,6 +305,8 @@ pub struct PlayerDto {
     pub melee_damage: DamageDiceDto,
     #[serde(default)]
     pub melee_profile: AttackProfileDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub projectile_profile: Option<ProjectileProfileDto>,
     #[serde(default)]
     pub is_dead: bool,
     #[serde(default)]
@@ -348,6 +371,8 @@ pub struct InventoryItemDto {
     pub modifiers: StatModifiersDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub melee_profile: Option<AttackProfileDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub projectile_profile: Option<ProjectileProfileDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -362,6 +387,8 @@ pub struct EquipmentItemDto {
     pub modifiers: StatModifiersDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub melee_profile: Option<AttackProfileDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub projectile_profile: Option<ProjectileProfileDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -373,6 +400,8 @@ pub struct GameEventDto {
     pub args: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outcome: Option<GameEventOutcomeDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trace: Option<ProjectileTraceDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -462,6 +491,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(AttackProfileDto);
     push_declaration!(MeleeBlowDto);
     push_declaration!(MeleeRoutineDto);
+    push_declaration!(ProjectileProfileDto);
+    push_declaration!(ProjectileTraceDto);
     push_declaration!(Position);
     push_declaration!(CellDto);
     push_declaration!(VisibilityState);
@@ -787,6 +818,7 @@ mod tests {
                     damage_type: DamageTypeDto::Physical,
                 },
                 melee_profile: AttackProfileDto::default(),
+                projectile_profile: None,
                 is_dead: false,
                 equipment_modifiers: StatModifiersDto {
                     attack: 1,
@@ -834,6 +866,7 @@ mod tests {
                     max_hp: 4,
                 },
                 melee_profile: None,
+                projectile_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
                 id: "demo.item.equipment.1".to_owned(),
@@ -846,6 +879,7 @@ mod tests {
                     max_hp: 4,
                 },
                 melee_profile: None,
+                projectile_profile: None,
             }],
             next_item_instance_serial: 4,
             explored: vec![true],

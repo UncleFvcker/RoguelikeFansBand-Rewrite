@@ -876,6 +876,23 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-combat-player-death", {
         source: contentName(event.args.source),
       });
+    case "projectile-unavailable":
+      return localization.format("message-projectile-unavailable");
+    case "projectile-landed":
+      return localization.format("message-projectile-landed");
+    case "projectile-miss":
+      return localization.format("message-projectile-miss", {
+        target: contentName(event.args.target),
+      });
+    case "projectile-hit":
+      return localization.format("message-projectile-hit", {
+        target: contentName(event.args.target),
+        damage: event.args.damage ?? "?",
+      });
+    case "projectile-slay":
+      return localization.format("message-projectile-slay", {
+        target: contentName(event.args.target),
+      });
     case "status-player-damage":
       return localization.format("message-status-player-damage", {
         status: statusName(event.args.status),
@@ -1029,6 +1046,9 @@ function contentName(id: string | undefined): string {
   }
   if (id === "demo.item.echo-blade") {
     return localization.format("item-demo-echo-blade-name");
+  }
+  if (id === "demo.item.resonance-sling") {
+    return localization.format("item-demo-resonance-sling-name");
   }
   if (id === "demo.actor.ember-mote") {
     return localization.format("actor-demo-ember-mote-name");

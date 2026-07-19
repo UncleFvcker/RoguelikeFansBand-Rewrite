@@ -57,6 +57,12 @@
       "kindId": "demo.item.echo-blade",
       "position": { "x": 6, "y": 3 },
       "quantity": 1
+    },
+    {
+      "instanceId": "demo.item.resonance-sling.1",
+      "kindId": "demo.item.resonance-sling",
+      "position": { "x": 6, "y": 4 },
+      "quantity": 1
     }
   ]
 }

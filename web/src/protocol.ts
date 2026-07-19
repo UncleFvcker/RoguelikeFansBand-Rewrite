@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -16,6 +16,10 @@ export type AttackProfileDto = { attacks: number, toHit: number, toDamage: numbe
 export type MeleeBlowDto = { methodId: string, toHit: number, damage: DamageDiceDto, };
 
 export type MeleeRoutineDto = { blows: Array<MeleeBlowDto>, };
+
+export type ProjectileProfileDto = { range: number, toHit: number, toDamage: number, damage: DamageDiceDto, sourceItemId: string, };
+
+export type ProjectileTraceDto = { origin: Position, impact: Position, traversed: Array<Position>, };
 
 export type Position = { x: number, y: number, };
 
@@ -41,17 +45,17 @@ export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResoluti
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
 
 export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, };
 
 export type ItemDto = { id: string, kindId: string, position: Position, quantity: number, };
 
-export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, quantity: number, equipmentSlot: string | null, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, };
 
-export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, };
+export type EquipmentItemDto = { id: string, kindId: string, quantity: number, slotId: string, modifiers: StatModifiersDto, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, };
 
-export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, };
+export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 
 export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, worldTick: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
 

@@ -32,6 +32,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v11：结构化伤害事件、派生属性与检定底座](design/contract-v11-structured-damage-events.md)
 - [Contract v12：武器 AttackProfile 与玩家多段近战](design/contract-v12-weapon-attack-profile.md)
 - [Contract v13：怪物 MeleeRoutine 与稳定 blow 顺序](design/contract-v13-monster-melee-routines.md)
+- [Contract v14：权威 projectile 与发射器基础](design/contract-v14-projectile-foundation.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
@@ -47,7 +48,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v13/scenarios`](tests/fixtures/contract-v13/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v12` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v14/scenarios`](tests/fixtures/contract-v14/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v13` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -72,9 +73,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-协议 1.13 / contract-v13 已建立内容驱动的怪物 `MeleeRoutine`、独立 blow 命中/伤害和稳定中断顺序；未声明 routine 的怪物保持单击 fallback。active baseline 共 49 个 exact fixtures。原创内容包为 1.9.0，新增回声猎犬；存档继续为 v1，state hash Schema 继续为 v9。完整边界见 [Contract v13 说明](design/contract-v13-monster-melee-routines.md)。
+协议 1.14 / contract-v14 已建立方向射击、内容驱动发射器、权威直线轨迹及首目标碰撞。active baseline 共 50 个 exact fixtures。原创内容包为 1.10.0，新增共鸣投射器；存档继续为 v1，state hash Schema 继续为 v9。完整边界见 [Contract v14 说明](design/contract-v14-projectile-foundation.md)。
 
-下一规则里程碑 contract-v14 承接 projectile、射击与投掷。
+下一切片在现有 projectile 上增加弹药事务与投掷落点。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 根据内容定义与装备权威派生，回声护符提供攻击 +1、防御 +1、最大生命 +4。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -146,10 +147,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v13/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v14/baseline-policy.json
 ```
 
-当前 49 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 50 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

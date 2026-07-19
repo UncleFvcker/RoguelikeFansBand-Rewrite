@@ -524,7 +524,7 @@ mod tests {
             .expect("pickup should execute");
         let (final_game, replay) = recorder.finish();
 
-        assert_eq!(final_game.snapshot().items.len(), 2);
+        assert_eq!(final_game.snapshot().items.len(), 3);
         assert_eq!(final_game.snapshot().inventory.len(), 1);
         let verification = verify(&replay, initial).expect("pickup replay should verify");
         assert_eq!(verification.commands_verified, 2);
@@ -563,7 +563,7 @@ mod tests {
 
         assert!(final_game.snapshot().inventory.is_empty());
         assert!(final_game.snapshot().equipment.is_empty());
-        assert_eq!(final_game.snapshot().items.len(), 3);
+        assert_eq!(final_game.snapshot().items.len(), 4);
         let verification = verify(&replay, initial).expect("inventory action replay should verify");
         assert_eq!(verification.commands_verified, 7);
         assert_eq!(verification.final_state_hash, final_game.state_hash());

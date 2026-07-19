@@ -2,9 +2,26 @@
 
 use std::collections::BTreeMap;
 
-use rfb_protocol::{GameEventDto, GameEventOutcomeDto};
+use rfb_protocol::{GameEventDto, GameEventOutcomeDto, Position, ProjectileTraceDto};
 
 use crate::effect::DamageOutcome;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ProjectileTrace {
+    pub(crate) origin: Position,
+    pub(crate) impact: Position,
+    pub(crate) traversed: Vec<Position>,
+}
+
+impl From<ProjectileTrace> for ProjectileTraceDto {
+    fn from(trace: ProjectileTrace) -> Self {
+        Self {
+            origin: trace.origin,
+            impact: trace.impact,
+            traversed: trace.traversed,
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
@@ -33,6 +50,24 @@ pub(crate) enum DomainEvent {
         slot_id: String,
     },
     MoveBlocked,
+    ProjectileUnavailable,
+    ProjectileLanded {
+        trace: ProjectileTrace,
+    },
+    ProjectileMissed {
+        target_kind_id: String,
+        trace: ProjectileTrace,
+    },
+    ProjectileHit {
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    ProjectileSlew {
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
     PlayerMeleeMissed {
         target_kind_id: String,
     },
@@ -152,6 +187,57 @@ impl DomainEvent {
                 [("slot", slot_id)],
             ),
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
+            Self::ProjectileUnavailable => {
+                dto_without_args("combat.projectile-unavailable", "projectile-unavailable")
+            }
+            Self::ProjectileLanded { trace } => with_trace(
+                dto_without_args("combat.projectile-landed", "projectile-landed"),
+                trace,
+            ),
+            Self::ProjectileMissed {
+                target_kind_id,
+                trace,
+            } => with_trace(
+                dto(
+                    "combat.projectile-miss",
+                    "projectile-miss",
+                    [("target", target_kind_id)],
+                ),
+                trace,
+            ),
+            Self::ProjectileHit {
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "combat.projectile-hit",
+                    "projectile-hit",
+                    [
+                        ("target", target_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
+            Self::ProjectileSlew {
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "combat.projectile-slay",
+                    "projectile-slay",
+                    [("target", target_kind_id)],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
             Self::PlayerMeleeMissed { target_kind_id } => dto(
                 "combat.miss",
                 "combat-player-miss",
@@ -311,6 +397,7 @@ fn dto_without_args(kind: &str, message_key: &str) -> GameEventDto {
         message_key: message_key.to_owned(),
         args: BTreeMap::new(),
         outcome: None,
+        trace: None,
     }
 }
 
@@ -323,6 +410,7 @@ fn dto<const N: usize>(kind: &str, message_key: &str, args: [(&str, String); N])
             .map(|(key, value)| (key.to_owned(), value))
             .collect(),
         outcome: None,
+        trace: None,
     }
 }
 
@@ -341,6 +429,11 @@ fn with_method(mut event: GameEventDto, method_id: Option<String>) -> GameEventD
     if let Some(method_id) = method_id {
         event.args.insert("method".to_owned(), method_id);
     }
+    event
+}
+
+fn with_trace(mut event: GameEventDto, trace: ProjectileTrace) -> GameEventDto {
+    event.trace = Some(trace.into());
     event
 }
 

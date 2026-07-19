@@ -5,6 +5,7 @@ use crate::{rng::RfbRng, stats::DerivedStat};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CheckKind {
     MeleeHit,
+    ProjectileHit,
     FearAction,
 }
 

@@ -114,7 +114,7 @@ rfb.terrain.wall.granite
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 五份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段，并可为怪物声明 `meleeRoutine.blows`；每个 blow 包含稳定 method ID、命中修正、伤害骰和类型，列表限制为 1–8 项。未声明 routine 时由既有伤害字段构造单击 fallback。物品可声明仅供不可堆叠 `weapon` 使用的 `meleeProfile`。原创包 1.9.0 的回声猎犬提供物理撕咬与冷属性抓击。
+角色定义使用必需的基础战斗字段，并可为怪物声明 `meleeRoutine.blows`；每个 blow 包含稳定 method ID、命中修正、伤害骰和类型，列表限制为 1–8 项。未声明 routine 时由既有伤害字段构造单击 fallback。物品可声明仅供不可堆叠 `weapon` 使用的 `meleeProfile`，或仅供不可堆叠 `launcher` 使用的 `projectileProfile`。原创包 1.10.0 的共鸣投射器提供射程、命中/伤害修正、伤害骰和类型。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -188,7 +188,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、一个原创怪物、两个原创物品和一个 20×20 世界；
+- 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、六种原创怪物、四种原创物品和一个 20×20 世界；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -196,4 +196,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 以 1.8.0 增加武器 `meleeProfile`，contract-v13 以 1.9.0 增加怪物 `meleeRoutine`。state hash Schema 仍为 v9。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 以 1.8.0 增加武器 `meleeProfile`，contract-v13 以 1.9.0 增加怪物 `meleeRoutine`，contract-v14 以 1.10.0 增加发射器 `projectileProfile`。state hash Schema 仍为 v9。

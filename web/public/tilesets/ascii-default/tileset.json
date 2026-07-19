@@ -37,6 +37,10 @@
     "demo.item.echo-blade": {
       "foreground": "#a9dcff",
       "background": "#182b3a"
+    },
+    "demo.item.resonance-sling": {
+      "foreground": "#9ee7d8",
+      "background": "#17312f"
     }
   },
   "fallback": {

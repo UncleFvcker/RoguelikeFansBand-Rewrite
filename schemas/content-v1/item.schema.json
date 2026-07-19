@@ -54,6 +54,49 @@
       ],
       "type": "object"
     },
+    "ProjectileProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "damageDice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageSides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "range": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "toDamage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "toHit": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "range",
+        "toHit",
+        "toDamage",
+        "damageDice",
+        "damageSides"
+      ],
+      "type": "object"
+    },
     "StatModifiers": {
       "additionalProperties": false,
       "properties": {
@@ -131,6 +174,17 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "projectileProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProjectileProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "tags": {
       "items": {

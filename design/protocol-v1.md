@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.13、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.14、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.13";
+  protocolVersion: "1.14";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -76,7 +76,7 @@ interface ProtocolEnvelope<T> {
 }
 ```
 
-协议 1.13 新增 `MeleeRoutineDto` / `MeleeBlowDto`，输出怪物逐 blow 的 method ID、命中修正、伤害骰和类型。显式 routine 的战斗事件携带 `method` 参数；旧单击 fallback 的事件形状保持不变。当前规则边界见 [Contract v13](contract-v13-monster-melee-routines.md)。
+协议 1.14 新增方向 `Fire` 命令、`ProjectileProfileDto` 和 `ProjectileTraceDto`。射击事件明确输出起点、落点和逐格轨迹，并继续复用结构化伤害 outcome。当前规则边界见 [Contract v14](contract-v14-projectile-foundation.md)。
 
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
