@@ -6,6 +6,17 @@
         "actorKindId": {
           "type": "string"
         },
+        "group": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncounterGroupDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "maxDepth": {
           "format": "uint16",
           "maximum": 65535,
@@ -29,6 +40,130 @@
         "weight",
         "minDepth",
         "maxDepth"
+      ],
+      "type": "object"
+    },
+    "EncounterEscortDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/EncounterEscortEntryDefinition"
+          },
+          "type": "array"
+        },
+        "maxCount": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minCount": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minCount",
+        "maxCount",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "EncounterEscortEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "weight",
+        "minDepth",
+        "maxDepth"
+      ],
+      "type": "object"
+    },
+    "EncounterFormation": {
+      "enum": [
+        "cluster",
+        "ring"
+      ],
+      "type": "string"
+    },
+    "EncounterFriendsDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "maxCount": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minCount": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minCount",
+        "maxCount"
+      ],
+      "type": "object"
+    },
+    "EncounterGroupDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "escort": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncounterEscortDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "formation": {
+          "$ref": "#/$defs/EncounterFormation"
+        },
+        "friends": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncounterFriendsDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "formation"
       ],
       "type": "object"
     }

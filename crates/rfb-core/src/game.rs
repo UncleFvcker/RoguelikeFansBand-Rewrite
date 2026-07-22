@@ -37,9 +37,10 @@ use crate::{
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
 use rfb_content::{
-    ActorRole, ContentCatalog, ContentPosition, FloorLifecycle, ItemUseEffectDefinition,
-    ProceduralFloorDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
-    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
+    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
+    TaskObjectiveDefinition, TaskObjectiveKind, ThemeVaultCandidateDefinition, VaultDefinition,
+    VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -57,7 +58,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 43] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 44] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -101,9 +102,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 43] = [
     "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0",
     "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad",
     "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f",
+    "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0";
+    "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -4281,49 +4283,53 @@ impl Game {
             } else {
                 "remote"
             };
-            let encounter_rolls =
-                definition
-                    .generation_budget
-                    .as_ref()
-                    .map_or(table.rolls, |budget| {
-                        let reserved_actor_slots = definition
-                            .nest
-                            .as_ref()
-                            .map_or(0, |nest| nest.spawn_count)
-                            .saturating_add(if guardian.is_some() { 1 } else { 0 })
-                            .saturating_add(
-                                vault_placements
-                                    .iter()
-                                    .flat_map(|placement| &placement.vault.encounter_groups)
-                                    .map(|group| {
-                                        u16::try_from(group.member_positions.len())
-                                            .expect("validated vault group size must fit u16")
-                                    })
-                                    .sum::<u16>(),
-                            );
-                        table
-                            .rolls
-                            .min(budget.actor_slots.saturating_sub(reserved_actor_slots))
-                    });
-            for ordinal in 0..encounter_rolls {
-                let entry = &eligible_entries[self.roll_weighted_index(&weights)];
-                let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
-                occupied.insert(position);
-                let actor = self
-                    .content
-                    .actor(&entry.actor_kind_id)
-                    .expect("validated encounter actor must remain available");
-                entities.push(actor_from_spawn(
-                    &format!("{}.encounter.{}", definition.id, ordinal + 1),
-                    &entry.actor_kind_id,
-                    ContentPosition {
-                        x: u16::try_from(position.x).expect("generated actor x must fit u16"),
-                        y: u16::try_from(position.y).expect("generated actor y must fit u16"),
-                    },
-                    actor.max_hp,
-                    actor.speed,
-                    INITIAL_MONSTER_ENERGY_NEED,
+            let reserved_actor_slots = definition
+                .nest
+                .as_ref()
+                .map_or(0, |nest| nest.spawn_count)
+                .saturating_add(if guardian.is_some() { 1 } else { 0 })
+                .saturating_add(
+                    vault_placements
+                        .iter()
+                        .flat_map(|placement| &placement.vault.encounter_groups)
+                        .map(|group| {
+                            u16::try_from(group.member_positions.len())
+                                .expect("validated vault group size must fit u16")
+                        })
+                        .sum::<u16>(),
+                );
+            if definition.generation_budget.as_ref().is_some_and(|budget| {
+                budget.group_placements.is_some() && budget.group_actor_slots.is_some()
+            }) {
+                entities.extend(self.generate_dynamic_encounter_groups(
+                    definition,
+                    &table,
+                    &eligible_entries,
+                    &rooms,
+                    room_id,
+                    reserved_actor_slots,
+                    &mut occupied,
                 ));
+            } else {
+                let encounter_rolls =
+                    definition
+                        .generation_budget
+                        .as_ref()
+                        .map_or(table.rolls, |budget| {
+                            table
+                                .rolls
+                                .min(budget.actor_slots.saturating_sub(reserved_actor_slots))
+                        });
+                for ordinal in 0..encounter_rolls {
+                    let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                    let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
+                    occupied.insert(position);
+                    entities.push(self.generated_actor(
+                        format!("{}.encounter.{}", definition.id, ordinal + 1),
+                        &entry.actor_kind_id,
+                        position,
+                    ));
+                }
             }
             if let Some(nest) = &definition.nest {
                 let entry = &eligible_entries[self.roll_weighted_index(&weights)];
@@ -4628,6 +4634,281 @@ impl Game {
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
         })
+    }
+
+    fn generated_actor(&self, id: String, kind_id: &str, position: Position) -> Actor {
+        let actor = self
+            .content
+            .actor(kind_id)
+            .expect("validated generated actor must remain available");
+        actor_from_spawn(
+            &id,
+            kind_id,
+            ContentPosition {
+                x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+            },
+            actor.max_hp,
+            actor.speed,
+            INITIAL_MONSTER_ENERGY_NEED,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn generate_dynamic_encounter_groups(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        table: &EncounterTableDefinition,
+        eligible_entries: &[EncounterEntryDefinition],
+        rooms: &[GeneratedRoom],
+        room_id: &str,
+        reserved_actor_slots: u16,
+        occupied: &mut BTreeSet<Position>,
+    ) -> Vec<Actor> {
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("dynamic encounters require a generation budget");
+        let group_placement_limit = budget
+            .group_placements
+            .expect("validated group placement budget must remain available");
+        let mut remaining_group_actor_slots = budget
+            .group_actor_slots
+            .expect("validated group actor budget must remain available");
+        let mut remaining_actor_slots = budget.actor_slots.saturating_sub(reserved_actor_slots);
+        let grouped_entries = eligible_entries
+            .iter()
+            .filter(|entry| entry.group.is_some())
+            .cloned()
+            .collect::<Vec<_>>();
+        let plain_entries = eligible_entries
+            .iter()
+            .filter(|entry| entry.group.is_none())
+            .cloned()
+            .collect::<Vec<_>>();
+        let minimum_group_companions = grouped_entries
+            .iter()
+            .filter_map(|entry| entry.group.as_ref())
+            .map(rfb_content::EncounterGroupDefinition::min_companion_count)
+            .min()
+            .expect("validated dynamic floor must have a grouped encounter");
+        let mut generated = Vec::new();
+        let mut leader_ordinal = 0_u16;
+
+        for group_slot in 0..group_placement_limit {
+            let future_group_count = group_placement_limit - group_slot - 1;
+            let future_companion_reserve =
+                future_group_count.saturating_mul(minimum_group_companions);
+            let future_actor_reserve = future_group_count
+                .saturating_mul(minimum_group_companions.saturating_add(1))
+                .saturating_add(1);
+            let available_companion_slots = remaining_group_actor_slots
+                .saturating_sub(future_companion_reserve)
+                .min(
+                    remaining_actor_slots
+                        .saturating_sub(future_actor_reserve)
+                        .saturating_sub(1),
+                );
+            let mut candidates = grouped_entries
+                .iter()
+                .filter(|entry| {
+                    entry.group.as_ref().is_some_and(|group| {
+                        group.min_companion_count() <= available_companion_slots
+                    })
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            let mut placed_group = None;
+            while !candidates.is_empty() {
+                let weights = candidates
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                let selected_index = if candidates.len() == 1 {
+                    0
+                } else {
+                    self.roll_weighted_index(&weights)
+                };
+                let entry = candidates.remove(selected_index);
+                let group = entry
+                    .group
+                    .as_ref()
+                    .expect("grouped encounter candidate must retain its group");
+                let friend_min = group
+                    .friends
+                    .as_ref()
+                    .map_or(0, |friends| friends.min_count);
+                let friend_max = group
+                    .friends
+                    .as_ref()
+                    .map_or(0, |friends| friends.max_count);
+                let escort_min = group.escort.as_ref().map_or(0, |escort| escort.min_count);
+                let escort_max = group.escort.as_ref().map_or(0, |escort| escort.max_count);
+                let friend_upper =
+                    friend_max.min(available_companion_slots.saturating_sub(escort_min));
+                let mut friend_count = self.roll_inclusive(friend_min, friend_upper);
+                let escort_upper =
+                    escort_max.min(available_companion_slots.saturating_sub(friend_count));
+                let mut escort_count = self.roll_inclusive(escort_min, escort_upper);
+                let formation_placement = loop {
+                    let placement_candidates = formation_placement_candidates(
+                        rooms,
+                        room_id,
+                        occupied,
+                        group.formation,
+                        friend_count.saturating_add(escort_count),
+                    );
+                    if !placement_candidates.is_empty() {
+                        let placement_index = if placement_candidates.len() == 1 {
+                            0
+                        } else {
+                            usize::try_from(
+                                self.rng
+                                    .bounded(u64::try_from(placement_candidates.len()).expect(
+                                        "formation placement candidate count must fit u64",
+                                    )),
+                            )
+                            .expect("formation placement candidate index must fit usize")
+                        };
+                        break Some(placement_candidates[placement_index].clone());
+                    }
+                    if escort_count > escort_min {
+                        escort_count -= 1;
+                    } else if friend_count > friend_min {
+                        friend_count -= 1;
+                    } else {
+                        break None;
+                    }
+                };
+                let Some((leader_position, companion_positions)) = formation_placement else {
+                    continue;
+                };
+                placed_group = Some((
+                    entry,
+                    friend_count,
+                    escort_count,
+                    leader_position,
+                    companion_positions,
+                ));
+                break;
+            }
+            let Some((entry, friend_count, escort_count, leader_position, companion_positions)) =
+                placed_group
+            else {
+                break;
+            };
+
+            leader_ordinal += 1;
+            occupied.insert(leader_position);
+            generated.push(self.generated_actor(
+                format!("{}.encounter.{leader_ordinal}", definition.id),
+                &entry.actor_kind_id,
+                leader_position,
+            ));
+            for (index, position) in companion_positions
+                .iter()
+                .take(usize::from(friend_count))
+                .copied()
+                .enumerate()
+            {
+                occupied.insert(position);
+                generated.push(self.generated_actor(
+                    format!(
+                        "{}.encounter.{leader_ordinal}.friend.{}",
+                        definition.id,
+                        index + 1
+                    ),
+                    &entry.actor_kind_id,
+                    position,
+                ));
+            }
+            if escort_count > 0 {
+                let escort = entry
+                    .group
+                    .as_ref()
+                    .and_then(|group| group.escort.as_ref())
+                    .expect("positive escort count must retain an escort table");
+                let eligible_escorts = escort
+                    .entries
+                    .iter()
+                    .filter(|escort_entry| {
+                        escort_entry.min_depth <= definition.depth
+                            && definition.depth <= escort_entry.max_depth
+                            && self
+                                .content
+                                .actor(&escort_entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .collect::<Vec<_>>();
+                let escort_weights = eligible_escorts
+                    .iter()
+                    .map(|escort_entry| escort_entry.weight)
+                    .collect::<Vec<_>>();
+                for (index, position) in companion_positions
+                    .iter()
+                    .skip(usize::from(friend_count))
+                    .take(usize::from(escort_count))
+                    .copied()
+                    .enumerate()
+                {
+                    let escort_index = if eligible_escorts.len() == 1 {
+                        0
+                    } else {
+                        self.roll_weighted_index(&escort_weights)
+                    };
+                    let kind_id = &eligible_escorts[escort_index].actor_kind_id;
+                    occupied.insert(position);
+                    generated.push(self.generated_actor(
+                        format!(
+                            "{}.encounter.{leader_ordinal}.escort.{}",
+                            definition.id,
+                            index + 1
+                        ),
+                        kind_id,
+                        position,
+                    ));
+                }
+            }
+            let companion_count = friend_count.saturating_add(escort_count);
+            remaining_group_actor_slots =
+                remaining_group_actor_slots.saturating_sub(companion_count);
+            remaining_actor_slots =
+                remaining_actor_slots.saturating_sub(companion_count.saturating_add(1));
+        }
+
+        let plain_weights = plain_entries
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        while leader_ordinal < table.rolls && remaining_actor_slots > 0 {
+            let entry_index = if plain_entries.len() == 1 {
+                0
+            } else {
+                self.roll_weighted_index(&plain_weights)
+            };
+            let entry = &plain_entries[entry_index];
+            let position = self.choose_generated_room_position(rooms, room_id, occupied);
+            occupied.insert(position);
+            leader_ordinal += 1;
+            generated.push(self.generated_actor(
+                format!("{}.encounter.{leader_ordinal}", definition.id),
+                &entry.actor_kind_id,
+                position,
+            ));
+            remaining_actor_slots -= 1;
+        }
+        generated
+    }
+
+    fn roll_inclusive(&mut self, minimum: u16, maximum: u16) -> u16 {
+        debug_assert!(minimum <= maximum);
+        if minimum == maximum {
+            minimum
+        } else {
+            minimum
+                + u16::try_from(self.rng.bounded(u64::from(maximum - minimum) + 1))
+                    .expect("bounded encounter group count must fit u16")
+        }
     }
 
     fn select_spatial_vault_placements(
@@ -5945,6 +6226,72 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     let dx = left.x - right.x;
     let dy = left.y - right.y;
     dx * dx + dy * dy
+}
+
+fn formation_placement_candidates(
+    rooms: &[GeneratedRoom],
+    room_id: &str,
+    occupied: &BTreeSet<Position>,
+    formation: EncounterFormation,
+    companion_count: u16,
+) -> Vec<(Position, Vec<Position>)> {
+    const RING_OFFSETS: [(i32, i32); 8] = [
+        (0, -1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+        (0, 1),
+        (-1, 1),
+        (-1, 0),
+        (-1, -1),
+    ];
+    const CLUSTER_ORDER: [usize; 8] = [0, 2, 4, 6, 1, 3, 5, 7];
+    let room = rooms
+        .iter()
+        .find(|room| room.id == room_id)
+        .expect("validated formation room must remain available");
+    let mut candidates = Vec::new();
+    for leader_y in room.y..room.y + room.height {
+        for leader_x in room.x..room.x + room.width {
+            let leader = Position {
+                x: leader_x,
+                y: leader_y,
+            };
+            if occupied.contains(&leader) {
+                continue;
+            }
+            for orientation in 0..RING_OFFSETS.len() {
+                let offsets = (0..usize::from(companion_count))
+                    .map(|index| {
+                        let base_index = match formation {
+                            EncounterFormation::Cluster => CLUSTER_ORDER[index],
+                            EncounterFormation::Ring => {
+                                index * RING_OFFSETS.len() / usize::from(companion_count)
+                            }
+                        };
+                        RING_OFFSETS[(base_index + orientation) % RING_OFFSETS.len()]
+                    })
+                    .collect::<Vec<_>>();
+                let companions = offsets
+                    .iter()
+                    .map(|(dx, dy)| Position {
+                        x: leader.x + dx,
+                        y: leader.y + dy,
+                    })
+                    .collect::<Vec<_>>();
+                if companions.iter().all(|position| {
+                    position.x >= room.x
+                        && position.x < room.x + room.width
+                        && position.y >= room.y
+                        && position.y < room.y + room.height
+                        && !occupied.contains(position)
+                }) {
+                    candidates.push((leader, companions));
+                }
+            }
+        }
+    }
+    candidates
 }
 
 fn transformed_vault_dimensions(vault: &VaultDefinition, transform: VaultTransform) -> (u16, u16) {
@@ -7793,6 +8140,186 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_friends_and_escorts_obey_group_budgets_and_formations() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..6 {
+            descend_one_floor(&mut game);
+        }
+
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-6");
+        assert_eq!(game.entities.len(), 7);
+        let captain = game
+            .entities
+            .iter()
+            .find(|entity| entity.kind_id == "demo.actor.chorus-captain")
+            .expect("depth six should contain one chorus captain");
+        let captain_position = captain.position;
+        let friends = game
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".friend."))
+            .collect::<Vec<_>>();
+        let escorts = game
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".escort."))
+            .collect::<Vec<_>>();
+        assert!((1..=2).contains(&friends.len()));
+        assert!((1..=2).contains(&escorts.len()));
+        assert!(friends.len() + escorts.len() <= 4);
+        assert!(friends.iter().all(|friend| {
+            friend.kind_id == "demo.actor.chorus-captain"
+                && adjacent(friend.position, captain_position)
+        }));
+        assert!(escorts.iter().all(|escort| {
+            matches!(
+                escort.kind_id.as_str(),
+                "demo.actor.frost-wisp" | "demo.actor.storm-spark"
+            ) && adjacent(escort.position, captain_position)
+        }));
+
+        descend_one_floor(&mut game);
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-7");
+        assert_eq!(game.entities.len(), 8);
+        let shepherd = game
+            .entities
+            .iter()
+            .find(|entity| entity.kind_id == "demo.actor.spore-shepherd")
+            .expect("depth seven should contain one spore shepherd");
+        let shepherd_position = shepherd.position;
+        let friends = game
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".friend."))
+            .collect::<Vec<_>>();
+        let escorts = game
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".escort."))
+            .collect::<Vec<_>>();
+        assert!((1..=2).contains(&friends.len()));
+        assert!((2..=3).contains(&escorts.len()));
+        assert!(friends.len() + escorts.len() <= 5);
+        assert!(friends.iter().all(|friend| {
+            friend.kind_id == "demo.actor.spore-shepherd"
+                && adjacent(friend.position, shepherd_position)
+        }));
+        assert!(escorts.iter().all(|escort| {
+            matches!(
+                escort.kind_id.as_str(),
+                "demo.actor.venom-spore" | "demo.actor.echo-hound"
+            ) && adjacent(escort.position, shepherd_position)
+        }));
+
+        let restored =
+            Game::from_save(game.to_save()).expect("dynamic encounter groups should round-trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn formation_space_pressure_shrinks_then_falls_back_atomically() {
+        let seed = (1..=64)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(2) == 1 && rng.bounded(2) == 1
+            })
+            .expect("a seed should request both maximum companion counts");
+        let mut game = Game::new(seed);
+        let definition = game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("built-in world should exist")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-6")
+            .expect("fixture should contain the ring formation floor")
+            .clone();
+        let mut table = game
+            .content
+            .encounter_table("demo.encounter-table.resonance-formations")
+            .expect("fixture should contain the formation encounter table")
+            .clone();
+        table.rolls = 1;
+        let eligible_entries = table
+            .entries
+            .iter()
+            .filter(|entry| entry.min_depth <= 6 && 6 <= entry.max_depth)
+            .cloned()
+            .collect::<Vec<_>>();
+        let rooms = [GeneratedRoom {
+            id: "remote",
+            x: 0,
+            y: 0,
+            width: 3,
+            height: 3,
+        }];
+        let free = BTreeSet::from([
+            Position { x: 1, y: 0 },
+            Position { x: 1, y: 1 },
+            Position { x: 1, y: 2 },
+        ]);
+        let mut occupied = (0..3)
+            .flat_map(|y| (0..3).map(move |x| Position { x, y }))
+            .filter(|position| !free.contains(position))
+            .collect::<BTreeSet<_>>();
+
+        let shrunk = game.generate_dynamic_encounter_groups(
+            &definition,
+            &table,
+            &eligible_entries,
+            &rooms,
+            "remote",
+            0,
+            &mut occupied,
+        );
+        assert_eq!(shrunk.len(), 3);
+        assert_eq!(
+            shrunk
+                .iter()
+                .filter(|actor| actor.id.contains(".friend.") || actor.id.contains(".escort."))
+                .count(),
+            2
+        );
+
+        let mut left = Game::new(seed);
+        let mut right = Game::new(seed);
+        let only_one_free = BTreeSet::from([Position { x: 1, y: 1 }]);
+        let occupied = (0..3)
+            .flat_map(|y| (0..3).map(move |x| Position { x, y }))
+            .filter(|position| !only_one_free.contains(position))
+            .collect::<BTreeSet<_>>();
+        let mut left_occupied = occupied.clone();
+        let mut right_occupied = occupied;
+        let left_generated = left.generate_dynamic_encounter_groups(
+            &definition,
+            &table,
+            &eligible_entries,
+            &rooms,
+            "remote",
+            0,
+            &mut left_occupied,
+        );
+        let right_generated = right.generate_dynamic_encounter_groups(
+            &definition,
+            &table,
+            &eligible_entries,
+            &rooms,
+            "remote",
+            0,
+            &mut right_occupied,
+        );
+        assert_eq!(left_generated, right_generated);
+        assert_eq!(left_generated.len(), 1);
+        assert!(left_generated[0].id.ends_with(".encounter.1"));
+        assert!(!left_generated[0].id.contains(".friend."));
+        assert!(!left_generated[0].id.contains(".escort."));
+    }
+
+    #[test]
     fn vault_coordinate_transforms_cover_rotations_and_reflections() {
         let game = Game::new(1);
         let vault = game
@@ -7936,6 +8463,41 @@ mod tests {
                 .entities
                 .iter()
                 .all(|entity| !entity.id.contains(".vault."))
+        );
+    }
+
+    #[test]
+    fn previous_v50_generated_floor_is_not_backfilled_with_dynamic_groups() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..6 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0".to_owned();
+        payload.entities.retain(|entity| {
+            !entity
+                .id
+                .starts_with("demo.floor.resonance-depth-6.encounter.1")
+        });
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v50 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-6");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(
+            restored.entities.iter().all(|entity| {
+                !entity.id.contains(".friend.") && !entity.id.contains(".escort.")
+            })
         );
     }
 

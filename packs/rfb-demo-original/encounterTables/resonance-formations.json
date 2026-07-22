@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.resonance-formations",
+  "rolls": 12,
+  "entries": [
+    {
+      "actorKindId": "demo.actor.chorus-captain",
+      "weight": 1,
+      "minDepth": 6,
+      "maxDepth": 6,
+      "group": {
+        "friends": { "minCount": 1, "maxCount": 2 },
+        "escort": {
+          "minCount": 1,
+          "maxCount": 2,
+          "entries": [
+            {
+              "actorKindId": "demo.actor.frost-wisp",
+              "weight": 1,
+              "minDepth": 6,
+              "maxDepth": 6
+            },
+            {
+              "actorKindId": "demo.actor.storm-spark",
+              "weight": 2,
+              "minDepth": 6,
+              "maxDepth": 6
+            }
+          ]
+        },
+        "formation": "ring"
+      }
+    },
+    {
+      "actorKindId": "demo.actor.spore-shepherd",
+      "weight": 1,
+      "minDepth": 7,
+      "maxDepth": 7,
+      "group": {
+        "friends": { "minCount": 1, "maxCount": 2 },
+        "escort": {
+          "minCount": 2,
+          "maxCount": 3,
+          "entries": [
+            {
+              "actorKindId": "demo.actor.venom-spore",
+              "weight": 3,
+              "minDepth": 7,
+              "maxDepth": 7
+            },
+            {
+              "actorKindId": "demo.actor.echo-hound",
+              "weight": 1,
+              "minDepth": 7,
+              "maxDepth": 7
+            }
+          ]
+        },
+        "formation": "cluster"
+      }
+    },
+    {
+      "actorKindId": "demo.actor.echo-hound",
+      "weight": 3,
+      "minDepth": 6,
+      "maxDepth": 7
+    },
+    {
+      "actorKindId": "demo.actor.frost-wisp",
+      "weight": 2,
+      "minDepth": 6,
+      "maxDepth": 7
+    },
+    {
+      "actorKindId": "demo.actor.venom-spore",
+      "weight": 2,
+      "minDepth": 6,
+      "maxDepth": 7
+    }
+  ]
+}

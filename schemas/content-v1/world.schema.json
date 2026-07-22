@@ -386,6 +386,26 @@
           "minimum": 0,
           "type": "integer"
         },
+        "groupActorSlots": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "groupPlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "lootPlacements": {
           "format": "uint16",
           "maximum": 65535,

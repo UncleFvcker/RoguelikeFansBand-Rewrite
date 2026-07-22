@@ -42,6 +42,7 @@
 - [Contract v48：楼层生成表、加权 Vault 与巢穴](contract-v48-floor-generation-tables.md)
 - [Contract v49：预算化十层压力地牢](contract-v49-budgeted-pressure-dungeon.md)
 - [Contract v50：Vault 空间变换与确定性多模板落位](contract-v50-spatial-vault-placement.md)
+- [Contract v51：动态 friends/escort 群体与 formation](contract-v51-dynamic-encounter-groups.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -596,12 +597,13 @@ interface SaveGame {
 - 协议 1.48 和 contract-v48 已建立；内容包 1.41.0 新增独立 encounter/theme 根和楼层表引用，普通房间怪物/掉落改为表驱动，深度 2 在两个主题 Vault 间确定性加权选择，深度 1 建立首个同类巢穴，深度 3 验证无 Vault 候选回退。save v1 / state hash Schema v19 不变，active baseline 共 96 个 exact fixtures。
 - 协议 1.49 和 contract-v49 已建立；内容包 1.42.0 新增 actorSlots/lootPlacements 总预算和独立十层压力地牢，深度 4 切换第二主题，最终层按 10 actor/3 loot placement 规模生成。save v1 / state hash Schema v19 不变，active baseline 共 99 个 exact fixtures。
 - 协议 1.50 和 contract-v50 已建立；内容包 1.43.0 新增 Vault 八向变换、边界入口、自由 wall 区落位、多 Vault 数量/面积预算、重叠拒绝与稳定失败回退。深度 8 在 9 actor/3 loot placement 内落位两个小模板并跳过无法落位的 12×12 候选；save v1 / state hash Schema v19 不变，active baseline 共 100 个 exact fixtures。
+- 协议 1.51 和 contract-v51 已建立；内容包 1.44.0 新增动态 friends/escort、`cluster/ring` formation、群体数量/随从 actor 预算、空间缩减与原子回退。深度 6/7 分别生成 ring/cluster 群体并保持 7/8 actor 总预算；save v1 / state hash Schema v19 不变，active baseline 共 102 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage E 收尾，加入动态 friends/escort 群体，再扩展多入口、大模板连通性、陷阱/门空间预算和分支连接；
+1. 继续 Stage E 收尾，扩展房间/陷阱/门空间预算、pit/pack AI、多入口、大模板连通性和分支连接；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

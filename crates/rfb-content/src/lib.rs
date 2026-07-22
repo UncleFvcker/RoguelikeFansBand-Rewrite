@@ -414,6 +414,72 @@ pub struct EncounterEntryDefinition {
     pub weight: u32,
     pub min_depth: u16,
     pub max_depth: u16,
+    #[serde(default)]
+    pub group: Option<EncounterGroupDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterGroupDefinition {
+    #[serde(default)]
+    pub friends: Option<EncounterFriendsDefinition>,
+    #[serde(default)]
+    pub escort: Option<EncounterEscortDefinition>,
+    pub formation: EncounterFormation,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterFriendsDefinition {
+    pub min_count: u16,
+    pub max_count: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterEscortDefinition {
+    pub min_count: u16,
+    pub max_count: u16,
+    pub entries: Vec<EncounterEscortEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterEscortEntryDefinition {
+    pub actor_kind_id: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum EncounterFormation {
+    Cluster,
+    Ring,
+}
+
+impl EncounterGroupDefinition {
+    #[must_use]
+    pub fn min_companion_count(&self) -> u16 {
+        self.friends
+            .as_ref()
+            .map_or(0, |friends| friends.min_count)
+            .saturating_add(self.escort.as_ref().map_or(0, |escort| escort.min_count))
+    }
+
+    #[must_use]
+    pub fn max_companion_count(&self) -> u16 {
+        self.friends
+            .as_ref()
+            .map_or(0, |friends| friends.max_count)
+            .saturating_add(self.escort.as_ref().map_or(0, |escort| escort.max_count))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -706,6 +772,10 @@ pub struct ProceduralGenerationBudgetDefinition {
     pub vault_placements: Option<u16>,
     #[serde(default)]
     pub vault_area_tiles: Option<u32>,
+    #[serde(default)]
+    pub group_placements: Option<u16>,
+    #[serde(default)]
+    pub group_actor_slots: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1613,7 +1683,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         });
         let mut actor_ids = BTreeSet::new();
         let mut total_weight = 0_u64;
-        for entry in &table.entries {
+        for entry in &mut table.entries {
             require_actor_role(
                 &actor_roles,
                 &entry.actor_kind_id,
@@ -1630,6 +1700,74 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 || !actor_ids.insert(entry.actor_kind_id.clone())
             {
                 return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+            }
+            if let Some(group) = &mut entry.group {
+                let friends_are_valid = group.friends.as_ref().is_none_or(|friends| {
+                    friends.max_count > 0
+                        && friends.min_count <= friends.max_count
+                        && friends.max_count <= 7
+                });
+                let escort_is_valid = group.escort.as_ref().is_none_or(|escort| {
+                    escort.max_count > 0
+                        && escort.min_count <= escort.max_count
+                        && escort.max_count <= 7
+                        && !escort.entries.is_empty()
+                        && escort.entries.len() <= 64
+                });
+                if !friends_are_valid
+                    || !escort_is_valid
+                    || group.min_companion_count() == 0
+                    || group.max_companion_count() > 7
+                {
+                    return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+                }
+                if let Some(escort) = &mut group.escort {
+                    escort.entries.sort_by(|left, right| {
+                        left.actor_kind_id
+                            .cmp(&right.actor_kind_id)
+                            .then(left.min_depth.cmp(&right.min_depth))
+                            .then(left.max_depth.cmp(&right.max_depth))
+                    });
+                    let mut escort_actor_ids = BTreeSet::new();
+                    let mut escort_weight = 0_u64;
+                    for escort_entry in &escort.entries {
+                        require_actor_role(
+                            &actor_roles,
+                            &escort_entry.actor_kind_id,
+                            ActorRole::Monster,
+                            &table.id,
+                        )?;
+                        if escort_entry.weight == 0
+                            || escort_entry.min_depth < entry.min_depth
+                            || escort_entry.min_depth > escort_entry.max_depth
+                            || escort_entry.max_depth > entry.max_depth
+                            || actor_levels
+                                .get(&escort_entry.actor_kind_id)
+                                .is_none_or(|level| *level > u32::from(escort_entry.max_depth))
+                            || !escort_actor_ids.insert(escort_entry.actor_kind_id.clone())
+                        {
+                            return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+                        }
+                        escort_weight = escort_weight
+                            .checked_add(u64::from(escort_entry.weight))
+                            .ok_or_else(|| {
+                            ContentError::InvalidEncounterTable(table.id.clone())
+                        })?;
+                    }
+                    if escort_weight == 0
+                        || (entry.min_depth..=entry.max_depth).any(|depth| {
+                            !escort.entries.iter().any(|escort_entry| {
+                                escort_entry.min_depth <= depth
+                                    && depth <= escort_entry.max_depth
+                                    && actor_levels
+                                        .get(&escort_entry.actor_kind_id)
+                                        .is_some_and(|level| *level <= u32::from(depth))
+                            })
+                        })
+                    {
+                        return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+                    }
+                }
             }
             total_weight = total_weight
                 .checked_add(u64::from(entry.weight))
@@ -2082,23 +2220,31 @@ fn validate_world(
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
-        if let Some(table_id) = &procedural.encounter_table_id {
+        let eligible_encounter_entries = if let Some(table_id) = &procedural.encounter_table_id {
             let Some(table) = encounter_tables.get(table_id) else {
                 return Err(ContentError::DanglingReference {
                     owner: procedural.id.clone(),
                     target: table_id.clone(),
                 });
             };
-            if !table.entries.iter().any(|entry| {
-                entry.min_depth <= procedural.depth
-                    && procedural.depth <= entry.max_depth
-                    && actor_levels
-                        .get(&entry.actor_kind_id)
-                        .is_some_and(|level| *level <= u32::from(procedural.depth))
-            }) {
+            let entries = table
+                .entries
+                .iter()
+                .filter(|entry| {
+                    entry.min_depth <= procedural.depth
+                        && procedural.depth <= entry.max_depth
+                        && actor_levels
+                            .get(&entry.actor_kind_id)
+                            .is_some_and(|level| *level <= u32::from(procedural.depth))
+                })
+                .collect::<Vec<_>>();
+            if entries.is_empty() {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
-        }
+            entries
+        } else {
+            Vec::new()
+        };
         if let Some(table_id) = &procedural.loot_table_id {
             require_reference(loot_table_ids, table_id, &procedural.id)?;
         }
@@ -2168,6 +2314,11 @@ fn validate_world(
                 (Some(placements), Some(area_tiles)) => Some((placements, area_tiles)),
                 _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
             };
+            let group_budget = match (budget.group_placements, budget.group_actor_slots) {
+                (None, None) => None,
+                (Some(placements), Some(actor_slots)) => Some((placements, actor_slots)),
+                _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+            };
             if procedural.lifecycle != FloorLifecycle::Dungeon
                 || procedural.encounter_table_id.is_none()
                 || procedural.loot_table_id.is_none()
@@ -2202,6 +2353,56 @@ fn validate_world(
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
             }
+            if let Some((placements, group_actor_slots)) = group_budget {
+                let grouped_entries = eligible_encounter_entries
+                    .iter()
+                    .filter(|entry| entry.group.is_some())
+                    .copied()
+                    .collect::<Vec<_>>();
+                let plain_entries = eligible_encounter_entries
+                    .iter()
+                    .filter(|entry| entry.group.is_none())
+                    .copied()
+                    .collect::<Vec<_>>();
+                let maximum_minimum_companions = grouped_entries
+                    .iter()
+                    .filter_map(|entry| entry.group.as_ref())
+                    .map(EncounterGroupDefinition::min_companion_count)
+                    .max()
+                    .unwrap_or(0);
+                let required_companion_slots =
+                    usize::from(placements) * usize::from(maximum_minimum_companions);
+                let required_actor_slots =
+                    reserved_actor_slots + usize::from(placements) + required_companion_slots + 1;
+                let encounter_rolls = procedural
+                    .encounter_table_id
+                    .as_ref()
+                    .and_then(|table_id| encounter_tables.get(table_id))
+                    .map_or(0, |table| table.rolls);
+                if !(1..=4).contains(&placements)
+                    || !(1..=14).contains(&group_actor_slots)
+                    || placements >= encounter_rolls
+                    || grouped_entries.is_empty()
+                    || plain_entries.is_empty()
+                    || procedural.nest.is_some()
+                    || spatial_vault_budget.is_some()
+                    || required_companion_slots > usize::from(group_actor_slots)
+                    || required_actor_slots > usize::from(budget.actor_slots)
+                    || grouped_entries.iter().any(|entry| {
+                        entry
+                            .group
+                            .as_ref()
+                            .is_some_and(|group| group.min_companion_count() > group_actor_slots)
+                    })
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+            } else if eligible_encounter_entries
+                .iter()
+                .any(|entry| entry.group.is_some())
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
             for entry in &eligible_theme_entries {
                 for candidate in entry.vault_candidates.iter().filter(|candidate| {
                     candidate.min_depth <= procedural.depth
@@ -2225,6 +2426,11 @@ fn validate_world(
                     }
                 }
             }
+        } else if eligible_encounter_entries
+            .iter()
+            .any(|entry| entry.group.is_some())
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
         if let Some(vault_id) = &procedural.vault_id {
             let Some(vault) = vaults.get(vault_id) else {
@@ -3252,10 +3458,10 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 37);
-        assert_eq!(first.content.actors.len(), 8);
+        assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
-        assert_eq!(first.content.encounter_tables.len(), 2);
+        assert_eq!(first.content.encounter_tables.len(), 3);
         assert_eq!(first.content.loot_tables.len(), 5);
         assert_eq!(first.content.theme_tables.len(), 2);
         assert_eq!(first.content.vaults.len(), 5);
@@ -3269,7 +3475,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.43.0");
+        assert_eq!(catalog.pack_version(), "1.44.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3293,6 +3499,18 @@ mod tests {
                 .encounter_table("demo.encounter-table.echo-depths")
                 .map(|table| (table.rolls, table.entries.len())),
             Some((1, 5))
+        );
+        assert_eq!(
+            catalog
+                .encounter_table("demo.encounter-table.resonance-formations")
+                .map(|table| {
+                    table
+                        .entries
+                        .iter()
+                        .filter(|entry| entry.group.is_some())
+                        .count()
+                }),
+            Some(2)
         );
         assert_eq!(
             catalog
@@ -3709,6 +3927,54 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut incomplete_spatial_budget),
             Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut incomplete_group_budget = artifact.content.clone();
+        incomplete_group_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-6")
+            .expect("fixture should contain the dynamic group floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .group_actor_slots = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_group_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut undersized_group_budget = artifact.content.clone();
+        undersized_group_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-6")
+            .expect("fixture should contain the dynamic group floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .group_actor_slots = Some(1);
+        assert!(matches!(
+            validate_and_normalize(&mut undersized_group_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut player_escort = artifact.content.clone();
+        player_escort
+            .encounter_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.encounter-table.resonance-formations")
+            .expect("fixture should contain the formation encounter table")
+            .entries
+            .iter_mut()
+            .find_map(|entry| entry.group.as_mut())
+            .and_then(|group| group.escort.as_mut())
+            .expect("fixture should contain an escort table")
+            .entries[0]
+            .actor_kind_id = "demo.actor.explorer".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut player_escort),
+            Err(ContentError::WrongActorRole(_))
         ));
     }
 

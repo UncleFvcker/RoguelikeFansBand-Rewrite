@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.spore-shepherd",
+  "role": "monster",
+  "nameKey": "actor-demo-spore-shepherd-name",
+  "descriptionKey": "actor-demo-spore-shepherd-description",
+  "glyph": "S",
+  "level": 5,
+  "maxHp": 6,
+  "speed": 110,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "poison",
+  "tags": ["spore", "leader"]
+}

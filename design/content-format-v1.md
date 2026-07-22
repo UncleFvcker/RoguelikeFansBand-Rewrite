@@ -119,6 +119,8 @@ contract-v49 为普通 dungeon 程序化楼层增加可选 `generationBudget { a
 
 contract-v50 为 Vault 增加可选 `transforms`，允许 identity、四向旋转和四种镜像，入口可位于任一模板边界。楼层预算可成对增加 `vaultPlacements/vaultAreaTiles`，启用后按数量、面积、actor 和 loot 预算选择多个不同 Vault，在地图未开凿 wall 区自由落位；矩形重叠被拒绝，无可行原点的候选稳定移除并继续回退。
 
+contract-v51 为 encounter 条目增加可选 `group`：`friends` 生成同种类成员，`escort` 从独立加权/深度候选中逐个选种，`formation` 支持 `cluster/ring`。楼层预算可成对增加 `groupPlacements/groupActorSlots`；随从同时消耗群体随从预算和 actor 总预算，领袖只消耗 actor 总预算。空间不足时先缩减 escort、再缩减 friends；最小阵容无法放置则原子放弃该群体并回退到其他群体或普通 encounter。
+
 contract-v42 新增 `retakeable`（默认 `false`）。启用后，未完成时普通离开会保存任务层并保持入口开放；重新进入恢复原楼层，而显式放弃或完成仍关闭入口。
 
 contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结算组，共享进度与结果；组内目标种类、required 和重接策略必须一致，并且整组恰好声明一个奖励。`kill-actor-kind` 可用 `spawnCount` 控制单个成员楼层生成的目标数量。
@@ -209,7 +211,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含 37 种地形、一个玩家原型、七种原创怪物、五种原创物品、两个 encounter table、五个 loot table、两个 theme table、五个 vault 和一个带 20×20 地表、三层主题地牢及十层压力地牢的世界；
+- 已完成：`packs/rfb-demo-original`，包含 37 种地形、一个玩家原型、九种原创怪物、五种原创物品、三个 encounter table、五个 loot table、两个 theme table、五个 vault 和一个带 20×20 地表、三层主题地牢及十层压力地牢的世界；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -217,4 +219,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22 以 1.17.0 增加 affix 根和实例引用，contract-v23 以 1.18.0 增加实例质量，contract-v24 以 1.19.0 增加 loot table 根和死亡引用，contract-v25 以 1.20.0 增加出生携带引用，contract-v26 以 1.21.0 增加稳定入口层和程序化楼层定义，contract-v27 以 1.22.0 增加深度与房间内容，contract-v28–v35 建立地形交互、多层与探索生命周期，contract-v36–v45 建立任务状态机，contract-v46 以 1.39.0 建立最终层与守护者，contract-v47 以 1.40.0 增加 vault 根、深度 encounter group 与主题 loot，contract-v48 以 1.41.0 增加 encounter/theme 根、楼层表引用、加权 Vault 与巢穴，contract-v49 以 1.42.0 增加 actor/loot 生成预算、深度主题分段和十层压力场景，contract-v50 以 1.43.0 增加 Vault 变换、空间预算、多模板落位和失败回退。当前 state hash 为 Schema v19。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22 以 1.17.0 增加 affix 根和实例引用，contract-v23 以 1.18.0 增加实例质量，contract-v24 以 1.19.0 增加 loot table 根和死亡引用，contract-v25 以 1.20.0 增加出生携带引用，contract-v26 以 1.21.0 增加稳定入口层和程序化楼层定义，contract-v27 以 1.22.0 增加深度与房间内容，contract-v28–v35 建立地形交互、多层与探索生命周期，contract-v36–v45 建立任务状态机，contract-v46 以 1.39.0 建立最终层与守护者，contract-v47 以 1.40.0 增加 vault 根、深度 encounter group 与主题 loot，contract-v48 以 1.41.0 增加 encounter/theme 根、楼层表引用、加权 Vault 与巢穴，contract-v49 以 1.42.0 增加 actor/loot 生成预算、深度主题分段和十层压力场景，contract-v50 以 1.43.0 增加 Vault 变换、空间预算、多模板落位和失败回退，contract-v51 以 1.44.0 增加动态 friends/escort、formation 和群体预算。当前 state hash 为 Schema v19。

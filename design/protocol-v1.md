@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.50、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.51、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -144,6 +144,8 @@ interface GameCoreV1 {
 协议 1.49 继续保持 DTO 和 save 字段不变，固定 `actorSlots/lootPlacements` 预算预留、普通 encounter 填充、重复楼层 loot placement 和十层主题分段的 RNG 顺序；版本升级用于拒绝以 1.48 规则解释预算化首次生成和回放。当前规则边界见 [Contract v49](contract-v49-budgeted-pressure-dungeon.md)。
 
 协议 1.50 继续保持 DTO 和 save 字段不变，固定 Vault 变换枚举、自由落位候选顺序、多 Vault area/actor/loot 预算竞争、重叠拒绝和失败候选回退的 RNG 顺序；版本升级用于拒绝以 1.49 规则解释空间 Vault 首次生成和回放。当前规则边界见 [Contract v50](contract-v50-spatial-vault-placement.md)。
+
+协议 1.51 继续保持 DTO 和 save 字段不变，固定动态 friends/escort 数量抽取、escort 选种、`cluster/ring` formation 候选、群体预算竞争、空间缩减和原子回退的 RNG 顺序；版本升级用于拒绝以 1.50 规则解释动态群体首次生成和回放。当前规则边界见 [Contract v51](contract-v51-dynamic-encounter-groups.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 
