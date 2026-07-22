@@ -209,6 +209,7 @@ mod tests {
             content_hash: "0".repeat(64),
             world_id: "test.world.fixture".to_owned(),
             current_floor_id: "test.floor.surface".to_owned(),
+            floor_connections: Vec::new(),
             stored_floors: Vec::new(),
         };
         (header, payload)

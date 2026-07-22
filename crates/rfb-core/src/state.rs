@@ -49,6 +49,13 @@ pub(crate) struct FloorState {
     pub(crate) items: Vec<ItemInstance>,
     pub(crate) explored: Vec<bool>,
     pub(crate) revealed_terrain: BTreeSet<Position>,
+    pub(crate) connections: Vec<FloorConnectionState>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FloorConnectionState {
+    pub(crate) id: String,
+    pub(crate) position: Position,
 }
 
 pub(crate) struct EquipOutcome {

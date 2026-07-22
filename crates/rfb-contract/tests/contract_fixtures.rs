@@ -7,7 +7,7 @@ use rfb_contract::{ContractFixture, validate_fixture_set, verify};
 #[test]
 fn committed_contract_fixtures_pass() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/fixtures/contract-v57/scenarios");
+        .join("../../tests/fixtures/contract-v58/scenarios");
     let mut paths = fs::read_dir(&root)
         .expect("contract fixture directory should exist")
         .map(|entry| entry.expect("fixture entry should be readable").path())
@@ -19,7 +19,7 @@ fn committed_contract_fixtures_pass() {
     paths.sort();
     assert!(
         paths.len() >= 114,
-        "the active contract baseline requires at least 114 committed fixtures"
+        "the active contract baseline requires at least 117 committed fixtures"
     );
 
     let fixtures = paths

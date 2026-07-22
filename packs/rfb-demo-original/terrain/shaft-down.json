@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.shaft-down",
+  "nameKey": "terrain-demo-shaft-down-name",
+  "descriptionKey": "terrain-demo-shaft-down-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["shaft", "stairs-down"]
+}

@@ -26,14 +26,15 @@ use crate::{
         GENERATED_ITEM_ID_PREFIX, actor_from_entity, actor_from_player, actor_from_spawn,
         actors_to_save, carried_item_from_dto, carried_items_to_save,
         derive_next_item_instance_serial, equipment_item_from_dto, equipment_to_save,
-        floor_from_save, floor_to_save, inventory_item_from_dto, inventory_to_save, item_from_dto,
-        items_to_save, player_to_save, position_from_content, revealed_terrain_from_save,
+        floor_connections_from_save, floor_connections_to_save, floor_from_save, floor_to_save,
+        inventory_item_from_dto, inventory_to_save, item_from_dto, items_to_save, player_to_save,
+        position_from_content, revealed_terrain_from_save,
     },
     scheduler::{
         INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, gain_energy,
         spend_energy,
     },
-    state::{Actor, EquipOutcome, FloorState, ItemInstance, ItemLocation},
+    state::{Actor, EquipOutcome, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
 use rfb_content::{
@@ -47,20 +48,20 @@ use rfb_content::{
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
     ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto,
-    EquipmentItemSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
-    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
-    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
-    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto,
-    Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
-    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
-    TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
+    GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto,
+    ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto,
+    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto,
+    PlayerSaveDto, Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto,
+    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
+    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 50] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 51] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -111,9 +112,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 50] = [
     "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9",
     "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9",
     "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041",
+    "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1";
+    "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -140,7 +142,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV19 {
+struct StateHashPayloadV20 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -162,6 +164,8 @@ struct StateHashPayloadV19 {
     explored: Vec<bool>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     revealed_terrain: Vec<Position>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    floor_connections: Vec<FloorConnectionSaveDto>,
     rng: RngSaveDto,
     content_id: String,
     content_hash: String,
@@ -573,6 +577,7 @@ pub struct Game {
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
+    floor_connections: Vec<FloorConnectionState>,
     rng: RfbRng,
     revision: u32,
     turn: u32,
@@ -680,6 +685,7 @@ impl Game {
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
+            floor_connections: Vec::new(),
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
@@ -861,6 +867,11 @@ impl Game {
             payload.terrain.height,
             &content,
         )?;
+        let floor_connections = floor_connections_from_save(
+            payload.floor_connections.clone(),
+            payload.terrain.width,
+            payload.terrain.height,
+        )?;
         let item_knowledge = item_knowledge_from_save(payload.item_knowledge, &content)?;
         let mut item_property_knowledge =
             item_property_knowledge_from_save(payload.item_property_knowledge, &items, &content)?;
@@ -907,6 +918,7 @@ impl Game {
             next_item_instance_serial,
             explored,
             revealed_terrain,
+            floor_connections,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
@@ -945,6 +957,7 @@ impl Game {
             next_item_instance_serial: self.next_item_instance_serial,
             explored: self.explored.clone(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
+            floor_connections: floor_connections_to_save(&self.floor_connections),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
@@ -1352,8 +1365,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV19 {
-            schema_version: 19,
+        let payload = StateHashPayloadV20 {
+            schema_version: 20,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -1376,6 +1389,7 @@ impl Game {
             next_item_instance_serial: self.next_item_instance_serial,
             explored: Vec::new(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
+            floor_connections: floor_connections_to_save(&self.floor_connections),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
@@ -3807,8 +3821,8 @@ impl Game {
         {
             return Ok(None);
         }
-        let target_floor_id = if abandon_task {
-            initial_floor_id.clone()
+        let (target_floor_id, arrival_connection_id) = if abandon_task {
+            (initial_floor_id.clone(), None)
         } else if self.current_floor_id == initial_floor_id {
             let Some(target) = procedural_floors.iter().find(|floor| {
                 floor.return_floor_id == initial_floor_id
@@ -3816,17 +3830,36 @@ impl Game {
             }) else {
                 return Ok(None);
             };
-            target.id.clone()
+            (target.id.clone(), target.entry_connection_id.clone())
         } else if let Some(current) = procedural_floors
             .iter()
             .find(|floor| floor.id == self.current_floor_id)
         {
-            if terrain.tags.iter().any(|tag| tag == "stairs-up") {
-                current.return_floor_id.clone()
+            if let Some(connection_state) = self
+                .floor_connections
+                .iter()
+                .find(|connection| connection.position == self.player.position)
+            {
+                let connection = current
+                    .connections
+                    .iter()
+                    .find(|connection| connection.id == connection_state.id)
+                    .ok_or(CoreError::InvalidSave(
+                        "active floor connection is missing from content",
+                    ))?;
+                (
+                    connection.target_floor_id.clone(),
+                    connection.target_connection_id.clone(),
+                )
+            } else if terrain.tags.iter().any(|tag| tag == "stairs-up") {
+                (current.return_floor_id.clone(), None)
             } else if terrain.tags.iter().any(|tag| tag == "stairs-down") {
-                current.next_floor_id.clone().ok_or(CoreError::InvalidSave(
-                    "downward floor connection is missing",
-                ))?
+                (
+                    current.next_floor_id.clone().ok_or(CoreError::InvalidSave(
+                        "downward floor connection is missing",
+                    ))?,
+                    None,
+                )
             } else {
                 return Ok(None);
             }
@@ -3919,6 +3952,7 @@ impl Game {
             items: floor_items,
             explored: std::mem::take(&mut self.explored),
             revealed_terrain: std::mem::take(&mut self.revealed_terrain),
+            connections: std::mem::take(&mut self.floor_connections),
         };
         self.stored_floors.insert(from_floor_id.clone(), current);
 
@@ -3944,6 +3978,19 @@ impl Game {
         } else {
             return Err(CoreError::InvalidSave("return floor state is missing"));
         };
+        if let Some(arrival_connection_id) = arrival_connection_id {
+            if let Some(connection) = destination
+                .connections
+                .iter()
+                .find(|connection| connection.id == arrival_connection_id)
+            {
+                destination.player_position = connection.position;
+            } else if !destination.connections.is_empty() {
+                return Err(CoreError::InvalidSave(
+                    "destination floor connection is missing",
+                ));
+            }
+        }
         if expedition_ended {
             self.stored_floors.clear();
         }
@@ -4056,6 +4103,7 @@ impl Game {
         self.items = global_items;
         self.explored = floor.explored;
         self.revealed_terrain = floor.revealed_terrain;
+        self.floor_connections = floor.connections;
         self.reveal_current_visibility();
     }
 
@@ -4340,12 +4388,6 @@ impl Game {
                 &definition.closed_door_terrain_id,
             );
         }
-        set_generated_terrain(
-            &mut terrain,
-            width,
-            first_center,
-            &definition.up_stair_terrain_id,
-        );
         let down_stair_position = if maze_only {
             second_center
         } else {
@@ -4354,14 +4396,6 @@ impl Game {
                 y: first_center.y,
             }
         };
-        if let Some(down_stair_terrain_id) = &definition.down_stair_terrain_id {
-            set_generated_terrain(
-                &mut terrain,
-                width,
-                down_stair_position,
-                down_stair_terrain_id,
-            );
-        }
         let fixed_trap_position = if maze_only {
             let route = maze_floor_path(&maze_walkable, first_center, second_center);
             route[route.len() / 2]
@@ -4370,6 +4404,39 @@ impl Game {
                 x: first_center.x,
                 y: first_center.y + 1,
             }
+        };
+        let mut floor_connections = if definition.connections.is_empty() {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                first_center,
+                &definition.up_stair_terrain_id,
+            );
+            if let Some(down_stair_terrain_id) = &definition.down_stair_terrain_id {
+                set_generated_terrain(
+                    &mut terrain,
+                    width,
+                    down_stair_position,
+                    down_stair_terrain_id,
+                );
+            }
+            Vec::new()
+        } else {
+            let (primary_up_id, primary_down_id) = primary_floor_connection_ids(definition);
+            for (connection_id, position) in [
+                (primary_up_id, first_center),
+                (primary_down_id, down_stair_position),
+            ] {
+                if let Some(connection) = connection_id.and_then(|connection_id| {
+                    definition
+                        .connections
+                        .iter()
+                        .find(|connection| connection.id == connection_id)
+                }) {
+                    set_generated_terrain(&mut terrain, width, position, &connection.terrain_id);
+                }
+            }
+            Vec::new()
         };
         set_generated_terrain(
             &mut terrain,
@@ -4396,11 +4463,31 @@ impl Game {
         } else {
             Vec::new()
         };
-        let mut feature_reserved = BTreeSet::from([first_center, fixed_trap_position]);
+        if !definition.connections.is_empty() {
+            floor_connections = place_generated_floor_connections(
+                definition,
+                first_center,
+                down_stair_position,
+                fixed_trap_position,
+                &generated_floor_terrain_id,
+                &mut terrain,
+                &mut self.rng,
+            )?;
+        }
+        let mut feature_reserved = BTreeSet::from([fixed_trap_position]);
+        if floor_connections.is_empty() {
+            feature_reserved.insert(first_center);
+        } else {
+            feature_reserved.extend(
+                floor_connections
+                    .iter()
+                    .map(|connection| connection.position),
+            );
+        }
         if let Some(door_position) = door_position {
             feature_reserved.insert(door_position);
         }
-        if definition.down_stair_terrain_id.is_some() {
+        if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
             feature_reserved.insert(down_stair_position);
         }
         for placement in &vault_placements {
@@ -4455,6 +4542,11 @@ impl Game {
             Vec::new()
         };
         let mut occupied = BTreeSet::from([first_center]);
+        occupied.extend(
+            floor_connections
+                .iter()
+                .map(|connection| connection.position),
+        );
         if maze_only {
             occupied.insert(fixed_trap_position);
         }
@@ -4471,7 +4563,7 @@ impl Game {
                 }
             }
         }
-        if definition.down_stair_terrain_id.is_some() {
+        if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
         let mut entities = Vec::new();
@@ -4955,6 +5047,7 @@ impl Game {
             items,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
+            connections: floor_connections,
         })
     }
 
@@ -6300,6 +6393,18 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
         }
+        if !floor_connections_are_valid(
+            &self.current_floor_id,
+            self.width,
+            self.height,
+            &self.terrain,
+            &self.floor_connections,
+            world,
+        ) {
+            return Err(CoreError::InvalidSave(
+                "active floor connection state is invalid",
+            ));
+        }
         if self.explored.len() != self.terrain.len() {
             return Err(CoreError::InvalidSave(
                 "exploration memory dimensions are invalid",
@@ -6422,6 +6527,18 @@ impl Game {
                 || !floor_position_is_walkable(floor, floor.player_position, &self.content)
             {
                 return Err(CoreError::InvalidSave("stored floor state is invalid"));
+            }
+            if !floor_connections_are_valid(
+                &floor.id,
+                floor.width,
+                floor.height,
+                &floor.terrain,
+                &floor.connections,
+                world,
+            ) {
+                return Err(CoreError::InvalidSave(
+                    "stored floor connection state is invalid",
+                ));
             }
             for terrain_id in &floor.terrain {
                 if self.content.terrain(terrain_id).is_none() {
@@ -7740,6 +7857,157 @@ fn set_generated_terrain(terrain: &mut [String], width: u16, position: Position,
     terrain[index] = terrain_id.to_owned();
 }
 
+fn place_generated_floor_connections(
+    definition: &ProceduralFloorDefinition,
+    entry_anchor: Position,
+    down_stair_anchor: Position,
+    fixed_trap_position: Position,
+    floor_terrain_id: &str,
+    terrain: &mut [String],
+    rng: &mut RfbRng,
+) -> Result<Vec<FloorConnectionState>, CoreError> {
+    let terrain_ref: &[String] = terrain;
+    let mut candidates = (1..definition.height - 1)
+        .flat_map(|y| {
+            (1..definition.width - 1).filter_map(move |x| {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                (position != fixed_trap_position
+                    && terrain_ref[generated_terrain_index(definition.width, position)]
+                        == floor_terrain_id)
+                    .then_some(position)
+            })
+        })
+        .collect::<Vec<_>>();
+    let (primary_up_id, primary_down_id) = primary_floor_connection_ids(definition);
+    let mut ordered_connections = Vec::with_capacity(definition.connections.len());
+    for connection_id in [primary_up_id, primary_down_id].into_iter().flatten() {
+        ordered_connections.push(
+            definition
+                .connections
+                .iter()
+                .find(|connection| connection.id == connection_id)
+                .expect("selected primary connection must remain available"),
+        );
+    }
+    ordered_connections.extend(definition.connections.iter().filter(|connection| {
+        primary_up_id != Some(connection.id.as_str())
+            && primary_down_id != Some(connection.id.as_str())
+    }));
+
+    let mut placed = Vec::with_capacity(definition.connections.len());
+    for connection in ordered_connections {
+        let position = if primary_up_id == Some(connection.id.as_str()) {
+            entry_anchor
+        } else if primary_down_id == Some(connection.id.as_str()) {
+            down_stair_anchor
+        } else {
+            if candidates.is_empty() {
+                return Err(CoreError::InvalidSave(
+                    "generated floor has insufficient connection space",
+                ));
+            }
+            let candidate_index = usize::try_from(rng.bounded(candidates.len() as u64))
+                .expect("bounded connection index must fit usize");
+            candidates[candidate_index]
+        };
+        candidates.retain(|candidate| *candidate != position);
+        set_generated_terrain(terrain, definition.width, position, &connection.terrain_id);
+        placed.push(FloorConnectionState {
+            id: connection.id.clone(),
+            position,
+        });
+    }
+    placed.sort_by(|left, right| left.id.cmp(&right.id));
+    Ok(placed)
+}
+
+fn primary_floor_connection_ids(
+    definition: &ProceduralFloorDefinition,
+) -> (Option<&str>, Option<&str>) {
+    let primary_up_id = definition.entry_connection_id.as_deref().or_else(|| {
+        definition
+            .connections
+            .iter()
+            .find(|connection| connection.terrain_id == definition.up_stair_terrain_id)
+            .map(|connection| connection.id.as_str())
+    });
+    let primary_down_id = definition
+        .down_stair_terrain_id
+        .as_ref()
+        .and_then(|terrain_id| {
+            definition
+                .connections
+                .iter()
+                .find(|connection| {
+                    connection.terrain_id == *terrain_id
+                        && primary_up_id != Some(connection.id.as_str())
+                })
+                .map(|connection| connection.id.as_str())
+        });
+    (primary_up_id, primary_down_id)
+}
+
+fn floor_connections_are_valid(
+    floor_id: &str,
+    width: u16,
+    height: u16,
+    terrain: &[String],
+    connections: &[FloorConnectionState],
+    world: &rfb_content::WorldDefinition,
+) -> bool {
+    if connections.is_empty() {
+        return true;
+    }
+    if floor_id == world.initial_floor_id {
+        return false;
+    }
+    let Some(definition) = world
+        .procedural_floors
+        .iter()
+        .find(|definition| definition.id == floor_id)
+    else {
+        return false;
+    };
+    if definition.connections.len() != connections.len() {
+        return false;
+    }
+    let expected_ids = definition
+        .connections
+        .iter()
+        .map(|connection| connection.id.as_str())
+        .collect::<BTreeSet<_>>();
+    let actual_ids = connections
+        .iter()
+        .map(|connection| connection.id.as_str())
+        .collect::<BTreeSet<_>>();
+    let unique_positions = connections
+        .iter()
+        .map(|connection| connection.position)
+        .collect::<BTreeSet<_>>();
+    expected_ids == actual_ids
+        && unique_positions.len() == connections.len()
+        && connections.iter().all(|state| {
+            let position = state.position;
+            let Some(connection) = definition
+                .connections
+                .iter()
+                .find(|connection| connection.id == state.id)
+            else {
+                return false;
+            };
+            position.x >= 0
+                && position.y >= 0
+                && position.x < i32::from(width)
+                && position.y < i32::from(height)
+                && terrain
+                    .get(position.y as usize * usize::from(width) + position.x as usize)
+                    .is_some_and(|terrain_id| terrain_id == &connection.terrain_id)
+        })
+}
+
 fn generated_terrain_index(width: u16, position: Position) -> usize {
     position.y as usize * usize::from(width) + position.x as usize
 }
@@ -7910,6 +8178,21 @@ mod tests {
             .expect("descent should transition");
     }
 
+    fn connection_position(game: &Game, connection_id: &str) -> Position {
+        game.floor_connections
+            .iter()
+            .find(|connection| connection.id == connection_id)
+            .unwrap_or_else(|| panic!("floor should contain connection {connection_id}"))
+            .position
+    }
+
+    fn traverse_connection(game: &mut Game, connection_id: &str) {
+        game.player.position = connection_position(game, connection_id);
+        game.traverse_stairs(false)
+            .expect("connection traversal should resolve")
+            .expect("connection traversal should transition");
+    }
+
     fn visual_at(snapshot: &GameSnapshot, position: Position) -> CellVisualDto {
         *snapshot
             .visual_cells
@@ -8037,14 +8320,14 @@ mod tests {
 
         assert_eq!(left_update.floor_id, "demo.floor.echo-depth-1");
         assert_eq!(left_update.state_hash, right_update.state_hash);
-        assert_eq!(left.rng.draw_counter, 17);
+        assert_eq!(left.rng.draw_counter, 19);
         assert_eq!(left.entities.len(), 4);
         let room_encounter = left
             .entities
             .iter()
             .find(|entity| entity.id == "demo.floor.echo-depth-1.encounter.1")
             .expect("floor encounter table should spawn its declared roll");
-        assert_eq!(room_encounter.position, Position { x: 16, y: 14 });
+        assert_eq!(room_encounter.position, Position { x: 15, y: 11 });
         assert!(matches!(
             room_encounter.kind_id.as_str(),
             "demo.actor.acid-seep" | "demo.actor.echo-hound" | "demo.actor.frost-wisp"
@@ -8108,6 +8391,179 @@ mod tests {
         assert!(restored.rng.draw_counter > draws_before_reentry);
         assert_eq!(restored.entities.len(), 4);
         assert_eq!(restored.items.len(), 1);
+    }
+
+    #[test]
+    fn floor_connections_are_seeded_distinct_and_content_authoritative() {
+        let mut left = Game::new(27);
+        let mut right = Game::new(27);
+        for game in [&mut left, &mut right] {
+            game.player.position = Position { x: 3, y: 4 };
+            game.traverse_stairs(false)
+                .expect("echo dungeon entry should resolve")
+                .expect("echo dungeon entry should transition");
+        }
+
+        assert_eq!(left.floor_connections, right.floor_connections);
+        assert_eq!(left.terrain, right.terrain);
+        assert_eq!(left.floor_connections.len(), 4);
+        assert_eq!(
+            left.player.position,
+            connection_position(&left, "demo.connection.echo-depth-1.surface-up")
+        );
+        let positions = left
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        assert_eq!(positions.len(), left.floor_connections.len());
+        for connection in &left.floor_connections {
+            let definition = left
+                .content
+                .world(BUILT_IN_WORLD_ID)
+                .expect("built-in world should exist")
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == left.current_floor_id)
+                .expect("current procedural floor should exist")
+                .connections
+                .iter()
+                .find(|candidate| candidate.id == connection.id)
+                .expect("generated connection should exist in content");
+            assert_eq!(left.terrain_at(connection.position), definition.terrain_id);
+        }
+
+        let layouts = (0..8)
+            .map(|seed| {
+                let mut game = Game::new(seed);
+                game.player.position = Position { x: 3, y: 4 };
+                game.traverse_stairs(false)
+                    .expect("echo dungeon entry should resolve")
+                    .expect("echo dungeon entry should transition");
+                game.floor_connections
+                    .iter()
+                    .map(|connection| {
+                        (
+                            connection.id.clone(),
+                            connection.position.x,
+                            connection.position.y,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<BTreeSet<_>>();
+        assert!(layouts.len() > 1);
+    }
+
+    #[test]
+    fn paired_stairs_and_shaft_use_independent_arrival_connections() {
+        let mut game = Game::new(71);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("echo dungeon entry should resolve")
+            .expect("echo dungeon entry should transition");
+
+        let down_a = connection_position(&game, "demo.connection.echo-depth-1.down-a");
+        let down_b = connection_position(&game, "demo.connection.echo-depth-1.down-b");
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.down-a");
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2");
+        assert_eq!(
+            game.player.position,
+            connection_position(&game, "demo.connection.echo-depth-2.up-a")
+        );
+        traverse_connection(&mut game, "demo.connection.echo-depth-2.up-a");
+        assert_eq!(game.player.position, down_a);
+
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.down-b");
+        assert_eq!(
+            game.player.position,
+            connection_position(&game, "demo.connection.echo-depth-2.up-b")
+        );
+        traverse_connection(&mut game, "demo.connection.echo-depth-2.up-b");
+        assert_eq!(game.player.position, down_b);
+
+        let shaft_down = connection_position(&game, "demo.connection.echo-depth-1.shaft-down");
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.shaft-down");
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-3");
+        assert_eq!(
+            game.player.position,
+            connection_position(&game, "demo.connection.echo-depth-3.shaft-up")
+        );
+        traverse_connection(&mut game, "demo.connection.echo-depth-3.shaft-up");
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-1");
+        assert_eq!(game.player.position, shaft_down);
+    }
+
+    #[test]
+    fn floor_connections_round_trip_and_reject_invalid_authoritative_state() {
+        let mut game = Game::new(93);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("echo dungeon entry should resolve")
+            .expect("echo dungeon entry should transition");
+        let payload = game.to_save();
+        let restored = Game::from_save(payload.clone()).expect("connections should round-trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.floor_connections, game.floor_connections);
+
+        let mut missing = payload.clone();
+        missing.floor_connections.pop();
+        assert!(Game::from_save(missing).is_err());
+
+        let mut duplicate = payload.clone();
+        duplicate.floor_connections[1].id = duplicate.floor_connections[0].id.clone();
+        assert!(Game::from_save(duplicate).is_err());
+
+        let mut mismatched_terrain = payload;
+        let position = mismatched_terrain.floor_connections[0].position;
+        let index = position.y as usize * usize::from(mismatched_terrain.terrain.width)
+            + position.x as usize;
+        mismatched_terrain.terrain.terrain_ids[index] = "demo.terrain.floor".to_owned();
+        assert!(Game::from_save(mismatched_terrain).is_err());
+    }
+
+    #[test]
+    fn previous_v57_floor_without_connection_state_uses_legacy_stairs_without_rebuild() {
+        let mut game = Game::new(117);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("echo dungeon entry should resolve")
+            .expect("echo dungeon entry should transition");
+        let down_a = connection_position(&game, "demo.connection.echo-depth-1.down-a");
+        let surface_up = connection_position(&game, "demo.connection.echo-depth-1.surface-up");
+        let mut payload = game.to_save();
+        for connection in &payload.floor_connections {
+            let index = connection.position.y as usize * usize::from(payload.terrain.width)
+                + connection.position.x as usize;
+            payload.terrain.terrain_ids[index] = if connection.position == down_a {
+                "demo.terrain.stairs-down".to_owned()
+            } else if connection.position == surface_up {
+                "demo.terrain.stairs-up".to_owned()
+            } else {
+                "demo.terrain.floor".to_owned()
+            };
+        }
+        payload.player.position = down_a;
+        payload.floor_connections.clear();
+        payload.content_hash =
+            "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1".to_owned();
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let mut restored = Game::from_save(payload).expect("v57 floor should migrate");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(restored.floor_connections.is_empty());
+
+        restored
+            .traverse_stairs(false)
+            .expect("legacy stairs should resolve")
+            .expect("legacy stairs should transition");
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-2");
     }
 
     #[test]
@@ -8857,30 +9313,13 @@ mod tests {
         ));
 
         let mut game = Game::new(27);
-        for (seq, game_command) in [
-            GameCommand::Move {
-                direction: Direction::South,
-            },
-            GameCommand::TraverseStairs,
-            GameCommand::Move {
-                direction: Direction::West,
-            },
-            GameCommand::TraverseStairs,
-            GameCommand::Move {
-                direction: Direction::West,
-            },
-            GameCommand::TraverseStairs,
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            game.dispatch(command(
-                u32::try_from(seq + 1).expect("sequence must fit u32"),
-                u32::try_from(seq).expect("revision must fit u32"),
-                game_command,
-            ))
-            .expect("final floor setup should succeed");
-        }
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("echo dungeon entry should resolve")
+            .expect("echo dungeon entry should transition");
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.down-a");
+        traverse_connection(&mut game, "demo.connection.echo-depth-2.down-a");
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-3");
         let mut payload = game.to_save();
         payload.dungeon_states[0].guardian_defeated = true;
         assert!(matches!(
@@ -9245,9 +9684,17 @@ mod tests {
 
     #[test]
     fn themed_vault_paints_template_and_spawns_depth_eligible_group_and_loot() {
-        let mut game = Game::new(27);
-        descend_one_floor(&mut game);
-        descend_one_floor(&mut game);
+        let game = (1..=64)
+            .find_map(|seed| {
+                let mut game = Game::new(seed);
+                descend_one_floor(&mut game);
+                descend_one_floor(&mut game);
+                game.entities
+                    .iter()
+                    .any(|entity| entity.id.contains("harmonic-sepulcher-sentinels"))
+                    .then_some(game)
+            })
+            .expect("a harmonic sepulcher seed should remain reachable");
 
         assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2");
         assert_eq!(game.entities.len(), 4);

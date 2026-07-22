@@ -58,6 +58,13 @@
       ],
       "type": "object"
     },
+    "FloorConnectionKind": {
+      "enum": [
+        "stairs",
+        "shaft"
+      ],
+      "type": "string"
+    },
     "FloorLifecycle": {
       "enum": [
         "dungeon",
@@ -157,6 +164,37 @@
       ],
       "type": "object"
     },
+    "ProceduralFloorConnectionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/FloorConnectionKind"
+        },
+        "targetConnectionId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetFloorId": {
+          "type": "string"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "terrainId",
+        "targetFloorId"
+      ],
+      "type": "object"
+    },
     "ProceduralFloorDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -187,6 +225,13 @@
             "null"
           ]
         },
+        "connections": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProceduralFloorConnectionDefinition"
+          },
+          "type": "array"
+        },
         "depth": {
           "format": "uint16",
           "maximum": 65535,
@@ -208,6 +253,13 @@
           ]
         },
         "encounterTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entryConnectionId": {
           "default": null,
           "type": [
             "string",

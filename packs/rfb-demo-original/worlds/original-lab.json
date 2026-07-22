@@ -146,7 +146,32 @@
       "spawnCount": 3
     },
     "entryTerrainId": "demo.terrain.stairs-down",
+    "entryConnectionId": "demo.connection.echo-depth-1.surface-up",
     "nextFloorId": "demo.floor.echo-depth-2",
+    "connections": [{
+      "id": "demo.connection.echo-depth-1.down-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-down",
+      "targetFloorId": "demo.floor.echo-depth-2",
+      "targetConnectionId": "demo.connection.echo-depth-2.up-a"
+    }, {
+      "id": "demo.connection.echo-depth-1.down-b",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-down",
+      "targetFloorId": "demo.floor.echo-depth-2",
+      "targetConnectionId": "demo.connection.echo-depth-2.up-b"
+    }, {
+      "id": "demo.connection.echo-depth-1.shaft-down",
+      "kind": "shaft",
+      "terrainId": "demo.terrain.shaft-down",
+      "targetFloorId": "demo.floor.echo-depth-3",
+      "targetConnectionId": "demo.connection.echo-depth-3.shaft-up"
+    }, {
+      "id": "demo.connection.echo-depth-1.surface-up",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.surface"
+    }],
     "depth": 1,
     "width": 20,
     "height": 20,
@@ -171,6 +196,31 @@
       "lootPlacements": 2
     },
     "nextFloorId": "demo.floor.echo-depth-3",
+    "connections": [{
+      "id": "demo.connection.echo-depth-2.down-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-down",
+      "targetFloorId": "demo.floor.echo-depth-3",
+      "targetConnectionId": "demo.connection.echo-depth-3.up-a"
+    }, {
+      "id": "demo.connection.echo-depth-2.down-b",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-down",
+      "targetFloorId": "demo.floor.echo-depth-3",
+      "targetConnectionId": "demo.connection.echo-depth-3.up-b"
+    }, {
+      "id": "demo.connection.echo-depth-2.up-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-1",
+      "targetConnectionId": "demo.connection.echo-depth-1.down-a"
+    }, {
+      "id": "demo.connection.echo-depth-2.up-b",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-1",
+      "targetConnectionId": "demo.connection.echo-depth-1.down-b"
+    }],
     "depth": 2,
     "width": 20,
     "height": 20,
@@ -199,6 +249,25 @@
       "instanceId": "demo.guardian.echo-depths.1",
       "actorKindId": "demo.actor.resonant-warden"
     },
+    "connections": [{
+      "id": "demo.connection.echo-depth-3.shaft-up",
+      "kind": "shaft",
+      "terrainId": "demo.terrain.shaft-up",
+      "targetFloorId": "demo.floor.echo-depth-1",
+      "targetConnectionId": "demo.connection.echo-depth-1.shaft-down"
+    }, {
+      "id": "demo.connection.echo-depth-3.up-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-2",
+      "targetConnectionId": "demo.connection.echo-depth-2.down-a"
+    }, {
+      "id": "demo.connection.echo-depth-3.up-b",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-2",
+      "targetConnectionId": "demo.connection.echo-depth-2.down-b"
+    }],
     "depth": 3,
     "width": 20,
     "height": 20,

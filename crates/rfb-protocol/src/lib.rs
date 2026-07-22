@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.57";
+pub const PROTOCOL_VERSION: &str = "1.58";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -927,6 +927,13 @@ pub struct CarriedItemSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FloorConnectionSaveDto {
+    pub id: String,
+    pub position: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FloorSaveDto {
     pub id: String,
     pub player_position: Position,
@@ -940,6 +947,8 @@ pub struct FloorSaveDto {
     pub explored: Vec<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub revealed_terrain: Vec<Position>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub connections: Vec<FloorConnectionSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1029,6 +1038,8 @@ pub struct SavePayloadV1 {
     pub explored: Vec<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub revealed_terrain: Vec<Position>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub floor_connections: Vec<FloorConnectionSaveDto>,
     pub rng: RngSaveDto,
     pub content_id: String,
     pub content_hash: String,

@@ -6,12 +6,13 @@ use crate::{
     effect::StatusInstance,
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
-    state::{Actor, FloorState, ItemInstance, ItemLocation},
+    state::{Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
-    ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorSaveDto, InventoryItemSaveDto,
-    ItemSaveDto, PlayerSaveDto, Position, ResistanceSaveDto, StatusSaveDto, TerrainSaveDto,
+    ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorSaveDto,
+    InventoryItemSaveDto, ItemSaveDto, PlayerSaveDto, Position, ResistanceSaveDto, StatusSaveDto,
+    TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -384,6 +385,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
         carried_items: carried_items_to_save(&floor.items),
         explored: floor.explored.clone(),
         revealed_terrain: floor.revealed_terrain.iter().copied().collect(),
+        connections: floor_connections_to_save(&floor.connections),
     }
 }
 
@@ -398,6 +400,8 @@ pub(crate) fn floor_from_save(
         floor.terrain.height,
         content,
     )?;
+    let connections =
+        floor_connections_from_save(floor.connections, floor.terrain.width, floor.terrain.height)?;
     let entities = floor
         .entities
         .into_iter()
@@ -425,7 +429,57 @@ pub(crate) fn floor_from_save(
         items,
         explored: floor.explored,
         revealed_terrain,
+        connections,
     })
+}
+
+pub(crate) fn floor_connections_to_save(
+    connections: &[FloorConnectionState],
+) -> Vec<FloorConnectionSaveDto> {
+    let mut connections = connections
+        .iter()
+        .map(|connection| FloorConnectionSaveDto {
+            id: connection.id.clone(),
+            position: connection.position,
+        })
+        .collect::<Vec<_>>();
+    connections.sort_by(|left, right| left.id.cmp(&right.id));
+    connections
+}
+
+pub(crate) fn floor_connections_from_save(
+    connections: Vec<FloorConnectionSaveDto>,
+    width: u16,
+    height: u16,
+) -> Result<Vec<FloorConnectionState>, CoreError> {
+    let mut restored = connections
+        .into_iter()
+        .map(|connection| {
+            if !valid_rule_id(&connection.id)
+                || connection.position.x < 0
+                || connection.position.y < 0
+                || connection.position.x >= i32::from(width)
+                || connection.position.y >= i32::from(height)
+            {
+                return Err(CoreError::InvalidSave("floor connection state is invalid"));
+            }
+            Ok(FloorConnectionState {
+                id: connection.id,
+                position: connection.position,
+            })
+        })
+        .collect::<Result<Vec<_>, CoreError>>()?;
+    restored.sort_by(|left, right| left.id.cmp(&right.id));
+    let unique_positions = restored
+        .iter()
+        .map(|connection| connection.position)
+        .collect::<BTreeSet<_>>();
+    if restored.windows(2).any(|pair| pair[0].id == pair[1].id)
+        || unique_positions.len() != restored.len()
+    {
+        return Err(CoreError::InvalidSave("floor connection state is invalid"));
+    }
+    Ok(restored)
 }
 
 pub(crate) fn revealed_terrain_from_save(

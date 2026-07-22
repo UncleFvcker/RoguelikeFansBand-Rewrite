@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v57/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v56` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v58/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v57` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v57/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v58/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v57/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；武器多段近战建立 `contract-v12`，怪物 `MeleeRoutine` 建立 `contract-v13`，权威 projectile 基础建立 `contract-v14`，弹药与投掷实例事务建立 `contract-v15`，目标选择建立 `contract-v16`，弹药破损/回收建立 `contract-v17`，重量射程与投掷攻击建立 `contract-v18`，携带重量与容量拒绝建立 `contract-v19`，物品知识建立 `contract-v20`，消耗品建立 `contract-v21`，实例词条建立 `contract-v22`，质量鉴别与 state hash Schema v12 建立 `contract-v23`，确定性战利品生成建立 `contract-v24`，怪物携带物与 state hash Schema v13 建立 `contract-v25`，楼层生命周期与 state hash Schema v14 建立 `contract-v26`，深度/房间实体分配建立 `contract-v27`，普通门地形状态建立 `contract-v28`，锁门与破门检定建立 `contract-v29`，权威相邻地形交互查询建立 `contract-v30`，秘密门知识与 state hash Schema v15 建立 `contract-v31`，任务目标、奖励、退出政策、计数、暂停恢复与共享任务 ID 由 `contract-v36`–`contract-v43` 逐步建立，权威任务状态机与 state hash Schema v17 由 `contract-v44` 建立，有序多阶段目标与 state hash Schema v18 由 `contract-v45` 建立，多深度最终层、持久守护者与 state hash Schema v19 由 `contract-v46` 建立，深度主题 vault 与群体 encounter 由 `contract-v47` 建立，楼层生成表、加权 Vault 与第一类巢穴由 `contract-v48` 建立，预算化十层压力地牢与深度主题分段由 `contract-v49` 建立，Vault 空间变换、多模板落位和稳定失败回退由 `contract-v50` 建立，动态 friends/escort、formation 与群体预算由 `contract-v51` 建立，程序化特殊地形表、room/corridor 放置与 feature 预算由 `contract-v52` 建立，分阶段 cavern 地貌与房间几何预算由 `contract-v53` 建立，深浅湖泊与边界河流阶段由 `contract-v54` 建立，迷宫、毁坏区与岩脉阶段由 `contract-v55` 建立，原版式复合 pit 与等级阵列由 `contract-v56` 建立，完全替代房间的 maze-only 专用楼层由 `contract-v57` 建立。当前规则边界见 [Contract v57](contract-v57-maze-only-floor.md)。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；武器多段近战建立 `contract-v12`，怪物 `MeleeRoutine` 建立 `contract-v13`，权威 projectile 基础建立 `contract-v14`，弹药与投掷实例事务建立 `contract-v15`，目标选择建立 `contract-v16`，弹药破损/回收建立 `contract-v17`，重量射程与投掷攻击建立 `contract-v18`，携带重量与容量拒绝建立 `contract-v19`，物品知识建立 `contract-v20`，消耗品建立 `contract-v21`，实例词条建立 `contract-v22`，质量鉴别与 state hash Schema v12 建立 `contract-v23`，确定性战利品生成建立 `contract-v24`，怪物携带物与 state hash Schema v13 建立 `contract-v25`，楼层生命周期与 state hash Schema v14 建立 `contract-v26`，深度/房间实体分配建立 `contract-v27`，普通门地形状态建立 `contract-v28`，锁门与破门检定建立 `contract-v29`，权威相邻地形交互查询建立 `contract-v30`，秘密地形知识与 state hash Schema v15 建立 `contract-v31`，任务状态机由 `contract-v36`–`contract-v45` 建立，多深度最终层与 state hash Schema v19 由 `contract-v46` 建立，深度主题 Vault、楼层表、预算、动态群体、特殊地形和分阶段地貌由 `contract-v47`–`contract-v55` 建立，原版式 pit 与 maze-only 由 `contract-v56`–`contract-v57` 建立，权威楼层连接、独立到达点、shaft 与 state hash Schema v20 由 `contract-v58` 建立。当前规则边界见 [Contract v58](contract-v58-floor-connections.md)。

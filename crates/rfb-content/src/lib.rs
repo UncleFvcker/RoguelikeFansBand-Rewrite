@@ -683,6 +683,8 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub entry_terrain_id: Option<String>,
     #[serde(default)]
+    pub entry_connection_id: Option<String>,
+    #[serde(default)]
     pub completed_entry_terrain_id: Option<String>,
     #[serde(default)]
     pub failed_entry_terrain_id: Option<String>,
@@ -702,6 +704,8 @@ pub struct ProceduralFloorDefinition {
     pub task_reward: Option<TaskRewardDefinition>,
     #[serde(default)]
     pub next_floor_id: Option<String>,
+    #[serde(default)]
+    pub connections: Vec<ProceduralFloorConnectionDefinition>,
     pub depth: u16,
     pub width: u16,
     pub height: u16,
@@ -714,6 +718,26 @@ pub struct ProceduralFloorDefinition {
     pub trap_terrain_id: String,
     pub actor_spawns: Vec<ProceduralActorSpawnDefinition>,
     pub loot_spawns: Vec<ProceduralLootSpawnDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralFloorConnectionDefinition {
+    pub id: String,
+    pub kind: FloorConnectionKind,
+    pub terrain_id: String,
+    pub target_floor_id: String,
+    #[serde(default)]
+    pub target_connection_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum FloorConnectionKind {
+    Stairs,
+    Shaft,
 }
 
 const fn default_allow_early_task_exit() -> bool {
@@ -1401,6 +1425,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
     let mut all_ids = BTreeSet::new();
     let mut terrain_ids = BTreeSet::new();
     let mut terrain_walkability = BTreeMap::new();
+    let mut terrain_tags = BTreeMap::new();
     let mut terrain_open_targets = BTreeMap::new();
     let mut terrain_traps = BTreeSet::new();
     for terrain in &mut content.terrain {
@@ -1413,6 +1438,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         insert_definition_id(&mut all_ids, &terrain.id)?;
         terrain_ids.insert(terrain.id.clone());
         terrain_walkability.insert(terrain.id.clone(), terrain.walkable);
+        terrain_tags.insert(
+            terrain.id.clone(),
+            terrain.tags.iter().cloned().collect::<BTreeSet<_>>(),
+        );
         if let Some(target_id) = &terrain.open_to_terrain_id {
             terrain_open_targets.insert(terrain.id.clone(), target_id.clone());
         }
@@ -2262,6 +2291,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             &WorldValidationRefs {
                 terrain_ids: &terrain_ids,
                 terrain_walkability: &terrain_walkability,
+                terrain_tags: &terrain_tags,
                 terrain_open_targets: &terrain_open_targets,
                 terrain_traps: &terrain_traps,
                 actor_roles: &actor_roles,
@@ -2282,6 +2312,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
 struct WorldValidationRefs<'a> {
     terrain_ids: &'a BTreeSet<String>,
     terrain_walkability: &'a BTreeMap<String, bool>,
+    terrain_tags: &'a BTreeMap<String, BTreeSet<String>>,
     terrain_open_targets: &'a BTreeMap<String, String>,
     terrain_traps: &'a BTreeSet<String>,
     actor_roles: &'a BTreeMap<String, ActorRole>,
@@ -2393,6 +2424,7 @@ fn validate_world(
     let WorldValidationRefs {
         terrain_ids,
         terrain_walkability,
+        terrain_tags,
         terrain_open_targets,
         terrain_traps,
         actor_roles,
@@ -2410,6 +2442,7 @@ fn validate_world(
     }
     validate_definition_id(&world.initial_floor_id, "floor")?;
     let mut procedural_actor_ids = BTreeSet::new();
+    let mut procedural_connection_ids = BTreeSet::new();
     world.procedural_floors.sort_by_key(|floor| floor.depth);
     let floor_ids = world
         .procedural_floors
@@ -2433,6 +2466,43 @@ fn validate_world(
             .as_ref()
             .map_or(ProceduralLayoutMode::Rooms, |layout| layout.mode);
         let maze_only = layout_mode == ProceduralLayoutMode::MazeOnly;
+        procedural
+            .connections
+            .sort_by(|left, right| left.id.cmp(&right.id));
+        if procedural.connections.len() > 16
+            || (procedural.connections.is_empty() && procedural.entry_connection_id.is_some())
+            || procedural.entry_connection_id.as_ref().is_some_and(|id| {
+                !procedural
+                    .connections
+                    .iter()
+                    .any(|connection| connection.id == *id)
+            })
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        for connection in &procedural.connections {
+            validate_definition_id(&connection.id, "connection")?;
+            if !procedural_connection_ids.insert(connection.id.clone()) {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            require_reference(terrain_ids, &connection.terrain_id, &procedural.id)?;
+            let tags = terrain_tags
+                .get(&connection.terrain_id)
+                .expect("validated connection terrain must remain available");
+            if !terrain_walkability
+                .get(&connection.terrain_id)
+                .copied()
+                .unwrap_or(false)
+                || (matches!(connection.kind, FloorConnectionKind::Shaft) != tags.contains("shaft"))
+                || (!tags.contains("stairs-up") && !tags.contains("stairs-down"))
+                || (tags.contains("stairs-up") && tags.contains("stairs-down"))
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if let Some(target_connection_id) = &connection.target_connection_id {
+                validate_definition_id(target_connection_id, "connection")?;
+            }
+        }
         if procedural.id == world.initial_floor_id
             || procedural.width != world.width
             || procedural.height != world.height
@@ -3357,6 +3427,86 @@ fn validate_world(
             require_reference(loot_table_ids, &spawn.loot_table_id, &procedural.id)?;
         }
     }
+    for procedural in &world.procedural_floors {
+        if procedural.connections.is_empty() {
+            continue;
+        }
+        if procedural.return_floor_id == world.initial_floor_id
+            && procedural
+                .entry_connection_id
+                .as_ref()
+                .and_then(|id| {
+                    procedural
+                        .connections
+                        .iter()
+                        .find(|connection| connection.id == *id)
+                })
+                .is_none_or(|connection| connection.target_floor_id != world.initial_floor_id)
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        if procedural.return_floor_id != world.initial_floor_id
+            && procedural.entry_connection_id.is_some()
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        for connection in &procedural.connections {
+            if !floor_ids.contains(&connection.target_floor_id)
+                && connection.target_floor_id != world.initial_floor_id
+            {
+                return Err(ContentError::DanglingReference {
+                    owner: procedural.id.clone(),
+                    target: connection.target_floor_id.clone(),
+                });
+            }
+            if connection.target_floor_id == world.initial_floor_id {
+                if connection.target_connection_id.is_some()
+                    || !matches!(connection.kind, FloorConnectionKind::Stairs)
+                    || !terrain_tags
+                        .get(&connection.terrain_id)
+                        .is_some_and(|tags| tags.contains("stairs-up"))
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                continue;
+            }
+            let target = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == connection.target_floor_id)
+                .expect("validated connection target must remain available");
+            let Some(target_connection_id) = connection.target_connection_id.as_ref() else {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            };
+            let Some(target_connection) = target
+                .connections
+                .iter()
+                .find(|candidate| candidate.id == *target_connection_id)
+            else {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            };
+            let depth_delta = target.depth.abs_diff(procedural.depth);
+            if target_connection.target_floor_id != procedural.id
+                || target_connection.target_connection_id.as_deref() != Some(connection.id.as_str())
+                || target_connection.kind != connection.kind
+                || (matches!(connection.kind, FloorConnectionKind::Stairs) && depth_delta != 1)
+                || (matches!(connection.kind, FloorConnectionKind::Shaft) && depth_delta != 2)
+                || (target.lifecycle != procedural.lifecycle)
+                || (target.dungeon_id != procedural.dungeon_id)
+                || !terrain_tags
+                    .get(&connection.terrain_id)
+                    .is_some_and(|tags| {
+                        if target.depth > procedural.depth {
+                            tags.contains("stairs-down")
+                        } else {
+                            tags.contains("stairs-up")
+                        }
+                    })
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+    }
     for procedural in world
         .procedural_floors
         .iter()
@@ -4211,7 +4361,7 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 42);
+        assert_eq!(first.content.terrain.len(), 44);
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
@@ -4230,7 +4380,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.50.0");
+        assert_eq!(catalog.pack_version(), "1.51.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -5261,6 +5411,56 @@ mod tests {
         final_floor.down_stair_terrain_id = Some("demo.terrain.stairs-down".to_owned());
         assert!(matches!(
             validate_and_normalize(&mut final_with_descent),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+    }
+
+    #[test]
+    fn floor_connections_require_reciprocal_targets_and_matching_terrain_roles() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut broken_pair = artifact.content.clone();
+        broken_pair.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-1")
+            .expect("fixture should contain echo depth one")
+            .connections
+            .iter_mut()
+            .find(|connection| connection.id == "demo.connection.echo-depth-1.down-a")
+            .expect("fixture should contain the first downward connection")
+            .target_connection_id = Some("demo.connection.echo-depth-2.up-b".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut broken_pair),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut wrong_shaft_kind = artifact.content.clone();
+        wrong_shaft_kind.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-1")
+            .expect("fixture should contain echo depth one")
+            .connections
+            .iter_mut()
+            .find(|connection| connection.id == "demo.connection.echo-depth-1.shaft-down")
+            .expect("fixture should contain the downward shaft")
+            .kind = FloorConnectionKind::Stairs;
+        assert!(matches!(
+            validate_and_normalize(&mut wrong_shaft_kind),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut missing_entry = artifact.content.clone();
+        missing_entry.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-1")
+            .expect("fixture should contain echo depth one")
+            .entry_connection_id = None;
+        assert!(matches!(
+            validate_and_normalize(&mut missing_entry),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
     }

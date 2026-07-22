@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.57、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.58、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -158,6 +158,8 @@ interface GameCoreV1 {
 协议 1.56 仍不增加 DTO 或 save 字段，固定 pit roster 权重抽取、等级/ID 排序、中心阶位映射、复合房间覆盖、单入口连接和 footprint 保留顺序；版本升级用于拒绝以 1.55 规则解释首次 pit 生成和回放。当前规则边界见 [Contract v56](contract-v56-classic-monster-pit.md)。
 
 协议 1.57 仍不增加 DTO 或 save 字段；`layout.mode = maze-only`、BFS 远距锚点、路径陷阱和区域化 encounter/loot 都属于首次楼层生成规则。版本升级用于拒绝以 1.56 的“maze 叠加房间”顺序解释新生成与回放。当前规则边界见 [Contract v57](contract-v57-maze-only-floor.md)。
+
+协议 1.58 在 save v1 新增 `FloorConnectionSaveDto`：当前层使用可选 `floorConnections`，离层 `FloorSaveDto` 使用可选 `connections`，都保存稳定连接 ID 与位置。缺失或空列表表示 v57 及更早的已生成楼层，运行时继续使用 legacy 楼梯标签；非空列表必须与内容定义和实际 terrain 完全匹配。版本升级同时固定附加连接的 RNG 落位、独立到达点与 shaft 跨层语义。当前规则边界见 [Contract v58](contract-v58-floor-connections.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 
