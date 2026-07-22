@@ -30,6 +30,15 @@
 - [Contract v21：消耗品 UseAction 与可观察鉴定](contract-v21-consumable-use-action.md)
 - [Contract v22：实例词条与知识投影](contract-v22-instance-affix-knowledge.md)
 - [Contract v23：物品鉴别与完整识别](contract-v23-item-appraisal.md)
+- [Contract v24：确定性战利品生成](contract-v24-deterministic-loot-generation.md)
+- [Contract v25：怪物携带物与统一死亡掉落事务](contract-v25-monster-carried-items.md)
+- [Contract v26：楼层生命周期与确定性程序化楼层](contract-v26-floor-lifecycle.md)
+- [Contract v27：程序化房间怪物与地面掉落分配](contract-v27-procedural-room-content.md)
+- [Contract v28：门地形状态与方向性交互](contract-v28-door-terrain-state.md)
+- [Contract v29：锁门、开锁检定与破门](contract-v29-locked-door-checks.md)
+- [Contract v30：权威相邻地形交互查询](contract-v30-authoritative-terrain-interactions.md)
+- [Contract v31：秘密门、搜索与地形知识](contract-v31-secret-door-search.md)
+- [Contract v47：深度主题 Vault 与群体遭遇](contract-v47-themed-vault.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -567,12 +576,26 @@ interface SaveGame {
 - 协议 1.21 和 contract-v21 已建立；内容包 1.16.0 为发光碎片声明首个治疗 `UseAction`，核心原子消耗单件并按实际治疗结果更新 tried/aware，HTML 通过 `usable` 提供使用入口。active baseline 共 58 个 exact fixtures，save v1 / state hash Schema v10 不变。
 - 协议 1.22 和 contract-v22 已建立；内容包 1.17.0 新增独立 affix 根与固定实例引用，核心首次装备时发现词条，HTML 只渲染 `knownProperties`。active baseline 共 59 个 exact fixtures，save v1 / state hash Schema v11。
 - 协议 1.23 和 contract-v23 已建立；内容包 1.18.0 为实例保存质量，HTML 的鉴别入口只显示质量，装备后才显示完整词条。active baseline 共 60 个 exact fixtures，save v1 / state hash Schema v12。
+- 协议 1.24 和 contract-v24 已建立；内容包 1.19.0 新增加权掉落表和怪物引用，死亡生成按物品/品质/词条固定消耗三次 RNG，并复用既有鉴别投影。active baseline 共 61 个 exact fixtures，save v1 / state hash Schema v12 不变。
+- 协议 1.25 和 contract-v25 已建立；内容包 1.20.0 新增怪物出生携带表，核心保存 `CarriedBy(actorId)` 所有权并在统一死亡事务中先放下真实实例、再生成普通掉落。active baseline 共 62 个 exact fixtures，save v1 新增可选携带列表，state hash 升至 Schema v13。
+- 协议 1.26 和 contract-v26 已建立；内容包 1.21.0 新增稳定入口层、程序化层和上下楼梯地形，核心保存离层 `FloorState` 并在首次进入时按固定四次 RNG 生成双房间/L 形走廊。active baseline 共 63 个 exact fixtures，save v1 新增当前/离层楼层字段，state hash 升至 Schema v14。
+- 协议 1.27 和 contract-v27 已建立；内容包 1.22.0 新增楼层深度、稳定房间怪物/掉落生成项和第三个 loot table，首次生成固定完成怪物种类/位置与地面 loot，返回不重新抽取。active baseline 共 64 个 exact fixtures，save v1 / state hash Schema v14 不变。
+- 协议 1.31 和 contract-v31 已建立；内容包 1.25.0 新增隐藏门投影和搜索能力，核心只向普通格子 DTO/交互查询输出玩家已知 terrain，前端使用大写 S 主动搜索。active baseline 共 68 个 exact fixtures，save v1 / state hash Schema v15。
+- 协议 1.39 和 contract-v39 已建立；内容包 1.33.0 把任务目标扩展为稳定实例收集与击杀，任务日志投影 `current/required`，一次性讨伐层复用普通死亡、掉落、奖励和入口关闭管线。active baseline 共 77 个 exact fixtures，save v1 / state hash Schema v15 不变。
+- 协议 1.40 和 contract-v40 已建立；内容包 1.34.0 新增任务提前退出政策、显式放弃命令与独立 abandoned 状态，前端为 active 任务提供放弃入口。active baseline 共 79 个 exact fixtures，save v1 / state hash Schema v15 不变。
+- 协议 1.41 和 contract-v41 已建立；内容包 1.35.0 新增按 actor kind 累计的数量击杀目标，save v1 保存任务计数，state hash 升至 Schema v16。active baseline 共 81 个 exact fixtures。
+- 协议 1.42 和 contract-v42 已建立；内容包 1.36.0 新增可重接任务、paused/resumed 状态和完整任务层恢复。active baseline 共 83 个 exact fixtures，save v1 / state hash Schema v16 不变。
+- 协议 1.43 和 contract-v43 已建立；内容包 1.37.0 新增独立 task ID、跨入口共享进度与整组入口结算。active baseline 共 85 个 exact fixtures，save v1 / state hash Schema v16 不变。
+- 协议 1.44 和 contract-v44 已建立；任务状态迁入权威 `TaskState`，击杀和拾取进度改由集中领域事件消费器推进，state hash 升至 Schema v17。active baseline 共 86 个 exact fixtures，内容包继续为 1.37.0。
+- 协议 1.45 和 contract-v45 已建立；内容包 1.38.0 新增跨成员楼层的有序 `taskStages`，任务状态保存当前阶段，任务日志显示阶段编号，state hash 升至 Schema v18。active baseline 共 88 个 exact fixtures。
+- 协议 1.46 和 contract-v46 已建立；内容包 1.39.0 将回声地牢扩展为三层，新增显式最终层、确定性守护者、持久击败状态和守护者死亡事件，state hash 升至 Schema v19。active baseline 共 91 个 exact fixtures。
+- 协议 1.47 和 contract-v47 已建立；内容包 1.40.0 新增独立 vault 根，深度 2 的主题模板绘制隐藏入口与固定 terrain，按深度加权表生成 3 人群组并使用专属 loot table。save v1 / state hash Schema v19 不变，active baseline 共 92 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage D，建立内容驱动掉落表与确定性生成；返回武器、药水破裂、鼠标点选、路径预览和投射物动画按内容需求后补；
+1. 继续 Stage E 收尾，把 vault 内表提升为普通房间可复用的楼层级 encounter/loot/theme 表，并加入多个 vault 的深度/稀有度加权选择与第一类巢穴；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

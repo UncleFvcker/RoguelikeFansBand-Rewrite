@@ -13,4 +13,4 @@
 
 ## 下一步
 
-伪鉴定与完整识别已由 [contract-v23](contract-v23-item-appraisal.md) 建立：鉴别只公开实例质量，装备公开完整词条。下一步接入掉落表和程序化生成；诅咒知识与其他鉴定来源继续复用该状态机。
+伪鉴定与完整识别已由 [contract-v23](contract-v23-item-appraisal.md) 建立：鉴别只公开实例质量，装备公开完整词条。掉落表和确定性生成已由 [contract-v24](contract-v24-deterministic-loot-generation.md) 建立；诅咒知识与其他鉴定来源继续复用该状态机。

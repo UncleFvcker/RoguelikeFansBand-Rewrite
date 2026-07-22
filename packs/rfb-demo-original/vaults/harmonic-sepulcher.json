@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json",
+  "formatVersion": 1,
+  "id": "demo.vault.harmonic-sepulcher",
+  "nameKey": "vault-demo-harmonic-sepulcher-name",
+  "themeId": "demo.theme.echo-depths",
+  "width": 6,
+  "height": 5,
+  "baseTerrainId": "demo.terrain.floor",
+  "entrancePosition": { "x": 3, "y": 0 },
+  "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.door-secret",
+      "positions": [{ "x": 3, "y": 0 }]
+    },
+    {
+      "terrainId": "demo.terrain.wall",
+      "positions": [
+        { "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 2, "y": 0 },
+        { "x": 4, "y": 0 }, { "x": 5, "y": 0 },
+        { "x": 0, "y": 1 }, { "x": 5, "y": 1 },
+        { "x": 0, "y": 2 }, { "x": 5, "y": 2 },
+        { "x": 0, "y": 3 }, { "x": 5, "y": 3 },
+        { "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 },
+        { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }
+      ]
+    }
+  ],
+  "encounterGroups": [
+    {
+      "id": "demo.vault-group.harmonic-sepulcher-sentinels",
+      "memberPositions": [
+        { "x": 1, "y": 1 },
+        { "x": 4, "y": 1 },
+        { "x": 3, "y": 3 }
+      ],
+      "entries": [
+        {
+          "actorKindId": "demo.actor.acid-seep",
+          "weight": 1,
+          "minDepth": 1,
+          "maxDepth": 1
+        },
+        {
+          "actorKindId": "demo.actor.frost-wisp",
+          "weight": 1,
+          "minDepth": 1,
+          "maxDepth": 2
+        },
+        {
+          "actorKindId": "demo.actor.storm-spark",
+          "weight": 2,
+          "minDepth": 2,
+          "maxDepth": 3
+        },
+        {
+          "actorKindId": "demo.actor.venom-spore",
+          "weight": 2,
+          "minDepth": 2,
+          "maxDepth": 3
+        }
+      ]
+    }
+  ],
+  "lootSpawns": [
+    {
+      "id": "demo.vault-loot.harmonic-sepulcher-cache",
+      "position": { "x": 2, "y": 3 },
+      "lootTableId": "demo.loot-table.harmonic-sepulcher"
+    }
+  ]
+}

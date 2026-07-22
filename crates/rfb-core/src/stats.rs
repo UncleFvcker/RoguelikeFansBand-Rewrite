@@ -11,6 +11,11 @@ pub enum StatKind {
     MeleeDamageBonus,
     RangedSkill,
     ThrowingSkill,
+    DoorSkill,
+    BashPower,
+    SearchSkill,
+    DisarmSkill,
+    DigSkill,
     ArmorClass,
     ActionDifficulty,
 }

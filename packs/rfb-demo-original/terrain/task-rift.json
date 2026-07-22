@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.task-rift",
+  "nameKey": "terrain-demo-task-rift-name",
+  "descriptionKey": "terrain-demo-task-rift-description",
+  "glyph": "O",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["task-entry"]
+}

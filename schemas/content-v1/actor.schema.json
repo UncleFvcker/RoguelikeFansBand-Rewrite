@@ -80,6 +80,18 @@
       "format": "int32",
       "type": "integer"
     },
+    "bashPower": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "carriedLootTableId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "carryCapacityTenthsPound": {
       "default": 0,
       "format": "uint32",
@@ -109,6 +121,21 @@
     "descriptionKey": {
       "type": "string"
     },
+    "digSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "disarmSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "doorSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,
@@ -125,6 +152,13 @@
       "format": "uint32",
       "minimum": 0,
       "type": "integer"
+    },
+    "lootTableId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "maxHp": {
       "format": "int32",
@@ -146,6 +180,11 @@
     },
     "role": {
       "$ref": "#/$defs/ActorRole"
+    },
+    "searchSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
     },
     "speed": {
       "default": 110,

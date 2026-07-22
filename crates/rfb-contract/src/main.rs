@@ -43,6 +43,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             verify(&fixture)?;
             println!("{}: ok", fixture.id);
         }
+        "refresh" => {
+            let mut fixture: ContractFixture = serde_json::from_slice(&fs::read(&path)?)?;
+            fixture.assertions = Some(observe(&fixture)?);
+            let mut output = serde_json::to_string_pretty(&fixture)?;
+            output.push('\n');
+            fs::write(&path, output)?;
+            println!("{}: refreshed", fixture.id);
+        }
         "normalize-snapshot" => {
             let normalized = normalize_json(&fs::read(path)?)?;
             println!("{}", serde_json::to_string_pretty(&normalized)?);
@@ -57,7 +65,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ => {
             return Err(
-                "mode must be observe, verify, normalize-snapshot, hash-snapshot, or validate-policy"
+                "mode must be observe, verify, refresh, normalize-snapshot, hash-snapshot, or validate-policy"
                     .into(),
             );
         }
@@ -65,7 +73,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-const USAGE: &str = "usage: rfb-contract <observe|verify|normalize-snapshot|hash-snapshot|validate-policy> <input.json> | rfb-contract migrate-baseline <source-directory> <new-directory>";
+const USAGE: &str = "usage: rfb-contract <observe|verify|refresh|normalize-snapshot|hash-snapshot|validate-policy> <input.json> | rfb-contract migrate-baseline <source-directory> <new-directory>";
 
 fn migrate_baseline(
     source: &std::path::Path,

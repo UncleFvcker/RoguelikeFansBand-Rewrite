@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.resonant-warden",
+  "role": "monster",
+  "nameKey": "actor-demo-resonant-warden-name",
+  "descriptionKey": "actor-demo-resonant-warden-description",
+  "glyph": "W",
+  "level": 3,
+  "maxHp": 6,
+  "speed": 110,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "lootTableId": "demo.loot-table.resonant-warden",
+  "tags": ["guardian", "construct"]
+}

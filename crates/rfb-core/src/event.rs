@@ -50,6 +50,87 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         property_name_key: String,
     },
+    LootDropped {
+        source_kind_id: String,
+        target_kind_id: String,
+        quantity: u32,
+    },
+    FloorTransitioned {
+        from_floor_id: String,
+        to_floor_id: String,
+    },
+    FloorTransitionUnavailable,
+    DungeonExpeditionEnded,
+    DungeonGuardianDefeated {
+        dungeon_id: String,
+        floor_id: String,
+        target_kind_id: String,
+    },
+    OneShotFloorClosed {
+        floor_id: String,
+    },
+    TaskCompleted {
+        floor_id: String,
+    },
+    TaskFailed {
+        floor_id: String,
+    },
+    TaskAbandoned {
+        floor_id: String,
+    },
+    TaskPaused {
+        floor_id: String,
+    },
+    TaskResumed {
+        floor_id: String,
+    },
+    TaskRewarded {
+        item_kind_id: String,
+        quantity: u32,
+    },
+    DoorOpened {
+        position: Position,
+    },
+    DoorUnlocked {
+        position: Position,
+    },
+    DoorUnlockFailed {
+        position: Position,
+    },
+    DoorOpenUnavailable,
+    DoorBashedOpen {
+        position: Position,
+    },
+    DoorBashFailed {
+        position: Position,
+    },
+    DoorBashUnavailable,
+    SecretTerrainDiscovered {
+        position: Position,
+    },
+    SearchFoundNothing,
+    TrapTriggered {
+        position: Position,
+        damage: DamageOutcome,
+    },
+    TrapDisarmed {
+        position: Position,
+    },
+    TrapDisarmFailed {
+        position: Position,
+    },
+    TrapDisarmUnavailable,
+    TerrainDug {
+        position: Position,
+    },
+    TerrainDigFailed {
+        position: Position,
+    },
+    TerrainDigUnavailable,
+    DoorClosed {
+        position: Position,
+    },
+    DoorCloseUnavailable,
     Waited,
     ItemPickedUp {
         target_kind_id: String,
@@ -245,6 +326,157 @@ impl DomainEvent {
                     ("propertyNameKey", property_name_key),
                 ],
             ),
+            Self::LootDropped {
+                source_kind_id,
+                target_kind_id,
+                quantity,
+            } => dto(
+                "loot.drop",
+                "loot-drop",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
+                ],
+            ),
+            Self::FloorTransitioned {
+                from_floor_id,
+                to_floor_id,
+            } => dto(
+                "floor.transition",
+                "floor-transition",
+                [("from", from_floor_id), ("to", to_floor_id)],
+            ),
+            Self::FloorTransitionUnavailable => dto_without_args(
+                "floor.transition-unavailable",
+                "floor-transition-unavailable",
+            ),
+            Self::DungeonExpeditionEnded => {
+                dto_without_args("floor.expedition-ended", "floor-expedition-ended")
+            }
+            Self::DungeonGuardianDefeated {
+                dungeon_id,
+                floor_id,
+                target_kind_id,
+            } => dto(
+                "dungeon.guardian-defeated",
+                "dungeon-guardian-defeated",
+                [
+                    ("dungeon", dungeon_id),
+                    ("floor", floor_id),
+                    ("target", target_kind_id),
+                ],
+            ),
+            Self::OneShotFloorClosed { floor_id } => dto(
+                "floor.one-shot-closed",
+                "floor-one-shot-closed",
+                [("floor", floor_id)],
+            ),
+            Self::TaskCompleted { floor_id } => {
+                dto("task.completed", "task-completed", [("floor", floor_id)])
+            }
+            Self::TaskFailed { floor_id } => {
+                dto("task.failed", "task-failed", [("floor", floor_id)])
+            }
+            Self::TaskAbandoned { floor_id } => {
+                dto("task.abandoned", "task-abandoned", [("floor", floor_id)])
+            }
+            Self::TaskPaused { floor_id } => {
+                dto("task.paused", "task-paused", [("floor", floor_id)])
+            }
+            Self::TaskResumed { floor_id } => {
+                dto("task.resumed", "task-resumed", [("floor", floor_id)])
+            }
+            Self::TaskRewarded {
+                item_kind_id,
+                quantity,
+            } => dto(
+                "task.rewarded",
+                "task-rewarded",
+                [("target", item_kind_id), ("quantity", quantity.to_string())],
+            ),
+            Self::DoorOpened { position } => dto(
+                "terrain.door-opened",
+                "door-opened",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorUnlocked { position } => dto(
+                "terrain.door-unlocked",
+                "door-unlocked",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorUnlockFailed { position } => dto(
+                "terrain.door-unlock-failed",
+                "door-unlock-failed",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorOpenUnavailable => {
+                dto_without_args("terrain.door-open-unavailable", "door-open-unavailable")
+            }
+            Self::DoorBashedOpen { position } => dto(
+                "terrain.door-bashed-open",
+                "door-bashed-open",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorBashFailed { position } => dto(
+                "terrain.door-bash-failed",
+                "door-bash-failed",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorBashUnavailable => {
+                dto_without_args("terrain.door-bash-unavailable", "door-bash-unavailable")
+            }
+            Self::SecretTerrainDiscovered { position } => dto(
+                "terrain.secret-discovered",
+                "terrain-secret-discovered",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::SearchFoundNothing => {
+                dto_without_args("terrain.search-empty", "terrain-search-empty")
+            }
+            Self::TrapTriggered { position, damage } => dto_with_outcome(
+                "terrain.trap-triggered",
+                "terrain-trap-triggered",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::TrapDisarmed { position } => dto(
+                "terrain.trap-disarmed",
+                "terrain-trap-disarmed",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::TrapDisarmFailed { position } => dto(
+                "terrain.trap-disarm-failed",
+                "terrain-trap-disarm-failed",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::TrapDisarmUnavailable => dto_without_args(
+                "terrain.trap-disarm-unavailable",
+                "terrain-trap-disarm-unavailable",
+            ),
+            Self::TerrainDug { position } => dto(
+                "terrain.dug",
+                "terrain-dug",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::TerrainDigFailed { position } => dto(
+                "terrain.dig-failed",
+                "terrain-dig-failed",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::TerrainDigUnavailable => {
+                dto_without_args("terrain.dig-unavailable", "terrain-dig-unavailable")
+            }
+            Self::DoorClosed { position } => dto(
+                "terrain.door-closed",
+                "door-closed",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorCloseUnavailable => {
+                dto_without_args("terrain.door-close-unavailable", "door-close-unavailable")
+            }
             Self::Waited => dto_without_args("turn.wait", "game-wait"),
             Self::ItemPickedUp {
                 target_kind_id,

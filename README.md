@@ -42,8 +42,33 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v21：消耗品 UseAction 与可观察鉴定](design/contract-v21-consumable-use-action.md)
 - [Contract v22：实例词条与知识投影](design/contract-v22-instance-affix-knowledge.md)
 - [Contract v23：物品鉴别与完整识别](design/contract-v23-item-appraisal.md)
+- [Contract v24：确定性战利品生成](design/contract-v24-deterministic-loot-generation.md)
+- [Contract v25：怪物携带物与统一死亡掉落事务](design/contract-v25-monster-carried-items.md)
+- [Contract v26：楼层生命周期与确定性程序化楼层](design/contract-v26-floor-lifecycle.md)
+- [Contract v27：程序化房间怪物与地面掉落分配](design/contract-v27-procedural-room-content.md)
+- [Contract v28：门地形状态与方向性交互](design/contract-v28-door-terrain-state.md)
+- [Contract v29：锁门、开锁检定与破门](design/contract-v29-locked-door-checks.md)
+- [Contract v30：权威相邻地形交互查询](design/contract-v30-authoritative-terrain-interactions.md)
+- [Contract v31：秘密门、搜索与地形知识](design/contract-v31-secret-door-search.md)
+- [Contract v32：隐藏陷阱、触发与解除](design/contract-v32-hidden-traps-disarm.md)
+- [Contract v33：挖掘与可破坏地形](design/contract-v33-diggable-terrain.md)
+- [Contract v34：多深度楼层连接](design/contract-v34-multi-depth-floors.md)
+- [Contract v35：地牢探索实例生命周期](design/contract-v35-dungeon-expedition-lifecycle.md)
+- [Contract v36：一次性任务层](design/contract-v36-one-shot-task-floor.md)
+- [Contract v37：任务目标与完成/失败](design/contract-v37-task-objective-resolution.md)
+- [Contract v38：任务奖励与任务日志](design/contract-v38-task-reward-journal.md)
+- [Contract v39：击杀目标与任务进度](design/contract-v39-kill-objective-progress.md)
+- [Contract v40：任务放弃与退出限制](design/contract-v40-task-abandon-exit-policy.md)
+- [Contract v41：数量击杀与持久进度](design/contract-v41-counted-kill-progress.md)
+- [Contract v42：可重接任务](design/contract-v42-retakeable-task.md)
+- [Contract v43：独立任务 ID 与共享任务范围](design/contract-v43-shared-task-id.md)
+- [Contract v44：权威任务状态机与领域事件订阅](design/contract-v44-task-state-machine.md)
+- [Contract v45：有序多阶段任务目标](design/contract-v45-ordered-task-stages.md)
+- [Contract v46：多深度最终层与持久守护者](design/contract-v46-final-floor-guardian.md)
+- [Contract v47：深度主题 Vault 与群体遭遇](design/contract-v47-themed-vault.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
+- [待实现内容清单](design/pending-implementation.md)
 - [核心协议 v1](design/protocol-v1.md)
 - [确定性模拟、随机数与回放](design/deterministic-simulation.md)
 - [内容数据格式 v1](design/content-format-v1.md)
@@ -58,7 +83,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v23/scenarios`](tests/fixtures/contract-v23/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v22` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v47/scenarios`](tests/fixtures/contract-v47/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v46` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -83,9 +108,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 当前阶段
 
-协议 1.23 / contract-v23 已建立实例质量、背包鉴别、装备完整识别与防泄漏投影。active baseline 共 60 个 exact fixtures。原创内容包为 1.18.0；存档继续为 v1，state hash 升至 Schema v12。完整边界见 [Contract v23 说明](design/contract-v23-item-appraisal.md)。
+协议 1.47 / contract-v47 已建立独立 vault 内容根：回声地牢深度 2 使用带隐藏入口和固定 terrain 图案的主题模板，按深度过滤加权 actor 表后生成 3 人群组，并从 vault 专属 loot table 生成缓存。active baseline 共 92 个 exact fixtures，内容包为 1.40.0、terrain 35、actor 8、loot table 5、vault 1；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v47 说明](design/contract-v47-themed-vault.md)。
 
-阶段 D 的种类级知识、消耗品、实例词条与鉴别状态机已经建立。下一规则切片进入内容驱动掉落表；鼠标点选、路径预览和投射物动画留在后续前端切片。
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层地牢、最终层、持久守护者和第一类主题 vault 已经建立。Stage E 后续主要剩余楼层级 encounter/loot/theme 表、vault 加权选择、巢穴/护卫群体、分支连接和更大规模生成；任务线的暂停管理仍保留在后续队列。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -157,10 +182,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v23/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v47/baseline-policy.json
 ```
 
-当前 60 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 92 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

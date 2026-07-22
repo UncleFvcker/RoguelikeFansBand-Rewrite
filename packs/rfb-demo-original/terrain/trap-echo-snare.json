@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.trap-echo-snare",
+  "nameKey": "terrain-demo-trap-echo-snare-name",
+  "descriptionKey": "terrain-demo-trap-echo-snare-description",
+  "glyph": "^",
+  "walkable": true,
+  "blocksSight": false,
+  "concealedAsTerrainId": "demo.terrain.floor",
+  "searchCheckDifficulty": 8,
+  "trap": {
+    "damage": 2,
+    "damageType": "physical",
+    "disarmToTerrainId": "demo.terrain.floor",
+    "disarmCheckDifficulty": 8
+  },
+  "tags": ["trap", "echo"]
+}

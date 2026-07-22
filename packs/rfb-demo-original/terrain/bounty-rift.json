@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json","formatVersion":1,"id":"demo.terrain.bounty-rift","nameKey":"terrain-demo-bounty-rift-name","descriptionKey":"terrain-demo-bounty-rift-description","glyph":">","walkable":true,"blocksSight":false,"tags":["stairs-down","task-entry"]}

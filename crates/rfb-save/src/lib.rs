@@ -191,10 +191,15 @@ mod tests {
             items: Vec::<ItemSaveDto>::new(),
             inventory: Vec::<InventoryItemSaveDto>::new(),
             equipment: Vec::new(),
+            carried_items: Vec::new(),
             item_knowledge: Vec::new(),
             item_property_knowledge: Vec::new(),
+            task_progress: Vec::new(),
+            task_states: Vec::new(),
+            dungeon_states: Vec::new(),
             next_item_instance_serial: 1,
             explored: vec![true],
+            revealed_terrain: Vec::new(),
             rng: RngSaveDto {
                 algorithm: "rfb-rng-xoshiro256ss-v1".to_owned(),
                 state: [1, 2, 3, 4],
@@ -203,6 +208,8 @@ mod tests {
             content_id: "rfb.test.content-v1".to_owned(),
             content_hash: "0".repeat(64),
             world_id: "test.world.fixture".to_owned(),
+            current_floor_id: "test.floor.surface".to_owned(),
+            stored_floors: Vec::new(),
         };
         (header, payload)
     }

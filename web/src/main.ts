@@ -42,6 +42,14 @@ import {
   targetSelectionAtCursor,
   type TargetingState,
 } from "./targeting";
+import {
+  terrainInteractionCommand,
+  terrainInteractionForDirection,
+  terrainInteractionsForMode,
+  terrainInteractionModeForKey,
+  terrainSearchCommandForKey,
+  type TerrainInteractionMode,
+} from "./terrain-interaction";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -54,6 +62,7 @@ let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
 let dropQuantityItemId: string | undefined;
 let targeting: TargetingState | undefined;
+let terrainInteractionMode: TerrainInteractionMode | undefined;
 let mapWidth = 0;
 let mapHeight = 0;
 
@@ -70,6 +79,7 @@ const defenseValue = element<HTMLElement>("defense-value");
 const effectsValue = element<HTMLElement>("effects-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
+const taskLogList = element<HTMLUListElement>("task-log-list");
 const inventoryCount = element<HTMLElement>("inventory-count");
 const inventorySelectionCount = element<HTMLElement>("inventory-selection-count");
 const inventoryUse = element<HTMLButtonElement>("inventory-use");
@@ -197,6 +207,86 @@ window.addEventListener("keydown", (event) => {
       targeting = moveTargetCursor(targeting, direction, mapWidth, mapHeight);
       renderTargeting();
     }
+    return;
+  }
+  if (terrainInteractionMode) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      terrainInteractionMode = undefined;
+      addLocalizedMessage("message-door-mode-cancelled", undefined, "system");
+      return;
+    }
+    const direction = directionForKeyboardEvent(event);
+    if (direction) {
+      event.preventDefault();
+      const mode = terrainInteractionMode;
+      terrainInteractionMode = undefined;
+      const interaction = currentStatus
+        ? terrainInteractionForDirection(
+            currentStatus.terrainInteractions,
+            mode,
+            direction,
+          )
+        : undefined;
+      if (!interaction) {
+        addLocalizedMessage(
+          "message-terrain-interaction-not-applicable",
+          undefined,
+          "system",
+        );
+        return;
+      }
+      if (!interaction.available) {
+        addLocalizedMessage(
+          interaction.unavailableReason === "occupied-by-actor"
+            ? "message-terrain-interaction-blocked-actor"
+            : "message-terrain-interaction-blocked-item",
+          undefined,
+          "system",
+        );
+        return;
+      }
+      void dispatch(terrainInteractionCommand(mode, direction));
+    }
+    return;
+  }
+  const nextTerrainInteractionMode = terrainInteractionModeForKey(event.key);
+  if (nextTerrainInteractionMode) {
+    event.preventDefault();
+    if (
+      !currentStatus ||
+      terrainInteractionsForMode(
+        currentStatus.terrainInteractions,
+        nextTerrainInteractionMode,
+      ).length === 0
+    ) {
+      addLocalizedMessage(
+        "message-terrain-interaction-mode-unavailable",
+        undefined,
+        "system",
+      );
+      return;
+    }
+    terrainInteractionMode = nextTerrainInteractionMode;
+    addLocalizedMessage(
+      nextTerrainInteractionMode === "open-door"
+        ? "message-door-mode-open"
+        : nextTerrainInteractionMode === "close-door"
+          ? "message-door-mode-close"
+          : nextTerrainInteractionMode === "bash-door"
+            ? "message-door-mode-bash"
+            : nextTerrainInteractionMode === "disarm-trap"
+              ? "message-trap-mode-disarm"
+              : "message-terrain-mode-dig",
+      undefined,
+      "system",
+    );
+    return;
+  }
+  const searchCommand = terrainSearchCommandForKey(event.key);
+  if (searchCommand) {
+    event.preventDefault();
+    void dispatch(searchCommand);
     return;
   }
   if (event.key.toLowerCase() === "f") {
@@ -698,6 +788,28 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
             }),
           )
           .join(" · ");
+  taskLogList.replaceChildren(
+    ...state.tasks.map((task) => {
+      const row = document.createElement("li");
+      row.textContent = localization.format("task-log-entry", {
+        task: contentName(task.floorId),
+        status: localization.format(`task-status-${task.status}` as MessageKey),
+        stage: task.stage,
+        stages: task.stages,
+        current: task.current,
+        required: task.required,
+      });
+      if (task.status === "active") {
+        const abandon = document.createElement("button");
+        abandon.type = "button";
+        abandon.textContent = localization.format("action-task-abandon");
+        abandon.disabled = busy;
+        abandon.addEventListener("click", () => void dispatch({ type: "abandon-task" }));
+        row.append(" ", abandon);
+      }
+      return row;
+    }),
+  );
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
@@ -994,6 +1106,56 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-game-wait");
     case "game-move-blocked":
       return localization.format("message-move-blocked");
+    case "floor-transition":
+      return localization.format("message-floor-transition", {
+        from: floorName(event.args.from),
+        to: floorName(event.args.to),
+      });
+    case "floor-transition-unavailable":
+      return localization.format("message-floor-transition-unavailable");
+    case "floor-expedition-ended":
+      return localization.format("message-floor-expedition-ended");
+    case "floor-one-shot-closed":
+      return localization.format("message-floor-one-shot-closed");
+    case "task-completed":
+      return localization.format("message-task-completed");
+    case "task-failed":
+      return localization.format("message-task-failed");
+    case "task-abandoned":
+      return localization.format("message-task-abandoned");
+    case "task-paused":
+      return localization.format("message-task-paused");
+    case "task-resumed":
+      return localization.format("message-task-resumed");
+    case "task-rewarded":
+      return localization.format("message-task-rewarded", {
+        target: visibleItemNameForKind(event.args.target),
+        quantity: event.args.quantity ?? "?",
+      });
+    case "door-opened":
+      return localization.format("message-door-opened");
+    case "door-open-unavailable":
+      return localization.format("message-door-open-unavailable");
+    case "door-closed":
+      return localization.format("message-door-closed");
+    case "door-close-unavailable":
+      return localization.format("message-door-close-unavailable");
+    case "terrain-trap-triggered":
+      return localization.format("message-terrain-trap-triggered", {
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
+    case "terrain-trap-disarmed":
+      return localization.format("message-terrain-trap-disarmed");
+    case "terrain-trap-disarm-failed":
+      return localization.format("message-terrain-trap-disarm-failed");
+    case "terrain-trap-disarm-unavailable":
+      return localization.format("message-terrain-trap-disarm-unavailable");
+    case "terrain-dug":
+      return localization.format("message-terrain-dug");
+    case "terrain-dig-failed":
+      return localization.format("message-terrain-dig-failed");
+    case "terrain-dig-unavailable":
+      return localization.format("message-terrain-dig-unavailable");
     case "combat-player-hit":
       return formatPlayerDamageEvent(event);
     case "combat-player-slay":
@@ -1117,6 +1279,12 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-property-discovered", {
         target: visibleItemNameForKind(event.args.target),
         property: itemPropertyName(event.args.propertyNameKey),
+      });
+    case "loot-drop":
+      return localization.format("message-loot-drop", {
+        source: contentName(event.args.source),
+        target: visibleItemNameForKind(event.args.target),
+        quantity: event.args.quantity ?? "?",
       });
     case "item-unequip-success":
       return localization.format("message-item-unequip-success", {
@@ -1243,6 +1411,16 @@ function damageTypeName(damageType: DamageTypeDto): string {
     poison: "damage-type-poison-name",
   };
   return localization.format(keys[damageType]);
+}
+
+function floorName(id: string | undefined): string {
+  if (id === "demo.floor.surface") {
+    return localization.format("world-demo-original-lab-name");
+  }
+  if (id === "demo.floor.echo-depth-1") {
+    return localization.format("floor-demo-echo-depth-1-name");
+  }
+  return id ?? "?";
 }
 
 function contentName(id: string | undefined): string {
@@ -1528,6 +1706,7 @@ function renderTargeting(): void {
 function commandForKeyboardEvent(event: KeyboardEvent): GameCommand | undefined {
   const key = event.key.toLowerCase();
   if (key === "g") return { type: "pick-up" };
+  if (key === ">" || key === "<") return { type: "traverse-stairs" };
   const direction = directionForKeyboardEvent(event);
   if (inputPreset === "numpad") {
     if (event.code === "Numpad5") return { type: "wait" };

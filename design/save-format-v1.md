@@ -71,24 +71,29 @@ interface SavePayloadV1 {
   items: ItemSaveDto[];
   inventory: InventoryItemSaveDto[];
   equipment: EquipmentItemSaveDto[];
+  carriedItems: CarriedItemSaveDto[];
   nextItemInstanceSerial: number;
   explored: boolean[];
   rng: RngSaveDto;
   contentId: string;
   contentHash: string;
   worldId: string;
+  currentFloorId: string;
+  storedFloors: FloorSaveDto[];
 }
 ```
 
-当前桌面垂直切片已经把地面 `items`、`inventory` 物品堆、`equipment` 装备列表和 `nextItemInstanceSerial` 写入 payload。存档使用独立的 `PlayerSaveDto`、`ActorSaveDto` 和物品存档 DTO，不再复用面向前端的 `PlayerDto`、`EntityDto`、`InventoryItemDto` 或 `EquipmentItemDto`。
+`FloorSaveDto` 保存离层 ID、玩家离层位置、地形、怪物、地面物品、怪物携带物和探索记忆。当前活动层继续占用 payload 顶层的 `terrain`、`entities`、`items`、`carriedItems` 与 `explored`；`storedFloors` 只保存非活动层，载入时拒绝重复 ID 或把当前层同时放入仓库。
 
-Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明确区分 `Ground(position)`、`Inventory` 和 `Equipped(slotId)`。拾取、整堆丢弃、装备与卸下只改变同一实例的位置；部分拆堆才分配新的稳定实例 ID。v1 存档线格式继续投影为 `items`、`inventory` 和 `equipment` 三个列表，以兼容现有文件和 contract-v9，但这三个列表不再对应三套核心结构体。
+当前桌面垂直切片已经把地面 `items`、玩家 `inventory` 物品堆、`equipment` 装备列表、怪物 `carriedItems`、楼层仓库和 `nextItemInstanceSerial` 写入 payload。存档使用独立的 `PlayerSaveDto`、`ActorSaveDto`、`FloorSaveDto` 和物品存档 DTO，不再复用面向前端的 `PlayerDto`、`EntityDto`、`InventoryItemDto` 或 `EquipmentItemDto`。
+
+Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明确区分 `Ground(position)`、`Inventory`、`Equipped(slotId)` 和 `CarriedBy(actorId)`。拾取、整堆丢弃、装备、卸下和怪物死亡放下携带物只改变同一实例的位置；部分拆堆才分配新的稳定实例 ID。v1 存档线格式投影为 `items`、`inventory`、`equipment` 和带默认值的 `carriedItems` 列表，但这些列表不对应多套核心结构体。
 
 玩家存档保存实例 ID、种类 ID、位置、当前生命、自然最大生命、基础速度、当前 `energyNeed`、状态列表与抗性 profile；怪物保存相同的权威运行状态。状态保存稳定 kind ID、强度、剩余 tick 和可选来源 ID；普通抗性不显式写入稀疏列表。最终速度、攻击、防御、近战能力、AC、伤害骰、装备 modifier、死亡标志、glyph 和本地化文本均不写入新存档，而是在载入后重新派生。旧 v1 存档缺失状态/抗性字段时按空集合迁移。
 
 背包与装备项保存稳定实例 ID、内容 kind ID、数量及装备槽 ID，不保存选择复选框或 HTML 面板状态。种类级 `itemKnowledge` 只保存非空 tried/aware 记录，并要求 aware 蕴含 tried；旧存档缺失该字段时按空知识表载入。载入后必须验证内容引用、实例 ID 唯一性、`maxStack`、槽位匹配、槽位唯一性、知识记录唯一且引用带外观名称的种类，以及生成实例序号不能落后于任何 `generated.item.N`。旧存档缺失 `equipment` 时按空列表载入，缺失分配序号时从所有现有实例 ID 推导。玩家负生命值代表已死亡，可安全保存和重载；`isDead` 仅是协议派生字段。
 
-协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；该数组不参与 state hash。协议 1.23 在物品位置 DTO 保存质量，并以 `itemPropertyKnowledge` 保存 `appraised`、`identified` 与已知词条；v22 记录可从已有词条和装备位置迁移。当前 state hash Schema v12 明确覆盖质量、词条真值与鉴别知识。
+协议 1.3 增加 `explored` 布尔数组保存 Rust 权威地图记忆。旧存档缺失该字段时按空记忆载入并揭示玩家当前 FOV；探索记忆不参与 state hash。协议 1.23 在物品位置 DTO 保存质量，并以 `itemPropertyKnowledge` 保存 `appraised`、`identified` 与已知词条；v22 记录可从已有词条和装备位置迁移。协议 1.24 的战利品生成直接写入既有实例字段和 `nextItemInstanceSerial`。协议 1.25 新增可选 `carriedItems`；旧存档缺失时按空列表载入，不为已有怪物补抽携带物。协议 1.26 新增带默认值的 `currentFloorId` 和 `storedFloors`；旧存档迁移到世界入口层且没有离层状态。协议 1.27 不增加存档字段；已访问的 v26 程序化层保持原有实体集合，不补生成 v27 房间内容。协议 1.28 继续直接保存 terrain ID 数组；旧程序化层不会补插门。协议 1.29 的锁定/破损门继续使用 terrain ID；协议 1.30 的 `terrainInteractions` 是派生视图。协议 1.31 在当前层和每个 `FloorSaveDto` 新增带默认值的 `revealedTerrain` 稳定位置列表；旧存档按空知识载入，非法、重复、越界或指向非隐藏 terrain 的记录被拒绝。协议 1.41 新增可选 `taskProgress`；协议 1.43 将进度键规范为 `taskId`，并兼容读取旧 `floorId` 后按内容映射迁移。协议 1.44 新增可选 `taskStates`，保存任务 ID、状态、当前/要求进度和活跃楼层；旧 `taskProgress` 只作为迁移输入，新存档不再写入重复进度副本。协议 1.45 在任务状态中增加带默认值的 `stageIndex`，保存当前有序阶段；旧单目标状态按第零阶段载入。协议 1.46 新增可选 `dungeonStates`，保存守护者击败状态；探索实例楼层清除时该状态仍保留。协议 1.47 不增加存档字段；新生成 vault 仍作为普通 terrain、actor 和 item 保存，旧存档已有楼层不会被补绘。state hash Schema v19 覆盖任务状态与持久地牢状态。
 
 禁止保存：
 

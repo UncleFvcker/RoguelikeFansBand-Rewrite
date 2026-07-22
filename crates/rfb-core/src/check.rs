@@ -8,6 +8,11 @@ pub enum CheckKind {
     ProjectileHit,
     ThrowHit,
     FearAction,
+    UnlockDoor,
+    BashDoor,
+    SearchTerrain,
+    DisarmTrap,
+    DigTerrain,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

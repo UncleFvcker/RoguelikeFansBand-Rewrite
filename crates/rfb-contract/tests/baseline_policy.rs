@@ -9,12 +9,38 @@ fn committed_baseline_policy_and_waivers_are_valid() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures");
     for version in [
         "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14",
-        "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23",
+        "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27",
+        "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37", "v38", "v39", "v40",
+        "v41", "v42", "v43", "v44", "v45", "v46", "v47",
     ] {
         let policy = root.join(format!("contract-{version}/baseline-policy.json"));
         let report = validate_policy_file(&policy).expect("baseline policy should validate");
         assert_eq!(report.policy_id, format!("rfb-contract-baseline-{version}"));
         let minimum = match version {
+            "v47" => 92,
+            "v46" => 91,
+            "v45" => 88,
+            "v44" => 86,
+            "v43" => 85,
+            "v42" => 83,
+            "v41" => 81,
+            "v40" => 79,
+            "v39" => 77,
+            "v38" => 76,
+            "v37" => 75,
+            "v36" => 74,
+            "v35" => 73,
+            "v34" => 72,
+            "v33" => 71,
+            "v32" => 70,
+            "v31" => 68,
+            "v30" => 67,
+            "v29" => 66,
+            "v28" => 65,
+            "v27" => 64,
+            "v26" => 63,
+            "v25" => 62,
+            "v24" => 61,
             "v23" => 60,
             "v22" => 59,
             "v21" => 58,

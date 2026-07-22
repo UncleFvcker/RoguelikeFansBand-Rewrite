@@ -1,0 +1,198 @@
+{
+  "$defs": {
+    "ContentPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "y": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "TerrainOverride": {
+      "additionalProperties": false,
+      "properties": {
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terrainId",
+        "positions"
+      ],
+      "type": "object"
+    },
+    "VaultEncounterEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "weight",
+        "minDepth",
+        "maxDepth"
+      ],
+      "type": "object"
+    },
+    "VaultEncounterGroupDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/VaultEncounterEntryDefinition"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "memberPositions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "memberPositions",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "VaultLootSpawnDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "lootTableId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        }
+      },
+      "required": [
+        "id",
+        "position",
+        "lootTableId"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "baseTerrainId": {
+      "type": "string"
+    },
+    "encounterGroups": {
+      "items": {
+        "$ref": "#/$defs/VaultEncounterGroupDefinition"
+      },
+      "type": "array"
+    },
+    "entrancePosition": {
+      "$ref": "#/$defs/ContentPosition"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "height": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "lootSpawns": {
+      "items": {
+        "$ref": "#/$defs/VaultLootSpawnDefinition"
+      },
+      "type": "array"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "terrainOverrides": {
+      "items": {
+        "$ref": "#/$defs/TerrainOverride"
+      },
+      "type": "array"
+    },
+    "themeId": {
+      "type": "string"
+    },
+    "width": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "themeId",
+    "width",
+    "height",
+    "baseTerrainId",
+    "entrancePosition",
+    "terrainOverrides",
+    "encounterGroups",
+    "lootSpawns"
+  ],
+  "title": "VaultDefinition",
+  "type": "object"
+}

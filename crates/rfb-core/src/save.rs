@@ -6,12 +6,12 @@ use crate::{
     effect::StatusInstance,
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
-    state::{Actor, ItemInstance, ItemLocation},
+    state::{Actor, FloorState, ItemInstance, ItemLocation},
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
-    ActorSaveDto, EquipmentItemSaveDto, InventoryItemSaveDto, ItemSaveDto, PlayerSaveDto, Position,
-    ResistanceSaveDto, StatusSaveDto,
+    ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorSaveDto, InventoryItemSaveDto,
+    ItemSaveDto, PlayerSaveDto, Position, ResistanceSaveDto, StatusSaveDto, TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -164,6 +164,25 @@ pub(crate) fn equipment_item_from_dto(
         affix_ids: item.affix_ids,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
+        },
+    })
+}
+
+pub(crate) fn carried_item_from_dto(
+    item: CarriedItemSaveDto,
+    content: &ContentCatalog,
+) -> Result<ItemInstance, CoreError> {
+    content
+        .item(&item.kind_id)
+        .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    Ok(ItemInstance {
+        id: item.id,
+        kind_id: item.kind_id,
+        quantity: item.quantity,
+        quality: item.quality,
+        affix_ids: item.affix_ids,
+        location: ItemLocation::CarriedBy {
+            actor_id: item.actor_id,
         },
     })
 }
@@ -324,4 +343,124 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
             .then_with(|| left.id.cmp(&right.id))
     });
     equipment
+}
+
+pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSaveDto> {
+    let mut carried = items
+        .iter()
+        .filter_map(|item| {
+            let ItemLocation::CarriedBy { actor_id } = &item.location else {
+                return None;
+            };
+            Some(CarriedItemSaveDto {
+                id: item.id.clone(),
+                kind_id: item.kind_id.clone(),
+                quantity: item.quantity,
+                actor_id: actor_id.clone(),
+                quality: item.quality,
+                affix_ids: item.affix_ids.clone(),
+            })
+        })
+        .collect::<Vec<_>>();
+    carried.sort_by(|left, right| {
+        left.actor_id
+            .cmp(&right.actor_id)
+            .then_with(|| left.id.cmp(&right.id))
+    });
+    carried
+}
+
+pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
+    FloorSaveDto {
+        id: floor.id.clone(),
+        player_position: floor.player_position,
+        terrain: TerrainSaveDto {
+            width: floor.width,
+            height: floor.height,
+            terrain_ids: floor.terrain.clone(),
+        },
+        entities: actors_to_save(&floor.entities),
+        items: items_to_save(&floor.items),
+        carried_items: carried_items_to_save(&floor.items),
+        explored: floor.explored.clone(),
+        revealed_terrain: floor.revealed_terrain.iter().copied().collect(),
+    }
+}
+
+pub(crate) fn floor_from_save(
+    floor: FloorSaveDto,
+    content: &ContentCatalog,
+) -> Result<FloorState, CoreError> {
+    let revealed_terrain = revealed_terrain_from_save(
+        floor.revealed_terrain,
+        &floor.terrain.terrain_ids,
+        floor.terrain.width,
+        floor.terrain.height,
+        content,
+    )?;
+    let entities = floor
+        .entities
+        .into_iter()
+        .map(|entity| actor_from_entity(entity, content))
+        .collect::<Result<Vec<_>, CoreError>>()?;
+    let mut items = floor
+        .items
+        .into_iter()
+        .map(item_from_dto)
+        .collect::<Vec<_>>();
+    items.extend(
+        floor
+            .carried_items
+            .into_iter()
+            .map(|item| carried_item_from_dto(item, content))
+            .collect::<Result<Vec<_>, CoreError>>()?,
+    );
+    Ok(FloorState {
+        id: floor.id,
+        width: floor.terrain.width,
+        height: floor.terrain.height,
+        terrain: floor.terrain.terrain_ids,
+        player_position: floor.player_position,
+        entities,
+        items,
+        explored: floor.explored,
+        revealed_terrain,
+    })
+}
+
+pub(crate) fn revealed_terrain_from_save(
+    positions: Vec<Position>,
+    terrain: &[String],
+    width: u16,
+    height: u16,
+    content: &ContentCatalog,
+) -> Result<BTreeSet<Position>, CoreError> {
+    let mut revealed = BTreeSet::new();
+    for position in positions {
+        if position.x < 0
+            || position.y < 0
+            || position.x >= i32::from(width)
+            || position.y >= i32::from(height)
+            || !revealed.insert(position)
+        {
+            return Err(CoreError::InvalidSave(
+                "revealed terrain knowledge is invalid",
+            ));
+        }
+        let index = position.y as usize * usize::from(width) + position.x as usize;
+        let Some(definition) = terrain
+            .get(index)
+            .and_then(|terrain_id| content.terrain(terrain_id))
+        else {
+            return Err(CoreError::InvalidSave(
+                "revealed terrain knowledge is invalid",
+            ));
+        };
+        if definition.concealed_as_terrain_id.is_none() {
+            return Err(CoreError::InvalidSave(
+                "revealed terrain knowledge is invalid",
+            ));
+        }
+    }
+    Ok(revealed)
 }

@@ -6,7 +6,7 @@ use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, ItemKnowledgeSaveDto,
     ItemPropertyKnowledgeSaveDto, PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto,
-    SaveHeaderV1, StatusDto, StatusSaveDto,
+    SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -100,6 +100,8 @@ pub struct FinalStateAssertion {
     #[serde(default)]
     pub world_tick: u32,
     pub last_command_seq: u32,
+    #[serde(default)]
+    pub floor_id: String,
     pub player_position: Position,
     #[serde(default)]
     pub player_hp: Option<i32>,
@@ -136,6 +138,12 @@ pub struct FinalStateAssertion {
     pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: Option<u64>,
+    #[serde(default)]
+    pub terrain_interactions: Vec<TerrainInteractionDto>,
+    #[serde(default)]
+    pub tasks: Vec<TaskStatusDto>,
+    #[serde(default)]
+    pub revealed_terrain: Vec<Position>,
     pub state_hash: String,
 }
 
@@ -241,6 +249,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             turn: snapshot.turn,
             world_tick: snapshot.world_tick,
             last_command_seq: snapshot.last_command_seq,
+            floor_id: snapshot.floor_id.clone(),
             player_position: snapshot.player.position,
             player_hp: Some(snapshot.player.hp),
             player_max_hp: Some(snapshot.player.max_hp),
@@ -271,6 +280,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             item_knowledge: save.item_knowledge,
             item_property_knowledge: save.item_property_knowledge,
             next_item_instance_serial: Some(save.next_item_instance_serial),
+            terrain_interactions: snapshot.terrain_interactions,
+            tasks: snapshot.tasks,
+            revealed_terrain: save.revealed_terrain,
             state_hash: snapshot.state_hash,
         },
         events,

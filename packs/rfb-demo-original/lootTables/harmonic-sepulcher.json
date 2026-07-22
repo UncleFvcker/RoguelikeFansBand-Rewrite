@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.loot-table.harmonic-sepulcher",
+  "rolls": 1,
+  "entries": [
+    {
+      "itemKindId": "demo.item.echo-blade",
+      "weight": 1,
+      "quantity": 1
+    },
+    {
+      "itemKindId": "demo.item.echo-charm",
+      "weight": 2,
+      "quantity": 1
+    }
+  ],
+  "qualityWeights": [
+    {
+      "quality": "ordinary",
+      "weight": 2
+    },
+    {
+      "quality": "fine",
+      "weight": 1
+    }
+  ],
+  "affixWeights": [
+    {
+      "weight": 2
+    },
+    {
+      "affixId": "demo.affix.harmonic-edge",
+      "weight": 1
+    }
+  ]
+}

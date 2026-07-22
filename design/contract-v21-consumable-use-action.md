@@ -20,4 +20,4 @@
 
 ## 后续
 
-Stage D 的实例级物品属性已由 [contract-v22](contract-v22-instance-affix-knowledge.md) 建立，质量鉴别与完整识别已由 [contract-v23](contract-v23-item-appraisal.md) 建立。下一步进入内容驱动掉落表；程序化地牢继续排在物品闭环之后。
+Stage D 的实例级物品属性已由 [contract-v22](contract-v22-instance-affix-knowledge.md) 建立，质量鉴别与完整识别已由 [contract-v23](contract-v23-item-appraisal.md) 建立，确定性掉落已由 [contract-v24](contract-v24-deterministic-loot-generation.md) 建立，怪物携带物已由 [contract-v25](contract-v25-monster-carried-items.md) 建立。阶段 E 的楼层生命周期骨架已由 [contract-v26](contract-v26-floor-lifecycle.md) 建立。

@@ -22,13 +22,15 @@ packs/base/
 ├─ actors/
 ├─ affixes/
 ├─ items/
+├─ lootTables/
 ├─ terrain/
+├─ vaults/
 ├─ worlds/
 ├─ locales/
 └─ assets/
 ```
 
-当前 v1 编译器实现 `actors`、`affixes`、`items`、`terrain` 和 `worlds` 五个严格类型根。后续怪物能力、职业、种族、法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
+当前 v1 编译器实现 `actors`、`affixes`、`items`、`lootTables`、`terrain`、`vaults` 和 `worlds` 七个严格类型根。后续怪物能力、职业、种族、法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
 
 `pack.json`：
 
@@ -103,6 +105,16 @@ rfb.terrain.wall.granite
 
 `inspect-source` 只编译并显示规范化摘要/hash，不读取或改写 lock；修改内容后先审查该输出，再显式更新 `content.lock.json`。`verify-source` 则要求源内容与已提交 lock 完全一致。
 
+一次性任务层使用 `taskObjective`、`taskReward` 和入口结果 terrain 描述任务闭环。contract-v40 新增 `allowEarlyTaskExit`（默认 `true`）与必需的 `abandonedEntryTerrainId`：前者决定未完成时普通上楼是否允许，后者保存显式放弃后的权威地表结果。contract-v45 新增 `taskStages`：一个共享任务只由一个成员楼层声明有序阶段，每阶段绑定成员 `floorId`，支持收集、进入楼层、单实例击杀和按种类计数击杀；旧 `taskObjective` 继续表示单阶段任务。
+
+contract-v46 为普通地牢楼层增加 `dungeonId`、`finalFloor` 和 `guardian`。同一 dungeon ID 的楼层必须形成从深度 1 到唯一最终层的完整线性链；非最终层必须有 `nextFloorId/downStairTerrainId`，最终层必须没有下行连接并声明唯一守护者实例与 actor kind。
+
+contract-v47 新增独立 `VaultDefinition`：模板声明稳定主题 ID、尺寸、基础 terrain、入口、terrain 覆盖、群体成员位置、带深度范围的加权 actor 候选和 loot table 引用。程序化楼层通过 `themeId/vaultId` 引用模板；编译器保证主题一致、位置可行走且当前楼层深度至少有一个合法 encounter 候选。
+
+contract-v42 新增 `retakeable`（默认 `false`）。启用后，未完成时普通离开会保存任务层并保持入口开放；重新进入恢复原楼层，而显式放弃或完成仍关闭入口。
+
+contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结算组，共享进度与结果；组内目标种类、required 和重接策略必须一致，并且整组恰好声明一个奖励。`kill-actor-kind` 可用 `spawnCount` 控制单个成员楼层生成的目标数量。
+
 当前已完成第 1、2、3、7、8 项的单包版本，包括：
 
 - `deny_unknown_fields` 严格 JSON 解析；
@@ -113,9 +125,9 @@ rfb.terrain.wall.granite
 - 定义、tag、spawn 和地形覆盖的规范化排序；
 - `RFBCONT\0`、MessagePack payload、长度和 SHA-256 校验；
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
-- 六份提交到 `schemas/content-v1/` 的 JSON Schema。
+- 八份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，怪物该字段保持为零。怪物可声明 `meleeRoutine.blows`。物品必须声明整数重量，并可声明近战、发射、投掷或使用 profile。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。原创包 1.18.0 覆盖首个固定词条、鉴别与完整识别闭环。
+角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，并可用 `doorSkill` / `bashPower` / `searchSkill` 声明开锁、破门和搜索基础能力。怪物可声明 `meleeRoutine.blows`、出生携带用 `carriedLootTableId` 和死亡生成用 `lootTableId`。物品必须声明整数重量，并可声明近战、发射、投掷或使用 profile。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。独立 `LootTableDefinition` 声明加权物品、品质和词条。独立 `VaultDefinition` 声明主题 terrain、深度加权 encounter group 与主题掉落。地形可声明互斥的 `openToTerrainId` 或 `closeToTerrainId`；普通门互反转换要求关闭态不可行走/阻光、开启态可行走/透光。带 `openCheckDifficulty` 的锁门允许单向解锁到普通开启态；`bashToTerrainId` / `bashCheckDifficulty` 成对声明破门结果；`concealedAsTerrainId` / `searchCheckDifficulty` 成对声明隐藏投影和搜索难度，真实/伪装 terrain 必须保持相同碰撞与阻光语义。世界定义必须声明稳定 `initialFloorId` 和首个 `proceduralFloor`，后者固定楼层 ID、名称、返回层、深度、尺寸、地形引用以及按稳定 ID 排序的房间怪物/掉落生成项。怪物候选必须引用怪物定义且至少包含一个等级不高于该层深度的候选；运行时只从符合深度的候选中抽取。掉落项必须引用现有 loot table。原创包 1.40.0 覆盖固定词条、鉴别、怪物携带物、确定性死亡掉落、楼层/任务/地牢生命周期、三层最终守护者和第一类主题 vault。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -189,7 +201,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含两种地形、一个玩家原型、六种原创怪物、五种原创物品和一个 20×20 世界；
+- 已完成：`packs/rfb-demo-original`，包含 35 种地形、一个玩家原型、七种原创怪物、五种原创物品、五个 loot table、一个 vault 和一个带 20×20 地表/程序化层的世界；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -197,4 +209,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22 以 1.17.0 增加 affix 根和实例引用，contract-v23 以 1.18.0 增加实例质量。鉴别知识使 state hash 升至 Schema v12。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22 以 1.17.0 增加 affix 根和实例引用，contract-v23 以 1.18.0 增加实例质量，contract-v24 以 1.19.0 增加 loot table 根和死亡引用，contract-v25 以 1.20.0 增加出生携带引用，contract-v26 以 1.21.0 增加稳定入口层和程序化楼层定义，contract-v27 以 1.22.0 增加深度与房间内容，contract-v28–v35 建立地形交互、多层与探索生命周期，contract-v36–v45 建立任务状态机，contract-v46 以 1.39.0 建立最终层与守护者，contract-v47 以 1.40.0 增加 vault 根、深度 encounter group 与主题 loot。当前 state hash 为 Schema v19。

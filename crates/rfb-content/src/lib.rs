@@ -20,6 +20,8 @@ pub const TERRAIN_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/
 pub const ACTOR_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json";
 pub const ITEM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json";
 pub const AFFIX_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json";
+pub const LOOT_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json";
+pub const VAULT_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
 
 const fn default_actor_speed() -> u16 {
@@ -33,7 +35,15 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 5] = ["actors", "affixes", "items", "terrain", "worlds"];
+const SUPPORTED_ROOTS: [&str; 7] = [
+    "actors",
+    "affixes",
+    "items",
+    "lootTables",
+    "terrain",
+    "vaults",
+    "worlds",
+];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -71,7 +81,38 @@ pub struct TerrainDefinition {
     pub glyph: String,
     pub walkable: bool,
     pub blocks_sight: bool,
+    #[serde(default)]
+    pub open_to_terrain_id: Option<String>,
+    #[serde(default)]
+    pub open_check_difficulty: Option<i32>,
+    #[serde(default)]
+    pub close_to_terrain_id: Option<String>,
+    #[serde(default)]
+    pub bash_to_terrain_id: Option<String>,
+    #[serde(default)]
+    pub bash_check_difficulty: Option<i32>,
+    #[serde(default)]
+    pub dig_to_terrain_id: Option<String>,
+    #[serde(default)]
+    pub dig_check_difficulty: Option<i32>,
+    #[serde(default)]
+    pub concealed_as_terrain_id: Option<String>,
+    #[serde(default)]
+    pub search_check_difficulty: Option<i32>,
+    #[serde(default)]
+    pub trap: Option<TerrainTrapDefinition>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerrainTrapDefinition {
+    pub damage: i32,
+    #[serde(default)]
+    pub damage_type: ActorDamageType,
+    pub disarm_to_terrain_id: String,
+    pub disarm_check_difficulty: i32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -132,6 +173,16 @@ pub struct ActorDefinition {
     pub speed: u16,
     pub attack: i32,
     pub defense: i32,
+    #[serde(default)]
+    pub door_skill: i32,
+    #[serde(default)]
+    pub bash_power: i32,
+    #[serde(default)]
+    pub search_skill: i32,
+    #[serde(default)]
+    pub disarm_skill: i32,
+    #[serde(default)]
+    pub dig_skill: i32,
     pub damage_dice: u16,
     pub damage_sides: u16,
     #[serde(default)]
@@ -140,6 +191,10 @@ pub struct ActorDefinition {
     pub damage_type: ActorDamageType,
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
+    #[serde(default)]
+    pub loot_table_id: Option<String>,
+    #[serde(default)]
+    pub carried_loot_table_id: Option<String>,
     pub tags: Vec<String>,
 }
 
@@ -285,7 +340,7 @@ pub struct ActorSpawn {
     pub position: ContentPosition,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemQuality {
@@ -293,6 +348,93 @@ pub enum ItemQuality {
     Ordinary,
     Fine,
     Exceptional,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LootEntryDefinition {
+    pub item_kind_id: String,
+    pub weight: u32,
+    pub quantity: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LootQualityWeightDefinition {
+    pub quality: ItemQuality,
+    pub weight: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LootAffixWeightDefinition {
+    #[serde(default)]
+    pub affix_id: Option<String>,
+    pub weight: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LootTableDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub rolls: u16,
+    pub entries: Vec<LootEntryDefinition>,
+    pub quality_weights: Vec<LootQualityWeightDefinition>,
+    pub affix_weights: Vec<LootAffixWeightDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VaultDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub theme_id: String,
+    pub width: u16,
+    pub height: u16,
+    pub base_terrain_id: String,
+    pub entrance_position: ContentPosition,
+    pub terrain_overrides: Vec<TerrainOverride>,
+    pub encounter_groups: Vec<VaultEncounterGroupDefinition>,
+    pub loot_spawns: Vec<VaultLootSpawnDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VaultEncounterGroupDefinition {
+    pub id: String,
+    pub member_positions: Vec<ContentPosition>,
+    pub entries: Vec<VaultEncounterEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VaultEncounterEntryDefinition {
+    pub actor_kind_id: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VaultLootSpawnDefinition {
+    pub id: String,
+    pub position: ContentPosition,
+    pub loot_table_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -318,6 +460,7 @@ pub struct WorldDefinition {
     pub format_version: u16,
     pub id: String,
     pub name_key: String,
+    pub initial_floor_id: String,
     pub width: u16,
     pub height: u16,
     pub fill_terrain_id: String,
@@ -326,6 +469,145 @@ pub struct WorldDefinition {
     pub player: ActorSpawn,
     pub actors: Vec<ActorSpawn>,
     pub items: Vec<ItemSpawn>,
+    pub procedural_floors: Vec<ProceduralFloorDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralFloorDefinition {
+    pub id: String,
+    pub name_key: String,
+    pub return_floor_id: String,
+    #[serde(default)]
+    pub lifecycle: FloorLifecycle,
+    #[serde(default)]
+    pub dungeon_id: Option<String>,
+    #[serde(default)]
+    pub final_floor: bool,
+    #[serde(default)]
+    pub guardian: Option<DungeonGuardianDefinition>,
+    #[serde(default)]
+    pub theme_id: Option<String>,
+    #[serde(default)]
+    pub vault_id: Option<String>,
+    #[serde(default)]
+    pub entry_terrain_id: Option<String>,
+    #[serde(default)]
+    pub completed_entry_terrain_id: Option<String>,
+    #[serde(default)]
+    pub failed_entry_terrain_id: Option<String>,
+    #[serde(default)]
+    pub abandoned_entry_terrain_id: Option<String>,
+    #[serde(default = "default_allow_early_task_exit")]
+    pub allow_early_task_exit: bool,
+    #[serde(default)]
+    pub retakeable: bool,
+    #[serde(default)]
+    pub task_id: Option<String>,
+    #[serde(default)]
+    pub task_objective: Option<TaskObjectiveDefinition>,
+    #[serde(default)]
+    pub task_stages: Vec<TaskObjectiveDefinition>,
+    #[serde(default)]
+    pub task_reward: Option<TaskRewardDefinition>,
+    #[serde(default)]
+    pub next_floor_id: Option<String>,
+    pub depth: u16,
+    pub width: u16,
+    pub height: u16,
+    pub wall_terrain_id: String,
+    pub floor_terrain_id: String,
+    pub up_stair_terrain_id: String,
+    #[serde(default)]
+    pub down_stair_terrain_id: Option<String>,
+    pub closed_door_terrain_id: String,
+    pub trap_terrain_id: String,
+    pub actor_spawns: Vec<ProceduralActorSpawnDefinition>,
+    pub loot_spawns: Vec<ProceduralLootSpawnDefinition>,
+}
+
+const fn default_allow_early_task_exit() -> bool {
+    true
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DungeonGuardianDefinition {
+    pub instance_id: String,
+    pub actor_kind_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskObjectiveDefinition {
+    pub kind: TaskObjectiveKind,
+    #[serde(default)]
+    pub floor_id: Option<String>,
+    #[serde(default = "default_task_objective_required")]
+    pub required: u32,
+    #[serde(default)]
+    pub item_instance_id: Option<String>,
+    #[serde(default)]
+    pub item_kind_id: Option<String>,
+    #[serde(default)]
+    pub actor_instance_id: Option<String>,
+    #[serde(default)]
+    pub actor_kind_id: Option<String>,
+    #[serde(default)]
+    pub spawn_count: Option<u32>,
+}
+
+const fn default_task_objective_required() -> u32 {
+    1
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TaskObjectiveKind {
+    CollectItem,
+    EnterFloor,
+    KillActor,
+    KillActorKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskRewardDefinition {
+    pub item_instance_id: String,
+    pub item_kind_id: String,
+    pub quantity: u32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum FloorLifecycle {
+    #[default]
+    Dungeon,
+    OneShot,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralActorSpawnDefinition {
+    pub instance_id: String,
+    pub room_id: String,
+    pub actor_kind_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralLootSpawnDefinition {
+    pub id: String,
+    pub room_id: String,
+    pub loot_table_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -342,6 +624,10 @@ pub struct CompiledContentV1 {
     pub actors: Vec<ActorDefinition>,
     pub affixes: Vec<AffixDefinition>,
     pub items: Vec<ItemDefinition>,
+    #[serde(default)]
+    pub loot_tables: Vec<LootTableDefinition>,
+    #[serde(default)]
+    pub vaults: Vec<VaultDefinition>,
     pub worlds: Vec<WorldDefinition>,
 }
 
@@ -361,6 +647,8 @@ pub struct ContentCatalog {
     actors: BTreeMap<String, ActorDefinition>,
     affixes: BTreeMap<String, AffixDefinition>,
     items: BTreeMap<String, ItemDefinition>,
+    loot_tables: BTreeMap<String, LootTableDefinition>,
+    vaults: BTreeMap<String, VaultDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
 }
 
@@ -374,6 +662,8 @@ pub struct ContentSummary {
     pub actor_count: usize,
     pub affix_count: usize,
     pub item_count: usize,
+    pub loot_table_count: usize,
+    pub vault_count: usize,
     pub world_count: usize,
 }
 
@@ -397,6 +687,8 @@ impl CompiledArtifact {
             actor_count: self.content.actors.len(),
             affix_count: self.content.affixes.len(),
             item_count: self.content.items.len(),
+            loot_table_count: self.content.loot_tables.len(),
+            vault_count: self.content.vaults.len(),
             world_count: self.content.worlds.len(),
         }
     }
@@ -431,6 +723,16 @@ impl ContentCatalog {
                 .collect(),
             items: content
                 .items
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            loot_tables: content
+                .loot_tables
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            vaults: content
+                .vaults
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -479,6 +781,16 @@ impl ContentCatalog {
     #[must_use]
     pub fn affix(&self, id: &str) -> Option<&AffixDefinition> {
         self.affixes.get(id)
+    }
+
+    #[must_use]
+    pub fn loot_table(&self, id: &str) -> Option<&LootTableDefinition> {
+        self.loot_tables.get(id)
+    }
+
+    #[must_use]
+    pub fn vault(&self, id: &str) -> Option<&VaultDefinition> {
+        self.vaults.get(id)
     }
 
     #[must_use]
@@ -532,6 +844,8 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         actors: load_root(root, "actors", &roots, &mut budget)?,
         affixes: load_root(root, "affixes", &roots, &mut budget)?,
         items: load_root(root, "items", &roots, &mut budget)?,
+        loot_tables: load_root(root, "lootTables", &roots, &mut budget)?,
+        vaults: load_root(root, "vaults", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };
     encode_content(content)
@@ -664,11 +978,17 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .affixes
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.items.sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .loot_tables
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content.vaults.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
 
     let mut all_ids = BTreeSet::new();
     let mut terrain_ids = BTreeSet::new();
     let mut terrain_walkability = BTreeMap::new();
+    let mut terrain_open_targets = BTreeMap::new();
+    let mut terrain_traps = BTreeSet::new();
     for terrain in &mut content.terrain {
         require_schema(&terrain.schema, TERRAIN_SCHEMA, &terrain.id)?;
         require_format_version(terrain.format_version, &terrain.id)?;
@@ -679,9 +999,150 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         insert_definition_id(&mut all_ids, &terrain.id)?;
         terrain_ids.insert(terrain.id.clone());
         terrain_walkability.insert(terrain.id.clone(), terrain.walkable);
+        if let Some(target_id) = &terrain.open_to_terrain_id {
+            terrain_open_targets.insert(terrain.id.clone(), target_id.clone());
+        }
+        if terrain.trap.is_some() {
+            terrain_traps.insert(terrain.id.clone());
+        }
+    }
+    for terrain in &content.terrain {
+        if terrain.open_to_terrain_id.is_some() && terrain.close_to_terrain_id.is_some() {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
+        if terrain.open_check_difficulty.is_some() && terrain.open_to_terrain_id.is_none() {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
+        if terrain.bash_to_terrain_id.is_some() != terrain.bash_check_difficulty.is_some() {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
+        if terrain.dig_to_terrain_id.is_some() != terrain.dig_check_difficulty.is_some() {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
+        if terrain.concealed_as_terrain_id.is_some() != terrain.search_check_difficulty.is_some() {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
+        if terrain
+            .open_check_difficulty
+            .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
+            || terrain
+                .bash_check_difficulty
+                .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
+            || terrain
+                .dig_check_difficulty
+                .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
+            || terrain
+                .search_check_difficulty
+                .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
+        {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
+        if let Some(target_id) = &terrain.open_to_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = content
+                .terrain
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated terrain target must remain available");
+            if target_id == &terrain.id
+                || terrain.walkable
+                || !terrain.blocks_sight
+                || !target.walkable
+                || target.blocks_sight
+                || (terrain.open_check_difficulty.is_none()
+                    && target.close_to_terrain_id.as_deref() != Some(terrain.id.as_str()))
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
+        if let Some(target_id) = &terrain.close_to_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = content
+                .terrain
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated terrain target must remain available");
+            if target_id == &terrain.id
+                || !terrain.walkable
+                || terrain.blocks_sight
+                || target.walkable
+                || !target.blocks_sight
+                || target.open_to_terrain_id.as_deref() != Some(terrain.id.as_str())
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
+        if let Some(target_id) = &terrain.bash_to_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = content
+                .terrain
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated terrain target must remain available");
+            if target_id == &terrain.id
+                || terrain.walkable
+                || !terrain.blocks_sight
+                || !target.walkable
+                || target.blocks_sight
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
+        if let Some(target_id) = &terrain.dig_to_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = content
+                .terrain
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated terrain target must remain available");
+            if target_id == &terrain.id
+                || terrain.walkable
+                || !terrain.blocks_sight
+                || !target.walkable
+                || target.blocks_sight
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
+        if let Some(target_id) = &terrain.concealed_as_terrain_id {
+            require_reference(&terrain_ids, target_id, &terrain.id)?;
+            let target = content
+                .terrain
+                .iter()
+                .find(|candidate| candidate.id == *target_id)
+                .expect("validated terrain target must remain available");
+            if target_id == &terrain.id
+                || terrain.walkable != target.walkable
+                || terrain.blocks_sight != target.blocks_sight
+                || target.concealed_as_terrain_id.is_some()
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
+        if let Some(trap) = &terrain.trap {
+            require_reference(&terrain_ids, &trap.disarm_to_terrain_id, &terrain.id)?;
+            let target = content
+                .terrain
+                .iter()
+                .find(|candidate| candidate.id == trap.disarm_to_terrain_id)
+                .expect("validated trap target must remain available");
+            if trap.damage <= 0
+                || !(1..=1_000_000).contains(&trap.disarm_check_difficulty)
+                || trap.disarm_to_terrain_id == terrain.id
+                || !terrain.walkable
+                || terrain.blocks_sight
+                || !target.walkable
+                || target.blocks_sight
+                || terrain.concealed_as_terrain_id.is_none()
+            {
+                return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+            }
+        }
     }
 
     let mut actor_roles = BTreeMap::new();
+    let mut actor_levels = BTreeMap::new();
+    let mut actor_loot_table_ids = Vec::new();
     for actor in &mut content.actors {
         require_schema(&actor.schema, ACTOR_SCHEMA, &actor.id)?;
         require_format_version(actor.format_version, &actor.id)?;
@@ -696,6 +1157,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || actor.attack > 1_000_000
             || actor.defense < 0
             || actor.defense > 1_000_000
+            || actor.door_skill < 0
+            || actor.door_skill > 1_000_000
+            || actor.bash_power < 0
+            || actor.bash_power > 1_000_000
+            || actor.search_skill < 0
+            || actor.search_skill > 1_000_000
             || actor.damage_dice == 0
             || actor.damage_dice > 100
             || actor.damage_sides == 0
@@ -726,9 +1193,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         {
             return Err(ContentError::InvalidMeleeRoutine(actor.id.clone()));
         }
+        if let Some(loot_table_id) = &actor.loot_table_id {
+            if actor.role != ActorRole::Monster || validate_id(loot_table_id).is_err() {
+                return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+            }
+            actor_loot_table_ids.push((actor.id.clone(), loot_table_id.clone()));
+        }
+        if let Some(loot_table_id) = &actor.carried_loot_table_id {
+            if actor.role != ActorRole::Monster || validate_id(loot_table_id).is_err() {
+                return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+            }
+            actor_loot_table_ids.push((format!("{}#carried", actor.id), loot_table_id.clone()));
+        }
         normalize_tags(&actor.id, &mut actor.tags)?;
         insert_definition_id(&mut all_ids, &actor.id)?;
         actor_roles.insert(actor.id.clone(), actor.role);
+        actor_levels.insert(actor.id.clone(), actor.level);
     }
 
     let mut affix_ids = BTreeSet::new();
@@ -869,6 +1349,238 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         }
     }
 
+    let mut loot_table_ids = BTreeSet::new();
+    for table in &mut content.loot_tables {
+        require_schema(&table.schema, LOOT_TABLE_SCHEMA, &table.id)?;
+        require_format_version(table.format_version, &table.id)?;
+        validate_definition_id(&table.id, "loot-table")?;
+        if table.rolls == 0
+            || table.rolls > 16
+            || table.entries.is_empty()
+            || table.entries.len() > 64
+            || table.quality_weights.is_empty()
+            || table.quality_weights.len() > 3
+            || table.affix_weights.is_empty()
+            || table.affix_weights.len() > 64
+        {
+            return Err(ContentError::InvalidLootTable(table.id.clone()));
+        }
+
+        table.entries.sort_by(|left, right| {
+            left.item_kind_id
+                .cmp(&right.item_kind_id)
+                .then(left.quantity.cmp(&right.quantity))
+        });
+        table.quality_weights.sort_by_key(|entry| entry.quality);
+        table
+            .affix_weights
+            .sort_by(|left, right| left.affix_id.as_deref().cmp(&right.affix_id.as_deref()));
+
+        let mut entry_ids = BTreeSet::new();
+        let mut quality_ids = BTreeSet::new();
+        let mut affix_entries = BTreeSet::new();
+        let mut entry_weight = 0_u64;
+        let mut quality_weight = 0_u64;
+        let mut affix_weight = 0_u64;
+        for entry in &table.entries {
+            let Some((max_stack, equippable)) = item_limits.get(&entry.item_kind_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: table.id.clone(),
+                    target: entry.item_kind_id.clone(),
+                });
+            };
+            if entry.weight == 0
+                || entry.quantity == 0
+                || entry.quantity > *max_stack
+                || !entry_ids.insert(entry.item_kind_id.as_str())
+                || ((table
+                    .quality_weights
+                    .iter()
+                    .any(|quality| quality.quality != ItemQuality::Ordinary)
+                    || table
+                        .affix_weights
+                        .iter()
+                        .any(|affix| affix.affix_id.is_some()))
+                    && (*max_stack != 1 || entry.quantity != 1))
+                || (table
+                    .affix_weights
+                    .iter()
+                    .any(|affix| affix.affix_id.is_some())
+                    && !equippable)
+            {
+                return Err(ContentError::InvalidLootTable(table.id.clone()));
+            }
+            entry_weight = entry_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidLootTable(table.id.clone()))?;
+        }
+        for entry in &table.quality_weights {
+            if entry.weight == 0 || !quality_ids.insert(entry.quality) {
+                return Err(ContentError::InvalidLootTable(table.id.clone()));
+            }
+            quality_weight = quality_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidLootTable(table.id.clone()))?;
+        }
+        for entry in &table.affix_weights {
+            if entry.weight == 0 || !affix_entries.insert(entry.affix_id.as_deref()) {
+                return Err(ContentError::InvalidLootTable(table.id.clone()));
+            }
+            if let Some(affix_id) = &entry.affix_id
+                && !affix_ids.contains(affix_id)
+            {
+                return Err(ContentError::DanglingReference {
+                    owner: table.id.clone(),
+                    target: affix_id.clone(),
+                });
+            }
+            affix_weight = affix_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidLootTable(table.id.clone()))?;
+        }
+        if entry_weight == 0 || quality_weight == 0 || affix_weight == 0 {
+            return Err(ContentError::InvalidLootTable(table.id.clone()));
+        }
+        insert_definition_id(&mut all_ids, &table.id)?;
+        loot_table_ids.insert(table.id.clone());
+    }
+
+    for (actor_id, loot_table_id) in actor_loot_table_ids {
+        require_reference(&loot_table_ids, &loot_table_id, &actor_id)?;
+    }
+
+    let mut vaults_by_id = BTreeMap::new();
+    for vault in &mut content.vaults {
+        require_schema(&vault.schema, VAULT_SCHEMA, &vault.id)?;
+        require_format_version(vault.format_version, &vault.id)?;
+        validate_definition_id(&vault.id, "vault")?;
+        validate_message_key(&vault.name_key)?;
+        validate_definition_id(&vault.theme_id, "theme")?;
+        if !(2..=6).contains(&vault.width)
+            || !(2..=5).contains(&vault.height)
+            || vault.entrance_position.x != vault.width / 2
+            || vault.entrance_position.y != 0
+        {
+            return Err(ContentError::InvalidVault(vault.id.clone()));
+        }
+        require_reference(&terrain_ids, &vault.base_terrain_id, &vault.id)?;
+        if terrain_walkability.get(&vault.base_terrain_id) != Some(&true) {
+            return Err(ContentError::InvalidVault(vault.id.clone()));
+        }
+
+        for terrain_override in &mut vault.terrain_overrides {
+            terrain_override.positions.sort();
+        }
+        vault.terrain_overrides.sort_by(|left, right| {
+            left.terrain_id
+                .cmp(&right.terrain_id)
+                .then(left.positions.cmp(&right.positions))
+        });
+        let mut terrain_by_position = BTreeMap::new();
+        let mut terrain_override_ids = BTreeSet::new();
+        for terrain_override in &mut vault.terrain_overrides {
+            require_reference(&terrain_ids, &terrain_override.terrain_id, &vault.id)?;
+            if terrain_override.positions.is_empty()
+                || !terrain_override_ids.insert(terrain_override.terrain_id.clone())
+            {
+                return Err(ContentError::InvalidVault(vault.id.clone()));
+            }
+            for position in &terrain_override.positions {
+                if position.x >= vault.width
+                    || position.y >= vault.height
+                    || terrain_by_position
+                        .insert(*position, terrain_override.terrain_id.clone())
+                        .is_some()
+                {
+                    return Err(ContentError::InvalidVault(vault.id.clone()));
+                }
+            }
+        }
+
+        vault
+            .encounter_groups
+            .sort_by(|left, right| left.id.cmp(&right.id));
+        vault
+            .loot_spawns
+            .sort_by(|left, right| left.id.cmp(&right.id));
+        if vault.encounter_groups.is_empty()
+            || vault.encounter_groups.len() > 16
+            || vault.loot_spawns.is_empty()
+            || vault.loot_spawns.len() > 16
+        {
+            return Err(ContentError::InvalidVault(vault.id.clone()));
+        }
+        let mut section_ids = BTreeSet::new();
+        let mut occupied_positions = BTreeSet::new();
+        for group in &mut vault.encounter_groups {
+            validate_id(&group.id)?;
+            group.member_positions.sort();
+            group.entries.sort_by(|left, right| {
+                left.actor_kind_id
+                    .cmp(&right.actor_kind_id)
+                    .then(left.min_depth.cmp(&right.min_depth))
+                    .then(left.max_depth.cmp(&right.max_depth))
+            });
+            if !section_ids.insert(group.id.clone())
+                || group.member_positions.is_empty()
+                || group.member_positions.len() > 16
+                || group.entries.is_empty()
+                || group.entries.len() > 64
+            {
+                return Err(ContentError::InvalidVault(vault.id.clone()));
+            }
+            let mut entry_ids = BTreeSet::new();
+            for entry in &group.entries {
+                require_actor_role(
+                    &actor_roles,
+                    &entry.actor_kind_id,
+                    ActorRole::Monster,
+                    &vault.id,
+                )?;
+                if entry.weight == 0
+                    || entry.min_depth == 0
+                    || entry.min_depth > entry.max_depth
+                    || entry.max_depth > 1_000
+                    || actor_levels
+                        .get(&entry.actor_kind_id)
+                        .is_none_or(|level| *level > u32::from(entry.max_depth))
+                    || !entry_ids.insert(entry.actor_kind_id.clone())
+                {
+                    return Err(ContentError::InvalidVault(vault.id.clone()));
+                }
+            }
+            for position in &group.member_positions {
+                let terrain_id = terrain_by_position
+                    .get(position)
+                    .unwrap_or(&vault.base_terrain_id);
+                if position.x >= vault.width
+                    || position.y >= vault.height
+                    || terrain_walkability.get(terrain_id) != Some(&true)
+                    || !occupied_positions.insert(*position)
+                {
+                    return Err(ContentError::InvalidVault(vault.id.clone()));
+                }
+            }
+        }
+        for spawn in &vault.loot_spawns {
+            validate_id(&spawn.id)?;
+            require_reference(&loot_table_ids, &spawn.loot_table_id, &vault.id)?;
+            let terrain_id = terrain_by_position
+                .get(&spawn.position)
+                .unwrap_or(&vault.base_terrain_id);
+            if !section_ids.insert(spawn.id.clone())
+                || spawn.position.x >= vault.width
+                || spawn.position.y >= vault.height
+                || terrain_walkability.get(terrain_id) != Some(&true)
+                || !occupied_positions.insert(spawn.position)
+            {
+                return Err(ContentError::InvalidVault(vault.id.clone()));
+            }
+        }
+        insert_definition_id(&mut all_ids, &vault.id)?;
+        vaults_by_id.insert(vault.id.clone(), vault.clone());
+    }
+
     for world in &mut content.worlds {
         require_schema(&world.schema, WORLD_SCHEMA, &world.id)?;
         require_format_version(world.format_version, &world.id)?;
@@ -877,26 +1589,541 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         insert_definition_id(&mut all_ids, &world.id)?;
         validate_world(
             world,
-            &terrain_ids,
-            &terrain_walkability,
-            &actor_roles,
-            &item_limits,
-            &affix_ids,
+            &WorldValidationRefs {
+                terrain_ids: &terrain_ids,
+                terrain_walkability: &terrain_walkability,
+                terrain_open_targets: &terrain_open_targets,
+                terrain_traps: &terrain_traps,
+                actor_roles: &actor_roles,
+                actor_levels: &actor_levels,
+                item_limits: &item_limits,
+                affix_ids: &affix_ids,
+                loot_table_ids: &loot_table_ids,
+                vaults: &vaults_by_id,
+            },
         )?;
+    }
+    Ok(())
+}
+
+struct WorldValidationRefs<'a> {
+    terrain_ids: &'a BTreeSet<String>,
+    terrain_walkability: &'a BTreeMap<String, bool>,
+    terrain_open_targets: &'a BTreeMap<String, String>,
+    terrain_traps: &'a BTreeSet<String>,
+    actor_roles: &'a BTreeMap<String, ActorRole>,
+    actor_levels: &'a BTreeMap<String, u32>,
+    item_limits: &'a BTreeMap<String, (u32, bool)>,
+    affix_ids: &'a BTreeSet<String>,
+    loot_table_ids: &'a BTreeSet<String>,
+    vaults: &'a BTreeMap<String, VaultDefinition>,
+}
+
+fn validate_task_objective(
+    owner_id: &str,
+    objective: &TaskObjectiveDefinition,
+    floor_ids: &BTreeSet<String>,
+    actor_roles: &BTreeMap<String, ActorRole>,
+    item_limits: &BTreeMap<String, (u32, bool)>,
+    instance_ids: &mut BTreeSet<String>,
+) -> Result<(), ContentError> {
+    if objective
+        .floor_id
+        .as_ref()
+        .is_some_and(|floor_id| !floor_ids.contains(floor_id))
+    {
+        return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+    }
+    match objective.kind {
+        TaskObjectiveKind::CollectItem => {
+            let (Some(instance_id), Some(kind_id)) =
+                (&objective.item_instance_id, &objective.item_kind_id)
+            else {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            };
+            validate_id(instance_id)?;
+            if !instance_ids.insert(instance_id.clone()) {
+                return Err(ContentError::DuplicateInstanceId(instance_id.clone()));
+            }
+            if !item_limits.contains_key(kind_id) {
+                return Err(ContentError::DanglingReference {
+                    owner: owner_id.to_owned(),
+                    target: kind_id.clone(),
+                });
+            }
+            if objective.required != 1
+                || objective.spawn_count.is_some()
+                || objective.actor_instance_id.is_some()
+                || objective.actor_kind_id.is_some()
+            {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            }
+        }
+        TaskObjectiveKind::EnterFloor => {
+            if objective.floor_id.is_none()
+                || objective.required != 1
+                || objective.item_instance_id.is_some()
+                || objective.item_kind_id.is_some()
+                || objective.actor_instance_id.is_some()
+                || objective.actor_kind_id.is_some()
+                || objective.spawn_count.is_some()
+            {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            }
+        }
+        TaskObjectiveKind::KillActor => {
+            let (Some(instance_id), Some(kind_id)) =
+                (&objective.actor_instance_id, &objective.actor_kind_id)
+            else {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            };
+            validate_id(instance_id)?;
+            if !instance_ids.insert(instance_id.clone()) {
+                return Err(ContentError::DuplicateInstanceId(instance_id.clone()));
+            }
+            require_actor_role(actor_roles, kind_id, ActorRole::Monster, owner_id)?;
+            if objective.required != 1
+                || objective.spawn_count.is_some()
+                || objective.item_instance_id.is_some()
+                || objective.item_kind_id.is_some()
+            {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            }
+        }
+        TaskObjectiveKind::KillActorKind => {
+            let Some(kind_id) = &objective.actor_kind_id else {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            };
+            if objective.required < 2
+                || objective.actor_instance_id.is_some()
+                || objective.item_instance_id.is_some()
+                || objective.item_kind_id.is_some()
+                || objective
+                    .spawn_count
+                    .is_some_and(|count| count == 0 || count > objective.required)
+            {
+                return Err(ContentError::InvalidProceduralFloor(owner_id.to_owned()));
+            }
+            require_actor_role(actor_roles, kind_id, ActorRole::Monster, owner_id)?;
+        }
     }
     Ok(())
 }
 
 fn validate_world(
     world: &mut WorldDefinition,
-    terrain_ids: &BTreeSet<String>,
-    terrain_walkability: &BTreeMap<String, bool>,
-    actor_roles: &BTreeMap<String, ActorRole>,
-    item_limits: &BTreeMap<String, (u32, bool)>,
-    affix_ids: &BTreeSet<String>,
+    refs: &WorldValidationRefs<'_>,
 ) -> Result<(), ContentError> {
+    let WorldValidationRefs {
+        terrain_ids,
+        terrain_walkability,
+        terrain_open_targets,
+        terrain_traps,
+        actor_roles,
+        actor_levels,
+        item_limits,
+        affix_ids,
+        loot_table_ids,
+        vaults,
+    } = refs;
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
+    }
+    validate_definition_id(&world.initial_floor_id, "floor")?;
+    let mut procedural_actor_ids = BTreeSet::new();
+    world.procedural_floors.sort_by_key(|floor| floor.depth);
+    let floor_ids = world
+        .procedural_floors
+        .iter()
+        .map(|floor| floor.id.clone())
+        .collect::<BTreeSet<_>>();
+    if world.procedural_floors.is_empty()
+        || floor_ids.len() != world.procedural_floors.len()
+        || !world
+            .procedural_floors
+            .iter()
+            .any(|floor| floor.return_floor_id == world.initial_floor_id)
+    {
+        return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
+    }
+    for procedural in &mut world.procedural_floors {
+        validate_definition_id(&procedural.id, "floor")?;
+        validate_message_key(&procedural.name_key)?;
+        if procedural.id == world.initial_floor_id
+            || procedural.width != world.width
+            || procedural.height != world.height
+            || (procedural.return_floor_id != world.initial_floor_id
+                && !floor_ids.contains(&procedural.return_floor_id))
+            || procedural
+                .next_floor_id
+                .as_ref()
+                .is_some_and(|id| !floor_ids.contains(id))
+            || procedural.next_floor_id.is_some() != procedural.down_stair_terrain_id.is_some()
+            || (procedural.lifecycle == FloorLifecycle::OneShot
+                && (procedural.return_floor_id != world.initial_floor_id
+                    || procedural.dungeon_id.is_some()
+                    || procedural.final_floor
+                    || procedural.guardian.is_some()
+                    || procedural.entry_terrain_id.is_none()
+                    || procedural.completed_entry_terrain_id.is_none()
+                    || procedural.failed_entry_terrain_id.is_none()
+                    || procedural.abandoned_entry_terrain_id.is_none()
+                    || procedural.next_floor_id.is_some()))
+            || (procedural.lifecycle == FloorLifecycle::Dungeon
+                && (procedural.dungeon_id.is_none()
+                    || procedural.completed_entry_terrain_id.is_some()
+                    || procedural.failed_entry_terrain_id.is_some()
+                    || procedural.abandoned_entry_terrain_id.is_some()
+                    || !procedural.allow_early_task_exit
+                    || procedural.retakeable
+                    || procedural.task_id.is_some()
+                    || procedural.task_objective.is_some()
+                    || !procedural.task_stages.is_empty()
+                    || procedural.task_reward.is_some()))
+        {
+            return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
+        }
+        if let Some(dungeon_id) = &procedural.dungeon_id {
+            validate_definition_id(dungeon_id, "dungeon")?;
+        }
+        if let Some(task_id) = &procedural.task_id {
+            validate_definition_id(task_id, "task")?;
+        }
+        if let Some(theme_id) = &procedural.theme_id {
+            validate_definition_id(theme_id, "theme")?;
+        }
+        if let Some(vault_id) = &procedural.vault_id {
+            let Some(vault) = vaults.get(vault_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: procedural.id.clone(),
+                    target: vault_id.clone(),
+                });
+            };
+            if procedural.theme_id.as_ref() != Some(&vault.theme_id)
+                || procedural
+                    .actor_spawns
+                    .iter()
+                    .any(|spawn| spawn.room_id == "remote")
+                || procedural
+                    .loot_spawns
+                    .iter()
+                    .any(|spawn| spawn.room_id == "remote")
+                || vault.encounter_groups.iter().any(|group| {
+                    !group.entries.iter().any(|entry| {
+                        entry.min_depth <= procedural.depth
+                            && procedural.depth <= entry.max_depth
+                            && actor_levels
+                                .get(&entry.actor_kind_id)
+                                .is_some_and(|level| *level <= u32::from(procedural.depth))
+                    })
+                })
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        for terrain_id in [
+            Some(&procedural.wall_terrain_id),
+            Some(&procedural.floor_terrain_id),
+            Some(&procedural.up_stair_terrain_id),
+            Some(&procedural.closed_door_terrain_id),
+            Some(&procedural.trap_terrain_id),
+            procedural.down_stair_terrain_id.as_ref(),
+            procedural.entry_terrain_id.as_ref(),
+            procedural.completed_entry_terrain_id.as_ref(),
+            procedural.failed_entry_terrain_id.as_ref(),
+            procedural.abandoned_entry_terrain_id.as_ref(),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            require_reference(terrain_ids, terrain_id, &procedural.id)?;
+        }
+        if let Some(objective) = &procedural.task_objective {
+            if objective.floor_id.is_some() {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            validate_task_objective(
+                &procedural.id,
+                objective,
+                &floor_ids,
+                actor_roles,
+                item_limits,
+                &mut procedural_actor_ids,
+            )?;
+        }
+        for stage in &procedural.task_stages {
+            validate_task_objective(
+                &procedural.id,
+                stage,
+                &floor_ids,
+                actor_roles,
+                item_limits,
+                &mut procedural_actor_ids,
+            )?;
+        }
+        if let Some(guardian) = &procedural.guardian {
+            validate_id(&guardian.instance_id)?;
+            if !procedural_actor_ids.insert(guardian.instance_id.clone()) {
+                return Err(ContentError::DuplicateInstanceId(
+                    guardian.instance_id.clone(),
+                ));
+            }
+            require_actor_role(
+                actor_roles,
+                &guardian.actor_kind_id,
+                ActorRole::Monster,
+                &procedural.id,
+            )?;
+            if actor_levels
+                .get(&guardian.actor_kind_id)
+                .is_none_or(|level| *level > u32::from(procedural.depth))
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        if let Some(reward) = &procedural.task_reward {
+            validate_id(&reward.item_instance_id)?;
+            if !procedural_actor_ids.insert(reward.item_instance_id.clone()) {
+                return Err(ContentError::DuplicateInstanceId(
+                    reward.item_instance_id.clone(),
+                ));
+            }
+            let (max_stack, _) = item_limits.get(&reward.item_kind_id).ok_or_else(|| {
+                ContentError::DanglingReference {
+                    owner: procedural.id.clone(),
+                    target: reward.item_kind_id.clone(),
+                }
+            })?;
+            if reward.quantity == 0 || reward.quantity > *max_stack {
+                return Err(ContentError::InvalidItemQuantity(
+                    reward.item_instance_id.clone(),
+                ));
+            }
+        }
+        if terrain_walkability
+            .get(&procedural.wall_terrain_id)
+            .copied()
+            .unwrap_or(true)
+            || !terrain_walkability
+                .get(&procedural.floor_terrain_id)
+                .copied()
+                .unwrap_or(false)
+            || !terrain_walkability
+                .get(&procedural.up_stair_terrain_id)
+                .copied()
+                .unwrap_or(false)
+            || procedural
+                .down_stair_terrain_id
+                .as_ref()
+                .is_some_and(|id| !terrain_walkability.get(id).copied().unwrap_or(false))
+            || terrain_walkability
+                .get(&procedural.closed_door_terrain_id)
+                .copied()
+                .unwrap_or(true)
+            || !terrain_open_targets.contains_key(&procedural.closed_door_terrain_id)
+            || !terrain_traps.contains(&procedural.trap_terrain_id)
+            || procedural.depth == 0
+            || procedural.depth > 1_000
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        procedural
+            .actor_spawns
+            .sort_by(|left, right| left.instance_id.cmp(&right.instance_id));
+        let mut room_spawn_counts = BTreeMap::new();
+        for spawn in &mut procedural.actor_spawns {
+            validate_id(&spawn.instance_id)?;
+            if !procedural_actor_ids.insert(spawn.instance_id.clone())
+                || !matches!(spawn.room_id.as_str(), "entry" | "remote")
+                || spawn.actor_kind_ids.is_empty()
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            *room_spawn_counts.entry(spawn.room_id.clone()).or_insert(0) += 1;
+            spawn.actor_kind_ids.sort();
+            for actor_kind_id in &spawn.actor_kind_ids {
+                require_actor_role(
+                    actor_roles,
+                    actor_kind_id,
+                    ActorRole::Monster,
+                    &procedural.id,
+                )?;
+            }
+            if !spawn.actor_kind_ids.iter().any(|actor_kind_id| {
+                actor_levels
+                    .get(actor_kind_id)
+                    .is_some_and(|level| *level <= u32::from(procedural.depth))
+            }) {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        procedural
+            .loot_spawns
+            .sort_by(|left, right| left.id.cmp(&right.id));
+        let mut loot_ids = BTreeSet::new();
+        for spawn in &procedural.loot_spawns {
+            validate_id(&spawn.id)?;
+            if !loot_ids.insert(spawn.id.clone()) {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            *room_spawn_counts.entry(spawn.room_id.clone()).or_insert(0) += 1;
+            require_reference(loot_table_ids, &spawn.loot_table_id, &procedural.id)?;
+        }
+    }
+    for procedural in world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot)
+    {
+        let task_id = procedural.task_id.as_deref().unwrap_or(&procedural.id);
+        let members = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| {
+                floor.lifecycle == FloorLifecycle::OneShot
+                    && floor.task_id.as_deref().unwrap_or(&floor.id) == task_id
+            })
+            .collect::<Vec<_>>();
+        if members
+            .iter()
+            .filter(|floor| floor.task_reward.is_some())
+            .count()
+            != 1
+            || members
+                .iter()
+                .any(|floor| floor.retakeable != procedural.retakeable)
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        let staged_definitions = members
+            .iter()
+            .filter(|floor| !floor.task_stages.is_empty())
+            .collect::<Vec<_>>();
+        if staged_definitions.is_empty() {
+            let Some(objective) = procedural.task_objective.as_ref() else {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            };
+            if members.iter().any(|floor| {
+                let Some(other) = floor.task_objective.as_ref() else {
+                    return true;
+                };
+                other.kind != objective.kind
+                    || other.required != objective.required
+                    || other.item_kind_id != objective.item_kind_id
+                    || other.actor_kind_id != objective.actor_kind_id
+            }) {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        } else {
+            if staged_definitions.len() != 1
+                || !procedural.retakeable
+                || members.iter().any(|floor| floor.task_objective.is_some())
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            let stages = &staged_definitions[0].task_stages;
+            let member_ids = members
+                .iter()
+                .map(|floor| floor.id.as_str())
+                .collect::<BTreeSet<_>>();
+            let mut actionable_floor_ids = BTreeSet::new();
+            if stages.len() < 2
+                || stages.iter().any(|stage| {
+                    stage
+                        .floor_id
+                        .as_deref()
+                        .is_none_or(|floor_id| !member_ids.contains(floor_id))
+                        || (stage.kind != TaskObjectiveKind::EnterFloor
+                            && !actionable_floor_ids.insert(
+                                stage
+                                    .floor_id
+                                    .as_deref()
+                                    .expect("staged objective floor must be validated"),
+                            ))
+                })
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+    }
+    for procedural in &world.procedural_floors {
+        if procedural.return_floor_id == world.initial_floor_id
+            && procedural.entry_terrain_id.is_none()
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        if let Some(next_id) = &procedural.next_floor_id {
+            let next = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == *next_id)
+                .expect("validated next floor must remain available");
+            if next.return_floor_id != procedural.id
+                || next.depth != procedural.depth.saturating_add(1)
+                || next.lifecycle != procedural.lifecycle
+                || next.dungeon_id != procedural.dungeon_id
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+    }
+    let dungeon_ids = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
+        .filter_map(|floor| floor.dungeon_id.as_deref())
+        .collect::<BTreeSet<_>>();
+    for dungeon_id in dungeon_ids {
+        let members = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
+            .collect::<Vec<_>>();
+        let roots = members
+            .iter()
+            .filter(|floor| floor.return_floor_id == world.initial_floor_id)
+            .copied()
+            .collect::<Vec<_>>();
+        let finals = members
+            .iter()
+            .filter(|floor| floor.final_floor)
+            .copied()
+            .collect::<Vec<_>>();
+        if roots.len() != 1 || finals.len() != 1 || roots[0].depth != 1 {
+            return Err(ContentError::InvalidProceduralFloor(members[0].id.clone()));
+        }
+        let mut seen = BTreeSet::new();
+        let mut current = roots[0];
+        loop {
+            if !seen.insert(current.id.as_str())
+                || current.final_floor != current.guardian.is_some()
+                || (current.final_floor && current.next_floor_id.is_some())
+                || (!current.final_floor && current.next_floor_id.is_none())
+            {
+                return Err(ContentError::InvalidProceduralFloor(current.id.clone()));
+            }
+            let Some(next_id) = current.next_floor_id.as_deref() else {
+                break;
+            };
+            current = members
+                .iter()
+                .find(|floor| floor.id == next_id)
+                .copied()
+                .ok_or_else(|| ContentError::InvalidProceduralFloor(current.id.clone()))?;
+        }
+        if seen.len() != members.len() || current.id != finals[0].id {
+            return Err(ContentError::InvalidProceduralFloor(current.id.clone()));
+        }
+    }
+    let mut entry_terrain_ids = BTreeSet::new();
+    for floor in world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.return_floor_id == world.initial_floor_id)
+    {
+        if !entry_terrain_ids.insert(floor.entry_terrain_id.as_deref()) {
+            return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+        }
     }
     require_reference(terrain_ids, &world.fill_terrain_id, &world.id)?;
     require_reference(terrain_ids, &world.border_terrain_id, &world.id)?;
@@ -926,6 +2153,11 @@ fn validate_world(
         validate_position(actor.position, world.width, world.height, &world.id)?;
         if !actor_positions.insert(actor.position) {
             return Err(ContentError::DuplicateActorPosition(world.id.clone()));
+        }
+    }
+    for actor_id in procedural_actor_ids {
+        if !instance_ids.insert(actor_id.clone()) {
+            return Err(ContentError::DuplicateInstanceId(actor_id));
         }
     }
 
@@ -1373,6 +2605,16 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             schema_for!(AffixDefinition),
         )?,
         schema_document(
+            "loot-table.schema.json",
+            LOOT_TABLE_SCHEMA,
+            schema_for!(LootTableDefinition),
+        )?,
+        schema_document(
+            "vault.schema.json",
+            VAULT_SCHEMA,
+            schema_for!(VaultDefinition),
+        )?,
+        schema_document(
             "world.schema.json",
             WORLD_SCHEMA,
             schema_for!(WorldDefinition),
@@ -1449,6 +2691,8 @@ pub enum ContentError {
     InvalidDefinitionText(String),
     #[error("definition glyph must contain one non-control Unicode scalar: {0}")]
     InvalidGlyph(String),
+    #[error("terrain open/close transition is invalid: {0}")]
+    InvalidTerrainTransition(String),
     #[error("invalid tag {tag} in {id}")]
     InvalidTag { id: String, tag: String },
     #[error("duplicate tag in {0}")]
@@ -1461,6 +2705,8 @@ pub enum ContentError {
     InvalidActorCarryCapacity(String),
     #[error("actor melee routine is invalid or requires the monster role: {0}")]
     InvalidMeleeRoutine(String),
+    #[error("actor loot table reference is invalid or requires the monster role: {0}")]
+    InvalidActorLootTable(String),
     #[error("item stack limit is outside supported limits: {0}")]
     InvalidItemStack(String),
     #[error("item weight is outside supported limits: {0}")]
@@ -1483,8 +2729,14 @@ pub enum ContentError {
     InvalidItemUseAction(String),
     #[error("affix stat modifiers are invalid: {0}")]
     InvalidAffixModifiers(String),
+    #[error("loot table weights, entries, or generated item constraints are invalid: {0}")]
+    InvalidLootTable(String),
+    #[error("vault terrain, encounters, or loot definition is invalid: {0}")]
+    InvalidVault(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
+    #[error("procedural floor definition is invalid: {0}")]
+    InvalidProceduralFloor(String),
     #[error("content reference from {owner} to {target} is unresolved")]
     DanglingReference { owner: String, target: String },
     #[error("actor has the wrong role for this spawn: {0}")]
@@ -1551,10 +2803,12 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 2);
-        assert_eq!(first.content.actors.len(), 7);
+        assert_eq!(first.content.terrain.len(), 35);
+        assert_eq!(first.content.actors.len(), 8);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
+        assert_eq!(first.content.loot_tables.len(), 5);
+        assert_eq!(first.content.vaults.len(), 1);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -1565,7 +2819,79 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.18.0");
+        assert_eq!(catalog.pack_version(), "1.40.0");
+        assert_eq!(
+            catalog
+                .actor("demo.actor.ember-mote")
+                .and_then(|actor| actor.loot_table_id.as_deref()),
+            Some("demo.loot-table.ember-mote")
+        );
+        assert_eq!(
+            catalog
+                .actor("demo.actor.ember-mote")
+                .and_then(|actor| actor.carried_loot_table_id.as_deref()),
+            Some("demo.loot-table.ember-mote-carried")
+        );
+        assert_eq!(
+            catalog
+                .loot_table("demo.loot-table.ember-mote")
+                .map(|table| (table.rolls, table.entries.len())),
+            Some((1, 2))
+        );
+        let world = catalog
+            .world("demo.world.original-v1")
+            .expect("demo world should remain available");
+        assert_eq!(world.initial_floor_id, "demo.floor.surface");
+        assert_eq!(world.procedural_floors.len(), 9);
+        assert_eq!(world.procedural_floors[0].id, "demo.floor.echo-depth-1");
+        assert_eq!(world.procedural_floors[0].depth, 1);
+        assert_eq!(
+            world.procedural_floors[0].closed_door_terrain_id,
+            "demo.terrain.door-secret"
+        );
+        assert_eq!(world.procedural_floors[0].actor_spawns.len(), 1);
+        assert_eq!(world.procedural_floors[0].loot_spawns.len(), 1);
+        assert_eq!(
+            catalog
+                .vault("demo.vault.harmonic-sepulcher")
+                .map(|vault| (vault.theme_id.as_str(), vault.encounter_groups.len())),
+            Some(("demo.theme.echo-depths", 1))
+        );
+        assert_eq!(
+            catalog
+                .terrain("demo.terrain.door-closed")
+                .and_then(|terrain| terrain.open_to_terrain_id.as_deref()),
+            Some("demo.terrain.door-open")
+        );
+        assert_eq!(
+            catalog.terrain("demo.terrain.door-locked").map(|terrain| (
+                terrain.open_check_difficulty,
+                terrain.bash_to_terrain_id.as_deref(),
+                terrain.bash_check_difficulty,
+            )),
+            Some((Some(24), Some("demo.terrain.door-broken"), Some(18)))
+        );
+        assert_eq!(
+            catalog.terrain("demo.terrain.door-secret").map(|terrain| (
+                terrain.concealed_as_terrain_id.as_deref(),
+                terrain.search_check_difficulty,
+            )),
+            Some((Some("demo.terrain.wall"), Some(8)))
+        );
+        assert_eq!(
+            catalog
+                .terrain("demo.terrain.door-open")
+                .and_then(|terrain| terrain.close_to_terrain_id.as_deref()),
+            Some("demo.terrain.door-closed")
+        );
+        assert_eq!(
+            catalog.actor("demo.actor.explorer").map(|actor| (
+                actor.door_skill,
+                actor.bash_power,
+                actor.search_skill
+            )),
+            Some((24, 30, 24))
+        );
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-hound")
@@ -1707,6 +3033,310 @@ mod tests {
         assert!(matches!(
             decode_content(&corrupted),
             Err(ContentError::ChecksumMismatch)
+        ));
+    }
+
+    #[test]
+    fn loot_tables_require_valid_weights_references_and_instance_shapes() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut zero_weight = artifact.content.clone();
+        zero_weight
+            .loot_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.loot-table.ember-mote")
+            .expect("fixture should contain the death loot table")
+            .entries[0]
+            .weight = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut zero_weight),
+            Err(ContentError::InvalidLootTable(_))
+        ));
+
+        let mut dangling_affix = artifact.content.clone();
+        dangling_affix
+            .loot_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.loot-table.ember-mote")
+            .expect("fixture should contain the death loot table")
+            .affix_weights[1]
+            .affix_id = Some("demo.affix.missing".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut dangling_affix),
+            Err(ContentError::DanglingReference { .. })
+        ));
+
+        let mut stackable_quality = artifact.content.clone();
+        stackable_quality
+            .loot_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.loot-table.ember-mote")
+            .expect("fixture should contain the death loot table")
+            .entries[0]
+            .item_kind_id = "demo.item.luminous-shard".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut stackable_quality),
+            Err(ContentError::InvalidLootTable(_))
+        ));
+
+        let mut player_drop = artifact.content.clone();
+        let player = player_drop
+            .actors
+            .iter_mut()
+            .find(|actor| actor.role == ActorRole::Player)
+            .expect("fixture should contain the player");
+        player.loot_table_id = Some("demo.loot-table.ember-mote".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut player_drop),
+            Err(ContentError::InvalidActorLootTable(_))
+        ));
+
+        let mut player_carry = artifact.content.clone();
+        let player = player_carry
+            .actors
+            .iter_mut()
+            .find(|actor| actor.role == ActorRole::Player)
+            .expect("fixture should contain the player");
+        player.carried_loot_table_id = Some("demo.loot-table.ember-mote-carried".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut player_carry),
+            Err(ContentError::InvalidActorLootTable(_))
+        ));
+    }
+
+    #[test]
+    fn procedural_floor_spawns_require_valid_depth_rooms_and_references() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut zero_depth = artifact.content.clone();
+        zero_depth.worlds[0].procedural_floors[0].depth = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut zero_depth),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut player_candidate = artifact.content.clone();
+        player_candidate.worlds[0].procedural_floors[0].actor_spawns[0].actor_kind_ids =
+            vec!["demo.actor.explorer".to_owned()];
+        assert!(matches!(
+            validate_and_normalize(&mut player_candidate),
+            Err(ContentError::WrongActorRole(_))
+        ));
+
+        let mut dangling_loot = artifact.content.clone();
+        dangling_loot.worlds[0].procedural_floors[0].loot_spawns[0].loot_table_id =
+            "demo.loot-table.missing".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut dangling_loot),
+            Err(ContentError::DanglingReference { .. })
+        ));
+
+        let mut duplicate_actor = artifact.content.clone();
+        duplicate_actor.worlds[0].procedural_floors[0].actor_spawns[0].instance_id =
+            "demo.monster.ember-mote.1".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_actor),
+            Err(ContentError::DuplicateInstanceId(_))
+        ));
+    }
+
+    #[test]
+    fn vaults_require_walkable_unique_positions_and_depth_eligible_encounters() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut blocked_member = artifact.content.clone();
+        blocked_member.vaults[0].encounter_groups[0].member_positions[0] =
+            ContentPosition { x: 0, y: 0 };
+        assert!(matches!(
+            validate_and_normalize(&mut blocked_member),
+            Err(ContentError::InvalidVault(_))
+        ));
+
+        let mut theme_mismatch = artifact.content.clone();
+        theme_mismatch.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-2")
+            .expect("fixture should contain the vault floor")
+            .theme_id = Some("demo.theme.other".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut theme_mismatch),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut no_depth_candidate = artifact.content.clone();
+        for entry in &mut no_depth_candidate.vaults[0].encounter_groups[0].entries {
+            entry.min_depth = 1;
+            entry.max_depth = 1;
+        }
+        assert!(matches!(
+            validate_and_normalize(&mut no_depth_candidate),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+    }
+
+    #[test]
+    fn staged_tasks_require_ordered_member_floor_objectives() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut outside_member = artifact.content.clone();
+        outside_member.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-chain-rift")
+            .expect("fixture should contain the staged task")
+            .task_stages[1]
+            .floor_id = Some("demo.floor.echo-bounty-rift".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut outside_member),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut duplicate_action_floor = artifact.content.clone();
+        duplicate_action_floor.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-chain-rift")
+            .expect("fixture should contain the staged task")
+            .task_stages[2]
+            .floor_id = Some("demo.floor.echo-chain-rift".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_action_floor),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut non_retakeable = artifact.content.clone();
+        for floor in non_retakeable.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .filter(|floor| floor.task_id.as_deref() == Some("demo.task.echo-chain"))
+        {
+            floor.retakeable = false;
+        }
+        assert!(matches!(
+            validate_and_normalize(&mut non_retakeable),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+    }
+
+    #[test]
+    fn dungeon_chains_require_one_guarded_final_floor() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut missing_guardian = artifact.content.clone();
+        missing_guardian.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-3")
+            .expect("fixture should contain the final floor")
+            .guardian = None;
+        assert!(matches!(
+            validate_and_normalize(&mut missing_guardian),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut broken_chain = artifact.content.clone();
+        broken_chain.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-3")
+            .expect("fixture should contain the final floor")
+            .dungeon_id = Some("demo.dungeon.other".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut broken_chain),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut final_with_descent = artifact.content.clone();
+        let final_floor = final_with_descent.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-3")
+            .expect("fixture should contain the final floor");
+        final_floor.next_floor_id = Some("demo.floor.echo-depth-1".to_owned());
+        final_floor.down_stair_terrain_id = Some("demo.terrain.stairs-down".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut final_with_descent),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+    }
+
+    #[test]
+    fn door_terrain_transitions_are_reciprocal_and_match_collision() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut missing_reciprocal = artifact.content.clone();
+        missing_reciprocal
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.door-closed")
+            .expect("fixture should contain the closed door")
+            .open_to_terrain_id = None;
+        assert!(matches!(
+            validate_and_normalize(&mut missing_reciprocal),
+            Err(ContentError::InvalidTerrainTransition(_))
+        ));
+
+        let mut blocked_open_door = artifact.content.clone();
+        blocked_open_door
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.door-open")
+            .expect("fixture should contain the open door")
+            .walkable = false;
+        assert!(matches!(
+            validate_and_normalize(&mut blocked_open_door),
+            Err(ContentError::InvalidTerrainTransition(_))
+        ));
+
+        let mut incomplete_bash = artifact.content.clone();
+        incomplete_bash
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.door-locked")
+            .expect("fixture should contain the locked door")
+            .bash_check_difficulty = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_bash),
+            Err(ContentError::InvalidTerrainTransition(_))
+        ));
+
+        let mut invalid_lock = artifact.content.clone();
+        invalid_lock
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.door-locked")
+            .expect("fixture should contain the locked door")
+            .open_check_difficulty = Some(0);
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_lock),
+            Err(ContentError::InvalidTerrainTransition(_))
+        ));
+
+        let mut incomplete_concealment = artifact.content.clone();
+        incomplete_concealment
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.door-secret")
+            .expect("fixture should contain the secret door")
+            .search_check_difficulty = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_concealment),
+            Err(ContentError::InvalidTerrainTransition(_))
+        ));
+
+        let mut non_door_generator = artifact.content.clone();
+        non_door_generator.worlds[0].procedural_floors[0].closed_door_terrain_id =
+            "demo.terrain.wall".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut non_door_generator),
+            Err(ContentError::InvalidProceduralFloor(_))
         ));
     }
 

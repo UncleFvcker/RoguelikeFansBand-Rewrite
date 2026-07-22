@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.task-rift-closed",
+  "nameKey": "terrain-demo-task-rift-closed-name",
+  "descriptionKey": "terrain-demo-task-rift-closed-description",
+  "glyph": ".",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["task-entry-closed"]
+}

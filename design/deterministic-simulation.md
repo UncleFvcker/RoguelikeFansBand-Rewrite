@@ -2,9 +2,15 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v12：哈希输入覆盖运行时内容包 ID/hash、world ID、战斗状态、带质量和稳定 affix 引用的物品实例、按稳定 ID 排序的种类知识与实例鉴别知识、RNG、世界脉冲和命令序号。contract-v23 因新增质量真值与鉴别级别而显式升级 Schema。
+当前 state hash Schema 为 v19：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、按 ID 排序的离层 `FloorState`、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、完整任务状态机、持久地牢守护者状态、RNG、世界脉冲和命令序号。contract-v46 因新增权威 `DungeonState` 而显式升级 Schema。
 
-state hash 与正式存档 DTO 已解耦。Schema v12 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
+
+contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、地面掉落位置和 loot roll 顺序；生成结果已经由 Schema v14 的当前/离层 actor、item、分配器和 RNG 字段覆盖，因此本切片不升级 state hash Schema。
+
+contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。
+
+state hash 与正式存档 DTO 已解耦。Schema v19 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识、任务状态机、当前阶段和守护者击败状态属于权威规则状态并参与 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 
@@ -68,7 +74,7 @@ interface ReplayV1 {
   contentHash: string;
   initialSaveHash: string;
   rngAlgorithm: string;
-  stateHashSchemaVersion: 9;
+  stateHashSchemaVersion: 19;
   commands: ReplayCommand[];
   checkpoints: ReplayCheckpoint[];
 }

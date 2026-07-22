@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 9;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 19;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -555,7 +555,7 @@ mod tests {
                 .snapshot()
                 .items
                 .iter()
-                .any(|item| item.id == "generated.item.1" && item.quantity == 1)
+                .any(|item| item.id == "generated.item.2" && item.quantity == 1)
         );
         let verification = verify(&replay, initial).expect("throw replay should verify");
         assert_eq!(verification.commands_verified, 3);
@@ -600,6 +600,113 @@ mod tests {
 
         let verification = verify(&replay, initial).expect("target selection replay should verify");
         assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn floor_transition_round_trips_through_replay() {
+        let mut payload = Game::new(27).to_save();
+        payload.player.position = rfb_protocol::Position { x: 3, y: 4 };
+        let initial = Game::from_save(payload).expect("stairs fixture should load");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::TraverseStairs)
+            .expect("stairs command should execute");
+        let (final_game, replay) = recorder.finish();
+
+        assert_eq!(final_game.snapshot().floor_id, "demo.floor.echo-depth-1");
+        let verification = verify(&replay, initial).expect("floor replay should verify");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn door_interaction_round_trips_through_replay() {
+        let mut payload = Game::new(27).to_save();
+        payload.player.position = rfb_protocol::Position { x: 3, y: 4 };
+        let initial = Game::from_save(payload).expect("door fixture should load");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        for command in [
+            GameCommand::TraverseStairs,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Search,
+            GameCommand::Search,
+            GameCommand::OpenDoor {
+                direction: Direction::East,
+            },
+            GameCommand::OpenDoor {
+                direction: Direction::East,
+            },
+        ] {
+            recorder
+                .dispatch(command)
+                .expect("door replay command should execute");
+        }
+        let (final_game, replay) = recorder.finish();
+
+        let snapshot = final_game.snapshot();
+        assert!(snapshot.cells.iter().any(|cell| {
+            cell.position == rfb_protocol::Position { x: 10, y: 4 }
+                && cell.terrain_id == "demo.terrain.door-open"
+        }));
+        let verification = verify(&replay, initial).expect("door replay should verify");
+        assert_eq!(verification.commands_verified, 9);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn door_bash_round_trips_through_replay() {
+        let mut payload = Game::new(27).to_save();
+        payload.player.position = rfb_protocol::Position { x: 3, y: 4 };
+        let initial = Game::from_save(payload).expect("door fixture should load");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        for command in [
+            GameCommand::TraverseStairs,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+            GameCommand::Search,
+            GameCommand::Search,
+            GameCommand::BashDoor {
+                direction: Direction::East,
+            },
+            GameCommand::BashDoor {
+                direction: Direction::East,
+            },
+        ] {
+            recorder
+                .dispatch(command)
+                .expect("door bash replay command should execute");
+        }
+        let (final_game, replay) = recorder.finish();
+
+        let snapshot = final_game.snapshot();
+        assert!(snapshot.cells.iter().any(|cell| {
+            cell.position == rfb_protocol::Position { x: 10, y: 4 }
+                && cell.terrain_id == "demo.terrain.door-broken"
+        }));
+        let verification = verify(&replay, initial).expect("door bash replay should verify");
+        assert_eq!(verification.commands_verified, 9);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 
@@ -668,13 +775,13 @@ mod tests {
             snapshot
                 .items
                 .iter()
-                .any(|item| item.id == "generated.item.1")
+                .any(|item| item.id == "generated.item.2")
         );
         assert!(
             snapshot
                 .items
                 .iter()
-                .any(|item| item.id == "generated.item.2")
+                .any(|item| item.id == "generated.item.3")
         );
         assert_eq!(snapshot.inventory[0].quantity, 2);
         let verification = verify(&replay, initial).expect("partial drop replay should verify");
@@ -782,6 +889,7 @@ mod tests {
     fn quiet_game(seed: u64) -> Game {
         let mut payload = Game::new(seed).to_save();
         payload.entities.clear();
+        payload.carried_items.clear();
         Game::from_save(payload).expect("monster-free replay fixture should restore")
     }
 

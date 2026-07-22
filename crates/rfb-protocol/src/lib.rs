@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.23";
+pub const PROTOCOL_VERSION: &str = "1.47";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -61,8 +61,21 @@ impl Direction {
     rename_all_fields = "camelCase"
 )]
 pub enum GameCommand {
+    AbandonTask,
     Appraise {
         item_id: String,
+    },
+    BashDoor {
+        direction: Direction,
+    },
+    CloseDoor {
+        direction: Direction,
+    },
+    DisarmTrap {
+        direction: Direction,
+    },
+    DigTerrain {
+        direction: Direction,
     },
     Drop {
         item_ids: Vec<String>,
@@ -83,11 +96,16 @@ pub enum GameCommand {
     Move {
         direction: Direction,
     },
+    OpenDoor {
+        direction: Direction,
+    },
     PickUp,
+    Search,
     Throw {
         item_id: String,
         direction: Direction,
     },
+    TraverseStairs,
     UseItem {
         item_id: String,
     },
@@ -241,6 +259,78 @@ pub struct GameCommandEnvelope {
 pub struct Position {
     pub x: i32,
     pub y: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum TerrainInteractionKindDto {
+    OpenDoor,
+    CloseDoor,
+    BashDoor,
+    DisarmTrap,
+    DigTerrain,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum TerrainInteractionUnavailableReasonDto {
+    OccupiedByActor,
+    OccupiedByItem,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TerrainInteractionDto {
+    pub kind: TerrainInteractionKindDto,
+    pub direction: Direction,
+    pub position: Position,
+    pub terrain_id: String,
+    pub requires_check: bool,
+    pub available: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unavailable_reason: Option<TerrainInteractionUnavailableReasonDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum TaskStatusKindDto {
+    Abandoned,
+    Available,
+    Active,
+    Completed,
+    Failed,
+    Paused,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TaskStatusDto {
+    #[serde(default)]
+    pub task_id: String,
+    pub floor_id: String,
+    pub name_key: String,
+    pub status: TaskStatusKindDto,
+    #[serde(default)]
+    pub current: u32,
+    #[serde(default = "default_task_required")]
+    pub required: u32,
+    #[serde(default = "default_task_stage")]
+    pub stage: u32,
+    #[serde(default = "default_task_stage")]
+    pub stages: u32,
+}
+
+const fn default_task_required() -> u32 {
+    1
+}
+
+const fn default_task_stage() -> u32 {
+    1
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -594,6 +684,11 @@ pub struct GameSnapshot {
     pub content_hash: String,
     pub content_visuals: Vec<ContentVisualDto>,
     pub world_id: String,
+    pub floor_id: String,
+    #[serde(default)]
+    pub terrain_interactions: Vec<TerrainInteractionDto>,
+    #[serde(default)]
+    pub tasks: Vec<TaskStatusDto>,
     pub state_hash: String,
 }
 
@@ -607,6 +702,7 @@ pub struct GameUpdate {
     #[serde(default)]
     pub world_tick: u32,
     pub command_seq: u32,
+    pub floor_id: String,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
     #[serde(default)]
@@ -618,6 +714,10 @@ pub struct GameUpdate {
     #[serde(default)]
     pub equipment: Vec<EquipmentItemDto>,
     pub removed_entities: Vec<String>,
+    #[serde(default)]
+    pub terrain_interactions: Vec<TerrainInteractionDto>,
+    #[serde(default)]
+    pub tasks: Vec<TaskStatusDto>,
     pub state_hash: String,
 }
 
@@ -663,6 +763,11 @@ pub fn generated_typescript() -> String {
     push_declaration!(ThrowProfileDto);
     push_declaration!(ProjectileTraceDto);
     push_declaration!(Position);
+    push_declaration!(TerrainInteractionKindDto);
+    push_declaration!(TerrainInteractionUnavailableReasonDto);
+    push_declaration!(TerrainInteractionDto);
+    push_declaration!(TaskStatusKindDto);
+    push_declaration!(TaskStatusDto);
     push_declaration!(CellDto);
     push_declaration!(VisibilityState);
     push_declaration!(CellLightDto);
@@ -809,6 +914,36 @@ pub struct EquipmentItemSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CarriedItemSaveDto {
+    pub id: String,
+    pub kind_id: String,
+    pub quantity: u32,
+    pub actor_id: String,
+    #[serde(default)]
+    pub quality: ItemQualityDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FloorSaveDto {
+    pub id: String,
+    pub player_position: Position,
+    pub terrain: TerrainSaveDto,
+    pub entities: Vec<ActorSaveDto>,
+    #[serde(default)]
+    pub items: Vec<ItemSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub carried_items: Vec<CarriedItemSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub explored: Vec<bool>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub revealed_terrain: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ItemKnowledgeSaveDto {
     pub kind_id: String,
     #[serde(default)]
@@ -831,6 +966,35 @@ pub struct ItemPropertyKnowledgeSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct TaskProgressSaveDto {
+    #[serde(alias = "floorId")]
+    pub task_id: String,
+    pub current: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskStateSaveDto {
+    pub task_id: String,
+    pub status: TaskStatusKindDto,
+    #[serde(default)]
+    pub stage_index: u32,
+    pub current: u32,
+    pub required: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_floor_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DungeonStateSaveDto {
+    pub dungeon_id: String,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub guardian_defeated: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
     pub schema_version: u16,
     pub revision: u32,
@@ -848,18 +1012,32 @@ pub struct SavePayloadV1 {
     #[serde(default)]
     pub equipment: Vec<EquipmentItemSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub carried_items: Vec<CarriedItemSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub task_progress: Vec<TaskProgressSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub task_states: Vec<TaskStateSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dungeon_states: Vec<DungeonStateSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub explored: Vec<bool>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub revealed_terrain: Vec<Position>,
     pub rng: RngSaveDto,
     pub content_id: String,
     pub content_hash: String,
     #[serde(default)]
     pub world_id: String,
+    #[serde(default)]
+    pub current_floor_id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stored_floors: Vec<FloorSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -950,6 +1128,15 @@ mod tests {
             GameCommand::Appraise {
                 item_id: "demo.item.echo-charm.1".to_owned(),
             },
+            GameCommand::BashDoor {
+                direction: Direction::South,
+            },
+            GameCommand::OpenDoor {
+                direction: Direction::East,
+            },
+            GameCommand::CloseDoor {
+                direction: Direction::West,
+            },
             GameCommand::Move {
                 direction: Direction::SouthEast,
             },
@@ -979,6 +1166,8 @@ mod tests {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
                 direction: Direction::North,
             },
+            GameCommand::TraverseStairs,
+            GameCommand::Search,
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
             },
@@ -1152,6 +1341,7 @@ mod tests {
         assert_eq!(decoded.equipment[0].slot_id, "charm");
         assert!(decoded.item_knowledge.is_empty());
         assert!(decoded.item_property_knowledge.is_empty());
+        assert!(decoded.revealed_terrain.is_empty());
         assert!(decoded.inventory[0].affix_ids.is_empty());
         assert_eq!(decoded.inventory[0].quality, ItemQualityDto::Ordinary);
     }

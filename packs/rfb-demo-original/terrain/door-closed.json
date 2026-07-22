@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.door-closed",
+  "nameKey": "terrain-demo-door-closed-name",
+  "descriptionKey": "terrain-demo-door-closed-description",
+  "glyph": "+",
+  "walkable": false,
+  "blocksSight": true,
+  "openToTerrainId": "demo.terrain.door-open",
+  "bashToTerrainId": "demo.terrain.door-broken",
+  "bashCheckDifficulty": 12,
+  "tags": ["door", "door-closed"]
+}

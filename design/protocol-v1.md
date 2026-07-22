@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.23、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.47、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.23";
+  protocolVersion: "1.47";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -92,6 +92,14 @@ interface ProtocolEnvelope<T> {
 
 协议 1.23 新增 `Appraise`、实例质量、鉴别级别与扩展后的 `ItemPropertyKnowledgeSaveDto`。`appraised` 只公开质量，`identified` 才公开完整词条；真实修正始终参与权威规则计算。当前规则边界见 [Contract v23](contract-v23-item-appraisal.md)。
 
+协议 1.25 为存档 DTO 增加可选怪物携带物列表，并固定出生携带生成、死亡放下真实实例、随后生成普通掉落的顺序；版本升级用于拒绝以 1.24 规则解释新的状态哈希和回放。当前规则边界见 [Contract v25](contract-v25-monster-carried-items.md)。
+
+协议 1.26 新增 `TraverseStairs`，并在快照/增量输出 `floorId`；save v1 增加当前楼层 ID 与离层状态列表。版本升级用于拒绝以 1.25 规则解释新的楼层仓库、state hash 和回放。当前规则边界见 [Contract v26](contract-v26-floor-lifecycle.md)。
+
+协议 1.27 保持 DTO 结构不变，固定程序化楼层的深度过滤、房间怪物/掉落分配与 RNG 顺序；版本升级用于拒绝以 1.26 规则解释新的首次楼层实体集合和回放。当前规则边界见 [Contract v27](contract-v27-procedural-room-content.md)。
+
+协议 1.28 新增方向性 `OpenDoor` / `CloseDoor`，协议 1.29 新增 `BashDoor` 与确定性开锁检定，协议 1.30 输出稳定 `terrainInteractions`。协议 1.31 新增 `Search`；普通 `CellDto` 与交互查询只输出玩家已知 terrain，秘密地形发现位置通过 save v1 持久化但不作为独立快照真值暴露。当前规则边界见 [Contract v31](contract-v31-secret-door-search.md)。
+
 - `requestId` 用于匹配请求和响应；
 - `commandSeq` 在会话内严格递增，核心拒绝重复或跳号命令；
 - `revision` 表示权威游戏状态版本；
@@ -114,6 +122,22 @@ interface GameCoreV1 {
 ```
 
 `GameCommandEnvelope` 至少包含 `commandSeq`、客户端已知的 `expectedRevision` 和一个具体命令。核心只在 revision 合法时执行会改变规则状态的命令。
+
+协议 1.40 新增 `abandon-task`。该命令只对当前 active 的一次性任务有效，并产生可回放的 `task.abandoned` 结果；任务日志状态同时新增 `abandoned`，与普通失败分开。
+
+协议 1.41 在 save v1 增加可选 `taskProgress`，每项保存稳定 `floorId` 和 `current`。任务日志可投影大于一的 `required`；旧存档缺失计数时按空进度载入。
+
+协议 1.42 为任务日志增加 `paused`，并新增 `task.paused`、`task.resumed` 事件。暂停和恢复仍使用普通 `traverse-stairs` 命令，不引入客户端专用状态修改入口。
+
+协议 1.43 为 `TaskStatusDto` 增加稳定 `taskId`。save v1 的 `taskProgress` 使用 `taskId`，但继续接受旧字段名 `floorId` 并在载入时规范化。
+
+协议 1.44 在 save v1 增加 `taskStates`，保存任务状态、进度、目标数量和当前 active floor。旧 `taskProgress` 仅作为迁移输入；新存档只写入权威任务状态。
+
+协议 1.45 为 `TaskStatusDto` 增加一基 `stage/stages`，为 `TaskStateSaveDto` 增加零基 `stageIndex`。`current/required` 表示当前阶段而非整条任务的累计值；旧单目标任务默认是第 1/1 阶段。
+
+协议 1.46 在 save v1 增加 `dungeonStates`，按稳定 `dungeonId` 保存最终守护者是否已击败。守护者死亡通过 `dungeon.guardian-defeated` 语义事件投影；缺失地牢状态的旧存档按未击败迁移。
+
+协议 1.47 保持 DTO 和 save 字段不变，固定独立 vault 模板、深度加权 encounter group 与主题 loot 的生成和 RNG 顺序；版本升级用于拒绝以 1.46 规则解释新的首次楼层实体集合和回放。当前规则边界见 [Contract v47](contract-v47-themed-vault.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 

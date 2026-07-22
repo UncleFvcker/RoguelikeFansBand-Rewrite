@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.echo-rubble",
+  "nameKey": "terrain-demo-echo-rubble-name",
+  "descriptionKey": "terrain-demo-echo-rubble-description",
+  "glyph": ":",
+  "walkable": false,
+  "blocksSight": true,
+  "digToTerrainId": "demo.terrain.floor",
+  "digCheckDifficulty": 8,
+  "tags": ["rubble", "diggable"]
+}

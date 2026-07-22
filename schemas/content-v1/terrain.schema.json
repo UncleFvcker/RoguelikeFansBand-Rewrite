@@ -1,4 +1,43 @@
 {
+  "$defs": {
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
+      ],
+      "type": "string"
+    },
+    "TerrainTrapDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "damage": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "damageType": {
+          "$ref": "#/$defs/ActorDamageType",
+          "default": "physical"
+        },
+        "disarmCheckDifficulty": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "disarmToTerrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "damage",
+        "disarmToTerrainId",
+        "disarmCheckDifficulty"
+      ],
+      "type": "object"
+    }
+  },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
@@ -6,11 +45,55 @@
     "$schema": {
       "type": "string"
     },
+    "bashCheckDifficulty": {
+      "default": null,
+      "format": "int32",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "bashToTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "blocksSight": {
       "type": "boolean"
     },
+    "closeToTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "concealedAsTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "descriptionKey": {
       "type": "string"
+    },
+    "digCheckDifficulty": {
+      "default": null,
+      "format": "int32",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "digToTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "formatVersion": {
       "format": "uint16",
@@ -27,11 +110,45 @@
     "nameKey": {
       "type": "string"
     },
+    "openCheckDifficulty": {
+      "default": null,
+      "format": "int32",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "openToTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "searchCheckDifficulty": {
+      "default": null,
+      "format": "int32",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "tags": {
       "items": {
         "type": "string"
       },
       "type": "array"
+    },
+    "trap": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TerrainTrapDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "walkable": {
       "type": "boolean"

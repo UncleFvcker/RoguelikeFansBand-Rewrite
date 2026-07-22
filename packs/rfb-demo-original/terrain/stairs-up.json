@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.stairs-up",
+  "nameKey": "terrain-demo-stairs-up-name",
+  "descriptionKey": "terrain-demo-stairs-up-description",
+  "glyph": "<",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["stairs-up"]
+}

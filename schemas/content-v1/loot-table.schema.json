@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "ItemQuality": {
+      "enum": [
+        "ordinary",
+        "fine",
+        "exceptional"
+      ],
+      "type": "string"
+    },
+    "LootAffixWeightDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "affixId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "weight"
+      ],
+      "type": "object"
+    },
+    "LootEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "itemKindId": {
+          "type": "string"
+        },
+        "quantity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "weight",
+        "quantity"
+      ],
+      "type": "object"
+    },
+    "LootQualityWeightDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "quality": {
+          "$ref": "#/$defs/ItemQuality"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "quality",
+        "weight"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "affixWeights": {
+      "items": {
+        "$ref": "#/$defs/LootAffixWeightDefinition"
+      },
+      "type": "array"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/LootEntryDefinition"
+      },
+      "type": "array"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "qualityWeights": {
+      "items": {
+        "$ref": "#/$defs/LootQualityWeightDefinition"
+      },
+      "type": "array"
+    },
+    "rolls": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "rolls",
+    "entries",
+    "qualityWeights",
+    "affixWeights"
+  ],
+  "title": "LootTableDefinition",
+  "type": "object"
+}

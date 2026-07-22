@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.loot-table.resonant-warden",
+  "rolls": 1,
+  "entries": [
+    {
+      "itemKindId": "demo.item.echo-charm",
+      "weight": 1,
+      "quantity": 1
+    }
+  ],
+  "qualityWeights": [
+    {
+      "quality": "fine",
+      "weight": 1
+    }
+  ],
+  "affixWeights": [
+    {
+      "affixId": "demo.affix.harmonic-edge",
+      "weight": 1
+    }
+  ]
+}

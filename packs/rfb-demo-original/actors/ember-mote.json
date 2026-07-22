@@ -14,5 +14,7 @@
   "damageDice": 1,
   "damageSides": 3,
   "damageType": "fire",
+  "carriedLootTableId": "demo.loot-table.ember-mote-carried",
+  "lootTableId": "demo.loot-table.ember-mote",
   "tags": ["elemental", "light-source"]
 }

@@ -3,11 +3,54 @@
   "formatVersion": 1,
   "id": "demo.world.original-v1",
   "nameKey": "world-demo-original-lab-name",
+  "initialFloorId": "demo.floor.surface",
   "width": 20,
   "height": 20,
   "fillTerrainId": "demo.terrain.floor",
   "borderTerrainId": "demo.terrain.wall",
   "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.echo-rubble",
+      "positions": [
+        { "x": 2, "y": 4 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.task-rift",
+      "positions": [
+        { "x": 4, "y": 2 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.hunt-rift",
+      "positions": [
+        { "x": 2, "y": 2 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.bounty-rift",
+      "positions": [
+        { "x": 4, "y": 4 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.bounty-annex-rift",
+      "positions": [
+        { "x": 4, "y": 6 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.chain-rift",
+      "positions": [
+        { "x": 6, "y": 2 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.chain-vault-rift",
+      "positions": [
+        { "x": 6, "y": 6 }
+      ]
+    },
     {
       "terrainId": "demo.terrain.wall",
       "positions": [
@@ -24,6 +67,12 @@
         { "x": 11, "y": 14 },
         { "x": 11, "y": 15 },
         { "x": 11, "y": 16 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.stairs-down",
+      "positions": [
+        { "x": 3, "y": 4 }
       ]
     }
   ],
@@ -72,5 +121,266 @@
       "position": { "x": 6, "y": 4 },
       "quantity": 6
     }
-  ]
+  ],
+  "proceduralFloors": [{
+    "id": "demo.floor.echo-depth-1",
+    "nameKey": "floor-demo-echo-depth-1-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "dungeon",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "themeId": "demo.theme.echo-depths",
+    "entryTerrainId": "demo.terrain.stairs-down",
+    "nextFloorId": "demo.floor.echo-depth-2",
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "downStairTerrainId": "demo.terrain.stairs-down",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [
+      {
+        "instanceId": "demo.monster.echo-depth-1.1",
+        "roomId": "remote",
+        "actorKindIds": [
+          "demo.actor.acid-seep",
+          "demo.actor.echo-hound",
+          "demo.actor.frost-wisp"
+        ]
+      }
+    ],
+    "lootSpawns": [
+      {
+        "id": "demo.spawn.echo-depth-1-loot.1",
+        "roomId": "remote",
+        "lootTableId": "demo.loot-table.echo-depth-1-room"
+      }
+    ]
+  }, {
+    "id": "demo.floor.echo-depth-2",
+    "nameKey": "floor-demo-echo-depth-2-name",
+    "returnFloorId": "demo.floor.echo-depth-1",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "themeId": "demo.theme.echo-depths",
+    "vaultId": "demo.vault.harmonic-sepulcher",
+    "nextFloorId": "demo.floor.echo-depth-3",
+    "depth": 2,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "downStairTerrainId": "demo.terrain.stairs-down",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-depth-3",
+    "nameKey": "floor-demo-echo-depth-3-name",
+    "returnFloorId": "demo.floor.echo-depth-2",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "themeId": "demo.theme.echo-depths",
+    "finalFloor": true,
+    "guardian": {
+      "instanceId": "demo.guardian.echo-depths.1",
+      "actorKindId": "demo.actor.resonant-warden"
+    },
+    "depth": 3,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-task-rift",
+    "nameKey": "floor-demo-echo-task-rift-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "one-shot",
+    "entryTerrainId": "demo.terrain.task-rift",
+    "completedEntryTerrainId": "demo.terrain.task-rift-closed",
+    "failedEntryTerrainId": "demo.terrain.task-rift-failed",
+    "abandonedEntryTerrainId": "demo.terrain.task-rift-abandoned",
+    "taskObjective": {
+      "kind": "collect-item",
+      "itemInstanceId": "demo.task.echo-rift.objective.1",
+      "itemKindId": "demo.item.luminous-shard"
+    },
+    "taskReward": {
+      "itemInstanceId": "demo.task.echo-rift.reward.1",
+      "itemKindId": "demo.item.echo-charm",
+      "quantity": 1
+    },
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [
+      {
+        "instanceId": "demo.monster.echo-task-rift.1",
+        "roomId": "remote",
+        "actorKindIds": ["demo.actor.echo-hound"]
+      }
+    ],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-hunt-rift",
+    "nameKey": "floor-demo-echo-hunt-rift-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "one-shot",
+    "entryTerrainId": "demo.terrain.hunt-rift",
+    "completedEntryTerrainId": "demo.terrain.hunt-rift-closed",
+    "failedEntryTerrainId": "demo.terrain.hunt-rift-failed",
+    "abandonedEntryTerrainId": "demo.terrain.hunt-rift-abandoned",
+    "allowEarlyTaskExit": false,
+    "taskObjective": {
+      "kind": "kill-actor",
+      "actorInstanceId": "demo.task.echo-hunt.target.1",
+      "actorKindId": "demo.actor.ember-mote"
+    },
+    "taskReward": {
+      "itemInstanceId": "demo.task.echo-hunt.reward.1",
+      "itemKindId": "demo.item.luminous-shard",
+      "quantity": 2
+    },
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-bounty-rift",
+    "nameKey": "floor-demo-echo-bounty-rift-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "one-shot",
+    "entryTerrainId": "demo.terrain.bounty-rift",
+    "completedEntryTerrainId": "demo.terrain.bounty-rift-closed",
+    "failedEntryTerrainId": "demo.terrain.bounty-rift-failed",
+    "abandonedEntryTerrainId": "demo.terrain.bounty-rift-abandoned",
+    "retakeable": true,
+    "taskId": "demo.task.echo-bounty",
+    "taskObjective": {
+      "kind": "kill-actor-kind",
+      "actorKindId": "demo.actor.ember-mote",
+      "required": 2
+    },
+    "taskReward": {
+      "itemInstanceId": "demo.task.echo-bounty.reward.1",
+      "itemKindId": "demo.item.echo-charm",
+      "quantity": 1
+    },
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-bounty-annex-rift",
+    "nameKey": "floor-demo-echo-bounty-annex-rift-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "one-shot",
+    "entryTerrainId": "demo.terrain.bounty-annex-rift",
+    "completedEntryTerrainId": "demo.terrain.bounty-annex-rift-closed",
+    "failedEntryTerrainId": "demo.terrain.bounty-annex-rift-failed",
+    "abandonedEntryTerrainId": "demo.terrain.bounty-annex-rift-abandoned",
+    "retakeable": true,
+    "taskId": "demo.task.echo-bounty",
+    "taskObjective": {
+      "kind": "kill-actor-kind",
+      "actorKindId": "demo.actor.ember-mote",
+      "required": 2,
+      "spawnCount": 1
+    },
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-chain-rift",
+    "nameKey": "floor-demo-echo-chain-rift-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "one-shot",
+    "entryTerrainId": "demo.terrain.chain-rift",
+    "completedEntryTerrainId": "demo.terrain.chain-rift-closed",
+    "failedEntryTerrainId": "demo.terrain.chain-rift-failed",
+    "abandonedEntryTerrainId": "demo.terrain.chain-rift-abandoned",
+    "retakeable": true,
+    "taskId": "demo.task.echo-chain",
+    "taskStages": [{
+      "kind": "collect-item",
+      "floorId": "demo.floor.echo-chain-rift",
+      "itemInstanceId": "demo.task.echo-chain.objective.1",
+      "itemKindId": "demo.item.luminous-shard"
+    }, {
+      "kind": "enter-floor",
+      "floorId": "demo.floor.echo-chain-vault-rift"
+    }, {
+      "kind": "kill-actor-kind",
+      "floorId": "demo.floor.echo-chain-vault-rift",
+      "actorKindId": "demo.actor.ember-mote",
+      "required": 2
+    }],
+    "taskReward": {
+      "itemInstanceId": "demo.task.echo-chain.reward.1",
+      "itemKindId": "demo.item.echo-charm",
+      "quantity": 1
+    },
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-chain-vault-rift",
+    "nameKey": "floor-demo-echo-chain-vault-rift-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "one-shot",
+    "entryTerrainId": "demo.terrain.chain-vault-rift",
+    "completedEntryTerrainId": "demo.terrain.chain-vault-rift-closed",
+    "failedEntryTerrainId": "demo.terrain.chain-vault-rift-failed",
+    "abandonedEntryTerrainId": "demo.terrain.chain-vault-rift-abandoned",
+    "retakeable": true,
+    "taskId": "demo.task.echo-chain",
+    "depth": 1,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }]
 }

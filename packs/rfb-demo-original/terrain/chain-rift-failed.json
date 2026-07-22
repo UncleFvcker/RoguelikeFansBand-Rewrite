@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json","formatVersion":1,"id":"demo.terrain.chain-rift-failed","nameKey":"terrain-demo-chain-rift-failed-name","descriptionKey":"terrain-demo-chain-rift-failed-description","glyph":".","walkable":true,"blocksSight":false,"tags":["task-entry-failed"]}

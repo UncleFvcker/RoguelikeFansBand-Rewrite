@@ -24,33 +24,39 @@ use crate::{
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_entity, actor_from_player, actor_from_spawn,
-        actors_to_save, derive_next_item_instance_serial, equipment_item_from_dto,
-        equipment_to_save, inventory_item_from_dto, inventory_to_save, item_from_dto,
-        items_to_save, player_to_save, position_from_content,
+        actors_to_save, carried_item_from_dto, carried_items_to_save,
+        derive_next_item_instance_serial, equipment_item_from_dto, equipment_to_save,
+        floor_from_save, floor_to_save, inventory_item_from_dto, inventory_to_save, item_from_dto,
+        items_to_save, player_to_save, position_from_content, revealed_terrain_from_save,
     },
     scheduler::{
         INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, gain_energy,
         spend_energy,
     },
-    state::{Actor, EquipOutcome, ItemInstance, ItemLocation},
+    state::{Actor, EquipOutcome, FloorState, ItemInstance, ItemLocation},
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
-use rfb_content::{ActorRole, ContentCatalog, ItemUseEffectDefinition};
+use rfb_content::{
+    ActorRole, ContentCatalog, ContentPosition, FloorLifecycle, ItemUseEffectDefinition,
+    ProceduralFloorDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
+};
 use rfb_protocol::{
-    ActorSaveDto, AttackProfileDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
-    DamageDiceDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommandEnvelope,
-    GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto,
-    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
-    PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, ProjectileProfileDto, RngSaveDto,
-    SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto, TerrainSaveDto,
-    ThrowProfileDto, VisibilityState,
+    ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
+    ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto,
+    EquipmentItemSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
+    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto,
+    Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
+    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
+    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
+    TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 18] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 40] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -69,9 +75,31 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 18] = [
     "43b38c37bc03ae81f8fe1e5a3f3c8afeba47921ff05321011bc227fb5813387f",
     "419260921954602e9b707dd8c260f80ad3ff1ad0504ea2dfbde739ec64ca2d54",
     "130f0f9fbddbdb12d7742d222e2e4deceabddb51810834c264da45678e15d474",
+    "b37af3a660c95c024d12c8232b6b5467cb7d57982e09431748f1516ed3c550c3",
+    "a3b8149e550f4211b496d6500171e52031baccc2223c7c60bbb1874cf2015cab",
+    "bdefe542bb40a876ae29f1e504ad8d9c7fcbbc4e5eba8092d937782fb88a74c3",
+    "febe50b7a55a637a05d78135f14aa8f72fa457632ae8d705c002e92acf9e4fd9",
+    "51ffdccfe19a9f159adc15c2f62965ff4a5d44b55990eb9f29df96870937a043",
+    "f060f44c88033e8ef75478929a354d6b5b0bc5f933ca2772e79c3440940942e8",
+    "2d2900d8052b0a600346d0b87cc3b3d5bb5138f851abbf2b95afa196bbbaaca2",
+    "e69258b4a303a38c10221f90d01c49628eb9ef737e97c7e777fe30070a025f81",
+    "224e4cc12f1f1a99e245b5e1a96e7c9371a6873460b6197c0f18007542c1a079",
+    "4fdb1018d89fadee287aeff70b2ca059f62b867cfd8db8ed7f6409f7bbbd4765",
+    "8319b75e64585ef782358ed5287e087d14fab3626dfa854296696751f66896ac",
+    "830b8ededc0dadb5600436137da7edb41353f945a09a4325d05546e16e75c4a8",
+    "738d40e03f4c4eaebb91d47c74ad7decd7c13ddd12cc41238d177408f66ea0cf",
+    "c390fb30dcc041b266ee895e72441cf656dbacc470a24ba86bd8d7b948be994f",
+    "b44f98cea0cc7f125421faebf3085a23c79228be2573daca38acef63abcca6ea",
+    "328600bfda30da20bd2efe7faac1f97eda03cccecb3ae0b36f4b683e74e5869e",
+    "02df91742a4ad4daf3aebe88c397f0a70396e36f9afc293cd87bdc310715929b",
+    "9ff7c821379c543d13fc5ee690a84c71fa4267f210381781a54378040a876403",
+    "7a65a77e6fec214a86be9ba7e6abbbebae14c7a68094b628f55d5960002e0b4f",
+    "b37398cb9d005302c958a9e300d07a435e8631d6a5cd44ba63b0086069577c43",
+    "0e6cf15310644e7b3eb2f7acb0c18a8b1a7fb08739e981e7492d4079e61ab44a",
+    "e03cb30ea8e1cd5821c14b54c4a038d30323cfc2cb6e0d6c483cbb006d70916f",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "b37af3a660c95c024d12c8232b6b5467cb7d57982e09431748f1516ed3c550c3";
+    "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -80,6 +108,16 @@ const MIN_THROW_RANGE: u16 = 2;
 const MAX_THROW_RANGE: u16 = 10;
 const AMBIENT_LIGHT: u8 = 28;
 const PLAYER_LIGHT_RADIUS: i32 = 6;
+const TERRAIN_INTERACTION_DIRECTIONS: [Direction; 8] = [
+    Direction::North,
+    Direction::NorthEast,
+    Direction::East,
+    Direction::SouthEast,
+    Direction::South,
+    Direction::SouthWest,
+    Direction::West,
+    Direction::NorthWest,
+];
 const ACTOR_LIGHT_RADIUS: i32 = 5;
 const ITEM_LIGHT_RADIUS: i32 = 4;
 const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
@@ -88,7 +126,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV12 {
+struct StateHashPayloadV19 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -100,21 +138,358 @@ struct StateHashPayloadV12 {
     items: Vec<ItemSaveDto>,
     inventory: Vec<InventoryItemSaveDto>,
     equipment: Vec<EquipmentItemSaveDto>,
+    carried_items: Vec<CarriedItemSaveDto>,
     item_knowledge: Vec<ItemKnowledgeSaveDto>,
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
+    task_states: Vec<TaskStateSaveDto>,
+    dungeon_states: Vec<DungeonStateSaveDto>,
     next_item_instance_serial: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     explored: Vec<bool>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    revealed_terrain: Vec<Position>,
     rng: RngSaveDto,
     content_id: String,
     content_hash: String,
     world_id: String,
+    current_floor_id: String,
+    stored_floors: Vec<FloorSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LootContext {
+    table_id: String,
+    floor_id: String,
+    depth: u16,
+    source: LootSource,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum LootSource {
+    MonsterCarried { actor_id: String },
+    MonsterDeath { actor_id: String },
+    FloorRoom { room_id: String, spawn_id: String },
+    Vault { vault_id: String, spawn_id: String },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct GeneratedRoom {
+    id: &'static str,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TaskState {
+    status: TaskStatusKindDto,
+    stage_index: u32,
+    current: u32,
+    required: u32,
+    active_floor_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct DungeonState {
+    guardian_defeated: bool,
+}
+
+struct TaskRestoreContext<'a> {
+    current_floor_id: &'a str,
+    terrain: &'a [String],
+    stored_floors: &'a BTreeMap<String, FloorState>,
+    entities: &'a [Actor],
+    items: &'a [ItemInstance],
+    legacy_progress: &'a BTreeMap<String, u32>,
+    saved_states: &'a [TaskStateSaveDto],
+    allow_missing_states: bool,
+}
+
+fn floor_task_id(floor: &ProceduralFloorDefinition) -> &str {
+    floor.task_id.as_deref().unwrap_or(&floor.id)
+}
+
+fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
+    world
+        .procedural_floors
+        .iter()
+        .filter_map(|floor| floor.dungeon_id.as_ref())
+        .map(|dungeon_id| {
+            (
+                dungeon_id.clone(),
+                DungeonState {
+                    guardian_defeated: false,
+                },
+            )
+        })
+        .collect()
+}
+
+fn restore_dungeon_states(
+    world: &rfb_content::WorldDefinition,
+    saved_states: &[DungeonStateSaveDto],
+) -> Result<BTreeMap<String, DungeonState>, CoreError> {
+    let mut states = initial_dungeon_states(world);
+    if saved_states.is_empty() {
+        return Ok(states);
+    }
+    let mut restored = BTreeMap::new();
+    for saved in saved_states {
+        if !states.contains_key(&saved.dungeon_id)
+            || restored
+                .insert(
+                    saved.dungeon_id.clone(),
+                    DungeonState {
+                        guardian_defeated: saved.guardian_defeated,
+                    },
+                )
+                .is_some()
+        {
+            return Err(CoreError::InvalidSave("dungeon state is invalid"));
+        }
+    }
+    if restored.len() != states.len() {
+        return Err(CoreError::InvalidSave("dungeon state set is incomplete"));
+    }
+    states.extend(restored);
+    Ok(states)
+}
+
+fn task_objectives<'a>(
+    world: &'a rfb_content::WorldDefinition,
+    task_id: &str,
+) -> Vec<&'a TaskObjectiveDefinition> {
+    if let Some(stages) = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor_task_id(floor) == task_id && !floor.task_stages.is_empty())
+        .map(|floor| floor.task_stages.iter().collect::<Vec<_>>())
+    {
+        return stages;
+    }
+    world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor_task_id(floor) == task_id)
+        .and_then(|floor| floor.task_objective.as_ref())
+        .into_iter()
+        .collect()
+}
+
+fn task_succeeded(world: &rfb_content::WorldDefinition, task_id: &str, state: &TaskState) -> bool {
+    let objectives = task_objectives(world, task_id);
+    usize::try_from(state.stage_index)
+        .ok()
+        .is_some_and(|stage| stage + 1 == objectives.len())
+        && state.current >= state.required
+}
+
+fn task_death_target_kind(event: &DomainEvent) -> Option<&str> {
+    match event {
+        DomainEvent::PlayerSlew { target_kind_id, .. }
+        | DomainEvent::ProjectileSlew { target_kind_id, .. }
+        | DomainEvent::ItemThrowSlew { target_kind_id, .. }
+        | DomainEvent::EntityDiedFromStatus { target_kind_id, .. } => Some(target_kind_id.as_str()),
+        _ => None,
+    }
+}
+
+fn initial_task_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, TaskState> {
+    let mut states = BTreeMap::new();
+    for floor in world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot)
+    {
+        states
+            .entry(floor_task_id(floor).to_owned())
+            .or_insert_with(|| TaskState {
+                status: TaskStatusKindDto::Available,
+                stage_index: 0,
+                current: 0,
+                required: task_objectives(world, floor_task_id(floor))
+                    .first()
+                    .map_or(1, |objective| objective.required),
+                active_floor_id: None,
+            });
+    }
+    states
+}
+
+fn restore_task_states(
+    world: &rfb_content::WorldDefinition,
+    context: TaskRestoreContext<'_>,
+) -> Result<BTreeMap<String, TaskState>, CoreError> {
+    let mut states = initial_task_states(world);
+    if !context.saved_states.is_empty() {
+        let mut restored = BTreeMap::new();
+        for saved in context.saved_states {
+            let Some(expected) = states.get(&saved.task_id) else {
+                return Err(CoreError::InvalidSave("task state ID is invalid"));
+            };
+            let objectives = task_objectives(world, &saved.task_id);
+            let Some(objective) = usize::try_from(saved.stage_index)
+                .ok()
+                .and_then(|stage| objectives.get(stage))
+            else {
+                return Err(CoreError::InvalidSave("task stage is invalid"));
+            };
+            let members = world
+                .procedural_floors
+                .iter()
+                .filter(|floor| floor_task_id(floor) == saved.task_id)
+                .collect::<Vec<_>>();
+            let active_floor_is_valid = saved.active_floor_id.as_ref().is_some_and(|floor_id| {
+                floor_id == context.current_floor_id
+                    && members.iter().any(|floor| floor.id == *floor_id)
+            });
+            let paused_floor_exists = members
+                .iter()
+                .any(|floor| context.stored_floors.contains_key(&floor.id));
+            let status_is_valid = match saved.status {
+                TaskStatusKindDto::Active => active_floor_is_valid,
+                TaskStatusKindDto::Paused => saved.active_floor_id.is_none() && paused_floor_exists,
+                TaskStatusKindDto::Completed => {
+                    saved.active_floor_id.is_none()
+                        && usize::try_from(saved.stage_index)
+                            .ok()
+                            .is_some_and(|stage| stage + 1 == objectives.len())
+                        && saved.current == saved.required
+                }
+                TaskStatusKindDto::Available
+                | TaskStatusKindDto::Failed
+                | TaskStatusKindDto::Abandoned => saved.active_floor_id.is_none(),
+            };
+            if (saved.stage_index == 0 && expected.required != objective.required)
+                || saved.required != objective.required
+                || saved.current > saved.required
+                || !status_is_valid
+                || restored
+                    .insert(
+                        saved.task_id.clone(),
+                        TaskState {
+                            status: saved.status,
+                            stage_index: saved.stage_index,
+                            current: saved.current,
+                            required: saved.required,
+                            active_floor_id: saved.active_floor_id.clone(),
+                        },
+                    )
+                    .is_some()
+            {
+                return Err(CoreError::InvalidSave("task state is invalid"));
+            }
+        }
+        if restored.len() != states.len() && !context.allow_missing_states {
+            return Err(CoreError::InvalidSave("task state set is incomplete"));
+        }
+        states.extend(restored);
+        return Ok(states);
+    }
+
+    let surface_terrain = if context.current_floor_id == world.initial_floor_id {
+        Some(context.terrain)
+    } else {
+        context
+            .stored_floors
+            .get(&world.initial_floor_id)
+            .map(|floor| floor.terrain.as_slice())
+    };
+    for (task_id, state) in &mut states {
+        let members = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor_task_id(floor) == task_id)
+            .collect::<Vec<_>>();
+        let active = members
+            .iter()
+            .copied()
+            .find(|floor| floor.id == context.current_floor_id);
+        state.status = if active.is_some() {
+            TaskStatusKindDto::Active
+        } else if surface_terrain.is_some_and(|surface| {
+            members.iter().any(|floor| {
+                floor
+                    .completed_entry_terrain_id
+                    .as_ref()
+                    .is_some_and(|id| surface.contains(id))
+            })
+        }) {
+            TaskStatusKindDto::Completed
+        } else if surface_terrain.is_some_and(|surface| {
+            members.iter().any(|floor| {
+                floor
+                    .failed_entry_terrain_id
+                    .as_ref()
+                    .is_some_and(|id| surface.contains(id))
+            })
+        }) {
+            TaskStatusKindDto::Failed
+        } else if surface_terrain.is_some_and(|surface| {
+            members.iter().any(|floor| {
+                floor
+                    .abandoned_entry_terrain_id
+                    .as_ref()
+                    .is_some_and(|id| surface.contains(id))
+            })
+        }) {
+            TaskStatusKindDto::Abandoned
+        } else if members
+            .iter()
+            .any(|floor| context.stored_floors.contains_key(&floor.id))
+        {
+            TaskStatusKindDto::Paused
+        } else {
+            TaskStatusKindDto::Available
+        };
+        state.active_floor_id = active.map(|floor| floor.id.clone());
+        state.stage_index = 0;
+        state.current = context.legacy_progress.get(task_id).copied().unwrap_or(0);
+        if state.status == TaskStatusKindDto::Completed {
+            state.current = state.required;
+        } else if let Some(floor) = active {
+            let objective = floor
+                .task_objective
+                .as_ref()
+                .expect("validated task objective must remain available");
+            match objective.kind {
+                TaskObjectiveKind::CollectItem => {
+                    if objective.item_instance_id.as_ref().is_some_and(|id| {
+                        context.items.iter().any(|item| {
+                            &item.id == id
+                                && matches!(
+                                    item.location,
+                                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                                )
+                        })
+                    }) {
+                        state.current = 1;
+                    }
+                }
+                TaskObjectiveKind::KillActor => {
+                    if objective
+                        .actor_instance_id
+                        .as_ref()
+                        .is_some_and(|id| !context.entities.iter().any(|entity| &entity.id == id))
+                    {
+                        state.current = 1;
+                    }
+                }
+                TaskObjectiveKind::EnterFloor | TaskObjectiveKind::KillActorKind => {}
+            }
+        }
+        state.current = state.current.min(state.required);
+    }
+    Ok(states)
 }
 
 #[derive(Debug, Clone)]
 pub struct Game {
     content: Arc<ContentCatalog>,
     world_id: String,
+    current_floor_id: String,
+    stored_floors: BTreeMap<String, FloorState>,
     width: u16,
     height: u16,
     terrain: Vec<String>,
@@ -123,8 +498,11 @@ pub struct Game {
     items: Vec<ItemInstance>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
+    task_states: BTreeMap<String, TaskState>,
+    dungeon_states: BTreeMap<String, DungeonState>,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
+    revealed_terrain: BTreeSet<Position>,
     rng: RfbRng,
     revision: u32,
     turn: u32,
@@ -211,9 +589,14 @@ impl Game {
             .collect::<Vec<_>>();
         let next_item_instance_serial =
             derive_next_item_instance_serial(&player, &entities, &items)?;
+        let initial_floor_id = world.initial_floor_id.clone();
+        let task_states = initial_task_states(world);
+        let dungeon_states = initial_dungeon_states(world);
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
+            current_floor_id: initial_floor_id,
+            stored_floors: BTreeMap::new(),
             width,
             height,
             terrain,
@@ -222,14 +605,18 @@ impl Game {
             items,
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
+            task_states,
+            dungeon_states,
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
+            revealed_terrain: BTreeSet::new(),
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
             world_tick: 0,
             last_command_seq: 0,
         };
+        game.initialize_carried_loot()?;
         game.reveal_current_visibility();
         game.validate_state()?;
         Ok(game)
@@ -257,8 +644,50 @@ impl Game {
         {
             return Err(CoreError::ContentMismatch);
         }
-        if content.world(&payload.world_id).is_none() {
-            return Err(CoreError::UnknownWorld(payload.world_id));
+        let migrating_previous_content = payload.content_hash != content.content_hash();
+        let world = content
+            .world(&payload.world_id)
+            .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
+        let mut legacy_task_progress = BTreeMap::new();
+        for progress in &payload.task_progress {
+            let Some(floor) = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor_task_id(floor) == progress.task_id)
+                .or_else(|| {
+                    world
+                        .procedural_floors
+                        .iter()
+                        .find(|floor| floor.id == progress.task_id)
+                })
+            else {
+                return Err(CoreError::InvalidSave("task progress floor ID is invalid"));
+            };
+            let task_id = floor_task_id(floor).to_owned();
+            let required = floor
+                .task_objective
+                .as_ref()
+                .map_or(1, |objective| objective.required);
+            if progress.current > required
+                || legacy_task_progress
+                    .insert(task_id, progress.current)
+                    .is_some()
+            {
+                return Err(CoreError::InvalidSave("task progress is invalid"));
+            }
+        }
+        let current_floor_id = if payload.current_floor_id.is_empty() {
+            world.initial_floor_id.clone()
+        } else {
+            payload.current_floor_id.clone()
+        };
+        if current_floor_id != world.initial_floor_id
+            && !world
+                .procedural_floors
+                .iter()
+                .any(|floor| floor.id == current_floor_id)
+        {
+            return Err(CoreError::InvalidSave("current floor ID is invalid"));
         }
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0 || payload.terrain.terrain_ids.len() != expected_len {
@@ -300,8 +729,44 @@ impl Game {
                 .map(|item| equipment_item_from_dto(item, &content))
                 .collect::<Result<Vec<_>, CoreError>>()?,
         );
+        items.extend(
+            payload
+                .carried_items
+                .into_iter()
+                .map(|item| carried_item_from_dto(item, &content))
+                .collect::<Result<Vec<_>, CoreError>>()?,
+        );
+        let mut stored_floors = BTreeMap::new();
+        for floor in payload.stored_floors {
+            let floor = floor_from_save(floor, &content)?;
+            if floor.id == current_floor_id
+                || (floor.id != world.initial_floor_id
+                    && !world
+                        .procedural_floors
+                        .iter()
+                        .any(|definition| definition.id == floor.id))
+                || stored_floors.insert(floor.id.clone(), floor).is_some()
+            {
+                return Err(CoreError::InvalidSave("stored floor state is invalid"));
+            }
+        }
+        if current_floor_id == world.initial_floor_id {
+            stored_floors.retain(|floor_id, _| {
+                world.procedural_floors.iter().any(|floor| {
+                    floor.id == *floor_id
+                        && floor.lifecycle == FloorLifecycle::OneShot
+                        && floor.retakeable
+                })
+            });
+        }
+        let mut allocator_entities = entities.clone();
+        let mut allocator_items = items.clone();
+        for floor in stored_floors.values() {
+            allocator_entities.extend(floor.entities.iter().cloned());
+            allocator_items.extend(floor.items.iter().cloned());
+        }
         let derived_next_item_instance_serial =
-            derive_next_item_instance_serial(&player, &entities, &items)?;
+            derive_next_item_instance_serial(&player, &allocator_entities, &allocator_items)?;
         let next_item_instance_serial = if payload.next_item_instance_serial == 0 {
             derived_next_item_instance_serial
         } else if payload.next_item_instance_serial < derived_next_item_instance_serial {
@@ -319,6 +784,13 @@ impl Game {
                 "exploration memory dimensions are invalid",
             ));
         }
+        let revealed_terrain = revealed_terrain_from_save(
+            payload.revealed_terrain,
+            &terrain,
+            payload.terrain.width,
+            payload.terrain.height,
+            &content,
+        )?;
         let item_knowledge = item_knowledge_from_save(payload.item_knowledge, &content)?;
         let mut item_property_knowledge =
             item_property_knowledge_from_save(payload.item_property_knowledge, &items, &content)?;
@@ -332,9 +804,25 @@ impl Game {
                     .extend(item.affix_ids.iter().cloned());
             }
         }
+        let task_states = restore_task_states(
+            world,
+            TaskRestoreContext {
+                current_floor_id: &current_floor_id,
+                terrain: &terrain,
+                stored_floors: &stored_floors,
+                entities: &entities,
+                items: &items,
+                legacy_progress: &legacy_task_progress,
+                saved_states: &payload.task_states,
+                allow_missing_states: migrating_previous_content,
+            },
+        )?;
+        let dungeon_states = restore_dungeon_states(world, &payload.dungeon_states)?;
         let mut game = Self {
             content,
             world_id: payload.world_id,
+            current_floor_id,
+            stored_floors,
             width: payload.terrain.width,
             height: payload.terrain.height,
             terrain,
@@ -343,8 +831,11 @@ impl Game {
             items,
             item_knowledge,
             item_property_knowledge,
+            task_states,
+            dungeon_states,
             next_item_instance_serial,
             explored,
+            revealed_terrain,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
@@ -374,14 +865,21 @@ impl Game {
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
+            carried_items: carried_items_to_save(&self.items),
             item_knowledge: self.item_knowledge_to_save(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
+            task_progress: Vec::new(),
+            task_states: self.task_states_to_save(),
+            dungeon_states: self.dungeon_states_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: self.explored.clone(),
+            revealed_terrain: self.revealed_terrain.iter().copied().collect(),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
             world_id: self.world_id.clone(),
+            current_floor_id: self.current_floor_id.clone(),
+            stored_floors: self.stored_floors.values().map(floor_to_save).collect(),
         }
     }
 
@@ -416,6 +914,9 @@ impl Game {
             content_hash: self.content.content_hash().to_owned(),
             content_visuals: self.content_visuals(),
             world_id: self.world_id.clone(),
+            floor_id: self.current_floor_id.clone(),
+            terrain_interactions: self.terrain_interactions(),
+            tasks: self.task_statuses(),
             state_hash: self.state_hash(),
         }
     }
@@ -455,6 +956,24 @@ impl Game {
                     });
                 } else {
                     events.push(DomainEvent::ItemAppraiseUnavailable);
+                }
+            }
+            GameAction::BashDoor { direction } => match self.bash_door(direction) {
+                Some(DoorBashOutcome::Succeeded { position }) => {
+                    changed.insert(position);
+                    events.push(DomainEvent::DoorBashedOpen { position });
+                }
+                Some(DoorBashOutcome::Failed { position }) => {
+                    events.push(DomainEvent::DoorBashFailed { position });
+                }
+                None => events.push(DomainEvent::DoorBashUnavailable),
+            },
+            GameAction::CloseDoor { direction } => {
+                if let Some(position) = self.close_door(direction) {
+                    changed.insert(position);
+                    events.push(DomainEvent::DoorClosed { position });
+                } else {
+                    events.push(DomainEvent::DoorCloseUnavailable);
                 }
             }
             GameAction::Drop { item_ids } => {
@@ -524,6 +1043,75 @@ impl Game {
                     &mut removed_entities,
                 )?;
             }
+            action @ (GameAction::TraverseStairs | GameAction::AbandonTask) => {
+                let abandon_task = matches!(action, GameAction::AbandonTask);
+                if let Some(transition) = self.traverse_stairs(abandon_task)? {
+                    for y in 0..self.height {
+                        for x in 0..self.width {
+                            changed.insert(Position {
+                                x: i32::from(x),
+                                y: i32::from(y),
+                            });
+                        }
+                    }
+                    events.push(DomainEvent::FloorTransitioned {
+                        from_floor_id: transition.from_floor_id,
+                        to_floor_id: transition.to_floor_id,
+                    });
+                    if transition.expedition_ended {
+                        events.push(DomainEvent::DungeonExpeditionEnded);
+                    }
+                    if let Some(floor_id) = transition.task_resumed {
+                        events.push(DomainEvent::TaskResumed { floor_id });
+                    }
+                    if let Some(floor_id) = transition.task_paused {
+                        events.push(DomainEvent::TaskPaused { floor_id });
+                    }
+                    if let Some((floor_id, resolution)) = transition.one_shot_closed {
+                        events.push(match resolution {
+                            TaskResolution::Completed => DomainEvent::TaskCompleted {
+                                floor_id: floor_id.clone(),
+                            },
+                            TaskResolution::Failed => DomainEvent::TaskFailed {
+                                floor_id: floor_id.clone(),
+                            },
+                            TaskResolution::Abandoned => DomainEvent::TaskAbandoned {
+                                floor_id: floor_id.clone(),
+                            },
+                        });
+                        if resolution == TaskResolution::Completed
+                            && let Some(reward) = self
+                                .content
+                                .world(&self.world_id)
+                                .and_then(|world| {
+                                    world
+                                        .procedural_floors
+                                        .iter()
+                                        .find(|floor| floor_task_id(floor) == floor_id)
+                                })
+                                .and_then(|floor| {
+                                    self.content.world(&self.world_id).and_then(|world| {
+                                        world
+                                            .procedural_floors
+                                            .iter()
+                                            .filter(|member| {
+                                                floor_task_id(member) == floor_task_id(floor)
+                                            })
+                                            .find_map(|member| member.task_reward.as_ref())
+                                    })
+                                })
+                        {
+                            events.push(DomainEvent::TaskRewarded {
+                                item_kind_id: reward.item_kind_id.clone(),
+                                quantity: reward.quantity,
+                            });
+                        }
+                        events.push(DomainEvent::OneShotFloorClosed { floor_id });
+                    }
+                } else {
+                    events.push(DomainEvent::FloorTransitionUnavailable);
+                }
+            }
             GameAction::UseItem { item_id } => {
                 self.use_inventory_item(&item_id, &mut events);
             }
@@ -580,19 +1168,84 @@ impl Game {
                             status_kind_id: STATUS_FEAR.to_owned(),
                         });
                     } else {
-                        self.resolve_player_melee(index, &mut events, &mut removed_entities);
+                        self.resolve_player_melee(
+                            index,
+                            &mut events,
+                            &mut changed,
+                            &mut removed_entities,
+                        )?;
                     }
                 } else {
                     let old_position = self.player.position;
                     self.player.position = target;
                     changed.insert(old_position);
                     changed.insert(target);
+                    if let Some((source_kind_id, damage)) = self.trigger_player_trap(target) {
+                        events.push(DomainEvent::TrapTriggered {
+                            position: target,
+                            damage,
+                        });
+                        if self.player_is_dead() {
+                            events.push(DomainEvent::PlayerDied {
+                                source_kind_id,
+                                method_id: None,
+                                damage,
+                            });
+                        }
+                    }
                 }
             }
+            GameAction::OpenDoor { direction } => match self.open_door(direction) {
+                Some(DoorOpenOutcome::Opened { position }) => {
+                    changed.insert(position);
+                    events.push(DomainEvent::DoorOpened { position });
+                }
+                Some(DoorOpenOutcome::Unlocked { position }) => {
+                    changed.insert(position);
+                    events.push(DomainEvent::DoorUnlocked { position });
+                    events.push(DomainEvent::DoorOpened { position });
+                }
+                Some(DoorOpenOutcome::UnlockFailed { position }) => {
+                    events.push(DomainEvent::DoorUnlockFailed { position });
+                }
+                None => events.push(DomainEvent::DoorOpenUnavailable),
+            },
+            GameAction::Search => {
+                let discovered = self.search_hidden_terrain();
+                if discovered.is_empty() {
+                    events.push(DomainEvent::SearchFoundNothing);
+                } else {
+                    for position in discovered {
+                        changed.insert(position);
+                        events.push(DomainEvent::SecretTerrainDiscovered { position });
+                    }
+                }
+            }
+            GameAction::DisarmTrap { direction } => match self.disarm_trap(direction) {
+                Some(TrapDisarmOutcome::Succeeded { position }) => {
+                    changed.insert(position);
+                    events.push(DomainEvent::TrapDisarmed { position });
+                }
+                Some(TrapDisarmOutcome::Failed { position }) => {
+                    events.push(DomainEvent::TrapDisarmFailed { position });
+                }
+                None => events.push(DomainEvent::TrapDisarmUnavailable),
+            },
+            GameAction::DigTerrain { direction } => match self.dig_terrain(direction) {
+                Some(TerrainDigOutcome::Succeeded { position }) => {
+                    changed.insert(position);
+                    events.push(DomainEvent::TerrainDug { position });
+                }
+                Some(TerrainDigOutcome::Failed { position }) => {
+                    events.push(DomainEvent::TerrainDigFailed { position });
+                }
+                None => events.push(DomainEvent::TerrainDigUnavailable),
+            },
         }
 
         spend_energy(&mut self.player.energy_need, action_cost);
-        self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities);
+        self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities)?;
+        self.apply_task_events(&events);
 
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(1);
@@ -607,6 +1260,7 @@ impl Game {
             turn: self.turn,
             world_tick: self.world_tick,
             command_seq: self.last_command_seq,
+            floor_id: self.current_floor_id.clone(),
             events,
             changed_cells: changed
                 .into_iter()
@@ -619,14 +1273,16 @@ impl Game {
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
             removed_entities,
+            terrain_interactions: self.terrain_interactions(),
+            tasks: self.task_statuses(),
             state_hash: self.state_hash(),
         })
     }
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV12 {
-            schema_version: 12,
+        let payload = StateHashPayloadV19 {
+            schema_version: 19,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -641,14 +1297,28 @@ impl Game {
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
+            carried_items: carried_items_to_save(&self.items),
             item_knowledge: self.item_knowledge_to_save(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
+            task_states: self.task_states_to_save(),
+            dungeon_states: self.dungeon_states_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: Vec::new(),
+            revealed_terrain: self.revealed_terrain.iter().copied().collect(),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
             world_id: self.world_id.clone(),
+            current_floor_id: self.current_floor_id.clone(),
+            stored_floors: self
+                .stored_floors
+                .values()
+                .map(|floor| {
+                    let mut floor = floor_to_save(floor);
+                    floor.explored.clear();
+                    floor
+                })
+                .collect(),
         };
         let bytes = rmp_serde::to_vec_named(&payload)
             .expect("serializing the internal save state should not fail");
@@ -683,11 +1353,27 @@ impl Game {
 
     #[must_use]
     pub fn location_key(&self) -> &str {
-        &self
+        let world = self
             .content
             .world(&self.world_id)
-            .expect("game world must remain in its content catalog")
-            .name_key
+            .expect("game world must remain in its content catalog");
+        world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)
+            .map_or(&world.name_key, |floor| &floor.name_key)
+    }
+
+    fn floor_depth(&self, floor_id: &str) -> u16 {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("game world must remain in its content catalog");
+        world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == floor_id)
+            .map_or(0, |floor| floor.depth)
     }
 
     fn player_dto(&self) -> PlayerDto {
@@ -1278,6 +1964,30 @@ impl Game {
             .collect()
     }
 
+    fn task_states_to_save(&self) -> Vec<TaskStateSaveDto> {
+        self.task_states
+            .iter()
+            .map(|(task_id, state)| TaskStateSaveDto {
+                task_id: task_id.clone(),
+                status: state.status,
+                stage_index: state.stage_index,
+                current: state.current,
+                required: state.required,
+                active_floor_id: state.active_floor_id.clone(),
+            })
+            .collect()
+    }
+
+    fn dungeon_states_to_save(&self) -> Vec<DungeonStateSaveDto> {
+        self.dungeon_states
+            .iter()
+            .map(|(dungeon_id, state)| DungeonStateSaveDto {
+                dungeon_id: dungeon_id.clone(),
+                guardian_defeated: state.guardian_defeated,
+            })
+            .collect()
+    }
+
     fn equipment_modifiers(&self) -> StatModifiersDto {
         self.items
             .iter()
@@ -1349,7 +2059,12 @@ impl Game {
     fn carried_weight_tenths_pound(&self) -> u32 {
         self.items
             .iter()
-            .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+            .filter(|item| {
+                matches!(
+                    item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                )
+            })
             .fold(0_u32, |total, item| {
                 total.saturating_add(
                     u32::from(self.item_weight_tenths_pound(&item.kind_id))
@@ -1514,6 +2229,36 @@ impl Game {
             base_source,
             rating_to_combat_value(definition.attack),
         );
+        pipeline.add(
+            StatKind::DoorSkill,
+            StatLayer::Base,
+            base_source,
+            definition.door_skill,
+        );
+        pipeline.add(
+            StatKind::BashPower,
+            StatLayer::Base,
+            base_source,
+            definition.bash_power,
+        );
+        pipeline.add(
+            StatKind::SearchSkill,
+            StatLayer::Base,
+            base_source,
+            definition.search_skill,
+        );
+        pipeline.add(
+            StatKind::DisarmSkill,
+            StatLayer::Base,
+            base_source,
+            definition.disarm_skill,
+        );
+        pipeline.add(
+            StatKind::DigSkill,
+            StatLayer::Base,
+            base_source,
+            definition.dig_skill,
+        );
 
         if include_equipment {
             for item in self
@@ -1633,6 +2378,11 @@ impl Game {
             melee_damage_bonus: pipeline.resolve(StatKind::MeleeDamageBonus, StatBounds::UNBOUNDED),
             ranged_skill: pipeline.resolve(StatKind::RangedSkill, StatBounds::NON_NEGATIVE),
             throwing_skill: pipeline.resolve(StatKind::ThrowingSkill, StatBounds::NON_NEGATIVE),
+            door_skill: pipeline.resolve(StatKind::DoorSkill, StatBounds::NON_NEGATIVE),
+            bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
+            search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
+            disarm_skill: pipeline.resolve(StatKind::DisarmSkill, StatBounds::NON_NEGATIVE),
+            dig_skill: pipeline.resolve(StatKind::DigSkill, StatBounds::NON_NEGATIVE),
         }
     }
 
@@ -1706,13 +2456,17 @@ impl Game {
                     trace: trace.clone(),
                 });
                 if self.entities[index].hp <= 0 {
-                    let removed = self.entities.remove(index);
-                    removed_entities.push(removed.id);
-                    events.push(DomainEvent::ProjectileSlew {
-                        target_kind_id,
-                        damage,
-                        trace: trace.clone(),
-                    });
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::ProjectileSlew {
+                            target_kind_id,
+                            damage,
+                            trace: trace.clone(),
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
                 }
             }
         } else {
@@ -1979,14 +2733,18 @@ impl Game {
                     trace: trace.clone(),
                 });
                 if self.entities[index].hp <= 0 {
-                    let removed = self.entities.remove(index);
-                    removed_entities.push(removed.id);
-                    events.push(DomainEvent::ItemThrowSlew {
-                        source_kind_id: source_kind_id.clone(),
-                        target_kind_id,
-                        damage,
-                        trace: trace.clone(),
-                    });
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::ItemThrowSlew {
+                            source_kind_id: source_kind_id.clone(),
+                            target_kind_id,
+                            damage,
+                            trace: trace.clone(),
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
                 }
             }
         } else {
@@ -2120,8 +2878,9 @@ impl Game {
         &mut self,
         index: usize,
         events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) {
+    ) -> Result<(), CoreError> {
         let definition = self
             .content
             .actor(&self.entities[index].kind_id)
@@ -2164,15 +2923,20 @@ impl Game {
                 damage,
             });
             if self.entities[index].hp <= 0 {
-                let removed = self.entities.remove(index);
-                removed_entities.push(removed.id);
-                events.push(DomainEvent::PlayerSlew {
-                    target_kind_id: removed.kind_id,
-                    damage,
-                });
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::PlayerSlew {
+                        target_kind_id: target_kind.clone(),
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
                 break;
             }
         }
+        Ok(())
     }
 
     fn advance_until_player_ready(
@@ -2180,10 +2944,10 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) {
+    ) -> Result<(), CoreError> {
         loop {
             self.world_tick = self.world_tick.saturating_add(1);
-            self.process_status_tick(events, changed, removed_entities);
+            self.process_status_tick(events, changed, removed_entities)?;
             if self.player_is_dead() {
                 break;
             }
@@ -2197,6 +2961,7 @@ impl Game {
                 break;
             }
         }
+        Ok(())
     }
 
     fn process_status_tick(
@@ -2204,7 +2969,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) {
+    ) -> Result<(), CoreError> {
         let player_tick = process_actor_status_tick(&mut self.player, false);
         for damage in player_tick.damage {
             events.push(DomainEvent::PlayerStatusDamaged {
@@ -2220,7 +2985,7 @@ impl Game {
                 status_kind_id: damage.status_kind_id,
                 damage: damage.outcome,
             });
-            return;
+            return Ok(());
         }
 
         let mut entity_ids = self
@@ -2253,16 +3018,20 @@ impl Game {
                 });
             }
             if let Some(damage) = tick.fatal_damage {
-                let removed = self.entities.remove(index);
-                changed.insert(removed.position);
-                removed_entities.push(removed.id);
-                events.push(DomainEvent::EntityDiedFromStatus {
-                    target_kind_id,
-                    status_kind_id: damage.status_kind_id,
-                    damage: damage.outcome,
-                });
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::EntityDiedFromStatus {
+                        target_kind_id,
+                        status_kind_id: damage.status_kind_id,
+                        damage: damage.outcome,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
         }
+        Ok(())
     }
 
     fn process_monster_energy_pulse(
@@ -2481,6 +3250,316 @@ impl Game {
         })
     }
 
+    fn initialize_carried_loot(&mut self) -> Result<(), CoreError> {
+        let floor_id = self.current_floor_id.clone();
+        let depth = self.floor_depth(&floor_id);
+        let actors = self.entities.clone();
+        let generated = self.generate_carried_loot_for_actors(&actors, &floor_id, depth)?;
+        self.items.extend(generated);
+        Ok(())
+    }
+
+    fn generate_carried_loot_for_actors(
+        &mut self,
+        actors: &[Actor],
+        floor_id: &str,
+        depth: u16,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        let mut carriers = actors
+            .iter()
+            .filter_map(|actor| {
+                self.content
+                    .actor(&actor.kind_id)
+                    .and_then(|definition| definition.carried_loot_table_id.clone())
+                    .map(|table_id| (actor.id.clone(), table_id))
+            })
+            .collect::<Vec<_>>();
+        carriers.sort_by(|left, right| left.0.cmp(&right.0));
+        let mut items = Vec::new();
+        for (actor_id, table_id) in carriers {
+            let generated = self.generate_loot_instances(
+                &LootContext {
+                    table_id,
+                    floor_id: floor_id.to_owned(),
+                    depth,
+                    source: LootSource::MonsterCarried {
+                        actor_id: actor_id.clone(),
+                    },
+                },
+                ItemLocation::CarriedBy { actor_id },
+            )?;
+            items.extend(generated);
+        }
+        Ok(items)
+    }
+
+    fn resolve_actor_death(
+        &mut self,
+        index: usize,
+        death_event: DomainEvent,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let actor = self.entities[index].clone();
+        let generated = self.generate_death_loot(&actor)?;
+        let mut carried = self
+            .items
+            .iter()
+            .filter_map(|item| match &item.location {
+                ItemLocation::CarriedBy { actor_id } if actor_id == &actor.id => {
+                    Some((item.id.clone(), item.kind_id.clone(), item.quantity))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        carried.sort_by(|left, right| left.0.cmp(&right.0));
+        let has_drops = !carried.is_empty() || !generated.is_empty();
+
+        let removed = self.entities.remove(index);
+        removed_entities.push(removed.id.clone());
+        events.push(death_event);
+        let defeated_guardian = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == self.current_floor_id)
+            })
+            .and_then(|floor| {
+                floor.guardian.as_ref().and_then(|guardian| {
+                    (guardian.instance_id == removed.id).then(|| {
+                        (
+                            floor
+                                .dungeon_id
+                                .clone()
+                                .expect("guardian floor must have a dungeon ID"),
+                            floor.id.clone(),
+                            guardian.actor_kind_id.clone(),
+                        )
+                    })
+                })
+            });
+        if let Some((dungeon_id, floor_id, target_kind_id)) = defeated_guardian {
+            self.dungeon_states
+                .get_mut(&dungeon_id)
+                .expect("guardian dungeon state must remain available")
+                .guardian_defeated = true;
+            events.push(DomainEvent::DungeonGuardianDefeated {
+                dungeon_id,
+                floor_id,
+                target_kind_id,
+            });
+        }
+
+        for (item_id, target_kind_id, quantity) in carried {
+            let item = self
+                .items
+                .iter_mut()
+                .find(|item| item.id == item_id)
+                .expect("carried item collected from authoritative item set");
+            item.location = ItemLocation::Ground(removed.position);
+            events.push(DomainEvent::LootDropped {
+                source_kind_id: removed.kind_id.clone(),
+                target_kind_id,
+                quantity,
+            });
+        }
+        for item in generated {
+            events.push(DomainEvent::LootDropped {
+                source_kind_id: removed.kind_id.clone(),
+                target_kind_id: item.kind_id.clone(),
+                quantity: item.quantity,
+            });
+            self.items.push(item);
+        }
+        if has_drops {
+            changed.insert(removed.position);
+        }
+        Ok(())
+    }
+
+    fn apply_task_events(&mut self, events: &[DomainEvent]) {
+        let Some((task_id, stage_index)) = self.task_states.iter().find_map(|(task_id, state)| {
+            (state.status == TaskStatusKindDto::Active
+                && state.active_floor_id.as_deref() == Some(self.current_floor_id.as_str()))
+            .then_some((task_id.clone(), state.stage_index))
+        }) else {
+            return;
+        };
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let objectives = task_objectives(world, &task_id);
+        let Some(objective) = usize::try_from(stage_index)
+            .ok()
+            .and_then(|stage| objectives.get(stage))
+            .copied()
+            .cloned()
+        else {
+            return;
+        };
+        let increment = match objective.kind {
+            TaskObjectiveKind::CollectItem => events.iter().any(|event| {
+                matches!(event, DomainEvent::ItemPickedUp { .. })
+                    && objective.item_instance_id.as_ref().is_some_and(|id| {
+                        self.items.iter().any(|item| {
+                            &item.id == id
+                                && matches!(
+                                    item.location,
+                                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                                )
+                        })
+                    })
+            }) as u32,
+            TaskObjectiveKind::EnterFloor => events.iter().any(|event| {
+                matches!(
+                    event,
+                    DomainEvent::FloorTransitioned { to_floor_id, .. }
+                        if objective.floor_id.as_deref() == Some(to_floor_id.as_str())
+                )
+            }) as u32,
+            TaskObjectiveKind::KillActor => events.iter().any(|event| {
+                task_death_target_kind(event).is_some()
+                    && objective
+                        .actor_instance_id
+                        .as_ref()
+                        .is_some_and(|id| !self.entities.iter().any(|entity| &entity.id == id))
+            }) as u32,
+            TaskObjectiveKind::KillActorKind => events
+                .iter()
+                .filter(|event| task_death_target_kind(event) == objective.actor_kind_id.as_deref())
+                .count()
+                .try_into()
+                .unwrap_or(u32::MAX),
+        };
+        if increment > 0 {
+            let state = self
+                .task_states
+                .get_mut(&task_id)
+                .expect("active task state must remain available");
+            state.current = state.current.saturating_add(increment).min(state.required);
+            if state.current >= state.required
+                && usize::try_from(state.stage_index)
+                    .ok()
+                    .is_some_and(|stage| stage + 1 < objectives.len())
+            {
+                state.stage_index = state.stage_index.saturating_add(1);
+                state.current = 0;
+                state.required = objectives[usize::try_from(state.stage_index)
+                    .expect("validated task stage must fit usize")]
+                .required;
+            }
+        }
+    }
+
+    fn generate_death_loot(&mut self, actor: &Actor) -> Result<Vec<ItemInstance>, CoreError> {
+        let Some(table_id) = self
+            .content
+            .actor(&actor.kind_id)
+            .and_then(|definition| definition.loot_table_id.clone())
+        else {
+            return Ok(Vec::new());
+        };
+        self.generate_loot_instances(
+            &LootContext {
+                table_id,
+                floor_id: self.current_floor_id.clone(),
+                depth: self.floor_depth(&self.current_floor_id),
+                source: LootSource::MonsterDeath {
+                    actor_id: actor.id.clone(),
+                },
+            },
+            ItemLocation::Ground(actor.position),
+        )
+    }
+
+    fn generate_loot_instances(
+        &mut self,
+        context: &LootContext,
+        location: ItemLocation,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        let context_is_valid = !context.floor_id.is_empty()
+            && match &context.source {
+                LootSource::MonsterCarried { actor_id } | LootSource::MonsterDeath { actor_id } => {
+                    !actor_id.is_empty()
+                }
+                LootSource::FloorRoom { room_id, spawn_id } => {
+                    context.depth > 0 && !room_id.is_empty() && !spawn_id.is_empty()
+                }
+                LootSource::Vault { vault_id, spawn_id } => {
+                    context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
+                }
+            };
+        debug_assert!(context_is_valid, "validated loot context must remain valid");
+        let table = self
+            .content
+            .loot_table(&context.table_id)
+            .expect("validated actor loot table must remain available")
+            .clone();
+        self.next_item_instance_serial
+            .checked_add(u64::from(table.rolls))
+            .ok_or(CoreError::ItemIdExhausted)?;
+        let entry_weights = table
+            .entries
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        let quality_weights = table
+            .quality_weights
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        let affix_weights = table
+            .affix_weights
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        let mut generated = Vec::with_capacity(usize::from(table.rolls));
+        for _ in 0..table.rolls {
+            let entry_index = self.roll_weighted_index(&entry_weights);
+            let quality_index = self.roll_weighted_index(&quality_weights);
+            let affix_index = self.roll_weighted_index(&affix_weights);
+            let entry = &table.entries[entry_index];
+            let quality = item_quality_dto(table.quality_weights[quality_index].quality);
+            let affix_ids = if quality == ItemQualityDto::Ordinary {
+                Vec::new()
+            } else {
+                table.affix_weights[affix_index]
+                    .affix_id
+                    .iter()
+                    .cloned()
+                    .collect()
+            };
+            let item = ItemInstance {
+                id: self.allocate_item_instance_id()?,
+                kind_id: entry.item_kind_id.clone(),
+                quantity: entry.quantity,
+                quality,
+                affix_ids,
+                location: location.clone(),
+            };
+            generated.push(item);
+        }
+        Ok(generated)
+    }
+
+    fn roll_weighted_index(&mut self, weights: &[u32]) -> usize {
+        let total = weights.iter().map(|weight| u64::from(*weight)).sum();
+        let mut roll = self.rng.bounded(total);
+        for (index, weight) in weights.iter().enumerate() {
+            let weight = u64::from(*weight);
+            if roll < weight {
+                return index;
+            }
+            roll -= weight;
+        }
+        unreachable!("validated positive weighted table must select an entry")
+    }
+
     fn clamp_player_hp_to_effective_max(&mut self) {
         self.player.hp = self.player.hp.min(self.effective_player_max_hp());
     }
@@ -2522,7 +3601,7 @@ impl Game {
         };
         CellDto {
             position,
-            terrain_id: self.terrain_at(position).to_owned(),
+            terrain_id: self.known_terrain_at(position).to_owned(),
             item_id: self
                 .items
                 .iter()
@@ -2634,8 +3713,1107 @@ impl Game {
         }
     }
 
+    fn traverse_stairs(
+        &mut self,
+        abandon_task: bool,
+    ) -> Result<Option<FloorTransitionOutcome>, CoreError> {
+        let terrain_id = self.terrain_at(self.player.position).to_owned();
+        let terrain = self
+            .content
+            .terrain(&terrain_id)
+            .expect("active terrain must remain available");
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let initial_floor_id = world.initial_floor_id.clone();
+        let procedural_floors = world.procedural_floors.clone();
+        let initial_task_states_by_id = initial_task_states(world);
+        if abandon_task
+            && !procedural_floors.iter().any(|floor| {
+                floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::OneShot
+            })
+        {
+            return Ok(None);
+        }
+        let target_floor_id = if abandon_task {
+            initial_floor_id.clone()
+        } else if self.current_floor_id == initial_floor_id {
+            let Some(target) = procedural_floors.iter().find(|floor| {
+                floor.return_floor_id == initial_floor_id
+                    && floor.entry_terrain_id.as_deref() == Some(terrain_id.as_str())
+            }) else {
+                return Ok(None);
+            };
+            target.id.clone()
+        } else if let Some(current) = procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)
+        {
+            if terrain.tags.iter().any(|tag| tag == "stairs-up") {
+                current.return_floor_id.clone()
+            } else if terrain.tags.iter().any(|tag| tag == "stairs-down") {
+                current.next_floor_id.clone().ok_or(CoreError::InvalidSave(
+                    "downward floor connection is missing",
+                ))?
+            } else {
+                return Ok(None);
+            }
+        } else {
+            return Ok(None);
+        };
+
+        if let Some(target) = procedural_floors
+            .iter()
+            .find(|floor| floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::OneShot)
+        {
+            let task_id = floor_task_id(target);
+            let state = self
+                .task_states
+                .get(task_id)
+                .expect("target task state must remain available");
+            let required_floor_id = task_objectives(world, task_id)
+                .get(usize::try_from(state.stage_index).unwrap_or(usize::MAX))
+                .and_then(|objective| objective.floor_id.as_deref());
+            if required_floor_id.is_some_and(|floor_id| floor_id != target_floor_id) {
+                return Ok(None);
+            }
+        }
+
+        let from_floor_id = self.current_floor_id.clone();
+        let source_definition = procedural_floors
+            .iter()
+            .find(|floor| floor.id == from_floor_id);
+        let expedition_ended = target_floor_id == initial_floor_id
+            && source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Dungeon);
+        let one_shot_source = source_definition
+            .filter(|floor| {
+                target_floor_id == initial_floor_id && floor.lifecycle == FloorLifecycle::OneShot
+            })
+            .cloned();
+        let one_shot_task_id = one_shot_source
+            .as_ref()
+            .map(floor_task_id)
+            .map(str::to_owned);
+        let task_members = one_shot_task_id.as_ref().map_or_else(Vec::new, |task_id| {
+            procedural_floors
+                .iter()
+                .filter(|floor| {
+                    floor.lifecycle == FloorLifecycle::OneShot && floor_task_id(floor) == task_id
+                })
+                .cloned()
+                .collect::<Vec<_>>()
+        });
+        let task_succeeded = one_shot_task_id.as_ref().is_some_and(|task_id| {
+            self.task_states
+                .get(task_id)
+                .is_some_and(|state| task_succeeded(world, task_id, state))
+        });
+        if !abandon_task
+            && one_shot_source.as_ref().is_some_and(|floor| {
+                !floor.retakeable && !floor.allow_early_task_exit && !task_succeeded
+            })
+        {
+            return Ok(None);
+        }
+        let task_resolution = if one_shot_source.is_none() {
+            None
+        } else if abandon_task {
+            Some(TaskResolution::Abandoned)
+        } else if task_succeeded {
+            Some(TaskResolution::Completed)
+        } else if one_shot_source
+            .as_ref()
+            .is_some_and(|floor| floor.retakeable)
+        {
+            None
+        } else {
+            Some(TaskResolution::Failed)
+        };
+        let all_items = std::mem::take(&mut self.items);
+        let (floor_items, global_items): (Vec<_>, Vec<_>) =
+            all_items.into_iter().partition(|item| {
+                matches!(
+                    item.location,
+                    ItemLocation::Ground(_) | ItemLocation::CarriedBy { .. }
+                )
+            });
+        let current = FloorState {
+            id: from_floor_id.clone(),
+            width: self.width,
+            height: self.height,
+            terrain: std::mem::take(&mut self.terrain),
+            player_position: self.player.position,
+            entities: std::mem::take(&mut self.entities),
+            items: floor_items,
+            explored: std::mem::take(&mut self.explored),
+            revealed_terrain: std::mem::take(&mut self.revealed_terrain),
+        };
+        self.stored_floors.insert(from_floor_id.clone(), current);
+
+        let task_resumed = procedural_floors
+            .iter()
+            .find(|floor| {
+                floor.id == target_floor_id
+                    && floor.lifecycle == FloorLifecycle::OneShot
+                    && floor.retakeable
+            })
+            .is_some_and(|floor| {
+                self.task_states
+                    .get(floor_task_id(floor))
+                    .is_some_and(|state| state.status == TaskStatusKindDto::Paused)
+            });
+        let mut destination = if let Some(floor) = self.stored_floors.remove(&target_floor_id) {
+            floor
+        } else if let Some(definition) = procedural_floors
+            .iter()
+            .find(|floor| floor.id == target_floor_id)
+        {
+            self.generate_procedural_floor(definition)?
+        } else {
+            return Err(CoreError::InvalidSave("return floor state is missing"));
+        };
+        if expedition_ended {
+            self.stored_floors.clear();
+        }
+        if one_shot_source.is_some()
+            && let Some(task_resolution) = task_resolution
+        {
+            for definition in &task_members {
+                self.stored_floors.remove(&definition.id);
+                if let (Some(entry_id), Some(result_id)) = (
+                    definition.entry_terrain_id.as_deref(),
+                    match task_resolution {
+                        TaskResolution::Completed => {
+                            definition.completed_entry_terrain_id.as_deref()
+                        }
+                        TaskResolution::Failed => definition.failed_entry_terrain_id.as_deref(),
+                        TaskResolution::Abandoned => {
+                            definition.abandoned_entry_terrain_id.as_deref()
+                        }
+                    },
+                ) {
+                    for terrain_id in &mut destination.terrain {
+                        if terrain_id == entry_id {
+                            *terrain_id = result_id.to_owned();
+                        }
+                    }
+                }
+            }
+            if task_resolution == TaskResolution::Completed
+                && let Some(reward) = task_members
+                    .iter()
+                    .find_map(|definition| definition.task_reward.as_ref())
+            {
+                destination.items.push(ItemInstance {
+                    id: reward.item_instance_id.clone(),
+                    kind_id: reward.item_kind_id.clone(),
+                    quantity: reward.quantity,
+                    quality: ItemQualityDto::Ordinary,
+                    affix_ids: Vec::new(),
+                    location: ItemLocation::Ground(destination.player_position),
+                });
+            }
+        }
+        if let Some(task_id) = &one_shot_task_id {
+            let state = self
+                .task_states
+                .get_mut(task_id)
+                .expect("active task state must remain available");
+            state.active_floor_id = None;
+            state.status = match task_resolution {
+                Some(TaskResolution::Completed) => {
+                    state.current = state.required;
+                    TaskStatusKindDto::Completed
+                }
+                Some(TaskResolution::Failed) => {
+                    state.stage_index = 0;
+                    state.current = 0;
+                    state.required = initial_task_states_by_id[task_id].required;
+                    TaskStatusKindDto::Failed
+                }
+                Some(TaskResolution::Abandoned) => {
+                    state.stage_index = 0;
+                    state.current = 0;
+                    state.required = initial_task_states_by_id[task_id].required;
+                    TaskStatusKindDto::Abandoned
+                }
+                None => TaskStatusKindDto::Paused,
+            };
+        }
+        if let Some(target) = procedural_floors
+            .iter()
+            .find(|floor| floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::OneShot)
+        {
+            let state = self
+                .task_states
+                .get_mut(floor_task_id(target))
+                .expect("target task state must remain available");
+            state.status = TaskStatusKindDto::Active;
+            state.active_floor_id = Some(target.id.clone());
+        }
+        self.activate_floor(destination, global_items);
+        Ok(Some(FloorTransitionOutcome {
+            from_floor_id,
+            to_floor_id: target_floor_id.clone(),
+            expedition_ended,
+            one_shot_closed: one_shot_source.as_ref().and_then(|floor| {
+                task_resolution.map(|resolution| (floor_task_id(floor).to_owned(), resolution))
+            }),
+            task_paused: one_shot_source
+                .filter(|floor| task_resolution.is_none() && floor.retakeable)
+                .map(|floor| floor_task_id(&floor).to_owned()),
+            task_resumed: task_resumed.then(|| {
+                procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == target_floor_id)
+                    .map(floor_task_id)
+                    .unwrap_or(&target_floor_id)
+                    .to_owned()
+            }),
+        }))
+    }
+
+    fn activate_floor(&mut self, floor: FloorState, mut global_items: Vec<ItemInstance>) {
+        self.current_floor_id = floor.id;
+        self.width = floor.width;
+        self.height = floor.height;
+        self.terrain = floor.terrain;
+        self.player.position = floor.player_position;
+        self.entities = floor.entities;
+        global_items.extend(floor.items);
+        self.items = global_items;
+        self.explored = floor.explored;
+        self.revealed_terrain = floor.revealed_terrain;
+        self.reveal_current_visibility();
+    }
+
+    fn generate_procedural_floor(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+    ) -> Result<FloorState, CoreError> {
+        let vault = definition
+            .vault_id
+            .as_ref()
+            .and_then(|vault_id| self.content.vault(vault_id))
+            .cloned();
+        let guardian = definition.guardian.as_ref().filter(|_| {
+            definition.dungeon_id.as_ref().is_some_and(|dungeon_id| {
+                self.dungeon_states
+                    .get(dungeon_id)
+                    .is_some_and(|state| !state.guardian_defeated)
+            })
+        });
+        let task_objectives = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| {
+                        floor_task_id(floor) == floor_task_id(definition)
+                            && !floor.task_stages.is_empty()
+                    })
+                    .map(|floor| {
+                        floor
+                            .task_stages
+                            .iter()
+                            .filter(|stage| {
+                                stage.floor_id.as_deref() == Some(definition.id.as_str())
+                            })
+                            .cloned()
+                            .collect::<Vec<_>>()
+                    })
+            })
+            .unwrap_or_else(|| definition.task_objective.iter().cloned().collect());
+        let width = definition.width;
+        let height = definition.height;
+        let mut terrain =
+            vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        let room_width = 6_i32;
+        let room_height = 5_i32;
+        let first_x = 1 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+        let first_y = 1 + i32::try_from(self.rng.bounded(4)).unwrap_or(0);
+        let second_x = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+        let second_y = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+        let rooms = [
+            GeneratedRoom {
+                id: "entry",
+                x: first_x,
+                y: first_y,
+                width: room_width,
+                height: room_height,
+            },
+            GeneratedRoom {
+                id: "remote",
+                x: second_x,
+                y: second_y,
+                width: room_width,
+                height: room_height,
+            },
+        ];
+        carve_room(
+            &mut terrain,
+            width,
+            rooms[0].x,
+            rooms[0].y,
+            rooms[0].width,
+            rooms[0].height,
+            &definition.floor_terrain_id,
+        );
+        carve_room(
+            &mut terrain,
+            width,
+            rooms[1].x,
+            rooms[1].y,
+            rooms[1].width,
+            rooms[1].height,
+            &definition.floor_terrain_id,
+        );
+        let first_center = Position {
+            x: rooms[0].x + rooms[0].width / 2,
+            y: rooms[0].y + rooms[0].height / 2,
+        };
+        let second_center = Position {
+            x: rooms[1].x + rooms[1].width / 2,
+            y: rooms[1].y + rooms[1].height / 2,
+        };
+        let vault_origin = vault.as_ref().map(|vault| Position {
+            x: second_center.x - i32::from(vault.entrance_position.x),
+            y: rooms[1].y,
+        });
+        for x in first_center.x.min(second_center.x)..=first_center.x.max(second_center.x) {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                Position {
+                    x,
+                    y: first_center.y,
+                },
+                &definition.floor_terrain_id,
+            );
+        }
+        for y in first_center.y.min(second_center.y)..=first_center.y.max(second_center.y) {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                Position {
+                    x: second_center.x,
+                    y,
+                },
+                &definition.floor_terrain_id,
+            );
+        }
+        let door_position = Position {
+            x: (first_center.x + second_center.x) / 2,
+            y: first_center.y,
+        };
+        set_generated_terrain(
+            &mut terrain,
+            width,
+            door_position,
+            &definition.closed_door_terrain_id,
+        );
+        set_generated_terrain(
+            &mut terrain,
+            width,
+            first_center,
+            &definition.up_stair_terrain_id,
+        );
+        let down_stair_position = Position {
+            x: first_center.x - 1,
+            y: first_center.y,
+        };
+        if let Some(down_stair_terrain_id) = &definition.down_stair_terrain_id {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                down_stair_position,
+                down_stair_terrain_id,
+            );
+        }
+        set_generated_terrain(
+            &mut terrain,
+            width,
+            Position {
+                x: first_center.x,
+                y: first_center.y + 1,
+            },
+            &definition.trap_terrain_id,
+        );
+        if let Some(vault) = &vault {
+            let origin = vault_origin.expect("present vault must have an origin");
+            for local_y in 0..vault.height {
+                for local_x in 0..vault.width {
+                    set_generated_terrain(
+                        &mut terrain,
+                        width,
+                        Position {
+                            x: origin.x + i32::from(local_x),
+                            y: origin.y + i32::from(local_y),
+                        },
+                        &vault.base_terrain_id,
+                    );
+                }
+            }
+            for terrain_override in &vault.terrain_overrides {
+                for local in &terrain_override.positions {
+                    set_generated_terrain(
+                        &mut terrain,
+                        width,
+                        Position {
+                            x: origin.x + i32::from(local.x),
+                            y: origin.y + i32::from(local.y),
+                        },
+                        &terrain_override.terrain_id,
+                    );
+                }
+            }
+        }
+        let mut occupied = BTreeSet::from([first_center]);
+        if definition.down_stair_terrain_id.is_some() {
+            occupied.insert(down_stair_position);
+        }
+        let mut entities = Vec::with_capacity(definition.actor_spawns.len());
+        for spawn in &definition.actor_spawns {
+            let eligible_kind_ids = spawn
+                .actor_kind_ids
+                .iter()
+                .filter(|kind_id| {
+                    self.content
+                        .actor(kind_id)
+                        .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            let kind_index = usize::try_from(
+                self.rng.bounded(
+                    u64::try_from(eligible_kind_ids.len())
+                        .expect("validated actor candidate count must fit u64"),
+                ),
+            )
+            .expect("bounded actor candidate index must fit usize");
+            let kind_id = &eligible_kind_ids[kind_index];
+            let position = self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+            occupied.insert(position);
+            let actor = self
+                .content
+                .actor(kind_id)
+                .expect("validated procedural actor kind must remain available");
+            entities.push(actor_from_spawn(
+                &spawn.instance_id,
+                kind_id,
+                ContentPosition {
+                    x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                    y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+                },
+                actor.max_hp,
+                actor.speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+            ));
+        }
+        if let Some(vault) = &vault {
+            let origin = vault_origin.expect("present vault must have an origin");
+            for group in &vault.encounter_groups {
+                let eligible_entries = group
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .collect::<Vec<_>>();
+                let weights = eligible_entries
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                for (ordinal, local) in group.member_positions.iter().enumerate() {
+                    let entry = eligible_entries[self.roll_weighted_index(&weights)];
+                    let actor = self
+                        .content
+                        .actor(&entry.actor_kind_id)
+                        .expect("validated vault encounter actor must remain available");
+                    let position = Position {
+                        x: origin.x + i32::from(local.x),
+                        y: origin.y + i32::from(local.y),
+                    };
+                    occupied.insert(position);
+                    entities.push(actor_from_spawn(
+                        &format!("{}.{}.{}", definition.id, group.id, ordinal + 1),
+                        &entry.actor_kind_id,
+                        ContentPosition {
+                            x: u16::try_from(position.x).expect("vault actor x must fit u16"),
+                            y: u16::try_from(position.y).expect("vault actor y must fit u16"),
+                        },
+                        actor.max_hp,
+                        actor.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                    ));
+                }
+            }
+        }
+        if let Some(guardian) = guardian {
+            let actor = self
+                .content
+                .actor(&guardian.actor_kind_id)
+                .expect("validated dungeon guardian must remain available");
+            let max_hp = actor.max_hp;
+            let speed = actor.speed;
+            let position = Position {
+                x: first_center.x + 1,
+                y: first_center.y,
+            };
+            occupied.insert(position);
+            entities.push(actor_from_spawn(
+                &guardian.instance_id,
+                &guardian.actor_kind_id,
+                ContentPosition {
+                    x: u16::try_from(position.x).expect("guardian x must fit u16"),
+                    y: u16::try_from(position.y).expect("guardian y must fit u16"),
+                },
+                max_hp,
+                speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+            ));
+        }
+        let mut items =
+            self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
+        for spawn in &definition.loot_spawns {
+            let position = self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+            occupied.insert(position);
+            items.extend(self.generate_loot_instances(
+                &LootContext {
+                    table_id: spawn.loot_table_id.clone(),
+                    floor_id: definition.id.clone(),
+                    depth: definition.depth,
+                    source: LootSource::FloorRoom {
+                        room_id: spawn.room_id.clone(),
+                        spawn_id: spawn.id.clone(),
+                    },
+                },
+                ItemLocation::Ground(position),
+            )?);
+        }
+        if let Some(vault) = &vault {
+            let origin = vault_origin.expect("present vault must have an origin");
+            for spawn in &vault.loot_spawns {
+                let position = Position {
+                    x: origin.x + i32::from(spawn.position.x),
+                    y: origin.y + i32::from(spawn.position.y),
+                };
+                occupied.insert(position);
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: spawn.loot_table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::Vault {
+                            vault_id: vault.id.clone(),
+                            spawn_id: spawn.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(position),
+                )?);
+            }
+        }
+        for objective in &task_objectives {
+            match objective.kind {
+                TaskObjectiveKind::CollectItem => items.push(ItemInstance {
+                    id: objective
+                        .item_instance_id
+                        .clone()
+                        .expect("validated item objective must have an instance ID"),
+                    kind_id: objective
+                        .item_kind_id
+                        .clone()
+                        .expect("validated item objective must have a kind ID"),
+                    quantity: 1,
+                    quality: ItemQualityDto::Ordinary,
+                    affix_ids: Vec::new(),
+                    location: ItemLocation::Ground(first_center),
+                }),
+                TaskObjectiveKind::KillActor => {
+                    let kind_id = objective
+                        .actor_kind_id
+                        .as_ref()
+                        .expect("validated kill objective must have a kind ID");
+                    let actor = self
+                        .content
+                        .actor(kind_id)
+                        .expect("validated objective actor must remain available");
+                    entities.push(actor_from_spawn(
+                        objective
+                            .actor_instance_id
+                            .as_ref()
+                            .expect("validated kill objective must have an instance ID"),
+                        kind_id,
+                        ContentPosition {
+                            x: u16::try_from(first_center.x + 1).expect("objective x must fit u16"),
+                            y: u16::try_from(first_center.y).expect("objective y must fit u16"),
+                        },
+                        actor.max_hp,
+                        actor.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                    ));
+                }
+                TaskObjectiveKind::KillActorKind => {
+                    let kind_id = objective
+                        .actor_kind_id
+                        .as_ref()
+                        .expect("validated counted kill objective must have a kind ID");
+                    let actor = self
+                        .content
+                        .actor(kind_id)
+                        .expect("validated objective actor must remain available");
+                    for ordinal in 0..objective.spawn_count.unwrap_or(objective.required) {
+                        entities.push(actor_from_spawn(
+                            &format!("{}.task-target.{}", definition.id, ordinal + 1),
+                            kind_id,
+                            ContentPosition {
+                                x: u16::try_from(
+                                    first_center.x + 1 + i32::try_from(ordinal).unwrap_or(i32::MAX),
+                                )
+                                .expect("objective x must fit u16"),
+                                y: u16::try_from(first_center.y).expect("objective y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                        ));
+                    }
+                }
+                TaskObjectiveKind::EnterFloor => {}
+            }
+        }
+        Ok(FloorState {
+            id: definition.id.clone(),
+            width,
+            height,
+            terrain,
+            player_position: first_center,
+            entities,
+            items,
+            explored: vec![false; usize::from(width) * usize::from(height)],
+            revealed_terrain: BTreeSet::new(),
+        })
+    }
+
+    fn choose_generated_room_position(
+        &mut self,
+        rooms: &[GeneratedRoom],
+        room_id: &str,
+        occupied: &BTreeSet<Position>,
+    ) -> Position {
+        let room = rooms
+            .iter()
+            .find(|room| room.id == room_id)
+            .expect("validated procedural room ID must remain available");
+        let candidates = (room.y..room.y + room.height)
+            .flat_map(|y| (room.x..room.x + room.width).map(move |x| Position { x, y }))
+            .filter(|position| !occupied.contains(position))
+            .collect::<Vec<_>>();
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("generated room candidate count must fit u64"),
+        ))
+        .expect("bounded generated room candidate index must fit usize");
+        candidates[index]
+    }
+
     fn terrain_at(&self, position: Position) -> &str {
         &self.terrain[self.index(position).expect("validated map position")]
+    }
+
+    fn known_terrain_at(&self, position: Position) -> &str {
+        let terrain_id = self.terrain_at(position);
+        let definition = self
+            .content
+            .terrain(terrain_id)
+            .expect("active terrain must remain available");
+        if !self.revealed_terrain.contains(&position)
+            && let Some(concealed_as) = definition.concealed_as_terrain_id.as_deref()
+        {
+            concealed_as
+        } else {
+            terrain_id
+        }
+    }
+
+    fn terrain_interactions(&self) -> Vec<TerrainInteractionDto> {
+        let mut interactions = Vec::new();
+        for direction in TERRAIN_INTERACTION_DIRECTIONS {
+            let position = self.position_in_direction(direction);
+            if self.index(position).is_none() {
+                continue;
+            }
+            let Some(terrain) = self.content.terrain(self.known_terrain_at(position)) else {
+                continue;
+            };
+            let unavailable_reason = self.terrain_interaction_unavailable_reason(position);
+            let available = unavailable_reason.is_none();
+            if terrain.open_to_terrain_id.is_some() {
+                interactions.push(TerrainInteractionDto {
+                    kind: TerrainInteractionKindDto::OpenDoor,
+                    direction,
+                    position,
+                    terrain_id: terrain.id.clone(),
+                    requires_check: terrain.open_check_difficulty.is_some(),
+                    available,
+                    unavailable_reason,
+                });
+            }
+            if terrain.close_to_terrain_id.is_some() {
+                interactions.push(TerrainInteractionDto {
+                    kind: TerrainInteractionKindDto::CloseDoor,
+                    direction,
+                    position,
+                    terrain_id: terrain.id.clone(),
+                    requires_check: false,
+                    available,
+                    unavailable_reason,
+                });
+            }
+            if terrain.bash_to_terrain_id.is_some() {
+                interactions.push(TerrainInteractionDto {
+                    kind: TerrainInteractionKindDto::BashDoor,
+                    direction,
+                    position,
+                    terrain_id: terrain.id.clone(),
+                    requires_check: true,
+                    available,
+                    unavailable_reason,
+                });
+            }
+            if terrain.trap.is_some() {
+                interactions.push(TerrainInteractionDto {
+                    kind: TerrainInteractionKindDto::DisarmTrap,
+                    direction,
+                    position,
+                    terrain_id: terrain.id.clone(),
+                    requires_check: true,
+                    available,
+                    unavailable_reason,
+                });
+            }
+            if terrain.dig_to_terrain_id.is_some() {
+                interactions.push(TerrainInteractionDto {
+                    kind: TerrainInteractionKindDto::DigTerrain,
+                    direction,
+                    position,
+                    terrain_id: terrain.id.clone(),
+                    requires_check: true,
+                    available,
+                    unavailable_reason,
+                });
+            }
+        }
+        interactions
+    }
+
+    fn task_statuses(&self) -> Vec<TaskStatusDto> {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        self.task_states
+            .iter()
+            .map(|(task_id, state)| {
+                let floor = world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor_task_id(floor) == task_id)
+                    .expect("task state must have a representative floor");
+                let stages = u32::try_from(task_objectives(world, task_id).len())
+                    .expect("validated task stage count must fit u32");
+                TaskStatusDto {
+                    task_id: task_id.clone(),
+                    floor_id: floor.id.clone(),
+                    name_key: floor.name_key.clone(),
+                    status: state.status,
+                    current: state.current,
+                    required: state.required,
+                    stage: state.stage_index.saturating_add(1),
+                    stages,
+                }
+            })
+            .collect()
+    }
+
+    fn trigger_player_trap(&mut self, position: Position) -> Option<(String, DamageOutcome)> {
+        let index = self.index(position)?;
+        let terrain = self.content.terrain(&self.terrain[index])?;
+        let source_kind_id = terrain.id.clone();
+        let trap = terrain.trap.as_ref()?;
+        let damage = resolve_damage(
+            DamagePacket::new(trap.damage, trap.damage_type.into()),
+            self.player.resistances.level(trap.damage_type.into()),
+        );
+        self.player.hp = self.player.hp.saturating_sub(damage.applied);
+        self.revealed_terrain.insert(position);
+        Some((source_kind_id, damage))
+    }
+
+    fn disarm_trap(&mut self, direction: Direction) -> Option<TrapDisarmOutcome> {
+        let position = self.position_in_direction(direction);
+        let index = self.index(position)?;
+        if !self.revealed_terrain.contains(&position)
+            || self
+                .terrain_interaction_unavailable_reason(position)
+                .is_some()
+        {
+            return None;
+        }
+        let terrain = self.content.terrain(&self.terrain[index])?;
+        let source_id = terrain.id.clone();
+        let trap = terrain.trap.as_ref()?;
+        let target_id = trap.disarm_to_terrain_id.clone();
+        let difficulty = trap.disarm_check_difficulty;
+        let ability = self.player_derived_stats().disarm_skill;
+        let mut difficulty_pipeline = DerivedStatsPipeline::new();
+        difficulty_pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            &source_id,
+            difficulty,
+        );
+        let check = resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::DisarmTrap,
+                actor_id: self.player.id.clone(),
+                target_id: Some(source_id),
+                ability,
+                difficulty: difficulty_pipeline
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        );
+        if !check.succeeded() {
+            return Some(TrapDisarmOutcome::Failed { position });
+        }
+        self.terrain[index] = target_id;
+        self.revealed_terrain.remove(&position);
+        Some(TrapDisarmOutcome::Succeeded { position })
+    }
+
+    fn dig_terrain(&mut self, direction: Direction) -> Option<TerrainDigOutcome> {
+        let position = self.position_in_direction(direction);
+        let index = self.index(position)?;
+        if self
+            .terrain_interaction_unavailable_reason(position)
+            .is_some()
+        {
+            return None;
+        }
+        let terrain = self.content.terrain(self.known_terrain_at(position))?;
+        let source_id = terrain.id.clone();
+        let target_id = terrain.dig_to_terrain_id.clone()?;
+        let difficulty = terrain.dig_check_difficulty?;
+        let ability = self.player_derived_stats().dig_skill;
+        let mut difficulty_pipeline = DerivedStatsPipeline::new();
+        difficulty_pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            &source_id,
+            difficulty,
+        );
+        let check = resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::DigTerrain,
+                actor_id: self.player.id.clone(),
+                target_id: Some(source_id),
+                ability,
+                difficulty: difficulty_pipeline
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        );
+        if !check.succeeded() {
+            return Some(TerrainDigOutcome::Failed { position });
+        }
+        self.terrain[index] = target_id;
+        self.revealed_terrain.remove(&position);
+        Some(TerrainDigOutcome::Succeeded { position })
+    }
+
+    fn search_hidden_terrain(&mut self) -> Vec<Position> {
+        let candidates = TERRAIN_INTERACTION_DIRECTIONS
+            .into_iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(direction);
+                let index = self.index(position)?;
+                if self.revealed_terrain.contains(&position) {
+                    return None;
+                }
+                let terrain = self.content.terrain(&self.terrain[index])?;
+                Some((
+                    position,
+                    terrain.id.clone(),
+                    terrain.search_check_difficulty?,
+                ))
+            })
+            .collect::<Vec<_>>();
+        let ability = self.player_derived_stats().search_skill;
+        let mut discovered = Vec::new();
+        for (position, terrain_id, difficulty) in candidates {
+            let mut difficulty_pipeline = DerivedStatsPipeline::new();
+            difficulty_pipeline.add(
+                StatKind::ActionDifficulty,
+                StatLayer::Environment,
+                &terrain_id,
+                difficulty,
+            );
+            let check = resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::SearchTerrain,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(terrain_id),
+                    ability: ability.clone(),
+                    difficulty: difficulty_pipeline
+                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                },
+            );
+            if check.succeeded() {
+                self.revealed_terrain.insert(position);
+                discovered.push(position);
+            }
+        }
+        discovered
+    }
+
+    fn terrain_interaction_unavailable_reason(
+        &self,
+        position: Position,
+    ) -> Option<TerrainInteractionUnavailableReasonDto> {
+        if self
+            .entities
+            .iter()
+            .any(|entity| entity.position == position)
+        {
+            return Some(TerrainInteractionUnavailableReasonDto::OccupiedByActor);
+        }
+        if self.items.iter().any(|item| {
+            matches!(item.location, ItemLocation::Ground(item_position) if item_position == position)
+        }) {
+            return Some(TerrainInteractionUnavailableReasonDto::OccupiedByItem);
+        }
+        None
+    }
+
+    fn open_door(&mut self, direction: rfb_protocol::Direction) -> Option<DoorOpenOutcome> {
+        let position = self.position_in_direction(direction);
+        let index = self.index(position)?;
+        if self
+            .terrain_interaction_unavailable_reason(position)
+            .is_some()
+        {
+            return None;
+        }
+        let terrain = self.content.terrain(self.known_terrain_at(position))?;
+        let source_id = terrain.id.clone();
+        let target_id = terrain.open_to_terrain_id.clone()?;
+        let difficulty = terrain.open_check_difficulty;
+        if let Some(difficulty) = difficulty {
+            let stats = self.player_derived_stats();
+            let mut difficulty_pipeline = DerivedStatsPipeline::new();
+            difficulty_pipeline.add(
+                StatKind::ActionDifficulty,
+                StatLayer::Environment,
+                &source_id,
+                difficulty,
+            );
+            let check = resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::UnlockDoor,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(source_id),
+                    ability: stats.door_skill,
+                    difficulty: difficulty_pipeline
+                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                },
+            );
+            if !check.succeeded() {
+                return Some(DoorOpenOutcome::UnlockFailed { position });
+            }
+        }
+        self.terrain[index] = target_id;
+        self.revealed_terrain.remove(&position);
+        Some(if difficulty.is_some() {
+            DoorOpenOutcome::Unlocked { position }
+        } else {
+            DoorOpenOutcome::Opened { position }
+        })
+    }
+
+    fn bash_door(&mut self, direction: rfb_protocol::Direction) -> Option<DoorBashOutcome> {
+        let position = self.position_in_direction(direction);
+        let index = self.index(position)?;
+        if self
+            .terrain_interaction_unavailable_reason(position)
+            .is_some()
+        {
+            return None;
+        }
+        let terrain = self.content.terrain(self.known_terrain_at(position))?;
+        let source_id = terrain.id.clone();
+        let target_id = terrain.bash_to_terrain_id.clone()?;
+        let difficulty = terrain.bash_check_difficulty?;
+        let stats = self.player_derived_stats();
+        let mut difficulty_pipeline = DerivedStatsPipeline::new();
+        difficulty_pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            &source_id,
+            difficulty,
+        );
+        let check = resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::BashDoor,
+                actor_id: self.player.id.clone(),
+                target_id: Some(source_id),
+                ability: stats.bash_power,
+                difficulty: difficulty_pipeline
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        );
+        if !check.succeeded() {
+            return Some(DoorBashOutcome::Failed { position });
+        }
+        self.terrain[index] = target_id;
+        self.revealed_terrain.remove(&position);
+        Some(DoorBashOutcome::Succeeded { position })
+    }
+
+    fn close_door(&mut self, direction: rfb_protocol::Direction) -> Option<Position> {
+        let position = self.position_in_direction(direction);
+        let index = self.index(position)?;
+        if self
+            .terrain_interaction_unavailable_reason(position)
+            .is_some()
+        {
+            return None;
+        }
+        let target_id = self
+            .content
+            .terrain(&self.terrain[index])?
+            .close_to_terrain_id
+            .clone()?;
+        self.terrain[index] = target_id;
+        Some(position)
+    }
+
+    fn position_in_direction(&self, direction: rfb_protocol::Direction) -> Position {
+        let (dx, dy) = direction.delta();
+        Position {
+            x: self.player.position.x + dx,
+            y: self.player.position.y + dy,
+        }
     }
 
     fn index(&self, position: Position) -> Option<usize> {
@@ -2656,9 +4834,39 @@ impl Game {
     }
 
     fn validate_state(&self) -> Result<(), CoreError> {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .ok_or_else(|| CoreError::UnknownWorld(self.world_id.clone()))?;
+        let valid_floor = |floor_id: &str| {
+            floor_id == world.initial_floor_id
+                || world
+                    .procedural_floors
+                    .iter()
+                    .any(|floor| floor.id == floor_id)
+        };
+        if !valid_floor(&self.current_floor_id)
+            || self
+                .stored_floors
+                .keys()
+                .any(|floor_id| !valid_floor(floor_id))
+        {
+            return Err(CoreError::InvalidSave("floor identity is invalid"));
+        }
         if self.explored.len() != self.terrain.len() {
             return Err(CoreError::InvalidSave(
                 "exploration memory dimensions are invalid",
+            ));
+        }
+        if !revealed_terrain_is_valid(
+            &self.revealed_terrain,
+            &self.terrain,
+            self.width,
+            self.height,
+            &self.content,
+        ) {
+            return Err(CoreError::InvalidSave(
+                "revealed terrain knowledge is invalid",
             ));
         }
         for terrain_id in &self.terrain {
@@ -2672,6 +4880,7 @@ impl Game {
         }
         let mut instance_ids = BTreeSet::new();
         instance_ids.insert(self.player.id.clone());
+        let mut monster_ids = BTreeSet::new();
         let mut positions = BTreeSet::new();
         positions.insert(self.player.position);
         for entity in &self.entities {
@@ -2682,6 +4891,7 @@ impl Game {
             {
                 return Err(CoreError::InvalidSave("entity position is invalid"));
             }
+            monster_ids.insert(entity.id.clone());
         }
         let mut equipment_slots = BTreeSet::new();
         for item in &self.items {
@@ -2740,36 +4950,220 @@ impl Game {
                         return Err(CoreError::InvalidSave("equipment item state is invalid"));
                     }
                 }
+                ItemLocation::CarriedBy { actor_id } => {
+                    if !common_valid
+                        || !monster_ids.contains(actor_id)
+                        || item.quantity > definition.max_stack
+                    {
+                        return Err(CoreError::InvalidSave("carried item state is invalid"));
+                    }
+                }
+            }
+        }
+        for floor in self.stored_floors.values() {
+            let expected_len = usize::from(floor.width) * usize::from(floor.height);
+            if floor.terrain.len() != expected_len
+                || floor.explored.len() != expected_len
+                || !revealed_terrain_is_valid(
+                    &floor.revealed_terrain,
+                    &floor.terrain,
+                    floor.width,
+                    floor.height,
+                    &self.content,
+                )
+                || floor.id == self.current_floor_id
+                || !floor_position_is_walkable(floor, floor.player_position, &self.content)
+            {
+                return Err(CoreError::InvalidSave("stored floor state is invalid"));
+            }
+            for terrain_id in &floor.terrain {
+                if self.content.terrain(terrain_id).is_none() {
+                    return Err(CoreError::UnknownTerrain(terrain_id.clone()));
+                }
+            }
+            let mut floor_positions = BTreeSet::new();
+            let mut floor_monster_ids = BTreeSet::new();
+            for entity in &floor.entities {
+                self.validate_actor(entity, ActorRole::Monster)?;
+                if !instance_ids.insert(entity.id.clone())
+                    || !floor_position_is_walkable(floor, entity.position, &self.content)
+                    || !floor_positions.insert(entity.position)
+                {
+                    return Err(CoreError::InvalidSave(
+                        "stored floor entity state is invalid",
+                    ));
+                }
+                floor_monster_ids.insert(entity.id.clone());
+            }
+            for item in &floor.items {
+                let definition = self
+                    .content
+                    .item(&item.kind_id)
+                    .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+                let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
+                    && item
+                        .affix_ids
+                        .iter()
+                        .all(|affix_id| self.content.affix(affix_id).is_some())
+                    && (item.affix_ids.is_empty()
+                        || (definition.max_stack == 1
+                            && definition.equipment_slot.is_some()
+                            && item.quantity == 1
+                            && item.quality != ItemQualityDto::Ordinary))
+                    && (item.quality == ItemQualityDto::Ordinary
+                        || (definition.max_stack == 1 && item.quantity == 1));
+                let location_is_valid = match &item.location {
+                    ItemLocation::Ground(position) => {
+                        floor_position_is_walkable(floor, *position, &self.content)
+                    }
+                    ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. } => false,
+                };
+                if !instance_ids.insert(item.id.clone())
+                    || item.quantity == 0
+                    || item.quantity > definition.max_stack
+                    || !affixes_are_valid
+                    || !location_is_valid
+                {
+                    return Err(CoreError::InvalidSave("stored floor item state is invalid"));
+                }
+            }
+        }
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let expected_tasks = initial_task_states(world);
+        if self.task_states.len() != expected_tasks.len() {
+            return Err(CoreError::InvalidSave("task state set is invalid"));
+        }
+        for (task_id, state) in &self.task_states {
+            let Some(expected) = expected_tasks.get(task_id) else {
+                return Err(CoreError::InvalidSave("task state ID is invalid"));
+            };
+            let members = world
+                .procedural_floors
+                .iter()
+                .filter(|floor| floor_task_id(floor) == task_id)
+                .collect::<Vec<_>>();
+            let objectives = task_objectives(world, task_id);
+            let Some(objective) = usize::try_from(state.stage_index)
+                .ok()
+                .and_then(|stage| objectives.get(stage))
+            else {
+                return Err(CoreError::InvalidSave("task stage is invalid"));
+            };
+            let active_is_valid = state.active_floor_id.as_ref().is_some_and(|floor_id| {
+                floor_id == &self.current_floor_id
+                    && members.iter().any(|floor| floor.id == *floor_id)
+            });
+            let paused_is_valid = members
+                .iter()
+                .any(|floor| self.stored_floors.contains_key(&floor.id));
+            let status_is_valid = match state.status {
+                TaskStatusKindDto::Active => active_is_valid,
+                TaskStatusKindDto::Paused => state.active_floor_id.is_none() && paused_is_valid,
+                TaskStatusKindDto::Completed => {
+                    state.active_floor_id.is_none()
+                        && usize::try_from(state.stage_index)
+                            .ok()
+                            .is_some_and(|stage| stage + 1 == objectives.len())
+                        && state.current == state.required
+                }
+                TaskStatusKindDto::Available
+                | TaskStatusKindDto::Failed
+                | TaskStatusKindDto::Abandoned => state.active_floor_id.is_none(),
+            };
+            if (state.stage_index == 0 && expected.required != objective.required)
+                || state.required != objective.required
+                || state.current > state.required
+                || !status_is_valid
+            {
+                return Err(CoreError::InvalidSave("task state is invalid"));
+            }
+        }
+        let expected_dungeons = initial_dungeon_states(world);
+        if self.dungeon_states.len() != expected_dungeons.len() {
+            return Err(CoreError::InvalidSave("dungeon state set is invalid"));
+        }
+        for (dungeon_id, state) in &self.dungeon_states {
+            if !expected_dungeons.contains_key(dungeon_id) {
+                return Err(CoreError::InvalidSave("dungeon state ID is invalid"));
+            }
+            let final_floor = world
+                .procedural_floors
+                .iter()
+                .find(|floor| {
+                    floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.final_floor
+                })
+                .expect("validated dungeon must retain a final floor");
+            let guardian_id = &final_floor
+                .guardian
+                .as_ref()
+                .expect("validated final floor must retain a guardian")
+                .instance_id;
+            let guardian_present = if self.current_floor_id == final_floor.id {
+                Some(self.entities.iter().any(|actor| &actor.id == guardian_id))
+            } else {
+                self.stored_floors
+                    .get(&final_floor.id)
+                    .map(|floor| floor.entities.iter().any(|actor| &actor.id == guardian_id))
+            };
+            if guardian_present.is_some_and(|present| present == state.guardian_defeated) {
+                return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
             }
         }
         for (item_id, knowledge) in &self.item_property_knowledge {
-            let Some(item) = self.items.iter().find(|item| &item.id == item_id) else {
+            let Some(item) = self
+                .items
+                .iter()
+                .chain(
+                    self.stored_floors
+                        .values()
+                        .flat_map(|floor| floor.items.iter()),
+                )
+                .find(|item| &item.id == item_id)
+            else {
                 return Err(CoreError::InvalidSave(
                     "item property knowledge state is invalid",
                 ));
             };
-            if (!knowledge.appraised
+            let empty_knowledge = !knowledge.appraised
                 && !knowledge.identified
-                && knowledge.known_affix_ids.is_empty())
-                || (knowledge.identified && !knowledge.appraised)
-                || knowledge
-                    .known_affix_ids
+                && knowledge.known_affix_ids.is_empty();
+            let identification_without_appraisal = knowledge.identified && !knowledge.appraised;
+            let foreign_affix = knowledge
+                .known_affix_ids
+                .iter()
+                .any(|affix_id| !item.affix_ids.contains(affix_id));
+            let incomplete_identification = knowledge.identified
+                && item
+                    .affix_ids
                     .iter()
-                    .any(|affix_id| !item.affix_ids.contains(affix_id))
-                || (knowledge.identified
-                    && item
-                        .affix_ids
-                        .iter()
-                        .any(|affix_id| !knowledge.known_affix_ids.contains(affix_id)))
+                    .any(|affix_id| !knowledge.known_affix_ids.contains(affix_id));
+            if empty_knowledge
+                || identification_without_appraisal
+                || foreign_affix
+                || incomplete_identification
             {
                 return Err(CoreError::InvalidSave(
                     "item property knowledge state is invalid",
                 ));
             }
         }
+        let mut allocator_entities = self.entities.clone();
+        let mut allocator_items = self.items.clone();
+        for floor in self.stored_floors.values() {
+            allocator_entities.extend(floor.entities.iter().cloned());
+            allocator_items.extend(floor.items.iter().cloned());
+        }
         if self.next_item_instance_serial == 0
             || self.next_item_instance_serial
-                < derive_next_item_instance_serial(&self.player, &self.entities, &self.items)?
+                < derive_next_item_instance_serial(
+                    &self.player,
+                    &allocator_entities,
+                    &allocator_items,
+                )?
         {
             return Err(CoreError::InvalidSave(
                 "item instance allocator is behind existing IDs",
@@ -2839,6 +5233,48 @@ struct ActorDerivedStats {
     melee_damage_bonus: DerivedStat,
     ranged_skill: DerivedStat,
     throwing_skill: DerivedStat,
+    door_skill: DerivedStat,
+    bash_power: DerivedStat,
+    search_skill: DerivedStat,
+    disarm_skill: DerivedStat,
+    dig_skill: DerivedStat,
+}
+
+enum TrapDisarmOutcome {
+    Succeeded { position: Position },
+    Failed { position: Position },
+}
+
+enum TerrainDigOutcome {
+    Succeeded { position: Position },
+    Failed { position: Position },
+}
+
+struct FloorTransitionOutcome {
+    from_floor_id: String,
+    to_floor_id: String,
+    expedition_ended: bool,
+    one_shot_closed: Option<(String, TaskResolution)>,
+    task_paused: Option<String>,
+    task_resumed: Option<String>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TaskResolution {
+    Completed,
+    Failed,
+    Abandoned,
+}
+
+enum DoorOpenOutcome {
+    Opened { position: Position },
+    Unlocked { position: Position },
+    UnlockFailed { position: Position },
+}
+
+enum DoorBashOutcome {
+    Succeeded { position: Position },
+    Failed { position: Position },
 }
 
 #[derive(Clone)]
@@ -3156,6 +5592,78 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     dx * dx + dy * dy
 }
 
+fn carve_room(
+    terrain: &mut [String],
+    width: u16,
+    x: i32,
+    y: i32,
+    room_width: i32,
+    room_height: i32,
+    floor_terrain_id: &str,
+) {
+    for room_y in y..y + room_height {
+        for room_x in x..x + room_width {
+            set_generated_terrain(
+                terrain,
+                width,
+                Position {
+                    x: room_x,
+                    y: room_y,
+                },
+                floor_terrain_id,
+            );
+        }
+    }
+}
+
+fn set_generated_terrain(terrain: &mut [String], width: u16, position: Position, terrain_id: &str) {
+    let index = position.y as usize * usize::from(width) + position.x as usize;
+    terrain[index] = terrain_id.to_owned();
+}
+
+fn floor_position_is_walkable(
+    floor: &FloorState,
+    position: Position,
+    content: &ContentCatalog,
+) -> bool {
+    if position.x < 0
+        || position.y < 0
+        || position.x >= i32::from(floor.width)
+        || position.y >= i32::from(floor.height)
+    {
+        return false;
+    }
+    let index = position.y as usize * usize::from(floor.width) + position.x as usize;
+    floor
+        .terrain
+        .get(index)
+        .and_then(|terrain_id| content.terrain(terrain_id))
+        .is_some_and(|terrain| terrain.walkable)
+}
+
+fn revealed_terrain_is_valid(
+    revealed: &BTreeSet<Position>,
+    terrain: &[String],
+    width: u16,
+    height: u16,
+    content: &ContentCatalog,
+) -> bool {
+    revealed.iter().all(|position| {
+        if position.x < 0
+            || position.y < 0
+            || position.x >= i32::from(width)
+            || position.y >= i32::from(height)
+        {
+            return false;
+        }
+        let index = position.y as usize * usize::from(width) + position.x as usize;
+        terrain
+            .get(index)
+            .and_then(|terrain_id| content.terrain(terrain_id))
+            .is_some_and(|definition| definition.concealed_as_terrain_id.is_some())
+    })
+}
+
 fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8) -> u8 {
     let distance = squared_distance(source, target);
     let radius_squared = radius * radius;
@@ -3300,7 +5808,7 @@ mod tests {
     #[test]
     fn movement_produces_fov_deltas_and_remembers_explored_cells() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         let first = game
             .dispatch(command(
                 1,
@@ -3338,11 +5846,463 @@ mod tests {
     }
 
     #[test]
+    fn procedural_floor_transition_is_deterministic_persistent_and_reversible() {
+        let mut left = Game::new(27);
+        let mut right = Game::new(27);
+        for game in [&mut left, &mut right] {
+            game.player.position = Position { x: 3, y: 4 };
+        }
+
+        let left_update = left
+            .dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("descending should generate the first floor");
+        let right_update = right
+            .dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("the same seed should generate the same floor");
+
+        assert_eq!(left_update.floor_id, "demo.floor.echo-depth-1");
+        assert_eq!(left_update.state_hash, right_update.state_hash);
+        assert_eq!(left.rng.draw_counter, 13);
+        assert_eq!(left.entities.len(), 1);
+        assert_eq!(left.entities[0].id, "demo.monster.echo-depth-1.1");
+        assert_eq!(left.entities[0].kind_id, "demo.actor.echo-hound");
+        assert_eq!(left.entities[0].position, Position { x: 16, y: 14 });
+        let floor_loot = left
+            .items
+            .iter()
+            .find(|item| matches!(item.location, ItemLocation::Ground(_)))
+            .expect("the generated floor should contain ground loot");
+        assert_eq!(floor_loot.id, "generated.item.2");
+        assert_eq!(floor_loot.kind_id, "demo.item.luminous-shard");
+        assert_eq!(floor_loot.quantity, 2);
+        assert_eq!(left.stored_floors.len(), 1);
+        assert_eq!(
+            left.terrain_at(left.player.position),
+            "demo.terrain.stairs-up"
+        );
+        assert!(left_update.events.iter().any(|event| {
+            event.kind == "floor.transition"
+                && event.args["from"] == "demo.floor.surface"
+                && event.args["to"] == "demo.floor.echo-depth-1"
+        }));
+
+        let mut restored = Game::from_save(left.to_save()).expect("generated floor should reload");
+        assert_eq!(restored.state_hash(), left.state_hash());
+        let return_update = restored
+            .dispatch(command(2, 1, GameCommand::TraverseStairs))
+            .expect("ascending should restore the entrance floor");
+        assert_eq!(return_update.floor_id, "demo.floor.surface");
+        assert_eq!(restored.player.position, Position { x: 3, y: 4 });
+        assert_eq!(restored.entities.len(), 1);
+        assert!(restored.stored_floors.is_empty());
+        assert!(
+            return_update
+                .events
+                .iter()
+                .any(|event| event.message_key == "floor-expedition-ended")
+        );
+
+        let draws_before_reentry = restored.rng.draw_counter;
+        let reentry_update = restored
+            .dispatch(command(3, 2, GameCommand::TraverseStairs))
+            .expect("descending again should generate a new expedition floor");
+        assert_eq!(reentry_update.floor_id, "demo.floor.echo-depth-1");
+        assert!(restored.rng.draw_counter > draws_before_reentry);
+        assert_eq!(restored.entities.len(), 1);
+        assert_eq!(restored.items.len(), 1);
+    }
+
+    #[test]
+    fn locked_door_checks_update_collision_visibility_and_persist() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("descending should generate the closed door");
+        let door_position = Position { x: 10, y: 4 };
+        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-secret");
+        assert!(!game.is_walkable(door_position));
+
+        game.player.position = Position { x: 9, y: 4 };
+        game.revealed_terrain.insert(door_position);
+        assert_eq!(
+            visual_at(&game.snapshot(), Position { x: 11, y: 4 }).visibility,
+            VisibilityState::Hidden
+        );
+        let draws_before_unlock = game.rng.draw_counter;
+        let failed_unlock = game
+            .dispatch(command(
+                2,
+                1,
+                GameCommand::OpenDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("the first unlock attempt should execute");
+        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-secret");
+        assert_eq!(game.rng.draw_counter, draws_before_unlock + 2);
+        assert!(
+            failed_unlock
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-unlock-failed")
+        );
+
+        let open_update = game
+            .dispatch(command(
+                3,
+                2,
+                GameCommand::OpenDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("the second deterministic unlock attempt should succeed");
+        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-open");
+        assert!(game.is_walkable(door_position));
+        assert_eq!(game.rng.draw_counter, draws_before_unlock + 3);
+        let terrain_events = open_update
+            .events
+            .iter()
+            .filter(|event| event.kind.starts_with("terrain."))
+            .map(|event| event.kind.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            terrain_events,
+            ["terrain.door-unlocked", "terrain.door-opened"]
+        );
+        assert_eq!(
+            visual_at(&game.snapshot(), Position { x: 11, y: 4 }).visibility,
+            VisibilityState::Visible
+        );
+
+        let mut restored = Game::from_save(game.to_save()).expect("open door should reload");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.terrain_at(door_position), "demo.terrain.door-open");
+
+        restored.player.position = Position { x: 5, y: 4 };
+        restored
+            .dispatch(command(4, 3, GameCommand::TraverseStairs))
+            .expect("ascending should end the dungeon expedition");
+        restored
+            .dispatch(command(5, 4, GameCommand::TraverseStairs))
+            .expect("descending should generate a fresh dungeon floor");
+        assert_eq!(
+            restored.terrain_at(door_position),
+            "demo.terrain.door-secret"
+        );
+
+        restored.player.position = Position { x: 9, y: 4 };
+        let close_update = restored
+            .dispatch(command(
+                6,
+                5,
+                GameCommand::CloseDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("closing a fresh secret door should remain a valid turn");
+        assert_eq!(
+            restored.terrain_at(door_position),
+            "demo.terrain.door-secret"
+        );
+        assert!(
+            close_update
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-close-unavailable")
+        );
+
+        let unavailable = restored
+            .dispatch(command(
+                7,
+                6,
+                GameCommand::CloseDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("closing a closed door should remain a valid turn");
+        assert!(
+            unavailable
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-close-unavailable")
+        );
+    }
+
+    #[test]
+    fn bashing_a_locked_door_is_deterministic_and_leaves_a_broken_door() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("descending should generate the locked door");
+        game.player.position = Position { x: 9, y: 4 };
+        let door_position = Position { x: 10, y: 4 };
+        game.revealed_terrain.insert(door_position);
+        let draws_before_bash = game.rng.draw_counter;
+
+        let failed = game
+            .dispatch(command(
+                2,
+                1,
+                GameCommand::BashDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("the first bash attempt should execute");
+        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-secret");
+        assert_eq!(game.rng.draw_counter, draws_before_bash + 2);
+        assert!(
+            failed
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-bash-failed")
+        );
+
+        let succeeded = game
+            .dispatch(command(
+                3,
+                2,
+                GameCommand::BashDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("the second deterministic bash attempt should succeed");
+        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-broken");
+        assert!(game.is_walkable(door_position));
+        assert_eq!(game.rng.draw_counter, draws_before_bash + 3);
+        assert!(
+            succeeded
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-bashed-open")
+        );
+
+        let mut restored = Game::from_save(game.to_save()).expect("broken door should reload");
+        assert_eq!(
+            restored.terrain_at(door_position),
+            "demo.terrain.door-broken"
+        );
+        let unavailable = restored
+            .dispatch(command(
+                4,
+                3,
+                GameCommand::CloseDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("closing a broken door should remain a valid turn");
+        assert!(
+            unavailable
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-close-unavailable")
+        );
+    }
+
+    #[test]
+    fn terrain_interaction_query_is_stable_and_reports_blockers() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("descending should generate the locked door");
+        game.player.position = Position { x: 9, y: 4 };
+        let door_position = Position { x: 10, y: 4 };
+
+        assert!(game.snapshot().terrain_interactions.is_empty());
+        assert_eq!(game.known_terrain_at(door_position), "demo.terrain.wall");
+        game.revealed_terrain.insert(door_position);
+        let locked = game.snapshot().terrain_interactions;
+        assert_eq!(locked.len(), 2);
+        assert_eq!(
+            locked
+                .iter()
+                .map(|interaction| (
+                    interaction.kind,
+                    interaction.direction,
+                    interaction.position,
+                    interaction.terrain_id.as_str(),
+                    interaction.requires_check,
+                    interaction.available,
+                    interaction.unavailable_reason,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (
+                    TerrainInteractionKindDto::OpenDoor,
+                    Direction::East,
+                    door_position,
+                    "demo.terrain.door-secret",
+                    true,
+                    true,
+                    None,
+                ),
+                (
+                    TerrainInteractionKindDto::BashDoor,
+                    Direction::East,
+                    door_position,
+                    "demo.terrain.door-secret",
+                    true,
+                    true,
+                    None,
+                ),
+            ]
+        );
+
+        for (command_seq, expected_revision) in [(2, 1), (3, 2)] {
+            game.dispatch(command(
+                command_seq,
+                expected_revision,
+                GameCommand::OpenDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("deterministic unlock attempts should execute");
+        }
+        let open = game.snapshot().terrain_interactions;
+        assert_eq!(open.len(), 1);
+        assert_eq!(open[0].kind, TerrainInteractionKindDto::CloseDoor);
+        assert!(!open[0].requires_check);
+        assert!(open[0].available);
+
+        game.items[0].location = ItemLocation::Ground(door_position);
+        let blocked_by_item = game.snapshot().terrain_interactions;
+        assert!(!blocked_by_item[0].available);
+        assert_eq!(
+            blocked_by_item[0].unavailable_reason,
+            Some(TerrainInteractionUnavailableReasonDto::OccupiedByItem)
+        );
+
+        game.entities[0].position = door_position;
+        let blocked_by_actor = game.snapshot().terrain_interactions;
+        assert!(!blocked_by_actor[0].available);
+        assert_eq!(
+            blocked_by_actor[0].unavailable_reason,
+            Some(TerrainInteractionUnavailableReasonDto::OccupiedByActor)
+        );
+    }
+
+    #[test]
+    fn search_discovers_secret_terrain_without_leaking_true_terrain() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("descending should generate the secret door");
+        game.player.position = Position { x: 9, y: 4 };
+        let door_position = Position { x: 10, y: 4 };
+        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-secret");
+        assert_eq!(game.known_terrain_at(door_position), "demo.terrain.wall");
+        assert!(game.snapshot().terrain_interactions.is_empty());
+        let draws_before_search = game.rng.draw_counter;
+
+        let hidden_open = game
+            .dispatch(command(
+                2,
+                1,
+                GameCommand::OpenDoor {
+                    direction: Direction::East,
+                },
+            ))
+            .expect("an undiscovered secret door should reject direct opening");
+        assert_eq!(game.rng.draw_counter, draws_before_search);
+        assert!(
+            hidden_open
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.door-open-unavailable")
+        );
+
+        let failed = game
+            .dispatch(command(3, 2, GameCommand::Search))
+            .expect("the first deterministic search should execute");
+        assert_eq!(game.rng.draw_counter, draws_before_search + 2);
+        assert_eq!(game.known_terrain_at(door_position), "demo.terrain.wall");
+        assert!(
+            failed
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.search-empty")
+        );
+
+        let discovered = game
+            .dispatch(command(4, 3, GameCommand::Search))
+            .expect("the second deterministic search should succeed");
+        assert_eq!(game.rng.draw_counter, draws_before_search + 3);
+        assert_eq!(
+            game.known_terrain_at(door_position),
+            "demo.terrain.door-secret"
+        );
+        assert!(game.revealed_terrain.contains(&door_position));
+        assert!(
+            discovered
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.secret-discovered")
+        );
+        assert_eq!(discovered.terrain_interactions.len(), 2);
+        assert!(
+            discovered
+                .changed_cells
+                .iter()
+                .any(|cell| cell.position == door_position
+                    && cell.terrain_id == "demo.terrain.door-secret")
+        );
+        let mut hidden_again = game.clone();
+        hidden_again.revealed_terrain.clear();
+        assert_ne!(hidden_again.state_hash(), game.state_hash());
+
+        let mut restored =
+            Game::from_save(game.to_save()).expect("terrain knowledge should reload");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored.known_terrain_at(door_position),
+            "demo.terrain.door-secret"
+        );
+        restored.player.position = Position { x: 5, y: 4 };
+        restored
+            .dispatch(command(5, 4, GameCommand::TraverseStairs))
+            .expect("ascending should end the dungeon expedition");
+        restored
+            .dispatch(command(6, 5, GameCommand::TraverseStairs))
+            .expect("descending should generate a fresh dungeon floor");
+        assert_eq!(
+            restored.known_terrain_at(door_position),
+            "demo.terrain.wall"
+        );
+    }
+
+    #[test]
+    fn stairs_command_off_stairs_keeps_the_current_floor() {
+        let mut game = Game::new(42);
+        let update = game
+            .dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("unavailable stairs command should remain a valid turn");
+
+        assert_eq!(update.floor_id, "demo.floor.surface");
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "floor.transition-unavailable")
+        );
+        assert!(game.stored_floors.is_empty());
+    }
+
+    #[test]
     fn exploration_memory_does_not_change_authoritative_state_hash() {
         let mut game = Game::new(42);
         let before = game.state_hash();
         game.explored.fill(true);
         assert_eq!(game.state_hash(), before);
+
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("descending should store the entrance floor");
+        let before_stored_memory_change = game.state_hash();
+        game.stored_floors
+            .get_mut("demo.floor.surface")
+            .expect("the entrance floor should be stored")
+            .explored
+            .fill(false);
+        assert_eq!(game.state_hash(), before_stored_memory_change);
     }
 
     #[test]
@@ -3353,6 +6313,18 @@ mod tests {
             Game::from_save(payload),
             Err(CoreError::InvalidSave(
                 "exploration memory dimensions are invalid"
+            ))
+        ));
+    }
+
+    #[test]
+    fn malformed_revealed_terrain_knowledge_is_rejected() {
+        let mut payload = Game::new(42).to_save();
+        payload.revealed_terrain = vec![Position { x: 3, y: 3 }];
+        assert!(matches!(
+            Game::from_save(payload),
+            Err(CoreError::InvalidSave(
+                "revealed terrain knowledge is invalid"
             ))
         ));
     }
@@ -3548,10 +6520,83 @@ mod tests {
     }
 
     #[test]
+    fn content_driven_loot_generation_is_deterministic_and_persistent() {
+        let mut left = Game::new(42);
+        let initial = left.to_save();
+        assert_eq!(initial.carried_items.len(), 1);
+        assert_eq!(initial.carried_items[0].id, "generated.item.1");
+        assert_eq!(
+            initial.carried_items[0].actor_id,
+            "demo.monster.ember-mote.1"
+        );
+        assert_eq!(initial.carried_items[0].kind_id, "demo.item.echo-charm");
+        assert_eq!(left.snapshot().items.len(), 5);
+        assert_eq!(left.rng.draw_counter, 3);
+        left.entities[0].statuses = vec![StatusInstance {
+            kind_id: STATUS_POISON.to_owned(),
+            intensity: 3,
+            remaining_ticks: 1,
+            source_id: Some(left.player.id.clone()),
+        }];
+        let mut right = left.clone();
+        let death_position = left.entities[0].position;
+
+        let left_update = left
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("loot-bearing monster death should execute");
+        let right_update = right
+            .dispatch(command(1, 0, GameCommand::Wait))
+            .expect("same loot context should execute");
+
+        assert_eq!(left_update.state_hash, right_update.state_hash);
+        assert_eq!(left.rng.draw_counter, 6);
+        assert_eq!(left.rng.draw_counter, right.rng.draw_counter);
+        let drops = left_update
+            .events
+            .iter()
+            .filter(|event| event.message_key == "loot-drop")
+            .collect::<Vec<_>>();
+        assert_eq!(drops.len(), 2);
+        assert_eq!(drops[0].args["target"], "demo.item.echo-charm");
+        assert_eq!(drops[1].args["source"], "demo.actor.ember-mote");
+        let carried = left
+            .items
+            .iter()
+            .find(|item| item.id == "generated.item.1")
+            .expect("carried loot should preserve its stable item ID");
+        assert_eq!(carried.location, ItemLocation::Ground(death_position));
+        assert_eq!(carried.kind_id, "demo.item.echo-charm");
+        let generated = left
+            .items
+            .iter()
+            .find(|item| item.id == "generated.item.2")
+            .expect("death loot should allocate the next stable item ID");
+        assert_eq!(generated.location, ItemLocation::Ground(death_position));
+        assert_eq!(generated.quantity, 1);
+        assert_eq!(generated.kind_id, "demo.item.echo-charm");
+        assert_eq!(generated.quality, ItemQualityDto::Ordinary);
+        assert!(generated.affix_ids.is_empty());
+        let restored = Game::from_save(left.to_save()).expect("generated loot should reload");
+        assert_eq!(restored.state_hash(), left.state_hash());
+    }
+
+    #[test]
+    fn carried_item_save_rejects_a_missing_monster_owner() {
+        let mut payload = Game::new(42).to_save();
+        payload.carried_items[0].actor_id = "demo.monster.missing".to_owned();
+
+        assert!(matches!(
+            Game::from_save(payload),
+            Err(CoreError::InvalidSave("carried item state is invalid"))
+        ));
+    }
+
+    #[test]
     fn previous_built_in_content_hash_migrates_without_spawning_new_items() {
         for previous_hash in PREVIOUS_BUILT_IN_CONTENT_HASHES {
             let mut payload = Game::new(42).to_save();
             payload.content_hash = previous_hash.to_owned();
+            payload.carried_items.clear();
             payload.items.retain(|item| {
                 item.kind_id != "demo.item.echo-charm"
                     && item.kind_id != "demo.item.echo-blade"
@@ -3573,6 +6618,165 @@ mod tests {
     }
 
     #[test]
+    fn previous_task_state_set_adds_new_tasks_as_available() {
+        let mut current_payload = Game::new(42).to_save();
+        current_payload
+            .task_states
+            .retain(|state| state.task_id != "demo.task.echo-chain");
+        assert!(matches!(
+            Game::from_save(current_payload),
+            Err(CoreError::InvalidSave("task state set is incomplete"))
+        ));
+
+        let mut payload = Game::new(42).to_save();
+        payload.content_hash =
+            "b37398cb9d005302c958a9e300d07a435e8631d6a5cd44ba63b0086069577c43".to_owned();
+        payload
+            .task_states
+            .retain(|state| state.task_id != "demo.task.echo-chain");
+
+        let restored = Game::from_save(payload).expect("v44 task state set should migrate");
+        let chain = restored
+            .snapshot()
+            .tasks
+            .into_iter()
+            .find(|task| task.task_id == "demo.task.echo-chain")
+            .expect("new staged task should be added during migration");
+        assert_eq!(chain.status, TaskStatusKindDto::Available);
+        assert_eq!((chain.stage, chain.stages), (1, 3));
+        assert_eq!((chain.current, chain.required), (0, 1));
+    }
+
+    #[test]
+    fn dungeon_guardian_state_migrates_and_rejects_entity_mismatch() {
+        let mut old_payload = Game::new(42).to_save();
+        old_payload.content_hash =
+            "0e6cf15310644e7b3eb2f7acb0c18a8b1a7fb08739e981e7492d4079e61ab44a".to_owned();
+        old_payload.dungeon_states.clear();
+        let restored = Game::from_save(old_payload).expect("v45 save should add dungeon state");
+        assert!(!restored.dungeon_states["demo.dungeon.echo-depths"].guardian_defeated);
+
+        let mut game = Game::new(27);
+        for (seq, game_command) in [
+            GameCommand::Move {
+                direction: Direction::South,
+            },
+            GameCommand::TraverseStairs,
+            GameCommand::Move {
+                direction: Direction::West,
+            },
+            GameCommand::TraverseStairs,
+            GameCommand::Move {
+                direction: Direction::West,
+            },
+            GameCommand::TraverseStairs,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            game.dispatch(command(
+                u32::try_from(seq + 1).expect("sequence must fit u32"),
+                u32::try_from(seq).expect("revision must fit u32"),
+                game_command,
+            ))
+            .expect("final floor setup should succeed");
+        }
+        let mut payload = game.to_save();
+        payload.dungeon_states[0].guardian_defeated = true;
+        assert!(matches!(
+            Game::from_save(payload),
+            Err(CoreError::InvalidSave("dungeon guardian state is invalid"))
+        ));
+    }
+
+    #[test]
+    fn previous_generated_floor_is_not_backfilled_with_v27_room_content() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("current content should generate the procedural floor");
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "febe50b7a55a637a05d78135f14aa8f72fa457632ae8d705c002e92acf9e4fd9".to_owned();
+        payload.entities.clear();
+        payload.items.clear();
+        payload.carried_items.clear();
+        payload.next_item_instance_serial = 2;
+
+        let restored = Game::from_save(payload).expect("v26 generated floor should migrate");
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
+        assert!(restored.entities.is_empty());
+        assert!(restored.items.is_empty());
+        assert_eq!(restored.next_item_instance_serial, 2);
+    }
+
+    #[test]
+    fn previous_generated_floor_is_not_backfilled_with_v28_door() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("current content should generate the procedural floor");
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "51ffdccfe19a9f159adc15c2f62965ff4a5d44b55990eb9f29df96870937a043".to_owned();
+        let door_index = 4_usize * usize::from(payload.terrain.width) + 10;
+        payload.terrain.terrain_ids[door_index] = "demo.terrain.floor".to_owned();
+
+        let restored = Game::from_save(payload).expect("v27 generated floor should migrate");
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
+        assert_eq!(
+            restored.terrain_at(Position { x: 10, y: 4 }),
+            "demo.terrain.floor"
+        );
+    }
+
+    #[test]
+    fn previous_generated_floor_is_not_upgraded_to_a_v29_locked_door() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("current content should generate the procedural floor");
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "f060f44c88033e8ef75478929a354d6b5b0bc5f933ca2772e79c3440940942e8".to_owned();
+        let door_index = 4_usize * usize::from(payload.terrain.width) + 10;
+        payload.terrain.terrain_ids[door_index] = "demo.terrain.door-closed".to_owned();
+
+        let restored = Game::from_save(payload).expect("v28 generated floor should migrate");
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
+        assert_eq!(
+            restored.terrain_at(Position { x: 10, y: 4 }),
+            "demo.terrain.door-closed"
+        );
+    }
+
+    #[test]
+    fn previous_generated_floor_is_not_upgraded_to_a_v31_secret_door() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.dispatch(command(1, 0, GameCommand::TraverseStairs))
+            .expect("current content should generate the procedural floor");
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "2d2900d8052b0a600346d0b87cc3b3d5bb5138f851abbf2b95afa196bbbaaca2".to_owned();
+        let door_index = 4_usize * usize::from(payload.terrain.width) + 10;
+        payload.terrain.terrain_ids[door_index] = "demo.terrain.door-locked".to_owned();
+        payload.revealed_terrain.clear();
+
+        let restored = Game::from_save(payload).expect("v30 generated floor should migrate");
+        let door_position = Position { x: 10, y: 4 };
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
+        assert_eq!(
+            restored.terrain_at(door_position),
+            "demo.terrain.door-locked"
+        );
+        assert_eq!(
+            restored.known_terrain_at(door_position),
+            "demo.terrain.door-locked"
+        );
+    }
+
+    #[test]
     fn previous_equipment_content_migrates_to_derived_modifiers() {
         let mut game = Game::new(42);
         collect_both_demo_items(&mut game);
@@ -3586,6 +6790,7 @@ mod tests {
         .expect("equip should execute");
         let mut payload = game.to_save();
         payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[1].to_owned();
+        payload.carried_items.clear();
         payload.player.base_max_hp = 0;
         payload.next_item_instance_serial = 0;
 
@@ -3775,7 +6980,7 @@ mod tests {
     #[test]
     fn pickup_moves_the_ground_stack_into_inventory() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.dispatch(command(
             1,
             0,
@@ -3803,7 +7008,7 @@ mod tests {
     #[test]
     fn pickup_over_capacity_rejects_the_whole_ground_stack() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.player.position = Position { x: 6, y: 4 };
         for kind_id in [
             "demo.item.luminous-shard",
@@ -3839,9 +7044,75 @@ mod tests {
     }
 
     #[test]
+    fn themed_vault_paints_template_and_spawns_depth_eligible_group_and_loot() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("first descent should resolve")
+            .expect("first descent should transition");
+        let down_index = game
+            .terrain
+            .iter()
+            .position(|terrain_id| terrain_id == "demo.terrain.stairs-down")
+            .expect("first depth should contain descending stairs");
+        game.player.position = Position {
+            x: i32::try_from(down_index % usize::from(game.width))
+                .expect("descending stair x must fit i32"),
+            y: i32::try_from(down_index / usize::from(game.width))
+                .expect("descending stair y must fit i32"),
+        };
+        game.traverse_stairs(false)
+            .expect("second descent should resolve")
+            .expect("second descent should transition");
+
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2");
+        assert_eq!(game.entities.len(), 3);
+        assert!(game.entities.iter().all(|entity| {
+            entity.id.starts_with(
+                "demo.floor.echo-depth-2.demo.vault-group.harmonic-sepulcher-sentinels.",
+            ) && matches!(
+                entity.kind_id.as_str(),
+                "demo.actor.frost-wisp" | "demo.actor.storm-spark" | "demo.actor.venom-spore"
+            )
+        }));
+
+        let first_member = game
+            .entities
+            .iter()
+            .find(|entity| entity.id.ends_with(".1"))
+            .expect("vault should contain its first group member");
+        let vault_origin = Position {
+            x: first_member.position.x - 1,
+            y: first_member.position.y - 1,
+        };
+        assert_eq!(
+            game.terrain_at(Position {
+                x: vault_origin.x + 3,
+                y: vault_origin.y,
+            }),
+            "demo.terrain.door-secret"
+        );
+        assert_eq!(game.terrain_at(vault_origin), "demo.terrain.wall");
+        assert!(game.items.iter().any(|item| {
+            item.location
+                == ItemLocation::Ground(Position {
+                    x: vault_origin.x + 2,
+                    y: vault_origin.y + 3,
+                })
+                && matches!(
+                    item.kind_id.as_str(),
+                    "demo.item.echo-blade" | "demo.item.echo-charm"
+                )
+        }));
+
+        let restored = Game::from_save(game.to_save()).expect("vault floor save should restore");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
     fn equipping_and_unequipping_moves_an_item_between_authoritative_lists() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         collect_both_demo_items(&mut game);
         let carried = game.snapshot();
         let charm = carried
@@ -3929,7 +7200,7 @@ mod tests {
     #[test]
     fn appraising_reveals_quality_without_revealing_affixes() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         collect_both_demo_items(&mut game);
 
         let before = game.snapshot();
@@ -3975,7 +7246,7 @@ mod tests {
     #[test]
     fn player_derived_stats_retain_equipment_and_status_sources() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         collect_both_demo_items(&mut game);
         game.dispatch(command(
             5,
@@ -4028,6 +7299,7 @@ mod tests {
     #[test]
     fn fear_check_can_consume_a_melee_action_without_attacking() {
         let mut game = Game::new(0);
+        game.rng = RfbRng::seeded(0);
         game.entities[0].position = Position { x: 4, y: 3 };
         game.entities[0].statuses.push(StatusInstance {
             kind_id: STATUS_SLOW.to_owned(),
@@ -4065,7 +7337,7 @@ mod tests {
     #[test]
     fn item_instance_identity_survives_location_transitions() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         let original_instance_count = game.items.len();
         collect_both_demo_items(&mut game);
 
@@ -4153,6 +7425,7 @@ mod tests {
     #[test]
     fn equipped_weapon_profile_drives_two_stable_player_attacks() {
         let mut game = Game::new(42);
+        game.rng = RfbRng::seeded(42);
         let weapon = game
             .items
             .iter_mut()
@@ -4176,8 +7449,10 @@ mod tests {
         assert_eq!(snapshot.equipment[0].melee_profile, Some(profile));
 
         let mut events = Vec::new();
+        let mut changed = BTreeSet::new();
         let mut removed = Vec::new();
-        game.resolve_player_melee(0, &mut events, &mut removed);
+        game.resolve_player_melee(0, &mut events, &mut changed, &mut removed)
+            .expect("melee resolution should succeed");
 
         assert_eq!(
             events
@@ -4195,6 +7470,7 @@ mod tests {
     #[test]
     fn equipped_launcher_traces_to_first_target_and_resolves_damage() {
         let mut game = Game::new(0);
+        game.rng = RfbRng::seeded(0);
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.resonance-sling")
@@ -4250,7 +7526,7 @@ mod tests {
             Some(5)
         );
         assert!(update.items.iter().any(|item| {
-            item.id == "generated.item.1"
+            item.id == "generated.item.2"
                 && item.kind_id == "demo.item.resonance-pellet"
                 && item.quantity == 1
                 && item.position == Position { x: 7, y: 3 }
@@ -4260,6 +7536,7 @@ mod tests {
     #[test]
     fn ammunition_breakage_is_checked_after_hitting_a_body() {
         let mut game = Game::new(16);
+        game.rng = RfbRng::seeded(16);
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.resonance-sling")
@@ -4295,7 +7572,7 @@ mod tests {
         assert!(!update.items.iter().any(|item| {
             item.kind_id == "demo.item.resonance-pellet" && item.position == Position { x: 7, y: 3 }
         }));
-        assert_eq!(game.next_item_instance_serial, 2);
+        assert_eq!(game.next_item_instance_serial, 3);
     }
 
     #[test]
@@ -4479,6 +7756,7 @@ mod tests {
     #[test]
     fn throwing_one_item_splits_the_stack_and_lands_before_a_wall() {
         let mut game = Game::new(0);
+        game.rng = RfbRng::seeded(0);
         game.player.position = Position { x: 10, y: 3 };
         game.items
             .iter_mut()
@@ -4509,7 +7787,7 @@ mod tests {
         assert!(trace.traversed.is_empty());
         assert_eq!(update.inventory[0].quantity, 4);
         assert!(update.items.iter().any(|item| {
-            item.id == "generated.item.1"
+            item.id == "generated.item.2"
                 && item.kind_id == "demo.item.luminous-shard"
                 && item.quantity == 1
                 && item.position == Position { x: 10, y: 3 }
@@ -4519,6 +7797,7 @@ mod tests {
     #[test]
     fn throwable_profile_uses_weight_range_and_resolves_damage() {
         let mut game = Game::new(0);
+        game.rng = RfbRng::seeded(0);
         game.item_knowledge.insert(
             "demo.item.luminous-shard".to_owned(),
             ItemKnowledgeState {
@@ -4570,7 +7849,7 @@ mod tests {
         assert_eq!(update.entities[0].hp, 9);
         assert_eq!(update.inventory[0].quantity, 4);
         assert!(update.items.iter().any(|item| {
-            item.id == "generated.item.1"
+            item.id == "generated.item.2"
                 && item.kind_id == "demo.item.luminous-shard"
                 && item.position == Position { x: 6, y: 3 }
         }));
@@ -4579,7 +7858,7 @@ mod tests {
     #[test]
     fn throwing_an_unknown_item_marks_the_kind_tried_and_preserves_its_appearance() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.luminous-shard")
@@ -4659,7 +7938,7 @@ mod tests {
     #[test]
     fn observable_item_use_consumes_one_heals_and_marks_the_kind_aware() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.player.hp = 3;
         game.items
             .iter_mut()
@@ -4705,7 +7984,7 @@ mod tests {
     #[test]
     fn unobservable_item_use_consumes_one_but_only_marks_the_kind_tried() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.luminous-shard")
@@ -4747,7 +8026,7 @@ mod tests {
     #[test]
     fn unusable_inventory_item_is_not_consumed_or_added_to_knowledge() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.echo-charm")
@@ -4777,6 +8056,7 @@ mod tests {
     #[test]
     fn missed_throw_still_lands_at_the_collided_target() {
         let mut game = Game::new(3);
+        game.rng = RfbRng::seeded(3);
         game.items
             .iter_mut()
             .find(|item| item.kind_id == "demo.item.luminous-shard")
@@ -4842,7 +8122,7 @@ mod tests {
     #[test]
     fn pickup_on_empty_ground_is_a_deterministic_turn() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         let before = game.state_hash();
         let update = game
             .dispatch(command(1, 0, GameCommand::PickUp))
@@ -4858,7 +8138,7 @@ mod tests {
     #[test]
     fn pickup_merges_into_the_lowest_id_compatible_stack() {
         let mut game = Game::new(42);
-        game.entities.clear();
+        clear_monsters(&mut game);
         game.items.push(ItemInstance {
             id: "demo.inventory.resonance-pellet.1".to_owned(),
             kind_id: "demo.item.resonance-pellet".to_owned(),
@@ -4905,11 +8185,11 @@ mod tests {
 
         assert_eq!(first_drop.inventory[0].quantity, 3);
         assert!(first_drop.items.iter().any(|item| {
-            item.id == "generated.item.1"
+            item.id == "generated.item.2"
                 && item.quantity == 2
                 && item.position == Position { x: 4, y: 3 }
         }));
-        assert_eq!(game.next_item_instance_serial, 2);
+        assert_eq!(game.next_item_instance_serial, 3);
 
         let mut restored = Game::from_save(game.to_save()).expect("save should preserve allocator");
         let second_drop = restored
@@ -4926,9 +8206,9 @@ mod tests {
             second_drop
                 .items
                 .iter()
-                .any(|item| item.id == "generated.item.2" && item.quantity == 1)
+                .any(|item| item.id == "generated.item.3" && item.quantity == 1)
         );
-        assert_eq!(restored.next_item_instance_serial, 3);
+        assert_eq!(restored.next_item_instance_serial, 4);
     }
 
     #[test]
@@ -4953,6 +8233,7 @@ mod tests {
     #[test]
     fn fixed_seed_exercises_player_miss_and_death_rejection() {
         let mut miss_game = Game::new(0);
+        miss_game.rng = RfbRng::seeded(0);
         miss_game.entities[0].position = Position { x: 4, y: 4 };
         miss_game.entities[0].energy_need = STANDARD_ACTION_COST;
         let miss_update = miss_game
@@ -4972,6 +8253,7 @@ mod tests {
         );
 
         let mut game = Game::new(0);
+        game.rng = RfbRng::seeded(0);
         game.entities[0].position = Position { x: 4, y: 4 };
         game.entities[0].energy_need = STANDARD_ACTION_COST;
         game.player.hp = 0;
@@ -5022,5 +8304,11 @@ mod tests {
         .expect("movement to charm should execute");
         game.dispatch(command(4, 3, GameCommand::PickUp))
             .expect("charm pickup should execute");
+    }
+
+    fn clear_monsters(game: &mut Game) {
+        game.entities.clear();
+        game.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
     }
 }

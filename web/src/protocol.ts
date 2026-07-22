@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "appraise", itemId: string, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "pick-up" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "abandon-task" } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "search" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -30,6 +30,16 @@ export type ThrowProfileDto = { range: number, toHit: number, toDamage: number, 
 export type ProjectileTraceDto = { origin: Position, impact: Position, landing: Position, traversed: Array<Position>, };
 
 export type Position = { x: number, y: number, };
+
+export type TerrainInteractionKindDto = "open-door" | "close-door" | "bash-door" | "disarm-trap" | "dig-terrain";
+
+export type TerrainInteractionUnavailableReasonDto = "occupied-by-actor" | "occupied-by-item";
+
+export type TerrainInteractionDto = { kind: TerrainInteractionKindDto, direction: Direction, position: Position, terrainId: string, requiresCheck: boolean, available: boolean, unavailableReason?: TerrainInteractionUnavailableReasonDto | null, };
+
+export type TaskStatusKindDto = "abandoned" | "available" | "active" | "completed" | "failed" | "paused";
+
+export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, };
 
@@ -75,7 +85,7 @@ export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: str
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 
-export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, worldTick: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, stateHash: string, };
+export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, worldTick: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, floorId: string, terrainInteractions: Array<TerrainInteractionDto>, tasks: Array<TaskStatusDto>, stateHash: string, };
 
-export type GameUpdate = { baseRevision: number, revision: number, turn: number, worldTick: number, commandSeq: number, events: Array<GameEventDto>, changedCells: Array<CellDto>, changedVisualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, removedEntities: Array<string>, stateHash: string, };
+export type GameUpdate = { baseRevision: number, revision: number, turn: number, worldTick: number, commandSeq: number, floorId: string, events: Array<GameEventDto>, changedCells: Array<CellDto>, changedVisualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, removedEntities: Array<string>, terrainInteractions: Array<TerrainInteractionDto>, tasks: Array<TaskStatusDto>, stateHash: string, };
 
