@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "id": "combat.elemental.poison-melee-resistant",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerHp": null,
+    "playerStatuses": [],
+    "playerResistances": [
+      {
+        "damageType": "poison",
+        "level": "resistant"
+      }
+    ],
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "kindId": "demo.actor.venom-spore",
+        "position": {
+          "x": 4,
+          "y": 3
+        },
+        "hp": null,
+        "energyNeed": null,
+        "statuses": [],
+        "resistances": []
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "floorId": "demo.floor.surface",
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 8,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 0,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [
+        {
+          "damageType": "poison",
+          "level": "resistant"
+        }
+      ],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 4,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 0,
+      "itemKnowledge": [],
+      "itemPropertyKnowledge": [],
+      "nextItemInstanceSerial": 2,
+      "terrainInteractions": [
+        {
+          "kind": "dig-terrain",
+          "direction": "south-west",
+          "position": {
+            "x": 2,
+            "y": 4
+          },
+          "terrainId": "demo.terrain.echo-rubble",
+          "requiresCheck": true,
+          "available": true
+        }
+      ],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3
+        }
+      ],
+      "revealedTerrain": [],
+      "stateHash": "8caf6ab2386dddc1650d29880e024979ab9b994c9246612e83e2d48ea277d3c5"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      },
+      {
+        "kind": "combat.monster-hit",
+        "messageKey": "combat-monster-hit",
+        "args": {
+          "damage": "2",
+          "source": "demo.actor.venom-spore"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 1,
+            "finalDamage": 2,
+            "damageType": "poison",
+            "resistance": "resistant"
+          }
+        }
+      }
+    ],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "8caf6ab2386dddc1650d29880e024979ab9b994c9246612e83e2d48ea277d3c5"
+  }
+}

@@ -858,7 +858,10 @@ pub struct ProceduralRoomGeometryDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProceduralLayoutDefinition {
-    pub rooms: ProceduralRoomGeometryDefinition,
+    #[serde(default)]
+    pub mode: ProceduralLayoutMode,
+    #[serde(default)]
+    pub rooms: Option<ProceduralRoomGeometryDefinition>,
     #[serde(default)]
     pub cavern: Option<ProceduralCavernDefinition>,
     #[serde(default)]
@@ -873,6 +876,15 @@ pub struct ProceduralLayoutDefinition {
     pub streamers: Vec<ProceduralStreamerCandidateDefinition>,
     #[serde(default)]
     pub pit: Option<ProceduralPitDefinition>,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ProceduralLayoutMode {
+    #[default]
+    Rooms,
+    MazeOnly,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2416,6 +2428,11 @@ fn validate_world(
     for procedural in &mut world.procedural_floors {
         validate_definition_id(&procedural.id, "floor")?;
         validate_message_key(&procedural.name_key)?;
+        let layout_mode = procedural
+            .layout
+            .as_ref()
+            .map_or(ProceduralLayoutMode::Rooms, |layout| layout.mode);
+        let maze_only = layout_mode == ProceduralLayoutMode::MazeOnly;
         if procedural.id == world.initial_floor_id
             || procedural.width != world.width
             || procedural.height != world.height
@@ -2560,6 +2577,7 @@ fn validate_world(
         if let Some(nest) = &procedural.nest
             && (procedural.encounter_table_id.is_none()
                 || procedural.vault_id.is_some()
+                || maze_only
                 || !matches!(nest.room_id.as_str(), "entry" | "remote")
                 || !(2..=16).contains(&nest.spawn_count)
                 || eligible_theme_entries.iter().any(|entry| {
@@ -2594,13 +2612,20 @@ fn validate_world(
                 _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
             };
             let room_budget = match (
-                procedural.layout.as_mut(),
+                procedural.layout.as_ref(),
                 budget.room_placements,
                 budget.room_area_tiles,
             ) {
                 (None, None, None) => None,
-                (Some(layout), Some(placements), Some(area_tiles)) => {
-                    Some((layout, placements, area_tiles))
+                (Some(layout), None, None)
+                    if layout.mode == ProceduralLayoutMode::MazeOnly && layout.rooms.is_none() =>
+                {
+                    None
+                }
+                (Some(layout), Some(placements), Some(area_tiles))
+                    if layout.mode == ProceduralLayoutMode::Rooms && layout.rooms.is_some() =>
+                {
+                    Some((placements, area_tiles))
                 }
                 _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
             };
@@ -2631,7 +2656,8 @@ fn validate_world(
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
-            if room_budget.is_none()
+            if !maze_only
+                && room_budget.is_none()
                 && (budget.cavern_area_tiles.is_some()
                     || budget.lake_area_tiles.is_some()
                     || budget.lake_deep_area_tiles.is_some()
@@ -2644,8 +2670,108 @@ fn validate_world(
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
-            if let Some((layout, placements, area_tiles)) = room_budget {
-                let geometry = &mut layout.rooms;
+            if maze_only {
+                let layout = procedural
+                    .layout
+                    .as_mut()
+                    .expect("maze-only mode requires a layout");
+                let interior_area = u32::from(procedural.width.saturating_sub(2))
+                    * u32::from(procedural.height.saturating_sub(2));
+                if layout.rooms.is_some()
+                    || layout.cavern.is_some()
+                    || layout.lake.is_some()
+                    || layout.river.is_some()
+                    || layout.destroyed.is_some()
+                    || layout.pit.is_some()
+                    || budget.cavern_area_tiles.is_some()
+                    || budget.lake_area_tiles.is_some()
+                    || budget.lake_deep_area_tiles.is_some()
+                    || budget.river_area_tiles.is_some()
+                    || budget.destruction_centers.is_some()
+                    || budget.destroyed_area_tiles.is_some()
+                    || budget.pit_placements.is_some()
+                    || budget.pit_actor_slots.is_some()
+                    || spatial_vault_budget.is_some()
+                    || group_budget.is_some()
+                    || feature_budget.is_some()
+                    || procedural.vault_id.is_some()
+                    || procedural.nest.is_some()
+                    || procedural.guardian.is_some()
+                    || !procedural.actor_spawns.is_empty()
+                    || !procedural.loot_spawns.is_empty()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                match (&layout.maze, budget.maze_floor_tiles) {
+                    (Some(maze), Some(floor_tiles)) => {
+                        let vertices =
+                            u32::from(maze.width.div_ceil(2)) * u32::from(maze.height.div_ceil(2));
+                        let expected_floor_tiles = vertices.saturating_mul(2).saturating_sub(1);
+                        if !(9..=procedural.width.saturating_sub(2)).contains(&maze.width)
+                            || !(9..=procedural.height.saturating_sub(2)).contains(&maze.height)
+                            || maze.width % 2 == 0
+                            || maze.height % 2 == 0
+                            || floor_tiles != expected_floor_tiles
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+                }
+                match (
+                    layout.streamers.is_empty(),
+                    budget.streamer_placements,
+                    budget.streamer_area_tiles,
+                ) {
+                    (true, None, None) => {}
+                    (false, Some(placements), Some(area_tiles)) => {
+                        layout
+                            .streamers
+                            .sort_by(|left, right| left.terrain_id.cmp(&right.terrain_id));
+                        let terrain_count = layout
+                            .streamers
+                            .iter()
+                            .map(|candidate| candidate.terrain_id.as_str())
+                            .collect::<BTreeSet<_>>()
+                            .len();
+                        for candidate in &layout.streamers {
+                            require_reference(terrain_ids, &candidate.terrain_id, &procedural.id)?;
+                        }
+                        if layout.streamers.len() > 4
+                            || terrain_count != layout.streamers.len()
+                            || layout.streamers.iter().any(|candidate| {
+                                !(1..=1_000_000).contains(&candidate.weight)
+                                    || terrain_walkability.get(&candidate.terrain_id)
+                                        != Some(&false)
+                                    || candidate.terrain_id == procedural.wall_terrain_id
+                                    || candidate.terrain_id == procedural.floor_terrain_id
+                                    || eligible_theme_entries
+                                        .iter()
+                                        .any(|entry| entry.floor_terrain_id == candidate.terrain_id)
+                            })
+                            || !(1..=4).contains(&placements)
+                            || !(u32::from(placements) * 4..=interior_area.saturating_div(4))
+                                .contains(&area_tiles)
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+                }
+            }
+            if let Some((placements, area_tiles)) = room_budget {
+                let layout = procedural
+                    .layout
+                    .as_mut()
+                    .expect("rooms mode requires a layout");
+                let geometry = layout
+                    .rooms
+                    .as_mut()
+                    .expect("rooms mode requires room geometry");
                 geometry.shapes.sort_by_key(|candidate| candidate.shape);
                 let shape_count = geometry
                     .shapes
@@ -2799,21 +2925,6 @@ fn validate_world(
                 }
                 match (&layout.maze, budget.maze_floor_tiles) {
                     (None, None) => {}
-                    (Some(maze), Some(floor_tiles)) => {
-                        let vertices =
-                            u32::from(maze.width.div_ceil(2)) * u32::from(maze.height.div_ceil(2));
-                        let expected_floor_tiles = vertices.saturating_mul(2).saturating_sub(1);
-                        if !(9..=procedural.width.saturating_sub(2)).contains(&maze.width)
-                            || !(9..=procedural.height.saturating_sub(2)).contains(&maze.height)
-                            || maze.width % 2 == 0
-                            || maze.height % 2 == 0
-                            || floor_tiles != expected_floor_tiles
-                        {
-                            return Err(ContentError::InvalidProceduralFloor(
-                                procedural.id.clone(),
-                            ));
-                        }
-                    }
                     _ => {
                         return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                     }
@@ -4119,7 +4230,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.49.0");
+        assert_eq!(catalog.pack_version(), "1.50.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -4226,7 +4337,7 @@ mod tests {
         );
         assert_eq!(
             final_floor.layout.as_ref().map(|layout| (
-                layout.rooms.shapes.len(),
+                layout.rooms.as_ref().map_or(0, |rooms| rooms.shapes.len()),
                 layout
                     .cavern
                     .as_ref()
@@ -4272,12 +4383,12 @@ mod tests {
                 layout
                     .maze
                     .as_ref()
-                    .map(|maze| (maze.width, maze.height, layout.streamers.len()))
+                    .map(|maze| (layout.mode, maze.width, maze.height, layout.streamers.len()))
             }),
-            Some((15, 15, 1))
+            Some((ProceduralLayoutMode::MazeOnly, 15, 15, 1))
         );
         assert_eq!(
-            maze_floor.layout.as_ref().and_then(|layout| {
+            final_floor.layout.as_ref().and_then(|layout| {
                 layout.pit.as_ref().map(|pit| {
                     (
                         pit.encounter_table_id.as_str(),
@@ -4290,12 +4401,12 @@ mod tests {
             Some(("demo.encounter-table.resonance-pit", 5, 5, 5))
         );
         assert_eq!(
-            maze_floor.generation_budget.as_ref().map(|budget| (
+            final_floor.generation_budget.as_ref().map(|budget| (
                 budget.actor_slots,
                 budget.pit_placements,
                 budget.pit_actor_slots,
             )),
-            Some((31, Some(1), Some(25)))
+            Some((30, Some(1), Some(25)))
         );
         assert_eq!(
             world.procedural_floors[0]
@@ -4323,7 +4434,7 @@ mod tests {
                 .generation_budget
                 .as_ref()
                 .map(|budget| (budget.actor_slots, budget.loot_placements)),
-            Some((10, 3))
+            Some((30, 3))
         );
         assert_eq!(
             catalog
@@ -4773,7 +4884,7 @@ mod tests {
         incomplete_room_budget.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the room-budget floor")
             .generation_budget
             .as_mut()
@@ -4788,7 +4899,7 @@ mod tests {
         undersized_room_budget.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the room-budget floor")
             .generation_budget
             .as_mut()
@@ -4803,7 +4914,7 @@ mod tests {
         blocked_cavern.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the cavern floor")
             .layout
             .as_mut()
@@ -4821,7 +4932,7 @@ mod tests {
         incomplete_cavern_budget.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the cavern floor")
             .generation_budget
             .as_mut()
@@ -4836,7 +4947,7 @@ mod tests {
         incomplete_lake_budget.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the lake floor")
             .generation_budget
             .as_mut()
@@ -4892,11 +5003,55 @@ mod tests {
             Err(ContentError::InvalidProceduralFloor(_))
         ));
 
+        let mut maze_with_rooms = artifact.content.clone();
+        let room_geometry = maze_with_rooms.worlds[0]
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .and_then(|floor| floor.layout.as_ref())
+            .and_then(|layout| layout.rooms.clone())
+            .expect("fixture should contain room geometry");
+        maze_with_rooms.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .and_then(|floor| floor.layout.as_mut())
+            .expect("fixture should contain the maze-only layout")
+            .rooms = Some(room_geometry);
+        assert!(matches!(
+            validate_and_normalize(&mut maze_with_rooms),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut room_overlay_maze = artifact.content.clone();
+        let final_floor = room_overlay_maze.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .expect("fixture should contain the rooms floor");
+        final_floor
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .maze_floor_tiles = Some(127);
+        final_floor
+            .layout
+            .as_mut()
+            .expect("fixture should contain a layout")
+            .maze = Some(ProceduralMazeDefinition {
+            width: 15,
+            height: 15,
+        });
+        assert!(matches!(
+            validate_and_normalize(&mut room_overlay_maze),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
         let mut mismatched_pit_budget = artifact.content.clone();
         mismatched_pit_budget.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the pit floor")
             .generation_budget
             .as_mut()
@@ -4911,7 +5066,7 @@ mod tests {
         dangling_pit_table.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the pit floor")
             .layout
             .as_mut()
@@ -4951,12 +5106,14 @@ mod tests {
         let shapes = &mut duplicate_room_shape.worlds[0]
             .procedural_floors
             .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the room-layout floor")
             .layout
             .as_mut()
             .expect("fixture should contain a layout")
             .rooms
+            .as_mut()
+            .expect("fixture should contain room geometry")
             .shapes;
         shapes[1].shape = shapes[0].shape;
         assert!(matches!(

@@ -675,6 +675,10 @@
           ],
           "default": null
         },
+        "mode": {
+          "$ref": "#/$defs/ProceduralLayoutMode",
+          "default": "rooms"
+        },
         "pit": {
           "anyOf": [
             {
@@ -698,7 +702,15 @@
           "default": null
         },
         "rooms": {
-          "$ref": "#/$defs/ProceduralRoomGeometryDefinition"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralRoomGeometryDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "streamers": {
           "default": [],
@@ -708,10 +720,14 @@
           "type": "array"
         }
       },
-      "required": [
-        "rooms"
-      ],
       "type": "object"
+    },
+    "ProceduralLayoutMode": {
+      "enum": [
+        "rooms",
+        "maze-only"
+      ],
+      "type": "string"
     },
     "ProceduralLootSpawnDefinition": {
       "additionalProperties": false,

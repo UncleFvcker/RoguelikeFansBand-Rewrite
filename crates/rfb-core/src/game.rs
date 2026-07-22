@@ -39,10 +39,10 @@ use crate::{
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
     EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, TaskObjectiveDefinition,
-    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
-    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
+    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
+    TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
+    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -60,7 +60,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 49] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 50] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -110,9 +110,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 49] = [
     "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a",
     "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9",
     "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9",
+    "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041";
+    "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -4062,6 +4063,10 @@ impl Game {
         &mut self,
         definition: &ProceduralFloorDefinition,
     ) -> Result<FloorState, CoreError> {
+        let maze_only = definition
+            .layout
+            .as_ref()
+            .is_some_and(|layout| layout.mode == ProceduralLayoutMode::MazeOnly);
         let eligible_themes = definition
             .theme_table_id
             .as_ref()
@@ -4120,7 +4125,7 @@ impl Game {
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
-        let legacy_vault = if uses_spatial_vault_budget {
+        let legacy_vault = if uses_spatial_vault_budget || maze_only {
             None
         } else if eligible_vault_candidates.is_empty() {
             definition
@@ -4189,15 +4194,26 @@ impl Game {
                 )
             })
         });
-        if let Some(maze) = definition
-            .layout
-            .as_ref()
-            .and_then(|layout| layout.maze.as_ref())
-        {
-            self.generate_maze(definition, maze, &generated_floor_terrain_id, &mut terrain);
-        }
-        let rooms = if let Some(layout) = &definition.layout {
-            self.generate_budgeted_rooms(definition, &layout.rooms)
+        let maze_walkable = if maze_only {
+            let maze = definition
+                .layout
+                .as_ref()
+                .and_then(|layout| layout.maze.as_ref())
+                .expect("validated maze-only layout must retain maze geometry");
+            self.generate_maze(definition, maze, &generated_floor_terrain_id, &mut terrain)
+        } else {
+            BTreeSet::new()
+        };
+        let rooms = if maze_only {
+            Vec::new()
+        } else if let Some(layout) = &definition.layout {
+            self.generate_budgeted_rooms(
+                definition,
+                layout
+                    .rooms
+                    .as_ref()
+                    .expect("validated rooms layout must retain room geometry"),
+            )
         } else {
             let room_width = 6_i32;
             let room_height = 5_i32;
@@ -4227,11 +4243,17 @@ impl Game {
         for room in &rooms {
             carve_generated_room(&mut terrain, width, room, &generated_floor_terrain_id);
         }
-        let first_center = rooms[0].center();
-        let second_center = rooms[1].center();
+        let (first_center, second_center) = if maze_only {
+            maze_floor_anchors(&maze_walkable)
+        } else {
+            (rooms[0].center(), rooms[1].center())
+        };
         let legacy_vault_origin = legacy_vault.as_ref().map(|vault| Position {
             x: second_center.x - i32::from(vault.entrance_position.x),
-            y: rooms[1].y,
+            y: rooms
+                .get(1)
+                .expect("legacy vault placement requires a remote room")
+                .y,
         });
         if let Some(destroyed) = definition
             .layout
@@ -4306,25 +4328,31 @@ impl Game {
         } else {
             rooms.as_slice()
         };
-        let door_position = Position {
+        let door_position = (!maze_only).then_some(Position {
             x: (first_center.x + second_center.x) / 2,
             y: first_center.y,
-        };
-        set_generated_terrain(
-            &mut terrain,
-            width,
-            door_position,
-            &definition.closed_door_terrain_id,
-        );
+        });
+        if let Some(door_position) = door_position {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                door_position,
+                &definition.closed_door_terrain_id,
+            );
+        }
         set_generated_terrain(
             &mut terrain,
             width,
             first_center,
             &definition.up_stair_terrain_id,
         );
-        let down_stair_position = Position {
-            x: first_center.x - 1,
-            y: first_center.y,
+        let down_stair_position = if maze_only {
+            second_center
+        } else {
+            Position {
+                x: first_center.x - 1,
+                y: first_center.y,
+            }
         };
         if let Some(down_stair_terrain_id) = &definition.down_stair_terrain_id {
             set_generated_terrain(
@@ -4334,13 +4362,19 @@ impl Game {
                 down_stair_terrain_id,
             );
         }
-        set_generated_terrain(
-            &mut terrain,
-            width,
+        let fixed_trap_position = if maze_only {
+            let route = maze_floor_path(&maze_walkable, first_center, second_center);
+            route[route.len() / 2]
+        } else {
             Position {
                 x: first_center.x,
                 y: first_center.y + 1,
-            },
+            }
+        };
+        set_generated_terrain(
+            &mut terrain,
+            width,
+            fixed_trap_position,
             &definition.trap_terrain_id,
         );
         let vault_placements = if let Some(vault) = legacy_vault.clone() {
@@ -4362,12 +4396,10 @@ impl Game {
         } else {
             Vec::new()
         };
-        let fixed_trap_position = Position {
-            x: first_center.x,
-            y: first_center.y + 1,
-        };
-        let mut feature_reserved =
-            BTreeSet::from([first_center, fixed_trap_position, door_position]);
+        let mut feature_reserved = BTreeSet::from([first_center, fixed_trap_position]);
+        if let Some(door_position) = door_position {
+            feature_reserved.insert(door_position);
+        }
         if definition.down_stair_terrain_id.is_some() {
             feature_reserved.insert(down_stair_position);
         }
@@ -4423,6 +4455,9 @@ impl Game {
             Vec::new()
         };
         let mut occupied = BTreeSet::from([first_center]);
+        if maze_only {
+            occupied.insert(fixed_trap_position);
+        }
         occupied.extend(terrain_features.iter().map(|feature| feature.position));
         if let Some(pit) = &pit_placement {
             let total_width = pit.definition.inner_width + 6;
@@ -4514,16 +4549,22 @@ impl Game {
                         });
                 for ordinal in 0..encounter_rolls {
                     let entry = &eligible_entries[self.roll_weighted_index(&weights)];
-                    let placement_room_id = if definition.layout.is_some() {
+                    let placement_room_id = if maze_only {
+                        "maze"
+                    } else if definition.layout.is_some() {
                         generated_non_entry_room_id(content_rooms, ordinal)
                     } else {
                         room_id
                     };
-                    let position = self.choose_generated_room_position(
-                        content_rooms,
-                        placement_room_id,
-                        &occupied,
-                    );
+                    let position = if maze_only {
+                        choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                    } else {
+                        self.choose_generated_room_position(
+                            content_rooms,
+                            placement_room_id,
+                            &occupied,
+                        )
+                    };
                     occupied.insert(position);
                     entities.push(self.generated_actor(
                         format!("{}.encounter.{}", definition.id, ordinal + 1),
@@ -4764,16 +4805,18 @@ impl Game {
                 )
             });
             for ordinal in 0..floor_loot_placements {
-                let placement_room_id = if definition.layout.is_some() {
+                let placement_room_id = if maze_only {
+                    "maze"
+                } else if definition.layout.is_some() {
                     generated_non_entry_room_id(content_rooms, ordinal)
                 } else {
                     room_id
                 };
-                let position = self.choose_generated_room_position(
-                    content_rooms,
-                    placement_room_id,
-                    &occupied,
-                );
+                let position = if maze_only {
+                    choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                } else {
+                    self.choose_generated_room_position(content_rooms, placement_room_id, &occupied)
+                };
                 occupied.insert(position);
                 items.extend(self.generate_loot_instances(
                     &LootContext {
@@ -7001,6 +7044,99 @@ fn generated_non_entry_room_id(rooms: &[GeneratedRoom], ordinal: u16) -> &str {
     &rooms[room_index].id
 }
 
+fn maze_floor_anchors(walkable: &BTreeSet<Position>) -> (Position, Position) {
+    let seed = walkable
+        .iter()
+        .min_by_key(|position| (position.y, position.x))
+        .copied()
+        .expect("validated maze must retain walkable terrain");
+    let entry = farthest_maze_position(walkable, seed);
+    let remote = farthest_maze_position(walkable, entry);
+    (entry, remote)
+}
+
+fn farthest_maze_position(walkable: &BTreeSet<Position>, start: Position) -> Position {
+    let distances = maze_floor_distances(walkable, start);
+    let mut positions = distances.keys().copied().collect::<Vec<_>>();
+    positions.sort_by(|left, right| {
+        distances[right]
+            .cmp(&distances[left])
+            .then_with(|| left.y.cmp(&right.y))
+            .then_with(|| left.x.cmp(&right.x))
+    });
+    positions[0]
+}
+
+fn maze_floor_distances(walkable: &BTreeSet<Position>, start: Position) -> BTreeMap<Position, u32> {
+    const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+    let mut distances = BTreeMap::from([(start, 0_u32)]);
+    let mut frontier = VecDeque::from([start]);
+    while let Some(position) = frontier.pop_front() {
+        let next_distance = distances[&position] + 1;
+        for (dx, dy) in CARDINAL_OFFSETS {
+            let neighbor = Position {
+                x: position.x + dx,
+                y: position.y + dy,
+            };
+            if walkable.contains(&neighbor) && !distances.contains_key(&neighbor) {
+                distances.insert(neighbor, next_distance);
+                frontier.push_back(neighbor);
+            }
+        }
+    }
+    distances
+}
+
+fn maze_floor_path(walkable: &BTreeSet<Position>, start: Position, end: Position) -> Vec<Position> {
+    const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+    let mut predecessors = BTreeMap::new();
+    let mut visited = BTreeSet::from([start]);
+    let mut frontier = VecDeque::from([start]);
+    while let Some(position) = frontier.pop_front() {
+        if position == end {
+            break;
+        }
+        for (dx, dy) in CARDINAL_OFFSETS {
+            let neighbor = Position {
+                x: position.x + dx,
+                y: position.y + dy,
+            };
+            if walkable.contains(&neighbor) && visited.insert(neighbor) {
+                predecessors.insert(neighbor, position);
+                frontier.push_back(neighbor);
+            }
+        }
+    }
+    let mut path = vec![end];
+    let mut current = end;
+    while current != start {
+        current = predecessors[&current];
+        path.push(current);
+    }
+    path.reverse();
+    path
+}
+
+fn choose_generated_maze_position(
+    walkable: &BTreeSet<Position>,
+    entry: Position,
+    occupied: &BTreeSet<Position>,
+) -> Position {
+    let distances = maze_floor_distances(walkable, entry);
+    let mut candidates = walkable
+        .iter()
+        .filter(|position| !occupied.contains(position))
+        .copied()
+        .collect::<Vec<_>>();
+    candidates.sort_by(|left, right| {
+        distances[right]
+            .cmp(&distances[left])
+            .then_with(|| left.y.cmp(&right.y))
+            .then_with(|| left.x.cmp(&right.x))
+    });
+    candidates[0]
+}
+
 fn formation_placement_candidates(
     rooms: &[GeneratedRoom],
     room_id: &str,
@@ -9214,9 +9350,9 @@ mod tests {
             .expect("pressure dungeon entry should resolve")
             .expect("pressure dungeon entry should transition");
 
-        let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 31, 10];
+        let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 1, 30];
         let loot_placements = [1_usize, 1, 1, 1, 2, 2, 2, 3, 3, 3];
-        let feature_placements = [0_usize, 0, 2, 3, 4, 4, 4, 4, 4, 4];
+        let feature_placements = [0_usize, 0, 2, 3, 4, 4, 4, 4, 0, 4];
         for depth in 1..=10 {
             assert_eq!(
                 game.current_floor_id,
@@ -9237,7 +9373,11 @@ mod tests {
                     )
                 })
                 .count();
-            let mandatory_feature_tiles = 2 + usize::from(depth == 8) * 2 + usize::from(depth == 9);
+            let mandatory_feature_tiles = if depth == 9 {
+                1
+            } else {
+                2 + usize::from(depth == 8) * 2 + usize::from(depth == 10)
+            };
             assert_eq!(
                 terrain_feature_tiles - mandatory_feature_tiles,
                 feature_placements[depth - 1]
@@ -9251,7 +9391,7 @@ mod tests {
             }
             let guardian_slots = if depth == 10 { 1 } else { 0 };
             let vault_slots = if depth == 8 { 2 } else { 0 };
-            let pit_slots = if depth == 9 { 25 } else { 0 };
+            let pit_slots = if depth == 10 { 25 } else { 0 };
             assert_eq!(
                 game.entities
                     .iter()
@@ -9291,7 +9431,7 @@ mod tests {
                     5
                 );
             }
-            if depth == 9 {
+            if depth == 10 {
                 let pit = game
                     .entities
                     .iter()
@@ -9391,19 +9531,23 @@ mod tests {
             .expect("built-in world should exist")
             .procedural_floors
             .iter()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the first layout floor")
             .clone();
         let layout = definition
             .layout
             .as_ref()
             .expect("fixture should contain a layout");
-        let rooms = game.generate_budgeted_rooms(&definition, &layout.rooms);
+        let room_geometry = layout
+            .rooms
+            .as_ref()
+            .expect("fixture should contain room geometry");
+        let rooms = game.generate_budgeted_rooms(&definition, room_geometry);
 
-        assert_eq!(rooms.len(), 4);
+        assert_eq!(rooms.len(), 5);
         assert_eq!(rooms[0].id, "entry");
         assert_eq!(rooms[1].id, "remote");
-        assert!(rooms.iter().map(GeneratedRoom::area).sum::<u32>() <= 96);
+        assert!(rooms.iter().map(GeneratedRoom::area).sum::<u32>() <= 112);
         let mut room_tiles = BTreeSet::new();
         for room in &rooms {
             for y in room.y..room.y + room.height {
@@ -9437,7 +9581,7 @@ mod tests {
                 })
             })
             .collect::<BTreeSet<_>>();
-        assert_eq!(cavern_tiles.len(), 56);
+        assert_eq!(cavern_tiles.len(), 64);
         let mut reached = BTreeSet::from([cavern_origin]);
         let mut frontier = VecDeque::from([cavern_origin]);
         while let Some(position) = frontier.pop_front() {
@@ -9457,14 +9601,14 @@ mod tests {
         let mut crosses = 0;
         for seed in 1..=64 {
             let mut seeded = Game::new(seed);
-            for room in seeded.generate_budgeted_rooms(&definition, &layout.rooms) {
+            for room in seeded.generate_budgeted_rooms(&definition, room_geometry) {
                 match room.shape {
                     ProceduralRoomShape::Rectangle => rectangles += 1,
                     ProceduralRoomShape::Cross => crosses += 1,
                 }
             }
         }
-        assert!(rectangles > crosses);
+        assert!(rectangles > 0);
         assert!(crosses > 0);
     }
 
@@ -9477,7 +9621,7 @@ mod tests {
             .expect("built-in world should exist")
             .procedural_floors
             .iter()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
             .expect("fixture should contain the lake floor")
             .clone();
         let mut lake_terrain = vec![
@@ -9519,8 +9663,8 @@ mod tests {
                 })
             })
             .collect::<BTreeSet<_>>();
-        assert_eq!(water_tiles.len(), 70);
-        assert_eq!(deep_tiles.len(), 28);
+        assert_eq!(water_tiles.len(), 76);
+        assert_eq!(deep_tiles.len(), 30);
         for expected in [&water_tiles, &deep_tiles] {
             let mut reached = BTreeSet::from([lake_origin]);
             let mut frontier = VecDeque::from([lake_origin]);
@@ -9705,6 +9849,64 @@ mod tests {
             }
         }
         assert!((1..=2).contains(&component_count));
+    }
+
+    #[test]
+    fn maze_only_floor_uses_reachable_region_anchors_without_room_overlay() {
+        let mut game = Game::new(151);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..9 {
+            descend_one_floor(&mut game);
+        }
+
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-9");
+        let walkable = game
+            .terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, terrain_id)| {
+                game.content
+                    .terrain(terrain_id)
+                    .is_some_and(|terrain| terrain.walkable)
+                    .then_some(Position {
+                        x: i32::try_from(index % usize::from(game.width))
+                            .expect("maze x must fit i32"),
+                        y: i32::try_from(index / usize::from(game.width))
+                            .expect("maze y must fit i32"),
+                    })
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(walkable.len(), 127);
+        let (entry, remote) = maze_floor_anchors(&walkable);
+        assert_eq!(game.player.position, entry);
+        assert_eq!(game.terrain_at(entry), "demo.terrain.stairs-up");
+        assert_eq!(game.terrain_at(remote), "demo.terrain.stairs-down");
+        assert_eq!(maze_floor_distances(&walkable, entry).len(), walkable.len());
+        assert!(
+            game.terrain
+                .iter()
+                .all(|terrain| terrain != "demo.terrain.door-secret")
+        );
+        assert!(game.entities.iter().all(|entity| {
+            entity.id.contains(".encounter.") && walkable.contains(&entity.position)
+        }));
+        assert!(game.items.iter().all(|item| {
+            matches!(item.location, ItemLocation::Ground(position) if walkable.contains(&position))
+        }));
+
+        let mut same_seed = Game::new(151);
+        same_seed.player.position = Position { x: 3, y: 2 };
+        same_seed
+            .traverse_stairs(false)
+            .expect("matching pressure dungeon entry should resolve")
+            .expect("matching pressure dungeon entry should transition");
+        for _ in 1..9 {
+            descend_one_floor(&mut same_seed);
+        }
+        assert_eq!(same_seed.state_hash(), game.state_hash());
     }
 
     #[test]
@@ -10438,6 +10640,48 @@ mod tests {
                 .entities
                 .iter()
                 .all(|entity| !entity.id.contains(".pit."))
+        );
+    }
+
+    #[test]
+    fn previous_v56_generated_floor_is_not_rebuilt_as_maze_only() {
+        let mut game = Game::new(156);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..9 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041".to_owned();
+        payload.entities[0].id = "demo.floor.resonance-depth-9.pit.1".to_owned();
+        let marker_index = payload
+            .terrain
+            .terrain_ids
+            .iter()
+            .position(|terrain| terrain == "demo.terrain.wall")
+            .expect("generated floor should retain a wall");
+        payload.terrain.terrain_ids[marker_index] = "demo.terrain.resonance-cavern".to_owned();
+        let expected_terrain = payload.terrain.clone();
+        let mut expected_entities = payload.entities.clone();
+        expected_entities.sort_by(|left, right| left.id.cmp(&right.id));
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v56 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-9");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .any(|entity| entity.id.contains(".pit."))
         );
     }
 

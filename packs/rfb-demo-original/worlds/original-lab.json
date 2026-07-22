@@ -411,48 +411,19 @@
     "encounterTableId": "demo.encounter-table.resonance-descent",
     "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
-    "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
-      "actorSlots": 31,
+      "actorSlots": 1,
       "lootPlacements": 3,
-      "roomPlacements": 4,
-      "roomAreaTiles": 96,
-      "cavernAreaTiles": 56,
-      "lakeAreaTiles": 70,
-      "lakeDeepAreaTiles": 28,
       "mazeFloorTiles": 127,
       "streamerPlacements": 2,
-      "streamerAreaTiles": 24,
-      "pitPlacements": 1,
-      "pitActorSlots": 25,
-      "featurePlacements": 4
+      "streamerAreaTiles": 24
     },
     "layout": {
-      "rooms": {
-        "minWidth": 5,
-        "maxWidth": 7,
-        "minHeight": 5,
-        "maxHeight": 7,
-        "shapes": [
-          { "shape": "rectangle", "weight": 3 },
-          { "shape": "cross", "weight": 2 }
-        ]
-      },
-      "cavern": { "terrainId": "demo.terrain.resonance-cavern" },
-      "lake": {
-        "deepTerrainId": "demo.terrain.resonance-water-deep",
-        "shallowTerrainId": "demo.terrain.resonance-water-shallow"
-      },
+      "mode": "maze-only",
       "maze": { "width": 15, "height": 15 },
       "streamers": [
         { "terrainId": "demo.terrain.resonance-vein", "weight": 1 }
-      ],
-      "pit": {
-        "encounterTableId": "demo.encounter-table.resonance-pit",
-        "innerWidth": 5,
-        "innerHeight": 5,
-        "rosterSize": 5
-      }
+      ]
     },
     "nextFloorId": "demo.floor.resonance-depth-10",
     "depth": 9,
@@ -476,7 +447,7 @@
     "themeTableId": "demo.theme-table.resonance-descent",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
-      "actorSlots": 10,
+      "actorSlots": 30,
       "lootPlacements": 3,
       "roomPlacements": 5,
       "roomAreaTiles": 112,
@@ -488,6 +459,8 @@
       "destroyedAreaTiles": 48,
       "streamerPlacements": 2,
       "streamerAreaTiles": 24,
+      "pitPlacements": 1,
+      "pitActorSlots": 25,
       "featurePlacements": 4
     },
     "layout": {
@@ -513,7 +486,13 @@
       "destroyed": { "terrainId": "demo.terrain.resonance-ruin" },
       "streamers": [
         { "terrainId": "demo.terrain.resonance-vein", "weight": 1 }
-      ]
+      ],
+      "pit": {
+        "encounterTableId": "demo.encounter-table.resonance-pit",
+        "innerWidth": 5,
+        "innerHeight": 5,
+        "rosterSize": 5
+      }
     },
     "finalFloor": true,
     "guardian": {
