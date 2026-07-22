@@ -675,6 +675,8 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub terrain_feature_table_id: Option<String>,
     #[serde(default)]
+    pub layout: Option<ProceduralLayoutDefinition>,
+    #[serde(default)]
     pub generation_budget: Option<ProceduralGenerationBudgetDefinition>,
     #[serde(default)]
     pub nest: Option<ProceduralNestDefinition>,
@@ -804,6 +806,12 @@ pub struct ProceduralGenerationBudgetDefinition {
     pub actor_slots: u16,
     pub loot_placements: u16,
     #[serde(default)]
+    pub room_placements: Option<u16>,
+    #[serde(default)]
+    pub room_area_tiles: Option<u32>,
+    #[serde(default)]
+    pub cavern_area_tiles: Option<u32>,
+    #[serde(default)]
     pub vault_placements: Option<u16>,
     #[serde(default)]
     pub vault_area_tiles: Option<u32>,
@@ -813,6 +821,49 @@ pub struct ProceduralGenerationBudgetDefinition {
     pub group_actor_slots: Option<u16>,
     #[serde(default)]
     pub feature_placements: Option<u16>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralRoomGeometryDefinition {
+    pub min_width: u16,
+    pub max_width: u16,
+    pub min_height: u16,
+    pub max_height: u16,
+    pub shapes: Vec<ProceduralRoomShapeCandidateDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralLayoutDefinition {
+    pub rooms: ProceduralRoomGeometryDefinition,
+    #[serde(default)]
+    pub cavern: Option<ProceduralCavernDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralCavernDefinition {
+    pub terrain_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralRoomShapeCandidateDefinition {
+    pub shape: ProceduralRoomShape,
+    pub weight: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ProceduralRoomShape {
+    Rectangle,
+    Cross,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2445,6 +2496,17 @@ fn validate_world(
                     .nest
                     .as_ref()
                     .map_or(0, |nest| usize::from(nest.spawn_count));
+            let room_budget = match (
+                procedural.layout.as_mut(),
+                budget.room_placements,
+                budget.room_area_tiles,
+            ) {
+                (None, None, None) => None,
+                (Some(layout), Some(placements), Some(area_tiles)) => {
+                    Some((layout, placements, area_tiles))
+                }
+                _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+            };
             let spatial_vault_budget = match (budget.vault_placements, budget.vault_area_tiles) {
                 (None, None) => None,
                 (Some(placements), Some(area_tiles)) => Some((placements, area_tiles)),
@@ -2471,6 +2533,79 @@ fn validate_world(
                 || reserved_actor_slots >= usize::from(budget.actor_slots)
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if room_budget.is_none() && budget.cavern_area_tiles.is_some() {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if let Some((layout, placements, area_tiles)) = room_budget {
+                let geometry = &mut layout.rooms;
+                geometry.shapes.sort_by_key(|candidate| candidate.shape);
+                let shape_count = geometry
+                    .shapes
+                    .iter()
+                    .map(|candidate| candidate.shape)
+                    .collect::<BTreeSet<_>>()
+                    .len();
+                let columns = if placements <= 4 { 2 } else { 3 };
+                let rows = placements.div_ceil(columns);
+                let minimum_cell_width = procedural.width.saturating_sub(2) / columns;
+                let minimum_cell_height = procedural.height.saturating_sub(2) / rows;
+                let minimum_room_area = geometry
+                    .shapes
+                    .iter()
+                    .map(|candidate| match candidate.shape {
+                        ProceduralRoomShape::Rectangle => {
+                            u32::from(geometry.min_width) * u32::from(geometry.min_height)
+                        }
+                        ProceduralRoomShape::Cross => {
+                            u32::from(geometry.min_width) + u32::from(geometry.min_height) - 1
+                        }
+                    })
+                    .min()
+                    .unwrap_or(0);
+                let interior_area = u32::from(procedural.width.saturating_sub(2))
+                    * u32::from(procedural.height.saturating_sub(2));
+                if !(2..=6).contains(&placements)
+                    || !(5..=9).contains(&geometry.min_width)
+                    || !(geometry.min_width..=9).contains(&geometry.max_width)
+                    || !(5..=9).contains(&geometry.min_height)
+                    || !(geometry.min_height..=9).contains(&geometry.max_height)
+                    || geometry.min_width > minimum_cell_width
+                    || geometry.min_height > minimum_cell_height
+                    || geometry.shapes.is_empty()
+                    || geometry.shapes.len() > 2
+                    || shape_count != geometry.shapes.len()
+                    || geometry
+                        .shapes
+                        .iter()
+                        .any(|candidate| !(1..=1_000_000).contains(&candidate.weight))
+                    || area_tiles > interior_area
+                    || u32::from(placements) * minimum_room_area > area_tiles
+                    || procedural.vault_id.is_some()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                match (&layout.cavern, budget.cavern_area_tiles) {
+                    (None, None) => {}
+                    (Some(cavern), Some(cavern_area_tiles)) => {
+                        require_reference(terrain_ids, &cavern.terrain_id, &procedural.id)?;
+                        if terrain_walkability.get(&cavern.terrain_id) != Some(&true)
+                            || cavern.terrain_id == procedural.floor_terrain_id
+                            || cavern.terrain_id == procedural.wall_terrain_id
+                            || eligible_theme_entries
+                                .iter()
+                                .any(|entry| entry.floor_terrain_id == cavern.terrain_id)
+                            || !(16..=interior_area).contains(&cavern_area_tiles)
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
             }
             if let Some((placements, area_tiles)) = spatial_vault_budget {
                 let interior_area = u32::from(procedural.width.saturating_sub(2))
@@ -2585,6 +2720,7 @@ fn validate_world(
             .iter()
             .any(|entry| entry.group.is_some())
             || procedural.terrain_feature_table_id.is_some()
+            || procedural.layout.is_some()
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
@@ -3620,7 +3756,7 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 37);
+        assert_eq!(first.content.terrain.len(), 38);
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
@@ -3639,7 +3775,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.45.0");
+        assert_eq!(catalog.pack_version(), "1.46.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3712,6 +3848,29 @@ mod tests {
         assert_eq!(
             world.procedural_floors[0].theme_table_id.as_deref(),
             Some("demo.theme-table.echo-depths")
+        );
+        let final_floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .expect("demo world should retain the budgeted cavern floor");
+        assert_eq!(
+            final_floor.generation_budget.as_ref().map(|budget| (
+                budget.room_placements,
+                budget.room_area_tiles,
+                budget.cavern_area_tiles,
+            )),
+            Some((Some(5), Some(112), Some(64)))
+        );
+        assert_eq!(
+            final_floor.layout.as_ref().map(|layout| (
+                layout.rooms.shapes.len(),
+                layout
+                    .cavern
+                    .as_ref()
+                    .map(|cavern| cavern.terrain_id.as_str()),
+            )),
+            Some((2, Some("demo.terrain.resonance-cavern")))
         );
         assert_eq!(
             world.procedural_floors[0]
@@ -4182,6 +4341,86 @@ mod tests {
             .feature_placements = Some(5);
         assert!(matches!(
             validate_and_normalize(&mut oversized_feature_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut incomplete_room_budget = artifact.content.clone();
+        incomplete_room_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the room-budget floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .room_area_tiles = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_room_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut undersized_room_budget = artifact.content.clone();
+        undersized_room_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the room-budget floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .room_area_tiles = Some(35);
+        assert!(matches!(
+            validate_and_normalize(&mut undersized_room_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut blocked_cavern = artifact.content.clone();
+        blocked_cavern.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the cavern floor")
+            .layout
+            .as_mut()
+            .expect("fixture should contain a layout")
+            .cavern
+            .as_mut()
+            .expect("fixture should contain a cavern")
+            .terrain_id = "demo.terrain.wall".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut blocked_cavern),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut incomplete_cavern_budget = artifact.content.clone();
+        incomplete_cavern_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the cavern floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .cavern_area_tiles = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_cavern_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut duplicate_room_shape = artifact.content.clone();
+        let shapes = &mut duplicate_room_shape.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the room-layout floor")
+            .layout
+            .as_mut()
+            .expect("fixture should contain a layout")
+            .rooms
+            .shapes;
+        shapes[1].shape = shapes[0].shape;
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_room_shape),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
     }

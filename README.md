@@ -71,6 +71,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v50：Vault 空间变换与确定性多模板落位](design/contract-v50-spatial-vault-placement.md)
 - [Contract v51：动态 friends/escort 群体与 formation](design/contract-v51-dynamic-encounter-groups.md)
 - [Contract v52：程序化特殊地形表与空间预算](design/contract-v52-terrain-feature-budgets.md)
+- [Contract v53：分阶段洞穴地貌与房间几何预算](design/contract-v53-staged-cavern-layout.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -88,7 +89,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v52/scenarios`](tests/fixtures/contract-v52/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v51` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v53/scenarios`](tests/fixtures/contract-v53/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v52` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -121,7 +122,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.52 / contract-v52 已建立独立 terrain feature 表、room/corridor 放置语义、深度加权选择、额外特殊地形预算、占位排斥与空间失败回退。共鸣压力地牢深度 3–10 会在固定拓扑门/陷阱之外放置 2–4 个 trap、rubble、locked/secret door。active baseline 共 104 个 exact fixtures，内容包为 1.45.0、terrain 37、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v52 说明](design/contract-v52-terrain-feature-budgets.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、第一类巢穴、动态 friends/escort formation 和额外特殊地形预算已经建立。Stage E 后续主要剩余房间数量/形状预算、pit/pack AI、多入口/连通性和分支连接；任务线的暂停管理仍保留在后续队列。
+协议 1.53 / contract-v53 已参考原版 `cave_gen()` 的分阶段结构，建立独立 cavern 基础地貌、多房间数量/面积预算、加权 `rectangle/cross` 形状、稳定网格落位、真实形状判定、房间与 cavern 连通，以及跨非入口房间的 encounter/loot 分布。共鸣压力地牢深度 9/10 分别生成 4/5 个房间和 56/64 格连通 cavern 基底。active baseline 共 106 个 exact fixtures，内容包为 1.46.0、terrain 38、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v53 说明](design/contract-v53-staged-cavern-layout.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、第一类巢穴、动态 friends/escort formation、额外特殊地形预算、连通 cavern 基底和多房间几何预算已经建立。Stage E 后续主要剩余 lake/river/streamer/destroyed/maze、pit/pack AI、多入口/连通性和分支连接；任务线的暂停管理仍保留在后续队列。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -193,10 +196,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v52/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v53/baseline-policy.json
 ```
 
-当前 104 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 106 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

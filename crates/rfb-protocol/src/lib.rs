@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.52";
+pub const PROTOCOL_VERSION: &str = "1.53";
 
 const fn default_actor_speed() -> u16 {
     110

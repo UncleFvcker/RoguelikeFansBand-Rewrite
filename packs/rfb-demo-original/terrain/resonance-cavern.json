@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.resonance-cavern",
+  "nameKey": "terrain-demo-resonance-cavern-name",
+  "descriptionKey": "terrain-demo-resonance-cavern-description",
+  "glyph": ",",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["interior", "stone", "natural-cavern", "deep-resonance"]
+}

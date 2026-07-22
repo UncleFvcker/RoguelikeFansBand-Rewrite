@@ -16,6 +16,8 @@ contract-v51 的动态群体阶段按 grouped encounter 权重选择领袖，依
 
 contract-v52 在 Vault 绘制后、actor/loot 生成前执行特殊地形阶段。每个槽先按深度候选权重抽取 terrain 条目，再从按地图行优先规范化的 room 或 corridor 位置中抽取；单条目或单位置不消费 RNG。无位置候选只从当前槽移除并继续回退，成功位置立即改写 terrain 并进入后续占位集合。v51 已生成楼层及 RNG 状态原样迁移，不补放 trap/door/rubble；state hash 继续使用 Schema v19。
 
+contract-v53 在房间阶段前生成 cavern 基础地貌：从中心开始，每步将四向连通前沿按 `y/x` 排序，多候选消费一次位置抽取，直到精确达到面积预算。房间阶段先按规范排序的形状权重选种，再从位置/尺寸候选中抽取；每个槽为未来房间保留最小面积，保证精确房间数量而不超总面积。房间按稳定槽序连接，encounter/loot 按 ordinal 轮转到非入口房间。v52 已生成楼层及 RNG 状态原样迁移，不补绘 cavern 或重建房间；state hash 继续使用 Schema v19。
+
 contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、地面掉落位置和 loot roll 顺序；生成结果已经由 Schema v14 的当前/离层 actor、item、分配器和 RNG 字段覆盖，因此本切片不升级 state hash Schema。
 
 contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。

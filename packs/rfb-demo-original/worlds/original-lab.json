@@ -412,7 +412,27 @@
     "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
-    "generationBudget": { "actorSlots": 10, "lootPlacements": 3, "featurePlacements": 4 },
+    "generationBudget": {
+      "actorSlots": 10,
+      "lootPlacements": 3,
+      "roomPlacements": 4,
+      "roomAreaTiles": 96,
+      "cavernAreaTiles": 56,
+      "featurePlacements": 4
+    },
+    "layout": {
+      "rooms": {
+        "minWidth": 5,
+        "maxWidth": 7,
+        "minHeight": 5,
+        "maxHeight": 7,
+        "shapes": [
+          { "shape": "rectangle", "weight": 3 },
+          { "shape": "cross", "weight": 2 }
+        ]
+      },
+      "cavern": { "terrainId": "demo.terrain.resonance-cavern" }
+    },
     "nextFloorId": "demo.floor.resonance-depth-10",
     "depth": 9,
     "width": 20,
@@ -434,7 +454,27 @@
     "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
-    "generationBudget": { "actorSlots": 10, "lootPlacements": 3, "featurePlacements": 4 },
+    "generationBudget": {
+      "actorSlots": 10,
+      "lootPlacements": 3,
+      "roomPlacements": 5,
+      "roomAreaTiles": 112,
+      "cavernAreaTiles": 64,
+      "featurePlacements": 4
+    },
+    "layout": {
+      "rooms": {
+        "minWidth": 5,
+        "maxWidth": 7,
+        "minHeight": 5,
+        "maxHeight": 7,
+        "shapes": [
+          { "shape": "rectangle", "weight": 3 },
+          { "shape": "cross", "weight": 2 }
+        ]
+      },
+      "cavern": { "terrainId": "demo.terrain.resonance-cavern" }
+    },
     "finalFloor": true,
     "guardian": {
       "instanceId": "demo.guardian.resonance-descent.1",

@@ -285,6 +285,8 @@ export const MESSAGE_KEYS = [
   "terrain-demo-resonance-rift-description",
   "terrain-demo-resonant-floor-name",
   "terrain-demo-resonant-floor-description",
+  "terrain-demo-resonance-cavern-name",
+  "terrain-demo-resonance-cavern-description",
   "vault-demo-harmonic-sepulcher-name",
   "vault-demo-resonant-gallery-name",
   "vault-demo-resonance-spindle-name",

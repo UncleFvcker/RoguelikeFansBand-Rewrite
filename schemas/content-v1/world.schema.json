@@ -133,6 +133,18 @@
       ],
       "type": "object"
     },
+    "ProceduralCavernDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terrainId"
+      ],
+      "type": "object"
+    },
     "ProceduralFloorDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -241,6 +253,17 @@
         },
         "id": {
           "type": "string"
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralLayoutDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "lifecycle": {
           "$ref": "#/$defs/FloorLifecycle",
@@ -393,6 +416,15 @@
           "minimum": 0,
           "type": "integer"
         },
+        "cavernAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "featurePlacements": {
           "default": null,
           "format": "uint16",
@@ -429,6 +461,25 @@
           "minimum": 0,
           "type": "integer"
         },
+        "roomAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "roomPlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "vaultAreaTiles": {
           "default": null,
           "format": "uint32",
@@ -452,6 +503,29 @@
       "required": [
         "actorSlots",
         "lootPlacements"
+      ],
+      "type": "object"
+    },
+    "ProceduralLayoutDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cavern": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralCavernDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rooms": {
+          "$ref": "#/$defs/ProceduralRoomGeometryDefinition"
+        }
+      },
+      "required": [
+        "rooms"
       ],
       "type": "object"
     },
@@ -491,6 +565,74 @@
       "required": [
         "roomId",
         "spawnCount"
+      ],
+      "type": "object"
+    },
+    "ProceduralRoomGeometryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "maxHeight": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxWidth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minHeight": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minWidth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "shapes": {
+          "items": {
+            "$ref": "#/$defs/ProceduralRoomShapeCandidateDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "minWidth",
+        "maxWidth",
+        "minHeight",
+        "maxHeight",
+        "shapes"
+      ],
+      "type": "object"
+    },
+    "ProceduralRoomShape": {
+      "enum": [
+        "rectangle",
+        "cross"
+      ],
+      "type": "string"
+    },
+    "ProceduralRoomShapeCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "$ref": "#/$defs/ProceduralRoomShape"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shape",
+        "weight"
       ],
       "type": "object"
     },

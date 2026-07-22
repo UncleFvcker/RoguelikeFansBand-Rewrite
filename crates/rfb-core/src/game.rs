@@ -39,8 +39,9 @@ use crate::{
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
     EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
-    TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
-    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    ProceduralRoomGeometryDefinition, ProceduralRoomShape, TaskObjectiveDefinition,
+    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
+    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -58,7 +59,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 45] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 46] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -104,9 +105,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 45] = [
     "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f",
     "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0",
     "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6",
+    "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a";
+    "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -179,13 +181,46 @@ enum LootSource {
     Vault { vault_id: String, spawn_id: String },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct GeneratedRoom {
-    id: &'static str,
+    id: String,
     x: i32,
     y: i32,
     width: i32,
     height: i32,
+    shape: ProceduralRoomShape,
+}
+
+impl GeneratedRoom {
+    fn center(&self) -> Position {
+        Position {
+            x: self.x + self.width / 2,
+            y: self.y + self.height / 2,
+        }
+    }
+
+    fn contains(&self, position: Position) -> bool {
+        if position.x < self.x
+            || position.x >= self.x + self.width
+            || position.y < self.y
+            || position.y >= self.y + self.height
+        {
+            return false;
+        }
+        match self.shape {
+            ProceduralRoomShape::Rectangle => true,
+            ProceduralRoomShape::Cross => {
+                position.x == self.center().x || position.y == self.center().y
+            }
+        }
+    }
+
+    fn area(&self) -> u32 {
+        match self.shape {
+            ProceduralRoomShape::Rectangle => (self.width * self.height) as u32,
+            ProceduralRoomShape::Cross => (self.width + self.height - 1) as u32,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -4127,77 +4162,63 @@ impl Game {
         let height = definition.height;
         let mut terrain =
             vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
-        let room_width = 6_i32;
-        let room_height = 5_i32;
-        let first_x = 1 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
-        let first_y = 1 + i32::try_from(self.rng.bounded(4)).unwrap_or(0);
-        let second_x = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
-        let second_y = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
-        let rooms = [
-            GeneratedRoom {
-                id: "entry",
-                x: first_x,
-                y: first_y,
-                width: room_width,
-                height: room_height,
-            },
-            GeneratedRoom {
-                id: "remote",
-                x: second_x,
-                y: second_y,
-                width: room_width,
-                height: room_height,
-            },
-        ];
-        carve_room(
-            &mut terrain,
-            width,
-            rooms[0].x,
-            rooms[0].y,
-            rooms[0].width,
-            rooms[0].height,
-            &generated_floor_terrain_id,
-        );
-        carve_room(
-            &mut terrain,
-            width,
-            rooms[1].x,
-            rooms[1].y,
-            rooms[1].width,
-            rooms[1].height,
-            &generated_floor_terrain_id,
-        );
-        let first_center = Position {
-            x: rooms[0].x + rooms[0].width / 2,
-            y: rooms[0].y + rooms[0].height / 2,
+        let cavern_origin = definition.layout.as_ref().and_then(|layout| {
+            layout.cavern.as_ref().map(|cavern| {
+                self.generate_connected_cavern(definition, &cavern.terrain_id, &mut terrain)
+            })
+        });
+        let rooms = if let Some(layout) = &definition.layout {
+            self.generate_budgeted_rooms(definition, &layout.rooms)
+        } else {
+            let room_width = 6_i32;
+            let room_height = 5_i32;
+            let first_x = 1 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+            let first_y = 1 + i32::try_from(self.rng.bounded(4)).unwrap_or(0);
+            let second_x = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+            let second_y = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+            vec![
+                GeneratedRoom {
+                    id: "entry".to_owned(),
+                    x: first_x,
+                    y: first_y,
+                    width: room_width,
+                    height: room_height,
+                    shape: ProceduralRoomShape::Rectangle,
+                },
+                GeneratedRoom {
+                    id: "remote".to_owned(),
+                    x: second_x,
+                    y: second_y,
+                    width: room_width,
+                    height: room_height,
+                    shape: ProceduralRoomShape::Rectangle,
+                },
+            ]
         };
-        let second_center = Position {
-            x: rooms[1].x + rooms[1].width / 2,
-            y: rooms[1].y + rooms[1].height / 2,
-        };
+        for room in &rooms {
+            carve_generated_room(&mut terrain, width, room, &generated_floor_terrain_id);
+        }
+        let first_center = rooms[0].center();
+        let second_center = rooms[1].center();
         let legacy_vault_origin = legacy_vault.as_ref().map(|vault| Position {
             x: second_center.x - i32::from(vault.entrance_position.x),
             y: rooms[1].y,
         });
-        for x in first_center.x.min(second_center.x)..=first_center.x.max(second_center.x) {
-            set_generated_terrain(
+        for connected_rooms in rooms.windows(2) {
+            carve_generated_corridor(
                 &mut terrain,
                 width,
-                Position {
-                    x,
-                    y: first_center.y,
-                },
+                connected_rooms[0].center(),
+                connected_rooms[1].center(),
                 &generated_floor_terrain_id,
             );
         }
-        for y in first_center.y.min(second_center.y)..=first_center.y.max(second_center.y) {
-            set_generated_terrain(
+        if let Some(cavern_origin) = cavern_origin {
+            carve_generated_corridor(
                 &mut terrain,
                 width,
-                Position {
-                    x: second_center.x,
-                    y,
-                },
+                first_center,
+                cavern_origin,
                 &generated_floor_terrain_id,
             );
         }
@@ -4376,7 +4397,13 @@ impl Game {
                         });
                 for ordinal in 0..encounter_rolls {
                     let entry = &eligible_entries[self.roll_weighted_index(&weights)];
-                    let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
+                    let placement_room_id = if definition.layout.is_some() {
+                        generated_non_entry_room_id(&rooms, ordinal)
+                    } else {
+                        room_id
+                    };
+                    let position =
+                        self.choose_generated_room_position(&rooms, placement_room_id, &occupied);
                     occupied.insert(position);
                     entities.push(self.generated_actor(
                         format!("{}.encounter.{}", definition.id, ordinal + 1),
@@ -4548,7 +4575,13 @@ impl Game {
                 )
             });
             for ordinal in 0..floor_loot_placements {
-                let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
+                let placement_room_id = if definition.layout.is_some() {
+                    generated_non_entry_room_id(&rooms, ordinal)
+                } else {
+                    room_id
+                };
+                let position =
+                    self.choose_generated_room_position(&rooms, placement_room_id, &occupied);
                 occupied.insert(position);
                 items.extend(self.generate_loot_instances(
                     &LootContext {
@@ -4556,7 +4589,7 @@ impl Game {
                         floor_id: definition.id.clone(),
                         depth: definition.depth,
                         source: LootSource::FloorRoom {
-                            room_id: room_id.to_owned(),
+                            room_id: placement_room_id.to_owned(),
                             spawn_id: format!("{}.loot-table.{}", definition.id, ordinal + 1),
                         },
                     },
@@ -4688,6 +4721,169 @@ impl Game {
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
         })
+    }
+
+    fn generate_budgeted_rooms(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        geometry: &ProceduralRoomGeometryDefinition,
+    ) -> Vec<GeneratedRoom> {
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("room geometry requires a generation budget");
+        let placement_count = budget
+            .room_placements
+            .expect("validated room placement count must remain available");
+        let mut remaining_area = budget
+            .room_area_tiles
+            .expect("validated room area budget must remain available");
+        let columns = if placement_count <= 4 { 2 } else { 3 };
+        let rows = placement_count.div_ceil(columns);
+        let interior_width = definition.width - 2;
+        let interior_height = definition.height - 2;
+        let minimum_room_area = geometry
+            .shapes
+            .iter()
+            .map(|candidate| match candidate.shape {
+                ProceduralRoomShape::Rectangle => {
+                    u32::from(geometry.min_width) * u32::from(geometry.min_height)
+                }
+                ProceduralRoomShape::Cross => {
+                    u32::from(geometry.min_width) + u32::from(geometry.min_height) - 1
+                }
+            })
+            .min()
+            .expect("validated room geometry must retain a shape");
+        let mut rooms = Vec::with_capacity(usize::from(placement_count));
+
+        for ordinal in 0..placement_count {
+            let column = ordinal % columns;
+            let row = ordinal / columns;
+            let cell_left = 1 + interior_width * column / columns;
+            let cell_right = 1 + interior_width * (column + 1) / columns;
+            let cell_top = 1 + interior_height * row / rows;
+            let cell_bottom = 1 + interior_height * (row + 1) / rows;
+            let future_room_count = placement_count - ordinal - 1;
+            let maximum_room_area =
+                remaining_area - u32::from(future_room_count) * minimum_room_area;
+            let mut shape_candidates = Vec::new();
+
+            for shape_candidate in &geometry.shapes {
+                let mut candidates = Vec::new();
+                for y in cell_top..cell_bottom {
+                    for x in cell_left..cell_right {
+                        for height in geometry.min_height..=geometry.max_height {
+                            for width in geometry.min_width..=geometry.max_width {
+                                if x + width > cell_right || y + height > cell_bottom {
+                                    continue;
+                                }
+                                let room = GeneratedRoom {
+                                    id: String::new(),
+                                    x: i32::from(x),
+                                    y: i32::from(y),
+                                    width: i32::from(width),
+                                    height: i32::from(height),
+                                    shape: shape_candidate.shape,
+                                };
+                                if room.area() <= maximum_room_area {
+                                    candidates.push(room);
+                                }
+                            }
+                        }
+                    }
+                }
+                if !candidates.is_empty() {
+                    shape_candidates.push((shape_candidate.weight, candidates));
+                }
+            }
+            let shape_index = if shape_candidates.len() == 1 {
+                0
+            } else {
+                let weights = shape_candidates
+                    .iter()
+                    .map(|(weight, _)| *weight)
+                    .collect::<Vec<_>>();
+                self.roll_weighted_index(&weights)
+            };
+            let candidates = &shape_candidates[shape_index].1;
+            let candidate_index = if candidates.len() == 1 {
+                0
+            } else {
+                usize::try_from(
+                    self.rng.bounded(
+                        u64::try_from(candidates.len())
+                            .expect("room geometry candidate count must fit u64"),
+                    ),
+                )
+                .expect("room geometry candidate index must fit usize")
+            };
+            let mut room = candidates[candidate_index].clone();
+            room.id = match ordinal {
+                0 => "entry".to_owned(),
+                1 => "remote".to_owned(),
+                _ => format!("room.{}", ordinal + 1),
+            };
+            remaining_area -= room.area();
+            rooms.push(room);
+        }
+
+        rooms
+    }
+
+    fn generate_connected_cavern(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Position {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let area = definition
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.cavern_area_tiles)
+            .expect("validated cavern area budget must remain available");
+        let origin = Position {
+            x: i32::from(definition.width / 2),
+            y: i32::from(definition.height / 2),
+        };
+        let mut carved = BTreeSet::from([origin]);
+        set_generated_terrain(terrain, definition.width, origin, terrain_id);
+
+        while carved.len() < usize::try_from(area).expect("cavern area must fit usize") {
+            let mut frontier = carved
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !carved.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("cavern frontier count must fit u64"),
+                ))
+                .expect("cavern frontier index must fit usize")
+            };
+            let position = frontier[index];
+            carved.insert(position);
+            set_generated_terrain(terrain, definition.width, position, terrain_id);
+        }
+
+        origin
     }
 
     fn generated_actor(&self, id: String, kind_id: &str, position: Position) -> Actor {
@@ -5171,7 +5367,7 @@ impl Game {
             .expect("validated procedural room ID must remain available");
         let candidates = (room.y..room.y + room.height)
             .flat_map(|y| (room.x..room.x + room.width).map(move |x| Position { x, y }))
-            .filter(|position| !occupied.contains(position))
+            .filter(|position| room.contains(*position) && !occupied.contains(position))
             .collect::<Vec<_>>();
         let index = usize::try_from(self.rng.bounded(
             u64::try_from(candidates.len()).expect("generated room candidate count must fit u64"),
@@ -6348,6 +6544,11 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     dx * dx + dy * dy
 }
 
+fn generated_non_entry_room_id(rooms: &[GeneratedRoom], ordinal: u16) -> &str {
+    let room_index = 1 + usize::from(ordinal) % (rooms.len() - 1);
+    &rooms[room_index].id
+}
+
 fn formation_placement_candidates(
     rooms: &[GeneratedRoom],
     room_id: &str,
@@ -6377,7 +6578,7 @@ fn formation_placement_candidates(
                 x: leader_x,
                 y: leader_y,
             };
-            if occupied.contains(&leader) {
+            if !room.contains(leader) || occupied.contains(&leader) {
                 continue;
             }
             for orientation in 0..RING_OFFSETS.len() {
@@ -6399,13 +6600,10 @@ fn formation_placement_candidates(
                         y: leader.y + dy,
                     })
                     .collect::<Vec<_>>();
-                if companions.iter().all(|position| {
-                    position.x >= room.x
-                        && position.x < room.x + room.width
-                        && position.y >= room.y
-                        && position.y < room.y + room.height
-                        && !occupied.contains(position)
-                }) {
+                if companions
+                    .iter()
+                    .all(|position| room.contains(*position) && !occupied.contains(position))
+                {
                     candidates.push((leader, companions));
                 }
             }
@@ -6561,27 +6759,34 @@ fn paint_generated_vault(terrain: &mut [String], width: u16, placement: &Generat
     }
 }
 
-fn carve_room(
+fn carve_generated_room(
     terrain: &mut [String],
     width: u16,
-    x: i32,
-    y: i32,
-    room_width: i32,
-    room_height: i32,
+    room: &GeneratedRoom,
     floor_terrain_id: &str,
 ) {
-    for room_y in y..y + room_height {
-        for room_x in x..x + room_width {
-            set_generated_terrain(
-                terrain,
-                width,
-                Position {
-                    x: room_x,
-                    y: room_y,
-                },
-                floor_terrain_id,
-            );
+    for y in room.y..room.y + room.height {
+        for x in room.x..room.x + room.width {
+            let position = Position { x, y };
+            if room.contains(position) {
+                set_generated_terrain(terrain, width, position, floor_terrain_id);
+            }
         }
+    }
+}
+
+fn carve_generated_corridor(
+    terrain: &mut [String],
+    width: u16,
+    from: Position,
+    to: Position,
+    floor_terrain_id: &str,
+) {
+    for x in from.x.min(to.x)..=from.x.max(to.x) {
+        set_generated_terrain(terrain, width, Position { x, y: from.y }, floor_terrain_id);
+    }
+    for y in from.y.min(to.y)..=from.y.max(to.y) {
+        set_generated_terrain(terrain, width, Position { x: to.x, y }, floor_terrain_id);
     }
 }
 
@@ -6609,12 +6814,7 @@ fn terrain_feature_placement_candidates(
             if reserved.contains(&position) {
                 return None;
             }
-            let inside_room = rooms.iter().any(|room| {
-                position.x >= room.x
-                    && position.x < room.x + room.width
-                    && position.y >= room.y
-                    && position.y < room.y + room.height
-            });
+            let inside_room = rooms.iter().any(|room| room.contains(position));
             match placement {
                 TerrainFeaturePlacement::Room if inside_room => Some(position),
                 TerrainFeaturePlacement::Corridor if !inside_room => Some(position),
@@ -8325,6 +8525,92 @@ mod tests {
     }
 
     #[test]
+    fn budgeted_rooms_and_connected_cavern_obey_geometric_limits() {
+        let mut game = Game::new(49);
+        let definition = game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("built-in world should exist")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the first layout floor")
+            .clone();
+        let layout = definition
+            .layout
+            .as_ref()
+            .expect("fixture should contain a layout");
+        let rooms = game.generate_budgeted_rooms(&definition, &layout.rooms);
+
+        assert_eq!(rooms.len(), 4);
+        assert_eq!(rooms[0].id, "entry");
+        assert_eq!(rooms[1].id, "remote");
+        assert!(rooms.iter().map(GeneratedRoom::area).sum::<u32>() <= 96);
+        let mut room_tiles = BTreeSet::new();
+        for room in &rooms {
+            for y in room.y..room.y + room.height {
+                for x in room.x..room.x + room.width {
+                    let position = Position { x, y };
+                    if room.contains(position) {
+                        assert!(room_tiles.insert(position));
+                    }
+                }
+            }
+        }
+
+        let mut terrain = vec![
+            definition.wall_terrain_id.clone();
+            usize::from(definition.width) * usize::from(definition.height)
+        ];
+        let cavern_origin = game.generate_connected_cavern(
+            &definition,
+            "demo.terrain.resonance-cavern",
+            &mut terrain,
+        );
+        let cavern_tiles = terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, terrain_id)| {
+                (terrain_id == "demo.terrain.resonance-cavern").then_some(Position {
+                    x: i32::try_from(index % usize::from(definition.width))
+                        .expect("cavern x must fit i32"),
+                    y: i32::try_from(index / usize::from(definition.width))
+                        .expect("cavern y must fit i32"),
+                })
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(cavern_tiles.len(), 56);
+        let mut reached = BTreeSet::from([cavern_origin]);
+        let mut frontier = VecDeque::from([cavern_origin]);
+        while let Some(position) = frontier.pop_front() {
+            for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                let neighbor = Position {
+                    x: position.x + dx,
+                    y: position.y + dy,
+                };
+                if cavern_tiles.contains(&neighbor) && reached.insert(neighbor) {
+                    frontier.push_back(neighbor);
+                }
+            }
+        }
+        assert_eq!(reached, cavern_tiles);
+
+        let mut rectangles = 0;
+        let mut crosses = 0;
+        for seed in 1..=64 {
+            let mut seeded = Game::new(seed);
+            for room in seeded.generate_budgeted_rooms(&definition, &layout.rooms) {
+                match room.shape {
+                    ProceduralRoomShape::Rectangle => rectangles += 1,
+                    ProceduralRoomShape::Cross => crosses += 1,
+                }
+            }
+        }
+        assert!(rectangles > crosses);
+        assert!(crosses > 0);
+    }
+
+    #[test]
     fn dynamic_friends_and_escorts_obey_group_budgets_and_formations() {
         let mut game = Game::new(49);
         game.player.position = Position { x: 3, y: 2 };
@@ -8499,11 +8785,12 @@ mod tests {
             .expect("fixture should contain a generation budget")
             .feature_placements = Some(2);
         let rooms = [GeneratedRoom {
-            id: "entry",
+            id: "entry".to_owned(),
             x: 1,
             y: 1,
             width: 1,
             height: 1,
+            shape: ProceduralRoomShape::Rectangle,
         }];
         let target = Position { x: 1, y: 1 };
         let mut terrain = vec!["demo.terrain.wall".to_owned(); 16];
@@ -8581,11 +8868,12 @@ mod tests {
             .cloned()
             .collect::<Vec<_>>();
         let rooms = [GeneratedRoom {
-            id: "remote",
+            id: "remote".to_owned(),
             x: 0,
             y: 0,
             width: 3,
             height: 3,
+            shape: ProceduralRoomShape::Rectangle,
         }];
         let free = BTreeSet::from([
             Position { x: 1, y: 0 },
@@ -8884,6 +9172,44 @@ mod tests {
                 .filter(|terrain| *terrain == "demo.terrain.trap-echo-snare")
                 .count(),
             1
+        );
+    }
+
+    #[test]
+    fn previous_v52_generated_floor_is_not_backfilled_with_layout_terrain() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..9 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a".to_owned();
+        for terrain_id in &mut payload.terrain.terrain_ids {
+            if terrain_id == "demo.terrain.resonance-cavern" {
+                *terrain_id = "demo.terrain.wall".to_owned();
+            }
+        }
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v52 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-9");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(
+            restored
+                .terrain
+                .iter()
+                .all(|terrain| terrain != "demo.terrain.resonance-cavern")
         );
     }
 
