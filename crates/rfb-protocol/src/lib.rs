@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.59";
+pub const PROTOCOL_VERSION: &str = "1.60";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -960,6 +960,16 @@ pub struct FloorConnectionSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FloorRegionSaveDto {
+    pub region_id: String,
+    pub theme_id: String,
+    pub encounter_table_id: String,
+    pub loot_table_id: String,
+    pub cells: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FloorSaveDto {
     pub id: String,
     pub player_position: Position,
@@ -975,6 +985,8 @@ pub struct FloorSaveDto {
     pub revealed_terrain: Vec<Position>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub connections: Vec<FloorConnectionSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub regions: Vec<FloorRegionSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1066,6 +1078,8 @@ pub struct SavePayloadV1 {
     pub revealed_terrain: Vec<Position>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub floor_connections: Vec<FloorConnectionSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub floor_regions: Vec<FloorRegionSaveDto>,
     pub rng: RngSaveDto,
     pub content_id: String,
     pub content_hash: String,
@@ -1379,6 +1393,7 @@ mod tests {
         assert!(decoded.item_knowledge.is_empty());
         assert!(decoded.item_property_knowledge.is_empty());
         assert!(decoded.revealed_terrain.is_empty());
+        assert!(decoded.floor_regions.is_empty());
         assert!(decoded.inventory[0].affix_ids.is_empty());
         assert_eq!(decoded.inventory[0].quality, ItemQualityDto::Ordinary);
     }

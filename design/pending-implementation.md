@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v59、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v60、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -8,9 +8,17 @@
 
 | 优先级 | 候选纵切 | 状态 | 边界 |
 | --- | --- | --- | --- |
-| P0 | 持久 pack identity 与 AI | 已由 contract-v59 完成 | 领袖/成员身份，以及首版 seek、surround、guard-leader 行为 |
-| P1 | 同层多区域主题 | 待实现 | 区域边界、群落、局部 encounter/loot/theme 与拼接连通性 |
-| P2 | 暂停任务管理 | 待实现 | 地表直接放弃、重接次数限制和重新生成策略 |
+| P0 | 同层多区域主题 | 已由 contract-v60 完成 | 房间级区域边界、局部 encounter/loot/theme 与走廊拼接带 |
+| P1 | 暂停任务管理 | 待实现 | 地表直接放弃、重接次数限制和重新生成策略 |
+| P2 | 区域组合扩展 | 待实现 | 区域与 Vault、pit、动态群体、feature、分阶段地貌和多连接组合 |
+
+## contract-v60 明确遗留
+
+- 区域与 Vault、pit/nest、dynamic formation、terrain feature 和分阶段地貌的组合；
+- 任意多边形/噪声边界、走廊区域归属、区域专属门和跨区域群体协作；
+- cavern/lake/river 等非房间空间的区域归属，以及更一般的多入口连通图。
+
+来源：[contract-v60](contract-v60-regional-themes.md)。
 
 ## contract-v59 明确遗留
 
@@ -160,7 +168,7 @@
 ## contract-v47 明确遗留
 
 - 按深度和地牢主题加权选择多个 vault、无候选回退已由 contract-v48 建立；旋转、镜像、自由 wall 区落位、多 Vault 同层和生成失败回退已由 contract-v50 建立，尚缺多入口和跨走廊拼接；
-- 普通房间可引用的独立 encounter/loot/theme 表已由 contract-v48 建立，actor/loot 总预算与深度区域主题已由 contract-v49 建立，第一版 Vault 数量/面积预算已由 contract-v50 建立，额外 trap/door/rubble 表与 feature 预算已由 contract-v52 建立，房间数量/形状/面积预算与连通 cavern 基础地貌已由 contract-v53 建立，深浅 lake/river 水文阶段已由 contract-v54 建立，maze/destroyed/streamer 阶段已由 contract-v55 建立，完全替代房间的 maze-only 专用楼层已由 contract-v57 建立；尚缺群落和同层多区域主题；
+- 普通房间可引用的独立 encounter/loot/theme 表已由 contract-v48 建立，actor/loot 总预算与深度区域主题已由 contract-v49 建立，第一版 Vault 数量/面积预算已由 contract-v50 建立，额外 trap/door/rubble 表与 feature 预算已由 contract-v52 建立，房间数量/形状/面积预算与连通 cavern 基础地貌已由 contract-v53 建立，深浅 lake/river 水文阶段已由 contract-v54 建立，maze/destroyed/streamer 阶段已由 contract-v55 建立，完全替代房间的 maze-only 专用楼层已由 contract-v57 建立，同层房间区域与局部表已由 contract-v60 建立；尚缺区域与 Vault、地貌、feature 和群体的组合；
 - 第一类同类巢穴已由 contract-v48 建立，动态 friends/escort、`cluster/ring` formation 和群体预算已由 contract-v51 建立，原版式独立复合 pit 与等级阵列已由 contract-v56 建立，持久 pack identity 与首版 AI 已由 contract-v59 建立；尚缺任意模板 formation、多个 pit、召唤、繁殖、种群上限、unique 过滤和更复杂 AI；
 - vault 越级强敌/掉落、专属陷阱、神器、来源标签和探索奖励；
 - 十层规模压力场景已由 contract-v49 建立，多 Vault 楼层已由 contract-v50 建立；尚缺更大模板成功落位后的连通性证明和多入口。
@@ -180,7 +188,7 @@
 ## contract-v49–v53 明确遗留
 
 - Vault 旋转、镜像、自由 wall 区落位、多 Vault 预算竞争、重叠拒绝和稳定失败回退已由 contract-v50 建立；尚缺多入口、大模板成功落位后的连通性证明和跨走廊拼接；
-- 额外陷阱、门与可挖掘特殊地形表、room/corridor 放置、空间预算和失败回退已由 contract-v52 建立；房间数量/尺寸/rectangle-cross 形状/面积预算、连通 cavern 基地貌和跨房间内容分布已由 contract-v53 建立；深浅 lake/river 与结构连通保护已由 contract-v54 建立；maze/destroyed/streamer 与墙体限定回退已由 contract-v55 建立；maze-only、远距锚点和区域内容落位已由 contract-v57 建立；尚缺 feature 分类型配额、相邻限制与同层多区域主题拼接；
+- 额外陷阱、门与可挖掘特殊地形表、room/corridor 放置、空间预算和失败回退已由 contract-v52 建立；房间数量/尺寸/rectangle-cross 形状/面积预算、连通 cavern 基地貌和跨房间内容分布已由 contract-v53 建立；深浅 lake/river 与结构连通保护已由 contract-v54 建立；maze/destroyed/streamer 与墙体限定回退已由 contract-v55 建立；maze-only、远距锚点和区域内容落位已由 contract-v57 建立；同层区域主题与走廊拼接带已由 contract-v60 建立，尚缺 feature 分类型配额、相邻限制及与区域组合；
 - friends/escort、`cluster/ring` formation、群体数量/随从预算、空间缩减和原子回退已由 contract-v51 建立，复合 pit、单入口、专属表和中心等级阵列已由 contract-v56 建立，持久 pack identity 与首版 AI 已由 contract-v59 建立；尚缺任意模板 formation、多个 pit、召唤、繁殖、种群上限、unique 过滤和更复杂 AI；
 - 更一般的分支连接与跨走廊拼接；shaft、随机楼梯、同层多个连接点与独立到达点已由 contract-v58 建立；
 - 跨机器性能计时基线；当前十层 fixture 只锁定规模、状态和确定性。
@@ -200,7 +208,7 @@
 ### 楼层与生成
 
 - 多深度连接、任务层、临时/持久层策略和旧层淘汰；
-- 动态朋友/护卫群体、`cluster/ring` formation 与群体预算已由 contract-v51 完成，额外陷阱/门/可挖掘障碍表与空间预算已由 contract-v52 完成，房间几何预算、连通 cavern 基底与跨房间内容分布已由 contract-v53 完成，深浅 lake/river 生成阶段已由 contract-v54 完成，maze/destroyed/streamer 已由 contract-v55 完成，原版式复合 pit 与等级阵列已由 contract-v56 完成，maze-only 专用楼层已由 contract-v57 完成，多楼梯/shaft/独立到达点已由 contract-v58 完成，持久 pack identity 与首版 AI 已由 contract-v59 完成；尚缺同层多区域主题和更一般的多入口。最终层守护者已由 contract-v46 完成，第一类固定主题 vault/group 已由 contract-v47 完成，多 Vault 加权选择与第一类巢穴已由 contract-v48 完成，actor/loot 总预算和十层压力链已由 contract-v49 完成，Vault 变换、自由落位、多模板面积预算与失败回退已由 contract-v50 完成；
+- 动态朋友/护卫群体、`cluster/ring` formation 与群体预算已由 contract-v51 完成，额外陷阱/门/可挖掘障碍表与空间预算已由 contract-v52 完成，房间几何预算、连通 cavern 基底与跨房间内容分布已由 contract-v53 完成，深浅 lake/river 生成阶段已由 contract-v54 完成，maze/destroyed/streamer 已由 contract-v55 完成，原版式复合 pit 与等级阵列已由 contract-v56 完成，maze-only 专用楼层已由 contract-v57 完成，多楼梯/shaft/独立到达点已由 contract-v58 完成，持久 pack identity 与首版 AI 已由 contract-v59 完成，同层房间区域与局部表已由 contract-v60 完成；尚缺区域与现有特殊生成阶段的组合和更一般的多入口。最终层守护者已由 contract-v46 完成，第一类固定主题 vault/group 已由 contract-v47 完成，多 Vault 加权选择与第一类巢穴已由 contract-v48 完成，actor/loot 总预算和十层压力链已由 contract-v49 完成，Vault 变换、自由落位、多模板面积预算与失败回退已由 contract-v50 完成；
 - 陷阱、秘密门和其他可变地形进入生成管线。
 
 来源：[contract-v26](contract-v26-floor-lifecycle.md)、[contract-v27](contract-v27-procedural-room-content.md)。

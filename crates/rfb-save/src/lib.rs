@@ -210,6 +210,7 @@ mod tests {
             world_id: "test.world.fixture".to_owned(),
             current_floor_id: "test.floor.surface".to_owned(),
             floor_connections: Vec::new(),
+            floor_regions: Vec::new(),
             stored_floors: Vec::new(),
         };
         (header, payload)

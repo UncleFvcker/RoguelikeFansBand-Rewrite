@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/region-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.region-table.resonance-biomes",
+  "entries": [
+    {
+      "regionId": "demo.region.resonance-gallery",
+      "themeTableId": "demo.theme-table.resonance-regions",
+      "themeId": "demo.theme.resonance-gallery",
+      "encounterTableId": "demo.encounter-table.resonance-gallery",
+      "lootTableId": "demo.loot-table.resonance-gallery",
+      "weight": 1,
+      "minDepth": 2,
+      "maxDepth": 2
+    },
+    {
+      "regionId": "demo.region.resonance-grotto",
+      "themeTableId": "demo.theme-table.resonance-regions",
+      "themeId": "demo.theme.resonance-grotto",
+      "encounterTableId": "demo.encounter-table.resonance-grotto",
+      "lootTableId": "demo.loot-table.resonance-grotto",
+      "weight": 3,
+      "minDepth": 2,
+      "maxDepth": 2
+    }
+  ]
+}

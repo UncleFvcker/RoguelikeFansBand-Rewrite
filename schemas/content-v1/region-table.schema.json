@@ -1,0 +1,83 @@
+{
+  "$defs": {
+    "RegionEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "encounterTableId": {
+          "type": "string"
+        },
+        "lootTableId": {
+          "type": "string"
+        },
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "regionId": {
+          "type": "string"
+        },
+        "themeId": {
+          "type": "string"
+        },
+        "themeTableId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "regionId",
+        "themeTableId",
+        "themeId",
+        "encounterTableId",
+        "lootTableId",
+        "weight",
+        "minDepth",
+        "maxDepth"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/region-table.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/RegionEntryDefinition"
+      },
+      "type": "array"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "entries"
+  ],
+  "title": "RegionTableDefinition",
+  "type": "object"
+}

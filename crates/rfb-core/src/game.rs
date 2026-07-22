@@ -26,17 +26,18 @@ use crate::{
         GENERATED_ITEM_ID_PREFIX, actor_from_entity, actor_from_player, actor_from_spawn,
         actors_to_save, carried_item_from_dto, carried_items_to_save,
         derive_next_item_instance_serial, equipment_item_from_dto, equipment_to_save,
-        floor_connections_from_save, floor_connections_to_save, floor_from_save, floor_to_save,
-        inventory_item_from_dto, inventory_to_save, item_from_dto, items_to_save, player_to_save,
-        position_from_content, revealed_terrain_from_save,
+        floor_connections_from_save, floor_connections_to_save, floor_from_save,
+        floor_regions_from_save, floor_regions_to_save, floor_to_save, inventory_item_from_dto,
+        inventory_to_save, item_from_dto, items_to_save, player_to_save, position_from_content,
+        revealed_terrain_from_save,
     },
     scheduler::{
         INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, gain_energy,
         spend_energy,
     },
     state::{
-        Actor, EquipOutcome, FloorConnectionState, FloorState, ItemInstance, ItemLocation,
-        MonsterPackIdentity,
+        Actor, EquipOutcome, FloorConnectionState, FloorRegionState, FloorState, ItemInstance,
+        ItemLocation, MonsterPackIdentity,
     },
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
@@ -52,21 +53,21 @@ use rfb_content::{
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
     ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto,
-    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
-    GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto,
-    ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, ProjectileProfileDto,
-    RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
-    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
-    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
-    ThrowProfileDto, VisibilityState,
+    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
+    GameCommandEnvelope, GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto,
+    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto,
+    Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
+    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
+    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
+    TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 52] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 53] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -119,9 +120,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 52] = [
     "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041",
     "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1",
     "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d",
+    "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d";
+    "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -148,7 +150,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV21 {
+struct StateHashPayloadV22 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -172,6 +174,8 @@ struct StateHashPayloadV21 {
     revealed_terrain: Vec<Position>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     floor_connections: Vec<FloorConnectionSaveDto>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    floor_regions: Vec<FloorRegionSaveDto>,
     rng: RngSaveDto,
     content_id: String,
     content_hash: String,
@@ -258,6 +262,13 @@ struct GeneratedPitPlacement {
 struct GeneratedTerrainFeature {
     terrain_id: String,
     position: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedRegion {
+    state: FloorRegionState,
+    room_ids: Vec<String>,
+    floor_terrain_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -584,6 +595,7 @@ pub struct Game {
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
     floor_connections: Vec<FloorConnectionState>,
+    floor_regions: Vec<FloorRegionState>,
     rng: RfbRng,
     revision: u32,
     turn: u32,
@@ -692,6 +704,7 @@ impl Game {
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
             floor_connections: Vec::new(),
+            floor_regions: Vec::new(),
             rng: RfbRng::seeded(seed),
             revision: 0,
             turn: 0,
@@ -878,6 +891,12 @@ impl Game {
             payload.terrain.width,
             payload.terrain.height,
         )?;
+        let floor_regions = floor_regions_from_save(
+            payload.floor_regions.clone(),
+            payload.terrain.width,
+            payload.terrain.height,
+            &content,
+        )?;
         let item_knowledge = item_knowledge_from_save(payload.item_knowledge, &content)?;
         let mut item_property_knowledge =
             item_property_knowledge_from_save(payload.item_property_knowledge, &items, &content)?;
@@ -925,6 +944,7 @@ impl Game {
             explored,
             revealed_terrain,
             floor_connections,
+            floor_regions,
             rng: RfbRng::from_save(&payload.rng)?,
             revision: payload.revision,
             turn: payload.turn,
@@ -964,6 +984,7 @@ impl Game {
             explored: self.explored.clone(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
             floor_connections: floor_connections_to_save(&self.floor_connections),
+            floor_regions: floor_regions_to_save(&self.floor_regions),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
@@ -1371,8 +1392,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV21 {
-            schema_version: 21,
+        let payload = StateHashPayloadV22 {
+            schema_version: 22,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -1396,6 +1417,7 @@ impl Game {
             explored: Vec::new(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
             floor_connections: floor_connections_to_save(&self.floor_connections),
+            floor_regions: floor_regions_to_save(&self.floor_regions),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
@@ -4082,6 +4104,7 @@ impl Game {
             explored: std::mem::take(&mut self.explored),
             revealed_terrain: std::mem::take(&mut self.revealed_terrain),
             connections: std::mem::take(&mut self.floor_connections),
+            regions: std::mem::take(&mut self.floor_regions),
         };
         self.stored_floors.insert(from_floor_id.clone(), current);
 
@@ -4233,6 +4256,7 @@ impl Game {
         self.explored = floor.explored;
         self.revealed_terrain = floor.revealed_terrain;
         self.floor_connections = floor.connections;
+        self.floor_regions = floor.regions;
         self.reveal_current_visibility();
     }
 
@@ -4244,6 +4268,37 @@ impl Game {
             .layout
             .as_ref()
             .is_some_and(|layout| layout.mode == ProceduralLayoutMode::MazeOnly);
+        let selected_region_entries = if let Some(table_id) = &definition.region_table_id {
+            let table = self
+                .content
+                .region_table(table_id)
+                .expect("validated region table must remain available")
+                .clone();
+            let mut eligible = table
+                .entries
+                .into_iter()
+                .filter(|entry| {
+                    entry.min_depth <= definition.depth && definition.depth <= entry.max_depth
+                })
+                .collect::<Vec<_>>();
+            let placement_count = definition
+                .generation_budget
+                .as_ref()
+                .and_then(|budget| budget.region_placements)
+                .expect("validated region floor must retain a placement budget");
+            let mut selected = Vec::with_capacity(usize::from(placement_count));
+            for _ in 0..placement_count {
+                let weights = eligible
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                let selected_index = self.roll_weighted_index(&weights);
+                selected.push(eligible.remove(selected_index));
+            }
+            selected
+        } else {
+            Vec::new()
+        };
         let eligible_themes = definition
             .theme_table_id
             .as_ref()
@@ -4417,8 +4472,56 @@ impl Game {
                 },
             ]
         };
-        for room in &rooms {
-            carve_generated_room(&mut terrain, width, room, &generated_floor_terrain_id);
+        let room_region_indexes =
+            assign_generated_rooms_to_regions(&rooms, selected_region_entries.len());
+        let mut generated_regions = selected_region_entries
+            .iter()
+            .enumerate()
+            .map(|(region_index, entry)| {
+                let theme = self
+                    .content
+                    .theme_table(&entry.theme_table_id)
+                    .and_then(|table| {
+                        table
+                            .entries
+                            .iter()
+                            .find(|theme| theme.theme_id == entry.theme_id)
+                    })
+                    .expect("validated region theme must remain available");
+                let room_ids = rooms
+                    .iter()
+                    .zip(&room_region_indexes)
+                    .filter(|(_, assigned_region)| **assigned_region == region_index)
+                    .map(|(room, _)| room.id.clone())
+                    .collect::<Vec<_>>();
+                let mut cells = rooms
+                    .iter()
+                    .zip(&room_region_indexes)
+                    .filter(|(_, assigned_region)| **assigned_region == region_index)
+                    .flat_map(|(room, _)| generated_room_cells(room))
+                    .collect::<Vec<_>>();
+                cells.sort();
+                GeneratedRegion {
+                    state: FloorRegionState {
+                        region_id: entry.region_id.clone(),
+                        theme_id: entry.theme_id.clone(),
+                        encounter_table_id: entry.encounter_table_id.clone(),
+                        loot_table_id: entry.loot_table_id.clone(),
+                        cells,
+                    },
+                    room_ids,
+                    floor_terrain_id: theme.floor_terrain_id.clone(),
+                }
+            })
+            .collect::<Vec<_>>();
+        for (room_index, room) in rooms.iter().enumerate() {
+            let room_terrain_id = room_region_indexes
+                .get(room_index)
+                .and_then(|region_index| generated_regions.get(*region_index))
+                .map_or(generated_floor_terrain_id.as_str(), |region| {
+                    region.floor_terrain_id.as_str()
+                });
+            carve_generated_room(&mut terrain, width, room, room_terrain_id);
         }
         let (first_center, second_center) = if maze_only {
             maze_floor_anchors(&maze_walkable)
@@ -4461,7 +4564,17 @@ impl Game {
             .is_some_and(|layout| layout.destroyed.is_some() || layout.river.is_some())
         {
             for room in &rooms {
-                carve_generated_room(&mut terrain, width, room, &generated_floor_terrain_id);
+                let room_index = rooms
+                    .iter()
+                    .position(|candidate| candidate.id == room.id)
+                    .expect("generated room must retain its stable index");
+                let room_terrain_id = room_region_indexes
+                    .get(room_index)
+                    .and_then(|region_index| generated_regions.get(*region_index))
+                    .map_or(generated_floor_terrain_id.as_str(), |region| {
+                        region.floor_terrain_id.as_str()
+                    });
+                carve_generated_room(&mut terrain, width, room, room_terrain_id);
             }
         }
         for connected_rooms in rooms.windows(2) {
@@ -4696,7 +4809,60 @@ impl Game {
             occupied.insert(down_stair_position);
         }
         let mut entities = Vec::new();
-        if let Some(table_id) = &definition.encounter_table_id {
+        if !generated_regions.is_empty() {
+            let actor_budget = definition
+                .generation_budget
+                .as_ref()
+                .expect("validated region floor must retain a generation budget")
+                .actor_slots;
+            let region_count = u16::try_from(generated_regions.len())
+                .expect("validated region count must fit u16");
+            for (region_index, region) in generated_regions.iter().enumerate() {
+                let region_index_u16 =
+                    u16::try_from(region_index).expect("validated region index must fit u16");
+                let placements = actor_budget / region_count
+                    + u16::from(region_index_u16 < actor_budget % region_count);
+                let table = self
+                    .content
+                    .encounter_table(&region.state.encounter_table_id)
+                    .expect("validated region encounter table must remain available")
+                    .clone();
+                let eligible_entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let weights = eligible_entries
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                for ordinal in 0..placements {
+                    let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                    let room_id = &region.room_ids[usize::from(ordinal) % region.room_ids.len()];
+                    let position =
+                        self.choose_generated_room_position(content_rooms, room_id, &occupied);
+                    occupied.insert(position);
+                    entities.push(self.generated_actor(
+                        format!(
+                            "{}.region.{}.encounter.{}",
+                            definition.id,
+                            region.state.region_id,
+                            ordinal + 1
+                        ),
+                        &entry.actor_kind_id,
+                        position,
+                    ));
+                }
+            }
+        } else if let Some(table_id) = &definition.encounter_table_id {
             let table = self
                 .content
                 .encounter_table(table_id)
@@ -5008,7 +5174,44 @@ impl Game {
         }
         let mut items =
             self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
-        if let Some(table_id) = &definition.loot_table_id {
+        if !generated_regions.is_empty() {
+            let loot_budget = definition
+                .generation_budget
+                .as_ref()
+                .expect("validated region floor must retain a generation budget")
+                .loot_placements;
+            let region_count = u16::try_from(generated_regions.len())
+                .expect("validated region count must fit u16");
+            for (region_index, region) in generated_regions.iter().enumerate() {
+                let region_index_u16 =
+                    u16::try_from(region_index).expect("validated region index must fit u16");
+                let placements = loot_budget / region_count
+                    + u16::from(region_index_u16 < loot_budget % region_count);
+                for ordinal in 0..placements {
+                    let room_id = &region.room_ids[usize::from(ordinal) % region.room_ids.len()];
+                    let position =
+                        self.choose_generated_room_position(content_rooms, room_id, &occupied);
+                    occupied.insert(position);
+                    items.extend(self.generate_loot_instances(
+                        &LootContext {
+                            table_id: region.state.loot_table_id.clone(),
+                            floor_id: definition.id.clone(),
+                            depth: definition.depth,
+                            source: LootSource::FloorRoom {
+                                room_id: room_id.clone(),
+                                spawn_id: format!(
+                                    "{}.region.{}.loot.{}",
+                                    definition.id,
+                                    region.state.region_id,
+                                    ordinal + 1
+                                ),
+                            },
+                        },
+                        ItemLocation::Ground(position),
+                    )?);
+                }
+            }
+        } else if let Some(table_id) = &definition.loot_table_id {
             let room_id = if legacy_vault.is_some() {
                 "entry"
             } else {
@@ -5166,6 +5369,7 @@ impl Game {
                 TaskObjectiveKind::EnterFloor => {}
             }
         }
+        generated_regions.sort_by(|left, right| left.state.region_id.cmp(&right.state.region_id));
         Ok(FloorState {
             id: definition.id.clone(),
             width,
@@ -5177,6 +5381,10 @@ impl Game {
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
             connections: floor_connections,
+            regions: generated_regions
+                .into_iter()
+                .map(|region| region.state)
+                .collect(),
         })
     }
 
@@ -6571,6 +6779,19 @@ impl Game {
                 "active floor connection state is invalid",
             ));
         }
+        if !floor_regions_are_valid(
+            &self.current_floor_id,
+            (self.width, self.height),
+            &self.floor_regions,
+            &self.entities,
+            &self.items,
+            world,
+            &self.content,
+        ) {
+            return Err(CoreError::InvalidSave(
+                "active floor region state is invalid",
+            ));
+        }
         if self.explored.len() != self.terrain.len() {
             return Err(CoreError::InvalidSave(
                 "exploration memory dimensions are invalid",
@@ -6707,6 +6928,19 @@ impl Game {
             ) {
                 return Err(CoreError::InvalidSave(
                     "stored floor connection state is invalid",
+                ));
+            }
+            if !floor_regions_are_valid(
+                &floor.id,
+                (floor.width, floor.height),
+                &floor.regions,
+                &floor.entities,
+                &floor.items,
+                world,
+                &self.content,
+            ) {
+                return Err(CoreError::InvalidSave(
+                    "stored floor region state is invalid",
                 ));
             }
             for terrain_id in &floor.terrain {
@@ -8012,6 +8246,49 @@ impl Game {
     }
 }
 
+fn assign_generated_rooms_to_regions(rooms: &[GeneratedRoom], region_count: usize) -> Vec<usize> {
+    if region_count == 0 {
+        return Vec::new();
+    }
+    debug_assert!(region_count <= rooms.len());
+    let anchors = if region_count == 1 {
+        vec![0]
+    } else {
+        (0..region_count)
+            .map(|index| index * (rooms.len() - 1) / (region_count - 1))
+            .collect::<Vec<_>>()
+    };
+    rooms
+        .iter()
+        .map(|room| {
+            let center = room.center();
+            anchors
+                .iter()
+                .enumerate()
+                .min_by_key(|(region_index, anchor)| {
+                    let anchor_center = rooms[**anchor].center();
+                    (
+                        center.x.abs_diff(anchor_center.x) + center.y.abs_diff(anchor_center.y),
+                        *region_index,
+                    )
+                })
+                .map(|(region_index, _)| region_index)
+                .expect("region floor must retain an anchor")
+        })
+        .collect()
+}
+
+fn generated_room_cells(room: &GeneratedRoom) -> Vec<Position> {
+    (room.y..room.y + room.height)
+        .flat_map(|y| {
+            (room.x..room.x + room.width).filter_map(move |x| {
+                let position = Position { x, y };
+                room.contains(position).then_some(position)
+            })
+        })
+        .collect()
+}
+
 fn carve_generated_room(
     terrain: &mut [String],
     width: u16,
@@ -8173,6 +8450,85 @@ fn primary_floor_connection_ids(
                 .map(|connection| connection.id.as_str())
         });
     (primary_up_id, primary_down_id)
+}
+
+fn floor_regions_are_valid(
+    floor_id: &str,
+    dimensions: (u16, u16),
+    regions: &[FloorRegionState],
+    entities: &[Actor],
+    items: &[ItemInstance],
+    world: &rfb_content::WorldDefinition,
+    content: &ContentCatalog,
+) -> bool {
+    let (width, height) = dimensions;
+    if regions.is_empty() {
+        return true;
+    }
+    let Some(definition) = world
+        .procedural_floors
+        .iter()
+        .find(|definition| definition.id == floor_id)
+    else {
+        return false;
+    };
+    let Some(table) = definition
+        .region_table_id
+        .as_deref()
+        .and_then(|table_id| content.region_table(table_id))
+    else {
+        return false;
+    };
+    let expected_count = definition
+        .generation_budget
+        .as_ref()
+        .and_then(|budget| budget.region_placements)
+        .map(usize::from);
+    if expected_count != Some(regions.len())
+        || regions
+            .windows(2)
+            .any(|pair| pair[0].region_id >= pair[1].region_id)
+    {
+        return false;
+    }
+    let mut cells = BTreeSet::new();
+    for region in regions {
+        let candidate_is_valid = table.entries.iter().any(|entry| {
+            entry.region_id == region.region_id
+                && entry.theme_id == region.theme_id
+                && entry.encounter_table_id == region.encounter_table_id
+                && entry.loot_table_id == region.loot_table_id
+                && entry.min_depth <= definition.depth
+                && definition.depth <= entry.max_depth
+        });
+        if !candidate_is_valid
+            || region.cells.is_empty()
+            || region.cells.windows(2).any(|pair| pair[0] >= pair[1])
+            || region.cells.iter().any(|position| {
+                position.x < 0
+                    || position.y < 0
+                    || position.x >= i32::from(width)
+                    || position.y >= i32::from(height)
+                    || !cells.insert(*position)
+            })
+        {
+            return false;
+        }
+    }
+    if entities
+        .iter()
+        .any(|entity| !cells.contains(&entity.position))
+    {
+        return false;
+    }
+    items.iter().all(|item| match &item.location {
+        ItemLocation::Ground(position) => cells.contains(position),
+        ItemLocation::CarriedBy { actor_id } => entities
+            .iter()
+            .find(|entity| &entity.id == actor_id)
+            .is_some_and(|entity| cells.contains(&entity.position)),
+        ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
+    })
 }
 
 fn floor_connections_are_valid(
@@ -10054,6 +10410,152 @@ mod tests {
     }
 
     #[test]
+    fn regional_themes_are_weighted_deterministic_and_keep_local_content_in_bounds() {
+        let mut grotto_entry_count = 0;
+        let mut gallery_entry_count = 0;
+        for seed in 1..=64 {
+            let mut left = Game::new(seed);
+            left.player.position = Position { x: 3, y: 2 };
+            left.traverse_stairs(false)
+                .expect("resonance entry should resolve")
+                .expect("resonance entry should transition");
+            descend_one_floor(&mut left);
+
+            let mut right = Game::new(seed);
+            right.player.position = Position { x: 3, y: 2 };
+            right
+                .traverse_stairs(false)
+                .expect("matching resonance entry should resolve")
+                .expect("matching resonance entry should transition");
+            descend_one_floor(&mut right);
+
+            assert_eq!(left.current_floor_id, "demo.floor.resonance-depth-2");
+            assert_eq!(left.floor_regions, right.floor_regions);
+            assert_eq!(left.state_hash(), right.state_hash());
+            assert_eq!(left.floor_regions.len(), 2);
+            assert_eq!(left.entities.len(), 4);
+            assert_eq!(left.items.len(), 2);
+
+            let entry_region = left
+                .floor_regions
+                .iter()
+                .find(|region| region.cells.contains(&left.player.position))
+                .expect("entry room must belong to one region");
+            match entry_region.region_id.as_str() {
+                "demo.region.resonance-grotto" => grotto_entry_count += 1,
+                "demo.region.resonance-gallery" => gallery_entry_count += 1,
+                _ => panic!("unexpected generated region"),
+            }
+
+            let mut all_cells = BTreeSet::new();
+            for region in &left.floor_regions {
+                assert_eq!(region.cells.len(), 30);
+                assert!(
+                    region
+                        .cells
+                        .iter()
+                        .all(|position| all_cells.insert(*position))
+                );
+                let expected_terrain = match region.region_id.as_str() {
+                    "demo.region.resonance-grotto" => "demo.terrain.resonance-cavern",
+                    "demo.region.resonance-gallery" => "demo.terrain.resonant-floor",
+                    _ => panic!("unexpected generated region"),
+                };
+                assert!(
+                    region
+                        .cells
+                        .iter()
+                        .any(|position| left.terrain_at(*position) == expected_terrain)
+                );
+            }
+            assert!(left.terrain.iter().enumerate().any(|(index, terrain_id)| {
+                let position = Position {
+                    x: i32::try_from(index % usize::from(left.width)).unwrap_or_default(),
+                    y: i32::try_from(index / usize::from(left.width)).unwrap_or_default(),
+                };
+                terrain_id == "demo.terrain.floor" && !all_cells.contains(&position)
+            }));
+
+            for entity in &left.entities {
+                let region = left
+                    .floor_regions
+                    .iter()
+                    .find(|region| region.cells.contains(&entity.position))
+                    .expect("regional actor must remain inside its assigned region");
+                assert!(match region.region_id.as_str() {
+                    "demo.region.resonance-grotto" => matches!(
+                        entity.kind_id.as_str(),
+                        "demo.actor.acid-seep" | "demo.actor.venom-spore"
+                    ),
+                    "demo.region.resonance-gallery" => matches!(
+                        entity.kind_id.as_str(),
+                        "demo.actor.echo-hound" | "demo.actor.storm-spark"
+                    ),
+                    _ => false,
+                });
+            }
+            for item in &left.items {
+                let ItemLocation::Ground(position) = item.location else {
+                    panic!("regional floor loot must be placed on the ground");
+                };
+                let region = left
+                    .floor_regions
+                    .iter()
+                    .find(|region| region.cells.contains(&position))
+                    .expect("regional loot must remain inside its assigned region");
+                assert_eq!(
+                    item.kind_id,
+                    match region.region_id.as_str() {
+                        "demo.region.resonance-grotto" => "demo.item.luminous-shard",
+                        "demo.region.resonance-gallery" => "demo.item.resonance-pellet",
+                        _ => panic!("unexpected generated region"),
+                    }
+                );
+            }
+        }
+        assert!(grotto_entry_count > gallery_entry_count);
+        assert!(gallery_entry_count > 0);
+    }
+
+    #[test]
+    fn floor_regions_round_trip_reject_overlap_and_v59_missing_state_stays_empty() {
+        let mut game = Game::new(17);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("resonance entry should resolve")
+            .expect("resonance entry should transition");
+        descend_one_floor(&mut game);
+
+        let payload = game.to_save();
+        assert_eq!(payload.floor_regions.len(), 2);
+        let restored = Game::from_save(payload.clone()).expect("region state should restore");
+        assert_eq!(restored.floor_regions, game.floor_regions);
+        assert_eq!(restored.state_hash(), game.state_hash());
+
+        let mut overlap = payload.clone();
+        let duplicate = overlap.floor_regions[0].cells[0];
+        overlap.floor_regions[1].cells.push(duplicate);
+        assert!(matches!(
+            Game::from_save(overlap),
+            Err(CoreError::InvalidSave("floor region state is invalid"))
+        ));
+
+        let mut legacy = payload;
+        legacy.content_hash =
+            "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d".to_owned();
+        legacy.floor_regions.clear();
+        let draw_counter = legacy.rng.draw_counter;
+        let legacy_entities = legacy.entities.clone();
+        let legacy_items = legacy.items.clone();
+        let restored =
+            Game::from_save(legacy).expect("v59 regionless floor should remain loadable");
+        assert!(restored.floor_regions.is_empty());
+        assert_eq!(restored.rng.draw_counter, draw_counter);
+        assert_eq!(actors_to_save(&restored.entities), legacy_entities);
+        assert_eq!(items_to_save(&restored.items), legacy_items);
+    }
+
+    #[test]
     fn generation_budgets_scale_across_the_ten_depth_pressure_dungeon() {
         let mut game = Game::new(49);
         game.player.position = Position { x: 3, y: 2 };
@@ -10061,8 +10563,8 @@ mod tests {
             .expect("pressure dungeon entry should resolve")
             .expect("pressure dungeon entry should transition");
 
-        let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 1, 30];
-        let loot_placements = [1_usize, 1, 1, 1, 2, 2, 2, 3, 3, 3];
+        let actor_slots = [2_usize, 4, 4, 5, 6, 7, 8, 9, 1, 30];
+        let loot_placements = [1_usize, 2, 1, 1, 2, 2, 2, 3, 3, 3];
         let feature_placements = [0_usize, 0, 2, 3, 4, 4, 4, 4, 0, 4];
         for depth in 1..=10 {
             assert_eq!(
@@ -10139,7 +10641,7 @@ mod tests {
                         .iter()
                         .filter(|terrain| *terrain == "demo.terrain.door-secret")
                         .count(),
-                    5
+                    4
                 );
             }
             if depth == 10 {
@@ -10199,7 +10701,7 @@ mod tests {
                     "demo.terrain.door-secret"
                 );
             }
-            if depth <= 3 {
+            if matches!(depth, 1 | 3) {
                 assert!(
                     game.terrain
                         .iter()
@@ -10210,6 +10712,22 @@ mod tests {
                         .terrain
                         .iter()
                         .any(|terrain| terrain == "demo.terrain.resonant-floor")
+                );
+            } else if depth == 2 {
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.floor")
+                );
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.resonant-floor")
+                );
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.resonance-cavern")
                 );
             } else {
                 assert!(

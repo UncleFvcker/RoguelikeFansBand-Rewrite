@@ -59,12 +59,22 @@ pub(crate) struct FloorState {
     pub(crate) explored: Vec<bool>,
     pub(crate) revealed_terrain: BTreeSet<Position>,
     pub(crate) connections: Vec<FloorConnectionState>,
+    pub(crate) regions: Vec<FloorRegionState>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FloorConnectionState {
     pub(crate) id: String,
     pub(crate) position: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FloorRegionState {
+    pub(crate) region_id: String,
+    pub(crate) theme_id: String,
+    pub(crate) encounter_table_id: String,
+    pub(crate) loot_table_id: String,
+    pub(crate) cells: Vec<Position>,
 }
 
 pub(crate) struct EquipOutcome {

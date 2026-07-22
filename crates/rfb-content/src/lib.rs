@@ -23,6 +23,7 @@ pub const AFFIX_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Ro
 pub const ENCOUNTER_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json";
 pub const LOOT_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json";
 pub const THEME_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json";
+pub const REGION_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/region-table.schema.json";
 pub const TERRAIN_FEATURE_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json";
 pub const VAULT_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
@@ -38,12 +39,13 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 10] = [
+const SUPPORTED_ROOTS: [&str; 11] = [
     "actors",
     "affixes",
     "encounterTables",
     "items",
     "lootTables",
+    "regionTables",
     "terrain",
     "terrainFeatureTables",
     "themeTables",
@@ -552,6 +554,31 @@ pub struct ThemeVaultCandidateDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RegionTableDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub entries: Vec<RegionEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RegionEntryDefinition {
+    pub region_id: String,
+    pub theme_table_id: String,
+    pub theme_id: String,
+    pub encounter_table_id: String,
+    pub loot_table_id: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TerrainFeatureTableDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -703,6 +730,8 @@ pub struct ProceduralFloorDefinition {
     pub loot_table_id: Option<String>,
     #[serde(default)]
     pub theme_table_id: Option<String>,
+    #[serde(default)]
+    pub region_table_id: Option<String>,
     #[serde(default)]
     pub terrain_feature_table_id: Option<String>,
     #[serde(default)]
@@ -860,6 +889,8 @@ pub struct ProceduralLootSpawnDefinition {
 pub struct ProceduralGenerationBudgetDefinition {
     pub actor_slots: u16,
     pub loot_placements: u16,
+    #[serde(default)]
+    pub region_placements: Option<u16>,
     #[serde(default)]
     pub room_placements: Option<u16>,
     #[serde(default)]
@@ -1043,6 +1074,8 @@ pub struct CompiledContentV1 {
     #[serde(default)]
     pub theme_tables: Vec<ThemeTableDefinition>,
     #[serde(default)]
+    pub region_tables: Vec<RegionTableDefinition>,
+    #[serde(default)]
     pub terrain_feature_tables: Vec<TerrainFeatureTableDefinition>,
     #[serde(default)]
     pub vaults: Vec<VaultDefinition>,
@@ -1068,6 +1101,7 @@ pub struct ContentCatalog {
     encounter_tables: BTreeMap<String, EncounterTableDefinition>,
     loot_tables: BTreeMap<String, LootTableDefinition>,
     theme_tables: BTreeMap<String, ThemeTableDefinition>,
+    region_tables: BTreeMap<String, RegionTableDefinition>,
     terrain_feature_tables: BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: BTreeMap<String, VaultDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
@@ -1086,6 +1120,7 @@ pub struct ContentSummary {
     pub encounter_table_count: usize,
     pub loot_table_count: usize,
     pub theme_table_count: usize,
+    pub region_table_count: usize,
     pub terrain_feature_table_count: usize,
     pub vault_count: usize,
     pub world_count: usize,
@@ -1114,6 +1149,7 @@ impl CompiledArtifact {
             encounter_table_count: self.content.encounter_tables.len(),
             loot_table_count: self.content.loot_tables.len(),
             theme_table_count: self.content.theme_tables.len(),
+            region_table_count: self.content.region_tables.len(),
             terrain_feature_table_count: self.content.terrain_feature_tables.len(),
             vault_count: self.content.vaults.len(),
             world_count: self.content.worlds.len(),
@@ -1165,6 +1201,11 @@ impl ContentCatalog {
                 .collect(),
             theme_tables: content
                 .theme_tables
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            region_tables: content
+                .region_tables
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -1241,6 +1282,11 @@ impl ContentCatalog {
     }
 
     #[must_use]
+    pub fn region_table(&self, id: &str) -> Option<&RegionTableDefinition> {
+        self.region_tables.get(id)
+    }
+
+    #[must_use]
     pub fn terrain_feature_table(&self, id: &str) -> Option<&TerrainFeatureTableDefinition> {
         self.terrain_feature_tables.get(id)
     }
@@ -1304,6 +1350,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         encounter_tables: load_root(root, "encounterTables", &roots, &mut budget)?,
         loot_tables: load_root(root, "lootTables", &roots, &mut budget)?,
         theme_tables: load_root(root, "themeTables", &roots, &mut budget)?,
+        region_tables: load_root(root, "regionTables", &roots, &mut budget)?,
         terrain_feature_tables: load_root(root, "terrainFeatureTables", &roots, &mut budget)?,
         vaults: load_root(root, "vaults", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
@@ -1446,6 +1493,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .sort_by(|left, right| left.id.cmp(&right.id));
     content
         .theme_tables
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .region_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
     content
         .terrain_feature_tables
@@ -2257,6 +2307,61 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         theme_tables_by_id.insert(table.id.clone(), table.clone());
     }
 
+    let mut region_tables_by_id = BTreeMap::new();
+    for table in &mut content.region_tables {
+        require_schema(&table.schema, REGION_TABLE_SCHEMA, &table.id)?;
+        require_format_version(table.format_version, &table.id)?;
+        validate_definition_id(&table.id, "region-table")?;
+        if table.entries.len() < 2 || table.entries.len() > 32 {
+            return Err(ContentError::InvalidRegionTable(table.id.clone()));
+        }
+        table.entries.sort_by(|left, right| {
+            left.region_id
+                .cmp(&right.region_id)
+                .then(left.min_depth.cmp(&right.min_depth))
+                .then(left.max_depth.cmp(&right.max_depth))
+        });
+        let mut region_ids = BTreeSet::new();
+        let mut total_weight = 0_u64;
+        for entry in &table.entries {
+            validate_definition_id(&entry.region_id, "region")?;
+            let Some(theme_table) = theme_tables_by_id.get(&entry.theme_table_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: table.id.clone(),
+                    target: entry.theme_table_id.clone(),
+                });
+            };
+            if !encounter_tables_by_id.contains_key(&entry.encounter_table_id) {
+                return Err(ContentError::DanglingReference {
+                    owner: table.id.clone(),
+                    target: entry.encounter_table_id.clone(),
+                });
+            }
+            require_reference(&loot_table_ids, &entry.loot_table_id, &table.id)?;
+            if entry.weight == 0
+                || entry.min_depth == 0
+                || entry.min_depth > entry.max_depth
+                || entry.max_depth > 1_000
+                || !region_ids.insert(entry.region_id.clone())
+                || !theme_table.entries.iter().any(|theme| {
+                    theme.theme_id == entry.theme_id
+                        && theme.min_depth <= entry.min_depth
+                        && entry.max_depth <= theme.max_depth
+                })
+            {
+                return Err(ContentError::InvalidRegionTable(table.id.clone()));
+            }
+            total_weight = total_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidRegionTable(table.id.clone()))?;
+        }
+        if total_weight == 0 {
+            return Err(ContentError::InvalidRegionTable(table.id.clone()));
+        }
+        insert_definition_id(&mut all_ids, &table.id)?;
+        region_tables_by_id.insert(table.id.clone(), table.clone());
+    }
+
     let mut terrain_feature_tables_by_id = BTreeMap::new();
     for table in &mut content.terrain_feature_tables {
         require_schema(&table.schema, TERRAIN_FEATURE_TABLE_SCHEMA, &table.id)?;
@@ -2333,6 +2438,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 encounter_tables: &encounter_tables_by_id,
                 loot_table_ids: &loot_table_ids,
                 theme_tables: &theme_tables_by_id,
+                region_tables: &region_tables_by_id,
                 terrain_feature_tables: &terrain_feature_tables_by_id,
                 vaults: &vaults_by_id,
             },
@@ -2354,6 +2460,7 @@ struct WorldValidationRefs<'a> {
     encounter_tables: &'a BTreeMap<String, EncounterTableDefinition>,
     loot_table_ids: &'a BTreeSet<String>,
     theme_tables: &'a BTreeMap<String, ThemeTableDefinition>,
+    region_tables: &'a BTreeMap<String, RegionTableDefinition>,
     terrain_feature_tables: &'a BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: &'a BTreeMap<String, VaultDefinition>,
 }
@@ -2466,6 +2573,7 @@ fn validate_world(
         encounter_tables,
         loot_table_ids,
         theme_tables,
+        region_tables,
         terrain_feature_tables,
         vaults,
     } = refs;
@@ -2582,6 +2690,30 @@ fn validate_world(
             || procedural.loot_table_id.is_some() && !procedural.loot_spawns.is_empty()
             || procedural.theme_table_id.is_some()
                 && (procedural.theme_id.is_some() || procedural.vault_id.is_some())
+            || procedural.region_table_id.is_some()
+                && (procedural.encounter_table_id.is_some()
+                    || procedural.loot_table_id.is_some()
+                    || procedural.theme_table_id.is_some()
+                    || procedural.theme_id.is_some()
+                    || procedural.vault_id.is_some()
+                    || procedural.terrain_feature_table_id.is_some()
+                    || !procedural.actor_spawns.is_empty()
+                    || !procedural.loot_spawns.is_empty()
+                    || procedural.nest.is_some()
+                    || procedural.guardian.is_some()
+                    || procedural.final_floor
+                    || maze_only
+                    || !procedural.connections.is_empty()
+                    || procedural.generation_budget.is_none()
+                    || procedural.layout.as_ref().is_some_and(|layout| {
+                        layout.cavern.is_some()
+                            || layout.lake.is_some()
+                            || layout.river.is_some()
+                            || layout.maze.is_some()
+                            || layout.destroyed.is_some()
+                            || !layout.streamers.is_empty()
+                            || layout.pit.is_some()
+                    }))
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
@@ -2628,6 +2760,61 @@ fn validate_world(
                 })
                 .collect::<Vec<_>>();
             if entries.is_empty() {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            entries
+        } else {
+            Vec::new()
+        };
+        let eligible_region_entries = if let Some(table_id) = &procedural.region_table_id {
+            let Some(table) = region_tables.get(table_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: procedural.id.clone(),
+                    target: table_id.clone(),
+                });
+            };
+            let entries = table
+                .entries
+                .iter()
+                .filter(|entry| {
+                    entry.min_depth <= procedural.depth && procedural.depth <= entry.max_depth
+                })
+                .collect::<Vec<_>>();
+            if entries.len() < 2
+                || entries.iter().any(|entry| {
+                    let theme_is_valid = theme_tables
+                        .get(&entry.theme_table_id)
+                        .and_then(|table| {
+                            table.entries.iter().find(|theme| {
+                                theme.theme_id == entry.theme_id
+                                    && theme.min_depth <= procedural.depth
+                                    && procedural.depth <= theme.max_depth
+                            })
+                        })
+                        .is_some_and(|theme| {
+                            !theme.vault_candidates.iter().any(|candidate| {
+                                candidate.min_depth <= procedural.depth
+                                    && procedural.depth <= candidate.max_depth
+                            })
+                        });
+                    let encounter_is_valid = encounter_tables
+                        .get(&entry.encounter_table_id)
+                        .is_some_and(|table| {
+                            table.entries.iter().any(|candidate| {
+                                candidate.group.is_none()
+                                    && candidate.min_depth <= procedural.depth
+                                    && procedural.depth <= candidate.max_depth
+                                    && actor_levels
+                                        .get(&candidate.actor_kind_id)
+                                        .is_some_and(|level| *level <= u32::from(procedural.depth))
+                            }) && table
+                                .entries
+                                .iter()
+                                .all(|candidate| candidate.group.is_none())
+                        });
+                    !theme_is_valid || !encounter_is_valid
+                })
+            {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
             entries
@@ -2749,14 +2936,48 @@ fn validate_world(
                 (Some(table_id), Some(placements)) => Some((table_id, placements)),
                 _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
             };
+            let region_budget = match (
+                procedural.region_table_id.as_ref(),
+                budget.region_placements,
+            ) {
+                (None, None) => None,
+                (Some(_), Some(placements)) => Some(placements),
+                _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+            };
             if procedural.lifecycle != FloorLifecycle::Dungeon
-                || procedural.encounter_table_id.is_none()
-                || procedural.loot_table_id.is_none()
+                || (procedural.region_table_id.is_none()
+                    && (procedural.encounter_table_id.is_none()
+                        || procedural.loot_table_id.is_none()))
                 || !(1..=128).contains(&budget.actor_slots)
                 || !(1..=8).contains(&budget.loot_placements)
                 || reserved_actor_slots >= usize::from(budget.actor_slots)
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if let Some(placements) = region_budget {
+                let room_count = budget.room_placements.unwrap_or(2);
+                if !(2..=4).contains(&placements)
+                    || placements > room_count
+                    || usize::from(placements) > eligible_region_entries.len()
+                    || budget.actor_slots < placements
+                    || budget.loot_placements < placements
+                    || spatial_vault_budget.is_some()
+                    || group_budget.is_some()
+                    || feature_budget.is_some()
+                    || budget.cavern_area_tiles.is_some()
+                    || budget.lake_area_tiles.is_some()
+                    || budget.lake_deep_area_tiles.is_some()
+                    || budget.river_area_tiles.is_some()
+                    || budget.maze_floor_tiles.is_some()
+                    || budget.destruction_centers.is_some()
+                    || budget.destroyed_area_tiles.is_some()
+                    || budget.streamer_placements.is_some()
+                    || budget.streamer_area_tiles.is_some()
+                    || budget.pit_placements.is_some()
+                    || budget.pit_actor_slots.is_some()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
             }
             if !maze_only
                 && room_budget.is_none()
@@ -4189,6 +4410,11 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             schema_for!(ThemeTableDefinition),
         )?,
         schema_document(
+            "region-table.schema.json",
+            REGION_TABLE_SCHEMA,
+            schema_for!(RegionTableDefinition),
+        )?,
+        schema_document(
             "terrain-feature-table.schema.json",
             TERRAIN_FEATURE_TABLE_SCHEMA,
             schema_for!(TerrainFeatureTableDefinition),
@@ -4319,6 +4545,8 @@ pub enum ContentError {
     InvalidEncounterTable(String),
     #[error("theme table weights, depth ranges, terrain, or vault candidates are invalid: {0}")]
     InvalidThemeTable(String),
+    #[error("region table weights, depth ranges, or local table references are invalid: {0}")]
+    InvalidRegionTable(String),
     #[error("terrain feature table weights, depth ranges, terrain, or placements are invalid: {0}")]
     InvalidTerrainFeatureTable(String),
     #[error("vault terrain, encounters, or loot definition is invalid: {0}")]
@@ -4397,9 +4625,10 @@ mod tests {
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
-        assert_eq!(first.content.encounter_tables.len(), 4);
-        assert_eq!(first.content.loot_tables.len(), 5);
-        assert_eq!(first.content.theme_tables.len(), 2);
+        assert_eq!(first.content.encounter_tables.len(), 6);
+        assert_eq!(first.content.loot_tables.len(), 7);
+        assert_eq!(first.content.theme_tables.len(), 3);
+        assert_eq!(first.content.region_tables.len(), 1);
         assert_eq!(first.content.terrain_feature_tables.len(), 1);
         assert_eq!(first.content.vaults.len(), 5);
         assert_eq!(first.content.worlds.len(), 1);
@@ -4412,7 +4641,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.52.0");
+        assert_eq!(catalog.pack_version(), "1.53.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -4468,6 +4697,21 @@ mod tests {
         );
         assert_eq!(
             catalog
+                .region_table("demo.region-table.resonance-biomes")
+                .map(|table| {
+                    table
+                        .entries
+                        .iter()
+                        .map(|entry| (entry.region_id.as_str(), entry.weight))
+                        .collect::<Vec<_>>()
+                }),
+            Some(vec![
+                ("demo.region.resonance-gallery", 1),
+                ("demo.region.resonance-grotto", 3),
+            ])
+        );
+        assert_eq!(
+            catalog
                 .terrain_feature_table("demo.terrain-feature-table.resonance-hazards")
                 .map(|table| (table.rolls, table.entries.len())),
             Some((4, 4))
@@ -4479,6 +4723,23 @@ mod tests {
         assert_eq!(world.procedural_floors.len(), 19);
         assert_eq!(world.procedural_floors[0].id, "demo.floor.echo-depth-1");
         assert_eq!(world.procedural_floors[0].depth, 1);
+        let regional_floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-2")
+            .expect("demo world should retain its regional floor");
+        assert_eq!(
+            regional_floor.region_table_id.as_deref(),
+            Some("demo.region-table.resonance-biomes")
+        );
+        assert_eq!(
+            regional_floor.generation_budget.as_ref().map(|budget| (
+                budget.actor_slots,
+                budget.loot_placements,
+                budget.region_placements,
+            )),
+            Some((4, 2, Some(2)))
+        );
         assert_eq!(
             world.procedural_floors[0].closed_door_terrain_id,
             "demo.terrain.door-secret"
@@ -5330,6 +5591,94 @@ mod tests {
             validate_and_normalize(&mut duplicate_room_shape),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
+    }
+
+    #[test]
+    fn region_tables_require_depth_eligible_candidates_and_isolated_budgets() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        fn regional_floor(content: &mut CompiledContentV1) -> &mut ProceduralFloorDefinition {
+            content.worlds[0]
+                .procedural_floors
+                .iter_mut()
+                .find(|floor| floor.id == "demo.floor.resonance-depth-2")
+                .expect("fixture should contain the regional floor")
+        }
+
+        let mut exhausted_depth = artifact.content.clone();
+        regional_floor(&mut exhausted_depth).depth = 3;
+        assert!(matches!(
+            validate_and_normalize(&mut exhausted_depth),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut missing_budget = artifact.content.clone();
+        regional_floor(&mut missing_budget)
+            .generation_budget
+            .as_mut()
+            .expect("regional floor should retain a generation budget")
+            .region_placements = None;
+        assert!(matches!(
+            validate_and_normalize(&mut missing_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut oversized_budget = artifact.content.clone();
+        regional_floor(&mut oversized_budget)
+            .generation_budget
+            .as_mut()
+            .expect("regional floor should retain a generation budget")
+            .region_placements = Some(3);
+        assert!(matches!(
+            validate_and_normalize(&mut oversized_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut mixed_floor_tables = artifact.content.clone();
+        regional_floor(&mut mixed_floor_tables).encounter_table_id =
+            Some("demo.encounter-table.resonance-descent".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut mixed_floor_tables),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut mixed_features = artifact.content.clone();
+        mixed_features.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-2")
+            .expect("fixture should contain the regional floor")
+            .terrain_feature_table_id =
+            Some("demo.terrain-feature-table.resonance-hazards".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut mixed_features),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut missing_theme = artifact.content.clone();
+        missing_theme.region_tables[0].entries[0].theme_id =
+            "demo.theme.resonance-missing".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut missing_theme),
+            Err(ContentError::InvalidRegionTable(_))
+        ));
+
+        let mut grouped_encounter = artifact.content.clone();
+        let group = grouped_encounter
+            .encounter_tables
+            .iter()
+            .find(|table| table.id == "demo.encounter-table.resonance-formations")
+            .and_then(|table| table.entries.iter().find_map(|entry| entry.group.clone()))
+            .expect("fixture should contain a dynamic group");
+        grouped_encounter
+            .encounter_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.encounter-table.resonance-gallery")
+            .expect("fixture should contain the regional encounter table")
+            .entries[0]
+            .group = Some(group);
+        assert!(validate_and_normalize(&mut grouped_encounter).is_err());
     }
 
     #[test]

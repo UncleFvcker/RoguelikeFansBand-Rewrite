@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.theme-table.resonance-regions",
+  "entries": [
+    {
+      "themeId": "demo.theme.resonance-gallery",
+      "floorTerrainId": "demo.terrain.resonant-floor",
+      "weight": 1,
+      "minDepth": 2,
+      "maxDepth": 2,
+      "vaultCandidates": []
+    },
+    {
+      "themeId": "demo.theme.resonance-grotto",
+      "floorTerrainId": "demo.terrain.resonance-cavern",
+      "weight": 1,
+      "minDepth": 2,
+      "maxDepth": 2,
+      "vaultCandidates": []
+    }
+  ]
+}

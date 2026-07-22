@@ -7,14 +7,15 @@ use crate::{
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
-        Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation, MonsterPackIdentity,
+        Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
+        MonsterPackIdentity,
     },
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
-    ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorSaveDto,
-    InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto, PlayerSaveDto, Position,
-    ResistanceSaveDto, StatusSaveDto, TerrainSaveDto,
+    ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
+    FloorRegionSaveDto, FloorSaveDto, InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto,
+    PlayerSaveDto, Position, ResistanceSaveDto, StatusSaveDto, TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -402,6 +403,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
         explored: floor.explored.clone(),
         revealed_terrain: floor.revealed_terrain.iter().copied().collect(),
         connections: floor_connections_to_save(&floor.connections),
+        regions: floor_regions_to_save(&floor.regions),
     }
 }
 
@@ -418,6 +420,12 @@ pub(crate) fn floor_from_save(
     )?;
     let connections =
         floor_connections_from_save(floor.connections, floor.terrain.width, floor.terrain.height)?;
+    let regions = floor_regions_from_save(
+        floor.regions,
+        floor.terrain.width,
+        floor.terrain.height,
+        content,
+    )?;
     let entities = floor
         .entities
         .into_iter()
@@ -446,7 +454,79 @@ pub(crate) fn floor_from_save(
         explored: floor.explored,
         revealed_terrain,
         connections,
+        regions,
     })
+}
+
+pub(crate) fn floor_regions_to_save(regions: &[FloorRegionState]) -> Vec<FloorRegionSaveDto> {
+    let mut regions = regions
+        .iter()
+        .map(|region| FloorRegionSaveDto {
+            region_id: region.region_id.clone(),
+            theme_id: region.theme_id.clone(),
+            encounter_table_id: region.encounter_table_id.clone(),
+            loot_table_id: region.loot_table_id.clone(),
+            cells: region.cells.clone(),
+        })
+        .collect::<Vec<_>>();
+    regions.sort_by(|left, right| left.region_id.cmp(&right.region_id));
+    for region in &mut regions {
+        region.cells.sort();
+    }
+    regions
+}
+
+pub(crate) fn floor_regions_from_save(
+    regions: Vec<FloorRegionSaveDto>,
+    width: u16,
+    height: u16,
+    content: &ContentCatalog,
+) -> Result<Vec<FloorRegionState>, CoreError> {
+    let mut restored = regions
+        .into_iter()
+        .map(|mut region| {
+            region.cells.sort();
+            if !valid_rule_id(&region.region_id)
+                || !valid_rule_id(&region.theme_id)
+                || !valid_rule_id(&region.encounter_table_id)
+                || !valid_rule_id(&region.loot_table_id)
+                || region.cells.is_empty()
+                || content
+                    .encounter_table(&region.encounter_table_id)
+                    .is_none()
+                || content.loot_table(&region.loot_table_id).is_none()
+                || region.cells.windows(2).any(|pair| pair[0] == pair[1])
+                || region.cells.iter().any(|position| {
+                    position.x < 0
+                        || position.y < 0
+                        || position.x >= i32::from(width)
+                        || position.y >= i32::from(height)
+                })
+            {
+                return Err(CoreError::InvalidSave("floor region state is invalid"));
+            }
+            Ok(FloorRegionState {
+                region_id: region.region_id,
+                theme_id: region.theme_id,
+                encounter_table_id: region.encounter_table_id,
+                loot_table_id: region.loot_table_id,
+                cells: region.cells,
+            })
+        })
+        .collect::<Result<Vec<_>, CoreError>>()?;
+    restored.sort_by(|left, right| left.region_id.cmp(&right.region_id));
+    let mut occupied = BTreeSet::new();
+    if restored
+        .windows(2)
+        .any(|pair| pair[0].region_id == pair[1].region_id)
+        || restored
+            .iter()
+            .flat_map(|region| region.cells.iter().copied())
+            .any(|position| !occupied.insert(position))
+    {
+        return Err(CoreError::InvalidSave("floor region state is invalid"));
+    }
+    Ok(restored)
 }
 
 pub(crate) fn floor_connections_to_save(

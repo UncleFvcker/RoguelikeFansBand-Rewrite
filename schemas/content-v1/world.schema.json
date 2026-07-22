@@ -367,6 +367,13 @@
             "null"
           ]
         },
+        "regionTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "retakeable": {
           "default": false,
           "type": "boolean"
@@ -582,6 +589,16 @@
           ]
         },
         "pitPlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "regionPlacements": {
           "default": null,
           "format": "uint16",
           "maximum": 65535,

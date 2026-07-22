@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.resonance-grotto",
+  "rolls": 2,
+  "entries": [
+    {
+      "actorKindId": "demo.actor.acid-seep",
+      "weight": 3,
+      "minDepth": 2,
+      "maxDepth": 2
+    },
+    {
+      "actorKindId": "demo.actor.venom-spore",
+      "weight": 1,
+      "minDepth": 2,
+      "maxDepth": 2
+    }
+  ]
+}
