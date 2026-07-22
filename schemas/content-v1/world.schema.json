@@ -323,6 +323,13 @@
           },
           "type": "array"
         },
+        "terrainFeatureTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "themeId": {
           "default": null,
           "type": [
@@ -385,6 +392,16 @@
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
+        },
+        "featurePlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "groupActorSlots": {
           "default": null,

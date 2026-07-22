@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.resonance-hazards",
+  "rolls": 4,
+  "entries": [
+    {
+      "terrainId": "demo.terrain.trap-echo-snare",
+      "placement": "room",
+      "weight": 5,
+      "minDepth": 3,
+      "maxDepth": 10
+    },
+    {
+      "terrainId": "demo.terrain.echo-rubble",
+      "placement": "room",
+      "weight": 3,
+      "minDepth": 3,
+      "maxDepth": 10
+    },
+    {
+      "terrainId": "demo.terrain.door-locked",
+      "placement": "corridor",
+      "weight": 4,
+      "minDepth": 4,
+      "maxDepth": 7
+    },
+    {
+      "terrainId": "demo.terrain.door-secret",
+      "placement": "corridor",
+      "weight": 4,
+      "minDepth": 6,
+      "maxDepth": 10
+    }
+  ]
+}

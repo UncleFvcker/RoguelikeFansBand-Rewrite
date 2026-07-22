@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "TerrainFeatureEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "placement": {
+          "$ref": "#/$defs/TerrainFeaturePlacement"
+        },
+        "terrainId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "terrainId",
+        "placement",
+        "weight",
+        "minDepth",
+        "maxDepth"
+      ],
+      "type": "object"
+    },
+    "TerrainFeaturePlacement": {
+      "enum": [
+        "room",
+        "corridor"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/TerrainFeatureEntryDefinition"
+      },
+      "type": "array"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "rolls": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "rolls",
+    "entries"
+  ],
+  "title": "TerrainFeatureTableDefinition",
+  "type": "object"
+}

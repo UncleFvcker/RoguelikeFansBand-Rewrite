@@ -23,6 +23,7 @@ pub const AFFIX_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Ro
 pub const ENCOUNTER_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json";
 pub const LOOT_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json";
 pub const THEME_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json";
+pub const TERRAIN_FEATURE_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json";
 pub const VAULT_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
 
@@ -37,13 +38,14 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 9] = [
+const SUPPORTED_ROOTS: [&str; 10] = [
     "actors",
     "affixes",
     "encounterTables",
     "items",
     "lootTables",
     "terrain",
+    "terrainFeatureTables",
     "themeTables",
     "vaults",
     "worlds",
@@ -519,6 +521,37 @@ pub struct ThemeVaultCandidateDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerrainFeatureTableDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub rolls: u16,
+    pub entries: Vec<TerrainFeatureEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerrainFeatureEntryDefinition {
+    pub terrain_id: String,
+    pub placement: TerrainFeaturePlacement,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TerrainFeaturePlacement {
+    Room,
+    Corridor,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct VaultDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -639,6 +672,8 @@ pub struct ProceduralFloorDefinition {
     pub loot_table_id: Option<String>,
     #[serde(default)]
     pub theme_table_id: Option<String>,
+    #[serde(default)]
+    pub terrain_feature_table_id: Option<String>,
     #[serde(default)]
     pub generation_budget: Option<ProceduralGenerationBudgetDefinition>,
     #[serde(default)]
@@ -776,6 +811,8 @@ pub struct ProceduralGenerationBudgetDefinition {
     pub group_placements: Option<u16>,
     #[serde(default)]
     pub group_actor_slots: Option<u16>,
+    #[serde(default)]
+    pub feature_placements: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -807,6 +844,8 @@ pub struct CompiledContentV1 {
     #[serde(default)]
     pub theme_tables: Vec<ThemeTableDefinition>,
     #[serde(default)]
+    pub terrain_feature_tables: Vec<TerrainFeatureTableDefinition>,
+    #[serde(default)]
     pub vaults: Vec<VaultDefinition>,
     pub worlds: Vec<WorldDefinition>,
 }
@@ -830,6 +869,7 @@ pub struct ContentCatalog {
     encounter_tables: BTreeMap<String, EncounterTableDefinition>,
     loot_tables: BTreeMap<String, LootTableDefinition>,
     theme_tables: BTreeMap<String, ThemeTableDefinition>,
+    terrain_feature_tables: BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: BTreeMap<String, VaultDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
 }
@@ -847,6 +887,7 @@ pub struct ContentSummary {
     pub encounter_table_count: usize,
     pub loot_table_count: usize,
     pub theme_table_count: usize,
+    pub terrain_feature_table_count: usize,
     pub vault_count: usize,
     pub world_count: usize,
 }
@@ -874,6 +915,7 @@ impl CompiledArtifact {
             encounter_table_count: self.content.encounter_tables.len(),
             loot_table_count: self.content.loot_tables.len(),
             theme_table_count: self.content.theme_tables.len(),
+            terrain_feature_table_count: self.content.terrain_feature_tables.len(),
             vault_count: self.content.vaults.len(),
             world_count: self.content.worlds.len(),
         }
@@ -924,6 +966,11 @@ impl ContentCatalog {
                 .collect(),
             theme_tables: content
                 .theme_tables
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            terrain_feature_tables: content
+                .terrain_feature_tables
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -995,6 +1042,11 @@ impl ContentCatalog {
     }
 
     #[must_use]
+    pub fn terrain_feature_table(&self, id: &str) -> Option<&TerrainFeatureTableDefinition> {
+        self.terrain_feature_tables.get(id)
+    }
+
+    #[must_use]
     pub fn vault(&self, id: &str) -> Option<&VaultDefinition> {
         self.vaults.get(id)
     }
@@ -1053,6 +1105,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         encounter_tables: load_root(root, "encounterTables", &roots, &mut budget)?,
         loot_tables: load_root(root, "lootTables", &roots, &mut budget)?,
         theme_tables: load_root(root, "themeTables", &roots, &mut budget)?,
+        terrain_feature_tables: load_root(root, "terrainFeatureTables", &roots, &mut budget)?,
         vaults: load_root(root, "vaults", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };
@@ -1194,6 +1247,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .sort_by(|left, right| left.id.cmp(&right.id));
     content
         .theme_tables
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .terrain_feature_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.vaults.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
@@ -1996,6 +2052,61 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         theme_tables_by_id.insert(table.id.clone(), table.clone());
     }
 
+    let mut terrain_feature_tables_by_id = BTreeMap::new();
+    for table in &mut content.terrain_feature_tables {
+        require_schema(&table.schema, TERRAIN_FEATURE_TABLE_SCHEMA, &table.id)?;
+        require_format_version(table.format_version, &table.id)?;
+        validate_definition_id(&table.id, "terrain-feature-table")?;
+        if !(1..=8).contains(&table.rolls) || table.entries.is_empty() || table.entries.len() > 64 {
+            return Err(ContentError::InvalidTerrainFeatureTable(table.id.clone()));
+        }
+        table.entries.sort_by(|left, right| {
+            left.min_depth
+                .cmp(&right.min_depth)
+                .then(left.max_depth.cmp(&right.max_depth))
+                .then(left.placement.cmp(&right.placement))
+                .then(left.terrain_id.cmp(&right.terrain_id))
+        });
+        let mut entry_keys = BTreeSet::new();
+        let mut total_weight = 0_u64;
+        for entry in &table.entries {
+            require_reference(&terrain_ids, &entry.terrain_id, &table.id)?;
+            let terrain = content
+                .terrain
+                .iter()
+                .find(|terrain| terrain.id == entry.terrain_id)
+                .expect("validated terrain feature must remain available");
+            let placement_matches_terrain = match entry.placement {
+                TerrainFeaturePlacement::Room => {
+                    terrain.trap.is_some() || terrain.dig_to_terrain_id.is_some()
+                }
+                TerrainFeaturePlacement::Corridor => terrain.open_to_terrain_id.is_some(),
+            };
+            if entry.weight == 0
+                || entry.min_depth == 0
+                || entry.min_depth > entry.max_depth
+                || entry.max_depth > 1_000
+                || !placement_matches_terrain
+                || !entry_keys.insert((
+                    entry.terrain_id.clone(),
+                    entry.placement,
+                    entry.min_depth,
+                    entry.max_depth,
+                ))
+            {
+                return Err(ContentError::InvalidTerrainFeatureTable(table.id.clone()));
+            }
+            total_weight = total_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidTerrainFeatureTable(table.id.clone()))?;
+        }
+        if total_weight == 0 {
+            return Err(ContentError::InvalidTerrainFeatureTable(table.id.clone()));
+        }
+        insert_definition_id(&mut all_ids, &table.id)?;
+        terrain_feature_tables_by_id.insert(table.id.clone(), table.clone());
+    }
+
     for world in &mut content.worlds {
         require_schema(&world.schema, WORLD_SCHEMA, &world.id)?;
         require_format_version(world.format_version, &world.id)?;
@@ -2016,6 +2127,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 encounter_tables: &encounter_tables_by_id,
                 loot_table_ids: &loot_table_ids,
                 theme_tables: &theme_tables_by_id,
+                terrain_feature_tables: &terrain_feature_tables_by_id,
                 vaults: &vaults_by_id,
             },
         )?;
@@ -2035,6 +2147,7 @@ struct WorldValidationRefs<'a> {
     encounter_tables: &'a BTreeMap<String, EncounterTableDefinition>,
     loot_table_ids: &'a BTreeSet<String>,
     theme_tables: &'a BTreeMap<String, ThemeTableDefinition>,
+    terrain_feature_tables: &'a BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: &'a BTreeMap<String, VaultDefinition>,
 }
 
@@ -2145,6 +2258,7 @@ fn validate_world(
         encounter_tables,
         loot_table_ids,
         theme_tables,
+        terrain_feature_tables,
         vaults,
     } = refs;
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
@@ -2269,6 +2383,28 @@ fn validate_world(
         } else {
             Vec::new()
         };
+        let eligible_terrain_feature_entries =
+            if let Some(table_id) = &procedural.terrain_feature_table_id {
+                let Some(table) = terrain_feature_tables.get(table_id) else {
+                    return Err(ContentError::DanglingReference {
+                        owner: procedural.id.clone(),
+                        target: table_id.clone(),
+                    });
+                };
+                let entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= procedural.depth && procedural.depth <= entry.max_depth
+                    })
+                    .collect::<Vec<_>>();
+                if entries.is_empty() {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                entries
+            } else {
+                Vec::new()
+            };
         for entry in &eligible_theme_entries {
             for candidate in entry.vault_candidates.iter().filter(|candidate| {
                 candidate.min_depth <= procedural.depth && procedural.depth <= candidate.max_depth
@@ -2317,6 +2453,14 @@ fn validate_world(
             let group_budget = match (budget.group_placements, budget.group_actor_slots) {
                 (None, None) => None,
                 (Some(placements), Some(actor_slots)) => Some((placements, actor_slots)),
+                _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+            };
+            let feature_budget = match (
+                procedural.terrain_feature_table_id.as_ref(),
+                budget.feature_placements,
+            ) {
+                (None, None) => None,
+                (Some(table_id), Some(placements)) => Some((table_id, placements)),
                 _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
             };
             if procedural.lifecycle != FloorLifecycle::Dungeon
@@ -2403,6 +2547,17 @@ fn validate_world(
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
+            if let Some((table_id, placements)) = feature_budget {
+                let table = terrain_feature_tables
+                    .get(table_id)
+                    .expect("validated terrain feature table must remain available");
+                if !(1..=8).contains(&placements)
+                    || placements > table.rolls
+                    || eligible_terrain_feature_entries.is_empty()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+            }
             for entry in &eligible_theme_entries {
                 for candidate in entry.vault_candidates.iter().filter(|candidate| {
                     candidate.min_depth <= procedural.depth
@@ -2429,6 +2584,7 @@ fn validate_world(
         } else if eligible_encounter_entries
             .iter()
             .any(|entry| entry.group.is_some())
+            || procedural.terrain_feature_table_id.is_some()
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
@@ -3260,6 +3416,11 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             schema_for!(ThemeTableDefinition),
         )?,
         schema_document(
+            "terrain-feature-table.schema.json",
+            TERRAIN_FEATURE_TABLE_SCHEMA,
+            schema_for!(TerrainFeatureTableDefinition),
+        )?,
+        schema_document(
             "vault.schema.json",
             VAULT_SCHEMA,
             schema_for!(VaultDefinition),
@@ -3385,6 +3546,8 @@ pub enum ContentError {
     InvalidEncounterTable(String),
     #[error("theme table weights, depth ranges, terrain, or vault candidates are invalid: {0}")]
     InvalidThemeTable(String),
+    #[error("terrain feature table weights, depth ranges, terrain, or placements are invalid: {0}")]
+    InvalidTerrainFeatureTable(String),
     #[error("vault terrain, encounters, or loot definition is invalid: {0}")]
     InvalidVault(String),
     #[error("world dimensions are outside supported limits: {0}")]
@@ -3464,6 +3627,7 @@ mod tests {
         assert_eq!(first.content.encounter_tables.len(), 3);
         assert_eq!(first.content.loot_tables.len(), 5);
         assert_eq!(first.content.theme_tables.len(), 2);
+        assert_eq!(first.content.terrain_feature_tables.len(), 1);
         assert_eq!(first.content.vaults.len(), 5);
         assert_eq!(first.content.worlds.len(), 1);
     }
@@ -3475,7 +3639,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.44.0");
+        assert_eq!(catalog.pack_version(), "1.45.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3517,6 +3681,12 @@ mod tests {
                 .theme_table("demo.theme-table.echo-depths")
                 .map(|table| table.entries[0].vault_candidates.len()),
             Some(2)
+        );
+        assert_eq!(
+            catalog
+                .terrain_feature_table("demo.terrain-feature-table.resonance-hazards")
+                .map(|table| (table.rolls, table.entries.len())),
+            Some((4, 4))
         );
         let world = catalog
             .world("demo.world.original-v1")
@@ -3975,6 +4145,44 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut player_escort),
             Err(ContentError::WrongActorRole(_))
+        ));
+
+        let mut invalid_feature_terrain = artifact.content.clone();
+        invalid_feature_terrain.terrain_feature_tables[0].entries[0].terrain_id =
+            "demo.terrain.floor".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_feature_terrain),
+            Err(ContentError::InvalidTerrainFeatureTable(_))
+        ));
+
+        let mut incomplete_feature_budget = artifact.content.clone();
+        incomplete_feature_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-3")
+            .expect("fixture should contain the feature-budget floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .feature_placements = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_feature_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut oversized_feature_budget = artifact.content.clone();
+        oversized_feature_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-3")
+            .expect("fixture should contain the feature-budget floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .feature_placements = Some(5);
+        assert!(matches!(
+            validate_and_normalize(&mut oversized_feature_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
         ));
     }
 

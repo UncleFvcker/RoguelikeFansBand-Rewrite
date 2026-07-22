@@ -39,8 +39,8 @@ use crate::{
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
     EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
-    TaskObjectiveDefinition, TaskObjectiveKind, ThemeVaultCandidateDefinition, VaultDefinition,
-    VaultTransform,
+    TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
+    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -58,7 +58,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 44] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 45] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -103,9 +103,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 44] = [
     "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad",
     "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f",
     "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0",
+    "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6";
+    "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -193,6 +194,12 @@ struct GeneratedVaultPlacement {
     origin: Position,
     transform: VaultTransform,
     ordinal: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedTerrainFeature {
+    terrain_id: String,
+    position: Position,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -4250,7 +4257,54 @@ impl Game {
         } else {
             Vec::new()
         };
+        let fixed_trap_position = Position {
+            x: first_center.x,
+            y: first_center.y + 1,
+        };
+        let mut feature_reserved =
+            BTreeSet::from([first_center, fixed_trap_position, door_position]);
+        if definition.down_stair_terrain_id.is_some() {
+            feature_reserved.insert(down_stair_position);
+        }
+        for placement in &vault_placements {
+            let (vault_width, vault_height) =
+                transformed_vault_dimensions(&placement.vault, placement.transform);
+            for y in 0..vault_height {
+                for x in 0..vault_width {
+                    feature_reserved.insert(Position {
+                        x: placement.origin.x + i32::from(x),
+                        y: placement.origin.y + i32::from(y),
+                    });
+                }
+            }
+        }
+        let terrain_features = if let Some(table_id) = &definition.terrain_feature_table_id {
+            let table = self
+                .content
+                .terrain_feature_table(table_id)
+                .expect("validated terrain feature table must remain available")
+                .clone();
+            let eligible_entries = table
+                .entries
+                .iter()
+                .filter(|entry| {
+                    entry.min_depth <= definition.depth && definition.depth <= entry.max_depth
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            self.place_terrain_features(
+                definition,
+                &eligible_entries,
+                &rooms,
+                &feature_reserved,
+                &generated_floor_terrain_id,
+                &mut terrain,
+            )
+        } else {
+            Vec::new()
+        };
         let mut occupied = BTreeSet::from([first_center]);
+        occupied.extend(terrain_features.iter().map(|feature| feature.position));
         if definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
@@ -5033,6 +5087,72 @@ impl Game {
                     remaining_vault_loot_placements.saturating_sub(loot_cost);
                 remaining_area = remaining_area.saturating_sub(area);
                 placements.push(placement);
+                break;
+            }
+        }
+        placements
+    }
+
+    fn place_terrain_features(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        eligible_entries: &[TerrainFeatureEntryDefinition],
+        rooms: &[GeneratedRoom],
+        reserved: &BTreeSet<Position>,
+        floor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Vec<GeneratedTerrainFeature> {
+        let placement_limit = definition
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.feature_placements)
+            .expect("terrain feature placement requires a validated budget");
+        let mut placements = Vec::new();
+
+        'placement_slots: for _ in 0..placement_limit {
+            let mut remaining_entries = eligible_entries.to_vec();
+            loop {
+                if remaining_entries.is_empty() {
+                    break 'placement_slots;
+                }
+                let selected_index = if remaining_entries.len() == 1 {
+                    0
+                } else {
+                    let weights = remaining_entries
+                        .iter()
+                        .map(|entry| entry.weight)
+                        .collect::<Vec<_>>();
+                    self.roll_weighted_index(&weights)
+                };
+                let entry = remaining_entries.remove(selected_index);
+                let candidates = terrain_feature_placement_candidates(
+                    terrain,
+                    definition.width,
+                    floor_terrain_id,
+                    rooms,
+                    reserved,
+                    entry.placement,
+                );
+                if candidates.is_empty() {
+                    continue;
+                }
+                let position_index = if candidates.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(candidates.len())
+                                .expect("terrain feature candidate count must fit u64"),
+                        ),
+                    )
+                    .expect("terrain feature candidate index must fit usize")
+                };
+                let position = candidates[position_index];
+                set_generated_terrain(terrain, definition.width, position, &entry.terrain_id);
+                placements.push(GeneratedTerrainFeature {
+                    terrain_id: entry.terrain_id,
+                    position,
+                });
                 break;
             }
         }
@@ -6463,6 +6583,45 @@ fn carve_room(
             );
         }
     }
+}
+
+fn terrain_feature_placement_candidates(
+    terrain: &[String],
+    width: u16,
+    floor_terrain_id: &str,
+    rooms: &[GeneratedRoom],
+    reserved: &BTreeSet<Position>,
+    placement: TerrainFeaturePlacement,
+) -> Vec<Position> {
+    terrain
+        .iter()
+        .enumerate()
+        .filter_map(|(index, terrain_id)| {
+            if terrain_id != floor_terrain_id {
+                return None;
+            }
+            let position = Position {
+                x: i32::try_from(index % usize::from(width))
+                    .expect("terrain feature x must fit i32"),
+                y: i32::try_from(index / usize::from(width))
+                    .expect("terrain feature y must fit i32"),
+            };
+            if reserved.contains(&position) {
+                return None;
+            }
+            let inside_room = rooms.iter().any(|room| {
+                position.x >= room.x
+                    && position.x < room.x + room.width
+                    && position.y >= room.y
+                    && position.y < room.y + room.height
+            });
+            match placement {
+                TerrainFeaturePlacement::Room if inside_room => Some(position),
+                TerrainFeaturePlacement::Corridor if !inside_room => Some(position),
+                _ => None,
+            }
+        })
+        .collect()
 }
 
 fn set_generated_terrain(terrain: &mut [String], width: u16, position: Position, terrain_id: &str) {
@@ -8057,6 +8216,7 @@ mod tests {
 
         let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 10, 10];
         let loot_placements = [1_usize, 1, 1, 1, 2, 2, 2, 3, 3, 3];
+        let feature_placements = [0_usize, 0, 2, 3, 4, 4, 4, 4, 4, 4];
         for depth in 1..=10 {
             assert_eq!(
                 game.current_floor_id,
@@ -8064,6 +8224,31 @@ mod tests {
             );
             assert_eq!(game.entities.len(), actor_slots[depth - 1]);
             assert_eq!(game.items.len(), loot_placements[depth - 1]);
+            let terrain_feature_tiles = game
+                .terrain
+                .iter()
+                .filter(|terrain| {
+                    matches!(
+                        terrain.as_str(),
+                        "demo.terrain.trap-echo-snare"
+                            | "demo.terrain.echo-rubble"
+                            | "demo.terrain.door-locked"
+                            | "demo.terrain.door-secret"
+                    )
+                })
+                .count();
+            let mandatory_feature_tiles = 2 + usize::from(depth == 8) * 2;
+            assert_eq!(
+                terrain_feature_tiles - mandatory_feature_tiles,
+                feature_placements[depth - 1]
+            );
+            if depth == 4 {
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.door-locked")
+                );
+            }
             let guardian_slots = if depth == 10 { 1 } else { 0 };
             let vault_slots = if depth == 8 { 2 } else { 0 };
             assert_eq!(
@@ -8102,7 +8287,7 @@ mod tests {
                         .iter()
                         .filter(|terrain| *terrain == "demo.terrain.door-secret")
                         .count(),
-                    3
+                    5
                 );
             }
             if depth <= 3 {
@@ -8218,6 +8403,151 @@ mod tests {
         let restored =
             Game::from_save(game.to_save()).expect("dynamic encounter groups should round-trip");
         assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn terrain_features_filter_by_depth_and_remain_deterministic() {
+        let mut locked_door_seeds = 0;
+        let mut secret_door_seeds = 0;
+        for seed in 1..=64 {
+            let mut left = Game::new(seed);
+            let mut right = Game::new(seed);
+            for game in [&mut left, &mut right] {
+                game.player.position = Position { x: 3, y: 2 };
+                game.traverse_stairs(false)
+                    .expect("pressure dungeon entry should resolve")
+                    .expect("pressure dungeon entry should transition");
+                descend_one_floor(game);
+                descend_one_floor(game);
+            }
+            assert_eq!(left.current_floor_id, "demo.floor.resonance-depth-3");
+            assert_eq!(left.state_hash(), right.state_hash());
+            assert_eq!(
+                left.terrain
+                    .iter()
+                    .filter(|terrain| {
+                        matches!(
+                            terrain.as_str(),
+                            "demo.terrain.trap-echo-snare" | "demo.terrain.echo-rubble"
+                        )
+                    })
+                    .count(),
+                3
+            );
+            assert!(
+                !left
+                    .terrain
+                    .iter()
+                    .any(|terrain| terrain == "demo.terrain.door-locked")
+            );
+
+            descend_one_floor(&mut left);
+            if left
+                .terrain
+                .iter()
+                .any(|terrain| terrain == "demo.terrain.door-locked")
+            {
+                locked_door_seeds += 1;
+            }
+            assert_eq!(
+                left.terrain
+                    .iter()
+                    .filter(|terrain| *terrain == "demo.terrain.door-secret")
+                    .count(),
+                1
+            );
+
+            descend_one_floor(&mut left);
+            descend_one_floor(&mut left);
+            if left
+                .terrain
+                .iter()
+                .filter(|terrain| *terrain == "demo.terrain.door-secret")
+                .count()
+                > 1
+            {
+                secret_door_seeds += 1;
+            }
+        }
+        assert!(locked_door_seeds > 0);
+        assert!(secret_door_seeds > 0);
+    }
+
+    #[test]
+    fn terrain_feature_space_failure_falls_back_without_overlap() {
+        let seed = (1..=64)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(101) < 100
+            })
+            .expect("a seed should select the impossible corridor candidate first");
+        let mut game = Game::new(seed);
+        let mut definition = game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("demo world should remain available")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-3")
+            .expect("fixture should contain a terrain feature floor")
+            .clone();
+        definition.width = 4;
+        definition.height = 4;
+        definition
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .feature_placements = Some(2);
+        let rooms = [GeneratedRoom {
+            id: "entry",
+            x: 1,
+            y: 1,
+            width: 1,
+            height: 1,
+        }];
+        let target = Position { x: 1, y: 1 };
+        let mut terrain = vec!["demo.terrain.wall".to_owned(); 16];
+        set_generated_terrain(&mut terrain, definition.width, target, "demo.terrain.floor");
+        let entries = [
+            TerrainFeatureEntryDefinition {
+                terrain_id: "demo.terrain.door-locked".to_owned(),
+                placement: TerrainFeaturePlacement::Corridor,
+                weight: 100,
+                min_depth: 1,
+                max_depth: 10,
+            },
+            TerrainFeatureEntryDefinition {
+                terrain_id: "demo.terrain.trap-echo-snare".to_owned(),
+                placement: TerrainFeaturePlacement::Room,
+                weight: 1,
+                min_depth: 1,
+                max_depth: 10,
+            },
+        ];
+
+        let placements = game.place_terrain_features(
+            &definition,
+            &entries,
+            &rooms,
+            &BTreeSet::new(),
+            "demo.terrain.floor",
+            &mut terrain,
+        );
+
+        assert_eq!(placements.len(), 1);
+        assert_eq!(placements[0].position, target);
+        assert_eq!(placements[0].terrain_id, "demo.terrain.trap-echo-snare");
+        assert_eq!(
+            terrain_feature_placement_candidates(
+                &terrain,
+                definition.width,
+                "demo.terrain.floor",
+                &rooms,
+                &BTreeSet::new(),
+                TerrainFeaturePlacement::Room,
+            ),
+            Vec::<Position>::new()
+        );
     }
 
     #[test]
@@ -8498,6 +8828,62 @@ mod tests {
             restored.entities.iter().all(|entity| {
                 !entity.id.contains(".friend.") && !entity.id.contains(".escort.")
             })
+        );
+    }
+
+    #[test]
+    fn previous_v51_generated_floor_is_not_backfilled_with_terrain_features() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        descend_one_floor(&mut game);
+        descend_one_floor(&mut game);
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6".to_owned();
+        let fixed_trap_position = Position {
+            x: payload.player.position.x,
+            y: payload.player.position.y + 1,
+        };
+        for index in 0..payload.terrain.terrain_ids.len() {
+            let position = Position {
+                x: i32::try_from(index % usize::from(payload.terrain.width))
+                    .expect("terrain x must fit i32"),
+                y: i32::try_from(index / usize::from(payload.terrain.width))
+                    .expect("terrain y must fit i32"),
+            };
+            if payload.terrain.terrain_ids[index] == "demo.terrain.echo-rubble"
+                || payload.terrain.terrain_ids[index] == "demo.terrain.trap-echo-snare"
+                    && position != fixed_trap_position
+            {
+                payload.terrain.terrain_ids[index] = "demo.terrain.floor".to_owned();
+            }
+        }
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v51 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-3");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(
+            !restored
+                .terrain
+                .iter()
+                .any(|terrain| terrain == "demo.terrain.echo-rubble")
+        );
+        assert_eq!(
+            restored
+                .terrain
+                .iter()
+                .filter(|terrain| *terrain == "demo.terrain.trap-echo-snare")
+                .count(),
+            1
         );
     }
 
