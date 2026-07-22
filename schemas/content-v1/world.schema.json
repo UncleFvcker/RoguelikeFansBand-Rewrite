@@ -455,11 +455,38 @@
             "null"
           ]
         },
+        "lakeAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "lakeDeepAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "lootPlacements": {
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
+        },
+        "riverAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "roomAreaTiles": {
           "default": null,
@@ -506,6 +533,22 @@
       ],
       "type": "object"
     },
+    "ProceduralLakeDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "deepTerrainId": {
+          "type": "string"
+        },
+        "shallowTerrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "deepTerrainId",
+        "shallowTerrainId"
+      ],
+      "type": "object"
+    },
     "ProceduralLayoutDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -513,6 +556,28 @@
           "anyOf": [
             {
               "$ref": "#/$defs/ProceduralCavernDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "lake": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralLakeDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "river": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralRiverDefinition"
             },
             {
               "type": "null"
@@ -565,6 +630,22 @@
       "required": [
         "roomId",
         "spawnCount"
+      ],
+      "type": "object"
+    },
+    "ProceduralRiverDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "deepTerrainId": {
+          "type": "string"
+        },
+        "shallowTerrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "deepTerrainId",
+        "shallowTerrainId"
       ],
       "type": "object"
     },

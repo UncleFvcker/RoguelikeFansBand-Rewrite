@@ -418,6 +418,8 @@
       "roomPlacements": 4,
       "roomAreaTiles": 96,
       "cavernAreaTiles": 56,
+      "lakeAreaTiles": 70,
+      "lakeDeepAreaTiles": 28,
       "featurePlacements": 4
     },
     "layout": {
@@ -431,7 +433,11 @@
           { "shape": "cross", "weight": 2 }
         ]
       },
-      "cavern": { "terrainId": "demo.terrain.resonance-cavern" }
+      "cavern": { "terrainId": "demo.terrain.resonance-cavern" },
+      "lake": {
+        "deepTerrainId": "demo.terrain.resonance-water-deep",
+        "shallowTerrainId": "demo.terrain.resonance-water-shallow"
+      }
     },
     "nextFloorId": "demo.floor.resonance-depth-10",
     "depth": 9,
@@ -460,6 +466,9 @@
       "roomPlacements": 5,
       "roomAreaTiles": 112,
       "cavernAreaTiles": 64,
+      "lakeAreaTiles": 76,
+      "lakeDeepAreaTiles": 30,
+      "riverAreaTiles": 52,
       "featurePlacements": 4
     },
     "layout": {
@@ -473,7 +482,15 @@
           { "shape": "cross", "weight": 2 }
         ]
       },
-      "cavern": { "terrainId": "demo.terrain.resonance-cavern" }
+      "cavern": { "terrainId": "demo.terrain.resonance-cavern" },
+      "lake": {
+        "deepTerrainId": "demo.terrain.resonance-water-deep",
+        "shallowTerrainId": "demo.terrain.resonance-water-shallow"
+      },
+      "river": {
+        "deepTerrainId": "demo.terrain.resonance-water-deep",
+        "shallowTerrainId": "demo.terrain.resonance-water-shallow"
+      }
     },
     "finalFloor": true,
     "guardian": {

@@ -812,6 +812,12 @@ pub struct ProceduralGenerationBudgetDefinition {
     #[serde(default)]
     pub cavern_area_tiles: Option<u32>,
     #[serde(default)]
+    pub lake_area_tiles: Option<u32>,
+    #[serde(default)]
+    pub lake_deep_area_tiles: Option<u32>,
+    #[serde(default)]
+    pub river_area_tiles: Option<u32>,
+    #[serde(default)]
     pub vault_placements: Option<u16>,
     #[serde(default)]
     pub vault_area_tiles: Option<u32>,
@@ -841,6 +847,10 @@ pub struct ProceduralLayoutDefinition {
     pub rooms: ProceduralRoomGeometryDefinition,
     #[serde(default)]
     pub cavern: Option<ProceduralCavernDefinition>,
+    #[serde(default)]
+    pub lake: Option<ProceduralLakeDefinition>,
+    #[serde(default)]
+    pub river: Option<ProceduralRiverDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -848,6 +858,22 @@ pub struct ProceduralLayoutDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProceduralCavernDefinition {
     pub terrain_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralLakeDefinition {
+    pub deep_terrain_id: String,
+    pub shallow_terrain_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralRiverDefinition {
+    pub deep_terrain_id: String,
+    pub shallow_terrain_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2534,7 +2560,12 @@ fn validate_world(
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
-            if room_budget.is_none() && budget.cavern_area_tiles.is_some() {
+            if room_budget.is_none()
+                && (budget.cavern_area_tiles.is_some()
+                    || budget.lake_area_tiles.is_some()
+                    || budget.lake_deep_area_tiles.is_some()
+                    || budget.river_area_tiles.is_some())
+            {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
             if let Some((layout, placements, area_tiles)) = room_budget {
@@ -2605,6 +2636,90 @@ fn validate_world(
                     _ => {
                         return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                     }
+                }
+                let validate_hydrology_terrain =
+                    |deep_terrain_id: &str, shallow_terrain_id: &str| {
+                        require_reference(terrain_ids, deep_terrain_id, &procedural.id)?;
+                        require_reference(terrain_ids, shallow_terrain_id, &procedural.id)?;
+                        if deep_terrain_id == shallow_terrain_id
+                            || terrain_walkability.get(deep_terrain_id) != Some(&false)
+                            || terrain_walkability.get(shallow_terrain_id) != Some(&true)
+                            || [deep_terrain_id, shallow_terrain_id]
+                                .contains(&procedural.floor_terrain_id.as_str())
+                            || [deep_terrain_id, shallow_terrain_id]
+                                .contains(&procedural.wall_terrain_id.as_str())
+                            || layout.cavern.as_ref().is_some_and(|cavern| {
+                                [deep_terrain_id, shallow_terrain_id]
+                                    .contains(&cavern.terrain_id.as_str())
+                            })
+                            || eligible_theme_entries.iter().any(|entry| {
+                                [deep_terrain_id, shallow_terrain_id]
+                                    .contains(&entry.floor_terrain_id.as_str())
+                            })
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                        Ok(())
+                    };
+                match (
+                    &layout.lake,
+                    budget.lake_area_tiles,
+                    budget.lake_deep_area_tiles,
+                ) {
+                    (None, None, None) => {}
+                    (Some(lake), Some(area_tiles), Some(deep_area_tiles)) => {
+                        validate_hydrology_terrain(
+                            &lake.deep_terrain_id,
+                            &lake.shallow_terrain_id,
+                        )?;
+                        if !(24..=interior_area).contains(&area_tiles)
+                            || deep_area_tiles < 4
+                            || deep_area_tiles.saturating_add(8) > area_tiles
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                match (&layout.river, budget.river_area_tiles) {
+                    (None, None) => {}
+                    (Some(river), Some(area_tiles)) => {
+                        validate_hydrology_terrain(
+                            &river.deep_terrain_id,
+                            &river.shallow_terrain_id,
+                        )?;
+                        let center_x = procedural.width / 2;
+                        let center_y = procedural.height / 2;
+                        let maximum_centerline_tiles = u32::from(
+                            center_x
+                                .saturating_sub(1)
+                                .max(procedural.width.saturating_sub(2 + center_x))
+                                + center_y
+                                    .saturating_sub(1)
+                                    .max(procedural.height.saturating_sub(2 + center_y))
+                                + 1,
+                        );
+                        if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles) {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                if let (Some(lake), Some(river)) = (&layout.lake, &layout.river)
+                    && (lake.deep_terrain_id != river.deep_terrain_id
+                        || lake.shallow_terrain_id != river.shallow_terrain_id)
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
             }
             if let Some((placements, area_tiles)) = spatial_vault_budget {
@@ -3756,7 +3871,7 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 38);
+        assert_eq!(first.content.terrain.len(), 40);
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
@@ -3775,7 +3890,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.46.0");
+        assert_eq!(catalog.pack_version(), "1.47.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3859,8 +3974,11 @@ mod tests {
                 budget.room_placements,
                 budget.room_area_tiles,
                 budget.cavern_area_tiles,
+                budget.lake_area_tiles,
+                budget.lake_deep_area_tiles,
+                budget.river_area_tiles,
             )),
-            Some((Some(5), Some(112), Some(64)))
+            Some((Some(5), Some(112), Some(64), Some(76), Some(30), Some(52)))
         );
         assert_eq!(
             final_floor.layout.as_ref().map(|layout| (
@@ -3869,8 +3987,21 @@ mod tests {
                     .cavern
                     .as_ref()
                     .map(|cavern| cavern.terrain_id.as_str()),
+                layout
+                    .lake
+                    .as_ref()
+                    .map(|lake| lake.deep_terrain_id.as_str()),
+                layout
+                    .river
+                    .as_ref()
+                    .map(|river| river.shallow_terrain_id.as_str()),
             )),
-            Some((2, Some("demo.terrain.resonance-cavern")))
+            Some((
+                2,
+                Some("demo.terrain.resonance-cavern"),
+                Some("demo.terrain.resonance-water-deep"),
+                Some("demo.terrain.resonance-water-shallow")
+            ))
         );
         assert_eq!(
             world.procedural_floors[0]
@@ -4404,6 +4535,51 @@ mod tests {
             .cavern_area_tiles = None;
         assert!(matches!(
             validate_and_normalize(&mut incomplete_cavern_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut incomplete_lake_budget = artifact.content.clone();
+        incomplete_lake_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the lake floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .lake_deep_area_tiles = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_lake_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut walkable_deep_water = artifact.content.clone();
+        walkable_deep_water
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.resonance-water-deep")
+            .expect("fixture should contain deep water")
+            .walkable = true;
+        assert!(matches!(
+            validate_and_normalize(&mut walkable_deep_water),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut incompatible_river = artifact.content.clone();
+        incompatible_river.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .expect("fixture should contain the river floor")
+            .layout
+            .as_mut()
+            .expect("fixture should contain a layout")
+            .river
+            .as_mut()
+            .expect("fixture should contain a river")
+            .shallow_terrain_id = "demo.terrain.floor".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut incompatible_river),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
 

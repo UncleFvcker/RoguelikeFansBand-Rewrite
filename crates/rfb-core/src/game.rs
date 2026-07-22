@@ -59,7 +59,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 46] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 47] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -106,9 +106,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 46] = [
     "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0",
     "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6",
     "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a",
+    "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9";
+    "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -4167,6 +4168,16 @@ impl Game {
                 self.generate_connected_cavern(definition, &cavern.terrain_id, &mut terrain)
             })
         });
+        let lake_origin = definition.layout.as_ref().and_then(|layout| {
+            layout.lake.as_ref().map(|lake| {
+                self.generate_connected_lake(
+                    definition,
+                    &lake.deep_terrain_id,
+                    &lake.shallow_terrain_id,
+                    &mut terrain,
+                )
+            })
+        });
         let rooms = if let Some(layout) = &definition.layout {
             self.generate_budgeted_rooms(definition, &layout.rooms)
         } else {
@@ -4204,6 +4215,25 @@ impl Game {
             x: second_center.x - i32::from(vault.entrance_position.x),
             y: rooms[1].y,
         });
+        if let Some(river) = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.river.as_ref())
+        {
+            self.generate_river(
+                definition,
+                &river.deep_terrain_id,
+                &river.shallow_terrain_id,
+                lake_origin.unwrap_or(Position {
+                    x: i32::from(width / 2),
+                    y: i32::from(height / 2),
+                }),
+                &mut terrain,
+            );
+            for room in &rooms {
+                carve_generated_room(&mut terrain, width, room, &generated_floor_terrain_id);
+            }
+        }
         for connected_rooms in rooms.windows(2) {
             carve_generated_corridor(
                 &mut terrain,
@@ -4884,6 +4914,174 @@ impl Game {
         }
 
         origin
+    }
+
+    fn generate_connected_lake(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        deep_terrain_id: &str,
+        shallow_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Position {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("lake requires a generation budget");
+        let area = usize::try_from(
+            budget
+                .lake_area_tiles
+                .expect("validated lake area budget must remain available"),
+        )
+        .expect("lake area must fit usize");
+        let deep_area = usize::try_from(
+            budget
+                .lake_deep_area_tiles
+                .expect("validated deep lake area budget must remain available"),
+        )
+        .expect("deep lake area must fit usize");
+        let origin = Position {
+            x: i32::from(definition.width / 2),
+            y: i32::from(definition.height / 2),
+        };
+        let mut selected = BTreeSet::from([origin]);
+        let mut insertion_order = vec![origin];
+
+        while insertion_order.len() < area {
+            let mut frontier = selected
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !selected.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("lake frontier count must fit u64"),
+                ))
+                .expect("lake frontier index must fit usize")
+            };
+            let position = frontier[index];
+            selected.insert(position);
+            insertion_order.push(position);
+        }
+
+        for (ordinal, position) in insertion_order.into_iter().enumerate() {
+            let terrain_id = if ordinal < deep_area {
+                deep_terrain_id
+            } else {
+                shallow_terrain_id
+            };
+            set_generated_terrain(terrain, definition.width, position, terrain_id);
+        }
+        origin
+    }
+
+    fn generate_river(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        deep_terrain_id: &str,
+        shallow_terrain_id: &str,
+        target: Position,
+        terrain: &mut [String],
+    ) {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let area = usize::try_from(
+            definition
+                .generation_budget
+                .as_ref()
+                .and_then(|budget| budget.river_area_tiles)
+                .expect("validated river area budget must remain available"),
+        )
+        .expect("river area must fit usize");
+        let side = self.rng.bounded(4);
+        let start = match side {
+            0 => Position {
+                x: 1 + i32::try_from(self.rng.bounded(u64::from(definition.width - 2)))
+                    .expect("river start x must fit i32"),
+                y: 1,
+            },
+            1 => Position {
+                x: i32::from(definition.width - 2),
+                y: 1 + i32::try_from(self.rng.bounded(u64::from(definition.height - 2)))
+                    .expect("river start y must fit i32"),
+            },
+            2 => Position {
+                x: 1 + i32::try_from(self.rng.bounded(u64::from(definition.width - 2)))
+                    .expect("river start x must fit i32"),
+                y: i32::from(definition.height - 2),
+            },
+            _ => Position {
+                x: 1,
+                y: 1 + i32::try_from(self.rng.bounded(u64::from(definition.height - 2)))
+                    .expect("river start y must fit i32"),
+            },
+        };
+        let mut current = start;
+        let mut centerline = vec![current];
+        while current != target {
+            let move_x = current.x != target.x;
+            let move_y = current.y != target.y;
+            let advance_x = move_x && (!move_y || self.rng.bounded(2) == 0);
+            if advance_x {
+                current.x += (target.x - current.x).signum();
+            } else {
+                current.y += (target.y - current.y).signum();
+            }
+            centerline.push(current);
+        }
+        debug_assert!(centerline.len() <= area);
+        let mut painted = centerline.iter().copied().collect::<BTreeSet<_>>();
+        for position in &centerline {
+            set_generated_terrain(terrain, definition.width, *position, deep_terrain_id);
+        }
+
+        while painted.len() < area {
+            let mut frontier = painted
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !painted.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("river frontier count must fit u64"),
+                ))
+                .expect("river frontier index must fit usize")
+            };
+            let position = frontier[index];
+            painted.insert(position);
+            set_generated_terrain(terrain, definition.width, position, shallow_terrain_id);
+        }
     }
 
     fn generated_actor(&self, id: String, kind_id: &str, position: Position) -> Actor {
@@ -6825,8 +7023,12 @@ fn terrain_feature_placement_candidates(
 }
 
 fn set_generated_terrain(terrain: &mut [String], width: u16, position: Position, terrain_id: &str) {
-    let index = position.y as usize * usize::from(width) + position.x as usize;
+    let index = generated_terrain_index(width, position);
     terrain[index] = terrain_id.to_owned();
+}
+
+fn generated_terrain_index(width: u16, position: Position) -> usize {
+    position.y as usize * usize::from(width) + position.x as usize
 }
 
 fn floor_position_is_walkable(
@@ -8611,6 +8813,137 @@ mod tests {
     }
 
     #[test]
+    fn lake_and_river_obey_exact_hydrology_budgets_and_connectivity() {
+        let mut lake_game = Game::new(77);
+        let lake_definition = lake_game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("built-in world should exist")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the lake floor")
+            .clone();
+        let mut lake_terrain = vec![
+            lake_definition.wall_terrain_id.clone();
+            usize::from(lake_definition.width)
+                * usize::from(lake_definition.height)
+        ];
+        let lake_origin = lake_game.generate_connected_lake(
+            &lake_definition,
+            "demo.terrain.resonance-water-deep",
+            "demo.terrain.resonance-water-shallow",
+            &mut lake_terrain,
+        );
+        let water_tiles = lake_terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, terrain_id)| {
+                matches!(
+                    terrain_id.as_str(),
+                    "demo.terrain.resonance-water-deep" | "demo.terrain.resonance-water-shallow"
+                )
+                .then_some(Position {
+                    x: i32::try_from(index % usize::from(lake_definition.width))
+                        .expect("lake x must fit i32"),
+                    y: i32::try_from(index / usize::from(lake_definition.width))
+                        .expect("lake y must fit i32"),
+                })
+            })
+            .collect::<BTreeSet<_>>();
+        let deep_tiles = lake_terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, terrain_id)| {
+                (terrain_id == "demo.terrain.resonance-water-deep").then_some(Position {
+                    x: i32::try_from(index % usize::from(lake_definition.width))
+                        .expect("deep lake x must fit i32"),
+                    y: i32::try_from(index / usize::from(lake_definition.width))
+                        .expect("deep lake y must fit i32"),
+                })
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(water_tiles.len(), 70);
+        assert_eq!(deep_tiles.len(), 28);
+        for expected in [&water_tiles, &deep_tiles] {
+            let mut reached = BTreeSet::from([lake_origin]);
+            let mut frontier = VecDeque::from([lake_origin]);
+            while let Some(position) = frontier.pop_front() {
+                for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                    let neighbor = Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    };
+                    if expected.contains(&neighbor) && reached.insert(neighbor) {
+                        frontier.push_back(neighbor);
+                    }
+                }
+            }
+            assert_eq!(&reached, expected);
+        }
+
+        let mut river_game = Game::new(93);
+        let river_definition = river_game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("built-in world should exist")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .expect("fixture should contain the river floor")
+            .clone();
+        let mut river_terrain = vec![
+            river_definition.wall_terrain_id.clone();
+            usize::from(river_definition.width)
+                * usize::from(river_definition.height)
+        ];
+        let target = Position {
+            x: i32::from(river_definition.width / 2),
+            y: i32::from(river_definition.height / 2),
+        };
+        river_game.generate_river(
+            &river_definition,
+            "demo.terrain.resonance-water-deep",
+            "demo.terrain.resonance-water-shallow",
+            target,
+            &mut river_terrain,
+        );
+        let river_water_count = river_terrain
+            .iter()
+            .filter(|terrain_id| {
+                matches!(
+                    terrain_id.as_str(),
+                    "demo.terrain.resonance-water-deep" | "demo.terrain.resonance-water-shallow"
+                )
+            })
+            .count();
+        assert_eq!(river_water_count, 52);
+        assert_eq!(
+            river_terrain[generated_terrain_index(river_definition.width, target)],
+            "demo.terrain.resonance-water-deep"
+        );
+        assert!(
+            (1..i32::from(river_definition.width - 1)).any(|x| {
+                [1, i32::from(river_definition.height - 2)]
+                    .into_iter()
+                    .any(|y| {
+                        river_terrain
+                            [generated_terrain_index(river_definition.width, Position { x, y })]
+                            == "demo.terrain.resonance-water-deep"
+                    })
+            }) || (1..i32::from(river_definition.height - 1)).any(|y| {
+                [1, i32::from(river_definition.width - 2)]
+                    .into_iter()
+                    .any(|x| {
+                        river_terrain
+                            [generated_terrain_index(river_definition.width, Position { x, y })]
+                            == "demo.terrain.resonance-water-deep"
+                    })
+            })
+        );
+    }
+
+    #[test]
     fn dynamic_friends_and_escorts_obey_group_budgets_and_formations() {
         let mut game = Game::new(49);
         game.player.position = Position { x: 3, y: 2 };
@@ -9211,6 +9544,47 @@ mod tests {
                 .iter()
                 .all(|terrain| terrain != "demo.terrain.resonance-cavern")
         );
+    }
+
+    #[test]
+    fn previous_v53_generated_floor_is_not_backfilled_with_hydrology() {
+        let mut game = Game::new(77);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..9 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9".to_owned();
+        for terrain_id in &mut payload.terrain.terrain_ids {
+            if matches!(
+                terrain_id.as_str(),
+                "demo.terrain.resonance-water-deep" | "demo.terrain.resonance-water-shallow"
+            ) {
+                *terrain_id = "demo.terrain.resonance-cavern".to_owned();
+            }
+        }
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v53 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-9");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(restored.terrain.iter().all(|terrain| {
+            !matches!(
+                terrain.as_str(),
+                "demo.terrain.resonance-water-deep" | "demo.terrain.resonance-water-shallow"
+            )
+        }));
     }
 
     #[test]
