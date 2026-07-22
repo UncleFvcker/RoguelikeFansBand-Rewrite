@@ -77,6 +77,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v56：原版式怪物 Pit 与等级阵列](design/contract-v56-classic-monster-pit.md)
 - [Contract v57：Maze-only 专用楼层模式](design/contract-v57-maze-only-floor.md)
 - [Contract v58：权威楼层连接与 shaft](design/contract-v58-floor-connections.md)
+- [Contract v59：持久 pack identity 与首版 pack AI](design/contract-v59-pack-ai.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -94,7 +95,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v58/scenarios`](tests/fixtures/contract-v58/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v57` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v59/scenarios`](tests/fixtures/contract-v59/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v58` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -135,7 +136,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.58 / contract-v58 已建立稳定连接 ID、同层多座普通楼梯、独立到达点和跨两层 shaft。主 up/down 保留旧锚点，附加连接在 Vault 之后使用种子 RNG 从合法格随机落位；当前层与离层存档保存连接 ID→位置，v57 无连接列表的旧楼层继续走 legacy 标签回退。active baseline 共 117 个 exact fixtures，内容包为 1.51.0、content hash 为 `ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d`；save 容器仍为 v1，state-hash 升至 Schema v20。完整边界见 [Contract v58 说明](design/contract-v58-floor-connections.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、巢穴、动态 friends/escort formation、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点与 shaft 已经建立。Stage E 下一步推进持久 pack identity 与首版 pack AI，之后是同层多区域主题。任务线的暂停管理仍保留在后续队列。
+协议 1.59 / contract-v59 已为动态群体增加稳定 pack ID、leader/member 身份和内容驱动的 `seek/surround/guard-leader` 首版 AI。pack 身份随当前层与离层 actor 持久化，leader 死亡时成员原子解散，v58 旧存档缺失字段时继续独立追踪。active baseline 共 117 个 exact fixtures，内容包为 1.52.0、content hash 为 `4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d`；save 容器仍为 v1，state-hash 升至 Schema v21。完整边界见 [Contract v59 说明](design/contract-v59-pack-ai.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点与 shaft 已经建立。Stage E 下一步推进同层多区域主题，之后是更一般的分支连接。任务线的暂停管理仍保留在后续队列。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -207,7 +210,7 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v58/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v59/baseline-policy.json
 ```
 
 当前 117 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：

@@ -29,7 +29,12 @@
             }
           ]
         },
-        "formation": "ring"
+        "formation": "ring",
+        "packAi": {
+          "leader": "seek",
+          "friends": "surround",
+          "escorts": "guard-leader"
+        }
       }
     },
     {
@@ -57,7 +62,12 @@
             }
           ]
         },
-        "formation": "cluster"
+        "formation": "cluster",
+        "packAi": {
+          "leader": "seek",
+          "friends": "surround",
+          "escorts": "guard-leader"
+        }
       }
     },
     {

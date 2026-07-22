@@ -160,12 +160,48 @@
             }
           ],
           "default": null
+        },
+        "packAi": {
+          "$ref": "#/$defs/EncounterPackAiDefinition",
+          "default": {
+            "escorts": "guard-leader",
+            "friends": "surround",
+            "leader": "seek"
+          }
         }
       },
       "required": [
         "formation"
       ],
       "type": "object"
+    },
+    "EncounterPackAiDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "escorts": {
+          "$ref": "#/$defs/MonsterPackBehavior"
+        },
+        "friends": {
+          "$ref": "#/$defs/MonsterPackBehavior"
+        },
+        "leader": {
+          "$ref": "#/$defs/MonsterPackBehavior"
+        }
+      },
+      "required": [
+        "leader",
+        "friends",
+        "escorts"
+      ],
+      "type": "object"
+    },
+    "MonsterPackBehavior": {
+      "enum": [
+        "seek",
+        "surround",
+        "guard-leader"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",

@@ -429,6 +429,37 @@ pub struct EncounterGroupDefinition {
     #[serde(default)]
     pub escort: Option<EncounterEscortDefinition>,
     pub formation: EncounterFormation,
+    #[serde(default)]
+    pub pack_ai: EncounterPackAiDefinition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterPackAiDefinition {
+    pub leader: MonsterPackBehavior,
+    pub friends: MonsterPackBehavior,
+    pub escorts: MonsterPackBehavior,
+}
+
+impl Default for EncounterPackAiDefinition {
+    fn default() -> Self {
+        Self {
+            leader: MonsterPackBehavior::Seek,
+            friends: MonsterPackBehavior::Surround,
+            escorts: MonsterPackBehavior::GuardLeader,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterPackBehavior {
+    #[default]
+    Seek,
+    Surround,
+    GuardLeader,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1947,6 +1978,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     || !escort_is_valid
                     || group.min_companion_count() == 0
                     || group.max_companion_count() > 7
+                    || group.pack_ai.leader == MonsterPackBehavior::GuardLeader
                 {
                     return Err(ContentError::InvalidEncounterTable(table.id.clone()));
                 }
@@ -4380,7 +4412,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.51.0");
+        assert_eq!(catalog.pack_version(), "1.52.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -4416,6 +4448,17 @@ mod tests {
                         .count()
                 }),
             Some(2)
+        );
+        assert_eq!(
+            catalog
+                .encounter_table("demo.encounter-table.resonance-formations")
+                .and_then(|table| table.entries.iter().find_map(|entry| entry.group.as_ref()))
+                .map(|group| group.pack_ai),
+            Some(EncounterPackAiDefinition {
+                leader: MonsterPackBehavior::Seek,
+                friends: MonsterPackBehavior::Surround,
+                escorts: MonsterPackBehavior::GuardLeader,
+            })
         );
         assert_eq!(
             catalog
@@ -4990,6 +5033,23 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut player_escort),
             Err(ContentError::WrongActorRole(_))
+        ));
+
+        let mut self_guarding_leader = artifact.content.clone();
+        self_guarding_leader
+            .encounter_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.encounter-table.resonance-formations")
+            .expect("fixture should contain the formation encounter table")
+            .entries
+            .iter_mut()
+            .find_map(|entry| entry.group.as_mut())
+            .expect("fixture should contain a dynamic group")
+            .pack_ai
+            .leader = MonsterPackBehavior::GuardLeader;
+        assert!(matches!(
+            validate_and_normalize(&mut self_guarding_leader),
+            Err(ContentError::InvalidEncounterTable(_))
         ));
 
         let mut invalid_feature_terrain = artifact.content.clone();

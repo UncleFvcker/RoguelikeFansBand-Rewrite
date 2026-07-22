@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use rfb_protocol::{ItemQualityDto, Position};
+use rfb_protocol::{ItemQualityDto, MonsterPackBehaviorDto, MonsterPackRoleDto, Position};
 use serde::{Deserialize, Serialize};
 
 use crate::{effect::StatusInstance, resistance::ResistanceProfile};
@@ -18,6 +18,15 @@ pub(crate) struct Actor {
     pub(crate) energy_need: i32,
     pub(crate) statuses: Vec<StatusInstance>,
     pub(crate) resistances: ResistanceProfile,
+    pub(crate) pack: Option<MonsterPackIdentity>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct MonsterPackIdentity {
+    pub(crate) id: String,
+    pub(crate) leader_id: String,
+    pub(crate) role: MonsterPackRoleDto,
+    pub(crate) behavior: MonsterPackBehaviorDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -5,8 +5,9 @@ use std::collections::BTreeSet;
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto,
-    SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
+    ItemPropertyKnowledgeSaveDto, MonsterPackSaveDto, PROTOCOL_VERSION, Position, ResistanceDto,
+    ResistanceSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto,
+    TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -157,6 +158,8 @@ pub struct ActorStateAssertion {
     pub energy_need: i32,
     #[serde(default)]
     pub statuses: Vec<StatusDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pack: Option<MonsterPackSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -272,6 +275,11 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                     speed: entity.speed,
                     energy_need: entity.energy_need,
                     statuses: entity.statuses.clone(),
+                    pack: save
+                        .entities
+                        .iter()
+                        .find(|saved| saved.id == entity.id)
+                        .and_then(|saved| saved.pack.clone()),
                 })
                 .collect(),
             ground_item_count: snapshot.items.len(),

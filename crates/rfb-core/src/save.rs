@@ -6,13 +6,15 @@ use crate::{
     effect::StatusInstance,
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
-    state::{Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
+    state::{
+        Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation, MonsterPackIdentity,
+    },
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorSaveDto,
-    InventoryItemSaveDto, ItemSaveDto, PlayerSaveDto, Position, ResistanceSaveDto, StatusSaveDto,
-    TerrainSaveDto,
+    InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto, PlayerSaveDto, Position,
+    ResistanceSaveDto, StatusSaveDto, TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -35,6 +37,7 @@ pub(crate) fn actor_from_spawn(
         energy_need,
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
+        pack: None,
     }
 }
 
@@ -70,6 +73,7 @@ pub(crate) fn actor_from_player(
         energy_need: player.energy_need,
         statuses,
         resistances,
+        pack: None,
     })
 }
 
@@ -116,6 +120,12 @@ pub(crate) fn actor_from_entity(
         energy_need: entity.energy_need,
         statuses,
         resistances,
+        pack: entity.pack.map(|pack| MonsterPackIdentity {
+            id: pack.id,
+            leader_id: pack.leader_id,
+            role: pack.role,
+            behavior: pack.behavior,
+        }),
     })
 }
 
@@ -223,6 +233,12 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
                 .map(StatusInstance::to_save_dto)
                 .collect(),
             resistances: entity.resistances.to_save_dtos(),
+            pack: entity.pack.as_ref().map(|pack| MonsterPackSaveDto {
+                id: pack.id.clone(),
+                leader_id: pack.leader_id.clone(),
+                role: pack.role,
+                behavior: pack.behavior,
+            }),
         })
         .collect::<Vec<_>>();
     entities.sort_by(|left, right| left.id.cmp(&right.id));

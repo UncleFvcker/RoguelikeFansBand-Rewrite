@@ -34,16 +34,20 @@ use crate::{
         INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, gain_energy,
         spend_energy,
     },
-    state::{Actor, EquipOutcome, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
+    state::{
+        Actor, EquipOutcome, FloorConnectionState, FloorState, ItemInstance, ItemLocation,
+        MonsterPackIdentity,
+    },
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
-    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
-    TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
-    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
+    ProceduralFloorDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
+    ProceduralStreamerCandidateDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
+    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
+    VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -51,17 +55,18 @@ use rfb_protocol::{
     EquipmentItemSaveDto, FloorConnectionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
     GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto,
     ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, PROTOCOL_VERSION, PlayerDto,
-    PlayerSaveDto, Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto,
-    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
-    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 51] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 52] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -113,9 +118,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 51] = [
     "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9",
     "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041",
     "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1",
+    "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d";
+    "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -142,7 +148,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV20 {
+struct StateHashPayloadV21 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -1365,8 +1371,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV20 {
-            schema_version: 20,
+        let payload = StateHashPayloadV21 {
+            schema_version: 21,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -3130,6 +3136,7 @@ impl Game {
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
         entity_ids.sort();
+        let mut surround_reservations = BTreeSet::new();
 
         for entity_id in entity_ids {
             if self.player_is_dead() {
@@ -3156,7 +3163,7 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
-            self.resolve_monster_action(index, events, changed);
+            self.resolve_monster_action(index, events, changed, &mut surround_reservations);
         }
     }
 
@@ -3165,12 +3172,39 @@ impl Game {
         index: usize,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        surround_reservations: &mut BTreeSet<Position>,
     ) {
+        let behavior = self.entities[index]
+            .pack
+            .as_ref()
+            .map_or(MonsterPackBehaviorDto::Seek, |pack| pack.behavior);
         if adjacent(self.entities[index].position, self.player.position) {
+            if behavior == MonsterPackBehaviorDto::Surround {
+                surround_reservations.insert(self.entities[index].position);
+            }
             self.resolve_monster_melee(index, events);
             return;
         }
-        let Some(next_position) = self.next_monster_step(index) else {
+        let next_position = match behavior {
+            MonsterPackBehaviorDto::Seek => self.next_monster_step(index),
+            MonsterPackBehaviorDto::Surround => self
+                .next_surround_step(index, surround_reservations)
+                .or_else(|| self.next_monster_step(index)),
+            MonsterPackBehaviorDto::GuardLeader => {
+                let leader_position = self.entities[index].pack.as_ref().and_then(|pack| {
+                    self.entities
+                        .iter()
+                        .find(|entity| entity.id == pack.leader_id)
+                        .map(|leader| leader.position)
+                });
+                match leader_position {
+                    Some(position) if adjacent(self.entities[index].position, position) => None,
+                    Some(position) => self.next_monster_step_toward(index, position, true),
+                    None => self.next_monster_step(index),
+                }
+            }
+        };
+        let Some(next_position) = next_position else {
             return;
         };
         let old_position = self.entities[index].position;
@@ -3244,6 +3278,76 @@ impl Game {
     }
 
     fn next_monster_step(&self, index: usize) -> Option<Position> {
+        self.next_monster_step_toward(index, self.player.position, true)
+    }
+
+    fn next_surround_step(
+        &self,
+        index: usize,
+        reservations: &mut BTreeSet<Position>,
+    ) -> Option<Position> {
+        const DELTAS: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+
+        let pack = self.entities[index].pack.as_ref()?;
+        let mut surround_members = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.pack.as_ref().is_some_and(|candidate| {
+                    candidate.id == pack.id
+                        && candidate.behavior == MonsterPackBehaviorDto::Surround
+                })
+            })
+            .map(|entity| entity.id.as_str())
+            .collect::<Vec<_>>();
+        surround_members.sort_unstable();
+        let rank = surround_members
+            .iter()
+            .position(|actor_id| *actor_id == self.entities[index].id)
+            .unwrap_or(0);
+        let occupied = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter(|(entity_index, _)| *entity_index != index)
+            .map(|(_, entity)| entity.position)
+            .collect::<BTreeSet<_>>();
+        for offset in 0..DELTAS.len() {
+            let (dx, dy) = DELTAS[(rank + offset) % DELTAS.len()];
+            let target = Position {
+                x: self.player.position.x + dx,
+                y: self.player.position.y + dy,
+            };
+            if target == self.player.position
+                || occupied.contains(&target)
+                || reservations.contains(&target)
+                || !self.is_walkable(target)
+            {
+                continue;
+            }
+            if let Some(step) = self.next_monster_step_toward(index, target, false) {
+                reservations.insert(target);
+                return Some(step);
+            }
+        }
+        None
+    }
+
+    fn next_monster_step_toward(
+        &self,
+        index: usize,
+        target: Position,
+        stop_adjacent: bool,
+    ) -> Option<Position> {
         const DELTAS: [(i32, i32); 8] = [
             (0, -1),
             (1, -1),
@@ -3256,13 +3360,29 @@ impl Game {
         ];
 
         let start = self.entities[index].position;
-        let occupied = self
+        let occupied_now = self
             .entities
             .iter()
             .enumerate()
             .filter(|(entity_index, _)| *entity_index != index)
             .map(|(_, entity)| entity.position)
             .collect::<BTreeSet<_>>();
+        let moving_pack_id = self.entities[index]
+            .pack
+            .as_ref()
+            .map(|pack| pack.id.as_str());
+        let path_blockers =
+            self.entities
+                .iter()
+                .enumerate()
+                .filter(|(entity_index, entity)| {
+                    *entity_index != index
+                        && !entity.pack.as_ref().is_some_and(|pack| {
+                            moving_pack_id.is_some_and(|moving| moving == pack.id)
+                        })
+                })
+                .map(|(_, entity)| entity.position)
+                .collect::<BTreeSet<_>>();
         let mut visited = BTreeSet::from([start]);
         let mut queue = VecDeque::new();
 
@@ -3274,23 +3394,21 @@ impl Game {
                     x: start.x + dx,
                     y: start.y + dy,
                 };
-                (
-                    squared_distance(position, self.player.position),
-                    order,
-                    position,
-                )
+                (squared_distance(position, target), order, position)
             })
             .collect::<Vec<_>>();
         initial.sort();
         for (_, _, position) in initial {
             if position == self.player.position
-                || occupied.contains(&position)
+                || occupied_now.contains(&position)
                 || !self.is_walkable(position)
                 || !visited.insert(position)
             {
                 continue;
             }
-            if adjacent(position, self.player.position) {
+            if (!stop_adjacent && position == target)
+                || (stop_adjacent && adjacent(position, target))
+            {
                 return Some(position);
             }
             queue.push_back((position, position));
@@ -3305,19 +3423,19 @@ impl Game {
                         x: position.x + dx,
                         y: position.y + dy,
                     };
-                    (squared_distance(next, self.player.position), order, next)
+                    (squared_distance(next, target), order, next)
                 })
                 .collect::<Vec<_>>();
             neighbors.sort();
             for (_, _, next) in neighbors {
                 if next == self.player.position
-                    || occupied.contains(&next)
+                    || path_blockers.contains(&next)
                     || !self.is_walkable(next)
                     || !visited.insert(next)
                 {
                     continue;
                 }
-                if adjacent(next, self.player.position) {
+                if (!stop_adjacent && next == target) || (stop_adjacent && adjacent(next, target)) {
                     return Some(first_step);
                 }
                 queue.push_back((next, first_step));
@@ -3400,8 +3518,19 @@ impl Game {
             .collect::<Vec<_>>();
         carried.sort_by(|left, right| left.0.cmp(&right.0));
         let has_drops = !carried.is_empty() || !generated.is_empty();
+        let dissolved_pack_id = actor
+            .pack
+            .as_ref()
+            .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()));
 
         let removed = self.entities.remove(index);
+        if let Some(pack_id) = dissolved_pack_id {
+            for entity in &mut self.entities {
+                if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                    entity.pack = None;
+                }
+            }
+        }
         removed_entities.push(removed.id.clone());
         events.push(death_event);
         let defeated_guardian = self
@@ -5492,6 +5621,18 @@ impl Game {
         )
     }
 
+    fn generated_pack_actor(
+        &self,
+        id: String,
+        kind_id: &str,
+        position: Position,
+        pack: MonsterPackIdentity,
+    ) -> Actor {
+        let mut actor = self.generated_actor(id, kind_id, position);
+        actor.pack = Some(pack);
+        actor
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn generate_dynamic_encounter_groups(
         &mut self,
@@ -5638,10 +5779,23 @@ impl Game {
 
             leader_ordinal += 1;
             occupied.insert(leader_position);
-            generated.push(self.generated_actor(
-                format!("{}.encounter.{leader_ordinal}", definition.id),
+            let leader_id = format!("{}.encounter.{leader_ordinal}", definition.id);
+            let pack_id = format!("{}.pack.{leader_ordinal}", definition.id);
+            let pack_ai = entry
+                .group
+                .as_ref()
+                .expect("grouped encounter must retain pack AI")
+                .pack_ai;
+            generated.push(self.generated_pack_actor(
+                leader_id.clone(),
                 &entry.actor_kind_id,
                 leader_position,
+                MonsterPackIdentity {
+                    id: pack_id.clone(),
+                    leader_id: leader_id.clone(),
+                    role: MonsterPackRoleDto::Leader,
+                    behavior: monster_pack_behavior_dto(pack_ai.leader),
+                },
             ));
             for (index, position) in companion_positions
                 .iter()
@@ -5650,7 +5804,7 @@ impl Game {
                 .enumerate()
             {
                 occupied.insert(position);
-                generated.push(self.generated_actor(
+                generated.push(self.generated_pack_actor(
                     format!(
                         "{}.encounter.{leader_ordinal}.friend.{}",
                         definition.id,
@@ -5658,6 +5812,12 @@ impl Game {
                     ),
                     &entry.actor_kind_id,
                     position,
+                    MonsterPackIdentity {
+                        id: pack_id.clone(),
+                        leader_id: leader_id.clone(),
+                        role: MonsterPackRoleDto::Member,
+                        behavior: monster_pack_behavior_dto(pack_ai.friends),
+                    },
                 ));
             }
             if escort_count > 0 {
@@ -5696,7 +5856,7 @@ impl Game {
                     };
                     let kind_id = &eligible_escorts[escort_index].actor_kind_id;
                     occupied.insert(position);
-                    generated.push(self.generated_actor(
+                    generated.push(self.generated_pack_actor(
                         format!(
                             "{}.encounter.{leader_ordinal}.escort.{}",
                             definition.id,
@@ -5704,6 +5864,12 @@ impl Game {
                         ),
                         kind_id,
                         position,
+                        MonsterPackIdentity {
+                            id: pack_id.clone(),
+                            leader_id: leader_id.clone(),
+                            role: MonsterPackRoleDto::Member,
+                            behavior: monster_pack_behavior_dto(pack_ai.escorts),
+                        },
                     ));
                 }
             }
@@ -6445,6 +6611,9 @@ impl Game {
             }
             monster_ids.insert(entity.id.clone());
         }
+        if !monster_packs_are_valid(&self.entities) {
+            return Err(CoreError::InvalidSave("monster pack state is invalid"));
+        }
         let mut equipment_slots = BTreeSet::new();
         for item in &self.items {
             let definition = self
@@ -6558,6 +6727,11 @@ impl Game {
                     ));
                 }
                 floor_monster_ids.insert(entity.id.clone());
+            }
+            if !monster_packs_are_valid(&floor.entities) {
+                return Err(CoreError::InvalidSave(
+                    "stored floor monster pack state is invalid",
+                ));
             }
             for item in &floor.items {
                 let definition = self
@@ -6767,11 +6941,54 @@ impl Game {
             || (expected_role == ActorRole::Player && actor.hp >= 0 && actor.energy_need > 0)
             || actor.energy_need < -STANDARD_ACTION_COST
             || actor.hp > effective_max_hp
+            || (expected_role == ActorRole::Player && actor.pack.is_some())
         {
             return Err(CoreError::InvalidSave("actor state is invalid"));
         }
         Ok(())
     }
+}
+
+fn monster_packs_are_valid(entities: &[Actor]) -> bool {
+    let mut packs = BTreeMap::<&str, Vec<&Actor>>::new();
+    for entity in entities {
+        let Some(pack) = &entity.pack else {
+            continue;
+        };
+        let valid_id = |id: &str| {
+            !id.is_empty()
+                && id.len() <= 128
+                && id.bytes().all(|byte| {
+                    byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
+                })
+        };
+        if !valid_id(&pack.id) || !valid_id(&pack.leader_id) {
+            return false;
+        }
+        packs.entry(&pack.id).or_default().push(entity);
+    }
+    packs.into_values().all(|members| {
+        let leaders = members
+            .iter()
+            .filter(|entity| {
+                entity.pack.as_ref().is_some_and(|pack| {
+                    pack.role == MonsterPackRoleDto::Leader
+                        && pack.behavior != MonsterPackBehaviorDto::GuardLeader
+                })
+            })
+            .copied()
+            .collect::<Vec<_>>();
+        leaders.len() == 1
+            && members.iter().all(|entity| {
+                let pack = entity
+                    .pack
+                    .as_ref()
+                    .expect("pack member must retain identity");
+                pack.leader_id == leaders[0].id
+                    && ((pack.role == MonsterPackRoleDto::Leader && entity.id == pack.leader_id)
+                        || (pack.role == MonsterPackRoleDto::Member && entity.id != pack.leader_id))
+            })
+    })
 }
 
 struct ActorStatusTick {
@@ -7154,6 +7371,14 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     let dx = left.x - right.x;
     let dy = left.y - right.y;
     dx * dx + dy * dy
+}
+
+const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPackBehaviorDto {
+    match behavior {
+        MonsterPackBehavior::Seek => MonsterPackBehaviorDto::Seek,
+        MonsterPackBehavior::Surround => MonsterPackBehaviorDto::Surround,
+        MonsterPackBehavior::GuardLeader => MonsterPackBehaviorDto::GuardLeader,
+    }
 }
 
 fn generated_non_entry_room_id(rooms: &[GeneratedRoom], ordinal: u16) -> &str {
@@ -9155,6 +9380,45 @@ mod tests {
     }
 
     #[test]
+    fn leader_death_dissolves_pack_before_remaining_members_act() {
+        let mut payload = Game::new(42).to_save();
+        let leader_id = payload.entities[0].id.clone();
+        let pack_id = "test.pack.leader-death".to_owned();
+        payload.entities[0].statuses = vec![StatusSaveDto {
+            kind_id: STATUS_POISON.to_owned(),
+            intensity: 3,
+            remaining_ticks: 1,
+            source_id: Some("demo.player.1".to_owned()),
+        }];
+        payload.entities[0].pack = Some(rfb_protocol::MonsterPackSaveDto {
+            id: pack_id.clone(),
+            leader_id: leader_id.clone(),
+            role: MonsterPackRoleDto::Leader,
+            behavior: MonsterPackBehaviorDto::Seek,
+        });
+        let mut member = payload.entities[0].clone();
+        member.id = "test.pack.member".to_owned();
+        member.position = Position { x: 8, y: 6 };
+        member.statuses.clear();
+        member.pack = Some(rfb_protocol::MonsterPackSaveDto {
+            id: pack_id,
+            leader_id,
+            role: MonsterPackRoleDto::Member,
+            behavior: MonsterPackBehaviorDto::GuardLeader,
+        });
+        payload.entities.push(member);
+
+        let mut game = Game::from_save(payload).expect("pack death setup should load");
+        game.dispatch(command(1, 0, GameCommand::Wait))
+            .expect("leader death should resolve");
+
+        assert_eq!(game.entities.len(), 1);
+        assert_eq!(game.entities[0].id, "test.pack.member");
+        assert!(game.entities[0].pack.is_none());
+        Game::from_save(game.to_save()).expect("dissolved pack should remain saveable");
+    }
+
+    #[test]
     fn content_driven_loot_generation_is_deterministic_and_persistent() {
         let mut left = Game::new(42);
         let initial = left.to_save();
@@ -10398,7 +10662,28 @@ mod tests {
                 "demo.actor.frost-wisp" | "demo.actor.storm-spark"
             ) && adjacent(escort.position, captain_position)
         }));
-
+        let captain_pack = captain
+            .pack
+            .as_ref()
+            .expect("dynamic leader should retain a pack identity");
+        assert_eq!(captain_pack.role, MonsterPackRoleDto::Leader);
+        assert_eq!(captain_pack.behavior, MonsterPackBehaviorDto::Seek);
+        assert!(friends.iter().all(|friend| {
+            friend.pack.as_ref().is_some_and(|pack| {
+                pack.id == captain_pack.id
+                    && pack.leader_id == captain.id
+                    && pack.role == MonsterPackRoleDto::Member
+                    && pack.behavior == MonsterPackBehaviorDto::Surround
+            })
+        }));
+        assert!(escorts.iter().all(|escort| {
+            escort.pack.as_ref().is_some_and(|pack| {
+                pack.id == captain_pack.id
+                    && pack.leader_id == captain.id
+                    && pack.role == MonsterPackRoleDto::Member
+                    && pack.behavior == MonsterPackBehaviorDto::GuardLeader
+            })
+        }));
         descend_one_floor(&mut game);
         assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-7");
         assert_eq!(game.entities.len(), 8);
@@ -10435,6 +10720,106 @@ mod tests {
         let restored =
             Game::from_save(game.to_save()).expect("dynamic encounter groups should round-trip");
         assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            actors_to_save(&restored.entities),
+            actors_to_save(&game.entities)
+        );
+    }
+
+    #[test]
+    fn pack_ai_reserves_surround_targets_and_guards_the_leader() {
+        let mut game = Game::new(42);
+        game.player.position = Position { x: 10, y: 10 };
+        let base = game.entities[0].clone();
+        let pack_id = "test.pack.1";
+        let leader_id = "test.pack.leader";
+        let pack = |role, behavior| {
+            Some(MonsterPackIdentity {
+                id: pack_id.to_owned(),
+                leader_id: leader_id.to_owned(),
+                role,
+                behavior,
+            })
+        };
+        let mut leader = base.clone();
+        leader.id = leader_id.to_owned();
+        leader.position = Position { x: 9, y: 7 };
+        leader.pack = pack(MonsterPackRoleDto::Leader, MonsterPackBehaviorDto::Seek);
+        let mut friend_one = base.clone();
+        friend_one.id = "test.pack.friend.1".to_owned();
+        friend_one.position = Position { x: 7, y: 9 };
+        friend_one.pack = pack(MonsterPackRoleDto::Member, MonsterPackBehaviorDto::Surround);
+        let mut friend_two = base.clone();
+        friend_two.id = "test.pack.friend.2".to_owned();
+        friend_two.position = Position { x: 7, y: 11 };
+        friend_two.pack = pack(MonsterPackRoleDto::Member, MonsterPackBehaviorDto::Surround);
+        let mut escort = base;
+        escort.id = "test.pack.escort.1".to_owned();
+        escort.position = Position { x: 6, y: 7 };
+        escort.pack = pack(
+            MonsterPackRoleDto::Member,
+            MonsterPackBehaviorDto::GuardLeader,
+        );
+        game.entities = vec![leader, friend_one, friend_two, escort];
+        game.items.clear();
+
+        let mut reservations = BTreeSet::new();
+        assert!(game.next_surround_step(1, &mut reservations).is_some());
+        assert!(game.next_surround_step(2, &mut reservations).is_some());
+        assert_eq!(reservations.len(), 2);
+        assert!(reservations.iter().all(|target| {
+            adjacent(*target, game.player.position) && game.is_walkable(*target)
+        }));
+
+        let leader_position = game.entities[0].position;
+        let before = squared_distance(game.entities[3].position, leader_position);
+        game.resolve_monster_action(
+            3,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut BTreeSet::new(),
+        );
+        assert!(squared_distance(game.entities[3].position, leader_position) < before);
+
+        let restored = Game::from_save(game.to_save()).expect("pack state should round-trip");
+        assert_eq!(
+            actors_to_save(&restored.entities),
+            actors_to_save(&game.entities)
+        );
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn malformed_pack_identity_is_rejected_and_v58_remains_independent() {
+        let mut malformed = Game::new(42).to_save();
+        malformed.entities[0].pack = Some(rfb_protocol::MonsterPackSaveDto {
+            id: "test.pack.missing-leader".to_owned(),
+            leader_id: "test.actor.missing".to_owned(),
+            role: MonsterPackRoleDto::Member,
+            behavior: MonsterPackBehaviorDto::GuardLeader,
+        });
+        assert!(matches!(
+            Game::from_save(malformed),
+            Err(CoreError::InvalidSave("monster pack state is invalid"))
+        ));
+
+        let mut legacy = Game::new(49);
+        legacy.player.position = Position { x: 3, y: 2 };
+        legacy
+            .traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..6 {
+            descend_one_floor(&mut legacy);
+        }
+        let mut payload = legacy.to_save();
+        payload.content_hash =
+            "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d".to_owned();
+        for entity in &mut payload.entities {
+            entity.pack = None;
+        }
+        let restored = Game::from_save(payload).expect("v58 actors without pack state should load");
+        assert!(restored.entities.iter().all(|entity| entity.pack.is_none()));
     }
 
     #[test]

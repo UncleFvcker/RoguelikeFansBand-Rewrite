@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.58";
+pub const PROTOCOL_VERSION: &str = "1.59";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -855,6 +855,32 @@ pub struct ActorSaveDto {
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pack: Option<MonsterPackSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterPackSaveDto {
+    pub id: String,
+    pub leader_id: String,
+    pub role: MonsterPackRoleDto,
+    pub behavior: MonsterPackBehaviorDto,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterPackRoleDto {
+    Leader,
+    Member,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterPackBehaviorDto {
+    Seek,
+    Surround,
+    GuardLeader,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
