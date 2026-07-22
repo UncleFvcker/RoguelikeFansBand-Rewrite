@@ -114,3 +114,6 @@ terrain-demo-chain-vault-rift-abandoned-name = abandoned chain vault
 terrain-demo-chain-vault-rift-abandoned-description = The vault collapsed when the ordered task was abandoned.
 vault-demo-harmonic-sepulcher-name = Harmonic Sepulcher
 vault-demo-resonant-gallery-name = Resonant Gallery
+vault-demo-resonance-spindle-name = Resonance Spindle
+vault-demo-resonance-crook-name = Resonance Crook
+vault-demo-sealed-resonance-monolith-name = Sealed Resonance Monolith

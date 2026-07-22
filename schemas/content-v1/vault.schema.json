@@ -118,6 +118,19 @@
         "lootTableId"
       ],
       "type": "object"
+    },
+    "VaultTransform": {
+      "enum": [
+        "identity",
+        "rotate90",
+        "rotate180",
+        "rotate270",
+        "mirror-horizontal",
+        "mirror-vertical",
+        "mirror-main-diagonal",
+        "mirror-anti-diagonal"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json",
@@ -171,6 +184,13 @@
     },
     "themeId": {
       "type": "string"
+    },
+    "transforms": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/VaultTransform"
+      },
+      "type": "array"
     },
     "width": {
       "format": "uint16",

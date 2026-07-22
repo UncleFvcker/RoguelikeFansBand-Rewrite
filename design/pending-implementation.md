@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v49、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v50、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -8,7 +8,7 @@
 
 | 优先级 | 候选纵切 | 状态 | 边界 |
 | --- | --- | --- | --- |
-| P0 | Stage E 模板放置与群体 | 待实现 | Vault 旋转镜像/自由落位、多 Vault 与空间预算、friends/escort 动态群体和分支连接 |
+| P0 | Stage E 动态群体 | 待实现 | friends/escort 动态群体、formation/pack 预算与存档回放 |
 | P1 | 暂停任务管理 | 待实现 | 地表直接放弃、重接次数限制和重新生成策略 |
 
 ## contract-v32 明确遗留
@@ -141,7 +141,7 @@
 ## contract-v46 明确遗留
 
 - 分支、跳层、shaft、随机楼梯和独立到达点；当前地牢链仍是严格线性；
-- vault 内的深度 encounter、主题 terrain/loot 和固定群体已由 contract-v47 建立；楼层级表、多个 vault 加权选择和第一类巢穴已由 contract-v48 建立；十层规模、actor/loot 预算和深度区域主题已由 contract-v49 建立，尚缺自由放置与空间预算；
+- vault 内的深度 encounter、主题 terrain/loot 和固定群体已由 contract-v47 建立；楼层级表、多个 vault 加权选择和第一类巢穴已由 contract-v48 建立；十层规模、actor/loot 预算和深度区域主题已由 contract-v49 建立；旋转/镜像、自由落位、多 Vault 空间预算和失败回退已由 contract-v50 建立，尚缺多入口与大模板成功落位后的连通性证明；
 - 入口守护者、守护者 unique 世界生态，以及神器、声望和属性奖励；
 - 多座地牢、进入条件、显式 `DungeonInstanceId`、胜利/退休和角色分数；
 - 回忆、传送、死亡等非楼梯方式结束探索时的统一生命周期。
@@ -150,34 +150,33 @@
 
 ## contract-v47 明确遗留
 
-- 按深度和地牢主题加权选择多个 vault、无候选回退已由 contract-v48 建立；尚缺旋转、镜像、自由房间落位、多 Vault 同层和生成失败重试；
-- 普通房间可引用的独立 encounter/loot/theme 表已由 contract-v48 建立，actor/loot 总预算与深度区域主题已由 contract-v49 建立；尚缺房间/空间预算、群落和同层多区域主题；
+- 按深度和地牢主题加权选择多个 vault、无候选回退已由 contract-v48 建立；旋转、镜像、自由 wall 区落位、多 Vault 同层和生成失败回退已由 contract-v50 建立，尚缺多入口和跨走廊拼接；
+- 普通房间可引用的独立 encounter/loot/theme 表已由 contract-v48 建立，actor/loot 总预算与深度区域主题已由 contract-v49 建立，第一版 Vault 数量/面积预算已由 contract-v50 建立；尚缺房间/陷阱/门空间预算、群落和同层多区域主题；
 - 第一类同类巢穴已由 contract-v48 建立；尚缺 pit、formation、friends、escort、召唤、繁殖、pack AI、种群上限和 unique 过滤；
 - vault 越级强敌/掉落、专属陷阱、神器、来源标签和探索奖励；
-- 十层规模压力场景已由 contract-v49 建立；尚缺更大模板的连通性证明、多入口和多 Vault 楼层。
+- 十层规模压力场景已由 contract-v49 建立，多 Vault 楼层已由 contract-v50 建立；尚缺更大模板成功落位后的连通性证明和多入口。
 
 来源：[contract-v47](contract-v47-themed-vault.md)。
 
 ## contract-v48 明确遗留
 
-- 十层地牢、actor/loot 生成预算和深度区域主题已由 contract-v49 建立；尚缺多个 Vault 同层、空间/陷阱预算与机器性能计时基线；
-- Vault 旋转、镜像、自由房间落位、多入口、大模板连通性证明和失败重试；
+- 十层地牢、actor/loot 生成预算和深度区域主题已由 contract-v49 建立，多个 Vault 同层和第一版面积预算已由 contract-v50 建立；尚缺陷阱/门空间预算与机器性能计时基线；
+- Vault 旋转、镜像、自由 wall 区落位和失败重试已由 contract-v50 建立；尚缺多入口与大模板成功落位后的连通性证明；
 - 巢穴专属表、形状、领袖与主题掉落，以及 pit、formation、friends、escort 和 pack AI；
 - unique/守护者过滤、召唤物与繁殖种群上限、越级强敌/掉落和神器来源标签；
 - 分支、shaft、随机楼梯、同层多个连接点与显式到达点。
 
 来源：[contract-v48](contract-v48-floor-generation-tables.md)。
 
-## contract-v49 明确遗留
+## contract-v49/v50 明确遗留
 
-- Vault 旋转、镜像、自由房间落位、多入口、大模板连通性和失败重试；
+- Vault 旋转、镜像、自由 wall 区落位、多 Vault 预算竞争、重叠拒绝和稳定失败回退已由 contract-v50 建立；尚缺多入口、大模板成功落位后的连通性证明和跨走廊拼接；
 - 房间数量/形状、空间、陷阱、门与特殊地形预算，以及同层多区域主题拼接；
-- 多 Vault 同层放置、预算竞争、重叠拒绝和稳定候选回退；
 - friends、escort、pit、formation、pack AI、召唤、繁殖、种群上限和 unique 过滤；
 - 分支、shaft、随机楼梯、同层多个连接点与独立到达点；
 - 跨机器性能计时基线；当前十层 fixture 只锁定规模、状态和确定性。
 
-来源：[contract-v49](contract-v49-budgeted-pressure-dungeon.md)。
+来源：[contract-v49](contract-v49-budgeted-pressure-dungeon.md)、[contract-v50](contract-v50-spatial-vault-placement.md)。
 
 ## contract-v25–v29 明确遗留
 
@@ -192,7 +191,7 @@
 ### 楼层与生成
 
 - 多深度连接、任务层、临时/持久层策略和旧层淘汰；
-- 动态朋友/护卫群体、空间/陷阱预算、同层多区域主题和更完整的生成阶段；最终层守护者已由 contract-v46 完成，第一类固定主题 vault/group 已由 contract-v47 完成，多 Vault 加权选择与第一类巢穴已由 contract-v48 完成，actor/loot 总预算和十层压力链已由 contract-v49 完成；
+- 动态朋友/护卫群体、陷阱/门空间预算、同层多区域主题和更完整的生成阶段；最终层守护者已由 contract-v46 完成，第一类固定主题 vault/group 已由 contract-v47 完成，多 Vault 加权选择与第一类巢穴已由 contract-v48 完成，actor/loot 总预算和十层压力链已由 contract-v49 完成，Vault 变换、自由落位、多模板面积预算与失败回退已由 contract-v50 完成；
 - 陷阱、秘密门和其他可变地形进入生成管线。
 
 来源：[contract-v26](contract-v26-floor-lifecycle.md)、[contract-v27](contract-v27-procedural-room-content.md)。

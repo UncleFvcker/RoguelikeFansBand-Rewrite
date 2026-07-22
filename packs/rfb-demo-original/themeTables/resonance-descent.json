@@ -17,7 +17,26 @@
       "weight": 1,
       "minDepth": 4,
       "maxDepth": 10,
-      "vaultCandidates": []
+      "vaultCandidates": [
+        {
+          "vaultId": "demo.vault.sealed-resonance-monolith",
+          "weight": 16,
+          "minDepth": 8,
+          "maxDepth": 8
+        },
+        {
+          "vaultId": "demo.vault.resonance-spindle",
+          "weight": 4,
+          "minDepth": 8,
+          "maxDepth": 8
+        },
+        {
+          "vaultId": "demo.vault.resonance-crook",
+          "weight": 1,
+          "minDepth": 8,
+          "maxDepth": 8
+        }
+      ]
     }
   ]
 }

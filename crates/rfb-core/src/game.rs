@@ -39,6 +39,7 @@ use crate::{
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, FloorLifecycle, ItemUseEffectDefinition,
     ProceduralFloorDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
+    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -56,7 +57,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 42] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 43] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -99,9 +100,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 42] = [
     "e03cb30ea8e1cd5821c14b54c4a038d30323cfc2cb6e0d6c483cbb006d70916f",
     "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0",
     "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad",
+    "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f";
+    "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -181,6 +183,14 @@ struct GeneratedRoom {
     y: i32,
     width: i32,
     height: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedVaultPlacement {
+    vault: VaultDefinition,
+    origin: Position,
+    transform: VaultTransform,
+    ordinal: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -4026,7 +4036,11 @@ impl Game {
             .as_ref()
             .map(|entry| entry.floor_terrain_id.clone())
             .unwrap_or_else(|| definition.floor_terrain_id.clone());
-        let eligible_vault_ids = selected_theme
+        let uses_spatial_vault_budget =
+            definition.generation_budget.as_ref().is_some_and(|budget| {
+                budget.vault_placements.is_some() && budget.vault_area_tiles.is_some()
+            });
+        let eligible_vault_candidates = selected_theme
             .as_ref()
             .map(|theme| {
                 theme
@@ -4039,30 +4053,35 @@ impl Game {
                                 .content
                                 .vault(&candidate.vault_id)
                                 .is_some_and(|vault| {
-                                    vault.width <= 6
-                                        && vault.height <= 5
-                                        && vault.entrance_position.x == vault.width / 2
-                                        && vault.entrance_position.y == 0
+                                    uses_spatial_vault_budget
+                                        || vault.width <= 6
+                                            && vault.height <= 5
+                                            && vault.entrance_position.x == vault.width / 2
+                                            && vault.entrance_position.y == 0
                                 })
                     })
                     .cloned()
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
-        let vault = if eligible_vault_ids.is_empty() {
+        let legacy_vault = if uses_spatial_vault_budget {
+            None
+        } else if eligible_vault_candidates.is_empty() {
             definition
                 .vault_id
                 .as_ref()
                 .and_then(|vault_id| self.content.vault(vault_id))
                 .cloned()
-        } else if eligible_vault_ids.len() == 1 {
-            self.content.vault(&eligible_vault_ids[0].vault_id).cloned()
+        } else if eligible_vault_candidates.len() == 1 {
+            self.content
+                .vault(&eligible_vault_candidates[0].vault_id)
+                .cloned()
         } else {
-            let weights = eligible_vault_ids
+            let weights = eligible_vault_candidates
                 .iter()
                 .map(|candidate| candidate.weight)
                 .collect::<Vec<_>>();
-            let vault_id = &eligible_vault_ids[self.roll_weighted_index(&weights)].vault_id;
+            let vault_id = &eligible_vault_candidates[self.roll_weighted_index(&weights)].vault_id;
             self.content.vault(vault_id).cloned()
         };
         let guardian = definition.guardian.as_ref().filter(|_| {
@@ -4147,7 +4166,7 @@ impl Game {
             x: rooms[1].x + rooms[1].width / 2,
             y: rooms[1].y + rooms[1].height / 2,
         };
-        let vault_origin = vault.as_ref().map(|vault| Position {
+        let legacy_vault_origin = legacy_vault.as_ref().map(|vault| Position {
             x: second_center.x - i32::from(vault.entrance_position.x),
             y: rooms[1].y,
         });
@@ -4210,35 +4229,25 @@ impl Game {
             },
             &definition.trap_terrain_id,
         );
-        if let Some(vault) = &vault {
-            let origin = vault_origin.expect("present vault must have an origin");
-            for local_y in 0..vault.height {
-                for local_x in 0..vault.width {
-                    set_generated_terrain(
-                        &mut terrain,
-                        width,
-                        Position {
-                            x: origin.x + i32::from(local_x),
-                            y: origin.y + i32::from(local_y),
-                        },
-                        &vault.base_terrain_id,
-                    );
-                }
-            }
-            for terrain_override in &vault.terrain_overrides {
-                for local in &terrain_override.positions {
-                    set_generated_terrain(
-                        &mut terrain,
-                        width,
-                        Position {
-                            x: origin.x + i32::from(local.x),
-                            y: origin.y + i32::from(local.y),
-                        },
-                        &terrain_override.terrain_id,
-                    );
-                }
-            }
-        }
+        let vault_placements = if let Some(vault) = legacy_vault.clone() {
+            let placement = GeneratedVaultPlacement {
+                vault,
+                origin: legacy_vault_origin.expect("present vault must have an origin"),
+                transform: VaultTransform::Identity,
+                ordinal: 1,
+            };
+            paint_generated_vault(&mut terrain, width, &placement);
+            vec![placement]
+        } else if uses_spatial_vault_budget {
+            self.select_spatial_vault_placements(
+                definition,
+                &eligible_vault_candidates,
+                guardian.is_some(),
+                &mut terrain,
+            )
+        } else {
+            Vec::new()
+        };
         let mut occupied = BTreeSet::from([first_center]);
         if definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
@@ -4267,7 +4276,11 @@ impl Game {
                 .iter()
                 .map(|entry| entry.weight)
                 .collect::<Vec<_>>();
-            let room_id = if vault.is_some() { "entry" } else { "remote" };
+            let room_id = if legacy_vault.is_some() {
+                "entry"
+            } else {
+                "remote"
+            };
             let encounter_rolls =
                 definition
                     .generation_budget
@@ -4279,20 +4292,14 @@ impl Game {
                             .map_or(0, |nest| nest.spawn_count)
                             .saturating_add(if guardian.is_some() { 1 } else { 0 })
                             .saturating_add(
-                                vault
-                                    .as_ref()
-                                    .map(|vault| {
-                                        vault
-                                            .encounter_groups
-                                            .iter()
-                                            .map(|group| {
-                                                u16::try_from(group.member_positions.len()).expect(
-                                                    "validated vault group size must fit u16",
-                                                )
-                                            })
-                                            .sum::<u16>()
+                                vault_placements
+                                    .iter()
+                                    .flat_map(|placement| &placement.vault.encounter_groups)
+                                    .map(|group| {
+                                        u16::try_from(group.member_positions.len())
+                                            .expect("validated vault group size must fit u16")
                                     })
-                                    .unwrap_or(0),
+                                    .sum::<u16>(),
                             );
                         table
                             .rolls
@@ -4381,9 +4388,8 @@ impl Game {
                 ));
             }
         }
-        if let Some(vault) = &vault {
-            let origin = vault_origin.expect("present vault must have an origin");
-            for group in &vault.encounter_groups {
+        for placement in &vault_placements {
+            for group in &placement.vault.encounter_groups {
                 let eligible_entries = group
                     .entries
                     .iter()
@@ -4406,13 +4412,26 @@ impl Game {
                         .content
                         .actor(&entry.actor_kind_id)
                         .expect("validated vault encounter actor must remain available");
+                    let local =
+                        transformed_vault_position(&placement.vault, placement.transform, *local);
                     let position = Position {
-                        x: origin.x + i32::from(local.x),
-                        y: origin.y + i32::from(local.y),
+                        x: placement.origin.x + local.x,
+                        y: placement.origin.y + local.y,
                     };
                     occupied.insert(position);
+                    let instance_id = if uses_spatial_vault_budget {
+                        format!(
+                            "{}.vault.{}.{}.{}",
+                            definition.id,
+                            placement.ordinal,
+                            group.id,
+                            ordinal + 1
+                        )
+                    } else {
+                        format!("{}.{}.{}", definition.id, group.id, ordinal + 1)
+                    };
                     entities.push(actor_from_spawn(
-                        &format!("{}.{}.{}", definition.id, group.id, ordinal + 1),
+                        &instance_id,
                         &entry.actor_kind_id,
                         ContentPosition {
                             x: u16::try_from(position.x).expect("vault actor x must fit u16"),
@@ -4452,16 +4471,20 @@ impl Game {
         let mut items =
             self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
         if let Some(table_id) = &definition.loot_table_id {
-            let room_id = if vault.is_some() { "entry" } else { "remote" };
+            let room_id = if legacy_vault.is_some() {
+                "entry"
+            } else {
+                "remote"
+            };
             let floor_loot_placements = definition.generation_budget.as_ref().map_or(1, |budget| {
                 budget.loot_placements.saturating_sub(
-                    vault
-                        .as_ref()
-                        .map(|vault| {
-                            u16::try_from(vault.loot_spawns.len())
+                    vault_placements
+                        .iter()
+                        .map(|placement| {
+                            u16::try_from(placement.vault.loot_spawns.len())
                                 .expect("validated vault loot count must fit u16")
                         })
-                        .unwrap_or(0),
+                        .sum::<u16>(),
                 )
             });
             for ordinal in 0..floor_loot_placements {
@@ -4499,12 +4522,16 @@ impl Game {
                 )?);
             }
         }
-        if let Some(vault) = &vault {
-            let origin = vault_origin.expect("present vault must have an origin");
-            for spawn in &vault.loot_spawns {
+        for placement in &vault_placements {
+            for spawn in &placement.vault.loot_spawns {
+                let local = transformed_vault_position(
+                    &placement.vault,
+                    placement.transform,
+                    spawn.position,
+                );
                 let position = Position {
-                    x: origin.x + i32::from(spawn.position.x),
-                    y: origin.y + i32::from(spawn.position.y),
+                    x: placement.origin.x + local.x,
+                    y: placement.origin.y + local.y,
                 };
                 occupied.insert(position);
                 items.extend(self.generate_loot_instances(
@@ -4513,7 +4540,7 @@ impl Game {
                         floor_id: definition.id.clone(),
                         depth: definition.depth,
                         source: LootSource::Vault {
-                            vault_id: vault.id.clone(),
+                            vault_id: placement.vault.id.clone(),
                             spawn_id: spawn.id.clone(),
                         },
                     },
@@ -4601,6 +4628,134 @@ impl Game {
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
         })
+    }
+
+    fn select_spatial_vault_placements(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        eligible_candidates: &[ThemeVaultCandidateDefinition],
+        guardian_present: bool,
+        terrain: &mut [String],
+    ) -> Vec<GeneratedVaultPlacement> {
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("spatial vault placement requires a generation budget");
+        let placement_limit = budget
+            .vault_placements
+            .expect("validated spatial vault count must remain available");
+        let mut remaining_area = budget
+            .vault_area_tiles
+            .expect("validated spatial vault area must remain available");
+        let fixed_actor_slots = definition
+            .nest
+            .as_ref()
+            .map_or(0, |nest| nest.spawn_count)
+            .saturating_add(u16::from(guardian_present));
+        let mut remaining_vault_actor_slots = budget
+            .actor_slots
+            .saturating_sub(fixed_actor_slots)
+            .saturating_sub(1);
+        let mut remaining_vault_loot_placements = budget.loot_placements.saturating_sub(1);
+        let mut remaining_candidates = eligible_candidates.to_vec();
+        let mut placements = Vec::new();
+
+        'placement_slots: for ordinal in 1..=placement_limit {
+            loop {
+                let affordable = remaining_candidates
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, candidate)| {
+                        let vault = self
+                            .content
+                            .vault(&candidate.vault_id)
+                            .expect("validated spatial vault must remain available");
+                        let actor_cost = vault
+                            .encounter_groups
+                            .iter()
+                            .map(|group| {
+                                u16::try_from(group.member_positions.len())
+                                    .expect("validated vault actor count must fit u16")
+                            })
+                            .sum::<u16>();
+                        let loot_cost = u16::try_from(vault.loot_spawns.len())
+                            .expect("validated vault loot count must fit u16");
+                        let area = u32::from(vault.width) * u32::from(vault.height);
+                        (actor_cost <= remaining_vault_actor_slots
+                            && loot_cost <= remaining_vault_loot_placements
+                            && area <= remaining_area)
+                            .then_some((index, candidate.weight))
+                    })
+                    .collect::<Vec<_>>();
+                if affordable.is_empty() {
+                    break 'placement_slots;
+                }
+                let selected_affordable = if affordable.len() == 1 {
+                    0
+                } else {
+                    let weights = affordable
+                        .iter()
+                        .map(|(_, weight)| *weight)
+                        .collect::<Vec<_>>();
+                    self.roll_weighted_index(&weights)
+                };
+                let candidate_index = affordable[selected_affordable].0;
+                let candidate = remaining_candidates.remove(candidate_index);
+                let vault = self
+                    .content
+                    .vault(&candidate.vault_id)
+                    .expect("validated spatial vault must remain available")
+                    .clone();
+                let placement_candidates = free_vault_placement_candidates(
+                    terrain,
+                    definition.width,
+                    definition.height,
+                    &definition.wall_terrain_id,
+                    &vault,
+                );
+                if placement_candidates.is_empty() {
+                    continue;
+                }
+                let placement_index = if placement_candidates.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(placement_candidates.len())
+                                .expect("vault placement candidate count must fit u64"),
+                        ),
+                    )
+                    .expect("vault placement candidate index must fit usize")
+                };
+                let (origin, transform) = placement_candidates[placement_index];
+                let actor_cost = vault
+                    .encounter_groups
+                    .iter()
+                    .map(|group| {
+                        u16::try_from(group.member_positions.len())
+                            .expect("validated vault actor count must fit u16")
+                    })
+                    .sum::<u16>();
+                let loot_cost = u16::try_from(vault.loot_spawns.len())
+                    .expect("validated vault loot count must fit u16");
+                let area = u32::from(vault.width) * u32::from(vault.height);
+                let placement = GeneratedVaultPlacement {
+                    vault,
+                    origin,
+                    transform,
+                    ordinal,
+                };
+                paint_generated_vault(terrain, definition.width, &placement);
+                remaining_vault_actor_slots =
+                    remaining_vault_actor_slots.saturating_sub(actor_cost);
+                remaining_vault_loot_placements =
+                    remaining_vault_loot_placements.saturating_sub(loot_cost);
+                remaining_area = remaining_area.saturating_sub(area);
+                placements.push(placement);
+                break;
+            }
+        }
+        placements
     }
 
     fn choose_generated_room_position(
@@ -5790,6 +5945,153 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     let dx = left.x - right.x;
     let dy = left.y - right.y;
     dx * dx + dy * dy
+}
+
+fn transformed_vault_dimensions(vault: &VaultDefinition, transform: VaultTransform) -> (u16, u16) {
+    match transform {
+        VaultTransform::Identity
+        | VaultTransform::Rotate180
+        | VaultTransform::MirrorHorizontal
+        | VaultTransform::MirrorVertical => (vault.width, vault.height),
+        VaultTransform::Rotate90
+        | VaultTransform::Rotate270
+        | VaultTransform::MirrorMainDiagonal
+        | VaultTransform::MirrorAntiDiagonal => (vault.height, vault.width),
+    }
+}
+
+fn transformed_vault_position(
+    vault: &VaultDefinition,
+    transform: VaultTransform,
+    position: ContentPosition,
+) -> Position {
+    let x = i32::from(position.x);
+    let y = i32::from(position.y);
+    let max_x = i32::from(vault.width - 1);
+    let max_y = i32::from(vault.height - 1);
+    match transform {
+        VaultTransform::Identity => Position { x, y },
+        VaultTransform::Rotate90 => Position { x: max_y - y, y: x },
+        VaultTransform::Rotate180 => Position {
+            x: max_x - x,
+            y: max_y - y,
+        },
+        VaultTransform::Rotate270 => Position { x: y, y: max_x - x },
+        VaultTransform::MirrorHorizontal => Position { x: max_x - x, y },
+        VaultTransform::MirrorVertical => Position { x, y: max_y - y },
+        VaultTransform::MirrorMainDiagonal => Position { x: y, y: x },
+        VaultTransform::MirrorAntiDiagonal => Position {
+            x: max_y - y,
+            y: max_x - x,
+        },
+    }
+}
+
+fn free_vault_placement_candidates(
+    terrain: &[String],
+    width: u16,
+    height: u16,
+    wall_terrain_id: &str,
+    vault: &VaultDefinition,
+) -> Vec<(Position, VaultTransform)> {
+    let transforms = if vault.transforms.is_empty() {
+        vec![VaultTransform::Identity]
+    } else {
+        vault.transforms.clone()
+    };
+    let mut candidates = Vec::new();
+    for transform in transforms {
+        let (transformed_width, transformed_height) =
+            transformed_vault_dimensions(vault, transform);
+        if transformed_width + 2 > width || transformed_height + 2 > height {
+            continue;
+        }
+        let entrance = transformed_vault_position(vault, transform, vault.entrance_position);
+        let outward = if entrance.y == 0 {
+            Position { x: 0, y: -1 }
+        } else if entrance.x + 1 == i32::from(transformed_width) {
+            Position { x: 1, y: 0 }
+        } else if entrance.y + 1 == i32::from(transformed_height) {
+            Position { x: 0, y: 1 }
+        } else {
+            Position { x: -1, y: 0 }
+        };
+        for origin_y in 1..=i32::from(height - transformed_height - 1) {
+            for origin_x in 1..=i32::from(width - transformed_width - 1) {
+                let origin = Position {
+                    x: origin_x,
+                    y: origin_y,
+                };
+                let footprint_is_free = (0..i32::from(transformed_height)).all(|local_y| {
+                    (0..i32::from(transformed_width)).all(|local_x| {
+                        let position = Position {
+                            x: origin.x + local_x,
+                            y: origin.y + local_y,
+                        };
+                        let index = position.y as usize * usize::from(width) + position.x as usize;
+                        terrain
+                            .get(index)
+                            .is_some_and(|terrain_id| terrain_id == wall_terrain_id)
+                    })
+                });
+                if !footprint_is_free {
+                    continue;
+                }
+                let connection = Position {
+                    x: origin.x + entrance.x + outward.x,
+                    y: origin.y + entrance.y + outward.y,
+                };
+                let connection_index =
+                    connection.y as usize * usize::from(width) + connection.x as usize;
+                if terrain
+                    .get(connection_index)
+                    .is_some_and(|terrain_id| terrain_id != wall_terrain_id)
+                {
+                    candidates.push((origin, transform));
+                }
+            }
+        }
+    }
+    candidates
+}
+
+fn paint_generated_vault(terrain: &mut [String], width: u16, placement: &GeneratedVaultPlacement) {
+    for local_y in 0..placement.vault.height {
+        for local_x in 0..placement.vault.width {
+            let local = transformed_vault_position(
+                &placement.vault,
+                placement.transform,
+                ContentPosition {
+                    x: local_x,
+                    y: local_y,
+                },
+            );
+            set_generated_terrain(
+                terrain,
+                width,
+                Position {
+                    x: placement.origin.x + local.x,
+                    y: placement.origin.y + local.y,
+                },
+                &placement.vault.base_terrain_id,
+            );
+        }
+    }
+    for terrain_override in &placement.vault.terrain_overrides {
+        for position in &terrain_override.positions {
+            let local =
+                transformed_vault_position(&placement.vault, placement.transform, *position);
+            set_generated_terrain(
+                terrain,
+                width,
+                Position {
+                    x: placement.origin.x + local.x,
+                    y: placement.origin.y + local.y,
+                },
+                &terrain_override.terrain_id,
+            );
+        }
+    }
 }
 
 fn carve_room(
@@ -7416,13 +7718,46 @@ mod tests {
             assert_eq!(game.entities.len(), actor_slots[depth - 1]);
             assert_eq!(game.items.len(), loot_placements[depth - 1]);
             let guardian_slots = if depth == 10 { 1 } else { 0 };
+            let vault_slots = if depth == 8 { 2 } else { 0 };
             assert_eq!(
                 game.entities
                     .iter()
                     .filter(|entity| entity.id.contains(".encounter."))
                     .count(),
-                actor_slots[depth - 1] - guardian_slots
+                actor_slots[depth - 1] - guardian_slots - vault_slots
             );
+            if depth == 8 {
+                assert_eq!(
+                    game.entities
+                        .iter()
+                        .filter(|entity| entity.id.contains(".vault."))
+                        .count(),
+                    2
+                );
+                assert!(
+                    game.entities
+                        .iter()
+                        .any(|entity| { entity.id.contains("resonance-spindle-watch") })
+                );
+                assert!(
+                    game.entities
+                        .iter()
+                        .any(|entity| entity.id.contains("resonance-crook-watch"))
+                );
+                assert!(
+                    !game
+                        .entities
+                        .iter()
+                        .any(|entity| entity.id.contains("sealed-resonance-monolith"))
+                );
+                assert_eq!(
+                    game.terrain
+                        .iter()
+                        .filter(|terrain| *terrain == "demo.terrain.door-secret")
+                        .count(),
+                    3
+                );
+            }
             if depth <= 3 {
                 assert!(
                     game.terrain
@@ -7455,6 +7790,153 @@ mod tests {
         let restored = Game::from_save(game.to_save())
             .expect("pressure dungeon final floor should round-trip");
         assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn vault_coordinate_transforms_cover_rotations_and_reflections() {
+        let game = Game::new(1);
+        let vault = game
+            .content
+            .vault("demo.vault.resonance-spindle")
+            .expect("fixture should contain the transformable Vault");
+
+        assert_eq!(
+            transformed_vault_dimensions(vault, VaultTransform::Rotate90),
+            (4, 3)
+        );
+        assert_eq!(
+            transformed_vault_position(vault, VaultTransform::Rotate90, vault.entrance_position),
+            Position { x: 3, y: 1 }
+        );
+        assert_eq!(
+            transformed_vault_position(
+                vault,
+                VaultTransform::MirrorHorizontal,
+                ContentPosition { x: 0, y: 1 }
+            ),
+            Position { x: 2, y: 1 }
+        );
+        assert_eq!(
+            transformed_vault_position(
+                vault,
+                VaultTransform::MirrorMainDiagonal,
+                ContentPosition { x: 0, y: 1 }
+            ),
+            Position { x: 1, y: 0 }
+        );
+        assert_eq!(
+            transformed_vault_position(
+                vault,
+                VaultTransform::MirrorAntiDiagonal,
+                ContentPosition { x: 0, y: 1 }
+            ),
+            Position { x: 2, y: 2 }
+        );
+    }
+
+    #[test]
+    fn spatial_vault_placement_falls_back_after_an_impossible_weighted_candidate() {
+        let mut game = Game::new(1);
+        let definition = game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("built-in world should exist")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-8")
+            .expect("fixture should contain the spatial Vault floor")
+            .clone();
+        let theme = game
+            .content
+            .theme_table("demo.theme-table.resonance-descent")
+            .expect("fixture should contain the pressure theme table")
+            .entries
+            .iter()
+            .find(|entry| entry.min_depth <= 8 && 8 <= entry.max_depth)
+            .expect("fixture should contain the deep theme");
+        let mut impossible = theme
+            .vault_candidates
+            .iter()
+            .find(|candidate| candidate.vault_id == "demo.vault.sealed-resonance-monolith")
+            .expect("fixture should contain the impossible candidate")
+            .clone();
+        impossible.weight = u32::MAX;
+        let mut fallback = theme
+            .vault_candidates
+            .iter()
+            .find(|candidate| candidate.vault_id == "demo.vault.resonance-spindle")
+            .expect("fixture should contain the fallback candidate")
+            .clone();
+        fallback.weight = 1;
+        let mut probe = RfbRng::seeded(1);
+        assert!(probe.bounded(u64::from(u32::MAX) + 1) < u64::from(u32::MAX));
+
+        let mut terrain = vec![
+            definition.wall_terrain_id.clone();
+            usize::from(definition.width) * usize::from(definition.height)
+        ];
+        for x in 1..i32::from(definition.width - 1) {
+            set_generated_terrain(
+                &mut terrain,
+                definition.width,
+                Position { x, y: 10 },
+                "demo.terrain.resonant-floor",
+            );
+        }
+        let placements = game.select_spatial_vault_placements(
+            &definition,
+            &[impossible, fallback],
+            false,
+            &mut terrain,
+        );
+
+        assert_eq!(placements.len(), 1);
+        assert_eq!(placements[0].vault.id, "demo.vault.resonance-spindle");
+    }
+
+    #[test]
+    fn previous_v49_generated_floor_is_not_backfilled_with_spatial_vaults() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..8 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f".to_owned();
+        let removed_positions = payload
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".vault."))
+            .map(|entity| entity.position)
+            .collect::<Vec<_>>();
+        payload
+            .entities
+            .retain(|entity| !entity.id.contains(".vault."));
+        for position in removed_positions {
+            let index =
+                position.y as usize * usize::from(payload.terrain.width) + position.x as usize;
+            payload.terrain.terrain_ids[index] = "demo.terrain.wall".to_owned();
+        }
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v49 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-8");
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|entity| !entity.id.contains(".vault."))
+        );
     }
 
     #[test]

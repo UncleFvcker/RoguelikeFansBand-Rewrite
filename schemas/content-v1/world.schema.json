@@ -391,6 +391,25 @@
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
+        },
+        "vaultAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "vaultPlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [

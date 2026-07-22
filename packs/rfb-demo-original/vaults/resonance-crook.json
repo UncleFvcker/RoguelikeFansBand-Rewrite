@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json",
+  "formatVersion": 1,
+  "id": "demo.vault.resonance-crook",
+  "nameKey": "vault-demo-resonance-crook-name",
+  "themeId": "demo.theme.resonance-deeps",
+  "width": 4,
+  "height": 3,
+  "baseTerrainId": "demo.terrain.resonant-floor",
+  "entrancePosition": { "x": 0, "y": 1 },
+  "transforms": ["identity", "rotate90", "mirror-horizontal", "mirror-main-diagonal"],
+  "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.door-secret",
+      "positions": [{ "x": 0, "y": 1 }]
+    },
+    {
+      "terrainId": "demo.terrain.wall",
+      "positions": [
+        { "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 2, "y": 0 }, { "x": 3, "y": 0 },
+        { "x": 3, "y": 1 },
+        { "x": 0, "y": 2 }, { "x": 2, "y": 2 }, { "x": 3, "y": 2 }
+      ]
+    }
+  ],
+  "encounterGroups": [
+    {
+      "id": "demo.vault-group.resonance-crook-watch",
+      "memberPositions": [{ "x": 2, "y": 1 }],
+      "entries": [
+        {
+          "actorKindId": "demo.actor.resonant-warden",
+          "weight": 1,
+          "minDepth": 8,
+          "maxDepth": 8
+        }
+      ]
+    }
+  ],
+  "lootSpawns": [
+    {
+      "id": "demo.vault-loot.resonance-crook-cache",
+      "position": { "x": 1, "y": 1 },
+      "lootTableId": "demo.loot-table.resonant-warden"
+    }
+  ]
+}

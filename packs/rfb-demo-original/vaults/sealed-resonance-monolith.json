@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json",
+  "formatVersion": 1,
+  "id": "demo.vault.sealed-resonance-monolith",
+  "nameKey": "vault-demo-sealed-resonance-monolith-name",
+  "themeId": "demo.theme.resonance-deeps",
+  "width": 12,
+  "height": 12,
+  "baseTerrainId": "demo.terrain.resonant-floor",
+  "entrancePosition": { "x": 6, "y": 0 },
+  "transforms": ["identity"],
+  "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.door-secret",
+      "positions": [{ "x": 6, "y": 0 }]
+    }
+  ],
+  "encounterGroups": [
+    {
+      "id": "demo.vault-group.sealed-resonance-monolith-watch",
+      "memberPositions": [{ "x": 6, "y": 6 }],
+      "entries": [
+        {
+          "actorKindId": "demo.actor.resonant-warden",
+          "weight": 1,
+          "minDepth": 8,
+          "maxDepth": 8
+        }
+      ]
+    }
+  ],
+  "lootSpawns": [
+    {
+      "id": "demo.vault-loot.sealed-resonance-monolith-cache",
+      "position": { "x": 5, "y": 6 },
+      "lootTableId": "demo.loot-table.resonant-warden"
+    }
+  ]
+}

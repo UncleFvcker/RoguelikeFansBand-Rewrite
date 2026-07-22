@@ -464,9 +464,25 @@ pub struct VaultDefinition {
     pub height: u16,
     pub base_terrain_id: String,
     pub entrance_position: ContentPosition,
+    #[serde(default)]
+    pub transforms: Vec<VaultTransform>,
     pub terrain_overrides: Vec<TerrainOverride>,
     pub encounter_groups: Vec<VaultEncounterGroupDefinition>,
     pub loot_spawns: Vec<VaultLootSpawnDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum VaultTransform {
+    Identity,
+    Rotate90,
+    Rotate180,
+    Rotate270,
+    MirrorHorizontal,
+    MirrorVertical,
+    MirrorMainDiagonal,
+    MirrorAntiDiagonal,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -686,6 +702,10 @@ pub struct ProceduralLootSpawnDefinition {
 pub struct ProceduralGenerationBudgetDefinition {
     pub actor_slots: u16,
     pub loot_placements: u16,
+    #[serde(default)]
+    pub vault_placements: Option<u16>,
+    #[serde(default)]
+    pub vault_area_tiles: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1629,10 +1649,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&vault.id, "vault")?;
         validate_message_key(&vault.name_key)?;
         validate_definition_id(&vault.theme_id, "theme")?;
-        if !(2..=6).contains(&vault.width)
-            || !(2..=5).contains(&vault.height)
-            || vault.entrance_position.x != vault.width / 2
-            || vault.entrance_position.y != 0
+        vault.transforms.sort();
+        let transform_count = vault
+            .transforms
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>()
+            .len();
+        if !(2..=12).contains(&vault.width)
+            || !(2..=12).contains(&vault.height)
+            || vault.entrance_position.x >= vault.width
+            || vault.entrance_position.y >= vault.height
+            || !(vault.entrance_position.x == 0
+                || vault.entrance_position.x + 1 == vault.width
+                || vault.entrance_position.y == 0
+                || vault.entrance_position.y + 1 == vault.height)
+            || transform_count != vault.transforms.len()
         {
             return Err(ContentError::InvalidVault(vault.id.clone()));
         }
@@ -2131,6 +2163,11 @@ fn validate_world(
                     .nest
                     .as_ref()
                     .map_or(0, |nest| usize::from(nest.spawn_count));
+            let spatial_vault_budget = match (budget.vault_placements, budget.vault_area_tiles) {
+                (None, None) => None,
+                (Some(placements), Some(area_tiles)) => Some((placements, area_tiles)),
+                _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+            };
             if procedural.lifecycle != FloorLifecycle::Dungeon
                 || procedural.encounter_table_id.is_none()
                 || procedural.loot_table_id.is_none()
@@ -2139,6 +2176,31 @@ fn validate_world(
                 || reserved_actor_slots >= usize::from(budget.actor_slots)
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if let Some((placements, area_tiles)) = spatial_vault_budget {
+                let interior_area = u32::from(procedural.width.saturating_sub(2))
+                    * u32::from(procedural.height.saturating_sub(2));
+                if !(1..=4).contains(&placements)
+                    || !(4..=512).contains(&area_tiles)
+                    || area_tiles > interior_area
+                    || procedural.theme_table_id.is_none()
+                    || procedural.vault_id.is_some()
+                    || procedural.nest.is_some()
+                    || eligible_theme_entries.is_empty()
+                    || eligible_theme_entries.iter().any(|entry| {
+                        entry
+                            .vault_candidates
+                            .iter()
+                            .filter(|candidate| {
+                                candidate.min_depth <= procedural.depth
+                                    && procedural.depth <= candidate.max_depth
+                            })
+                            .count()
+                            < usize::from(placements)
+                    })
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
             }
             for entry in &eligible_theme_entries {
                 for candidate in entry.vault_candidates.iter().filter(|candidate| {
@@ -2155,6 +2217,9 @@ fn validate_world(
                         .sum::<usize>();
                     if reserved_actor_slots + vault_actor_slots >= usize::from(budget.actor_slots)
                         || vault.loot_spawns.len() >= usize::from(budget.loot_placements)
+                        || spatial_vault_budget.is_some_and(|(_, area_tiles)| {
+                            u32::from(vault.width) * u32::from(vault.height) > area_tiles
+                        })
                     {
                         return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                     }
@@ -3193,7 +3258,7 @@ mod tests {
         assert_eq!(first.content.encounter_tables.len(), 2);
         assert_eq!(first.content.loot_tables.len(), 5);
         assert_eq!(first.content.theme_tables.len(), 2);
-        assert_eq!(first.content.vaults.len(), 2);
+        assert_eq!(first.content.vaults.len(), 5);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -3204,7 +3269,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.42.0");
+        assert_eq!(catalog.pack_version(), "1.43.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3630,6 +3695,21 @@ mod tests {
             validate_and_normalize(&mut exhausted_loot_budget),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
+
+        let mut incomplete_spatial_budget = artifact.content.clone();
+        incomplete_spatial_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-8")
+            .expect("fixture should contain the spatial Vault floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .vault_area_tiles = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_spatial_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
     }
 
     #[test]
@@ -3642,6 +3722,30 @@ mod tests {
             ContentPosition { x: 0, y: 0 };
         assert!(matches!(
             validate_and_normalize(&mut blocked_member),
+            Err(ContentError::InvalidVault(_))
+        ));
+
+        let mut duplicate_transform = artifact.content.clone();
+        let transform = duplicate_transform.vaults[0]
+            .transforms
+            .first()
+            .copied()
+            .unwrap_or(VaultTransform::Identity);
+        duplicate_transform.vaults[0].transforms = vec![transform, transform];
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_transform),
+            Err(ContentError::InvalidVault(_))
+        ));
+
+        let mut interior_entrance = artifact.content.clone();
+        let vault = interior_entrance
+            .vaults
+            .iter_mut()
+            .find(|vault| vault.width >= 4 && vault.height >= 4)
+            .expect("fixture should contain a large Vault");
+        vault.entrance_position = ContentPosition { x: 1, y: 1 };
+        assert!(matches!(
+            validate_and_normalize(&mut interior_entrance),
             Err(ContentError::InvalidVault(_))
         ));
 

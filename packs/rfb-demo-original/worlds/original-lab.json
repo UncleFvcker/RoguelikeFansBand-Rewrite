@@ -366,7 +366,12 @@
     "encounterTableId": "demo.encounter-table.resonance-descent",
     "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
-    "generationBudget": { "actorSlots": 9, "lootPlacements": 3 },
+    "generationBudget": {
+      "actorSlots": 9,
+      "lootPlacements": 3,
+      "vaultPlacements": 2,
+      "vaultAreaTiles": 180
+    },
     "nextFloorId": "demo.floor.resonance-depth-9",
     "depth": 8,
     "width": 20,

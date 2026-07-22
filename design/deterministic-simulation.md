@@ -10,6 +10,8 @@ contract-v48 在房间几何之前先过滤 theme 表：单一候选不抽取，
 
 contract-v49 的 `generationBudget` 算术不消费 RNG。生成器先从 actorSlots 预留巢穴、所选 Vault 群体和仍存活守护者，再以 encounter table rolls 为上限按 ordinal 填充普通遭遇；从 lootPlacements 预留 Vault loot 后，按 ordinal 重复楼层 loot table placement。十层压力地牢的主题表在深度 4 只有一个新主题候选，因此主题分段本身不抽取。v48 已生成楼层和 RNG 状态原样迁移，缺失的新地牢状态只补默认值；state hash 继续使用 Schema v19。
 
+contract-v50 的空间 Vault 管线先按剩余 area/actor/loot 预算过滤候选，再按内容权重抽取；模板变换按规范枚举序、地图原点按行优先枚举，可行原点超过一个时消费一次有界抽取。绘制后的非 wall 矩形使后续重叠候选失效。无可行原点的模板只从候选池移除，不消耗落位槽或预算，然后继续相同流程；候选耗尽即停止。v49 已生成楼层、terrain、实体、物品和 RNG 状态原样迁移，不补绘空间 Vault；state hash 继续使用 Schema v19。
+
 contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、地面掉落位置和 loot roll 顺序；生成结果已经由 Schema v14 的当前/离层 actor、item、分配器和 RNG 字段覆盖，因此本切片不升级 state hash Schema。
 
 contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。
