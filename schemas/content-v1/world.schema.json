@@ -346,6 +346,16 @@
             "null"
           ]
         },
+        "maxRetakes": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 16,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "nameKey": {
           "type": "string"
         },
@@ -373,6 +383,10 @@
             "string",
             "null"
           ]
+        },
+        "retakeFloorPolicy": {
+          "$ref": "#/$defs/RetakeFloorPolicy",
+          "default": "preserve-floor"
         },
         "retakeable": {
           "default": false,
@@ -993,6 +1007,13 @@
         "weight"
       ],
       "type": "object"
+    },
+    "RetakeFloorPolicy": {
+      "enum": [
+        "preserve-floor",
+        "regenerate-floor"
+      ],
+      "type": "string"
     },
     "TaskObjectiveDefinition": {
       "additionalProperties": false,

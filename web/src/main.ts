@@ -799,12 +799,31 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
         current: task.current,
         required: task.required,
       });
+      const maxRetakes = task.maxRetakes;
+      if (maxRetakes !== undefined && maxRetakes !== null) {
+        row.append(
+          " ",
+          localization.format("task-log-retakes", {
+            used: task.retakesUsed,
+            maximum: maxRetakes,
+          }),
+        );
+      }
       if (task.status === "active") {
         const abandon = document.createElement("button");
         abandon.type = "button";
         abandon.textContent = localization.format("action-task-abandon");
         abandon.disabled = busy;
         abandon.addEventListener("click", () => void dispatch({ type: "abandon-task" }));
+        row.append(" ", abandon);
+      } else if (task.status === "paused") {
+        const abandon = document.createElement("button");
+        abandon.type = "button";
+        abandon.textContent = localization.format("action-task-abandon");
+        abandon.disabled = busy;
+        abandon.addEventListener("click", () =>
+          void dispatch({ type: "abandon-paused-task", taskId: task.taskId }),
+        );
         row.append(" ", abandon);
       }
       return row;
@@ -1123,6 +1142,8 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-task-failed");
     case "task-abandoned":
       return localization.format("message-task-abandoned");
+    case "task-abandon-unavailable":
+      return localization.format("message-task-abandon-unavailable");
     case "task-paused":
       return localization.format("message-task-paused");
     case "task-resumed":

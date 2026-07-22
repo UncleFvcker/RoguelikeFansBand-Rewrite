@@ -429,6 +429,22 @@
         {
           "type": "object",
           "properties": {
+            "taskId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "abandon-paused-task"
+            }
+          },
+          "required": [
+            "type",
+            "taskId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "itemId": {
               "type": "string"
             },
@@ -1738,6 +1754,15 @@
         "floorId": {
           "type": "string"
         },
+        "maxRetakes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 16,
+          "minimum": 1
+        },
         "nameKey": {
           "type": "string"
         },
@@ -1745,6 +1770,13 @@
           "type": "integer",
           "format": "uint32",
           "default": 1,
+          "minimum": 0
+        },
+        "retakesUsed": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
           "minimum": 0
         },
         "stage": {

@@ -78,6 +78,7 @@ pub(crate) enum DomainEvent {
     TaskAbandoned {
         floor_id: String,
     },
+    TaskAbandonUnavailable,
     TaskPaused {
         floor_id: String,
     },
@@ -380,6 +381,9 @@ impl DomainEvent {
             }
             Self::TaskAbandoned { floor_id } => {
                 dto("task.abandoned", "task-abandoned", [("floor", floor_id)])
+            }
+            Self::TaskAbandonUnavailable => {
+                dto_without_args("task.abandon-unavailable", "task-abandon-unavailable")
             }
             Self::TaskPaused { floor_id } => {
                 dto("task.paused", "task-paused", [("floor", floor_id)])

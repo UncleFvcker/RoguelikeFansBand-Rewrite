@@ -52,6 +52,7 @@
 - [Contract v58：权威楼层连接与 shaft](contract-v58-floor-connections.md)
 - [Contract v59：持久 pack identity 与首版 pack AI](contract-v59-pack-ai.md)
 - [Contract v60：同层多区域主题](contract-v60-regional-themes.md)
+- [Contract v61：暂停任务管理与确定性重接](contract-v61-retake-management.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -613,6 +614,7 @@ interface SaveGame {
 - 协议 1.58 和 contract-v58 已建立；内容包 1.51.0 新增稳定楼层连接 ID、两组独立普通楼梯和跨两层 shaft，附加连接按种子 RNG 随机落位并保存 ID→位置。save 容器仍为 v1，state hash 升至 Schema v20，active baseline 共 117 个 exact fixtures。
 - 协议 1.59 和 contract-v59 已建立；内容包 1.52.0 为动态群体新增行为声明，生成稳定 pack ID、leader/member 身份和 `seek/surround/guard-leader` 首版 AI。save 容器仍为 v1，state hash 升至 Schema v21，active baseline 共 117 个 exact fixtures。
 - 协议 1.60 和 contract-v60 已建立；内容包 1.53.0 新增 region table 根、权重无放回区域选择、按房间中心归属的局部 terrain/encounter/loot 和持久区域边界。save 容器仍为 v1，state hash 升至 Schema v22，active baseline 共 119 个 exact fixtures。
+- 协议 1.61 和 contract-v61 已建立；内容包 1.54.0 新增可重接任务次数限制、保留/重建成员层策略和地表按 task ID 放弃。`retakesUsed` 进入 save v1 与 state hash Schema v23，active baseline 共 121 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 

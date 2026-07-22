@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v22：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、当前与离层的连接 ID→位置、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior、按 ID 排序的离层 `FloorState`、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、完整任务状态机、持久地牢守护者状态、RNG、世界脉冲和命令序号。contract-v60 因新增权威区域状态而显式升级 Schema。
+当前 state hash Schema 为 v23：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、当前与离层的连接 ID→位置、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior、按 ID 排序的离层 `FloorState`、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者状态、RNG、世界脉冲和命令序号。contract-v61 因新增权威 `retakesUsed` 而显式升级 Schema。
 
 contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
 
@@ -28,11 +28,13 @@ contract-v59 按楼层内生成群体的稳定顺序分配 `{floorId}.pack.N`，
 
 contract-v60 先按 region ID 规范候选并执行整数权重无放回抽样，再沿房间序列建立均匀锚点；非锚点房间按中心 Manhattan 距离与区域顺序决胜。actor/loot 预算按区域顺序整除并分配余数，位置只在所属房间内抽取。区域状态按 region ID、格坐标排序后进入哈希。v59 存档缺失区域时保留空列表、不补生成、不推进 RNG；区域状态进入 Schema v22。
 
+contract-v61 只在 paused 任务成功重入时递增 `retakesUsed`。`preserve-floor` 直接恢复已保存楼层且不抽 RNG；`regenerate-floor` 先按 task ID 丢弃全部已保存成员层，再沿普通楼层生成顺序使用当前 RNG，并把计数目标限制为 `required - current`。次数耗尽和无效地表放弃都不抽 RNG。v60 存档缺失计数时按 0 载入；该计数进入 Schema v23。
+
 contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、地面掉落位置和 loot roll 顺序；生成结果已经由 Schema v14 的当前/离层 actor、item、分配器和 RNG 字段覆盖，因此本切片不升级 state hash Schema。
 
 contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。
 
-state hash 与正式存档 DTO 已解耦。Schema v22 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识、任务状态机、当前阶段、守护者击败状态、楼层连接映射、区域边界/局部表引用和 pack identity/behavior 属于权威规则状态并参与 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v23 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰和装备派生 modifier 不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识、任务状态机、当前阶段与重接次数、守护者击败状态、楼层连接映射、区域边界/局部表引用和 pack identity/behavior 属于权威规则状态并参与 hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 

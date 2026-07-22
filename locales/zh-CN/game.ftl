@@ -123,6 +123,7 @@ message-floor-one-shot-closed = 一次性任务空间在你身后关闭了。
 message-task-completed = 你取回了任务目标。
 message-task-failed = 你没有取回任务目标就离开了。
 message-task-abandoned = 你主动放弃了当前任务。
+message-task-abandon-unavailable = 当前没有可从地表放弃的暂停任务。
 message-task-paused = 你暂时离开了任务，当前进度得以保留。
 message-task-resumed = 你重新进入了保留的任务。
 message-task-rewarded = 任务奖励：{ $target } × { $quantity }。

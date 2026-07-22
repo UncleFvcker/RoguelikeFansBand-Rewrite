@@ -755,6 +755,11 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub retakeable: bool,
     #[serde(default)]
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 16)))]
+    pub max_retakes: Option<u16>,
+    #[serde(default)]
+    pub retake_floor_policy: RetakeFloorPolicy,
+    #[serde(default)]
     pub task_id: Option<String>,
     #[serde(default)]
     pub task_objective: Option<TaskObjectiveDefinition>,
@@ -854,6 +859,15 @@ pub struct TaskRewardDefinition {
     pub item_instance_id: String,
     pub item_kind_id: String,
     pub quantity: u32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RetakeFloorPolicy {
+    #[default]
+    PreserveFloor,
+    RegenerateFloor,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2670,6 +2684,8 @@ fn validate_world(
                     || procedural.abandoned_entry_terrain_id.is_some()
                     || !procedural.allow_early_task_exit
                     || procedural.retakeable
+                    || procedural.max_retakes.is_some()
+                    || procedural.retake_floor_policy != RetakeFloorPolicy::PreserveFloor
                     || procedural.task_id.is_some()
                     || procedural.task_objective.is_some()
                     || !procedural.task_stages.is_empty()
@@ -2682,6 +2698,15 @@ fn validate_world(
         }
         if let Some(task_id) = &procedural.task_id {
             validate_definition_id(task_id, "task")?;
+        }
+        if (!procedural.retakeable
+            && (procedural.max_retakes.is_some()
+                || procedural.retake_floor_policy != RetakeFloorPolicy::PreserveFloor))
+            || procedural
+                .max_retakes
+                .is_some_and(|maximum| maximum == 0 || maximum > 16)
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
         if let Some(theme_id) = &procedural.theme_id {
             validate_definition_id(theme_id, "theme")?;
@@ -3779,9 +3804,11 @@ fn validate_world(
             .filter(|floor| floor.task_reward.is_some())
             .count()
             != 1
-            || members
-                .iter()
-                .any(|floor| floor.retakeable != procedural.retakeable)
+            || members.iter().any(|floor| {
+                floor.retakeable != procedural.retakeable
+                    || floor.max_retakes != procedural.max_retakes
+                    || floor.retake_floor_policy != procedural.retake_floor_policy
+            })
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
@@ -4641,7 +4668,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.53.0");
+        assert_eq!(catalog.pack_version(), "1.54.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -5777,6 +5804,30 @@ mod tests {
         }
         assert!(matches!(
             validate_and_normalize(&mut non_retakeable),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut zero_limit = artifact.content.clone();
+        zero_limit.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-bounty-rift")
+            .expect("fixture should contain the retakeable bounty")
+            .max_retakes = Some(0);
+        assert!(matches!(
+            validate_and_normalize(&mut zero_limit),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut mismatched_policy = artifact.content.clone();
+        mismatched_policy.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-bounty-annex-rift")
+            .expect("fixture should contain the shared bounty member")
+            .retake_floor_policy = RetakeFloorPolicy::PreserveFloor;
+        assert!(matches!(
+            validate_and_normalize(&mut mismatched_policy),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
     }

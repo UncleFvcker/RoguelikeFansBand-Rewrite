@@ -106,6 +106,7 @@ controls-vi = HJKL moves orthogonally, YUBN moves diagonally, and period waits. 
 controls-wasd = WASD moves orthogonally, QEZC moves diagonally, and Space waits. Press G to pick up, O then a direction to open, C then a direction to close, F to aim, and < or > to use stairs; Esc cancels an interaction mode.
 panel-task-log-title = Task Log
 task-log-entry = { $task }: { $status } · stage { $stage }/{ $stages } ({ $current }/{ $required })
+task-log-retakes = · retakes { $used }/{ $maximum }
 task-status-available = available
 task-status-active = active
 task-status-completed = completed

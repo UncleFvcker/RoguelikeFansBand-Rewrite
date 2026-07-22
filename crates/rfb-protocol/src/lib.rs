@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.60";
+pub const PROTOCOL_VERSION: &str = "1.61";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -62,6 +62,9 @@ impl Direction {
 )]
 pub enum GameCommand {
     AbandonTask,
+    AbandonPausedTask {
+        task_id: String,
+    },
     Appraise {
         item_id: String,
     },
@@ -323,6 +326,11 @@ pub struct TaskStatusDto {
     pub stage: u32,
     #[serde(default = "default_task_stage")]
     pub stages: u32,
+    #[serde(default)]
+    pub retakes_used: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 16)))]
+    pub max_retakes: Option<u16>,
 }
 
 const fn default_task_required() -> u32 {
@@ -1030,6 +1038,8 @@ pub struct TaskStateSaveDto {
     pub required: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_floor_id: Option<String>,
+    #[serde(default)]
+    pub retakes_used: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1396,6 +1406,20 @@ mod tests {
         assert!(decoded.floor_regions.is_empty());
         assert!(decoded.inventory[0].affix_ids.is_empty());
         assert_eq!(decoded.inventory[0].quality, ItemQualityDto::Ordinary);
+    }
+
+    #[test]
+    fn legacy_task_state_defaults_to_zero_retakes() {
+        let decoded: TaskStateSaveDto = serde_json::from_value(serde_json::json!({
+            "taskId": "demo.task.legacy",
+            "status": "paused",
+            "stageIndex": 0,
+            "current": 1,
+            "required": 2
+        }))
+        .expect("legacy task state should decode");
+
+        assert_eq!(decoded.retakes_used, 0);
     }
 
     #[test]

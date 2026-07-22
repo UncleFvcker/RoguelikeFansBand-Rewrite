@@ -651,6 +651,8 @@
     "failedEntryTerrainId": "demo.terrain.bounty-rift-failed",
     "abandonedEntryTerrainId": "demo.terrain.bounty-rift-abandoned",
     "retakeable": true,
+    "maxRetakes": 1,
+    "retakeFloorPolicy": "regenerate-floor",
     "taskId": "demo.task.echo-bounty",
     "taskObjective": {
       "kind": "kill-actor-kind",
@@ -682,6 +684,8 @@
     "failedEntryTerrainId": "demo.terrain.bounty-annex-rift-failed",
     "abandonedEntryTerrainId": "demo.terrain.bounty-annex-rift-abandoned",
     "retakeable": true,
+    "maxRetakes": 1,
+    "retakeFloorPolicy": "regenerate-floor",
     "taskId": "demo.task.echo-bounty",
     "taskObjective": {
       "kind": "kill-actor-kind",
@@ -709,6 +713,7 @@
     "failedEntryTerrainId": "demo.terrain.chain-rift-failed",
     "abandonedEntryTerrainId": "demo.terrain.chain-rift-abandoned",
     "retakeable": true,
+    "maxRetakes": 2,
     "taskId": "demo.task.echo-chain",
     "taskStages": [{
       "kind": "collect-item",
@@ -749,6 +754,7 @@
     "failedEntryTerrainId": "demo.terrain.chain-vault-rift-failed",
     "abandonedEntryTerrainId": "demo.terrain.chain-vault-rift-abandoned",
     "retakeable": true,
+    "maxRetakes": 2,
     "taskId": "demo.task.echo-chain",
     "depth": 1,
     "width": 20,

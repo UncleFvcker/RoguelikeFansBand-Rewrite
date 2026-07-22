@@ -127,6 +127,7 @@ message-floor-one-shot-closed = The one-use task space closes behind you.
 message-task-completed = You recovered the task objective.
 message-task-failed = You left without recovering the task objective.
 message-task-abandoned = You deliberately abandoned the active task.
+message-task-abandon-unavailable = There is no paused task that can be abandoned from here.
 message-task-paused = You leave the task for now; its progress is preserved.
 message-task-resumed = You resume the preserved task.
 message-task-rewarded = Task reward: { $quantity } × { $target }.

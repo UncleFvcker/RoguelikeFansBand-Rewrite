@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "abandon-task" } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "search" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "abandon-task" } | { "type": "abandon-paused-task", taskId: string, } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "search" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -39,7 +39,7 @@ export type TerrainInteractionDto = { kind: TerrainInteractionKindDto, direction
 
 export type TaskStatusKindDto = "abandoned" | "available" | "active" | "completed" | "failed" | "paused";
 
-export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, };
+export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, retakesUsed: number, maxRetakes?: number | null, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, };
 

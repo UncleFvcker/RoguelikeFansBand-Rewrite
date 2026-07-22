@@ -46,9 +46,9 @@ use rfb_content::{
     EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
     ProceduralFloorDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
     ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
-    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
-    VaultDefinition, VaultTransform,
+    ProceduralStreamerCandidateDefinition, RetakeFloorPolicy, TaskObjectiveDefinition,
+    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
+    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -67,7 +67,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 53] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 54] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -121,9 +121,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 53] = [
     "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1",
     "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d",
     "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d",
+    "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02";
+    "56fc449617a4c05c12ff11716c14b4f5c680cada9ad86c6ece736b52fa904bc2";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -150,7 +151,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV22 {
+struct StateHashPayloadV23 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -278,6 +279,7 @@ struct TaskState {
     current: u32,
     required: u32,
     active_floor_id: Option<String>,
+    retakes_used: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -403,6 +405,7 @@ fn initial_task_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String,
                     .first()
                     .map_or(1, |objective| objective.required),
                 active_floor_id: None,
+                retakes_used: 0,
             });
     }
     states
@@ -438,6 +441,7 @@ fn restore_task_states(
             let paused_floor_exists = members
                 .iter()
                 .any(|floor| context.stored_floors.contains_key(&floor.id));
+            let max_retakes = members.first().and_then(|floor| floor.max_retakes);
             let status_is_valid = match saved.status {
                 TaskStatusKindDto::Active => active_floor_is_valid,
                 TaskStatusKindDto::Paused => saved.active_floor_id.is_none() && paused_floor_exists,
@@ -455,6 +459,7 @@ fn restore_task_states(
             if (saved.stage_index == 0 && expected.required != objective.required)
                 || saved.required != objective.required
                 || saved.current > saved.required
+                || max_retakes.is_some_and(|maximum| saved.retakes_used > maximum)
                 || !status_is_valid
                 || restored
                     .insert(
@@ -465,6 +470,7 @@ fn restore_task_states(
                             current: saved.current,
                             required: saved.required,
                             active_floor_id: saved.active_floor_id.clone(),
+                            retakes_used: saved.retakes_used,
                         },
                     )
                     .is_some()
@@ -1059,6 +1065,17 @@ impl Game {
         let action_cost = action.energy_cost();
 
         match action {
+            GameAction::AbandonPausedTask { task_id } => {
+                if let Some(positions) = self.abandon_paused_task(&task_id) {
+                    changed.extend(positions);
+                    events.push(DomainEvent::TaskAbandoned {
+                        floor_id: task_id.clone(),
+                    });
+                    events.push(DomainEvent::OneShotFloorClosed { floor_id: task_id });
+                } else {
+                    events.push(DomainEvent::TaskAbandonUnavailable);
+                }
+            }
             GameAction::Appraise { item_id } => {
                 if let Some((target_kind_id, quality)) = self.appraise_inventory_item(&item_id) {
                     events.push(DomainEvent::ItemAppraised {
@@ -1392,8 +1409,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV22 {
-            schema_version: 22,
+        let payload = StateHashPayloadV23 {
+            schema_version: 23,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2087,6 +2104,7 @@ impl Game {
                 current: state.current,
                 required: state.required,
                 active_floor_id: state.active_floor_id.clone(),
+                retakes_used: state.retakes_used,
             })
             .collect()
     }
@@ -3949,6 +3967,73 @@ impl Game {
         }
     }
 
+    fn discard_stored_task_floors(&mut self, members: &[ProceduralFloorDefinition]) {
+        let mut discarded_item_ids = BTreeSet::new();
+        for definition in members {
+            if let Some(floor) = self.stored_floors.remove(&definition.id) {
+                discarded_item_ids.extend(floor.items.into_iter().map(|item| item.id));
+            }
+        }
+        self.item_property_knowledge
+            .retain(|item_id, _| !discarded_item_ids.contains(item_id));
+    }
+
+    fn abandon_paused_task(&mut self, task_id: &str) -> Option<Vec<Position>> {
+        let world = self.content.world(&self.world_id)?;
+        if self.current_floor_id != world.initial_floor_id
+            || self
+                .task_states
+                .get(task_id)
+                .is_none_or(|state| state.status != TaskStatusKindDto::Paused)
+        {
+            return None;
+        }
+        let members = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| {
+                floor.lifecycle == FloorLifecycle::OneShot
+                    && floor.retakeable
+                    && floor_task_id(floor) == task_id
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        let initial_required = initial_task_states(world).get(task_id)?.required;
+        if members.is_empty() {
+            return None;
+        }
+
+        self.discard_stored_task_floors(&members);
+        let mut changed = BTreeSet::new();
+        for definition in &members {
+            let (Some(entry_id), Some(abandoned_id)) = (
+                definition.entry_terrain_id.as_deref(),
+                definition.abandoned_entry_terrain_id.as_deref(),
+            ) else {
+                continue;
+            };
+            for (index, terrain_id) in self.terrain.iter_mut().enumerate() {
+                if terrain_id == entry_id {
+                    *terrain_id = abandoned_id.to_owned();
+                    changed.insert(Position {
+                        x: i32::try_from(index % usize::from(self.width)).ok()?,
+                        y: i32::try_from(index / usize::from(self.width)).ok()?,
+                    });
+                }
+            }
+        }
+        let state = self
+            .task_states
+            .get_mut(task_id)
+            .expect("paused task state must remain available");
+        state.status = TaskStatusKindDto::Abandoned;
+        state.stage_index = 0;
+        state.current = 0;
+        state.required = initial_required;
+        state.active_floor_id = None;
+        Some(changed.into_iter().collect())
+    }
+
     fn traverse_stairs(
         &mut self,
         abandon_task: bool,
@@ -4027,6 +4112,13 @@ impl Game {
                 .task_states
                 .get(task_id)
                 .expect("target task state must remain available");
+            if state.status == TaskStatusKindDto::Paused
+                && target
+                    .max_retakes
+                    .is_some_and(|maximum| state.retakes_used >= maximum)
+            {
+                return Ok(None);
+            }
             let required_floor_id = task_objectives(world, task_id)
                 .get(usize::try_from(state.stage_index).unwrap_or(usize::MAX))
                 .and_then(|objective| objective.floor_id.as_deref());
@@ -4120,6 +4212,23 @@ impl Game {
                     .get(floor_task_id(floor))
                     .is_some_and(|state| state.status == TaskStatusKindDto::Paused)
             });
+        if task_resumed
+            && let Some(target) = procedural_floors
+                .iter()
+                .find(|floor| floor.id == target_floor_id)
+            && target.retake_floor_policy == RetakeFloorPolicy::RegenerateFloor
+        {
+            let resumed_task_id = floor_task_id(target);
+            let resumed_members = procedural_floors
+                .iter()
+                .filter(|floor| {
+                    floor.lifecycle == FloorLifecycle::OneShot
+                        && floor_task_id(floor) == resumed_task_id
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            self.discard_stored_task_floors(&resumed_members);
+        }
         let mut destination = if let Some(floor) = self.stored_floors.remove(&target_floor_id) {
             floor
         } else if let Some(definition) = procedural_floors
@@ -4149,8 +4258,8 @@ impl Game {
         if one_shot_source.is_some()
             && let Some(task_resolution) = task_resolution
         {
+            self.discard_stored_task_floors(&task_members);
             for definition in &task_members {
-                self.stored_floors.remove(&definition.id);
                 if let (Some(entry_id), Some(result_id)) = (
                     definition.entry_terrain_id.as_deref(),
                     match task_resolution {
@@ -4219,6 +4328,9 @@ impl Game {
                 .task_states
                 .get_mut(floor_task_id(target))
                 .expect("target task state must remain available");
+            if task_resumed {
+                state.retakes_used = state.retakes_used.saturating_add(1);
+            }
             state.status = TaskStatusKindDto::Active;
             state.active_floor_id = Some(target.id.clone());
         }
@@ -5349,7 +5461,17 @@ impl Game {
                         .content
                         .actor(kind_id)
                         .expect("validated objective actor must remain available");
-                    for ordinal in 0..objective.spawn_count.unwrap_or(objective.required) {
+                    let remaining = self
+                        .task_states
+                        .get(floor_task_id(definition))
+                        .map_or(objective.required, |state| {
+                            state.required.saturating_sub(state.current)
+                        });
+                    let spawn_count = objective
+                        .spawn_count
+                        .unwrap_or(objective.required)
+                        .min(remaining);
+                    for ordinal in 0..spawn_count {
                         entities.push(actor_from_spawn(
                             &format!("{}.task-target.{}", definition.id, ordinal + 1),
                             kind_id,
@@ -6452,6 +6574,8 @@ impl Game {
                     required: state.required,
                     stage: state.stage_index.saturating_add(1),
                     stages,
+                    retakes_used: state.retakes_used,
+                    max_retakes: floor.max_retakes,
                 }
             })
             .collect()
@@ -7049,6 +7173,10 @@ impl Game {
             if (state.stage_index == 0 && expected.required != objective.required)
                 || state.required != objective.required
                 || state.current > state.required
+                || members
+                    .first()
+                    .and_then(|floor| floor.max_retakes)
+                    .is_some_and(|maximum| state.retakes_used > maximum)
                 || !status_is_valid
             {
                 return Err(CoreError::InvalidSave("task state is invalid"));
@@ -9900,6 +10028,143 @@ mod tests {
         assert_eq!(chain.status, TaskStatusKindDto::Available);
         assert_eq!((chain.stage, chain.stages), (1, 3));
         assert_eq!((chain.current, chain.required), (0, 1));
+    }
+
+    #[test]
+    fn paused_task_can_be_abandoned_from_the_surface() {
+        let mut game = Game::new(27);
+        let entry = Position { x: 4, y: 4 };
+        game.player.position = entry;
+        game.traverse_stairs(false)
+            .expect("bounty entry should resolve")
+            .expect("bounty entry should transition");
+        game.traverse_stairs(false)
+            .expect("bounty pause should resolve")
+            .expect("bounty pause should return to the surface");
+
+        let paused = game
+            .snapshot()
+            .tasks
+            .into_iter()
+            .find(|task| task.task_id == "demo.task.echo-bounty")
+            .expect("bounty task should be projected");
+        assert_eq!(paused.status, TaskStatusKindDto::Paused);
+        assert_eq!((paused.retakes_used, paused.max_retakes), (0, Some(1)));
+        assert!(
+            game.stored_floors
+                .contains_key("demo.floor.echo-bounty-rift")
+        );
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::AbandonPausedTask {
+                task_id: "demo.task.echo-bounty".to_owned(),
+            },
+        );
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert_eq!(
+            game.task_states["demo.task.echo-bounty"].status,
+            TaskStatusKindDto::Abandoned
+        );
+        assert!(
+            !game
+                .stored_floors
+                .contains_key("demo.floor.echo-bounty-rift")
+        );
+        assert_eq!(game.terrain_at(entry), "demo.terrain.bounty-rift-abandoned");
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "task.abandoned")
+        );
+        assert!(
+            update
+                .changed_cells
+                .iter()
+                .any(|cell| cell.position == entry
+                    && cell.terrain_id == "demo.terrain.bounty-rift-abandoned")
+        );
+        Game::from_save(game.to_save()).expect("surface abandonment should round-trip");
+    }
+
+    #[test]
+    fn regenerated_retake_preserves_progress_and_enforces_the_limit() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 4, y: 4 };
+        game.traverse_stairs(false)
+            .expect("bounty entry should resolve")
+            .expect("bounty entry should transition");
+        assert_eq!(game.entities.len(), 2);
+        game.entities.pop();
+        game.task_states
+            .get_mut("demo.task.echo-bounty")
+            .expect("bounty task should exist")
+            .current = 1;
+        game.traverse_stairs(false)
+            .expect("partial bounty pause should resolve")
+            .expect("partial bounty should return to the surface");
+        assert_eq!(
+            game.stored_floors["demo.floor.echo-bounty-rift"]
+                .entities
+                .len(),
+            1
+        );
+        let draws_before_retake = game.rng.draw_counter;
+
+        game.traverse_stairs(false)
+            .expect("first bounty retake should resolve")
+            .expect("first bounty retake should regenerate the floor");
+        assert!(game.rng.draw_counter > draws_before_retake);
+        assert_eq!(game.entities.len(), 1);
+        let active = &game.task_states["demo.task.echo-bounty"];
+        assert_eq!(active.status, TaskStatusKindDto::Active);
+        assert_eq!(
+            (active.current, active.required, active.retakes_used),
+            (1, 2, 1)
+        );
+
+        game.traverse_stairs(false)
+            .expect("second bounty pause should resolve")
+            .expect("second bounty pause should return to the surface");
+        let draws_before_rejected_retake = game.rng.draw_counter;
+        assert!(
+            game.traverse_stairs(false)
+                .expect("exhausted bounty entry should resolve")
+                .is_none()
+        );
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert_eq!(game.rng.draw_counter, draws_before_rejected_retake);
+
+        let mut invalid = game.to_save();
+        invalid
+            .task_states
+            .iter_mut()
+            .find(|state| state.task_id == "demo.task.echo-bounty")
+            .expect("bounty save state should exist")
+            .retakes_used = 2;
+        assert!(matches!(
+            Game::from_save(invalid),
+            Err(CoreError::InvalidSave("task state is invalid"))
+        ));
+    }
+
+    #[test]
+    fn v60_task_state_defaults_to_zero_retakes_without_rng_drift() {
+        let mut payload = Game::new(27).to_save();
+        payload.content_hash =
+            "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02".to_owned();
+        let saved_draws = payload.rng.draw_counter;
+        let restored = Game::from_save(payload).expect("v60 task state should migrate");
+
+        assert_eq!(restored.rng.draw_counter, saved_draws);
+        assert!(
+            restored
+                .snapshot()
+                .tasks
+                .iter()
+                .all(|task| task.retakes_used == 0)
+        );
     }
 
     #[test]
