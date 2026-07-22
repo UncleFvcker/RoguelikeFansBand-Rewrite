@@ -128,7 +128,13 @@
     "returnFloorId": "demo.floor.surface",
     "lifecycle": "dungeon",
     "dungeonId": "demo.dungeon.echo-depths",
-    "themeId": "demo.theme.echo-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
+    "nest": {
+      "roomId": "remote",
+      "spawnCount": 3
+    },
     "entryTerrainId": "demo.terrain.stairs-down",
     "nextFloorId": "demo.floor.echo-depth-2",
     "depth": 1,
@@ -140,31 +146,16 @@
     "downStairTerrainId": "demo.terrain.stairs-down",
     "closedDoorTerrainId": "demo.terrain.door-secret",
     "trapTerrainId": "demo.terrain.trap-echo-snare",
-    "actorSpawns": [
-      {
-        "instanceId": "demo.monster.echo-depth-1.1",
-        "roomId": "remote",
-        "actorKindIds": [
-          "demo.actor.acid-seep",
-          "demo.actor.echo-hound",
-          "demo.actor.frost-wisp"
-        ]
-      }
-    ],
-    "lootSpawns": [
-      {
-        "id": "demo.spawn.echo-depth-1-loot.1",
-        "roomId": "remote",
-        "lootTableId": "demo.loot-table.echo-depth-1-room"
-      }
-    ]
+    "actorSpawns": [],
+    "lootSpawns": []
   }, {
     "id": "demo.floor.echo-depth-2",
     "nameKey": "floor-demo-echo-depth-2-name",
     "returnFloorId": "demo.floor.echo-depth-1",
     "dungeonId": "demo.dungeon.echo-depths",
-    "themeId": "demo.theme.echo-depths",
-    "vaultId": "demo.vault.harmonic-sepulcher",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
     "nextFloorId": "demo.floor.echo-depth-3",
     "depth": 2,
     "width": 20,
@@ -182,7 +173,9 @@
     "nameKey": "floor-demo-echo-depth-3-name",
     "returnFloorId": "demo.floor.echo-depth-2",
     "dungeonId": "demo.dungeon.echo-depths",
-    "themeId": "demo.theme.echo-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
     "finalFloor": true,
     "guardian": {
       "instanceId": "demo.guardian.echo-depths.1",

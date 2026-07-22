@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.47 / contract-v47
+状态：长期规则实现路线；当前基线为协议 1.48 / contract-v48
 
 ## 1. 目的与边界
 
@@ -88,7 +88,7 @@ flowchart TD
 | 视野、记忆、光照 | LOS、FOV、探索记忆、怪物/物品光源 | 已建立基础版 | 保持 Rust 权威；后续增加隐身、黑暗、红外、感知和特殊视觉通道 |
 | 交互地形 | 开门、关门、挖掘、撞门、解除陷阱、上/下楼 | 部分建立 | contract-v26 已建立楼梯，contract-v28–v30 已建立门与权威交互，contract-v31 已建立主动搜索；下一步建立陷阱触发与解除 |
 | 楼层生命周期 | 新生成、离开、持久楼层、返回、任务楼层 | 已建立基础版 | contract-v26 已建立稳定 `FloorId`、显式 `FloorState`、离层仓库、save v1 往返和首次生成；后续增加多深度连接、临时/持久策略、任务层和旧层淘汰 |
-| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立三层链、最终层和持久守护者，contract-v47 已建立独立 vault 模板、深度 encounter group 与主题 loot；下一步扩展楼层级表、vault 加权选择和巢穴 |
+| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立三层链、最终层和持久守护者，contract-v47/v48 已建立独立 Vault、楼层 encounter/loot/theme 表、两个 Vault 的加权选择与第一类巢穴；下一步扩展生成预算、自由放置、动态群体和十层规模 |
 
 ### 4.3 角色创建与身份
 
@@ -163,7 +163,7 @@ flowchart TD
 | 怪物定义 | HP、AC、速度、经验、抗性、blow、法术、掉落、标签 | 部分建立 | 扩展 `ActorDefinition` 为角色公共部分 + `MonsterDefinition`，避免玩家和怪物字段无限并集 |
 | 回合与移动 AI | 追踪、视线、气味/flow、保持距离、逃跑、守卫、射击 | 部分建立 | contract-v8 已有八方向 BFS 追踪、占位避让和确定性 tie-breaker；后续以 `AiIntent` 扩展视线、距离、逃跑和能力选择 |
 | 怪物施法 | 选择法术、频率、射线检查、召唤和智能学习 | 未建立 | 能力系统共用 effect；AI 仅从可用能力评分，不直接执行效果 |
-| 群体与生成 | 成群、护卫、朋友、召唤、繁殖、独特和守护者 | 已建立模板基础版 | contract-v47 的 vault encounter group 能在固定位置生成多个深度合格成员；后续增加 friends/escort、散布、pack AI、召唤、繁殖、唯一性和种群上限 |
+| 群体与生成 | 成群、护卫、朋友、召唤、繁殖、独特和守护者 | 已建立模板基础版 | contract-v47 的 vault encounter group 能在固定位置生成多个深度合格成员，contract-v48 的巢穴一次选种后生成多个同类成员；后续增加 friends/escort、散布、pack AI、召唤、繁殖、唯一性和种群上限 |
 | 怪物物品与掉落 | 携带物、偷窃、掉落次数和主题 | 已建立基础版 | contract-v25 已建立真实携带实例、出生生成和统一死亡掉落事务；后续增加偷窃、缴械、怪物拾物、掉落次数和主题 |
 | 怪物回忆 | 观察攻击、抗性、掉落、击杀次数和死亡次数 | 未建立 | `MonsterKnowledge` 与怪物定义分开；观察事件逐项揭示 |
 | 宠物/友好 | 阵营、跟随、命令、维持费用、解散 | 未建立 | `FactionId` + `CompanionState` + 宠物命令；不使用多个 pet/friendly bool 组合 |
@@ -368,7 +368,7 @@ crates/rfb-core/src/
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立三层链、最终层与持久守护者；contract-v47 新增独立 vault 内容根、深度加权 encounter group、主题 terrain/loot 与固定群体。内容包为 1.40.0，active baseline 共 92 个 exact fixtures，save v1 / state hash Schema v19。下一切片建立楼层级 encounter/loot/theme 表、多个 vault 的加权选择与首类巢穴。详细边界见 [Contract v47](contract-v47-themed-vault.md)。
+当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立三层链、最终层与持久守护者；contract-v47/v48 已建立独立 Vault、楼层级 encounter/loot/theme 表、两个主题 Vault 的确定性加权选择、无候选回退与第一类同类巢穴。内容包为 1.41.0，active baseline 共 96 个 exact fixtures，save v1 / state hash Schema v19。下一切片应建立十层压力场景、整层生成预算、区域主题与 Vault 自由放置，再扩展动态 friends/escort 群体。详细边界见 [Contract v48](contract-v48-floor-generation-tables.md)。
 
 实现：
 
@@ -475,7 +475,7 @@ crates/rfb-core/src/
    - 射击与投掷均已复用既有 `DamagePacket` / effect pipeline；
    - 延后：返回武器、药水破裂、鼠标预览和动画事件。
 
-阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成三层链、最终层和持久守护者，contract-v47 完成第一类深度主题 vault、固定群体和专属 loot；下一步建立楼层级 encounter/loot/theme 表、vault 加权选择与巢穴。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标。
+阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成三层链、最终层和持久守护者，contract-v47 完成第一类深度主题 Vault、固定群体和专属 loot，contract-v48 完成楼层级 encounter/loot/theme 表、Vault 加权选择、回退与首类巢穴；下一步建立十层压力场景、生成预算、区域主题、Vault 自由放置和动态群体。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标。
 
 ## 9. 内容迁移策略
 

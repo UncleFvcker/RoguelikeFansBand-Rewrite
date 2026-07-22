@@ -640,28 +640,41 @@ mod tests {
             GameCommand::Move {
                 direction: Direction::East,
             },
-            GameCommand::Search,
-            GameCommand::Search,
-            GameCommand::OpenDoor {
-                direction: Direction::East,
-            },
-            GameCommand::OpenDoor {
-                direction: Direction::East,
-            },
         ] {
             recorder
                 .dispatch(command)
                 .expect("door replay command should execute");
         }
+        let door_position = rfb_protocol::Position { x: 10, y: 4 };
+        let discovered = (0..12).any(|_| {
+            recorder
+                .dispatch(GameCommand::Search)
+                .expect("door search replay command should execute");
+            recorder.game().snapshot().cells.iter().any(|cell| {
+                cell.position == door_position && cell.terrain_id == "demo.terrain.door-secret"
+            })
+        });
+        assert!(discovered, "fixed seed should discover the secret door");
+        let opened = (0..12).any(|_| {
+            recorder
+                .dispatch(GameCommand::OpenDoor {
+                    direction: Direction::East,
+                })
+                .expect("door open replay command should execute");
+            recorder.game().snapshot().cells.iter().any(|cell| {
+                cell.position == door_position && cell.terrain_id == "demo.terrain.door-open"
+            })
+        });
+        assert!(opened, "fixed seed should eventually unlock the door");
         let (final_game, replay) = recorder.finish();
 
         let snapshot = final_game.snapshot();
         assert!(snapshot.cells.iter().any(|cell| {
-            cell.position == rfb_protocol::Position { x: 10, y: 4 }
-                && cell.terrain_id == "demo.terrain.door-open"
+            cell.position == door_position && cell.terrain_id == "demo.terrain.door-open"
         }));
+        let command_count = replay.commands.len();
         let verification = verify(&replay, initial).expect("door replay should verify");
-        assert_eq!(verification.commands_verified, 9);
+        assert_eq!(verification.commands_verified, command_count);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 
@@ -685,28 +698,41 @@ mod tests {
             GameCommand::Move {
                 direction: Direction::East,
             },
-            GameCommand::Search,
-            GameCommand::Search,
-            GameCommand::BashDoor {
-                direction: Direction::East,
-            },
-            GameCommand::BashDoor {
-                direction: Direction::East,
-            },
         ] {
             recorder
                 .dispatch(command)
                 .expect("door bash replay command should execute");
         }
+        let door_position = rfb_protocol::Position { x: 10, y: 4 };
+        let discovered = (0..12).any(|_| {
+            recorder
+                .dispatch(GameCommand::Search)
+                .expect("door search replay command should execute");
+            recorder.game().snapshot().cells.iter().any(|cell| {
+                cell.position == door_position && cell.terrain_id == "demo.terrain.door-secret"
+            })
+        });
+        assert!(discovered, "fixed seed should discover the secret door");
+        let bashed = (0..12).any(|_| {
+            recorder
+                .dispatch(GameCommand::BashDoor {
+                    direction: Direction::East,
+                })
+                .expect("door bash replay command should execute");
+            recorder.game().snapshot().cells.iter().any(|cell| {
+                cell.position == door_position && cell.terrain_id == "demo.terrain.door-broken"
+            })
+        });
+        assert!(bashed, "fixed seed should eventually bash the door");
         let (final_game, replay) = recorder.finish();
 
         let snapshot = final_game.snapshot();
         assert!(snapshot.cells.iter().any(|cell| {
-            cell.position == rfb_protocol::Position { x: 10, y: 4 }
-                && cell.terrain_id == "demo.terrain.door-broken"
+            cell.position == door_position && cell.terrain_id == "demo.terrain.door-broken"
         }));
+        let command_count = replay.commands.len();
         let verification = verify(&replay, initial).expect("door bash replay should verify");
-        assert_eq!(verification.commands_verified, 9);
+        assert_eq!(verification.commands_verified, command_count);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 

@@ -1,0 +1,110 @@
+{
+  "$defs": {
+    "ThemeEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "floorTerrainId": {
+          "type": "string"
+        },
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "themeId": {
+          "type": "string"
+        },
+        "vaultCandidates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ThemeVaultCandidateDefinition"
+          },
+          "type": "array"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "themeId",
+        "floorTerrainId",
+        "weight",
+        "minDepth",
+        "maxDepth"
+      ],
+      "type": "object"
+    },
+    "ThemeVaultCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "vaultId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "vaultId",
+        "weight",
+        "minDepth",
+        "maxDepth"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/ThemeEntryDefinition"
+      },
+      "type": "array"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "entries"
+  ],
+  "title": "ThemeTableDefinition",
+  "type": "object"
+}

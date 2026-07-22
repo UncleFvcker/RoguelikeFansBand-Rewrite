@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.theme-table.echo-depths",
+  "entries": [
+    {
+      "themeId": "demo.theme.echo-depths",
+      "floorTerrainId": "demo.terrain.floor",
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 3,
+      "vaultCandidates": [
+        {
+          "vaultId": "demo.vault.harmonic-sepulcher",
+          "weight": 3,
+          "minDepth": 2,
+          "maxDepth": 2
+        },
+        {
+          "vaultId": "demo.vault.resonant-gallery",
+          "weight": 1,
+          "minDepth": 2,
+          "maxDepth": 2
+        }
+      ]
+    }
+  ]
+}

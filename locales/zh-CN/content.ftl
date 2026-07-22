@@ -99,3 +99,4 @@ terrain-demo-chain-vault-rift-failed-description = 有序任务失败后，秘�
 terrain-demo-chain-vault-rift-abandoned-name = 已放弃的连环秘库
 terrain-demo-chain-vault-rift-abandoned-description = 有序任务被放弃后，秘库随之坍缩。
 vault-demo-harmonic-sepulcher-name = 谐振墓库
+vault-demo-resonant-gallery-name = 共鸣回廊

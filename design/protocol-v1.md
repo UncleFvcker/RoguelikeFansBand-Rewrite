@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.47、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.48、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.47";
+  protocolVersion: "1.48";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -138,6 +138,8 @@ interface GameCoreV1 {
 协议 1.46 在 save v1 增加 `dungeonStates`，按稳定 `dungeonId` 保存最终守护者是否已击败。守护者死亡通过 `dungeon.guardian-defeated` 语义事件投影；缺失地牢状态的旧存档按未击败迁移。
 
 协议 1.47 保持 DTO 和 save 字段不变，固定独立 vault 模板、深度加权 encounter group 与主题 loot 的生成和 RNG 顺序；版本升级用于拒绝以 1.46 规则解释新的首次楼层实体集合和回放。当前规则边界见 [Contract v47](contract-v47-themed-vault.md)。
+
+协议 1.48 继续保持 DTO 和 save 字段不变，固定 encounter/theme 表的深度过滤、普通遭遇与楼层掉落读取、多个 Vault 的权重选择、无候选回退和同类巢穴 RNG 顺序；版本升级用于拒绝以 1.47 规则解释新的首次楼层实体集合和回放。当前规则边界见 [Contract v48](contract-v48-floor-generation-tables.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 

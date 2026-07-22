@@ -56,7 +56,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 40] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 41] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -97,9 +97,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 40] = [
     "b37398cb9d005302c958a9e300d07a435e8631d6a5cd44ba63b0086069577c43",
     "0e6cf15310644e7b3eb2f7acb0c18a8b1a7fb08739e981e7492d4079e61ab44a",
     "e03cb30ea8e1cd5821c14b54c4a038d30323cfc2cb6e0d6c483cbb006d70916f",
+    "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0";
+    "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -3992,11 +3993,75 @@ impl Game {
         &mut self,
         definition: &ProceduralFloorDefinition,
     ) -> Result<FloorState, CoreError> {
-        let vault = definition
-            .vault_id
+        let eligible_themes = definition
+            .theme_table_id
             .as_ref()
-            .and_then(|vault_id| self.content.vault(vault_id))
-            .cloned();
+            .and_then(|table_id| self.content.theme_table(table_id))
+            .map(|table| {
+                table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth && definition.depth <= entry.max_depth
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let selected_theme = if eligible_themes.is_empty() {
+            None
+        } else if eligible_themes.len() == 1 {
+            Some(eligible_themes[0].clone())
+        } else {
+            let weights = eligible_themes
+                .iter()
+                .map(|entry| entry.weight)
+                .collect::<Vec<_>>();
+            Some(eligible_themes[self.roll_weighted_index(&weights)].clone())
+        };
+        let generated_floor_terrain_id = selected_theme
+            .as_ref()
+            .map(|entry| entry.floor_terrain_id.clone())
+            .unwrap_or_else(|| definition.floor_terrain_id.clone());
+        let eligible_vault_ids = selected_theme
+            .as_ref()
+            .map(|theme| {
+                theme
+                    .vault_candidates
+                    .iter()
+                    .filter(|candidate| {
+                        candidate.min_depth <= definition.depth
+                            && definition.depth <= candidate.max_depth
+                            && self
+                                .content
+                                .vault(&candidate.vault_id)
+                                .is_some_and(|vault| {
+                                    vault.width <= 6
+                                        && vault.height <= 5
+                                        && vault.entrance_position.x == vault.width / 2
+                                        && vault.entrance_position.y == 0
+                                })
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let vault = if eligible_vault_ids.is_empty() {
+            definition
+                .vault_id
+                .as_ref()
+                .and_then(|vault_id| self.content.vault(vault_id))
+                .cloned()
+        } else if eligible_vault_ids.len() == 1 {
+            self.content.vault(&eligible_vault_ids[0].vault_id).cloned()
+        } else {
+            let weights = eligible_vault_ids
+                .iter()
+                .map(|candidate| candidate.weight)
+                .collect::<Vec<_>>();
+            let vault_id = &eligible_vault_ids[self.roll_weighted_index(&weights)].vault_id;
+            self.content.vault(vault_id).cloned()
+        };
         let guardian = definition.guardian.as_ref().filter(|_| {
             definition.dungeon_id.as_ref().is_some_and(|dungeon_id| {
                 self.dungeon_states
@@ -4060,7 +4125,7 @@ impl Game {
             rooms[0].y,
             rooms[0].width,
             rooms[0].height,
-            &definition.floor_terrain_id,
+            &generated_floor_terrain_id,
         );
         carve_room(
             &mut terrain,
@@ -4069,7 +4134,7 @@ impl Game {
             rooms[1].y,
             rooms[1].width,
             rooms[1].height,
-            &definition.floor_terrain_id,
+            &generated_floor_terrain_id,
         );
         let first_center = Position {
             x: rooms[0].x + rooms[0].width / 2,
@@ -4091,7 +4156,7 @@ impl Game {
                     x,
                     y: first_center.y,
                 },
-                &definition.floor_terrain_id,
+                &generated_floor_terrain_id,
             );
         }
         for y in first_center.y.min(second_center.y)..=first_center.y.max(second_center.y) {
@@ -4102,7 +4167,7 @@ impl Game {
                     x: second_center.x,
                     y,
                 },
-                &definition.floor_terrain_id,
+                &generated_floor_terrain_id,
             );
         }
         let door_position = Position {
@@ -4175,43 +4240,113 @@ impl Game {
         if definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
-        let mut entities = Vec::with_capacity(definition.actor_spawns.len());
-        for spawn in &definition.actor_spawns {
-            let eligible_kind_ids = spawn
-                .actor_kind_ids
+        let mut entities = Vec::new();
+        if let Some(table_id) = &definition.encounter_table_id {
+            let table = self
+                .content
+                .encounter_table(table_id)
+                .expect("validated floor encounter table must remain available")
+                .clone();
+            let eligible_entries = table
+                .entries
                 .iter()
-                .filter(|kind_id| {
-                    self.content
-                        .actor(kind_id)
-                        .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                .filter(|entry| {
+                    entry.min_depth <= definition.depth
+                        && definition.depth <= entry.max_depth
+                        && self
+                            .content
+                            .actor(&entry.actor_kind_id)
+                            .is_some_and(|actor| actor.level <= u32::from(definition.depth))
                 })
                 .cloned()
                 .collect::<Vec<_>>();
-            let kind_index = usize::try_from(
-                self.rng.bounded(
-                    u64::try_from(eligible_kind_ids.len())
-                        .expect("validated actor candidate count must fit u64"),
-                ),
-            )
-            .expect("bounded actor candidate index must fit usize");
-            let kind_id = &eligible_kind_ids[kind_index];
-            let position = self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
-            occupied.insert(position);
-            let actor = self
-                .content
-                .actor(kind_id)
-                .expect("validated procedural actor kind must remain available");
-            entities.push(actor_from_spawn(
-                &spawn.instance_id,
-                kind_id,
-                ContentPosition {
-                    x: u16::try_from(position.x).expect("generated actor x must fit u16"),
-                    y: u16::try_from(position.y).expect("generated actor y must fit u16"),
-                },
-                actor.max_hp,
-                actor.speed,
-                INITIAL_MONSTER_ENERGY_NEED,
-            ));
+            let weights = eligible_entries
+                .iter()
+                .map(|entry| entry.weight)
+                .collect::<Vec<_>>();
+            let room_id = if vault.is_some() { "entry" } else { "remote" };
+            for ordinal in 0..table.rolls {
+                let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
+                occupied.insert(position);
+                let actor = self
+                    .content
+                    .actor(&entry.actor_kind_id)
+                    .expect("validated encounter actor must remain available");
+                entities.push(actor_from_spawn(
+                    &format!("{}.encounter.{}", definition.id, ordinal + 1),
+                    &entry.actor_kind_id,
+                    ContentPosition {
+                        x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                        y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+                    },
+                    actor.max_hp,
+                    actor.speed,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                ));
+            }
+            if let Some(nest) = &definition.nest {
+                let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                for ordinal in 0..nest.spawn_count {
+                    let position =
+                        self.choose_generated_room_position(&rooms, &nest.room_id, &occupied);
+                    occupied.insert(position);
+                    let actor = self
+                        .content
+                        .actor(&entry.actor_kind_id)
+                        .expect("validated nest actor must remain available");
+                    entities.push(actor_from_spawn(
+                        &format!("{}.nest.{}", definition.id, ordinal + 1),
+                        &entry.actor_kind_id,
+                        ContentPosition {
+                            x: u16::try_from(position.x).expect("nest actor x must fit u16"),
+                            y: u16::try_from(position.y).expect("nest actor y must fit u16"),
+                        },
+                        actor.max_hp,
+                        actor.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                    ));
+                }
+            }
+        } else {
+            for spawn in &definition.actor_spawns {
+                let eligible_kind_ids = spawn
+                    .actor_kind_ids
+                    .iter()
+                    .filter(|kind_id| {
+                        self.content
+                            .actor(kind_id)
+                            .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let kind_index = usize::try_from(
+                    self.rng.bounded(
+                        u64::try_from(eligible_kind_ids.len())
+                            .expect("validated actor candidate count must fit u64"),
+                    ),
+                )
+                .expect("bounded actor candidate index must fit usize");
+                let kind_id = &eligible_kind_ids[kind_index];
+                let position =
+                    self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+                occupied.insert(position);
+                let actor = self
+                    .content
+                    .actor(kind_id)
+                    .expect("validated procedural actor kind must remain available");
+                entities.push(actor_from_spawn(
+                    &spawn.instance_id,
+                    kind_id,
+                    ContentPosition {
+                        x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                        y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+                    },
+                    actor.max_hp,
+                    actor.speed,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                ));
+            }
         }
         if let Some(vault) = &vault {
             let origin = vault_origin.expect("present vault must have an origin");
@@ -4283,21 +4418,40 @@ impl Game {
         }
         let mut items =
             self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
-        for spawn in &definition.loot_spawns {
-            let position = self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+        if let Some(table_id) = &definition.loot_table_id {
+            let room_id = if vault.is_some() { "entry" } else { "remote" };
+            let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
             occupied.insert(position);
             items.extend(self.generate_loot_instances(
                 &LootContext {
-                    table_id: spawn.loot_table_id.clone(),
+                    table_id: table_id.clone(),
                     floor_id: definition.id.clone(),
                     depth: definition.depth,
                     source: LootSource::FloorRoom {
-                        room_id: spawn.room_id.clone(),
-                        spawn_id: spawn.id.clone(),
+                        room_id: room_id.to_owned(),
+                        spawn_id: format!("{}.loot-table", definition.id),
                     },
                 },
                 ItemLocation::Ground(position),
             )?);
+        } else {
+            for spawn in &definition.loot_spawns {
+                let position =
+                    self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+                occupied.insert(position);
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: spawn.loot_table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::FloorRoom {
+                            room_id: spawn.room_id.clone(),
+                            spawn_id: spawn.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(position),
+                )?);
+            }
         }
         if let Some(vault) = &vault {
             let origin = vault_origin.expect("present vault must have an origin");
@@ -5735,6 +5889,37 @@ mod tests {
         }
     }
 
+    fn dispatch_next(game: &mut Game, command_value: GameCommand) -> GameUpdate {
+        let snapshot = game.snapshot();
+        game.dispatch(command(
+            snapshot.last_command_seq + 1,
+            snapshot.revision,
+            command_value,
+        ))
+        .expect("test command should execute")
+    }
+
+    fn descend_one_floor(game: &mut Game) {
+        if game.current_floor_id == "demo.floor.surface" {
+            game.player.position = Position { x: 3, y: 4 };
+        } else {
+            let down_index = game
+                .terrain
+                .iter()
+                .position(|terrain_id| terrain_id == "demo.terrain.stairs-down")
+                .expect("current floor should contain descending stairs");
+            game.player.position = Position {
+                x: i32::try_from(down_index % usize::from(game.width))
+                    .expect("descending stair x must fit i32"),
+                y: i32::try_from(down_index / usize::from(game.width))
+                    .expect("descending stair y must fit i32"),
+            };
+        }
+        game.traverse_stairs(false)
+            .expect("descent should resolve")
+            .expect("descent should transition");
+    }
+
     fn visual_at(snapshot: &GameSnapshot, position: Position) -> CellVisualDto {
         *snapshot
             .visual_cells
@@ -5862,11 +6047,34 @@ mod tests {
 
         assert_eq!(left_update.floor_id, "demo.floor.echo-depth-1");
         assert_eq!(left_update.state_hash, right_update.state_hash);
-        assert_eq!(left.rng.draw_counter, 13);
-        assert_eq!(left.entities.len(), 1);
-        assert_eq!(left.entities[0].id, "demo.monster.echo-depth-1.1");
-        assert_eq!(left.entities[0].kind_id, "demo.actor.echo-hound");
-        assert_eq!(left.entities[0].position, Position { x: 16, y: 14 });
+        assert_eq!(left.rng.draw_counter, 17);
+        assert_eq!(left.entities.len(), 4);
+        let room_encounter = left
+            .entities
+            .iter()
+            .find(|entity| entity.id == "demo.floor.echo-depth-1.encounter.1")
+            .expect("floor encounter table should spawn its declared roll");
+        assert_eq!(room_encounter.position, Position { x: 16, y: 14 });
+        assert!(matches!(
+            room_encounter.kind_id.as_str(),
+            "demo.actor.acid-seep" | "demo.actor.echo-hound" | "demo.actor.frost-wisp"
+        ));
+        let nest = left
+            .entities
+            .iter()
+            .filter(|entity| entity.id.starts_with("demo.floor.echo-depth-1.nest."))
+            .collect::<Vec<_>>();
+        assert_eq!(nest.len(), 3);
+        assert!(nest.iter().all(|entity| entity.kind_id == nest[0].kind_id));
+        assert!(nest.iter().all(|entity| !matches!(
+            entity.kind_id.as_str(),
+            "demo.actor.storm-spark" | "demo.actor.venom-spore"
+        )));
+        assert!(
+            left.entities
+                .iter()
+                .all(|entity| !entity.id.contains(".vault-group."))
+        );
         let floor_loot = left
             .items
             .iter()
@@ -5908,7 +6116,7 @@ mod tests {
             .expect("descending again should generate a new expedition floor");
         assert_eq!(reentry_update.floor_id, "demo.floor.echo-depth-1");
         assert!(restored.rng.draw_counter > draws_before_reentry);
-        assert_eq!(restored.entities.len(), 1);
+        assert_eq!(restored.entities.len(), 4);
         assert_eq!(restored.items.len(), 1);
     }
 
@@ -5929,36 +6137,26 @@ mod tests {
             VisibilityState::Hidden
         );
         let draws_before_unlock = game.rng.draw_counter;
-        let failed_unlock = game
-            .dispatch(command(
-                2,
-                1,
-                GameCommand::OpenDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("the first unlock attempt should execute");
-        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-secret");
-        assert_eq!(game.rng.draw_counter, draws_before_unlock + 2);
-        assert!(
-            failed_unlock
-                .events
-                .iter()
-                .any(|event| event.kind == "terrain.door-unlock-failed")
-        );
-
-        let open_update = game
-            .dispatch(command(
-                3,
-                2,
-                GameCommand::OpenDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("the second deterministic unlock attempt should succeed");
+        let mut saw_failed_unlock = false;
+        let open_update = (0..12)
+            .find_map(|_| {
+                let update = dispatch_next(
+                    &mut game,
+                    GameCommand::OpenDoor {
+                        direction: Direction::East,
+                    },
+                );
+                saw_failed_unlock |= update
+                    .events
+                    .iter()
+                    .any(|event| event.kind == "terrain.door-unlock-failed");
+                (game.terrain_at(door_position) == "demo.terrain.door-open").then_some(update)
+            })
+            .expect("fixed seed should eventually unlock the door");
+        assert!(saw_failed_unlock);
         assert_eq!(game.terrain_at(door_position), "demo.terrain.door-open");
         assert!(game.is_walkable(door_position));
-        assert_eq!(game.rng.draw_counter, draws_before_unlock + 3);
+        assert!(game.rng.draw_counter > draws_before_unlock);
         let terrain_events = open_update
             .events
             .iter()
@@ -5979,29 +6177,36 @@ mod tests {
         assert_eq!(restored.terrain_at(door_position), "demo.terrain.door-open");
 
         restored.player.position = Position { x: 5, y: 4 };
-        restored
-            .dispatch(command(4, 3, GameCommand::TraverseStairs))
-            .expect("ascending should end the dungeon expedition");
-        restored
-            .dispatch(command(5, 4, GameCommand::TraverseStairs))
-            .expect("descending should generate a fresh dungeon floor");
+        dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        let fresh_door_index = restored
+            .terrain
+            .iter()
+            .position(|terrain_id| terrain_id == "demo.terrain.door-secret")
+            .expect("fresh floor should contain a secret door");
+        let fresh_door_position = Position {
+            x: i32::try_from(fresh_door_index % usize::from(restored.width))
+                .expect("door x must fit i32"),
+            y: i32::try_from(fresh_door_index / usize::from(restored.width))
+                .expect("door y must fit i32"),
+        };
         assert_eq!(
-            restored.terrain_at(door_position),
+            restored.terrain_at(fresh_door_position),
             "demo.terrain.door-secret"
         );
 
-        restored.player.position = Position { x: 9, y: 4 };
-        let close_update = restored
-            .dispatch(command(
-                6,
-                5,
-                GameCommand::CloseDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("closing a fresh secret door should remain a valid turn");
+        restored.player.position = Position {
+            x: fresh_door_position.x - 1,
+            y: fresh_door_position.y,
+        };
+        let close_update = dispatch_next(
+            &mut restored,
+            GameCommand::CloseDoor {
+                direction: Direction::East,
+            },
+        );
         assert_eq!(
-            restored.terrain_at(door_position),
+            restored.terrain_at(fresh_door_position),
             "demo.terrain.door-secret"
         );
         assert!(
@@ -6011,15 +6216,12 @@ mod tests {
                 .any(|event| event.kind == "terrain.door-close-unavailable")
         );
 
-        let unavailable = restored
-            .dispatch(command(
-                7,
-                6,
-                GameCommand::CloseDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("closing a closed door should remain a valid turn");
+        let unavailable = dispatch_next(
+            &mut restored,
+            GameCommand::CloseDoor {
+                direction: Direction::East,
+            },
+        );
         assert!(
             unavailable
                 .events
@@ -6038,37 +6240,26 @@ mod tests {
         let door_position = Position { x: 10, y: 4 };
         game.revealed_terrain.insert(door_position);
         let draws_before_bash = game.rng.draw_counter;
-
-        let failed = game
-            .dispatch(command(
-                2,
-                1,
-                GameCommand::BashDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("the first bash attempt should execute");
-        assert_eq!(game.terrain_at(door_position), "demo.terrain.door-secret");
-        assert_eq!(game.rng.draw_counter, draws_before_bash + 2);
-        assert!(
-            failed
-                .events
-                .iter()
-                .any(|event| event.kind == "terrain.door-bash-failed")
-        );
-
-        let succeeded = game
-            .dispatch(command(
-                3,
-                2,
-                GameCommand::BashDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("the second deterministic bash attempt should succeed");
+        let mut saw_failed_bash = false;
+        let succeeded = (0..12)
+            .find_map(|_| {
+                let update = dispatch_next(
+                    &mut game,
+                    GameCommand::BashDoor {
+                        direction: Direction::East,
+                    },
+                );
+                saw_failed_bash |= update
+                    .events
+                    .iter()
+                    .any(|event| event.kind == "terrain.door-bash-failed");
+                (game.terrain_at(door_position) == "demo.terrain.door-broken").then_some(update)
+            })
+            .expect("fixed seed should eventually bash the door open");
+        assert!(saw_failed_bash);
         assert_eq!(game.terrain_at(door_position), "demo.terrain.door-broken");
         assert!(game.is_walkable(door_position));
-        assert_eq!(game.rng.draw_counter, draws_before_bash + 3);
+        assert!(game.rng.draw_counter > draws_before_bash);
         assert!(
             succeeded
                 .events
@@ -6081,15 +6272,12 @@ mod tests {
             restored.terrain_at(door_position),
             "demo.terrain.door-broken"
         );
-        let unavailable = restored
-            .dispatch(command(
-                4,
-                3,
-                GameCommand::CloseDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("closing a broken door should remain a valid turn");
+        let unavailable = dispatch_next(
+            &mut restored,
+            GameCommand::CloseDoor {
+                direction: Direction::East,
+            },
+        );
         assert!(
             unavailable
                 .events
@@ -6147,16 +6335,17 @@ mod tests {
             ]
         );
 
-        for (command_seq, expected_revision) in [(2, 1), (3, 2)] {
-            game.dispatch(command(
-                command_seq,
-                expected_revision,
-                GameCommand::OpenDoor {
-                    direction: Direction::East,
-                },
-            ))
-            .expect("deterministic unlock attempts should execute");
-        }
+        (0..12)
+            .find(|_| {
+                dispatch_next(
+                    &mut game,
+                    GameCommand::OpenDoor {
+                        direction: Direction::East,
+                    },
+                );
+                game.terrain_at(door_position) == "demo.terrain.door-open"
+            })
+            .expect("fixed seed should eventually unlock the queried door");
         let open = game.snapshot().terrain_interactions;
         assert_eq!(open.len(), 1);
         assert_eq!(open[0].kind, TerrainInteractionKindDto::CloseDoor);
@@ -6210,22 +6399,15 @@ mod tests {
                 .any(|event| event.kind == "terrain.door-open-unavailable")
         );
 
-        let failed = game
-            .dispatch(command(3, 2, GameCommand::Search))
-            .expect("the first deterministic search should execute");
-        assert_eq!(game.rng.draw_counter, draws_before_search + 2);
-        assert_eq!(game.known_terrain_at(door_position), "demo.terrain.wall");
-        assert!(
-            failed
-                .events
-                .iter()
-                .any(|event| event.kind == "terrain.search-empty")
-        );
-
-        let discovered = game
-            .dispatch(command(4, 3, GameCommand::Search))
-            .expect("the second deterministic search should succeed");
-        assert_eq!(game.rng.draw_counter, draws_before_search + 3);
+        let discovered = (0..12)
+            .find_map(|_| {
+                let update = dispatch_next(&mut game, GameCommand::Search);
+                game.revealed_terrain
+                    .contains(&door_position)
+                    .then_some(update)
+            })
+            .expect("fixed seed should eventually discover the secret door");
+        assert!(game.rng.draw_counter > draws_before_search);
         assert_eq!(
             game.known_terrain_at(door_position),
             "demo.terrain.door-secret"
@@ -6257,14 +6439,21 @@ mod tests {
             "demo.terrain.door-secret"
         );
         restored.player.position = Position { x: 5, y: 4 };
-        restored
-            .dispatch(command(5, 4, GameCommand::TraverseStairs))
-            .expect("ascending should end the dungeon expedition");
-        restored
-            .dispatch(command(6, 5, GameCommand::TraverseStairs))
-            .expect("descending should generate a fresh dungeon floor");
+        dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        let fresh_door_index = restored
+            .terrain
+            .iter()
+            .position(|terrain_id| terrain_id == "demo.terrain.door-secret")
+            .expect("fresh floor should contain a secret door");
+        let fresh_door_position = Position {
+            x: i32::try_from(fresh_door_index % usize::from(restored.width))
+                .expect("door x must fit i32"),
+            y: i32::try_from(fresh_door_index / usize::from(restored.width))
+                .expect("door y must fit i32"),
+        };
         assert_eq!(
-            restored.known_terrain_at(door_position),
+            restored.known_terrain_at(fresh_door_position),
             "demo.terrain.wall"
         );
     }
@@ -7046,38 +7235,39 @@ mod tests {
     #[test]
     fn themed_vault_paints_template_and_spawns_depth_eligible_group_and_loot() {
         let mut game = Game::new(27);
-        game.player.position = Position { x: 3, y: 4 };
-        game.traverse_stairs(false)
-            .expect("first descent should resolve")
-            .expect("first descent should transition");
-        let down_index = game
-            .terrain
-            .iter()
-            .position(|terrain_id| terrain_id == "demo.terrain.stairs-down")
-            .expect("first depth should contain descending stairs");
-        game.player.position = Position {
-            x: i32::try_from(down_index % usize::from(game.width))
-                .expect("descending stair x must fit i32"),
-            y: i32::try_from(down_index / usize::from(game.width))
-                .expect("descending stair y must fit i32"),
-        };
-        game.traverse_stairs(false)
-            .expect("second descent should resolve")
-            .expect("second descent should transition");
+        descend_one_floor(&mut game);
+        descend_one_floor(&mut game);
 
         assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2");
-        assert_eq!(game.entities.len(), 3);
-        assert!(game.entities.iter().all(|entity| {
-            entity.id.starts_with(
-                "demo.floor.echo-depth-2.demo.vault-group.harmonic-sepulcher-sentinels.",
-            ) && matches!(
+        assert_eq!(game.entities.len(), 4);
+        assert!(game.entities.iter().any(|entity| {
+            entity.id == "demo.floor.echo-depth-2.encounter.1"
+                && matches!(
+                    entity.kind_id.as_str(),
+                    "demo.actor.echo-hound"
+                        | "demo.actor.frost-wisp"
+                        | "demo.actor.storm-spark"
+                        | "demo.actor.venom-spore"
+                )
+        }));
+        let vault_members = game
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.id.starts_with(
+                    "demo.floor.echo-depth-2.demo.vault-group.harmonic-sepulcher-sentinels.",
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(vault_members.len(), 3);
+        assert!(vault_members.iter().all(|entity| {
+            matches!(
                 entity.kind_id.as_str(),
                 "demo.actor.frost-wisp" | "demo.actor.storm-spark" | "demo.actor.venom-spore"
             )
         }));
 
-        let first_member = game
-            .entities
+        let first_member = vault_members
             .iter()
             .find(|entity| entity.id.ends_with(".1"))
             .expect("vault should contain its first group member");
@@ -7107,6 +7297,65 @@ mod tests {
 
         let restored = Game::from_save(game.to_save()).expect("vault floor save should restore");
         assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn weighted_vault_candidates_are_deterministic_and_both_reachable() {
+        let mut harmonic = 0;
+        let mut resonant = 0;
+        for seed in 1..=64 {
+            let mut left = Game::new(seed);
+            let mut right = Game::new(seed);
+            for game in [&mut left, &mut right] {
+                descend_one_floor(game);
+                descend_one_floor(game);
+            }
+            assert_eq!(left.state_hash(), right.state_hash());
+            if left
+                .entities
+                .iter()
+                .any(|entity| entity.id.contains("harmonic-sepulcher-sentinels"))
+            {
+                harmonic += 1;
+            } else if left
+                .entities
+                .iter()
+                .any(|entity| entity.id.contains("resonant-gallery-chorus"))
+            {
+                resonant += 1;
+            } else {
+                panic!("depth two must select one eligible themed vault");
+            }
+        }
+        assert!(harmonic > resonant);
+        assert!(resonant > 0);
+    }
+
+    #[test]
+    fn previous_v47_generated_floor_is_not_backfilled_with_tables_or_nest() {
+        let mut game = Game::new(27);
+        descend_one_floor(&mut game);
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0".to_owned();
+        payload
+            .entities
+            .retain(|entity| entity.id == "demo.floor.echo-depth-1.encounter.1");
+        payload.entities[0].id = "demo.monster.echo-depth-1.1".to_owned();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v47 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
+        assert_eq!(restored.entities.len(), 1);
+        assert_eq!(restored.entities[0].id, "demo.monster.echo-depth-1.1");
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|entity| !entity.id.contains(".nest.") && !entity.id.contains(".encounter."))
+        );
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
     }
 
     #[test]

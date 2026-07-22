@@ -268,6 +268,7 @@ export const MESSAGE_KEYS = [
   "floor-demo-echo-depth-2-name",
   "floor-demo-echo-depth-3-name",
   "vault-demo-harmonic-sepulcher-name",
+  "vault-demo-resonant-gallery-name",
   "floor-demo-echo-task-rift-name",
   "terrain-demo-task-rift-name",
   "terrain-demo-task-rift-description",

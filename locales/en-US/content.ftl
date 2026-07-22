@@ -99,3 +99,4 @@ terrain-demo-chain-vault-rift-failed-description = The vault collapsed when the 
 terrain-demo-chain-vault-rift-abandoned-name = abandoned chain vault
 terrain-demo-chain-vault-rift-abandoned-description = The vault collapsed when the ordered task was abandoned.
 vault-demo-harmonic-sepulcher-name = Harmonic Sepulcher
+vault-demo-resonant-gallery-name = Resonant Gallery

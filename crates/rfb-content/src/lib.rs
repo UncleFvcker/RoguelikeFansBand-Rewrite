@@ -20,7 +20,9 @@ pub const TERRAIN_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/
 pub const ACTOR_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json";
 pub const ITEM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json";
 pub const AFFIX_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json";
+pub const ENCOUNTER_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json";
 pub const LOOT_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json";
+pub const THEME_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json";
 pub const VAULT_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
 
@@ -35,12 +37,14 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 7] = [
+const SUPPORTED_ROOTS: [&str; 9] = [
     "actors",
     "affixes",
+    "encounterTables",
     "items",
     "lootTables",
     "terrain",
+    "themeTables",
     "vaults",
     "worlds",
 ];
@@ -393,6 +397,62 @@ pub struct LootTableDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterTableDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub rolls: u16,
+    pub entries: Vec<EncounterEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EncounterEntryDefinition {
+    pub actor_kind_id: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ThemeTableDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub entries: Vec<ThemeEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ThemeEntryDefinition {
+    pub theme_id: String,
+    pub floor_terrain_id: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+    #[serde(default)]
+    pub vault_candidates: Vec<ThemeVaultCandidateDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ThemeVaultCandidateDefinition {
+    pub vault_id: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct VaultDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -491,6 +551,14 @@ pub struct ProceduralFloorDefinition {
     pub theme_id: Option<String>,
     #[serde(default)]
     pub vault_id: Option<String>,
+    #[serde(default)]
+    pub encounter_table_id: Option<String>,
+    #[serde(default)]
+    pub loot_table_id: Option<String>,
+    #[serde(default)]
+    pub theme_table_id: Option<String>,
+    #[serde(default)]
+    pub nest: Option<ProceduralNestDefinition>,
     #[serde(default)]
     pub entry_terrain_id: Option<String>,
     #[serde(default)]
@@ -611,6 +679,14 @@ pub struct ProceduralLootSpawnDefinition {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralNestDefinition {
+    pub room_id: String,
+    pub spawn_count: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CompiledContentV1 {
     pub format: String,
@@ -625,7 +701,11 @@ pub struct CompiledContentV1 {
     pub affixes: Vec<AffixDefinition>,
     pub items: Vec<ItemDefinition>,
     #[serde(default)]
+    pub encounter_tables: Vec<EncounterTableDefinition>,
+    #[serde(default)]
     pub loot_tables: Vec<LootTableDefinition>,
+    #[serde(default)]
+    pub theme_tables: Vec<ThemeTableDefinition>,
     #[serde(default)]
     pub vaults: Vec<VaultDefinition>,
     pub worlds: Vec<WorldDefinition>,
@@ -647,7 +727,9 @@ pub struct ContentCatalog {
     actors: BTreeMap<String, ActorDefinition>,
     affixes: BTreeMap<String, AffixDefinition>,
     items: BTreeMap<String, ItemDefinition>,
+    encounter_tables: BTreeMap<String, EncounterTableDefinition>,
     loot_tables: BTreeMap<String, LootTableDefinition>,
+    theme_tables: BTreeMap<String, ThemeTableDefinition>,
     vaults: BTreeMap<String, VaultDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
 }
@@ -662,7 +744,9 @@ pub struct ContentSummary {
     pub actor_count: usize,
     pub affix_count: usize,
     pub item_count: usize,
+    pub encounter_table_count: usize,
     pub loot_table_count: usize,
+    pub theme_table_count: usize,
     pub vault_count: usize,
     pub world_count: usize,
 }
@@ -687,7 +771,9 @@ impl CompiledArtifact {
             actor_count: self.content.actors.len(),
             affix_count: self.content.affixes.len(),
             item_count: self.content.items.len(),
+            encounter_table_count: self.content.encounter_tables.len(),
             loot_table_count: self.content.loot_tables.len(),
+            theme_table_count: self.content.theme_tables.len(),
             vault_count: self.content.vaults.len(),
             world_count: self.content.worlds.len(),
         }
@@ -726,8 +812,18 @@ impl ContentCatalog {
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
+            encounter_tables: content
+                .encounter_tables
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
             loot_tables: content
                 .loot_tables
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            theme_tables: content
+                .theme_tables
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -789,6 +885,16 @@ impl ContentCatalog {
     }
 
     #[must_use]
+    pub fn encounter_table(&self, id: &str) -> Option<&EncounterTableDefinition> {
+        self.encounter_tables.get(id)
+    }
+
+    #[must_use]
+    pub fn theme_table(&self, id: &str) -> Option<&ThemeTableDefinition> {
+        self.theme_tables.get(id)
+    }
+
+    #[must_use]
     pub fn vault(&self, id: &str) -> Option<&VaultDefinition> {
         self.vaults.get(id)
     }
@@ -844,7 +950,9 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         actors: load_root(root, "actors", &roots, &mut budget)?,
         affixes: load_root(root, "affixes", &roots, &mut budget)?,
         items: load_root(root, "items", &roots, &mut budget)?,
+        encounter_tables: load_root(root, "encounterTables", &roots, &mut budget)?,
         loot_tables: load_root(root, "lootTables", &roots, &mut budget)?,
+        theme_tables: load_root(root, "themeTables", &roots, &mut budget)?,
         vaults: load_root(root, "vaults", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };
@@ -979,7 +1087,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.items.sort_by(|left, right| left.id.cmp(&right.id));
     content
+        .encounter_tables
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
         .loot_tables
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .theme_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.vaults.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
@@ -1449,6 +1563,55 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         require_reference(&loot_table_ids, &loot_table_id, &actor_id)?;
     }
 
+    let mut encounter_tables_by_id = BTreeMap::new();
+    for table in &mut content.encounter_tables {
+        require_schema(&table.schema, ENCOUNTER_TABLE_SCHEMA, &table.id)?;
+        require_format_version(table.format_version, &table.id)?;
+        validate_definition_id(&table.id, "encounter-table")?;
+        if table.rolls == 0
+            || table.rolls > 16
+            || table.entries.is_empty()
+            || table.entries.len() > 64
+        {
+            return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+        }
+        table.entries.sort_by(|left, right| {
+            left.actor_kind_id
+                .cmp(&right.actor_kind_id)
+                .then(left.min_depth.cmp(&right.min_depth))
+                .then(left.max_depth.cmp(&right.max_depth))
+        });
+        let mut actor_ids = BTreeSet::new();
+        let mut total_weight = 0_u64;
+        for entry in &table.entries {
+            require_actor_role(
+                &actor_roles,
+                &entry.actor_kind_id,
+                ActorRole::Monster,
+                &table.id,
+            )?;
+            if entry.weight == 0
+                || entry.min_depth == 0
+                || entry.min_depth > entry.max_depth
+                || entry.max_depth > 1_000
+                || actor_levels
+                    .get(&entry.actor_kind_id)
+                    .is_none_or(|level| *level > u32::from(entry.max_depth))
+                || !actor_ids.insert(entry.actor_kind_id.clone())
+            {
+                return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+            }
+            total_weight = total_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidEncounterTable(table.id.clone()))?;
+        }
+        if total_weight == 0 {
+            return Err(ContentError::InvalidEncounterTable(table.id.clone()));
+        }
+        insert_definition_id(&mut all_ids, &table.id)?;
+        encounter_tables_by_id.insert(table.id.clone(), table.clone());
+    }
+
     let mut vaults_by_id = BTreeMap::new();
     for vault in &mut content.vaults {
         require_schema(&vault.schema, VAULT_SCHEMA, &vault.id)?;
@@ -1581,6 +1744,78 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         vaults_by_id.insert(vault.id.clone(), vault.clone());
     }
 
+    let mut theme_tables_by_id = BTreeMap::new();
+    for table in &mut content.theme_tables {
+        require_schema(&table.schema, THEME_TABLE_SCHEMA, &table.id)?;
+        require_format_version(table.format_version, &table.id)?;
+        validate_definition_id(&table.id, "theme-table")?;
+        if table.entries.is_empty() || table.entries.len() > 64 {
+            return Err(ContentError::InvalidThemeTable(table.id.clone()));
+        }
+        table.entries.sort_by(|left, right| {
+            left.min_depth
+                .cmp(&right.min_depth)
+                .then(left.max_depth.cmp(&right.max_depth))
+                .then(left.theme_id.cmp(&right.theme_id))
+                .then(left.floor_terrain_id.cmp(&right.floor_terrain_id))
+        });
+        let mut entry_keys = BTreeSet::new();
+        let mut total_weight = 0_u64;
+        for entry in &mut table.entries {
+            validate_definition_id(&entry.theme_id, "theme")?;
+            require_reference(&terrain_ids, &entry.floor_terrain_id, &table.id)?;
+            entry.vault_candidates.sort_by(|left, right| {
+                left.vault_id
+                    .cmp(&right.vault_id)
+                    .then(left.min_depth.cmp(&right.min_depth))
+                    .then(left.max_depth.cmp(&right.max_depth))
+            });
+            if entry.weight == 0
+                || entry.min_depth == 0
+                || entry.min_depth > entry.max_depth
+                || entry.max_depth > 1_000
+                || terrain_walkability.get(&entry.floor_terrain_id) != Some(&true)
+                || entry.vault_candidates.len() > 64
+                || !entry_keys.insert((entry.theme_id.clone(), entry.min_depth, entry.max_depth))
+            {
+                return Err(ContentError::InvalidThemeTable(table.id.clone()));
+            }
+            total_weight = total_weight
+                .checked_add(u64::from(entry.weight))
+                .ok_or_else(|| ContentError::InvalidThemeTable(table.id.clone()))?;
+            let mut vault_ids = BTreeSet::new();
+            let mut vault_weight = 0_u64;
+            for candidate in &entry.vault_candidates {
+                let Some(vault) = vaults_by_id.get(&candidate.vault_id) else {
+                    return Err(ContentError::DanglingReference {
+                        owner: table.id.clone(),
+                        target: candidate.vault_id.clone(),
+                    });
+                };
+                if candidate.weight == 0
+                    || candidate.min_depth < entry.min_depth
+                    || candidate.min_depth > candidate.max_depth
+                    || candidate.max_depth > entry.max_depth
+                    || vault.theme_id != entry.theme_id
+                    || !vault_ids.insert(candidate.vault_id.clone())
+                {
+                    return Err(ContentError::InvalidThemeTable(table.id.clone()));
+                }
+                vault_weight = vault_weight
+                    .checked_add(u64::from(candidate.weight))
+                    .ok_or_else(|| ContentError::InvalidThemeTable(table.id.clone()))?;
+            }
+            if !entry.vault_candidates.is_empty() && vault_weight == 0 {
+                return Err(ContentError::InvalidThemeTable(table.id.clone()));
+            }
+        }
+        if total_weight == 0 {
+            return Err(ContentError::InvalidThemeTable(table.id.clone()));
+        }
+        insert_definition_id(&mut all_ids, &table.id)?;
+        theme_tables_by_id.insert(table.id.clone(), table.clone());
+    }
+
     for world in &mut content.worlds {
         require_schema(&world.schema, WORLD_SCHEMA, &world.id)?;
         require_format_version(world.format_version, &world.id)?;
@@ -1598,7 +1833,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 actor_levels: &actor_levels,
                 item_limits: &item_limits,
                 affix_ids: &affix_ids,
+                encounter_tables: &encounter_tables_by_id,
                 loot_table_ids: &loot_table_ids,
+                theme_tables: &theme_tables_by_id,
                 vaults: &vaults_by_id,
             },
         )?;
@@ -1615,7 +1852,9 @@ struct WorldValidationRefs<'a> {
     actor_levels: &'a BTreeMap<String, u32>,
     item_limits: &'a BTreeMap<String, (u32, bool)>,
     affix_ids: &'a BTreeSet<String>,
+    encounter_tables: &'a BTreeMap<String, EncounterTableDefinition>,
     loot_table_ids: &'a BTreeSet<String>,
+    theme_tables: &'a BTreeMap<String, ThemeTableDefinition>,
     vaults: &'a BTreeMap<String, VaultDefinition>,
 }
 
@@ -1723,7 +1962,9 @@ fn validate_world(
         actor_levels,
         item_limits,
         affix_ids,
+        encounter_tables,
         loot_table_ids,
+        theme_tables,
         vaults,
     } = refs;
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
@@ -1791,6 +2032,88 @@ fn validate_world(
         }
         if let Some(theme_id) = &procedural.theme_id {
             validate_definition_id(theme_id, "theme")?;
+        }
+        if procedural.encounter_table_id.is_some() && !procedural.actor_spawns.is_empty()
+            || procedural.loot_table_id.is_some() && !procedural.loot_spawns.is_empty()
+            || procedural.theme_table_id.is_some()
+                && (procedural.theme_id.is_some() || procedural.vault_id.is_some())
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
+        if let Some(table_id) = &procedural.encounter_table_id {
+            let Some(table) = encounter_tables.get(table_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: procedural.id.clone(),
+                    target: table_id.clone(),
+                });
+            };
+            if !table.entries.iter().any(|entry| {
+                entry.min_depth <= procedural.depth
+                    && procedural.depth <= entry.max_depth
+                    && actor_levels
+                        .get(&entry.actor_kind_id)
+                        .is_some_and(|level| *level <= u32::from(procedural.depth))
+            }) {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        if let Some(table_id) = &procedural.loot_table_id {
+            require_reference(loot_table_ids, table_id, &procedural.id)?;
+        }
+        let eligible_theme_entries = if let Some(table_id) = &procedural.theme_table_id {
+            let Some(table) = theme_tables.get(table_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: procedural.id.clone(),
+                    target: table_id.clone(),
+                });
+            };
+            let entries = table
+                .entries
+                .iter()
+                .filter(|entry| {
+                    entry.min_depth <= procedural.depth && procedural.depth <= entry.max_depth
+                })
+                .collect::<Vec<_>>();
+            if entries.is_empty() {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            entries
+        } else {
+            Vec::new()
+        };
+        for entry in &eligible_theme_entries {
+            for candidate in entry.vault_candidates.iter().filter(|candidate| {
+                candidate.min_depth <= procedural.depth && procedural.depth <= candidate.max_depth
+            }) {
+                let vault = vaults
+                    .get(&candidate.vault_id)
+                    .expect("validated theme vault must remain available");
+                if vault.encounter_groups.iter().any(|group| {
+                    !group.entries.iter().any(|actor| {
+                        actor.min_depth <= procedural.depth
+                            && procedural.depth <= actor.max_depth
+                            && actor_levels
+                                .get(&actor.actor_kind_id)
+                                .is_some_and(|level| *level <= u32::from(procedural.depth))
+                    })
+                }) {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+            }
+        }
+        if let Some(nest) = &procedural.nest
+            && (procedural.encounter_table_id.is_none()
+                || procedural.vault_id.is_some()
+                || !matches!(nest.room_id.as_str(), "entry" | "remote")
+                || !(2..=16).contains(&nest.spawn_count)
+                || eligible_theme_entries.iter().any(|entry| {
+                    entry.vault_candidates.iter().any(|candidate| {
+                        candidate.min_depth <= procedural.depth
+                            && procedural.depth <= candidate.max_depth
+                    })
+                }))
+        {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
         if let Some(vault_id) = &procedural.vault_id {
             let Some(vault) = vaults.get(vault_id) else {
@@ -2605,9 +2928,19 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             schema_for!(AffixDefinition),
         )?,
         schema_document(
+            "encounter-table.schema.json",
+            ENCOUNTER_TABLE_SCHEMA,
+            schema_for!(EncounterTableDefinition),
+        )?,
+        schema_document(
             "loot-table.schema.json",
             LOOT_TABLE_SCHEMA,
             schema_for!(LootTableDefinition),
+        )?,
+        schema_document(
+            "theme-table.schema.json",
+            THEME_TABLE_SCHEMA,
+            schema_for!(ThemeTableDefinition),
         )?,
         schema_document(
             "vault.schema.json",
@@ -2731,6 +3064,10 @@ pub enum ContentError {
     InvalidAffixModifiers(String),
     #[error("loot table weights, entries, or generated item constraints are invalid: {0}")]
     InvalidLootTable(String),
+    #[error("encounter table weights, depth ranges, or actor entries are invalid: {0}")]
+    InvalidEncounterTable(String),
+    #[error("theme table weights, depth ranges, terrain, or vault candidates are invalid: {0}")]
+    InvalidThemeTable(String),
     #[error("vault terrain, encounters, or loot definition is invalid: {0}")]
     InvalidVault(String),
     #[error("world dimensions are outside supported limits: {0}")]
@@ -2807,8 +3144,10 @@ mod tests {
         assert_eq!(first.content.actors.len(), 8);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
+        assert_eq!(first.content.encounter_tables.len(), 1);
         assert_eq!(first.content.loot_tables.len(), 5);
-        assert_eq!(first.content.vaults.len(), 1);
+        assert_eq!(first.content.theme_tables.len(), 1);
+        assert_eq!(first.content.vaults.len(), 2);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -2819,7 +3158,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.40.0");
+        assert_eq!(catalog.pack_version(), "1.41.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -2838,6 +3177,18 @@ mod tests {
                 .map(|table| (table.rolls, table.entries.len())),
             Some((1, 2))
         );
+        assert_eq!(
+            catalog
+                .encounter_table("demo.encounter-table.echo-depths")
+                .map(|table| (table.rolls, table.entries.len())),
+            Some((1, 5))
+        );
+        assert_eq!(
+            catalog
+                .theme_table("demo.theme-table.echo-depths")
+                .map(|table| table.entries[0].vault_candidates.len()),
+            Some(2)
+        );
         let world = catalog
             .world("demo.world.original-v1")
             .expect("demo world should remain available");
@@ -2849,8 +3200,27 @@ mod tests {
             world.procedural_floors[0].closed_door_terrain_id,
             "demo.terrain.door-secret"
         );
-        assert_eq!(world.procedural_floors[0].actor_spawns.len(), 1);
-        assert_eq!(world.procedural_floors[0].loot_spawns.len(), 1);
+        assert!(world.procedural_floors[0].actor_spawns.is_empty());
+        assert!(world.procedural_floors[0].loot_spawns.is_empty());
+        assert_eq!(
+            world.procedural_floors[0].encounter_table_id.as_deref(),
+            Some("demo.encounter-table.echo-depths")
+        );
+        assert_eq!(
+            world.procedural_floors[0].loot_table_id.as_deref(),
+            Some("demo.loot-table.echo-depth-1-room")
+        );
+        assert_eq!(
+            world.procedural_floors[0].theme_table_id.as_deref(),
+            Some("demo.theme-table.echo-depths")
+        );
+        assert_eq!(
+            world.procedural_floors[0]
+                .nest
+                .as_ref()
+                .map(|nest| (nest.room_id.as_str(), nest.spawn_count)),
+            Some(("remote", 3))
+        );
         assert_eq!(
             catalog
                 .vault("demo.vault.harmonic-sepulcher")
@@ -3106,7 +3476,7 @@ mod tests {
     }
 
     #[test]
-    fn procedural_floor_spawns_require_valid_depth_rooms_and_references() {
+    fn procedural_floor_tables_require_valid_depth_roles_and_references() {
         let artifact =
             compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
@@ -3118,27 +3488,49 @@ mod tests {
         ));
 
         let mut player_candidate = artifact.content.clone();
-        player_candidate.worlds[0].procedural_floors[0].actor_spawns[0].actor_kind_ids =
-            vec!["demo.actor.explorer".to_owned()];
+        player_candidate.encounter_tables[0].entries[0].actor_kind_id =
+            "demo.actor.explorer".to_owned();
         assert!(matches!(
             validate_and_normalize(&mut player_candidate),
             Err(ContentError::WrongActorRole(_))
         ));
 
         let mut dangling_loot = artifact.content.clone();
-        dangling_loot.worlds[0].procedural_floors[0].loot_spawns[0].loot_table_id =
-            "demo.loot-table.missing".to_owned();
+        dangling_loot.worlds[0].procedural_floors[0].loot_table_id =
+            Some("demo.loot-table.missing".to_owned());
         assert!(matches!(
             validate_and_normalize(&mut dangling_loot),
             Err(ContentError::DanglingReference { .. })
         ));
 
         let mut duplicate_actor = artifact.content.clone();
-        duplicate_actor.worlds[0].procedural_floors[0].actor_spawns[0].instance_id =
-            "demo.monster.ember-mote.1".to_owned();
+        duplicate_actor.worlds[0].procedural_floors[0].encounter_table_id = None;
+        duplicate_actor.worlds[0].procedural_floors[0].nest = None;
+        duplicate_actor.worlds[0].procedural_floors[0]
+            .actor_spawns
+            .push(ProceduralActorSpawnDefinition {
+                instance_id: "demo.monster.ember-mote.1".to_owned(),
+                room_id: "remote".to_owned(),
+                actor_kind_ids: vec!["demo.actor.echo-hound".to_owned()],
+            });
         assert!(matches!(
             validate_and_normalize(&mut duplicate_actor),
             Err(ContentError::DuplicateInstanceId(_))
+        ));
+
+        let mut zero_weight = artifact.content.clone();
+        zero_weight.encounter_tables[0].entries[0].weight = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut zero_weight),
+            Err(ContentError::InvalidEncounterTable(_))
+        ));
+
+        let mut missing_theme = artifact.content.clone();
+        missing_theme.worlds[0].procedural_floors[0].theme_table_id =
+            Some("demo.theme-table.missing".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut missing_theme),
+            Err(ContentError::DanglingReference { .. })
         ));
     }
 
@@ -3156,15 +3548,10 @@ mod tests {
         ));
 
         let mut theme_mismatch = artifact.content.clone();
-        theme_mismatch.worlds[0]
-            .procedural_floors
-            .iter_mut()
-            .find(|floor| floor.id == "demo.floor.echo-depth-2")
-            .expect("fixture should contain the vault floor")
-            .theme_id = Some("demo.theme.other".to_owned());
+        theme_mismatch.vaults[0].theme_id = "demo.theme.other".to_owned();
         assert!(matches!(
             validate_and_normalize(&mut theme_mismatch),
-            Err(ContentError::InvalidProceduralFloor(_))
+            Err(ContentError::InvalidThemeTable(_))
         ));
 
         let mut no_depth_candidate = artifact.content.clone();

@@ -39,6 +39,7 @@
 - [Contract v30：权威相邻地形交互查询](contract-v30-authoritative-terrain-interactions.md)
 - [Contract v31：秘密门、搜索与地形知识](contract-v31-secret-door-search.md)
 - [Contract v47：深度主题 Vault 与群体遭遇](contract-v47-themed-vault.md)
+- [Contract v48：楼层生成表、加权 Vault 与巢穴](contract-v48-floor-generation-tables.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -590,12 +591,13 @@ interface SaveGame {
 - 协议 1.45 和 contract-v45 已建立；内容包 1.38.0 新增跨成员楼层的有序 `taskStages`，任务状态保存当前阶段，任务日志显示阶段编号，state hash 升至 Schema v18。active baseline 共 88 个 exact fixtures。
 - 协议 1.46 和 contract-v46 已建立；内容包 1.39.0 将回声地牢扩展为三层，新增显式最终层、确定性守护者、持久击败状态和守护者死亡事件，state hash 升至 Schema v19。active baseline 共 91 个 exact fixtures。
 - 协议 1.47 和 contract-v47 已建立；内容包 1.40.0 新增独立 vault 根，深度 2 的主题模板绘制隐藏入口与固定 terrain，按深度加权表生成 3 人群组并使用专属 loot table。save v1 / state hash Schema v19 不变，active baseline 共 92 个 exact fixtures。
+- 协议 1.48 和 contract-v48 已建立；内容包 1.41.0 新增独立 encounter/theme 根和楼层表引用，普通房间怪物/掉落改为表驱动，深度 2 在两个主题 Vault 间确定性加权选择，深度 1 建立首个同类巢穴，深度 3 验证无 Vault 候选回退。save v1 / state hash Schema v19 不变，active baseline 共 96 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage E 收尾，把 vault 内表提升为普通房间可复用的楼层级 encounter/loot/theme 表，并加入多个 vault 的深度/稀有度加权选择与第一类巢穴；
+1. 继续 Stage E 收尾，建立十层压力场景与整层生成预算，再加入区域主题、Vault 旋转/镜像/自由落位和动态 friends/escort 群体；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v47、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v48、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -8,7 +8,7 @@
 
 | 优先级 | 候选纵切 | 状态 | 边界 |
 | --- | --- | --- | --- |
-| P0 | Stage E 生成表与规模 | 待实现 | 楼层级 encounter/loot/theme 表、vault 加权选择、巢穴与更大层数 |
+| P0 | Stage E 生成规模与放置 | 待实现 | 十层压力场景、整层预算/区域主题、Vault 旋转镜像与自由落位、动态群体和分支连接 |
 | P1 | 暂停任务管理 | 待实现 | 地表直接放弃、重接次数限制和重新生成策略 |
 
 ## contract-v32 明确遗留
@@ -33,7 +33,7 @@
 
 - 分支楼梯、同层多个连接点、连接 ID 与到达点分别建模；
 - 随机楼梯位置、回忆/传送等非楼梯跨层入口；
-- 深度相关 encounter/loot 表和分支连接；守护者、最终层和禁止下行规则已由 contract-v46 完成；
+- 深度相关 encounter/loot/theme 表已由 contract-v48 完成；尚缺分支连接。守护者、最终层和禁止下行规则已由 contract-v46 完成；
 - 旧 v33 已访问深度 1 不补下楼梯，因此不能从旧存档进入新深度 2；需要正式存档迁移策略。
 
 来源：[contract-v34](contract-v34-multi-depth-floors.md)。
@@ -141,7 +141,7 @@
 ## contract-v46 明确遗留
 
 - 分支、跳层、shaft、随机楼梯和独立到达点；当前地牢链仍是严格线性；
-- vault 内的深度 encounter、主题 terrain/loot 和固定群体已由 contract-v47 建立；尚缺楼层级 encounter/loot/theme 表、多个 vault 加权选择、巢穴和十层规模生成；
+- vault 内的深度 encounter、主题 terrain/loot 和固定群体已由 contract-v47 建立；楼层级 encounter/loot/theme 表、多个 vault 加权选择和第一类巢穴已由 contract-v48 建立，尚缺十层规模生成、整层预算和自由放置；
 - 入口守护者、守护者 unique 世界生态，以及神器、声望和属性奖励；
 - 多座地牢、进入条件、显式 `DungeonInstanceId`、胜利/退休和角色分数；
 - 回忆、传送、死亡等非楼梯方式结束探索时的统一生命周期。
@@ -150,20 +150,30 @@
 
 ## contract-v47 明确遗留
 
-- 按深度、稀有度和地牢主题加权选择多个 vault，支持旋转、镜像、自由房间落位与生成失败回退；
-- 普通房间也能引用的独立 encounter/loot/theme 表，以及整层预算、群落和区域主题；
-- 巢穴、pit、formation、friends、escort、召唤、繁殖、pack AI、种群上限和 unique 过滤；
+- 按深度和地牢主题加权选择多个 vault、无候选回退已由 contract-v48 建立；尚缺旋转、镜像、自由房间落位、多 Vault 同层和生成失败重试；
+- 普通房间可引用的独立 encounter/loot/theme 表已由 contract-v48 建立；尚缺整层预算、群落和区域主题；
+- 第一类同类巢穴已由 contract-v48 建立；尚缺 pit、formation、friends、escort、召唤、繁殖、pack AI、种群上限和 unique 过滤；
 - vault 越级强敌/掉落、专属陷阱、神器、来源标签和探索奖励；
 - 更大模板的连通性证明、多入口、多 vault 楼层与十层规模压力场景。
 
 来源：[contract-v47](contract-v47-themed-vault.md)。
+
+## contract-v48 明确遗留
+
+- 十层以上地牢、生成预算、区域主题、多个 Vault 同层放置与压力/性能基线；
+- Vault 旋转、镜像、自由房间落位、多入口、大模板连通性证明和失败重试；
+- 巢穴专属表、形状、领袖与主题掉落，以及 pit、formation、friends、escort 和 pack AI；
+- unique/守护者过滤、召唤物与繁殖种群上限、越级强敌/掉落和神器来源标签；
+- 分支、shaft、随机楼梯、同层多个连接点与显式到达点。
+
+来源：[contract-v48](contract-v48-floor-generation-tables.md)。
 
 ## contract-v25–v29 明确遗留
 
 ### 怪物携带物与掉落
 
 - 偷窃、缴械、怪物主动拾物和怪物使用物品；
-- 多次掉落、普通房间/区域主题掉落、unique 过滤和特殊怪物掉落规则；vault 专属主题表已由 contract-v47 建立；
+- 多次掉落、区域主题掉落、unique 过滤和特殊怪物掉落规则；楼层 loot 表引用已由 contract-v48 建立，vault 专属 loot 已由 contract-v47 建立；
 - 统一 `DeathOutcome` 订阅边界，以及经验、任务、统计等死亡消费者。
 
 来源：[contract-v25](contract-v25-monster-carried-items.md)、[contract-v24](contract-v24-deterministic-loot-generation.md)。
@@ -171,7 +181,7 @@
 ### 楼层与生成
 
 - 多深度连接、任务层、临时/持久层策略和旧层淘汰；
-- 多 vault 选择、巢穴、动态朋友/护卫群体和更完整的生成阶段；最终层守护者已由 contract-v46 完成，第一类固定主题 vault/group 已由 contract-v47 完成；
+- 动态朋友/护卫群体、整层预算、区域主题和更完整的生成阶段；最终层守护者已由 contract-v46 完成，第一类固定主题 vault/group 已由 contract-v47 完成，多 Vault 加权选择与第一类巢穴已由 contract-v48 完成；
 - 陷阱、秘密门和其他可变地形进入生成管线。
 
 来源：[contract-v26](contract-v26-floor-lifecycle.md)、[contract-v27](contract-v27-procedural-room-content.md)。

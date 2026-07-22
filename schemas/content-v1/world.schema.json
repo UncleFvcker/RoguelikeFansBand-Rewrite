@@ -183,6 +183,13 @@
             "null"
           ]
         },
+        "encounterTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "entryTerrainId": {
           "default": null,
           "type": [
@@ -234,8 +241,26 @@
           },
           "type": "array"
         },
+        "lootTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "nameKey": {
           "type": "string"
+        },
+        "nest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralNestDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "nextFloorId": {
           "default": null,
@@ -288,6 +313,13 @@
           "type": "array"
         },
         "themeId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "themeTableId": {
           "default": null,
           "type": [
             "string",
@@ -351,6 +383,25 @@
         "id",
         "roomId",
         "lootTableId"
+      ],
+      "type": "object"
+    },
+    "ProceduralNestDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "roomId": {
+          "type": "string"
+        },
+        "spawnCount": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "roomId",
+        "spawnCount"
       ],
       "type": "object"
     },
