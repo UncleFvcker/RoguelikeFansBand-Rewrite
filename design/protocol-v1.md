@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.62、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.63、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -168,6 +168,10 @@ interface GameCoreV1 {
 协议 1.61 新增 `abandon-paused-task { taskId }`，让地表任务日志可以精确关闭一个 paused 共享任务；无效请求投影 `task.abandon-unavailable`。`TaskStatusDto` 新增 `retakesUsed/maxRetakes`，`TaskStateSaveDto` 新增默认值为 0 的 `retakesUsed`。有限次数只在成功恢复时递增，耗尽后的入口拒绝继续使用 `floor.transition-unavailable`。当前规则边界见 [Contract v61](contract-v61-retake-management.md)。
 
 协议 1.62 统一区域组合生成语义：区域楼层可以与 theme/Vault、动态群体、terrain feature、pit、guardian、分阶段地貌和显式连接共存；特殊 footprint 归属宿主区域，区域 actor 的寻路保持在持久边界内。DTO、save 容器和 state hash Schema 不新增字段。当前规则边界见 [Contract v62](contract-v62-regional-composition.md)。
+
+协议 1.63 新增内容侧 `DungeonDefinition`，把显式楼层连接约束为单根树，并允许多个程序化最终叶层共享同一守护者 actor kind。每个叶层使用不同镜像实例 ID；任一镜像被击败后只结算一次地牢征服，并移除其他已生成镜像、抑制尚未生成镜像。协议 DTO、save 容器和 state hash Schema 不新增字段。当前规则边界见 [Contract v63](contract-v63-dungeon-tree-guardian-mirrors.md)。
+
+协议 1.64 将内容侧 Vault 入口规范化为 1–8 个 `entrancePositions`，并固定模板内部连通校验、每入口最长 12 格的四向 BFS connector、整层连通证明和原子失败回退。旧 `entrancePosition` 继续可读并迁移为单元素列表。协议 DTO、save 容器和 state hash Schema 不新增字段；版本升级用于拒绝以 1.63 的单入口落位规则解释首次楼层生成与回放。当前规则边界见 [Contract v64](contract-v64-multi-entry-vault-connectivity.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 

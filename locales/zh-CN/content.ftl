@@ -135,3 +135,4 @@ vault-demo-resonant-gallery-name = 共鸣回廊
 vault-demo-resonance-spindle-name = 共鸣纺锤室
 vault-demo-resonance-crook-name = 共鸣曲廊
 vault-demo-sealed-resonance-monolith-name = 封闭共鸣巨构
+vault-demo-resonance-crossroads-name = 共鸣十字堡

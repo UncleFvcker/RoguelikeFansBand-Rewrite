@@ -150,7 +150,22 @@
       "type": "array"
     },
     "entrancePosition": {
-      "$ref": "#/$defs/ContentPosition"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContentPosition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "entrancePositions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContentPosition"
+      },
+      "type": "array"
     },
     "formatVersion": {
       "format": "uint16",
@@ -208,7 +223,6 @@
     "width",
     "height",
     "baseTerrainId",
-    "entrancePosition",
     "terrainOverrides",
     "encounterGroups",
     "lootSpawns"

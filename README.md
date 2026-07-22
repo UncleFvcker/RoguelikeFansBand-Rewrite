@@ -81,6 +81,8 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v60：同层多区域主题](design/contract-v60-regional-themes.md)
 - [Contract v61：暂停任务管理与确定性重接](design/contract-v61-retake-management.md)
 - [Contract v62：区域组合生成](design/contract-v62-regional-composition.md)
+- [Contract v63：树状地牢与共享守护者镜像](design/contract-v63-dungeon-tree-guardian-mirrors.md)
+- [Contract v64：多入口 Vault 与连通拼接](design/contract-v64-multi-entry-vault-connectivity.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -98,7 +100,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v62/scenarios`](tests/fixtures/contract-v62/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v61` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v64/scenarios`](tests/fixtures/contract-v64/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v63` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -145,7 +147,11 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.62 / contract-v62 已解除区域楼层与全层 theme/Vault、dynamic formation、terrain feature、pit、guardian、显式连接和 cavern/lake/river/destroyed/streamer 的阶段隔离。特殊 footprint 归入单一宿主区域，普通 actor/loot 按实际可行走容量分配，区域怪物寻路保持在持久边界内；demo 在 echo depth 2 和 resonance depth 6/7/8/10 覆盖各组合。active baseline 共 125 个 exact fixtures，内容包为 1.55.0、content hash 为 `9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d`；save v1 / state-hash Schema v23 不变。完整边界见 [Contract v62 说明](design/contract-v62-regional-composition.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 空间管线、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点与 shaft 已经建立；任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。下一步推进更一般的分支连接、Vault 多入口与跨走廊拼接。
+协议 1.63 / contract-v63 已增加独立 dungeon 定义、单根楼层树、唯一父边、多个程序化最终叶层和共享守护者镜像。回声地牢的普通楼梯与 shaft 现在进入不同子层；击败任一镜像只结算一次征服，并确定性移除其他已生成镜像。active baseline 共 127 个 exact fixtures，内容包为 1.56.0、content hash 为 `246f51864965fac494c7a39959f591caa0434d9fa4eac839501f9d09526eb617`；save v1 / state-hash Schema v23 不变。完整边界见 [Contract v63 说明](design/contract-v63-dungeon-tree-guardian-mirrors.md)。
+
+协议 1.64 / contract-v64 已把 Vault 入口升级为 1–8 个唯一边界位置，并在加载时证明模板内部可通行格连通；落位时每个入口使用固定方向、最多 12 格的 BFS connector 接入既有走廊，只有整层连通证明通过才原子提交。demo 新增 8×8 四入口 Crossroads，与不可落位 Monolith 一同覆盖加权选择和稳定回退。active baseline 共 129 个 exact fixtures，内容包为 1.57.0、content hash 为 `9f3e3d5dee1e8777179179259380990b9253aa7f195f08cd29cbbd58562793df`；save v1 / state-hash Schema v23 不变。完整边界见 [Contract v64 说明](design/contract-v64-multi-entry-vault-connectivity.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点与 shaft 已经建立；任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。下一步推进显式 dungeon instance identity、同一模板多运行时实例与动态探索树生命周期。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -217,10 +223,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v62/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v64/baseline-policy.json
 ```
 
-当前 125 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 129 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json",
+  "formatVersion": 1,
+  "id": "demo.vault.resonance-crossroads",
+  "nameKey": "vault-demo-resonance-crossroads-name",
+  "themeId": "demo.theme.resonance-deeps",
+  "width": 8,
+  "height": 8,
+  "baseTerrainId": "demo.terrain.resonant-floor",
+  "entrancePositions": [
+    { "x": 3, "y": 0 },
+    { "x": 7, "y": 3 },
+    { "x": 0, "y": 4 },
+    { "x": 4, "y": 7 }
+  ],
+  "transforms": [
+    "identity",
+    "rotate90",
+    "rotate180",
+    "rotate270",
+    "mirror-horizontal",
+    "mirror-vertical",
+    "mirror-main-diagonal",
+    "mirror-anti-diagonal"
+  ],
+  "terrainOverrides": [
+    {
+      "terrainId": "demo.terrain.door-secret",
+      "positions": [
+        { "x": 3, "y": 0 },
+        { "x": 7, "y": 3 },
+        { "x": 0, "y": 4 },
+        { "x": 4, "y": 7 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.wall",
+      "positions": [
+        { "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 2, "y": 0 },
+        { "x": 4, "y": 0 }, { "x": 5, "y": 0 }, { "x": 6, "y": 0 }, { "x": 7, "y": 0 },
+        { "x": 0, "y": 1 }, { "x": 7, "y": 1 },
+        { "x": 0, "y": 2 }, { "x": 2, "y": 2 }, { "x": 7, "y": 2 },
+        { "x": 0, "y": 3 }, { "x": 5, "y": 3 },
+        { "x": 2, "y": 4 }, { "x": 7, "y": 4 },
+        { "x": 0, "y": 5 }, { "x": 5, "y": 5 }, { "x": 7, "y": 5 },
+        { "x": 0, "y": 6 }, { "x": 7, "y": 6 },
+        { "x": 0, "y": 7 }, { "x": 1, "y": 7 }, { "x": 2, "y": 7 }, { "x": 3, "y": 7 },
+        { "x": 5, "y": 7 }, { "x": 6, "y": 7 }, { "x": 7, "y": 7 }
+      ]
+    }
+  ],
+  "encounterGroups": [
+    {
+      "id": "demo.vault-group.resonance-crossroads-watch",
+      "memberPositions": [
+        { "x": 2, "y": 3 },
+        { "x": 5, "y": 4 }
+      ],
+      "entries": [
+        {
+          "actorKindId": "demo.actor.resonant-warden",
+          "weight": 1,
+          "minDepth": 8,
+          "maxDepth": 8
+        }
+      ]
+    }
+  ],
+  "lootSpawns": [
+    {
+      "id": "demo.vault-loot.resonance-crossroads-cache",
+      "position": { "x": 4, "y": 3 },
+      "lootTableId": "demo.loot-table.resonant-warden"
+    }
+  ]
+}

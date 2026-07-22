@@ -302,6 +302,7 @@ export const MESSAGE_KEYS = [
   "vault-demo-resonance-spindle-name",
   "vault-demo-resonance-crook-name",
   "vault-demo-sealed-resonance-monolith-name",
+  "vault-demo-resonance-crossroads-name",
   "floor-demo-echo-task-rift-name",
   "terrain-demo-task-rift-name",
   "terrain-demo-task-rift-description",

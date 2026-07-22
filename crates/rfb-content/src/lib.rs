@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::{BTreeMap, BTreeSet, VecDeque},
     fs::{self, File},
     io::Read,
     path::{Path, PathBuf},
@@ -620,7 +620,10 @@ pub struct VaultDefinition {
     pub width: u16,
     pub height: u16,
     pub base_terrain_id: String,
-    pub entrance_position: ContentPosition,
+    #[serde(default)]
+    pub entrance_position: Option<ContentPosition>,
+    #[serde(default)]
+    pub entrance_positions: Vec<ContentPosition>,
     #[serde(default)]
     pub transforms: Vec<VaultTransform>,
     pub terrain_overrides: Vec<TerrainOverride>,
@@ -702,7 +705,18 @@ pub struct WorldDefinition {
     pub player: ActorSpawn,
     pub actors: Vec<ActorSpawn>,
     pub items: Vec<ItemSpawn>,
+    #[serde(default)]
+    pub dungeons: Vec<DungeonDefinition>,
     pub procedural_floors: Vec<ProceduralFloorDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DungeonDefinition {
+    pub id: String,
+    pub root_floor_id: String,
+    pub guardian_actor_kind_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1520,6 +1534,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
     let mut all_ids = BTreeSet::new();
     let mut terrain_ids = BTreeSet::new();
     let mut terrain_walkability = BTreeMap::new();
+    let mut terrain_connectability = BTreeMap::new();
     let mut terrain_tags = BTreeMap::new();
     let mut terrain_open_targets = BTreeMap::new();
     let mut terrain_traps = BTreeSet::new();
@@ -1533,6 +1548,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         insert_definition_id(&mut all_ids, &terrain.id)?;
         terrain_ids.insert(terrain.id.clone());
         terrain_walkability.insert(terrain.id.clone(), terrain.walkable);
+        terrain_connectability.insert(
+            terrain.id.clone(),
+            terrain.walkable
+                || terrain.open_to_terrain_id.is_some()
+                || terrain.bash_to_terrain_id.is_some()
+                || terrain.dig_to_terrain_id.is_some(),
+        );
         terrain_tags.insert(
             terrain.id.clone(),
             terrain.tags.iter().cloned().collect::<BTreeSet<_>>(),
@@ -2112,6 +2134,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&vault.id, "vault")?;
         validate_message_key(&vault.name_key)?;
         validate_definition_id(&vault.theme_id, "theme")?;
+        if vault.entrance_positions.is_empty() {
+            if let Some(legacy_position) = vault.entrance_position.take() {
+                vault.entrance_positions.push(legacy_position);
+            }
+        } else if vault.entrance_position.is_some() {
+            return Err(ContentError::InvalidVault(vault.id.clone()));
+        }
+        vault.entrance_positions.sort();
         vault.transforms.sort();
         let transform_count = vault
             .transforms
@@ -2121,12 +2151,19 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             .len();
         if !(2..=12).contains(&vault.width)
             || !(2..=12).contains(&vault.height)
-            || vault.entrance_position.x >= vault.width
-            || vault.entrance_position.y >= vault.height
-            || !(vault.entrance_position.x == 0
-                || vault.entrance_position.x + 1 == vault.width
-                || vault.entrance_position.y == 0
-                || vault.entrance_position.y + 1 == vault.height)
+            || !(1..=8).contains(&vault.entrance_positions.len())
+            || vault
+                .entrance_positions
+                .windows(2)
+                .any(|positions| positions[0] == positions[1])
+            || vault.entrance_positions.iter().any(|position| {
+                position.x >= vault.width
+                    || position.y >= vault.height
+                    || !(position.x == 0
+                        || position.x + 1 == vault.width
+                        || position.y == 0
+                        || position.y + 1 == vault.height)
+            })
             || transform_count != vault.transforms.len()
         {
             return Err(ContentError::InvalidVault(vault.id.clone()));
@@ -2163,6 +2200,46 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     return Err(ContentError::InvalidVault(vault.id.clone()));
                 }
             }
+        }
+
+        let connectable_positions = (0..vault.height)
+            .flat_map(|y| (0..vault.width).map(move |x| ContentPosition { x, y }))
+            .filter(|position| {
+                let terrain_id = terrain_by_position
+                    .get(position)
+                    .unwrap_or(&vault.base_terrain_id);
+                terrain_connectability
+                    .get(terrain_id)
+                    .copied()
+                    .unwrap_or(false)
+            })
+            .collect::<BTreeSet<_>>();
+        if vault
+            .entrance_positions
+            .iter()
+            .any(|position| !connectable_positions.contains(position))
+        {
+            return Err(ContentError::InvalidVault(vault.id.clone()));
+        }
+        let mut reached = BTreeSet::new();
+        let mut pending = VecDeque::from([vault.entrance_positions[0]]);
+        while let Some(position) = pending.pop_front() {
+            if !connectable_positions.contains(&position) || !reached.insert(position) {
+                continue;
+            }
+            for (dx, dy) in [(0_i32, -1_i32), (1, 0), (0, 1), (-1, 0)] {
+                let x = i32::from(position.x) + dx;
+                let y = i32::from(position.y) + dy;
+                if x >= 0 && y >= 0 && x < i32::from(vault.width) && y < i32::from(vault.height) {
+                    pending.push_back(ContentPosition {
+                        x: u16::try_from(x).expect("bounded Vault x must fit u16"),
+                        y: u16::try_from(y).expect("bounded Vault y must fit u16"),
+                    });
+                }
+            }
+        }
+        if reached != connectable_positions {
+            return Err(ContentError::InvalidVault(vault.id.clone()));
         }
 
         vault
@@ -2598,6 +2675,7 @@ fn validate_world(
     let mut procedural_actor_ids = BTreeSet::new();
     let mut procedural_connection_ids = BTreeSet::new();
     world.procedural_floors.sort_by_key(|floor| floor.depth);
+    world.dungeons.sort_by(|left, right| left.id.cmp(&right.id));
     let floor_ids = world
         .procedural_floors
         .iter()
@@ -2611,6 +2689,24 @@ fn validate_world(
             .any(|floor| floor.return_floor_id == world.initial_floor_id)
     {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
+    }
+    let mut dungeon_definition_ids = BTreeSet::new();
+    for dungeon in &world.dungeons {
+        validate_definition_id(&dungeon.id, "dungeon")?;
+        validate_definition_id(&dungeon.root_floor_id, "floor")?;
+        if !dungeon_definition_ids.insert(dungeon.id.clone())
+            || !floor_ids.contains(&dungeon.root_floor_id)
+        {
+            return Err(ContentError::InvalidProceduralFloor(
+                dungeon.root_floor_id.clone(),
+            ));
+        }
+        require_actor_role(
+            actor_roles,
+            &dungeon.guardian_actor_kind_id,
+            ActorRole::Monster,
+            &dungeon.id,
+        )?;
     }
     for procedural in &mut world.procedural_floors {
         validate_definition_id(&procedural.id, "floor")?;
@@ -3901,7 +3997,19 @@ fn validate_world(
         .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
         .filter_map(|floor| floor.dungeon_id.as_deref())
         .collect::<BTreeSet<_>>();
+    if dungeon_ids.len() != world.dungeons.len()
+        || dungeon_ids
+            .iter()
+            .any(|dungeon_id| !dungeon_definition_ids.contains(*dungeon_id))
+    {
+        return Err(ContentError::InvalidProceduralFloor(world.id.clone()));
+    }
     for dungeon_id in dungeon_ids {
+        let dungeon = world
+            .dungeons
+            .iter()
+            .find(|definition| definition.id == dungeon_id)
+            .expect("validated dungeon definition must remain available");
         let members = world
             .procedural_floors
             .iter()
@@ -3912,35 +4020,107 @@ fn validate_world(
             .filter(|floor| floor.return_floor_id == world.initial_floor_id)
             .copied()
             .collect::<Vec<_>>();
-        let finals = members
+        let Some(root) = members
             .iter()
-            .filter(|floor| floor.final_floor)
+            .find(|floor| floor.id == dungeon.root_floor_id)
             .copied()
-            .collect::<Vec<_>>();
-        if roots.len() != 1 || finals.len() != 1 || roots[0].depth != 1 {
+        else {
             return Err(ContentError::InvalidProceduralFloor(members[0].id.clone()));
+        };
+        if roots.len() != 1 || roots[0].id != root.id || root.depth != 1 {
+            return Err(ContentError::InvalidProceduralFloor(root.id.clone()));
         }
-        let mut seen = BTreeSet::new();
-        let mut current = roots[0];
-        loop {
-            if !seen.insert(current.id.as_str())
-                || current.final_floor != current.guardian.is_some()
-                || (current.final_floor && current.next_floor_id.is_some())
-                || (!current.final_floor && current.next_floor_id.is_none())
-            {
-                return Err(ContentError::InvalidProceduralFloor(current.id.clone()));
-            }
-            let Some(next_id) = current.next_floor_id.as_deref() else {
-                break;
+
+        let member_ids = members
+            .iter()
+            .map(|floor| floor.id.as_str())
+            .collect::<BTreeSet<_>>();
+        let mut children_by_floor = BTreeMap::<&str, Vec<&str>>::new();
+        let mut final_count = 0usize;
+        for floor in &members {
+            let mut parents = if floor.connections.is_empty() {
+                (floor.return_floor_id != world.initial_floor_id)
+                    .then_some(floor.return_floor_id.as_str())
+                    .into_iter()
+                    .collect::<Vec<_>>()
+            } else {
+                floor
+                    .connections
+                    .iter()
+                    .filter_map(|connection| {
+                        let target = members
+                            .iter()
+                            .find(|candidate| candidate.id == connection.target_floor_id)?;
+                        (target.depth < floor.depth).then_some(target.id.as_str())
+                    })
+                    .collect::<Vec<_>>()
             };
-            current = members
-                .iter()
-                .find(|floor| floor.id == next_id)
-                .copied()
-                .ok_or_else(|| ContentError::InvalidProceduralFloor(current.id.clone()))?;
+            parents.sort_unstable();
+            parents.dedup();
+            if (floor.id == root.id && !parents.is_empty())
+                || (floor.id != root.id
+                    && (parents.len() != 1 || floor.return_floor_id != parents[0]))
+            {
+                return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+            }
+
+            let mut children = if floor.connections.is_empty() {
+                floor
+                    .next_floor_id
+                    .as_deref()
+                    .into_iter()
+                    .collect::<Vec<_>>()
+            } else {
+                floor
+                    .connections
+                    .iter()
+                    .filter_map(|connection| {
+                        let target = members
+                            .iter()
+                            .find(|candidate| candidate.id == connection.target_floor_id)?;
+                        (target.depth > floor.depth).then_some(target.id.as_str())
+                    })
+                    .collect::<Vec<_>>()
+            };
+            let child_count = children.len();
+            children.sort_unstable();
+            children.dedup();
+            if children.len() != child_count
+                || children.iter().any(|child| !member_ids.contains(child))
+            {
+                return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+            }
+            let is_leaf = children.is_empty();
+            if floor.final_floor != is_leaf || floor.guardian.is_some() != is_leaf {
+                return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+            }
+            if let Some(guardian) = &floor.guardian {
+                final_count += 1;
+                if guardian.actor_kind_id != dungeon.guardian_actor_kind_id {
+                    return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+                }
+            }
+            children_by_floor.insert(floor.id.as_str(), children);
         }
-        if seen.len() != members.len() || current.id != finals[0].id {
-            return Err(ContentError::InvalidProceduralFloor(current.id.clone()));
+        if final_count == 0 {
+            return Err(ContentError::InvalidProceduralFloor(root.id.clone()));
+        }
+
+        let mut pending = vec![root.id.as_str()];
+        let mut seen = BTreeSet::new();
+        while let Some(floor_id) = pending.pop() {
+            if !seen.insert(floor_id) {
+                return Err(ContentError::InvalidProceduralFloor(floor_id.to_owned()));
+            }
+            pending.extend(
+                children_by_floor
+                    .get(floor_id)
+                    .into_iter()
+                    .flat_map(|children| children.iter().copied()),
+            );
+        }
+        if seen.len() != members.len() {
+            return Err(ContentError::InvalidProceduralFloor(root.id.clone()));
         }
     }
     let mut entry_terrain_ids = BTreeSet::new();
@@ -4668,7 +4848,7 @@ mod tests {
         assert_eq!(first.content.theme_tables.len(), 3);
         assert_eq!(first.content.region_tables.len(), 1);
         assert_eq!(first.content.terrain_feature_tables.len(), 1);
-        assert_eq!(first.content.vaults.len(), 5);
+        assert_eq!(first.content.vaults.len(), 6);
         assert_eq!(first.content.worlds.len(), 1);
     }
 
@@ -4679,7 +4859,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.55.0");
+        assert_eq!(catalog.pack_version(), "1.57.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -4758,7 +4938,8 @@ mod tests {
             .world("demo.world.original-v1")
             .expect("demo world should remain available");
         assert_eq!(world.initial_floor_id, "demo.floor.surface");
-        assert_eq!(world.procedural_floors.len(), 19);
+        assert_eq!(world.dungeons.len(), 2);
+        assert_eq!(world.procedural_floors.len(), 23);
         assert_eq!(world.procedural_floors[0].id, "demo.floor.echo-depth-1");
         assert_eq!(world.procedural_floors[0].depth, 1);
         let regional_floor = world
@@ -5773,11 +5954,46 @@ mod tests {
             .iter_mut()
             .find(|vault| vault.width >= 4 && vault.height >= 4)
             .expect("fixture should contain a large Vault");
-        vault.entrance_position = ContentPosition { x: 1, y: 1 };
+        vault.entrance_positions = vec![ContentPosition { x: 1, y: 1 }];
         assert!(matches!(
             validate_and_normalize(&mut interior_entrance),
             Err(ContentError::InvalidVault(_))
         ));
+
+        let mut duplicate_entrance = artifact.content.clone();
+        let entrance = duplicate_entrance.vaults[0].entrance_positions[0];
+        duplicate_entrance.vaults[0].entrance_positions = vec![entrance, entrance];
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_entrance),
+            Err(ContentError::InvalidVault(_))
+        ));
+
+        let mut disconnected_interior = artifact.content.clone();
+        let vault = disconnected_interior
+            .vaults
+            .iter_mut()
+            .find(|vault| vault.id == "demo.vault.harmonic-sepulcher")
+            .expect("fixture should contain the sepulcher Vault");
+        vault
+            .terrain_overrides
+            .iter_mut()
+            .find(|terrain| terrain.terrain_id == "demo.terrain.wall")
+            .expect("fixture should contain Vault walls")
+            .positions
+            .extend((1..5).map(|x| ContentPosition { x, y: 2 }));
+        assert!(matches!(
+            validate_and_normalize(&mut disconnected_interior),
+            Err(ContentError::InvalidVault(_))
+        ));
+
+        let mut legacy_entrance = artifact.content.clone();
+        let entrance = legacy_entrance.vaults[0].entrance_positions[0];
+        legacy_entrance.vaults[0].entrance_positions.clear();
+        legacy_entrance.vaults[0].entrance_position = Some(entrance);
+        validate_and_normalize(&mut legacy_entrance)
+            .expect("legacy single Vault entrance should normalize");
+        assert_eq!(legacy_entrance.vaults[0].entrance_position, None);
+        assert_eq!(legacy_entrance.vaults[0].entrance_positions, [entrance]);
 
         let mut theme_mismatch = artifact.content.clone();
         theme_mismatch.vaults[0].theme_id = "demo.theme.other".to_owned();
@@ -5867,7 +6083,7 @@ mod tests {
     }
 
     #[test]
-    fn dungeon_chains_require_one_guarded_final_floor() {
+    fn dungeon_trees_require_shared_guardian_mirrors() {
         let artifact =
             compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
@@ -5905,6 +6121,53 @@ mod tests {
         final_floor.down_stair_terrain_id = Some("demo.terrain.stairs-down".to_owned());
         assert!(matches!(
             validate_and_normalize(&mut final_with_descent),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut mismatched_guardian = artifact.content.clone();
+        mismatched_guardian.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-3-mirror")
+            .expect("fixture should contain a guardian mirror")
+            .guardian
+            .as_mut()
+            .expect("mirror should retain a guardian")
+            .actor_kind_id = "demo.actor.echo-hound".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut mismatched_guardian),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut converging_tree = artifact.content.clone();
+        let child_parent = converging_tree.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-2-mirror")
+            .expect("fixture should contain the mirror branch");
+        child_parent
+            .connections
+            .push(ProceduralFloorConnectionDefinition {
+                id: "demo.connection.test.second-parent-down".to_owned(),
+                kind: FloorConnectionKind::Stairs,
+                terrain_id: "demo.terrain.stairs-down".to_owned(),
+                target_floor_id: "demo.floor.echo-depth-3-mirror".to_owned(),
+                target_connection_id: Some("demo.connection.test.second-parent-up".to_owned()),
+            });
+        let child = converging_tree.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-3-mirror")
+            .expect("fixture should contain the existing mirror final");
+        child.connections.push(ProceduralFloorConnectionDefinition {
+            id: "demo.connection.test.second-parent-up".to_owned(),
+            kind: FloorConnectionKind::Stairs,
+            terrain_id: "demo.terrain.stairs-up".to_owned(),
+            target_floor_id: "demo.floor.echo-depth-2-mirror".to_owned(),
+            target_connection_id: Some("demo.connection.test.second-parent-down".to_owned()),
+        });
+        assert!(matches!(
+            validate_and_normalize(&mut converging_tree),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
     }

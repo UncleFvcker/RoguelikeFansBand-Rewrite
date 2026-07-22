@@ -67,7 +67,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 55] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 57] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -123,9 +123,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 55] = [
     "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d",
     "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02",
     "56fc449617a4c05c12ff11716c14b4f5c680cada9ad86c6ece736b52fa904bc2",
+    "9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d",
+    "246f51864965fac494c7a39959f591caa0434d9fa4eac839501f9d09526eb617",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d";
+    "9f3e3d5dee1e8777179179259380990b9253aa7f195f08cd29cbbd58562793df";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -250,6 +252,14 @@ struct GeneratedVaultPlacement {
     origin: Position,
     transform: VaultTransform,
     ordinal: u16,
+    connector_cells: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedVaultPlacementCandidate {
+    origin: Position,
+    transform: VaultTransform,
+    connector_cells: Vec<Position>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -312,12 +322,11 @@ fn floor_task_id(floor: &ProceduralFloorDefinition) -> &str {
 
 fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
     world
-        .procedural_floors
+        .dungeons
         .iter()
-        .filter_map(|floor| floor.dungeon_id.as_ref())
-        .map(|dungeon_id| {
+        .map(|dungeon| {
             (
-                dungeon_id.clone(),
+                dungeon.id.clone(),
                 DungeonState {
                     guardian_defeated: false,
                 },
@@ -965,6 +974,35 @@ impl Game {
             world_tick: payload.world_tick,
             last_command_seq: payload.last_command_seq,
         };
+        if migrating_previous_content {
+            let world = game
+                .content
+                .world(&game.world_id)
+                .expect("restored world must remain available")
+                .clone();
+            if !floor_connections_are_valid(
+                &game.current_floor_id,
+                game.width,
+                game.height,
+                &game.terrain,
+                &game.floor_connections,
+                &world,
+            ) {
+                game.floor_connections.clear();
+            }
+            for floor in game.stored_floors.values_mut() {
+                if !floor_connections_are_valid(
+                    &floor.id,
+                    floor.width,
+                    floor.height,
+                    &floor.terrain,
+                    &floor.connections,
+                    &world,
+                ) {
+                    floor.connections.clear();
+                }
+            }
+        }
         game.reveal_current_visibility();
         game.validate_state()?;
         Ok(game)
@@ -3611,15 +3649,44 @@ impl Game {
                 })
             });
         if let Some((dungeon_id, floor_id, target_kind_id)) = defeated_guardian {
-            self.dungeon_states
+            let state = self
+                .dungeon_states
                 .get_mut(&dungeon_id)
-                .expect("guardian dungeon state must remain available")
-                .guardian_defeated = true;
-            events.push(DomainEvent::DungeonGuardianDefeated {
-                dungeon_id,
-                floor_id,
-                target_kind_id,
-            });
+                .expect("guardian dungeon state must remain available");
+            let first_defeat = !state.guardian_defeated;
+            if first_defeat {
+                state.guardian_defeated = true;
+                events.push(DomainEvent::DungeonGuardianDefeated {
+                    dungeon_id: dungeon_id.clone(),
+                    floor_id,
+                    target_kind_id,
+                });
+                let mirror_ids = self
+                    .content
+                    .world(&self.world_id)
+                    .expect("active world must remain available")
+                    .procedural_floors
+                    .iter()
+                    .filter(|floor| {
+                        floor.dungeon_id.as_deref() == Some(dungeon_id.as_str())
+                            && floor.final_floor
+                    })
+                    .filter_map(|floor| {
+                        floor
+                            .guardian
+                            .as_ref()
+                            .map(|guardian| guardian.instance_id.as_str())
+                    })
+                    .collect::<BTreeSet<_>>();
+                for floor in self.stored_floors.values_mut() {
+                    floor
+                        .entities
+                        .retain(|entity| !mirror_ids.contains(entity.id.as_str()));
+                    floor.items.retain(|item| {
+                        !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if mirror_ids.contains(actor_id.as_str()))
+                    });
+                }
+            }
         }
 
         for (item_id, target_kind_id, quantity) in carried {
@@ -4475,8 +4542,9 @@ impl Game {
                                     uses_spatial_vault_budget
                                         || vault.width <= 6
                                             && vault.height <= 5
-                                            && vault.entrance_position.x == vault.width / 2
-                                            && vault.entrance_position.y == 0
+                                            && vault.entrance_positions.len() == 1
+                                            && vault.entrance_positions[0].x == vault.width / 2
+                                            && vault.entrance_positions[0].y == 0
                                 })
                     })
                     .cloned()
@@ -4664,7 +4732,7 @@ impl Game {
             (rooms[0].center(), rooms[1].center())
         };
         let legacy_vault_origin = legacy_vault.as_ref().map(|vault| Position {
-            x: second_center.x - i32::from(vault.entrance_position.x),
+            x: second_center.x - i32::from(vault.entrance_positions[0].x),
             y: rooms
                 .get(1)
                 .expect("legacy vault placement requires a remote room")
@@ -4822,6 +4890,7 @@ impl Game {
                 origin: legacy_vault_origin.expect("present vault must have an origin"),
                 transform: VaultTransform::Identity,
                 ordinal: 1,
+                connector_cells: Vec::new(),
             };
             paint_generated_vault(&mut terrain, width, &placement);
             vec![placement]
@@ -4830,6 +4899,7 @@ impl Game {
                 definition,
                 &eligible_vault_candidates,
                 guardian.is_some(),
+                &generated_floor_terrain_id,
                 &mut terrain,
             )
         } else {
@@ -4839,7 +4909,7 @@ impl Game {
             let entrance = transformed_vault_position(
                 &placement.vault,
                 placement.transform,
-                placement.vault.entrance_position,
+                placement.vault.entrance_positions[0],
             );
             let anchor = Position {
                 x: placement.origin.x + entrance.x,
@@ -4914,6 +4984,7 @@ impl Game {
                     });
                 }
             }
+            feature_reserved.extend(placement.connector_cells.iter().copied());
         }
         if let Some(pit) = &pit_placement {
             let total_width = pit.definition.inner_width + 6;
@@ -6412,6 +6483,7 @@ impl Game {
         definition: &ProceduralFloorDefinition,
         eligible_candidates: &[ThemeVaultCandidateDefinition],
         guardian_present: bool,
+        corridor_terrain_id: &str,
         terrain: &mut [String],
     ) -> Vec<GeneratedVaultPlacement> {
         let budget = definition
@@ -6491,7 +6563,9 @@ impl Game {
                     definition.width,
                     definition.height,
                     &definition.wall_terrain_id,
+                    corridor_terrain_id,
                     &vault,
+                    &self.content,
                 );
                 if placement_candidates.is_empty() {
                     continue;
@@ -6507,7 +6581,7 @@ impl Game {
                     )
                     .expect("vault placement candidate index must fit usize")
                 };
-                let (origin, transform) = placement_candidates[placement_index];
+                let candidate = placement_candidates[placement_index].clone();
                 let actor_cost = vault
                     .encounter_groups
                     .iter()
@@ -6521,11 +6595,17 @@ impl Game {
                 let area = u32::from(vault.width) * u32::from(vault.height);
                 let placement = GeneratedVaultPlacement {
                     vault,
-                    origin,
-                    transform,
+                    origin: candidate.origin,
+                    transform: candidate.transform,
                     ordinal,
+                    connector_cells: candidate.connector_cells,
                 };
-                paint_generated_vault(terrain, definition.width, &placement);
+                apply_generated_vault_placement(
+                    terrain,
+                    definition.width,
+                    corridor_terrain_id,
+                    &placement,
+                );
                 remaining_vault_actor_slots =
                     remaining_vault_actor_slots.saturating_sub(actor_cost);
                 remaining_vault_loot_placements =
@@ -7370,27 +7450,24 @@ impl Game {
             if !expected_dungeons.contains_key(dungeon_id) {
                 return Err(CoreError::InvalidSave("dungeon state ID is invalid"));
             }
-            let final_floor = world
-                .procedural_floors
-                .iter()
-                .find(|floor| {
-                    floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.final_floor
-                })
-                .expect("validated dungeon must retain a final floor");
-            let guardian_id = &final_floor
-                .guardian
-                .as_ref()
-                .expect("validated final floor must retain a guardian")
-                .instance_id;
-            let guardian_present = if self.current_floor_id == final_floor.id {
-                Some(self.entities.iter().any(|actor| &actor.id == guardian_id))
-            } else {
-                self.stored_floors
-                    .get(&final_floor.id)
-                    .map(|floor| floor.entities.iter().any(|actor| &actor.id == guardian_id))
-            };
-            if guardian_present.is_some_and(|present| present == state.guardian_defeated) {
-                return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
+            for final_floor in world.procedural_floors.iter().filter(|floor| {
+                floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.final_floor
+            }) {
+                let guardian_id = &final_floor
+                    .guardian
+                    .as_ref()
+                    .expect("validated final floor must retain a guardian")
+                    .instance_id;
+                let guardian_present = if self.current_floor_id == final_floor.id {
+                    Some(self.entities.iter().any(|actor| &actor.id == guardian_id))
+                } else {
+                    self.stored_floors
+                        .get(&final_floor.id)
+                        .map(|floor| floor.entities.iter().any(|actor| &actor.id == guardian_id))
+                };
+                if guardian_present.is_some_and(|present| present == state.guardian_defeated) {
+                    return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
+                }
             }
         }
         for (item_id, knowledge) in &self.item_property_knowledge {
@@ -8129,8 +8206,10 @@ fn free_vault_placement_candidates(
     width: u16,
     height: u16,
     wall_terrain_id: &str,
+    corridor_terrain_id: &str,
     vault: &VaultDefinition,
-) -> Vec<(Position, VaultTransform)> {
+    content: &ContentCatalog,
+) -> Vec<GeneratedVaultPlacementCandidate> {
     let transforms = if vault.transforms.is_empty() {
         vec![VaultTransform::Identity]
     } else {
@@ -8143,16 +8222,12 @@ fn free_vault_placement_candidates(
         if transformed_width + 2 > width || transformed_height + 2 > height {
             continue;
         }
-        let entrance = transformed_vault_position(vault, transform, vault.entrance_position);
-        let outward = if entrance.y == 0 {
-            Position { x: 0, y: -1 }
-        } else if entrance.x + 1 == i32::from(transformed_width) {
-            Position { x: 1, y: 0 }
-        } else if entrance.y + 1 == i32::from(transformed_height) {
-            Position { x: 0, y: 1 }
-        } else {
-            Position { x: -1, y: 0 }
-        };
+        let mut entrances = vault
+            .entrance_positions
+            .iter()
+            .map(|position| transformed_vault_position(vault, transform, *position))
+            .collect::<Vec<_>>();
+        entrances.sort_by_key(|position| (position.y, position.x));
         for origin_y in 1..=i32::from(height - transformed_height - 1) {
             for origin_x in 1..=i32::from(width - transformed_width - 1) {
                 let origin = Position {
@@ -8174,22 +8249,236 @@ fn free_vault_placement_candidates(
                 if !footprint_is_free {
                     continue;
                 }
-                let connection = Position {
-                    x: origin.x + entrance.x + outward.x,
-                    y: origin.y + entrance.y + outward.y,
+                let footprint = (0..i32::from(transformed_height))
+                    .flat_map(|local_y| {
+                        (0..i32::from(transformed_width)).map(move |local_x| Position {
+                            x: origin.x + local_x,
+                            y: origin.y + local_y,
+                        })
+                    })
+                    .collect::<BTreeSet<_>>();
+                let mut connector_cells = BTreeSet::new();
+                let mut all_entrances_connect = true;
+                for entrance in &entrances {
+                    let outward =
+                        vault_entrance_outward(*entrance, transformed_width, transformed_height);
+                    let outside = Position {
+                        x: origin.x + entrance.x + outward.x,
+                        y: origin.y + entrance.y + outward.y,
+                    };
+                    let Some(path) = vault_connector_path(
+                        terrain,
+                        width,
+                        wall_terrain_id,
+                        &footprint,
+                        &connector_cells,
+                        outside,
+                        content,
+                    ) else {
+                        all_entrances_connect = false;
+                        break;
+                    };
+                    connector_cells.extend(path);
+                }
+                if !all_entrances_connect {
+                    continue;
+                }
+                let connector_cells = connector_cells.into_iter().collect::<Vec<_>>();
+                let placement = GeneratedVaultPlacement {
+                    vault: vault.clone(),
+                    origin,
+                    transform,
+                    ordinal: 0,
+                    connector_cells: connector_cells.clone(),
                 };
-                let connection_index =
-                    connection.y as usize * usize::from(width) + connection.x as usize;
-                if terrain
-                    .get(connection_index)
-                    .is_some_and(|terrain_id| terrain_id != wall_terrain_id)
-                {
-                    candidates.push((origin, transform));
+                let mut proof_terrain = terrain.to_vec();
+                apply_generated_vault_placement(
+                    &mut proof_terrain,
+                    width,
+                    corridor_terrain_id,
+                    &placement,
+                );
+                if generated_terrain_is_connected(&proof_terrain, width, height, content) {
+                    candidates.push(GeneratedVaultPlacementCandidate {
+                        origin,
+                        transform,
+                        connector_cells,
+                    });
                 }
             }
         }
     }
     candidates
+}
+
+const MAX_VAULT_CONNECTOR_TILES: usize = 12;
+
+fn vault_entrance_outward(
+    entrance: Position,
+    transformed_width: u16,
+    transformed_height: u16,
+) -> Position {
+    if entrance.y == 0 {
+        Position { x: 0, y: -1 }
+    } else if entrance.x + 1 == i32::from(transformed_width) {
+        Position { x: 1, y: 0 }
+    } else if entrance.y + 1 == i32::from(transformed_height) {
+        Position { x: 0, y: 1 }
+    } else {
+        Position { x: -1, y: 0 }
+    }
+}
+
+fn vault_connector_path(
+    terrain: &[String],
+    width: u16,
+    wall_terrain_id: &str,
+    footprint: &BTreeSet<Position>,
+    existing_connectors: &BTreeSet<Position>,
+    start: Position,
+    content: &ContentCatalog,
+) -> Option<Vec<Position>> {
+    let height = i32::try_from(terrain.len() / usize::from(width)).ok()?;
+    if start.x <= 0
+        || start.y <= 0
+        || start.x >= i32::from(width - 1)
+        || start.y >= height - 1
+        || footprint.contains(&start)
+    {
+        return None;
+    }
+    let is_target = |position: Position| {
+        if existing_connectors.contains(&position) {
+            return true;
+        }
+        let index = position.y as usize * usize::from(width) + position.x as usize;
+        terrain.get(index).is_some_and(|terrain_id| {
+            terrain_id != wall_terrain_id && terrain_is_connectable(content, terrain_id)
+        })
+    };
+    if is_target(start) {
+        return Some(Vec::new());
+    }
+    let start_index = start.y as usize * usize::from(width) + start.x as usize;
+    if terrain
+        .get(start_index)
+        .is_none_or(|id| id != wall_terrain_id)
+    {
+        return None;
+    }
+
+    let mut pending = VecDeque::from([start]);
+    let mut distance = BTreeMap::from([(start, 0_usize)]);
+    let mut parent = BTreeMap::new();
+    while let Some(position) = pending.pop_front() {
+        let current_distance = distance[&position];
+        for direction in [
+            Position { x: 0, y: -1 },
+            Position { x: 1, y: 0 },
+            Position { x: 0, y: 1 },
+            Position { x: -1, y: 0 },
+        ] {
+            let next = Position {
+                x: position.x + direction.x,
+                y: position.y + direction.y,
+            };
+            if next.x <= 0
+                || next.y <= 0
+                || next.x >= i32::from(width - 1)
+                || next.y >= height - 1
+                || footprint.contains(&next)
+                || distance.contains_key(&next)
+            {
+                continue;
+            }
+            let index = next.y as usize * usize::from(width) + next.x as usize;
+            let terrain_id = terrain.get(index)?;
+            if is_target(next) {
+                parent.insert(next, position);
+                let mut path = Vec::new();
+                let mut cursor = next;
+                while cursor != start {
+                    cursor = parent[&cursor];
+                    path.push(cursor);
+                }
+                path.reverse();
+                path.retain(|cell| !existing_connectors.contains(cell));
+                return (path.len() <= MAX_VAULT_CONNECTOR_TILES).then_some(path);
+            }
+            if terrain_id != wall_terrain_id || current_distance >= MAX_VAULT_CONNECTOR_TILES {
+                continue;
+            }
+            distance.insert(next, current_distance + 1);
+            parent.insert(next, position);
+            pending.push_back(next);
+        }
+    }
+    None
+}
+
+fn terrain_is_connectable(content: &ContentCatalog, terrain_id: &str) -> bool {
+    content.terrain(terrain_id).is_some_and(|terrain| {
+        terrain.walkable
+            || terrain.open_to_terrain_id.is_some()
+            || terrain.bash_to_terrain_id.is_some()
+            || terrain.dig_to_terrain_id.is_some()
+    })
+}
+
+fn generated_terrain_is_connected(
+    terrain: &[String],
+    width: u16,
+    height: u16,
+    content: &ContentCatalog,
+) -> bool {
+    let connectable = terrain
+        .iter()
+        .enumerate()
+        .filter_map(|(index, terrain_id)| {
+            terrain_is_connectable(content, terrain_id).then_some(Position {
+                x: i32::try_from(index % usize::from(width)).expect("floor x must fit i32"),
+                y: i32::try_from(index / usize::from(width)).expect("floor y must fit i32"),
+            })
+        })
+        .collect::<BTreeSet<_>>();
+    let Some(start) = connectable.first().copied() else {
+        return false;
+    };
+    let mut reached = BTreeSet::new();
+    let mut pending = VecDeque::from([start]);
+    while let Some(position) = pending.pop_front() {
+        if !connectable.contains(&position) || !reached.insert(position) {
+            continue;
+        }
+        for direction in [
+            Position { x: 0, y: -1 },
+            Position { x: 1, y: 0 },
+            Position { x: 0, y: 1 },
+            Position { x: -1, y: 0 },
+        ] {
+            let next = Position {
+                x: position.x + direction.x,
+                y: position.y + direction.y,
+            };
+            if next.x >= 0 && next.y >= 0 && next.x < i32::from(width) && next.y < i32::from(height)
+            {
+                pending.push_back(next);
+            }
+        }
+    }
+    reached == connectable
+}
+
+fn apply_generated_vault_placement(
+    terrain: &mut [String],
+    width: u16,
+    corridor_terrain_id: &str,
+    placement: &GeneratedVaultPlacement,
+) {
+    paint_generated_vault(terrain, width, placement);
+    for position in &placement.connector_cells {
+        set_generated_terrain(terrain, width, *position, corridor_terrain_id);
+    }
 }
 
 fn paint_generated_vault(terrain: &mut [String], width: u16, placement: &GeneratedVaultPlacement) {
@@ -9499,21 +9788,22 @@ mod tests {
         assert_eq!(game.player.position, down_a);
 
         traverse_connection(&mut game, "demo.connection.echo-depth-1.down-b");
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2-mirror");
         assert_eq!(
             game.player.position,
-            connection_position(&game, "demo.connection.echo-depth-2.up-b")
+            connection_position(&game, "demo.connection.echo-depth-2-mirror.up-a")
         );
-        traverse_connection(&mut game, "demo.connection.echo-depth-2.up-b");
+        traverse_connection(&mut game, "demo.connection.echo-depth-2-mirror.up-a");
         assert_eq!(game.player.position, down_b);
 
         let shaft_down = connection_position(&game, "demo.connection.echo-depth-1.shaft-down");
         traverse_connection(&mut game, "demo.connection.echo-depth-1.shaft-down");
-        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-3");
+        assert_eq!(game.current_floor_id, "demo.floor.echo-depth-3-shaft");
         assert_eq!(
             game.player.position,
-            connection_position(&game, "demo.connection.echo-depth-3.shaft-up")
+            connection_position(&game, "demo.connection.echo-depth-3-shaft.shaft-up")
         );
-        traverse_connection(&mut game, "demo.connection.echo-depth-3.shaft-up");
+        traverse_connection(&mut game, "demo.connection.echo-depth-3-shaft.shaft-up");
         assert_eq!(game.current_floor_id, "demo.floor.echo-depth-1");
         assert_eq!(game.player.position, shaft_down);
     }
@@ -10533,6 +10823,139 @@ mod tests {
     }
 
     #[test]
+    fn guardian_mirrors_share_conquest_and_are_removed_from_other_final_floors() {
+        let mut game = Game::new(71);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("echo dungeon entry should resolve")
+            .expect("echo dungeon entry should transition");
+
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.down-a");
+        traverse_connection(&mut game, "demo.connection.echo-depth-2.down-b");
+        assert!(
+            game.entities
+                .iter()
+                .any(|actor| actor.id == "demo.guardian.echo-depths.2")
+        );
+        traverse_connection(&mut game, "demo.connection.echo-depth-3-mirror.up-a");
+        traverse_connection(&mut game, "demo.connection.echo-depth-2.up-a");
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.down-b");
+        traverse_connection(&mut game, "demo.connection.echo-depth-2-mirror.down-a");
+
+        assert!(
+            game.stored_floors["demo.floor.echo-depth-3-mirror"]
+                .entities
+                .iter()
+                .any(|actor| actor.id == "demo.guardian.echo-depths.2")
+        );
+        let guardian_index = game
+            .entities
+            .iter()
+            .position(|actor| actor.id == "demo.guardian.echo-depths.3")
+            .expect("branch final floor should contain its guardian mirror");
+        let mut events = Vec::new();
+        let mut changed = BTreeSet::new();
+        let mut removed_entities = Vec::new();
+        game.resolve_actor_death(
+            guardian_index,
+            DomainEvent::Waited,
+            &mut events,
+            &mut changed,
+            &mut removed_entities,
+        )
+        .expect("guardian mirror death should resolve");
+
+        assert!(game.dungeon_states["demo.dungeon.echo-depths"].guardian_defeated);
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(event, DomainEvent::DungeonGuardianDefeated { .. }))
+                .count(),
+            1
+        );
+        assert_eq!(removed_entities, ["demo.guardian.echo-depths.3"]);
+        assert!(
+            game.stored_floors["demo.floor.echo-depth-3-mirror"]
+                .entities
+                .iter()
+                .all(|actor| actor.id != "demo.guardian.echo-depths.2")
+        );
+        assert!(game.stored_floors["demo.floor.echo-depth-3-mirror"]
+            .items
+            .iter()
+            .all(|item| {
+                !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == "demo.guardian.echo-depths.2")
+            }));
+
+        let mut restored = Game::from_save(game.to_save()).expect("shared conquest should persist");
+        traverse_connection(&mut restored, "demo.connection.echo-depth-3-branch.up-a");
+        traverse_connection(&mut restored, "demo.connection.echo-depth-2-mirror.up-a");
+        traverse_connection(&mut restored, "demo.connection.echo-depth-1.shaft-down");
+        assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-3-shaft");
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|actor| actor.id != "demo.guardian.echo-depths.4")
+        );
+    }
+
+    #[test]
+    fn v62_floor_with_obsolete_connection_set_uses_legacy_stair_fallback() {
+        let mut game = Game::new(93);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("echo dungeon entry should resolve")
+            .expect("echo dungeon entry should transition");
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.down-a");
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d".to_owned();
+        let occupied = payload
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .chain(std::iter::once(payload.player.position))
+            .collect::<BTreeSet<_>>();
+        let legacy_index = payload
+            .terrain
+            .terrain_ids
+            .iter()
+            .enumerate()
+            .find(|(index, terrain_id)| {
+                let position = Position {
+                    x: i32::try_from(index % usize::from(payload.terrain.width))
+                        .expect("x should fit i32"),
+                    y: i32::try_from(index / usize::from(payload.terrain.width))
+                        .expect("y should fit i32"),
+                };
+                terrain_id.as_str() == "demo.terrain.floor" && !occupied.contains(&position)
+            })
+            .map(|(index, _)| index)
+            .expect("generated floor should retain a legacy stair candidate");
+        let legacy_position = Position {
+            x: i32::try_from(legacy_index % usize::from(payload.terrain.width))
+                .expect("x should fit i32"),
+            y: i32::try_from(legacy_index / usize::from(payload.terrain.width))
+                .expect("y should fit i32"),
+        };
+        payload.terrain.terrain_ids[legacy_index] = "demo.terrain.stairs-up".to_owned();
+        payload.floor_connections.push(FloorConnectionSaveDto {
+            id: "demo.connection.echo-depth-2.up-b".to_owned(),
+            position: legacy_position,
+        });
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let expected_draws = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v62 connection set should migrate");
+        assert!(restored.floor_connections.is_empty());
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(restored.rng.draw_counter, expected_draws);
+    }
+
+    #[test]
     fn previous_generated_floor_is_not_backfilled_with_v27_room_content() {
         let mut game = Game::new(27);
         game.player.position = Position { x: 3, y: 4 };
@@ -10901,7 +11324,7 @@ mod tests {
             .expect("a harmonic sepulcher seed should remain reachable");
 
         assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2");
-        assert_eq!(game.floor_connections.len(), 4);
+        assert_eq!(game.floor_connections.len(), 3);
         assert_eq!(game.floor_regions.len(), 2);
         assert_eq!(game.entities.len(), 5);
         let regional_encounters = game
@@ -11233,7 +11656,7 @@ mod tests {
             let mandatory_feature_tiles = if depth == 9 {
                 1
             } else {
-                2 + usize::from(depth == 8) * 2 + usize::from(depth == 10)
+                2 + usize::from(depth == 8) * 5 + usize::from(depth == 10)
             };
             assert_eq!(
                 terrain_feature_tiles - mandatory_feature_tiles,
@@ -11247,7 +11670,7 @@ mod tests {
                 );
             }
             let guardian_slots = if depth == 10 { 1 } else { 0 };
-            let vault_slots = if depth == 8 { 2 } else { 0 };
+            let vault_slots = if depth == 8 { 3 } else { 0 };
             let pit_slots = if depth == 10 { 25 } else { 0 };
             assert_eq!(
                 game.entities
@@ -11262,7 +11685,7 @@ mod tests {
                         .iter()
                         .filter(|entity| entity.id.contains(".vault."))
                         .count(),
-                    2
+                    3
                 );
                 assert!(
                     game.entities
@@ -11272,7 +11695,7 @@ mod tests {
                 assert!(
                     game.entities
                         .iter()
-                        .any(|entity| entity.id.contains("resonance-crook-watch"))
+                        .any(|entity| entity.id.contains("resonance-crossroads-watch"))
                 );
                 assert!(
                     !game
@@ -11285,7 +11708,7 @@ mod tests {
                         .iter()
                         .filter(|terrain| *terrain == "demo.terrain.door-secret")
                         .count(),
-                    3
+                    6
                 );
             }
             if depth == 10 {
@@ -11412,7 +11835,7 @@ mod tests {
                 .iter()
                 .filter(|entity| entity.id.contains(".vault."))
                 .count(),
-            2
+            3
         );
         assert!(game.entities.iter().all(|entity| {
             !entity.id.contains(".vault.")
@@ -12441,7 +12864,11 @@ mod tests {
             (4, 3)
         );
         assert_eq!(
-            transformed_vault_position(vault, VaultTransform::Rotate90, vault.entrance_position),
+            transformed_vault_position(
+                vault,
+                VaultTransform::Rotate90,
+                vault.entrance_positions[0]
+            ),
             Position { x: 3, y: 1 }
         );
         assert_eq!(
@@ -12523,11 +12950,118 @@ mod tests {
             &definition,
             &[impossible, fallback],
             false,
+            "demo.terrain.resonant-floor",
             &mut terrain,
         );
 
         assert_eq!(placements.len(), 1);
         assert_eq!(placements[0].vault.id, "demo.vault.resonance-spindle");
+    }
+
+    #[test]
+    fn large_multi_entrance_vault_stitches_into_a_connected_floor() {
+        let mut game = Game::new(64);
+        let definition = game
+            .content
+            .world(BUILT_IN_WORLD_ID)
+            .expect("built-in world should exist")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-8")
+            .expect("fixture should contain the spatial Vault floor")
+            .clone();
+        let candidate = ThemeVaultCandidateDefinition {
+            vault_id: "demo.vault.resonance-crossroads".to_owned(),
+            weight: 1,
+            min_depth: 8,
+            max_depth: 8,
+        };
+        let mut terrain = vec![
+            definition.wall_terrain_id.clone();
+            usize::from(definition.width) * usize::from(definition.height)
+        ];
+        for x in 1..i32::from(definition.width - 1) {
+            set_generated_terrain(
+                &mut terrain,
+                definition.width,
+                Position { x, y: 10 },
+                "demo.terrain.resonant-floor",
+            );
+        }
+        for y in 1..i32::from(definition.height - 1) {
+            set_generated_terrain(
+                &mut terrain,
+                definition.width,
+                Position { x: 10, y },
+                "demo.terrain.resonant-floor",
+            );
+        }
+
+        let placements = game.select_spatial_vault_placements(
+            &definition,
+            &[candidate],
+            false,
+            "demo.terrain.resonant-floor",
+            &mut terrain,
+        );
+
+        assert_eq!(placements.len(), 1);
+        let placement = &placements[0];
+        assert_eq!(placement.vault.entrance_positions.len(), 4);
+        assert!(!placement.connector_cells.is_empty());
+        assert!(placement.connector_cells.iter().all(|position| {
+            terrain[generated_terrain_index(definition.width, *position)]
+                == "demo.terrain.resonant-floor"
+        }));
+        assert!(generated_terrain_is_connected(
+            &terrain,
+            definition.width,
+            definition.height,
+            &game.content,
+        ));
+        let (vault_width, vault_height) =
+            transformed_vault_dimensions(&placement.vault, placement.transform);
+        for entrance in &placement.vault.entrance_positions {
+            let entrance =
+                transformed_vault_position(&placement.vault, placement.transform, *entrance);
+            let outward = vault_entrance_outward(entrance, vault_width, vault_height);
+            let outside = Position {
+                x: placement.origin.x + entrance.x + outward.x,
+                y: placement.origin.y + entrance.y + outward.y,
+            };
+            assert!(terrain_is_connectable(
+                &game.content,
+                &terrain[generated_terrain_index(definition.width, outside)]
+            ));
+        }
+    }
+
+    #[test]
+    fn previous_v63_generated_floor_is_not_rebuilt_for_multi_entry_vaults() {
+        let mut game = Game::new(93);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..8 {
+            descend_one_floor(&mut game);
+        }
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-8");
+
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "246f51864965fac494c7a39959f591caa0434d9fa4eac839501f9d09526eb617".to_owned();
+        let expected_terrain = payload.terrain.clone();
+        let expected_entities = payload.entities.clone();
+        let expected_items = payload.items.clone();
+        let expected_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v63 generated floor should migrate");
+
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, expected_draw_counter);
     }
 
     #[test]

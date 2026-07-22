@@ -42,6 +42,26 @@
       ],
       "type": "object"
     },
+    "DungeonDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "guardianActorKindId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "rootFloorId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "rootFloorId",
+        "guardianActorKindId"
+      ],
+      "type": "object"
+    },
     "DungeonGuardianDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1143,6 +1163,13 @@
     },
     "borderTerrainId": {
       "type": "string"
+    },
+    "dungeons": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/DungeonDefinition"
+      },
+      "type": "array"
     },
     "fillTerrainId": {
       "type": "string"

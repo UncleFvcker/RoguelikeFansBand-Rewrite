@@ -128,6 +128,15 @@
       "quantity": 6
     }
   ],
+  "dungeons": [{
+    "id": "demo.dungeon.echo-depths",
+    "rootFloorId": "demo.floor.echo-depth-1",
+    "guardianActorKindId": "demo.actor.resonant-warden"
+  }, {
+    "id": "demo.dungeon.resonance-descent",
+    "rootFloorId": "demo.floor.resonance-depth-1",
+    "guardianActorKindId": "demo.actor.resonant-warden"
+  }],
   "proceduralFloors": [{
     "id": "demo.floor.echo-depth-1",
     "nameKey": "floor-demo-echo-depth-1-name",
@@ -158,14 +167,14 @@
       "id": "demo.connection.echo-depth-1.down-b",
       "kind": "stairs",
       "terrainId": "demo.terrain.stairs-down",
-      "targetFloorId": "demo.floor.echo-depth-2",
-      "targetConnectionId": "demo.connection.echo-depth-2.up-b"
+      "targetFloorId": "demo.floor.echo-depth-2-mirror",
+      "targetConnectionId": "demo.connection.echo-depth-2-mirror.up-a"
     }, {
       "id": "demo.connection.echo-depth-1.shaft-down",
       "kind": "shaft",
       "terrainId": "demo.terrain.shaft-down",
-      "targetFloorId": "demo.floor.echo-depth-3",
-      "targetConnectionId": "demo.connection.echo-depth-3.shaft-up"
+      "targetFloorId": "demo.floor.echo-depth-3-shaft",
+      "targetConnectionId": "demo.connection.echo-depth-3-shaft.shaft-up"
     }, {
       "id": "demo.connection.echo-depth-1.surface-up",
       "kind": "stairs",
@@ -206,20 +215,14 @@
       "id": "demo.connection.echo-depth-2.down-b",
       "kind": "stairs",
       "terrainId": "demo.terrain.stairs-down",
-      "targetFloorId": "demo.floor.echo-depth-3",
-      "targetConnectionId": "demo.connection.echo-depth-3.up-b"
+      "targetFloorId": "demo.floor.echo-depth-3-mirror",
+      "targetConnectionId": "demo.connection.echo-depth-3-mirror.up-a"
     }, {
       "id": "demo.connection.echo-depth-2.up-a",
       "kind": "stairs",
       "terrainId": "demo.terrain.stairs-up",
       "targetFloorId": "demo.floor.echo-depth-1",
       "targetConnectionId": "demo.connection.echo-depth-1.down-a"
-    }, {
-      "id": "demo.connection.echo-depth-2.up-b",
-      "kind": "stairs",
-      "terrainId": "demo.terrain.stairs-up",
-      "targetFloorId": "demo.floor.echo-depth-1",
-      "targetConnectionId": "demo.connection.echo-depth-1.down-b"
     }],
     "depth": 2,
     "width": 20,
@@ -250,23 +253,11 @@
       "actorKindId": "demo.actor.resonant-warden"
     },
     "connections": [{
-      "id": "demo.connection.echo-depth-3.shaft-up",
-      "kind": "shaft",
-      "terrainId": "demo.terrain.shaft-up",
-      "targetFloorId": "demo.floor.echo-depth-1",
-      "targetConnectionId": "demo.connection.echo-depth-1.shaft-down"
-    }, {
       "id": "demo.connection.echo-depth-3.up-a",
       "kind": "stairs",
       "terrainId": "demo.terrain.stairs-up",
       "targetFloorId": "demo.floor.echo-depth-2",
       "targetConnectionId": "demo.connection.echo-depth-2.down-a"
-    }, {
-      "id": "demo.connection.echo-depth-3.up-b",
-      "kind": "stairs",
-      "terrainId": "demo.terrain.stairs-up",
-      "targetFloorId": "demo.floor.echo-depth-2",
-      "targetConnectionId": "demo.connection.echo-depth-2.down-b"
     }],
     "depth": 3,
     "width": 20,
@@ -297,6 +288,145 @@
     "floorTerrainId": "demo.terrain.floor",
     "upStairTerrainId": "demo.terrain.stairs-up",
     "downStairTerrainId": "demo.terrain.stairs-down",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-depth-2-mirror",
+    "nameKey": "floor-demo-echo-depth-2-name",
+    "returnFloorId": "demo.floor.echo-depth-1",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
+    "generationBudget": {
+      "actorSlots": 5,
+      "lootPlacements": 2
+    },
+    "nextFloorId": "demo.floor.echo-depth-3-branch",
+    "connections": [{
+      "id": "demo.connection.echo-depth-2-mirror.down-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-down",
+      "targetFloorId": "demo.floor.echo-depth-3-branch",
+      "targetConnectionId": "demo.connection.echo-depth-3-branch.up-a"
+    }, {
+      "id": "demo.connection.echo-depth-2-mirror.up-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-1",
+      "targetConnectionId": "demo.connection.echo-depth-1.down-b"
+    }],
+    "depth": 2,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "downStairTerrainId": "demo.terrain.stairs-down",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-depth-3-mirror",
+    "nameKey": "floor-demo-echo-depth-3-name",
+    "returnFloorId": "demo.floor.echo-depth-2",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
+    "generationBudget": {
+      "actorSlots": 2,
+      "lootPlacements": 1
+    },
+    "finalFloor": true,
+    "guardian": {
+      "instanceId": "demo.guardian.echo-depths.2",
+      "actorKindId": "demo.actor.resonant-warden"
+    },
+    "connections": [{
+      "id": "demo.connection.echo-depth-3-mirror.up-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-2",
+      "targetConnectionId": "demo.connection.echo-depth-2.down-b"
+    }],
+    "depth": 3,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-depth-3-branch",
+    "nameKey": "floor-demo-echo-depth-3-name",
+    "returnFloorId": "demo.floor.echo-depth-2-mirror",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
+    "generationBudget": {
+      "actorSlots": 2,
+      "lootPlacements": 1
+    },
+    "finalFloor": true,
+    "guardian": {
+      "instanceId": "demo.guardian.echo-depths.3",
+      "actorKindId": "demo.actor.resonant-warden"
+    },
+    "connections": [{
+      "id": "demo.connection.echo-depth-3-branch.up-a",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.echo-depth-2-mirror",
+      "targetConnectionId": "demo.connection.echo-depth-2-mirror.down-a"
+    }],
+    "depth": 3,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.echo-depth-3-shaft",
+    "nameKey": "floor-demo-echo-depth-3-name",
+    "returnFloorId": "demo.floor.echo-depth-1",
+    "dungeonId": "demo.dungeon.echo-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
+    "generationBudget": {
+      "actorSlots": 2,
+      "lootPlacements": 1
+    },
+    "finalFloor": true,
+    "guardian": {
+      "instanceId": "demo.guardian.echo-depths.4",
+      "actorKindId": "demo.actor.resonant-warden"
+    },
+    "connections": [{
+      "id": "demo.connection.echo-depth-3-shaft.shaft-up",
+      "kind": "shaft",
+      "terrainId": "demo.terrain.shaft-up",
+      "targetFloorId": "demo.floor.echo-depth-1",
+      "targetConnectionId": "demo.connection.echo-depth-1.shaft-down"
+    }],
+    "depth": 3,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
     "closedDoorTerrainId": "demo.terrain.door-secret",
     "trapTerrainId": "demo.terrain.trap-echo-snare",
     "actorSpawns": [],

@@ -7,7 +7,7 @@
   "width": 6,
   "height": 5,
   "baseTerrainId": "demo.terrain.floor",
-  "entrancePosition": { "x": 3, "y": 0 },
+  "entrancePositions": [{ "x": 3, "y": 0 }],
   "terrainOverrides": [
     {
       "terrainId": "demo.terrain.door-secret",

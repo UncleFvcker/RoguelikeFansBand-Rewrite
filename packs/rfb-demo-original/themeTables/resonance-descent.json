@@ -19,6 +19,12 @@
       "maxDepth": 10,
       "vaultCandidates": [
         {
+          "vaultId": "demo.vault.resonance-crossroads",
+          "weight": 32,
+          "minDepth": 8,
+          "maxDepth": 8
+        },
+        {
           "vaultId": "demo.vault.sealed-resonance-monolith",
           "weight": 16,
           "minDepth": 8,

@@ -135,3 +135,4 @@ vault-demo-resonant-gallery-name = Resonant Gallery
 vault-demo-resonance-spindle-name = Resonance Spindle
 vault-demo-resonance-crook-name = Resonance Crook
 vault-demo-sealed-resonance-monolith-name = Sealed Resonance Monolith
+vault-demo-resonance-crossroads-name = Resonance Crossroads

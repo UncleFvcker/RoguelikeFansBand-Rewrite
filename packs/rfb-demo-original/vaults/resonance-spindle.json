@@ -7,7 +7,7 @@
   "width": 3,
   "height": 4,
   "baseTerrainId": "demo.terrain.resonant-floor",
-  "entrancePosition": { "x": 1, "y": 0 },
+  "entrancePositions": [{ "x": 1, "y": 0 }],
   "transforms": [
     "identity",
     "rotate90",
