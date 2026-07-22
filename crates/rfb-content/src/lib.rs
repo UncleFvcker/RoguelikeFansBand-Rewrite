@@ -828,6 +828,10 @@ pub struct ProceduralGenerationBudgetDefinition {
     #[serde(default)]
     pub streamer_area_tiles: Option<u32>,
     #[serde(default)]
+    pub pit_placements: Option<u16>,
+    #[serde(default)]
+    pub pit_actor_slots: Option<u16>,
+    #[serde(default)]
     pub vault_placements: Option<u16>,
     #[serde(default)]
     pub vault_area_tiles: Option<u32>,
@@ -867,6 +871,18 @@ pub struct ProceduralLayoutDefinition {
     pub destroyed: Option<ProceduralDestroyedDefinition>,
     #[serde(default)]
     pub streamers: Vec<ProceduralStreamerCandidateDefinition>,
+    #[serde(default)]
+    pub pit: Option<ProceduralPitDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralPitDefinition {
+    pub encounter_table_id: String,
+    pub inner_width: u16,
+    pub inner_height: u16,
+    pub roster_size: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2560,7 +2576,23 @@ fn validate_world(
                 + procedural
                     .nest
                     .as_ref()
-                    .map_or(0, |nest| usize::from(nest.spawn_count));
+                    .map_or(0, |nest| usize::from(nest.spawn_count))
+                + budget.pit_actor_slots.map_or(0, usize::from);
+            let pit_budget = match (
+                procedural
+                    .layout
+                    .as_ref()
+                    .and_then(|layout| layout.pit.as_ref())
+                    .cloned(),
+                budget.pit_placements,
+                budget.pit_actor_slots,
+            ) {
+                (None, None, None) => None,
+                (Some(pit), Some(placements), Some(actor_slots)) => {
+                    Some((pit, placements, actor_slots))
+                }
+                _ => return Err(ContentError::InvalidProceduralFloor(procedural.id.clone())),
+            };
             let room_budget = match (
                 procedural.layout.as_mut(),
                 budget.room_placements,
@@ -2593,7 +2625,7 @@ fn validate_world(
             if procedural.lifecycle != FloorLifecycle::Dungeon
                 || procedural.encounter_table_id.is_none()
                 || procedural.loot_table_id.is_none()
-                || !(1..=16).contains(&budget.actor_slots)
+                || !(1..=128).contains(&budget.actor_slots)
                 || !(1..=8).contains(&budget.loot_placements)
                 || reserved_actor_slots >= usize::from(budget.actor_slots)
             {
@@ -2878,6 +2910,43 @@ fn validate_world(
                         }
                     }
                     _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                if let Some((pit, placements, actor_slots)) = &pit_budget {
+                    let Some(table) = encounter_tables.get(&pit.encounter_table_id) else {
+                        return Err(ContentError::DanglingReference {
+                            owner: procedural.id.clone(),
+                            target: pit.encounter_table_id.clone(),
+                        });
+                    };
+                    let eligible_pit_entries = table
+                        .entries
+                        .iter()
+                        .filter(|entry| {
+                            entry.min_depth <= procedural.depth
+                                && procedural.depth <= entry.max_depth
+                                && actor_levels
+                                    .get(&entry.actor_kind_id)
+                                    .is_some_and(|level| *level <= u32::from(procedural.depth))
+                        })
+                        .count();
+                    let total_width = pit.inner_width.saturating_add(6);
+                    let total_height = pit.inner_height.saturating_add(6);
+                    if *placements != 1
+                        || *actor_slots != pit.inner_width.saturating_mul(pit.inner_height)
+                        || !(5..=15).contains(&pit.inner_width)
+                        || !(5..=7).contains(&pit.inner_height)
+                        || pit.inner_width % 2 == 0
+                        || pit.inner_height % 2 == 0
+                        || !(2..=10).contains(&pit.roster_size)
+                        || eligible_pit_entries < 2
+                        || total_width > procedural.width.saturating_sub(2)
+                        || total_height > procedural.height.saturating_sub(2)
+                        || procedural.nest.is_some()
+                        || spatial_vault_budget.is_some()
+                        || group_budget.is_some()
+                    {
                         return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                     }
                 }
@@ -4035,7 +4104,7 @@ mod tests {
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
-        assert_eq!(first.content.encounter_tables.len(), 3);
+        assert_eq!(first.content.encounter_tables.len(), 4);
         assert_eq!(first.content.loot_tables.len(), 5);
         assert_eq!(first.content.theme_tables.len(), 2);
         assert_eq!(first.content.terrain_feature_tables.len(), 1);
@@ -4050,7 +4119,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.48.0");
+        assert_eq!(catalog.pack_version(), "1.49.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -4206,6 +4275,27 @@ mod tests {
                     .map(|maze| (maze.width, maze.height, layout.streamers.len()))
             }),
             Some((15, 15, 1))
+        );
+        assert_eq!(
+            maze_floor.layout.as_ref().and_then(|layout| {
+                layout.pit.as_ref().map(|pit| {
+                    (
+                        pit.encounter_table_id.as_str(),
+                        pit.inner_width,
+                        pit.inner_height,
+                        pit.roster_size,
+                    )
+                })
+            }),
+            Some(("demo.encounter-table.resonance-pit", 5, 5, 5))
+        );
+        assert_eq!(
+            maze_floor.generation_budget.as_ref().map(|budget| (
+                budget.actor_slots,
+                budget.pit_placements,
+                budget.pit_actor_slots,
+            )),
+            Some((31, Some(1), Some(25)))
         );
         assert_eq!(
             world.procedural_floors[0]
@@ -4800,6 +4890,37 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut mismatched_maze_budget),
             Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut mismatched_pit_budget = artifact.content.clone();
+        mismatched_pit_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the pit floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .pit_actor_slots = Some(24);
+        assert!(matches!(
+            validate_and_normalize(&mut mismatched_pit_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut dangling_pit_table = artifact.content.clone();
+        dangling_pit_table.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the pit floor")
+            .layout
+            .as_mut()
+            .and_then(|layout| layout.pit.as_mut())
+            .expect("fixture should contain a pit")
+            .encounter_table_id = "demo.encounter-table.missing".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut dangling_pit_table),
+            Err(ContentError::DanglingReference { .. })
         ));
 
         let mut incomplete_destroyed_budget = artifact.content.clone();

@@ -74,6 +74,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v53：分阶段洞穴地貌与房间几何预算](design/contract-v53-staged-cavern-layout.md)
 - [Contract v54：湖泊与河流水文阶段](design/contract-v54-lake-river-hydrology.md)
 - [Contract v55：迷宫、毁坏区与岩脉阶段](design/contract-v55-maze-destroyed-streamers.md)
+- [Contract v56：原版式怪物 Pit 与等级阵列](design/contract-v56-classic-monster-pit.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -91,7 +92,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v55/scenarios`](tests/fixtures/contract-v55/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v54` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v56/scenarios`](tests/fixtures/contract-v56/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v55` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -126,7 +127,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.55 / contract-v55 已沿原版 `build_maze_vault()`、`destroy_level()` 与 `build_streamer()` 增加内容驱动的完美迷宫、多震中毁坏区和加权岩脉阶段。深度 9 生成 15×15、127 通路格的 maze 与 24 格 streamer；深度 10 生成 48 格 destroyed 区与 24 格 streamer，房间/隧道仍保证主链连通。active baseline 共 110 个 exact fixtures，内容包为 1.48.0、terrain 42、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v55 说明](design/contract-v55-maze-destroyed-streamers.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、第一类巢穴、动态 friends/escort formation、额外特殊地形预算、连通 cavern 基底和多房间几何预算已经建立。Stage E 后续主要剩余 lake/river/streamer/destroyed/maze、pit/pack AI、多入口/连通性和分支连接；任务线的暂停管理仍保留在后续队列。
+协议 1.56 / contract-v56 已参考原版 `Monster Pit I` 与 `_init_formation()` 增加独立复合 pit 房间、单入口内室、专属加权怪物池和中心强化的等级阵列。深度 9 生成 11×11 外墙/环廊/内墙结构并以 25 个 actor 填满 5×5 内室；普通 encounter、loot 和 terrain feature 排除整个 pit footprint。active baseline 共 112 个 exact fixtures，内容包为 1.49.0、terrain 42、actor 10、encounter table 4、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v56 说明](design/contract-v56-classic-monster-pit.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、巢穴、动态 friends/escort formation、程序化地貌和原版式 pit 已经建立。Stage E 后续主要剩余 pack AI、多入口/连通性、分支连接、专用楼层模式与同层多区域主题；任务线的暂停管理仍保留在后续队列。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -198,10 +201,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v55/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v56/baseline-policy.json
 ```
 
-当前 110 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 112 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

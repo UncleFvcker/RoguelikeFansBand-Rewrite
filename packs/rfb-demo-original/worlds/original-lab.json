@@ -413,7 +413,7 @@
     "themeTableId": "demo.theme-table.resonance-descent",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
-      "actorSlots": 10,
+      "actorSlots": 31,
       "lootPlacements": 3,
       "roomPlacements": 4,
       "roomAreaTiles": 96,
@@ -423,6 +423,8 @@
       "mazeFloorTiles": 127,
       "streamerPlacements": 2,
       "streamerAreaTiles": 24,
+      "pitPlacements": 1,
+      "pitActorSlots": 25,
       "featurePlacements": 4
     },
     "layout": {
@@ -444,7 +446,13 @@
       "maze": { "width": 15, "height": 15 },
       "streamers": [
         { "terrainId": "demo.terrain.resonance-vein", "weight": 1 }
-      ]
+      ],
+      "pit": {
+        "encounterTableId": "demo.encounter-table.resonance-pit",
+        "innerWidth": 5,
+        "innerHeight": 5,
+        "rosterSize": 5
+      }
     },
     "nextFloorId": "demo.floor.resonance-depth-10",
     "depth": 9,

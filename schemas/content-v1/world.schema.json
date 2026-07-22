@@ -519,6 +519,26 @@
             "null"
           ]
         },
+        "pitActorSlots": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "pitPlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "riverAreaTiles": {
           "default": null,
           "format": "uint32",
@@ -655,6 +675,17 @@
           ],
           "default": null
         },
+        "pit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralPitDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "river": {
           "anyOf": [
             {
@@ -740,6 +771,39 @@
       "required": [
         "roomId",
         "spawnCount"
+      ],
+      "type": "object"
+    },
+    "ProceduralPitDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "encounterTableId": {
+          "type": "string"
+        },
+        "innerHeight": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "innerWidth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rosterSize": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "encounterTableId",
+        "innerWidth",
+        "innerHeight",
+        "rosterSize"
       ],
       "type": "object"
     },

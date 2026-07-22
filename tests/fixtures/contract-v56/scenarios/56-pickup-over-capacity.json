@@ -1,0 +1,294 @@
+{
+  "schemaVersion": 1,
+  "id": "item.pickup.over-capacity",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerHp": null,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": {
+          "x": 18,
+          "y": 18
+        },
+        "hp": null,
+        "energyNeed": 100,
+        "statuses": [
+          {
+            "kindId": "rfb.status.slow",
+            "intensity": 10,
+            "remainingTicks": 1000
+          }
+        ],
+        "resistances": []
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "south"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 9,
+      "turn": 9,
+      "worldTick": 90,
+      "lastCommandSeq": 9,
+      "floorId": "demo.floor.surface",
+      "playerPosition": {
+        "x": 6,
+        "y": 4
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 97,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 18,
+            "y": 18
+          },
+          "hp": 3,
+          "speed": 10,
+          "energyNeed": 10,
+          "statuses": [
+            {
+              "kindId": "rfb.status.slow",
+              "intensity": 10,
+              "remainingTicks": 910
+            }
+          ]
+        }
+      ],
+      "groundItemCount": 1,
+      "inventoryStackCount": 4,
+      "equipmentCount": 0,
+      "itemKnowledge": [],
+      "itemPropertyKnowledge": [],
+      "nextItemInstanceSerial": 2,
+      "terrainInteractions": [],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3
+        }
+      ],
+      "revealedTerrain": [],
+      "stateHash": "b7008cbbc04893da297265830930f20b504ba7b72a7f7f11a4092d834884e631"
+    },
+    "events": [
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "5",
+          "target": "demo.item.luminous-shard"
+        }
+      },
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "1",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "1",
+          "target": "demo.item.echo-blade"
+        }
+      },
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "6",
+          "target": "demo.item.resonance-pellet"
+        }
+      },
+      {
+        "kind": "item.pickup.over-capacity",
+        "messageKey": "item-pickup-over-capacity",
+        "args": {
+          "capacity": "100",
+          "currentWeight": "97",
+          "pickupWeight": "15",
+          "quantity": "1",
+          "target": "demo.item.resonance-sling"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 4
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "b7008cbbc04893da297265830930f20b504ba7b72a7f7f11a4092d834884e631"
+  }
+}

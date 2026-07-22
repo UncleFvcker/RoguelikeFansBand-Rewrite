@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.55、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.56、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -154,6 +154,8 @@ interface GameCoreV1 {
 协议 1.54 仍不增加 DTO 或 save 字段，固定 lake 连通前沿、深浅分层、river 边界/坐标/轴向选择、浅水岸扩展和房间/隧道覆盖顺序的 RNG 语义；版本升级用于拒绝以 1.53 规则解释首次水文生成和回放。当前规则边界见 [Contract v54](contract-v54-lake-river-hydrology.md)。
 
 协议 1.55 继续保持 DTO 与 save 字段不变，固定 maze 根节点/邻居、destroyed 震中/前沿、streamer 权重/起点/方向/候选和稳定回退的 RNG 语义；版本升级用于拒绝以 1.54 规则解释首次 late-terrain 生成和回放。当前规则边界见 [Contract v55](contract-v55-maze-destroyed-streamers.md)。
+
+协议 1.56 仍不增加 DTO 或 save 字段，固定 pit roster 权重抽取、等级/ID 排序、中心阶位映射、复合房间覆盖、单入口连接和 footprint 保留顺序；版本升级用于拒绝以 1.55 规则解释首次 pit 生成和回放。当前规则边界见 [Contract v56](contract-v56-classic-monster-pit.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 

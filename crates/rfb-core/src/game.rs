@@ -39,10 +39,10 @@ use crate::{
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
     EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
-    ProceduralMazeDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
-    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
-    VaultDefinition, VaultTransform,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, TaskObjectiveDefinition,
+    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
+    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -60,7 +60,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 48] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 49] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -77,6 +77,7 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 48] = [
     "154f5c333d2e352ff13734823a8cfded3e513b545c7b2e934663954887c375cf",
     "479728aa3cead56c7dbf886a1beb4a9f20b5034085da8836cb82f2191246e979",
     "43b38c37bc03ae81f8fe1e5a3f3c8afeba47921ff05321011bc227fb5813387f",
+    "52c3db16ad5240ff83ba652b09ef70cccac991a586b593f84c11956a55539596",
     "419260921954602e9b707dd8c260f80ad3ff1ad0504ea2dfbde739ec64ca2d54",
     "130f0f9fbddbdb12d7742d222e2e4deceabddb51810834c264da45678e15d474",
     "b37af3a660c95c024d12c8232b6b5467cb7d57982e09431748f1516ed3c550c3",
@@ -111,7 +112,7 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 48] = [
     "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "52c3db16ad5240ff83ba652b09ef70cccac991a586b593f84c11956a55539596";
+    "461242cb2164434a7ef44a3692f1c9fa4ffe9921f07c17e0857c96f2f2d95041";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -232,6 +233,14 @@ struct GeneratedVaultPlacement {
     origin: Position,
     transform: VaultTransform,
     ordinal: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedPitPlacement {
+    definition: ProceduralPitDefinition,
+    origin: Position,
+    outer_entrance: Position,
+    inner_entrance: Position,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -4279,6 +4288,24 @@ impl Game {
         {
             self.generate_streamers(definition, &layout.streamers, &mut terrain);
         }
+        let pit_placement = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.pit.as_ref())
+            .map(|pit| {
+                self.place_classic_pit(
+                    definition,
+                    pit,
+                    rooms[rooms.len() - 2].center(),
+                    &generated_floor_terrain_id,
+                    &mut terrain,
+                )
+            });
+        let content_rooms = if pit_placement.is_some() {
+            &rooms[..rooms.len() - 1]
+        } else {
+            rooms.as_slice()
+        };
         let door_position = Position {
             x: (first_center.x + second_center.x) / 2,
             y: first_center.y,
@@ -4356,6 +4383,20 @@ impl Game {
                 }
             }
         }
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            for y in 0..total_height {
+                for x in 0..total_width {
+                    feature_reserved.insert(Position {
+                        x: pit.origin.x + i32::from(x),
+                        y: pit.origin.y + i32::from(y),
+                    });
+                }
+            }
+            feature_reserved.insert(pit.outer_entrance);
+            feature_reserved.insert(pit.inner_entrance);
+        }
         let terrain_features = if let Some(table_id) = &definition.terrain_feature_table_id {
             let table = self
                 .content
@@ -4373,7 +4414,7 @@ impl Game {
             self.place_terrain_features(
                 definition,
                 &eligible_entries,
-                &rooms,
+                content_rooms,
                 &feature_reserved,
                 &generated_floor_terrain_id,
                 &mut terrain,
@@ -4383,6 +4424,18 @@ impl Game {
         };
         let mut occupied = BTreeSet::from([first_center]);
         occupied.extend(terrain_features.iter().map(|feature| feature.position));
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            for y in 0..total_height {
+                for x in 0..total_width {
+                    occupied.insert(Position {
+                        x: pit.origin.x + i32::from(x),
+                        y: pit.origin.y + i32::from(y),
+                    });
+                }
+            }
+        }
         if definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
@@ -4419,6 +4472,13 @@ impl Game {
                 .nest
                 .as_ref()
                 .map_or(0, |nest| nest.spawn_count)
+                .saturating_add(
+                    definition
+                        .generation_budget
+                        .as_ref()
+                        .and_then(|budget| budget.pit_actor_slots)
+                        .unwrap_or(0),
+                )
                 .saturating_add(if guardian.is_some() { 1 } else { 0 })
                 .saturating_add(
                     vault_placements
@@ -4437,7 +4497,7 @@ impl Game {
                     definition,
                     &table,
                     &eligible_entries,
-                    &rooms,
+                    content_rooms,
                     room_id,
                     reserved_actor_slots,
                     &mut occupied,
@@ -4455,12 +4515,15 @@ impl Game {
                 for ordinal in 0..encounter_rolls {
                     let entry = &eligible_entries[self.roll_weighted_index(&weights)];
                     let placement_room_id = if definition.layout.is_some() {
-                        generated_non_entry_room_id(&rooms, ordinal)
+                        generated_non_entry_room_id(content_rooms, ordinal)
                     } else {
                         room_id
                     };
-                    let position =
-                        self.choose_generated_room_position(&rooms, placement_room_id, &occupied);
+                    let position = self.choose_generated_room_position(
+                        content_rooms,
+                        placement_room_id,
+                        &occupied,
+                    );
                     occupied.insert(position);
                     entities.push(self.generated_actor(
                         format!("{}.encounter.{}", definition.id, ordinal + 1),
@@ -4490,6 +4553,75 @@ impl Game {
                         actor.speed,
                         INITIAL_MONSTER_ENERGY_NEED,
                     ));
+                }
+            }
+            if let Some(pit) = &pit_placement {
+                let table = self
+                    .content
+                    .encounter_table(&pit.definition.encounter_table_id)
+                    .expect("validated pit encounter table must remain available")
+                    .clone();
+                let eligible = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let pit_weights = eligible
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                let mut roster = (0..pit.definition.roster_size)
+                    .map(|_| {
+                        eligible[self.roll_weighted_index(&pit_weights)]
+                            .actor_kind_id
+                            .clone()
+                    })
+                    .collect::<Vec<_>>();
+                roster.sort_by(|left, right| {
+                    let left_level = self
+                        .content
+                        .actor(left)
+                        .expect("pit roster actor must remain available")
+                        .level;
+                    let right_level = self
+                        .content
+                        .actor(right)
+                        .expect("pit roster actor must remain available")
+                        .level;
+                    right_level.cmp(&left_level).then_with(|| left.cmp(right))
+                });
+                let half_width = pit.definition.inner_width / 2;
+                let half_height = pit.definition.inner_height / 2;
+                let maximum_rank = pit.definition.roster_size - 1;
+                let mut ordinal = 0_u16;
+                for local_y in 0..pit.definition.inner_height {
+                    for local_x in 0..pit.definition.inner_width {
+                        let dx = local_x.abs_diff(half_width);
+                        let dy = local_y.abs_diff(half_height);
+                        let horizontal_rank = dx * maximum_rank / half_width;
+                        let vertical_rank = dy * maximum_rank / half_height;
+                        let rank = usize::from(horizontal_rank.max(vertical_rank));
+                        let kind_id = &roster[rank];
+                        let position = Position {
+                            x: pit.origin.x + 3 + i32::from(local_x),
+                            y: pit.origin.y + 3 + i32::from(local_y),
+                        };
+                        occupied.insert(position);
+                        ordinal += 1;
+                        entities.push(self.generated_actor(
+                            format!("{}.pit.{}", definition.id, ordinal),
+                            kind_id,
+                            position,
+                        ));
+                    }
                 }
             }
         } else {
@@ -4633,12 +4765,15 @@ impl Game {
             });
             for ordinal in 0..floor_loot_placements {
                 let placement_room_id = if definition.layout.is_some() {
-                    generated_non_entry_room_id(&rooms, ordinal)
+                    generated_non_entry_room_id(content_rooms, ordinal)
                 } else {
                     room_id
                 };
-                let position =
-                    self.choose_generated_room_position(&rooms, placement_room_id, &occupied);
+                let position = self.choose_generated_room_position(
+                    content_rooms,
+                    placement_room_id,
+                    &occupied,
+                );
                 occupied.insert(position);
                 items.extend(self.generate_loot_instances(
                     &LootContext {
@@ -4886,6 +5021,98 @@ impl Game {
         }
 
         rooms
+    }
+
+    fn place_classic_pit(
+        &mut self,
+        floor: &ProceduralFloorDefinition,
+        pit: &ProceduralPitDefinition,
+        approach: Position,
+        floor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> GeneratedPitPlacement {
+        let placement_count = floor
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.room_placements)
+            .expect("validated pit requires room placement budget");
+        let columns = if placement_count <= 4 { 2 } else { 3 };
+        let rows = placement_count.div_ceil(columns);
+        let ordinal = placement_count - 1;
+        let column = ordinal % columns;
+        let row = ordinal / columns;
+        let interior_width = floor.width - 2;
+        let interior_height = floor.height - 2;
+        let cell_left = 1 + interior_width * column / columns;
+        let cell_right = 1 + interior_width * (column + 1) / columns;
+        let cell_top = 1 + interior_height * row / rows;
+        let cell_bottom = 1 + interior_height * (row + 1) / rows;
+        let total_width = pit.inner_width + 6;
+        let total_height = pit.inner_height + 6;
+        let maximum_x = i32::from(floor.width - total_width - 1);
+        let maximum_y = i32::from(floor.height - total_height - 1);
+        let origin = Position {
+            x: ((i32::from(cell_left + cell_right) - i32::from(total_width)) / 2)
+                .clamp(1, maximum_x),
+            y: ((i32::from(cell_top + cell_bottom) - i32::from(total_height)) / 2)
+                .clamp(1, maximum_y),
+        };
+        let center_y = origin.y + i32::from(total_height / 2);
+        let outer_entrance = Position {
+            x: origin.x,
+            y: center_y,
+        };
+        let inner_entrance = Position {
+            x: origin.x + 2,
+            y: center_y,
+        };
+
+        for local_y in 0..total_height {
+            for local_x in 0..total_width {
+                let on_outer_wall = local_x == 0
+                    || local_y == 0
+                    || local_x + 1 == total_width
+                    || local_y + 1 == total_height;
+                let on_inner_wall = local_x == 2
+                    || local_y == 2
+                    || local_x + 3 == total_width
+                    || local_y + 3 == total_height;
+                let terrain_id = if on_outer_wall || on_inner_wall {
+                    &floor.wall_terrain_id
+                } else {
+                    floor_terrain_id
+                };
+                set_generated_terrain(
+                    terrain,
+                    floor.width,
+                    Position {
+                        x: origin.x + i32::from(local_x),
+                        y: origin.y + i32::from(local_y),
+                    },
+                    terrain_id,
+                );
+            }
+        }
+        set_generated_terrain(terrain, floor.width, outer_entrance, floor_terrain_id);
+        carve_generated_corridor(
+            terrain,
+            floor.width,
+            approach,
+            outer_entrance,
+            floor_terrain_id,
+        );
+        set_generated_terrain(
+            terrain,
+            floor.width,
+            inner_entrance,
+            &floor.closed_door_terrain_id,
+        );
+        GeneratedPitPlacement {
+            definition: pit.clone(),
+            origin,
+            outer_entrance,
+            inner_entrance,
+        }
     }
 
     fn generate_connected_cavern(
@@ -8987,7 +9214,7 @@ mod tests {
             .expect("pressure dungeon entry should resolve")
             .expect("pressure dungeon entry should transition");
 
-        let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 10, 10];
+        let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 31, 10];
         let loot_placements = [1_usize, 1, 1, 1, 2, 2, 2, 3, 3, 3];
         let feature_placements = [0_usize, 0, 2, 3, 4, 4, 4, 4, 4, 4];
         for depth in 1..=10 {
@@ -9010,7 +9237,7 @@ mod tests {
                     )
                 })
                 .count();
-            let mandatory_feature_tiles = 2 + usize::from(depth == 8) * 2;
+            let mandatory_feature_tiles = 2 + usize::from(depth == 8) * 2 + usize::from(depth == 9);
             assert_eq!(
                 terrain_feature_tiles - mandatory_feature_tiles,
                 feature_placements[depth - 1]
@@ -9024,12 +9251,13 @@ mod tests {
             }
             let guardian_slots = if depth == 10 { 1 } else { 0 };
             let vault_slots = if depth == 8 { 2 } else { 0 };
+            let pit_slots = if depth == 9 { 25 } else { 0 };
             assert_eq!(
                 game.entities
                     .iter()
                     .filter(|entity| entity.id.contains(".encounter."))
                     .count(),
-                actor_slots[depth - 1] - guardian_slots - vault_slots
+                actor_slots[depth - 1] - guardian_slots - vault_slots - pit_slots
             );
             if depth == 8 {
                 assert_eq!(
@@ -9061,6 +9289,63 @@ mod tests {
                         .filter(|terrain| *terrain == "demo.terrain.door-secret")
                         .count(),
                     5
+                );
+            }
+            if depth == 9 {
+                let pit = game
+                    .entities
+                    .iter()
+                    .filter(|entity| entity.id.contains(".pit."))
+                    .collect::<Vec<_>>();
+                assert_eq!(pit.len(), 25);
+                let xs = pit
+                    .iter()
+                    .map(|entity| entity.position.x)
+                    .collect::<BTreeSet<_>>();
+                let ys = pit
+                    .iter()
+                    .map(|entity| entity.position.y)
+                    .collect::<BTreeSet<_>>();
+                assert_eq!(xs.len(), 5);
+                assert_eq!(ys.len(), 5);
+                let center = Position {
+                    x: (*xs.first().expect("pit must have a left edge")
+                        + *xs.last().expect("pit must have a right edge"))
+                        / 2,
+                    y: (*ys.first().expect("pit must have a top edge")
+                        + *ys.last().expect("pit must have a bottom edge"))
+                        / 2,
+                };
+                let center_actor = pit
+                    .iter()
+                    .find(|entity| entity.position == center)
+                    .expect("pit must fill its center");
+                let center_level = game
+                    .content
+                    .actor(&center_actor.kind_id)
+                    .expect("pit actor must remain available")
+                    .level;
+                assert!(
+                    pit.iter()
+                        .filter(|entity| {
+                            xs.contains(&entity.position.x) && ys.contains(&entity.position.y)
+                        })
+                        .all(|entity| {
+                            center_level
+                                >= game
+                                    .content
+                                    .actor(&entity.kind_id)
+                                    .expect("pit actor must remain available")
+                                    .level
+                        })
+                );
+                let inner_door = Position {
+                    x: *xs.first().expect("pit must have a left edge") - 1,
+                    y: center.y,
+                };
+                assert_eq!(
+                    game.terrain[generated_terrain_index(game.width, inner_door)],
+                    "demo.terrain.door-secret"
                 );
             }
             if depth <= 3 {
@@ -10118,6 +10403,42 @@ mod tests {
                 "demo.terrain.resonance-vein" | "demo.terrain.resonance-ruin"
             )
         }));
+    }
+
+    #[test]
+    fn previous_v55_generated_floor_is_not_backfilled_with_a_pit() {
+        let mut game = Game::new(156);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..9 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "52c3db16ad5240ff83ba652b09ef70cccac991a586b593f84c11956a55539596".to_owned();
+        payload
+            .entities
+            .retain(|entity| !entity.id.contains(".pit."));
+        let expected_entities = payload.entities.clone();
+        let expected_terrain = payload.terrain.clone();
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v55 generated floor should migrate");
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-9");
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(restored.to_save().terrain, expected_terrain);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|entity| !entity.id.contains(".pit."))
+        );
     }
 
     #[test]

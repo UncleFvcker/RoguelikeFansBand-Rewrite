@@ -47,6 +47,7 @@
 - [Contract v53：分阶段洞穴地貌与房间几何预算](contract-v53-staged-cavern-layout.md)
 - [Contract v54：湖泊与河流水文阶段](contract-v54-lake-river-hydrology.md)
 - [Contract v55：迷宫、毁坏区与岩脉阶段](contract-v55-maze-destroyed-streamers.md)
+- [Contract v56：原版式怪物 Pit 与等级阵列](contract-v56-classic-monster-pit.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -603,13 +604,13 @@ interface SaveGame {
 - 协议 1.50 和 contract-v50 已建立；内容包 1.43.0 新增 Vault 八向变换、边界入口、自由 wall 区落位、多 Vault 数量/面积预算、重叠拒绝与稳定失败回退。深度 8 在 9 actor/3 loot placement 内落位两个小模板并跳过无法落位的 12×12 候选；save v1 / state hash Schema v19 不变，active baseline 共 100 个 exact fixtures。
 - 协议 1.51 和 contract-v51 已建立；内容包 1.44.0 新增动态 friends/escort、`cluster/ring` formation、群体数量/随从 actor 预算、空间缩减与原子回退。深度 6/7 分别生成 ring/cluster 群体并保持 7/8 actor 总预算；save v1 / state hash Schema v19 不变，active baseline 共 102 个 exact fixtures。
 - 协议 1.52 和 contract-v52 已建立；内容包 1.45.0 新增独立 terrain feature 表、room/corridor 放置、深度权重、额外特殊地形预算、占位排斥与失败回退。压力地牢深度 3–10 放置 2–4 个额外 trap/rubble/door；save v1 / state hash Schema v19 不变，active baseline 共 104 个 exact fixtures。
-- 协议 1.55 和 contract-v55 已建立；内容包 1.48.0 在分阶段 layout 中新增完美 maze、多震中 destroyed、加权 streamer、独立废墟/矿脉 terrain 与稳定空间回退。save v1 / state hash Schema v19 不变，active baseline 共 110 个 exact fixtures。
+- 协议 1.56 和 contract-v56 已建立；内容包 1.49.0 在分阶段 layout 中新增原版式复合 pit、专属 encounter table、密集等级阵列和 footprint 保留。save v1 / state hash Schema v19 不变，active baseline 共 112 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage E 分阶段地貌，依次补 lake/river/streamer/destroyed/maze，再推进 pit/pack AI、多入口、大模板连通性和分支连接；
+1. 继续 Stage E 地牢生态，推进 pack AI、多入口、大模板连通性、专用楼层模式、同层多区域主题和分支连接；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。
