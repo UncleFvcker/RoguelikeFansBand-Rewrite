@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.resonant-floor",
+  "nameKey": "terrain-demo-resonant-floor-name",
+  "descriptionKey": "terrain-demo-resonant-floor-description",
+  "glyph": ":",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["interior", "stone", "deep-resonance"]
+}

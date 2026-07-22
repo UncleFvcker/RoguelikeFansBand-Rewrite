@@ -558,6 +558,8 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub theme_table_id: Option<String>,
     #[serde(default)]
+    pub generation_budget: Option<ProceduralGenerationBudgetDefinition>,
+    #[serde(default)]
     pub nest: Option<ProceduralNestDefinition>,
     #[serde(default)]
     pub entry_terrain_id: Option<String>,
@@ -676,6 +678,14 @@ pub struct ProceduralLootSpawnDefinition {
     pub id: String,
     pub room_id: String,
     pub loot_table_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralGenerationBudgetDefinition {
+    pub actor_slots: u16,
+    pub loot_placements: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2115,6 +2125,42 @@ fn validate_world(
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
+        if let Some(budget) = &procedural.generation_budget {
+            let reserved_actor_slots = usize::from(u8::from(procedural.guardian.is_some()))
+                + procedural
+                    .nest
+                    .as_ref()
+                    .map_or(0, |nest| usize::from(nest.spawn_count));
+            if procedural.lifecycle != FloorLifecycle::Dungeon
+                || procedural.encounter_table_id.is_none()
+                || procedural.loot_table_id.is_none()
+                || !(1..=16).contains(&budget.actor_slots)
+                || !(1..=8).contains(&budget.loot_placements)
+                || reserved_actor_slots >= usize::from(budget.actor_slots)
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            for entry in &eligible_theme_entries {
+                for candidate in entry.vault_candidates.iter().filter(|candidate| {
+                    candidate.min_depth <= procedural.depth
+                        && procedural.depth <= candidate.max_depth
+                }) {
+                    let vault = vaults
+                        .get(&candidate.vault_id)
+                        .expect("validated theme vault must remain available");
+                    let vault_actor_slots = vault
+                        .encounter_groups
+                        .iter()
+                        .map(|group| group.member_positions.len())
+                        .sum::<usize>();
+                    if reserved_actor_slots + vault_actor_slots >= usize::from(budget.actor_slots)
+                        || vault.loot_spawns.len() >= usize::from(budget.loot_placements)
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+            }
+        }
         if let Some(vault_id) = &procedural.vault_id {
             let Some(vault) = vaults.get(vault_id) else {
                 return Err(ContentError::DanglingReference {
@@ -3140,13 +3186,13 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 35);
+        assert_eq!(first.content.terrain.len(), 37);
         assert_eq!(first.content.actors.len(), 8);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
-        assert_eq!(first.content.encounter_tables.len(), 1);
+        assert_eq!(first.content.encounter_tables.len(), 2);
         assert_eq!(first.content.loot_tables.len(), 5);
-        assert_eq!(first.content.theme_tables.len(), 1);
+        assert_eq!(first.content.theme_tables.len(), 2);
         assert_eq!(first.content.vaults.len(), 2);
         assert_eq!(first.content.worlds.len(), 1);
     }
@@ -3158,7 +3204,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.41.0");
+        assert_eq!(catalog.pack_version(), "1.42.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3193,7 +3239,7 @@ mod tests {
             .world("demo.world.original-v1")
             .expect("demo world should remain available");
         assert_eq!(world.initial_floor_id, "demo.floor.surface");
-        assert_eq!(world.procedural_floors.len(), 9);
+        assert_eq!(world.procedural_floors.len(), 19);
         assert_eq!(world.procedural_floors[0].id, "demo.floor.echo-depth-1");
         assert_eq!(world.procedural_floors[0].depth, 1);
         assert_eq!(
@@ -3216,10 +3262,31 @@ mod tests {
         );
         assert_eq!(
             world.procedural_floors[0]
+                .generation_budget
+                .as_ref()
+                .map(|budget| (budget.actor_slots, budget.loot_placements)),
+            Some((4, 1))
+        );
+        assert_eq!(
+            world.procedural_floors[0]
                 .nest
                 .as_ref()
                 .map(|nest| (nest.room_id.as_str(), nest.spawn_count)),
             Some(("remote", 3))
+        );
+        let pressure_final = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .expect("demo world should contain the pressure final floor");
+        assert!(pressure_final.final_floor);
+        assert_eq!(pressure_final.depth, 10);
+        assert_eq!(
+            pressure_final
+                .generation_budget
+                .as_ref()
+                .map(|budget| (budget.actor_slots, budget.loot_placements)),
+            Some((10, 3))
         );
         assert_eq!(
             catalog
@@ -3505,6 +3572,7 @@ mod tests {
 
         let mut duplicate_actor = artifact.content.clone();
         duplicate_actor.worlds[0].procedural_floors[0].encounter_table_id = None;
+        duplicate_actor.worlds[0].procedural_floors[0].generation_budget = None;
         duplicate_actor.worlds[0].procedural_floors[0].nest = None;
         duplicate_actor.worlds[0].procedural_floors[0]
             .actor_spawns
@@ -3531,6 +3599,36 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut missing_theme),
             Err(ContentError::DanglingReference { .. })
+        ));
+
+        let mut exhausted_actor_budget = artifact.content.clone();
+        exhausted_actor_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-1")
+            .expect("fixture should contain the nest floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .actor_slots = 3;
+        assert!(matches!(
+            validate_and_normalize(&mut exhausted_actor_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut exhausted_loot_budget = artifact.content.clone();
+        exhausted_loot_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.echo-depth-2")
+            .expect("fixture should contain the vault floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .loot_placements = 1;
+        assert!(matches!(
+            validate_and_normalize(&mut exhausted_loot_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
         ));
     }
 

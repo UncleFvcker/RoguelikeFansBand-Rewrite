@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/theme-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.theme-table.resonance-descent",
+  "entries": [
+    {
+      "themeId": "demo.theme.resonance-shallows",
+      "floorTerrainId": "demo.terrain.floor",
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 3,
+      "vaultCandidates": []
+    },
+    {
+      "themeId": "demo.theme.resonance-deeps",
+      "floorTerrainId": "demo.terrain.resonant-floor",
+      "weight": 1,
+      "minDepth": 4,
+      "maxDepth": 10,
+      "vaultCandidates": []
+    }
+  ]
+}

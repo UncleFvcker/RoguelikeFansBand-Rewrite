@@ -211,6 +211,17 @@
         "floorTerrainId": {
           "type": "string"
         },
+        "generationBudget": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralGenerationBudgetDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "guardian": {
           "anyOf": [
             {
@@ -363,6 +374,28 @@
         "trapTerrainId",
         "actorSpawns",
         "lootSpawns"
+      ],
+      "type": "object"
+    },
+    "ProceduralGenerationBudgetDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorSlots": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lootPlacements": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actorSlots",
+        "lootPlacements"
       ],
       "type": "object"
     },

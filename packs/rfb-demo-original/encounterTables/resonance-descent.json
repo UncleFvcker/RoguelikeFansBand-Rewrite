@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.resonance-descent",
+  "rolls": 12,
+  "entries": [
+    {
+      "actorKindId": "demo.actor.acid-seep",
+      "weight": 2,
+      "minDepth": 1,
+      "maxDepth": 3
+    },
+    {
+      "actorKindId": "demo.actor.echo-hound",
+      "weight": 5,
+      "minDepth": 1,
+      "maxDepth": 10
+    },
+    {
+      "actorKindId": "demo.actor.frost-wisp",
+      "weight": 4,
+      "minDepth": 1,
+      "maxDepth": 10
+    },
+    {
+      "actorKindId": "demo.actor.storm-spark",
+      "weight": 4,
+      "minDepth": 2,
+      "maxDepth": 10
+    },
+    {
+      "actorKindId": "demo.actor.venom-spore",
+      "weight": 3,
+      "minDepth": 2,
+      "maxDepth": 10
+    },
+    {
+      "actorKindId": "demo.actor.resonant-warden",
+      "weight": 1,
+      "minDepth": 6,
+      "maxDepth": 10
+    }
+  ]
+}

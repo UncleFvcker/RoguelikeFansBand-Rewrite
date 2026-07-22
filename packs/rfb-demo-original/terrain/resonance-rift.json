@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.resonance-rift",
+  "nameKey": "terrain-demo-resonance-rift-name",
+  "descriptionKey": "terrain-demo-resonance-rift-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["stairs-down", "dungeon-entry", "pressure-scenario"]
+}

@@ -56,7 +56,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 41] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 42] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -98,9 +98,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 41] = [
     "0e6cf15310644e7b3eb2f7acb0c18a8b1a7fb08739e981e7492d4079e61ab44a",
     "e03cb30ea8e1cd5821c14b54c4a038d30323cfc2cb6e0d6c483cbb006d70916f",
     "ae7b19dd780d73091a5b34aed2f67dcbc5650d2e2ed1d7748cc86f48020f8fb0",
+    "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad";
+    "5d65fd9ca827dd05fc035650b82046edb592d563565c7e4075b32512a43f4e1f";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -230,6 +231,7 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
 fn restore_dungeon_states(
     world: &rfb_content::WorldDefinition,
     saved_states: &[DungeonStateSaveDto],
+    allow_missing_states: bool,
 ) -> Result<BTreeMap<String, DungeonState>, CoreError> {
     let mut states = initial_dungeon_states(world);
     if saved_states.is_empty() {
@@ -250,7 +252,7 @@ fn restore_dungeon_states(
             return Err(CoreError::InvalidSave("dungeon state is invalid"));
         }
     }
-    if restored.len() != states.len() {
+    if !allow_missing_states && restored.len() != states.len() {
         return Err(CoreError::InvalidSave("dungeon state set is incomplete"));
     }
     states.extend(restored);
@@ -818,7 +820,8 @@ impl Game {
                 allow_missing_states: migrating_previous_content,
             },
         )?;
-        let dungeon_states = restore_dungeon_states(world, &payload.dungeon_states)?;
+        let dungeon_states =
+            restore_dungeon_states(world, &payload.dungeon_states, migrating_previous_content)?;
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -4265,7 +4268,37 @@ impl Game {
                 .map(|entry| entry.weight)
                 .collect::<Vec<_>>();
             let room_id = if vault.is_some() { "entry" } else { "remote" };
-            for ordinal in 0..table.rolls {
+            let encounter_rolls =
+                definition
+                    .generation_budget
+                    .as_ref()
+                    .map_or(table.rolls, |budget| {
+                        let reserved_actor_slots = definition
+                            .nest
+                            .as_ref()
+                            .map_or(0, |nest| nest.spawn_count)
+                            .saturating_add(if guardian.is_some() { 1 } else { 0 })
+                            .saturating_add(
+                                vault
+                                    .as_ref()
+                                    .map(|vault| {
+                                        vault
+                                            .encounter_groups
+                                            .iter()
+                                            .map(|group| {
+                                                u16::try_from(group.member_positions.len()).expect(
+                                                    "validated vault group size must fit u16",
+                                                )
+                                            })
+                                            .sum::<u16>()
+                                    })
+                                    .unwrap_or(0),
+                            );
+                        table
+                            .rolls
+                            .min(budget.actor_slots.saturating_sub(reserved_actor_slots))
+                    });
+            for ordinal in 0..encounter_rolls {
                 let entry = &eligible_entries[self.roll_weighted_index(&weights)];
                 let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
                 occupied.insert(position);
@@ -4420,20 +4453,33 @@ impl Game {
             self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
         if let Some(table_id) = &definition.loot_table_id {
             let room_id = if vault.is_some() { "entry" } else { "remote" };
-            let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
-            occupied.insert(position);
-            items.extend(self.generate_loot_instances(
-                &LootContext {
-                    table_id: table_id.clone(),
-                    floor_id: definition.id.clone(),
-                    depth: definition.depth,
-                    source: LootSource::FloorRoom {
-                        room_id: room_id.to_owned(),
-                        spawn_id: format!("{}.loot-table", definition.id),
+            let floor_loot_placements = definition.generation_budget.as_ref().map_or(1, |budget| {
+                budget.loot_placements.saturating_sub(
+                    vault
+                        .as_ref()
+                        .map(|vault| {
+                            u16::try_from(vault.loot_spawns.len())
+                                .expect("validated vault loot count must fit u16")
+                        })
+                        .unwrap_or(0),
+                )
+            });
+            for ordinal in 0..floor_loot_placements {
+                let position = self.choose_generated_room_position(&rooms, room_id, &occupied);
+                occupied.insert(position);
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::FloorRoom {
+                            room_id: room_id.to_owned(),
+                            spawn_id: format!("{}.loot-table.{}", definition.id, ordinal + 1),
+                        },
                     },
-                },
-                ItemLocation::Ground(position),
-            )?);
+                    ItemLocation::Ground(position),
+                )?);
+            }
         } else {
             for spawn in &definition.loot_spawns {
                 let position =
@@ -6844,6 +6890,27 @@ mod tests {
         old_payload.dungeon_states.clear();
         let restored = Game::from_save(old_payload).expect("v45 save should add dungeon state");
         assert!(!restored.dungeon_states["demo.dungeon.echo-depths"].guardian_defeated);
+        assert!(!restored.dungeon_states["demo.dungeon.resonance-descent"].guardian_defeated);
+
+        let mut v48_payload = Game::new(42).to_save();
+        v48_payload.content_hash =
+            "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad".to_owned();
+        v48_payload
+            .dungeon_states
+            .retain(|state| state.dungeon_id == "demo.dungeon.echo-depths");
+        let restored =
+            Game::from_save(v48_payload).expect("v48 save should add the pressure dungeon state");
+        assert!(!restored.dungeon_states["demo.dungeon.echo-depths"].guardian_defeated);
+        assert!(!restored.dungeon_states["demo.dungeon.resonance-descent"].guardian_defeated);
+
+        let mut current_payload = Game::new(42).to_save();
+        current_payload
+            .dungeon_states
+            .retain(|state| state.dungeon_id == "demo.dungeon.echo-depths");
+        assert!(matches!(
+            Game::from_save(current_payload),
+            Err(CoreError::InvalidSave("dungeon state set is incomplete"))
+        ));
 
         let mut game = Game::new(27);
         for (seq, game_command) in [
@@ -7329,6 +7396,87 @@ mod tests {
         }
         assert!(harmonic > resonant);
         assert!(resonant > 0);
+    }
+
+    #[test]
+    fn generation_budgets_scale_across_the_ten_depth_pressure_dungeon() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+
+        let actor_slots = [2_usize, 3, 4, 5, 6, 7, 8, 9, 10, 10];
+        let loot_placements = [1_usize, 1, 1, 1, 2, 2, 2, 3, 3, 3];
+        for depth in 1..=10 {
+            assert_eq!(
+                game.current_floor_id,
+                format!("demo.floor.resonance-depth-{depth}")
+            );
+            assert_eq!(game.entities.len(), actor_slots[depth - 1]);
+            assert_eq!(game.items.len(), loot_placements[depth - 1]);
+            let guardian_slots = if depth == 10 { 1 } else { 0 };
+            assert_eq!(
+                game.entities
+                    .iter()
+                    .filter(|entity| entity.id.contains(".encounter."))
+                    .count(),
+                actor_slots[depth - 1] - guardian_slots
+            );
+            if depth <= 3 {
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.floor")
+                );
+                assert!(
+                    !game
+                        .terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.resonant-floor")
+                );
+            } else {
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|terrain| terrain == "demo.terrain.resonant-floor")
+                );
+            }
+            if depth < 10 {
+                descend_one_floor(&mut game);
+            }
+        }
+        assert!(
+            game.entities
+                .iter()
+                .any(|entity| entity.id == "demo.guardian.resonance-descent.1")
+        );
+        assert_eq!(game.stored_floors.len(), 10);
+        let restored = Game::from_save(game.to_save())
+            .expect("pressure dungeon final floor should round-trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn previous_v48_floor_and_dungeon_state_are_not_backfilled() {
+        let mut game = Game::new(27);
+        descend_one_floor(&mut game);
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad".to_owned();
+        payload
+            .dungeon_states
+            .retain(|state| state.dungeon_id == "demo.dungeon.echo-depths");
+        let expected_entities = payload.entities.clone();
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v48 floor should migrate");
+
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(!restored.dungeon_states["demo.dungeon.resonance-descent"].guardian_defeated);
     }
 
     #[test]
