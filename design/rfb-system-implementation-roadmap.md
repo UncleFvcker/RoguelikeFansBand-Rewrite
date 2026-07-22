@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.54 / contract-v54
+状态：长期规则实现路线；当前基线为协议 1.55 / contract-v55
 
 ## 1. 目的与边界
 
@@ -88,7 +88,7 @@ flowchart TD
 | 视野、记忆、光照 | LOS、FOV、探索记忆、怪物/物品光源 | 已建立基础版 | 保持 Rust 权威；后续增加隐身、黑暗、红外、感知和特殊视觉通道 |
 | 交互地形 | 开门、关门、挖掘、撞门、解除陷阱、上/下楼 | 部分建立 | contract-v26 已建立楼梯，contract-v28–v30 已建立门与权威交互，contract-v31 已建立主动搜索；下一步建立陷阱触发与解除 |
 | 楼层生命周期 | 新生成、离开、持久楼层、返回、任务楼层 | 已建立基础版 | contract-v26 已建立稳定 `FloorId`、显式 `FloorState`、离层仓库、save v1 往返和首次生成；后续增加多深度连接、临时/持久策略、任务层和旧层淘汰 |
-| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53 参考原版分阶段管线建立连通 cavern 基底、多房间数量/形状/面积预算和跨房间内容分布，contract-v54 建立深浅 lake/river 水文与连通保护；下一步补 streamer/destroyed/maze、pit/pack AI 和多入口 |
+| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53 建立 cavern/room 管线，contract-v54 建立 lake/river 水文，contract-v55 建立 maze/destroyed/streamer 与稳定回退；下一步补 pit/pack AI、多入口、完全替代房间的专用楼层模式和同层多区域主题 |
 
 ### 4.3 角色创建与身份
 
@@ -368,7 +368,7 @@ crates/rfb-core/src/
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53 参考原版 `cave_gen()` 的阶段结构，新增连通 cavern 基础地貌、多房间几何与跨房间内容分布；contract-v54 参考 `build_lake()` / `add_river()` 新增深浅 lake/river、精确绘制预算与房间/隧道连通保护。内容包为 1.47.0，active baseline 共 108 个 exact fixtures，save v1 / state hash Schema v19。下一切片应沿 layout 管线增加 streamer/destroyed/maze，再推进 pit/pack AI、多入口和大模板连通性。详细边界见 [Contract v54](contract-v54-lake-river-hydrology.md)。
+当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53 建立 cavern/room 分阶段管线；contract-v54 新增深浅 lake/river；contract-v55 参考 `build_maze_vault()`、`destroy_level()` 与 `build_streamer()` 新增完美 maze、多震中 destroyed、加权 streamer、独立废墟/矿脉 terrain 和稳定墙体回退。内容包为 1.48.0，active baseline 共 110 个 exact fixtures，save v1 / state hash Schema v19。下一切片应推进 pit/pack AI、多入口、完全替代房间的专用楼层模式和同层多区域主题。详细边界见 [Contract v55](contract-v55-maze-destroyed-streamers.md)。
 
 实现：
 
@@ -475,7 +475,7 @@ crates/rfb-core/src/
    - 射击与投掷均已复用既有 `DamagePacket` / effect pipeline；
    - 延后：返回武器、药水破裂、鼠标预览和动画事件。
 
-阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成最终层和持久守护者，contract-v47 完成第一类深度主题 Vault、固定群体和专属 loot，contract-v48 完成楼层级 encounter/loot/theme 表、Vault 加权选择、回退与首类巢穴，contract-v49 完成十层压力场景、actor/loot 预算和深度区域主题，contract-v50 完成 Vault 变换、自由落位、多模板空间预算与失败回退，contract-v51 完成动态群体，contract-v52 完成 terrain feature 表和额外特殊地形预算，contract-v53 完成连通 cavern 基础地貌与房间数量/形状/面积预算，contract-v54 完成深浅 lake/river 水文阶段；下一步扩展 streamer/destroyed/maze。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标。
+阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成最终层和持久守护者，contract-v47 完成第一类深度主题 Vault、固定群体和专属 loot，contract-v48 完成楼层级 encounter/loot/theme 表、Vault 加权选择、回退与首类巢穴，contract-v49 完成十层压力场景、actor/loot 预算和深度区域主题，contract-v50 完成 Vault 变换、自由落位、多模板空间预算与失败回退，contract-v51 完成动态群体，contract-v52 完成 terrain feature 表和额外特殊地形预算，contract-v53 完成 cavern/room 几何预算，contract-v54 完成 lake/river，contract-v55 完成 maze/destroyed/streamer；下一步扩展 pit/pack AI、多入口、专用楼层模式和多区域主题。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标。
 
 ## 9. 内容迁移策略
 

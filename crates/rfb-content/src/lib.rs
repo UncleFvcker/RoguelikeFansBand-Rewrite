@@ -818,6 +818,16 @@ pub struct ProceduralGenerationBudgetDefinition {
     #[serde(default)]
     pub river_area_tiles: Option<u32>,
     #[serde(default)]
+    pub maze_floor_tiles: Option<u32>,
+    #[serde(default)]
+    pub destruction_centers: Option<u16>,
+    #[serde(default)]
+    pub destroyed_area_tiles: Option<u32>,
+    #[serde(default)]
+    pub streamer_placements: Option<u16>,
+    #[serde(default)]
+    pub streamer_area_tiles: Option<u32>,
+    #[serde(default)]
     pub vault_placements: Option<u16>,
     #[serde(default)]
     pub vault_area_tiles: Option<u32>,
@@ -851,6 +861,12 @@ pub struct ProceduralLayoutDefinition {
     pub lake: Option<ProceduralLakeDefinition>,
     #[serde(default)]
     pub river: Option<ProceduralRiverDefinition>,
+    #[serde(default)]
+    pub maze: Option<ProceduralMazeDefinition>,
+    #[serde(default)]
+    pub destroyed: Option<ProceduralDestroyedDefinition>,
+    #[serde(default)]
+    pub streamers: Vec<ProceduralStreamerCandidateDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -874,6 +890,29 @@ pub struct ProceduralLakeDefinition {
 pub struct ProceduralRiverDefinition {
     pub deep_terrain_id: String,
     pub shallow_terrain_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralMazeDefinition {
+    pub width: u16,
+    pub height: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralDestroyedDefinition {
+    pub terrain_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralStreamerCandidateDefinition {
+    pub terrain_id: String,
+    pub weight: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2564,7 +2603,12 @@ fn validate_world(
                 && (budget.cavern_area_tiles.is_some()
                     || budget.lake_area_tiles.is_some()
                     || budget.lake_deep_area_tiles.is_some()
-                    || budget.river_area_tiles.is_some())
+                    || budget.river_area_tiles.is_some()
+                    || budget.maze_floor_tiles.is_some()
+                    || budget.destruction_centers.is_some()
+                    || budget.destroyed_area_tiles.is_some()
+                    || budget.streamer_placements.is_some()
+                    || budget.streamer_area_tiles.is_some())
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
@@ -2720,6 +2764,122 @@ fn validate_world(
                         || lake.shallow_terrain_id != river.shallow_terrain_id)
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                match (&layout.maze, budget.maze_floor_tiles) {
+                    (None, None) => {}
+                    (Some(maze), Some(floor_tiles)) => {
+                        let vertices =
+                            u32::from(maze.width.div_ceil(2)) * u32::from(maze.height.div_ceil(2));
+                        let expected_floor_tiles = vertices.saturating_mul(2).saturating_sub(1);
+                        if !(9..=procedural.width.saturating_sub(2)).contains(&maze.width)
+                            || !(9..=procedural.height.saturating_sub(2)).contains(&maze.height)
+                            || maze.width % 2 == 0
+                            || maze.height % 2 == 0
+                            || floor_tiles != expected_floor_tiles
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                match (
+                    &layout.destroyed,
+                    budget.destruction_centers,
+                    budget.destroyed_area_tiles,
+                ) {
+                    (None, None, None) => {}
+                    (Some(destroyed), Some(centers), Some(area_tiles)) => {
+                        require_reference(terrain_ids, &destroyed.terrain_id, &procedural.id)?;
+                        if terrain_walkability.get(&destroyed.terrain_id) != Some(&false)
+                            || destroyed.terrain_id == procedural.wall_terrain_id
+                            || destroyed.terrain_id == procedural.floor_terrain_id
+                            || layout
+                                .cavern
+                                .as_ref()
+                                .is_some_and(|cavern| cavern.terrain_id == destroyed.terrain_id)
+                            || layout.lake.as_ref().is_some_and(|lake| {
+                                [
+                                    lake.deep_terrain_id.as_str(),
+                                    lake.shallow_terrain_id.as_str(),
+                                ]
+                                .contains(&destroyed.terrain_id.as_str())
+                            })
+                            || eligible_theme_entries
+                                .iter()
+                                .any(|entry| entry.floor_terrain_id == destroyed.terrain_id)
+                            || !(1..=4).contains(&centers)
+                            || !(u32::from(centers) * 8..=interior_area.saturating_div(2))
+                                .contains(&area_tiles)
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                match (
+                    layout.streamers.is_empty(),
+                    budget.streamer_placements,
+                    budget.streamer_area_tiles,
+                ) {
+                    (true, None, None) => {}
+                    (false, Some(placements), Some(area_tiles)) => {
+                        layout
+                            .streamers
+                            .sort_by(|left, right| left.terrain_id.cmp(&right.terrain_id));
+                        let terrain_count = layout
+                            .streamers
+                            .iter()
+                            .map(|candidate| candidate.terrain_id.as_str())
+                            .collect::<BTreeSet<_>>()
+                            .len();
+                        for candidate in &layout.streamers {
+                            require_reference(terrain_ids, &candidate.terrain_id, &procedural.id)?;
+                        }
+                        if layout.streamers.len() > 4
+                            || terrain_count != layout.streamers.len()
+                            || layout.streamers.iter().any(|candidate| {
+                                !(1..=1_000_000).contains(&candidate.weight)
+                                    || terrain_walkability.get(&candidate.terrain_id)
+                                        != Some(&false)
+                                    || candidate.terrain_id == procedural.wall_terrain_id
+                                    || candidate.terrain_id == procedural.floor_terrain_id
+                                    || layout.destroyed.as_ref().is_some_and(|destroyed| {
+                                        destroyed.terrain_id == candidate.terrain_id
+                                    })
+                                    || layout.cavern.as_ref().is_some_and(|cavern| {
+                                        cavern.terrain_id == candidate.terrain_id
+                                    })
+                                    || layout.lake.as_ref().is_some_and(|lake| {
+                                        [
+                                            lake.deep_terrain_id.as_str(),
+                                            lake.shallow_terrain_id.as_str(),
+                                        ]
+                                        .contains(&candidate.terrain_id.as_str())
+                                    })
+                                    || eligible_theme_entries
+                                        .iter()
+                                        .any(|entry| entry.floor_terrain_id == candidate.terrain_id)
+                            })
+                            || !(1..=4).contains(&placements)
+                            || !(u32::from(placements) * 4..=interior_area.saturating_div(4))
+                                .contains(&area_tiles)
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(
+                                procedural.id.clone(),
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
                 }
             }
             if let Some((placements, area_tiles)) = spatial_vault_budget {
@@ -3871,7 +4031,7 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 40);
+        assert_eq!(first.content.terrain.len(), 42);
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
@@ -3890,7 +4050,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.47.0");
+        assert_eq!(catalog.pack_version(), "1.48.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -3977,8 +4137,23 @@ mod tests {
                 budget.lake_area_tiles,
                 budget.lake_deep_area_tiles,
                 budget.river_area_tiles,
+                budget.destruction_centers,
+                budget.destroyed_area_tiles,
+                budget.streamer_placements,
+                budget.streamer_area_tiles,
             )),
-            Some((Some(5), Some(112), Some(64), Some(76), Some(30), Some(52)))
+            Some((
+                Some(5),
+                Some(112),
+                Some(64),
+                Some(76),
+                Some(30),
+                Some(52),
+                Some(2),
+                Some(48),
+                Some(2),
+                Some(24)
+            ))
         );
         assert_eq!(
             final_floor.layout.as_ref().map(|layout| (
@@ -3995,13 +4170,42 @@ mod tests {
                     .river
                     .as_ref()
                     .map(|river| river.shallow_terrain_id.as_str()),
+                layout
+                    .destroyed
+                    .as_ref()
+                    .map(|destroyed| destroyed.terrain_id.as_str()),
+                layout.streamers.len(),
             )),
             Some((
                 2,
                 Some("demo.terrain.resonance-cavern"),
                 Some("demo.terrain.resonance-water-deep"),
-                Some("demo.terrain.resonance-water-shallow")
+                Some("demo.terrain.resonance-water-shallow"),
+                Some("demo.terrain.resonance-ruin"),
+                1
             ))
+        );
+        let maze_floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("demo world should retain the maze floor");
+        assert_eq!(
+            maze_floor.generation_budget.as_ref().map(|budget| (
+                budget.maze_floor_tiles,
+                budget.streamer_placements,
+                budget.streamer_area_tiles
+            )),
+            Some((Some(127), Some(2), Some(24)))
+        );
+        assert_eq!(
+            maze_floor.layout.as_ref().and_then(|layout| {
+                layout
+                    .maze
+                    .as_ref()
+                    .map(|maze| (maze.width, maze.height, layout.streamers.len()))
+            }),
+            Some((15, 15, 1))
         );
         assert_eq!(
             world.procedural_floors[0]
@@ -4582,6 +4786,45 @@ mod tests {
             validate_and_normalize(&mut incompatible_river),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
+
+        let mut mismatched_maze_budget = artifact.content.clone();
+        mismatched_maze_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+            .expect("fixture should contain the maze floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .maze_floor_tiles = Some(126);
+        assert!(matches!(
+            validate_and_normalize(&mut mismatched_maze_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut incomplete_destroyed_budget = artifact.content.clone();
+        incomplete_destroyed_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .expect("fixture should contain the destroyed floor")
+            .generation_budget
+            .as_mut()
+            .expect("fixture should contain a generation budget")
+            .destruction_centers = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_destroyed_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut walkable_streamer = artifact.content.clone();
+        walkable_streamer
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.resonance-vein")
+            .expect("fixture should contain the streamer terrain")
+            .walkable = true;
+        assert!(validate_and_normalize(&mut walkable_streamer).is_err());
 
         let mut duplicate_room_shape = artifact.content.clone();
         let shapes = &mut duplicate_room_shape.worlds[0]

@@ -73,6 +73,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v52：程序化特殊地形表与空间预算](design/contract-v52-terrain-feature-budgets.md)
 - [Contract v53：分阶段洞穴地貌与房间几何预算](design/contract-v53-staged-cavern-layout.md)
 - [Contract v54：湖泊与河流水文阶段](design/contract-v54-lake-river-hydrology.md)
+- [Contract v55：迷宫、毁坏区与岩脉阶段](design/contract-v55-maze-destroyed-streamers.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -90,7 +91,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v54/scenarios`](tests/fixtures/contract-v54/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v53` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v55/scenarios`](tests/fixtures/contract-v55/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v54` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -123,7 +124,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.52 / contract-v52 已建立独立 terrain feature 表、room/corridor 放置语义、深度加权选择、额外特殊地形预算、占位排斥与空间失败回退。共鸣压力地牢深度 3–10 会在固定拓扑门/陷阱之外放置 2–4 个 trap、rubble、locked/secret door。active baseline 共 104 个 exact fixtures，内容包为 1.45.0、terrain 37、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v52 说明](design/contract-v52-terrain-feature-budgets.md)。
 
-协议 1.54 / contract-v54 已沿原版 `build_lake()` / `add_river()` 管线增加内容驱动的深浅水 terrain、湖泊总面积/深水核心预算、内部边界到湖心的河流中心线、浅水岸扩展，以及房间/隧道后期开凿的连通性保护。共鸣压力地牢深度 9 生成 70 格湖泊，深度 10 生成 76 格湖泊与 52 格河流。active baseline 共 108 个 exact fixtures，内容包为 1.47.0、terrain 40、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v54 说明](design/contract-v54-lake-river-hydrology.md)。
+协议 1.55 / contract-v55 已沿原版 `build_maze_vault()`、`destroy_level()` 与 `build_streamer()` 增加内容驱动的完美迷宫、多震中毁坏区和加权岩脉阶段。深度 9 生成 15×15、127 通路格的 maze 与 24 格 streamer；深度 10 生成 48 格 destroyed 区与 24 格 streamer，房间/隧道仍保证主链连通。active baseline 共 110 个 exact fixtures，内容包为 1.48.0、terrain 42、actor 10、encounter table 3、loot table 5、theme table 2、terrain feature table 1、vault 5；save v1 / state-hash Schema v19 不变。完整边界见 [Contract v55 说明](design/contract-v55-maze-destroyed-streamers.md)。
 
 阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、最终层、持久守护者、楼层生成表、actor/loot 总预算、深度区域主题、Vault 空间管线、第一类巢穴、动态 friends/escort formation、额外特殊地形预算、连通 cavern 基底和多房间几何预算已经建立。Stage E 后续主要剩余 lake/river/streamer/destroyed/maze、pit/pack AI、多入口/连通性和分支连接；任务线的暂停管理仍保留在后续队列。
 
@@ -197,10 +198,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v54/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v55/baseline-policy.json
 ```
 
-当前 108 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 110 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

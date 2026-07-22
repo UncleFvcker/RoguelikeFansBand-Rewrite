@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.resonance-vein",
+  "nameKey": "terrain-demo-resonance-vein-name",
+  "descriptionKey": "terrain-demo-resonance-vein-description",
+  "glyph": "%",
+  "walkable": false,
+  "blocksSight": true,
+  "digToTerrainId": "demo.terrain.floor",
+  "digCheckDifficulty": 10,
+  "tags": ["interior", "stone", "vein", "diggable", "resonance"]
+}

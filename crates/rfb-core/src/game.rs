@@ -39,9 +39,10 @@ use crate::{
 use rfb_content::{
     ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
     EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, ProceduralFloorDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomShape, TaskObjectiveDefinition,
-    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
-    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    ProceduralMazeDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
+    ProceduralStreamerCandidateDefinition, TaskObjectiveDefinition, TaskObjectiveKind,
+    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
+    VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
@@ -59,7 +60,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 47] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 48] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -107,9 +108,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 47] = [
     "de045e1652d6e484937743b84a98e5e77887f28340a6492e72e8c6e1f72326e6",
     "1f8848e160b4ec51ca36acc512920946888fec20a36d7ac7b860bdb126aff79a",
     "11a28d24125572468148dce77f0082340ab82a3a7ef87637303578681b31c4e9",
+    "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9";
+    "52c3db16ad5240ff83ba652b09ef70cccac991a586b593f84c11956a55539596";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -4178,6 +4180,13 @@ impl Game {
                 )
             })
         });
+        if let Some(maze) = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.maze.as_ref())
+        {
+            self.generate_maze(definition, maze, &generated_floor_terrain_id, &mut terrain);
+        }
         let rooms = if let Some(layout) = &definition.layout {
             self.generate_budgeted_rooms(definition, &layout.rooms)
         } else {
@@ -4215,6 +4224,13 @@ impl Game {
             x: second_center.x - i32::from(vault.entrance_position.x),
             y: rooms[1].y,
         });
+        if let Some(destroyed) = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.destroyed.as_ref())
+        {
+            self.generate_destroyed_region(definition, &destroyed.terrain_id, &mut terrain);
+        }
         if let Some(river) = definition
             .layout
             .as_ref()
@@ -4230,6 +4246,12 @@ impl Game {
                 }),
                 &mut terrain,
             );
+        }
+        if definition
+            .layout
+            .as_ref()
+            .is_some_and(|layout| layout.destroyed.is_some() || layout.river.is_some())
+        {
             for room in &rooms {
                 carve_generated_room(&mut terrain, width, room, &generated_floor_terrain_id);
             }
@@ -4251,6 +4273,11 @@ impl Game {
                 cavern_origin,
                 &generated_floor_terrain_id,
             );
+        }
+        if let Some(layout) = &definition.layout
+            && !layout.streamers.is_empty()
+        {
+            self.generate_streamers(definition, &layout.streamers, &mut terrain);
         }
         let door_position = Position {
             x: (first_center.x + second_center.x) / 2,
@@ -6940,6 +6967,7 @@ fn paint_generated_vault(terrain: &mut [String], width: u16, placement: &Generat
             );
         }
     }
+
     for terrain_override in &placement.vault.terrain_overrides {
         for position in &terrain_override.positions {
             let local =
@@ -6954,6 +6982,328 @@ fn paint_generated_vault(terrain: &mut [String], width: u16, placement: &Generat
                 &terrain_override.terrain_id,
             );
         }
+    }
+}
+
+impl Game {
+    fn generate_maze(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        maze: &ProceduralMazeDefinition,
+        floor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        let left = i32::from((definition.width - maze.width) / 2);
+        let top = i32::from((definition.height - maze.height) / 2);
+        for y in top..top + i32::from(maze.height) {
+            for x in left..left + i32::from(maze.width) {
+                set_generated_terrain(
+                    terrain,
+                    definition.width,
+                    Position { x, y },
+                    &definition.wall_terrain_id,
+                );
+            }
+        }
+
+        let columns = usize::from(maze.width.div_ceil(2));
+        let rows = usize::from(maze.height.div_ceil(2));
+        let vertex_count = columns * rows;
+        let root = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(vertex_count).expect("maze vertex count must fit u64")),
+        )
+        .expect("maze root must fit usize");
+        let node_position = |node: usize| Position {
+            x: left + i32::try_from((node % columns) * 2).expect("maze x must fit i32"),
+            y: top + i32::try_from((node / columns) * 2).expect("maze y must fit i32"),
+        };
+        let mut visited = BTreeSet::from([root]);
+        let mut stack = vec![root];
+        let mut carved = BTreeSet::new();
+        let root_position = node_position(root);
+        carved.insert(root_position);
+        set_generated_terrain(terrain, definition.width, root_position, floor_terrain_id);
+
+        while let Some(&node) = stack.last() {
+            let column = node % columns;
+            let row = node / columns;
+            let mut neighbors = Vec::new();
+            if row > 0 && !visited.contains(&(node - columns)) {
+                neighbors.push(node - columns);
+            }
+            if column + 1 < columns && !visited.contains(&(node + 1)) {
+                neighbors.push(node + 1);
+            }
+            if row + 1 < rows && !visited.contains(&(node + columns)) {
+                neighbors.push(node + columns);
+            }
+            if column > 0 && !visited.contains(&(node - 1)) {
+                neighbors.push(node - 1);
+            }
+            if neighbors.is_empty() {
+                stack.pop();
+                continue;
+            }
+            let neighbor_index = if neighbors.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(neighbors.len()).expect("maze neighbor count must fit u64"),
+                ))
+                .expect("maze neighbor index must fit usize")
+            };
+            let neighbor = neighbors[neighbor_index];
+            let from = node_position(node);
+            let to = node_position(neighbor);
+            let connector = Position {
+                x: (from.x + to.x) / 2,
+                y: (from.y + to.y) / 2,
+            };
+            for position in [connector, to] {
+                carved.insert(position);
+                set_generated_terrain(terrain, definition.width, position, floor_terrain_id);
+            }
+            visited.insert(neighbor);
+            stack.push(neighbor);
+        }
+
+        carved
+    }
+
+    fn generate_destroyed_region(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        terrain_id: &str,
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("destroyed region requires a generation budget");
+        let center_count = usize::from(
+            budget
+                .destruction_centers
+                .expect("validated destruction center budget must remain available"),
+        );
+        let area = usize::try_from(
+            budget
+                .destroyed_area_tiles
+                .expect("validated destroyed area budget must remain available"),
+        )
+        .expect("destroyed area must fit usize");
+        let margin_x = i32::from((definition.width / 5).max(2));
+        let margin_y = i32::from((definition.height / 5).max(2));
+        let mut center_candidates = (margin_y..i32::from(definition.height) - margin_y)
+            .flat_map(|y| {
+                (margin_x..i32::from(definition.width) - margin_x).map(move |x| Position { x, y })
+            })
+            .collect::<Vec<_>>();
+        let mut selected = BTreeSet::new();
+        for _ in 0..center_count {
+            let index = if center_candidates.len() == 1 {
+                0
+            } else {
+                usize::try_from(
+                    self.rng.bounded(
+                        u64::try_from(center_candidates.len())
+                            .expect("destruction center count must fit u64"),
+                    ),
+                )
+                .expect("destruction center index must fit usize")
+            };
+            selected.insert(center_candidates.remove(index));
+        }
+
+        while selected.len() < area {
+            let mut frontier = selected
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !selected.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("destroyed frontier count must fit u64"),
+                ))
+                .expect("destroyed frontier index must fit usize")
+            };
+            selected.insert(frontier[index]);
+        }
+        for position in &selected {
+            set_generated_terrain(terrain, definition.width, *position, terrain_id);
+        }
+        selected
+    }
+
+    fn generate_streamers(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        streamers: &[ProceduralStreamerCandidateDefinition],
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        const DIRECTIONS: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("streamers require a generation budget");
+        let placement_count = budget
+            .streamer_placements
+            .expect("validated streamer placement count must remain available");
+        let area = usize::try_from(
+            budget
+                .streamer_area_tiles
+                .expect("validated streamer area budget must remain available"),
+        )
+        .expect("streamer area must fit usize");
+        let weights = streamers
+            .iter()
+            .map(|candidate| candidate.weight)
+            .collect::<Vec<_>>();
+        let mut assignments = BTreeMap::<Position, String>::new();
+
+        for _ in 0..placement_count {
+            let streamer_index = if streamers.len() == 1 {
+                0
+            } else {
+                self.roll_weighted_index(&weights)
+            };
+            let streamer = &streamers[streamer_index];
+            let mut starts = Vec::new();
+            for y in (definition.height / 3)..=(definition.height * 2 / 3) {
+                for x in (definition.width / 3)..=(definition.width * 2 / 3) {
+                    let position = Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    };
+                    if terrain[generated_terrain_index(definition.width, position)]
+                        == definition.wall_terrain_id
+                    {
+                        starts.push(position);
+                    }
+                }
+            }
+            if starts.is_empty() {
+                starts = generated_wall_positions(definition, terrain);
+            }
+            if starts.is_empty() {
+                break;
+            }
+            starts.sort_by_key(|position| (position.y, position.x));
+            let start_index = if starts.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(starts.len()).expect("streamer start count must fit u64"),
+                ))
+                .expect("streamer start index must fit usize")
+            };
+            let direction_index =
+                usize::try_from(self.rng.bounded(8)).expect("streamer direction must fit usize");
+            let (dx, dy) = DIRECTIONS[direction_index];
+            let mut cursor = starts[start_index];
+            while cursor.x > 0
+                && cursor.y > 0
+                && cursor.x + 1 < i32::from(definition.width)
+                && cursor.y + 1 < i32::from(definition.height)
+            {
+                for y in cursor.y - 1..=cursor.y + 1 {
+                    for x in cursor.x - 1..=cursor.x + 1 {
+                        let position = Position { x, y };
+                        if position.x > 0
+                            && position.y > 0
+                            && position.x + 1 < i32::from(definition.width)
+                            && position.y + 1 < i32::from(definition.height)
+                            && terrain[generated_terrain_index(definition.width, position)]
+                                == definition.wall_terrain_id
+                        {
+                            assignments
+                                .entry(position)
+                                .or_insert_with(|| streamer.terrain_id.clone());
+                        }
+                    }
+                }
+                cursor.x += dx;
+                cursor.y += dy;
+            }
+        }
+
+        let mut painted = BTreeSet::new();
+        while painted.len() < area {
+            let mut candidates = assignments
+                .iter()
+                .filter_map(|(position, terrain_id)| {
+                    (!painted.contains(position)
+                        && terrain[generated_terrain_index(definition.width, *position)]
+                            == definition.wall_terrain_id)
+                        .then_some((*position, terrain_id.as_str()))
+                })
+                .collect::<Vec<_>>();
+            candidates.sort_by_key(|(position, _)| (position.y, position.x));
+            if candidates.is_empty() {
+                let fallback = generated_wall_positions(definition, terrain);
+                if fallback.is_empty() {
+                    break;
+                }
+                let index = if fallback.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(fallback.len())
+                                .expect("streamer fallback count must fit u64"),
+                        ),
+                    )
+                    .expect("streamer fallback index must fit usize")
+                };
+                let position = fallback[index];
+                set_generated_terrain(
+                    terrain,
+                    definition.width,
+                    position,
+                    &streamers[0].terrain_id,
+                );
+                painted.insert(position);
+                continue;
+            }
+            let index = if candidates.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(candidates.len()).expect("streamer candidate count must fit u64"),
+                ))
+                .expect("streamer candidate index must fit usize")
+            };
+            let (position, terrain_id) = candidates[index];
+            set_generated_terrain(terrain, definition.width, position, terrain_id);
+            painted.insert(position);
+        }
+        painted
     }
 }
 
@@ -7029,6 +7379,27 @@ fn set_generated_terrain(terrain: &mut [String], width: u16, position: Position,
 
 fn generated_terrain_index(width: u16, position: Position) -> usize {
     position.y as usize * usize::from(width) + position.x as usize
+}
+
+fn generated_wall_positions(
+    definition: &ProceduralFloorDefinition,
+    terrain: &[String],
+) -> Vec<Position> {
+    let mut positions = (1..definition.height - 1)
+        .flat_map(|y| {
+            (1..definition.width - 1).filter_map(move |x| {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                (terrain[generated_terrain_index(definition.width, position)]
+                    == definition.wall_terrain_id)
+                    .then_some(position)
+            })
+        })
+        .collect::<Vec<_>>();
+    positions.sort_by_key(|position| (position.y, position.x));
+    positions
 }
 
 fn floor_position_is_walkable(
@@ -8944,6 +9315,114 @@ mod tests {
     }
 
     #[test]
+    fn maze_destroyed_regions_and_streamers_obey_geometric_budgets() {
+        let mut game = Game::new(151);
+        let (maze_definition, destroyed_definition) = {
+            let world = game
+                .content
+                .world(BUILT_IN_WORLD_ID)
+                .expect("built-in world should exist");
+            (
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == "demo.floor.resonance-depth-9")
+                    .expect("fixture should contain the maze floor")
+                    .clone(),
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+                    .expect("fixture should contain the destroyed floor")
+                    .clone(),
+            )
+        };
+        let maze_layout = maze_definition
+            .layout
+            .as_ref()
+            .expect("fixture should contain a layout");
+        let mut maze_terrain = vec![
+            maze_definition.wall_terrain_id.clone();
+            usize::from(maze_definition.width)
+                * usize::from(maze_definition.height)
+        ];
+        let maze_tiles = game.generate_maze(
+            &maze_definition,
+            maze_layout
+                .maze
+                .as_ref()
+                .expect("fixture should contain a maze"),
+            "demo.terrain.resonant-floor",
+            &mut maze_terrain,
+        );
+        assert_eq!(maze_tiles.len(), 127);
+        let root = *maze_tiles
+            .iter()
+            .next()
+            .expect("maze should contain a floor");
+        let mut reached = BTreeSet::from([root]);
+        let mut frontier = VecDeque::from([root]);
+        while let Some(position) = frontier.pop_front() {
+            for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                let neighbor = Position {
+                    x: position.x + dx,
+                    y: position.y + dy,
+                };
+                if maze_tiles.contains(&neighbor) && reached.insert(neighbor) {
+                    frontier.push_back(neighbor);
+                }
+            }
+        }
+        assert_eq!(reached, maze_tiles);
+
+        let before_streamers = maze_terrain.clone();
+        let streamer_tiles =
+            game.generate_streamers(&maze_definition, &maze_layout.streamers, &mut maze_terrain);
+        assert_eq!(streamer_tiles.len(), 24);
+        assert!(streamer_tiles.iter().all(|position| {
+            before_streamers[generated_terrain_index(maze_definition.width, *position)]
+                == maze_definition.wall_terrain_id
+                && maze_terrain[generated_terrain_index(maze_definition.width, *position)]
+                    == "demo.terrain.resonance-vein"
+        }));
+
+        let mut destroyed_terrain = vec![
+            destroyed_definition.wall_terrain_id.clone();
+            usize::from(destroyed_definition.width)
+                * usize::from(destroyed_definition.height)
+        ];
+        let destroyed_tiles = game.generate_destroyed_region(
+            &destroyed_definition,
+            "demo.terrain.resonance-ruin",
+            &mut destroyed_terrain,
+        );
+        assert_eq!(destroyed_tiles.len(), 48);
+        assert!(destroyed_tiles.iter().all(|position| {
+            destroyed_terrain[generated_terrain_index(destroyed_definition.width, *position)]
+                == "demo.terrain.resonance-ruin"
+        }));
+        let mut remaining = destroyed_tiles.clone();
+        let mut component_count = 0;
+        while let Some(&start) = remaining.iter().next() {
+            component_count += 1;
+            let mut component_frontier = VecDeque::from([start]);
+            remaining.remove(&start);
+            while let Some(position) = component_frontier.pop_front() {
+                for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                    let neighbor = Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    };
+                    if remaining.remove(&neighbor) {
+                        component_frontier.push_back(neighbor);
+                    }
+                }
+            }
+        }
+        assert!((1..=2).contains(&component_count));
+    }
+
+    #[test]
     fn dynamic_friends_and_escorts_obey_group_budgets_and_formations() {
         let mut game = Game::new(49);
         game.player.position = Position { x: 3, y: 2 };
@@ -9583,6 +10062,60 @@ mod tests {
             !matches!(
                 terrain.as_str(),
                 "demo.terrain.resonance-water-deep" | "demo.terrain.resonance-water-shallow"
+            )
+        }));
+    }
+
+    #[test]
+    fn previous_v54_generated_floors_are_not_backfilled_with_late_terrain_stages() {
+        let mut game = Game::new(151);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..10 {
+            descend_one_floor(&mut game);
+        }
+        let mut payload = game.to_save();
+        payload.content_hash =
+            "e3c0d8653f86663c6bb7eb2cf99caf9d1ba5a259566560d7d70bb9592de2b1e9".to_owned();
+        for terrain_id in &mut payload.terrain.terrain_ids {
+            if matches!(
+                terrain_id.as_str(),
+                "demo.terrain.resonance-vein" | "demo.terrain.resonance-ruin"
+            ) {
+                *terrain_id = "demo.terrain.wall".to_owned();
+            }
+        }
+        for floor in &mut payload.stored_floors {
+            for terrain_id in &mut floor.terrain.terrain_ids {
+                if matches!(
+                    terrain_id.as_str(),
+                    "demo.terrain.resonance-vein" | "demo.terrain.resonance-ruin"
+                ) {
+                    *terrain_id = "demo.terrain.wall".to_owned();
+                }
+            }
+        }
+        let expected_terrain = payload.terrain.clone();
+        let expected_stored_floors = payload.stored_floors.clone();
+        let expected_entities = payload.entities.clone();
+        let expected_items = payload.items.clone();
+        let saved_draw_counter = payload.rng.draw_counter;
+
+        let restored = Game::from_save(payload).expect("v54 generated floors should migrate");
+        let restored_payload = restored.to_save();
+
+        assert_eq!(restored.current_floor_id, "demo.floor.resonance-depth-10");
+        assert_eq!(restored_payload.terrain, expected_terrain);
+        assert_eq!(restored_payload.stored_floors, expected_stored_floors);
+        assert_eq!(actors_to_save(&restored.entities), expected_entities);
+        assert_eq!(items_to_save(&restored.items), expected_items);
+        assert_eq!(restored.rng.draw_counter, saved_draw_counter);
+        assert!(restored.terrain.iter().all(|terrain| {
+            !matches!(
+                terrain.as_str(),
+                "demo.terrain.resonance-vein" | "demo.terrain.resonance-ruin"
             )
         }));
     }

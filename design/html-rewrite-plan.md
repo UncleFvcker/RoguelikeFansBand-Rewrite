@@ -46,6 +46,7 @@
 - [Contract v52：程序化特殊地形表与空间预算](contract-v52-terrain-feature-budgets.md)
 - [Contract v53：分阶段洞穴地貌与房间几何预算](contract-v53-staged-cavern-layout.md)
 - [Contract v54：湖泊与河流水文阶段](contract-v54-lake-river-hydrology.md)
+- [Contract v55：迷宫、毁坏区与岩脉阶段](contract-v55-maze-destroyed-streamers.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -602,7 +603,7 @@ interface SaveGame {
 - 协议 1.50 和 contract-v50 已建立；内容包 1.43.0 新增 Vault 八向变换、边界入口、自由 wall 区落位、多 Vault 数量/面积预算、重叠拒绝与稳定失败回退。深度 8 在 9 actor/3 loot placement 内落位两个小模板并跳过无法落位的 12×12 候选；save v1 / state hash Schema v19 不变，active baseline 共 100 个 exact fixtures。
 - 协议 1.51 和 contract-v51 已建立；内容包 1.44.0 新增动态 friends/escort、`cluster/ring` formation、群体数量/随从 actor 预算、空间缩减与原子回退。深度 6/7 分别生成 ring/cluster 群体并保持 7/8 actor 总预算；save v1 / state hash Schema v19 不变，active baseline 共 102 个 exact fixtures。
 - 协议 1.52 和 contract-v52 已建立；内容包 1.45.0 新增独立 terrain feature 表、room/corridor 放置、深度权重、额外特殊地形预算、占位排斥与失败回退。压力地牢深度 3–10 放置 2–4 个额外 trap/rubble/door；save v1 / state hash Schema v19 不变，active baseline 共 104 个 exact fixtures。
-- 协议 1.54 和 contract-v54 已建立；内容包 1.47.0 在分阶段 layout 中新增深浅 lake/river terrain、湖泊总量/深水核心预算、边界河流中心线、浅水岸扩展与房间/隧道连通保护。save v1 / state hash Schema v19 不变，active baseline 共 108 个 exact fixtures。
+- 协议 1.55 和 contract-v55 已建立；内容包 1.48.0 在分阶段 layout 中新增完美 maze、多震中 destroyed、加权 streamer、独立废墟/矿脉 terrain 与稳定空间回退。save v1 / state hash Schema v19 不变，active baseline 共 110 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 

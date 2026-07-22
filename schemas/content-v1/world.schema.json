@@ -145,6 +145,18 @@
       ],
       "type": "object"
     },
+    "ProceduralDestroyedDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terrainId"
+      ],
+      "type": "object"
+    },
     "ProceduralFloorDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -425,6 +437,25 @@
             "null"
           ]
         },
+        "destroyedAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "destructionCenters": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "featurePlacements": {
           "default": null,
           "format": "uint16",
@@ -479,6 +510,15 @@
           "minimum": 0,
           "type": "integer"
         },
+        "mazeFloorTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "riverAreaTiles": {
           "default": null,
           "format": "uint32",
@@ -498,6 +538,25 @@
           ]
         },
         "roomPlacements": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "streamerAreaTiles": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "streamerPlacements": {
           "default": null,
           "format": "uint16",
           "maximum": 65535,
@@ -563,10 +622,32 @@
           ],
           "default": null
         },
+        "destroyed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralDestroyedDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "lake": {
           "anyOf": [
             {
               "$ref": "#/$defs/ProceduralLakeDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "maze": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralMazeDefinition"
             },
             {
               "type": "null"
@@ -587,6 +668,13 @@
         },
         "rooms": {
           "$ref": "#/$defs/ProceduralRoomGeometryDefinition"
+        },
+        "streamers": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProceduralStreamerCandidateDefinition"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -611,6 +699,28 @@
         "id",
         "roomId",
         "lootTableId"
+      ],
+      "type": "object"
+    },
+    "ProceduralMazeDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "width": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height"
       ],
       "type": "object"
     },
@@ -713,6 +823,24 @@
       },
       "required": [
         "shape",
+        "weight"
+      ],
+      "type": "object"
+    },
+    "ProceduralStreamerCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "terrainId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "terrainId",
         "weight"
       ],
       "type": "object"

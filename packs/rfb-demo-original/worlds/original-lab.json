@@ -420,6 +420,9 @@
       "cavernAreaTiles": 56,
       "lakeAreaTiles": 70,
       "lakeDeepAreaTiles": 28,
+      "mazeFloorTiles": 127,
+      "streamerPlacements": 2,
+      "streamerAreaTiles": 24,
       "featurePlacements": 4
     },
     "layout": {
@@ -437,7 +440,11 @@
       "lake": {
         "deepTerrainId": "demo.terrain.resonance-water-deep",
         "shallowTerrainId": "demo.terrain.resonance-water-shallow"
-      }
+      },
+      "maze": { "width": 15, "height": 15 },
+      "streamers": [
+        { "terrainId": "demo.terrain.resonance-vein", "weight": 1 }
+      ]
     },
     "nextFloorId": "demo.floor.resonance-depth-10",
     "depth": 9,
@@ -469,6 +476,10 @@
       "lakeAreaTiles": 76,
       "lakeDeepAreaTiles": 30,
       "riverAreaTiles": 52,
+      "destructionCenters": 2,
+      "destroyedAreaTiles": 48,
+      "streamerPlacements": 2,
+      "streamerAreaTiles": 24,
       "featurePlacements": 4
     },
     "layout": {
@@ -490,7 +501,11 @@
       "river": {
         "deepTerrainId": "demo.terrain.resonance-water-deep",
         "shallowTerrainId": "demo.terrain.resonance-water-shallow"
-      }
+      },
+      "destroyed": { "terrainId": "demo.terrain.resonance-ruin" },
+      "streamers": [
+        { "terrainId": "demo.terrain.resonance-vein", "weight": 1 }
+      ]
     },
     "finalFloor": true,
     "guardian": {
