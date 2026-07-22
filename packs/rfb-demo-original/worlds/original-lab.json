@@ -188,12 +188,12 @@
     "nameKey": "floor-demo-echo-depth-2-name",
     "returnFloorId": "demo.floor.echo-depth-1",
     "dungeonId": "demo.dungeon.echo-depths",
-    "encounterTableId": "demo.encounter-table.echo-depths",
-    "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.echo-depths",
+    "regionTableId": "demo.region-table.resonance-biomes",
     "generationBudget": {
-      "actorSlots": 4,
-      "lootPlacements": 2
+      "actorSlots": 5,
+      "lootPlacements": 3,
+      "regionPlacements": 2
     },
     "nextFloorId": "demo.floor.echo-depth-3",
     "connections": [{
@@ -391,13 +391,13 @@
     "nameKey": "floor-demo-resonance-depth-6-name",
     "returnFloorId": "demo.floor.resonance-depth-5",
     "dungeonId": "demo.dungeon.resonance-descent",
-    "encounterTableId": "demo.encounter-table.resonance-formations",
-    "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
+    "regionTableId": "demo.region-table.resonance-biomes",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
       "actorSlots": 7,
       "lootPlacements": 2,
+      "regionPlacements": 2,
       "groupPlacements": 1,
       "groupActorSlots": 4,
       "featurePlacements": 4
@@ -419,13 +419,13 @@
     "nameKey": "floor-demo-resonance-depth-7-name",
     "returnFloorId": "demo.floor.resonance-depth-6",
     "dungeonId": "demo.dungeon.resonance-descent",
-    "encounterTableId": "demo.encounter-table.resonance-formations",
-    "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
+    "regionTableId": "demo.region-table.resonance-biomes",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
       "actorSlots": 8,
       "lootPlacements": 2,
+      "regionPlacements": 2,
       "groupPlacements": 1,
       "groupActorSlots": 5,
       "featurePlacements": 4
@@ -447,13 +447,13 @@
     "nameKey": "floor-demo-resonance-depth-8-name",
     "returnFloorId": "demo.floor.resonance-depth-7",
     "dungeonId": "demo.dungeon.resonance-descent",
-    "encounterTableId": "demo.encounter-table.resonance-descent",
-    "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
+    "regionTableId": "demo.region-table.resonance-biomes",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
       "actorSlots": 9,
-      "lootPlacements": 3,
+      "lootPlacements": 4,
+      "regionPlacements": 2,
       "vaultPlacements": 2,
       "vaultAreaTiles": 180,
       "featurePlacements": 4
@@ -509,15 +509,15 @@
     "nameKey": "floor-demo-resonance-depth-10-name",
     "returnFloorId": "demo.floor.resonance-depth-9",
     "dungeonId": "demo.dungeon.resonance-descent",
-    "encounterTableId": "demo.encounter-table.resonance-descent",
-    "lootTableId": "demo.loot-table.echo-depth-1-room",
     "themeTableId": "demo.theme-table.resonance-descent",
+    "regionTableId": "demo.region-table.resonance-biomes",
     "terrainFeatureTableId": "demo.terrain-feature-table.resonance-hazards",
     "generationBudget": {
       "actorSlots": 30,
       "lootPlacements": 3,
       "roomPlacements": 5,
       "roomAreaTiles": 112,
+      "regionPlacements": 2,
       "cavernAreaTiles": 64,
       "lakeAreaTiles": 76,
       "lakeDeepAreaTiles": 30,

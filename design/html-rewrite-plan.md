@@ -53,6 +53,7 @@
 - [Contract v59：持久 pack identity 与首版 pack AI](contract-v59-pack-ai.md)
 - [Contract v60：同层多区域主题](contract-v60-regional-themes.md)
 - [Contract v61：暂停任务管理与确定性重接](contract-v61-retake-management.md)
+- [Contract v62：区域组合生成](contract-v62-regional-composition.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -614,13 +615,14 @@ interface SaveGame {
 - 协议 1.58 和 contract-v58 已建立；内容包 1.51.0 新增稳定楼层连接 ID、两组独立普通楼梯和跨两层 shaft，附加连接按种子 RNG 随机落位并保存 ID→位置。save 容器仍为 v1，state hash 升至 Schema v20，active baseline 共 117 个 exact fixtures。
 - 协议 1.59 和 contract-v59 已建立；内容包 1.52.0 为动态群体新增行为声明，生成稳定 pack ID、leader/member 身份和 `seek/surround/guard-leader` 首版 AI。save 容器仍为 v1，state hash 升至 Schema v21，active baseline 共 117 个 exact fixtures。
 - 协议 1.60 和 contract-v60 已建立；内容包 1.53.0 新增 region table 根、权重无放回区域选择、按房间中心归属的局部 terrain/encounter/loot 和持久区域边界。save 容器仍为 v1，state hash 升至 Schema v22，active baseline 共 119 个 exact fixtures。
-- 协议 1.61 和 contract-v61 已建立；内容包 1.54.0 新增可重接任务次数限制、保留/重建成员层策略和地表按 task ID 放弃。`retakesUsed` 进入 save v1 与 state hash Schema v23，active baseline 共 121 个 exact fixtures。
+- 协议 1.61 和 contract-v61 已建立；内容包 1.54.0 新增 paused 任务的地表放弃、重接次数限制和保留进度的确定性成员层重建。save v1 新增带默认值的 `retakesUsed`，state hash 升至 Schema v23，active baseline 共 121 个 exact fixtures。
+- 协议 1.62 和 contract-v62 已建立；内容包 1.55.0 允许区域与 Vault、动态群体、terrain feature、pit、guardian、分阶段地貌和显式连接组合，区域特殊 footprint 持久归属宿主并限制区域怪物寻路。save v1 与 state hash Schema v23 不变，active baseline 共 125 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage E 地牢生态，推进区域与 Vault/pit/feature/分阶段地貌的组合，再推进更一般的分支连接与 Vault 多入口；
+1. 继续 Stage E 地牢生态，推进更一般的分支连接、Vault 多入口与跨走廊拼接；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

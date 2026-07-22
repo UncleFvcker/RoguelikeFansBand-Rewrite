@@ -2718,27 +2718,13 @@ fn validate_world(
             || procedural.region_table_id.is_some()
                 && (procedural.encounter_table_id.is_some()
                     || procedural.loot_table_id.is_some()
-                    || procedural.theme_table_id.is_some()
                     || procedural.theme_id.is_some()
                     || procedural.vault_id.is_some()
-                    || procedural.terrain_feature_table_id.is_some()
                     || !procedural.actor_spawns.is_empty()
                     || !procedural.loot_spawns.is_empty()
                     || procedural.nest.is_some()
-                    || procedural.guardian.is_some()
-                    || procedural.final_floor
                     || maze_only
-                    || !procedural.connections.is_empty()
-                    || procedural.generation_budget.is_none()
-                    || procedural.layout.as_ref().is_some_and(|layout| {
-                        layout.cavern.is_some()
-                            || layout.lake.is_some()
-                            || layout.river.is_some()
-                            || layout.maze.is_some()
-                            || layout.destroyed.is_some()
-                            || !layout.streamers.is_empty()
-                            || layout.pit.is_some()
-                    }))
+                    || procedural.generation_budget.is_none())
         {
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
@@ -2791,6 +2777,9 @@ fn validate_world(
         } else {
             Vec::new()
         };
+        let regional_groups_enabled = procedural.generation_budget.as_ref().is_some_and(|budget| {
+            budget.group_placements.is_some() && budget.group_actor_slots.is_some()
+        });
         let eligible_region_entries = if let Some(table_id) = &procedural.region_table_id {
             let Some(table) = region_tables.get(table_id) else {
                 return Err(ContentError::DanglingReference {
@@ -2825,17 +2814,17 @@ fn validate_world(
                     let encounter_is_valid = encounter_tables
                         .get(&entry.encounter_table_id)
                         .is_some_and(|table| {
-                            table.entries.iter().any(|candidate| {
-                                candidate.group.is_none()
-                                    && candidate.min_depth <= procedural.depth
+                            let mut eligible = table.entries.iter().filter(|candidate| {
+                                candidate.min_depth <= procedural.depth
                                     && procedural.depth <= candidate.max_depth
                                     && actor_levels
                                         .get(&candidate.actor_kind_id)
                                         .is_some_and(|level| *level <= u32::from(procedural.depth))
-                            }) && table
-                                .entries
-                                .iter()
-                                .all(|candidate| candidate.group.is_none())
+                            });
+                            let has_plain =
+                                eligible.clone().any(|candidate| candidate.group.is_none());
+                            let has_group = eligible.any(|candidate| candidate.group.is_some());
+                            has_plain && (regional_groups_enabled == has_group)
                         });
                     !theme_is_valid || !encounter_is_valid
                 })
@@ -2981,25 +2970,14 @@ fn validate_world(
             }
             if let Some(placements) = region_budget {
                 let room_count = budget.room_placements.unwrap_or(2);
+                let regional_room_count =
+                    room_count.saturating_sub(u16::from(pit_budget.is_some()));
                 if !(2..=4).contains(&placements)
-                    || placements > room_count
+                    || placements > regional_room_count
                     || usize::from(placements) > eligible_region_entries.len()
-                    || budget.actor_slots < placements
+                    || reserved_actor_slots + usize::from(placements)
+                        > usize::from(budget.actor_slots)
                     || budget.loot_placements < placements
-                    || spatial_vault_budget.is_some()
-                    || group_budget.is_some()
-                    || feature_budget.is_some()
-                    || budget.cavern_area_tiles.is_some()
-                    || budget.lake_area_tiles.is_some()
-                    || budget.lake_deep_area_tiles.is_some()
-                    || budget.river_area_tiles.is_some()
-                    || budget.maze_floor_tiles.is_some()
-                    || budget.destruction_centers.is_some()
-                    || budget.destroyed_area_tiles.is_some()
-                    || budget.streamer_placements.is_some()
-                    || budget.streamer_area_tiles.is_some()
-                    || budget.pit_placements.is_some()
-                    || budget.pit_actor_slots.is_some()
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
@@ -3436,12 +3414,31 @@ fn validate_world(
                 }
             }
             if let Some((placements, group_actor_slots)) = group_budget {
-                let grouped_entries = eligible_encounter_entries
+                let group_source_entries = if procedural.region_table_id.is_some() {
+                    eligible_region_entries
+                        .iter()
+                        .flat_map(|region| {
+                            encounter_tables[&region.encounter_table_id]
+                                .entries
+                                .iter()
+                                .filter(|entry| {
+                                    entry.min_depth <= procedural.depth
+                                        && procedural.depth <= entry.max_depth
+                                        && actor_levels.get(&entry.actor_kind_id).is_some_and(
+                                            |level| *level <= u32::from(procedural.depth),
+                                        )
+                                })
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    eligible_encounter_entries.clone()
+                };
+                let grouped_entries = group_source_entries
                     .iter()
                     .filter(|entry| entry.group.is_some())
                     .copied()
                     .collect::<Vec<_>>();
-                let plain_entries = eligible_encounter_entries
+                let plain_entries = group_source_entries
                     .iter()
                     .filter(|entry| entry.group.is_none())
                     .copied()
@@ -3454,13 +3451,24 @@ fn validate_world(
                     .unwrap_or(0);
                 let required_companion_slots =
                     usize::from(placements) * usize::from(maximum_minimum_companions);
-                let required_actor_slots =
-                    reserved_actor_slots + usize::from(placements) + required_companion_slots + 1;
-                let encounter_rolls = procedural
-                    .encounter_table_id
-                    .as_ref()
-                    .and_then(|table_id| encounter_tables.get(table_id))
-                    .map_or(0, |table| table.rolls);
+                let ordinary_actor_reserve = region_budget.map_or(1, usize::from);
+                let required_actor_slots = reserved_actor_slots
+                    + usize::from(placements)
+                    + required_companion_slots
+                    + ordinary_actor_reserve;
+                let encounter_rolls = if procedural.region_table_id.is_some() {
+                    eligible_region_entries
+                        .iter()
+                        .map(|region| encounter_tables[&region.encounter_table_id].rolls)
+                        .min()
+                        .unwrap_or(0)
+                } else {
+                    procedural
+                        .encounter_table_id
+                        .as_ref()
+                        .and_then(|table_id| encounter_tables.get(table_id))
+                        .map_or(0, |table| table.rolls)
+                };
                 if !(1..=4).contains(&placements)
                     || !(1..=14).contains(&group_actor_slots)
                     || placements >= encounter_rolls
@@ -3509,8 +3517,11 @@ fn validate_world(
                         .iter()
                         .map(|group| group.member_positions.len())
                         .sum::<usize>();
-                    if reserved_actor_slots + vault_actor_slots >= usize::from(budget.actor_slots)
-                        || vault.loot_spawns.len() >= usize::from(budget.loot_placements)
+                    let ordinary_reserve = region_budget.map_or(1, usize::from);
+                    if reserved_actor_slots + vault_actor_slots + ordinary_reserve
+                        > usize::from(budget.actor_slots)
+                        || vault.loot_spawns.len() + ordinary_reserve
+                            > usize::from(budget.loot_placements)
                         || spatial_vault_budget.is_some_and(|(_, area_tiles)| {
                             u32::from(vault.width) * u32::from(vault.height) > area_tiles
                         })
@@ -4668,7 +4679,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.54.0");
+        assert_eq!(catalog.pack_version(), "1.55.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -5621,7 +5632,7 @@ mod tests {
     }
 
     #[test]
-    fn region_tables_require_depth_eligible_candidates_and_isolated_budgets() {
+    fn region_tables_require_depth_eligible_candidates_and_composable_budgets() {
         let artifact =
             compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
@@ -5634,7 +5645,7 @@ mod tests {
         }
 
         let mut exhausted_depth = artifact.content.clone();
-        regional_floor(&mut exhausted_depth).depth = 3;
+        regional_floor(&mut exhausted_depth).depth = 11;
         assert!(matches!(
             validate_and_normalize(&mut exhausted_depth),
             Err(ContentError::InvalidProceduralFloor(_))
@@ -5670,18 +5681,18 @@ mod tests {
             Err(ContentError::InvalidProceduralFloor(_))
         ));
 
-        let mut mixed_features = artifact.content.clone();
-        mixed_features.worlds[0]
-            .procedural_floors
-            .iter_mut()
-            .find(|floor| floor.id == "demo.floor.resonance-depth-2")
-            .expect("fixture should contain the regional floor")
-            .terrain_feature_table_id =
+        let mut composable_features = artifact.content.clone();
+        composable_features.terrain_feature_tables[0].entries[0].min_depth = 2;
+        let floor = regional_floor(&mut composable_features);
+        floor.terrain_feature_table_id =
             Some("demo.terrain-feature-table.resonance-hazards".to_owned());
-        assert!(matches!(
-            validate_and_normalize(&mut mixed_features),
-            Err(ContentError::InvalidProceduralFloor(_))
-        ));
+        floor
+            .generation_budget
+            .as_mut()
+            .expect("regional floor should retain a generation budget")
+            .feature_placements = Some(1);
+        validate_and_normalize(&mut composable_features)
+            .expect("regional feature, theme, vault, and connections should compose");
 
         let mut missing_theme = artifact.content.clone();
         missing_theme.region_tables[0].entries[0].theme_id =
@@ -5691,21 +5702,44 @@ mod tests {
             Err(ContentError::InvalidRegionTable(_))
         ));
 
-        let mut grouped_encounter = artifact.content.clone();
-        let group = grouped_encounter
-            .encounter_tables
-            .iter()
-            .find(|table| table.id == "demo.encounter-table.resonance-formations")
-            .and_then(|table| table.entries.iter().find_map(|entry| entry.group.clone()))
-            .expect("fixture should contain a dynamic group");
-        grouped_encounter
-            .encounter_tables
+        let mut incomplete_group_budget = artifact.content.clone();
+        let budget = incomplete_group_budget.worlds[0]
+            .procedural_floors
             .iter_mut()
-            .find(|table| table.id == "demo.encounter-table.resonance-gallery")
-            .expect("fixture should contain the regional encounter table")
-            .entries[0]
-            .group = Some(group);
-        assert!(validate_and_normalize(&mut grouped_encounter).is_err());
+            .find(|floor| floor.id == "demo.floor.resonance-depth-6")
+            .and_then(|floor| floor.generation_budget.as_mut())
+            .expect("fixture should contain the regional group budget");
+        budget.group_actor_slots = None;
+        assert!(matches!(
+            validate_and_normalize(&mut incomplete_group_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut exhausted_special_actor_budget = artifact.content.clone();
+        exhausted_special_actor_budget.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .and_then(|floor| floor.generation_budget.as_mut())
+            .expect("fixture should contain the regional pit budget")
+            .actor_slots = 27;
+        assert!(matches!(
+            validate_and_normalize(&mut exhausted_special_actor_budget),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut pit_consumes_too_many_rooms = artifact.content.clone();
+        pit_consumes_too_many_rooms.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.resonance-depth-10")
+            .and_then(|floor| floor.generation_budget.as_mut())
+            .expect("fixture should contain the regional pit budget")
+            .room_placements = Some(2);
+        assert!(matches!(
+            validate_and_normalize(&mut pit_consumes_too_many_rooms),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
     }
 
     #[test]

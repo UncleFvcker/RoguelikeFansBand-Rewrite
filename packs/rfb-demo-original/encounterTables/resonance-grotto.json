@@ -8,13 +8,79 @@
       "actorKindId": "demo.actor.acid-seep",
       "weight": 3,
       "minDepth": 2,
-      "maxDepth": 2
+      "maxDepth": 10
     },
     {
       "actorKindId": "demo.actor.venom-spore",
       "weight": 1,
       "minDepth": 2,
-      "maxDepth": 2
+      "maxDepth": 10
+    },
+    {
+      "actorKindId": "demo.actor.chorus-captain",
+      "weight": 2,
+      "minDepth": 6,
+      "maxDepth": 6,
+      "group": {
+        "friends": { "minCount": 1, "maxCount": 2 },
+        "escort": {
+          "minCount": 1,
+          "maxCount": 2,
+          "entries": [
+            {
+              "actorKindId": "demo.actor.frost-wisp",
+              "weight": 1,
+              "minDepth": 6,
+              "maxDepth": 6
+            },
+            {
+              "actorKindId": "demo.actor.storm-spark",
+              "weight": 2,
+              "minDepth": 6,
+              "maxDepth": 6
+            }
+          ]
+        },
+        "formation": "ring",
+        "packAi": {
+          "leader": "seek",
+          "friends": "surround",
+          "escorts": "guard-leader"
+        }
+      }
+    },
+    {
+      "actorKindId": "demo.actor.spore-shepherd",
+      "weight": 2,
+      "minDepth": 7,
+      "maxDepth": 7,
+      "group": {
+        "friends": { "minCount": 1, "maxCount": 2 },
+        "escort": {
+          "minCount": 2,
+          "maxCount": 3,
+          "entries": [
+            {
+              "actorKindId": "demo.actor.venom-spore",
+              "weight": 3,
+              "minDepth": 7,
+              "maxDepth": 7
+            },
+            {
+              "actorKindId": "demo.actor.echo-hound",
+              "weight": 1,
+              "minDepth": 7,
+              "maxDepth": 7
+            }
+          ]
+        },
+        "formation": "cluster",
+        "packAi": {
+          "leader": "seek",
+          "friends": "surround",
+          "escorts": "guard-leader"
+        }
+      }
     }
   ]
 }

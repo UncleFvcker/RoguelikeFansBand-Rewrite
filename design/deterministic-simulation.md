@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v23：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、当前与离层的连接 ID→位置、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior、按 ID 排序的离层 `FloorState`、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者状态、RNG、世界脉冲和命令序号。contract-v61 因新增权威 `retakesUsed` 而显式升级 Schema。
+当前 state hash Schema 为 v23：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、当前与离层的连接 ID→位置、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior、按 ID 排序的离层 `FloorState`、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者状态、RNG、世界脉冲和命令序号。contract-v61 因新增权威 `retakesUsed` 而显式升级 Schema；contract-v62 只改变内容驱动生成和区域边界行为，不新增哈希字段。
 
 contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
 
@@ -29,6 +29,8 @@ contract-v59 按楼层内生成群体的稳定顺序分配 `{floorId}.pack.N`，
 contract-v60 先按 region ID 规范候选并执行整数权重无放回抽样，再沿房间序列建立均匀锚点；非锚点房间按中心 Manhattan 距离与区域顺序决胜。actor/loot 预算按区域顺序整除并分配余数，位置只在所属房间内抽取。区域状态按 region ID、格坐标排序后进入哈希。v59 存档缺失区域时保留空列表、不补生成、不推进 RNG；区域状态进入 Schema v22。
 
 contract-v61 只在 paused 任务成功重入时递增 `retakesUsed`。`preserve-floor` 直接恢复已保存楼层且不抽 RNG；`regenerate-floor` 先按 task ID 丢弃全部已保存成员层，再沿普通楼层生成顺序使用当前 RNG，并把计数目标限制为 `required - current`。次数耗尽和无效地表放弃都不抽 RNG。v60 存档缺失计数时按 0 载入；该计数进入 Schema v23。
+
+contract-v62 在确定性生成中先按既有顺序完成区域选择、特殊 footprint 宿主归属和固定内容占位，再联合分配区域普通 actor/loot。区域动态群体使用稳定 region ID 前缀；同一 region 的怪物寻路只接受 region cells 内的路径。Vault/pit/feature/guardian 的组合不增加额外迁移抽取；v61 及更早生成楼层不会回补区域组合。
 
 contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、地面掉落位置和 loot roll 顺序；生成结果已经由 Schema v14 的当前/离层 actor、item、分配器和 RNG 字段覆盖，因此本切片不升级 state hash Schema。
 

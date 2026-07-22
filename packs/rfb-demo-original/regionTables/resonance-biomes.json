@@ -11,7 +11,7 @@
       "lootTableId": "demo.loot-table.resonance-gallery",
       "weight": 1,
       "minDepth": 2,
-      "maxDepth": 2
+      "maxDepth": 10
     },
     {
       "regionId": "demo.region.resonance-grotto",
@@ -21,7 +21,7 @@
       "lootTableId": "demo.loot-table.resonance-grotto",
       "weight": 3,
       "minDepth": 2,
-      "maxDepth": 2
+      "maxDepth": 10
     }
   ]
 }

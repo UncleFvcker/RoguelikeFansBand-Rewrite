@@ -8,7 +8,7 @@
       "floorTerrainId": "demo.terrain.resonant-floor",
       "weight": 1,
       "minDepth": 2,
-      "maxDepth": 2,
+      "maxDepth": 10,
       "vaultCandidates": []
     },
     {
@@ -16,7 +16,7 @@
       "floorTerrainId": "demo.terrain.resonance-cavern",
       "weight": 1,
       "minDepth": 2,
-      "maxDepth": 2,
+      "maxDepth": 10,
       "vaultCandidates": []
     }
   ]

@@ -67,7 +67,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 54] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 55] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -122,9 +122,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 54] = [
     "ee07c276bbe568fafc1e1d6942e9d57d158bd250ed452b32c01c774d8521e96d",
     "4cdcad204a7ccad6d67b8dcb50ccdcc188220a72d258c37219974fad51e5274d",
     "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02",
+    "56fc449617a4c05c12ff11716c14b4f5c680cada9ad86c6ece736b52fa904bc2",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "56fc449617a4c05c12ff11716c14b4f5c680cada9ad86c6ece736b52fa904bc2";
+    "9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -263,6 +264,13 @@ struct GeneratedPitPlacement {
 struct GeneratedTerrainFeature {
     terrain_id: String,
     position: Position,
+}
+
+struct TerrainFeaturePlacementContext<'a> {
+    rooms: &'a [GeneratedRoom],
+    reserved: &'a BTreeSet<Position>,
+    floor_terrain_id: &'a str,
+    room_floor_terrain_ids: &'a BTreeSet<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -3400,6 +3408,10 @@ impl Game {
         ];
 
         let start = self.entities[index].position;
+        let movement_region = self
+            .floor_regions
+            .iter()
+            .find(|region| region.cells.contains(&start));
         let occupied_now = self
             .entities
             .iter()
@@ -3442,6 +3454,7 @@ impl Game {
             if position == self.player.position
                 || occupied_now.contains(&position)
                 || !self.is_walkable(position)
+                || movement_region.is_some_and(|region| !region.cells.contains(&position))
                 || !visited.insert(position)
             {
                 continue;
@@ -3471,6 +3484,7 @@ impl Game {
                 if next == self.player.position
                     || path_blockers.contains(&next)
                     || !self.is_walkable(next)
+                    || movement_region.is_some_and(|region| !region.cells.contains(&next))
                     || !visited.insert(next)
                 {
                     continue;
@@ -4584,8 +4598,17 @@ impl Game {
                 },
             ]
         };
+        let content_rooms = if definition
+            .layout
+            .as_ref()
+            .is_some_and(|layout| layout.pit.is_some())
+        {
+            &rooms[..rooms.len() - 1]
+        } else {
+            rooms.as_slice()
+        };
         let room_region_indexes =
-            assign_generated_rooms_to_regions(&rooms, selected_region_entries.len());
+            assign_generated_rooms_to_regions(content_rooms, selected_region_entries.len());
         let mut generated_regions = selected_region_entries
             .iter()
             .enumerate()
@@ -4600,13 +4623,13 @@ impl Game {
                             .find(|theme| theme.theme_id == entry.theme_id)
                     })
                     .expect("validated region theme must remain available");
-                let room_ids = rooms
+                let room_ids = content_rooms
                     .iter()
                     .zip(&room_region_indexes)
                     .filter(|(_, assigned_region)| **assigned_region == region_index)
                     .map(|(room, _)| room.id.clone())
                     .collect::<Vec<_>>();
-                let mut cells = rooms
+                let mut cells = content_rooms
                     .iter()
                     .zip(&room_region_indexes)
                     .filter(|(_, assigned_region)| **assigned_region == region_index)
@@ -4725,11 +4748,6 @@ impl Game {
                     &mut terrain,
                 )
             });
-        let content_rooms = if pit_placement.is_some() {
-            &rooms[..rooms.len() - 1]
-        } else {
-            rooms.as_slice()
-        };
         let door_position = (!maze_only).then_some(Position {
             x: (first_center.x + second_center.x) / 2,
             y: first_center.y,
@@ -4817,6 +4835,47 @@ impl Game {
         } else {
             Vec::new()
         };
+        for placement in &vault_placements {
+            let entrance = transformed_vault_position(
+                &placement.vault,
+                placement.transform,
+                placement.vault.entrance_position,
+            );
+            let anchor = Position {
+                x: placement.origin.x + entrance.x,
+                y: placement.origin.y + entrance.y,
+            };
+            let (vault_width, vault_height) =
+                transformed_vault_dimensions(&placement.vault, placement.transform);
+            let footprint = (0..vault_height).flat_map(|y| {
+                (0..vault_width).map(move |x| Position {
+                    x: placement.origin.x + i32::from(x),
+                    y: placement.origin.y + i32::from(y),
+                })
+            });
+            assign_generated_footprint_to_region(
+                &mut generated_regions,
+                content_rooms,
+                anchor,
+                footprint,
+            );
+        }
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            let footprint = (0..total_height).flat_map(|y| {
+                (0..total_width).map(move |x| Position {
+                    x: pit.origin.x + i32::from(x),
+                    y: pit.origin.y + i32::from(y),
+                })
+            });
+            assign_generated_footprint_to_region(
+                &mut generated_regions,
+                content_rooms,
+                pit.outer_entrance,
+                footprint,
+            );
+        }
         if !definition.connections.is_empty() {
             floor_connections = place_generated_floor_connections(
                 definition,
@@ -4870,6 +4929,10 @@ impl Game {
             feature_reserved.insert(pit.outer_entrance);
             feature_reserved.insert(pit.inner_entrance);
         }
+        let room_floor_terrain_ids = generated_regions
+            .iter()
+            .map(|region| region.floor_terrain_id.clone())
+            .collect::<BTreeSet<_>>();
         let terrain_features = if let Some(table_id) = &definition.terrain_feature_table_id {
             let table = self
                 .content
@@ -4887,9 +4950,12 @@ impl Game {
             self.place_terrain_features(
                 definition,
                 &eligible_entries,
-                content_rooms,
-                &feature_reserved,
-                &generated_floor_terrain_id,
+                TerrainFeaturePlacementContext {
+                    rooms: content_rooms,
+                    reserved: &feature_reserved,
+                    floor_terrain_id: &generated_floor_terrain_id,
+                    room_floor_terrain_ids: &room_floor_terrain_ids,
+                },
                 &mut terrain,
             )
         } else {
@@ -4917,27 +4983,77 @@ impl Game {
                 }
             }
         }
+        for placement in &vault_placements {
+            occupied.extend(
+                placement
+                    .vault
+                    .encounter_groups
+                    .iter()
+                    .flat_map(|group| &group.member_positions)
+                    .map(|local| {
+                        let local = transformed_vault_position(
+                            &placement.vault,
+                            placement.transform,
+                            *local,
+                        );
+                        Position {
+                            x: placement.origin.x + local.x,
+                            y: placement.origin.y + local.y,
+                        }
+                    }),
+            );
+            occupied.extend(placement.vault.loot_spawns.iter().map(|spawn| {
+                let local = transformed_vault_position(
+                    &placement.vault,
+                    placement.transform,
+                    spawn.position,
+                );
+                Position {
+                    x: placement.origin.x + local.x,
+                    y: placement.origin.y + local.y,
+                }
+            }));
+        }
         if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
+        let guardian_position = guardian.map(|_| Position {
+            x: first_center.x + 1,
+            y: first_center.y,
+        });
+        occupied.extend(guardian_position);
+        let reserved_actor_slots = definition
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.pit_actor_slots)
+            .unwrap_or(0)
+            .saturating_add(definition.nest.as_ref().map_or(0, |nest| nest.spawn_count))
+            .saturating_add(if guardian.is_some() { 1 } else { 0 })
+            .saturating_add(
+                vault_placements
+                    .iter()
+                    .flat_map(|placement| &placement.vault.encounter_groups)
+                    .map(|group| {
+                        u16::try_from(group.member_positions.len())
+                            .expect("validated vault group size must fit u16")
+                    })
+                    .sum::<u16>(),
+            );
         let mut entities = Vec::new();
+        let mut regional_loot_allocations = Vec::new();
         if !generated_regions.is_empty() {
-            let actor_budget = definition
+            let budget = definition
                 .generation_budget
                 .as_ref()
-                .expect("validated region floor must retain a generation budget")
-                .actor_slots;
+                .expect("validated region floor must retain a generation budget");
             let region_count = u16::try_from(generated_regions.len())
                 .expect("validated region count must fit u16");
-            for (region_index, region) in generated_regions.iter().enumerate() {
-                let region_index_u16 =
-                    u16::try_from(region_index).expect("validated region index must fit u16");
-                let placements = actor_budget / region_count
-                    + u16::from(region_index_u16 < actor_budget % region_count);
+            if budget.group_placements.is_some() && budget.group_actor_slots.is_some() {
+                let host = &generated_regions[0];
                 let table = self
                     .content
-                    .encounter_table(&region.state.encounter_table_id)
-                    .expect("validated region encounter table must remain available")
+                    .encounter_table(&host.state.encounter_table_id)
+                    .expect("validated regional group table must remain available")
                     .clone();
                 let eligible_entries = table
                     .entries
@@ -4952,19 +5068,81 @@ impl Game {
                     })
                     .cloned()
                     .collect::<Vec<_>>();
+                let room_id = &host.room_ids[0];
+                let id_prefix = format!("{}.region.{}", definition.id, host.state.region_id);
+                entities.extend(self.generate_dynamic_encounter_groups(
+                    definition,
+                    &table,
+                    &eligible_entries,
+                    content_rooms,
+                    room_id,
+                    reserved_actor_slots,
+                    region_count,
+                    false,
+                    &id_prefix,
+                    &mut occupied,
+                ));
+            }
+            let actor_budget = budget
+                .actor_slots
+                .saturating_sub(reserved_actor_slots)
+                .saturating_sub(
+                    u16::try_from(entities.len())
+                        .expect("generated regional group size must fit u16"),
+                );
+            let loot_budget = budget.loot_placements.saturating_sub(
+                vault_placements
+                    .iter()
+                    .map(|placement| {
+                        u16::try_from(placement.vault.loot_spawns.len())
+                            .expect("validated vault loot count must fit u16")
+                    })
+                    .sum::<u16>(),
+            );
+            let (regional_actor_allocations, loot_allocations) =
+                allocate_generated_region_placements(
+                    &generated_regions,
+                    &terrain,
+                    width,
+                    &self.content,
+                    &occupied,
+                    actor_budget,
+                    loot_budget,
+                );
+            regional_loot_allocations = loot_allocations;
+            for (region_index, region) in generated_regions.iter().enumerate() {
+                let placements = regional_actor_allocations[region_index];
+                let table = self
+                    .content
+                    .encounter_table(&region.state.encounter_table_id)
+                    .expect("validated region encounter table must remain available")
+                    .clone();
+                let eligible_entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.group.is_none()
+                            && entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
                 let weights = eligible_entries
                     .iter()
                     .map(|entry| entry.weight)
                     .collect::<Vec<_>>();
                 for ordinal in 0..placements {
                     let entry = &eligible_entries[self.roll_weighted_index(&weights)];
-                    let room_id = &region.room_ids[usize::from(ordinal) % region.room_ids.len()];
                     let position =
-                        self.choose_generated_room_position(content_rooms, room_id, &occupied);
+                        self.choose_generated_region_position(region, &terrain, width, &occupied);
                     occupied.insert(position);
                     entities.push(self.generated_actor(
                         format!(
-                            "{}.region.{}.encounter.{}",
+                            "{}.region.{}.encounter.plain.{}",
                             definition.id,
                             region.state.region_id,
                             ordinal + 1
@@ -5002,28 +5180,6 @@ impl Game {
             } else {
                 "remote"
             };
-            let reserved_actor_slots = definition
-                .nest
-                .as_ref()
-                .map_or(0, |nest| nest.spawn_count)
-                .saturating_add(
-                    definition
-                        .generation_budget
-                        .as_ref()
-                        .and_then(|budget| budget.pit_actor_slots)
-                        .unwrap_or(0),
-                )
-                .saturating_add(if guardian.is_some() { 1 } else { 0 })
-                .saturating_add(
-                    vault_placements
-                        .iter()
-                        .flat_map(|placement| &placement.vault.encounter_groups)
-                        .map(|group| {
-                            u16::try_from(group.member_positions.len())
-                                .expect("validated vault group size must fit u16")
-                        })
-                        .sum::<u16>(),
-                );
             if definition.generation_budget.as_ref().is_some_and(|budget| {
                 budget.group_placements.is_some() && budget.group_actor_slots.is_some()
             }) {
@@ -5034,6 +5190,9 @@ impl Game {
                     content_rooms,
                     room_id,
                     reserved_actor_slots,
+                    1,
+                    true,
+                    &definition.id,
                     &mut occupied,
                 ));
             } else {
@@ -5095,75 +5254,6 @@ impl Game {
                     ));
                 }
             }
-            if let Some(pit) = &pit_placement {
-                let table = self
-                    .content
-                    .encounter_table(&pit.definition.encounter_table_id)
-                    .expect("validated pit encounter table must remain available")
-                    .clone();
-                let eligible = table
-                    .entries
-                    .iter()
-                    .filter(|entry| {
-                        entry.min_depth <= definition.depth
-                            && definition.depth <= entry.max_depth
-                            && self
-                                .content
-                                .actor(&entry.actor_kind_id)
-                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
-                    })
-                    .cloned()
-                    .collect::<Vec<_>>();
-                let pit_weights = eligible
-                    .iter()
-                    .map(|entry| entry.weight)
-                    .collect::<Vec<_>>();
-                let mut roster = (0..pit.definition.roster_size)
-                    .map(|_| {
-                        eligible[self.roll_weighted_index(&pit_weights)]
-                            .actor_kind_id
-                            .clone()
-                    })
-                    .collect::<Vec<_>>();
-                roster.sort_by(|left, right| {
-                    let left_level = self
-                        .content
-                        .actor(left)
-                        .expect("pit roster actor must remain available")
-                        .level;
-                    let right_level = self
-                        .content
-                        .actor(right)
-                        .expect("pit roster actor must remain available")
-                        .level;
-                    right_level.cmp(&left_level).then_with(|| left.cmp(right))
-                });
-                let half_width = pit.definition.inner_width / 2;
-                let half_height = pit.definition.inner_height / 2;
-                let maximum_rank = pit.definition.roster_size - 1;
-                let mut ordinal = 0_u16;
-                for local_y in 0..pit.definition.inner_height {
-                    for local_x in 0..pit.definition.inner_width {
-                        let dx = local_x.abs_diff(half_width);
-                        let dy = local_y.abs_diff(half_height);
-                        let horizontal_rank = dx * maximum_rank / half_width;
-                        let vertical_rank = dy * maximum_rank / half_height;
-                        let rank = usize::from(horizontal_rank.max(vertical_rank));
-                        let kind_id = &roster[rank];
-                        let position = Position {
-                            x: pit.origin.x + 3 + i32::from(local_x),
-                            y: pit.origin.y + 3 + i32::from(local_y),
-                        };
-                        occupied.insert(position);
-                        ordinal += 1;
-                        entities.push(self.generated_actor(
-                            format!("{}.pit.{}", definition.id, ordinal),
-                            kind_id,
-                            position,
-                        ));
-                    }
-                }
-            }
         } else {
             for spawn in &definition.actor_spawns {
                 let eligible_kind_ids = spawn
@@ -5203,6 +5293,9 @@ impl Game {
                     INITIAL_MONSTER_ENERGY_NEED,
                 ));
             }
+        }
+        if let Some(pit) = &pit_placement {
+            entities.extend(self.generate_classic_pit_actors(definition, pit, &mut occupied));
         }
         for placement in &vault_placements {
             for group in &placement.vault.encounter_groups {
@@ -5267,11 +5360,7 @@ impl Game {
                 .expect("validated dungeon guardian must remain available");
             let max_hp = actor.max_hp;
             let speed = actor.speed;
-            let position = Position {
-                x: first_center.x + 1,
-                y: first_center.y,
-            };
-            occupied.insert(position);
+            let position = guardian_position.expect("present guardian must retain a position");
             entities.push(actor_from_spawn(
                 &guardian.instance_id,
                 &guardian.actor_kind_id,
@@ -5287,22 +5376,12 @@ impl Game {
         let mut items =
             self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
         if !generated_regions.is_empty() {
-            let loot_budget = definition
-                .generation_budget
-                .as_ref()
-                .expect("validated region floor must retain a generation budget")
-                .loot_placements;
-            let region_count = u16::try_from(generated_regions.len())
-                .expect("validated region count must fit u16");
             for (region_index, region) in generated_regions.iter().enumerate() {
-                let region_index_u16 =
-                    u16::try_from(region_index).expect("validated region index must fit u16");
-                let placements = loot_budget / region_count
-                    + u16::from(region_index_u16 < loot_budget % region_count);
+                let placements = regional_loot_allocations[region_index];
                 for ordinal in 0..placements {
                     let room_id = &region.room_ids[usize::from(ordinal) % region.room_ids.len()];
                     let position =
-                        self.choose_generated_room_position(content_rooms, room_id, &occupied);
+                        self.choose_generated_region_position(region, &terrain, width, &occupied);
                     occupied.insert(position);
                     items.extend(self.generate_loot_instances(
                         &LootContext {
@@ -5490,6 +5569,10 @@ impl Game {
                 }
                 TaskObjectiveKind::EnterFloor => {}
             }
+        }
+        for region in &mut generated_regions {
+            region.state.cells.sort();
+            region.state.cells.dedup();
         }
         generated_regions.sort_by(|left, right| left.state.region_id.cmp(&right.state.region_id));
         Ok(FloorState {
@@ -5963,6 +6046,84 @@ impl Game {
         actor
     }
 
+    fn generate_classic_pit_actors(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        pit: &GeneratedPitPlacement,
+        occupied: &mut BTreeSet<Position>,
+    ) -> Vec<Actor> {
+        let table = self
+            .content
+            .encounter_table(&pit.definition.encounter_table_id)
+            .expect("validated pit encounter table must remain available")
+            .clone();
+        let eligible = table
+            .entries
+            .iter()
+            .filter(|entry| {
+                entry.min_depth <= definition.depth
+                    && definition.depth <= entry.max_depth
+                    && self
+                        .content
+                        .actor(&entry.actor_kind_id)
+                        .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        let pit_weights = eligible
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        let mut roster = (0..pit.definition.roster_size)
+            .map(|_| {
+                eligible[self.roll_weighted_index(&pit_weights)]
+                    .actor_kind_id
+                    .clone()
+            })
+            .collect::<Vec<_>>();
+        roster.sort_by(|left, right| {
+            let left_level = self
+                .content
+                .actor(left)
+                .expect("pit roster actor must remain available")
+                .level;
+            let right_level = self
+                .content
+                .actor(right)
+                .expect("pit roster actor must remain available")
+                .level;
+            right_level.cmp(&left_level).then_with(|| left.cmp(right))
+        });
+
+        let half_width = pit.definition.inner_width / 2;
+        let half_height = pit.definition.inner_height / 2;
+        let maximum_rank = pit.definition.roster_size - 1;
+        let mut ordinal = 0_u16;
+        let mut actors = Vec::new();
+        for local_y in 0..pit.definition.inner_height {
+            for local_x in 0..pit.definition.inner_width {
+                let dx = local_x.abs_diff(half_width);
+                let dy = local_y.abs_diff(half_height);
+                let horizontal_rank = dx * maximum_rank / half_width;
+                let vertical_rank = dy * maximum_rank / half_height;
+                let rank = usize::from(horizontal_rank.max(vertical_rank));
+                let kind_id = &roster[rank];
+                let position = Position {
+                    x: pit.origin.x + 3 + i32::from(local_x),
+                    y: pit.origin.y + 3 + i32::from(local_y),
+                };
+                occupied.insert(position);
+                ordinal += 1;
+                actors.push(self.generated_actor(
+                    format!("{}.pit.{}", definition.id, ordinal),
+                    kind_id,
+                    position,
+                ));
+            }
+        }
+        actors
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn generate_dynamic_encounter_groups(
         &mut self,
@@ -5972,6 +6133,9 @@ impl Game {
         rooms: &[GeneratedRoom],
         room_id: &str,
         reserved_actor_slots: u16,
+        ordinary_actor_reserve: u16,
+        fill_plain: bool,
+        id_prefix: &str,
         occupied: &mut BTreeSet<Position>,
     ) -> Vec<Actor> {
         let budget = definition
@@ -6010,7 +6174,7 @@ impl Game {
                 future_group_count.saturating_mul(minimum_group_companions);
             let future_actor_reserve = future_group_count
                 .saturating_mul(minimum_group_companions.saturating_add(1))
-                .saturating_add(1);
+                .saturating_add(ordinary_actor_reserve);
             let available_companion_slots = remaining_group_actor_slots
                 .saturating_sub(future_companion_reserve)
                 .min(
@@ -6109,8 +6273,8 @@ impl Game {
 
             leader_ordinal += 1;
             occupied.insert(leader_position);
-            let leader_id = format!("{}.encounter.{leader_ordinal}", definition.id);
-            let pack_id = format!("{}.pack.{leader_ordinal}", definition.id);
+            let leader_id = format!("{id_prefix}.encounter.{leader_ordinal}");
+            let pack_id = format!("{id_prefix}.pack.{leader_ordinal}");
             let pack_ai = entry
                 .group
                 .as_ref()
@@ -6136,8 +6300,7 @@ impl Game {
                 occupied.insert(position);
                 generated.push(self.generated_pack_actor(
                     format!(
-                        "{}.encounter.{leader_ordinal}.friend.{}",
-                        definition.id,
+                        "{id_prefix}.encounter.{leader_ordinal}.friend.{}",
                         index + 1
                     ),
                     &entry.actor_kind_id,
@@ -6188,8 +6351,7 @@ impl Game {
                     occupied.insert(position);
                     generated.push(self.generated_pack_actor(
                         format!(
-                            "{}.encounter.{leader_ordinal}.escort.{}",
-                            definition.id,
+                            "{id_prefix}.encounter.{leader_ordinal}.escort.{}",
                             index + 1
                         ),
                         kind_id,
@@ -6214,7 +6376,7 @@ impl Game {
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
-        while leader_ordinal < table.rolls && remaining_actor_slots > 0 {
+        while fill_plain && leader_ordinal < table.rolls && remaining_actor_slots > 0 {
             let entry_index = if plain_entries.len() == 1 {
                 0
             } else {
@@ -6267,11 +6429,14 @@ impl Game {
             .as_ref()
             .map_or(0, |nest| nest.spawn_count)
             .saturating_add(u16::from(guardian_present));
+        let ordinary_placement_reserve = budget.region_placements.unwrap_or(1);
         let mut remaining_vault_actor_slots = budget
             .actor_slots
             .saturating_sub(fixed_actor_slots)
-            .saturating_sub(1);
-        let mut remaining_vault_loot_placements = budget.loot_placements.saturating_sub(1);
+            .saturating_sub(ordinary_placement_reserve);
+        let mut remaining_vault_loot_placements = budget
+            .loot_placements
+            .saturating_sub(ordinary_placement_reserve);
         let mut remaining_candidates = eligible_candidates.to_vec();
         let mut placements = Vec::new();
 
@@ -6377,9 +6542,7 @@ impl Game {
         &mut self,
         definition: &ProceduralFloorDefinition,
         eligible_entries: &[TerrainFeatureEntryDefinition],
-        rooms: &[GeneratedRoom],
-        reserved: &BTreeSet<Position>,
-        floor_terrain_id: &str,
+        context: TerrainFeaturePlacementContext<'_>,
         terrain: &mut [String],
     ) -> Vec<GeneratedTerrainFeature> {
         let placement_limit = definition
@@ -6408,9 +6571,10 @@ impl Game {
                 let candidates = terrain_feature_placement_candidates(
                     terrain,
                     definition.width,
-                    floor_terrain_id,
-                    rooms,
-                    reserved,
+                    context.floor_terrain_id,
+                    context.room_floor_terrain_ids,
+                    context.rooms,
+                    context.reserved,
                     entry.placement,
                 );
                 if candidates.is_empty() {
@@ -6457,6 +6621,22 @@ impl Game {
             u64::try_from(candidates.len()).expect("generated room candidate count must fit u64"),
         ))
         .expect("bounded generated room candidate index must fit usize");
+        candidates[index]
+    }
+
+    fn choose_generated_region_position(
+        &mut self,
+        region: &GeneratedRegion,
+        terrain: &[String],
+        width: u16,
+        occupied: &BTreeSet<Position>,
+    ) -> Position {
+        let candidates =
+            generated_region_open_positions(region, terrain, width, &self.content, occupied);
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("regional candidate count must fit u64"),
+        ))
+        .expect("regional candidate index must fit usize");
         candidates[index]
     }
 
@@ -8417,6 +8597,125 @@ fn generated_room_cells(room: &GeneratedRoom) -> Vec<Position> {
         .collect()
 }
 
+fn allocate_generated_region_placements(
+    regions: &[GeneratedRegion],
+    terrain: &[String],
+    width: u16,
+    content: &ContentCatalog,
+    occupied: &BTreeSet<Position>,
+    actor_placements: u16,
+    loot_placements: u16,
+) -> (Vec<u16>, Vec<u16>) {
+    let region_count = u16::try_from(regions.len()).expect("regional count must fit u16");
+    debug_assert!(actor_placements >= region_count);
+    debug_assert!(loot_placements >= region_count);
+
+    let mut remaining_capacity = regions
+        .iter()
+        .map(|region| {
+            generated_region_open_positions(region, terrain, width, content, occupied).len()
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        remaining_capacity.iter().all(|capacity| *capacity >= 2),
+        "each generated region must retain room space for an actor and loot"
+    );
+
+    let mut actor_allocations = vec![1_u16; regions.len()];
+    let mut loot_allocations = vec![1_u16; regions.len()];
+    for capacity in &mut remaining_capacity {
+        *capacity -= 2;
+    }
+
+    let mut actor_remaining = actor_placements - region_count;
+    let mut region_index = 0_usize;
+    while actor_remaining > 0 {
+        if remaining_capacity[region_index] > 0 {
+            actor_allocations[region_index] += 1;
+            remaining_capacity[region_index] -= 1;
+            actor_remaining -= 1;
+        }
+        region_index = (region_index + 1) % regions.len();
+        assert!(
+            actor_remaining == 0 || remaining_capacity.iter().any(|capacity| *capacity > 0),
+            "generated regions must retain enough room space for actor placements"
+        );
+    }
+
+    let mut loot_remaining = loot_placements - region_count;
+    while loot_remaining > 0 {
+        if remaining_capacity[region_index] > 0 {
+            loot_allocations[region_index] += 1;
+            remaining_capacity[region_index] -= 1;
+            loot_remaining -= 1;
+        }
+        region_index = (region_index + 1) % regions.len();
+        assert!(
+            loot_remaining == 0 || remaining_capacity.iter().any(|capacity| *capacity > 0),
+            "generated regions must retain enough room space for loot placements"
+        );
+    }
+
+    (actor_allocations, loot_allocations)
+}
+
+fn generated_region_open_positions(
+    region: &GeneratedRegion,
+    terrain: &[String],
+    width: u16,
+    content: &ContentCatalog,
+    occupied: &BTreeSet<Position>,
+) -> Vec<Position> {
+    region
+        .state
+        .cells
+        .iter()
+        .copied()
+        .filter(|position| !occupied.contains(position))
+        .filter(|position| {
+            content
+                .terrain(&terrain[generated_terrain_index(width, *position)])
+                .is_some_and(|definition| definition.walkable)
+        })
+        .collect()
+}
+
+fn assign_generated_footprint_to_region(
+    regions: &mut [GeneratedRegion],
+    rooms: &[GeneratedRoom],
+    anchor: Position,
+    footprint: impl IntoIterator<Item = Position>,
+) {
+    let footprint = footprint.into_iter().collect::<BTreeSet<_>>();
+    let Some(region_index) = regions
+        .iter()
+        .enumerate()
+        .min_by_key(|(region_index, region)| {
+            let distance = region
+                .room_ids
+                .iter()
+                .filter_map(|room_id| rooms.iter().find(|room| room.id == *room_id))
+                .map(|room| {
+                    let center = room.center();
+                    anchor.x.abs_diff(center.x) + anchor.y.abs_diff(center.y)
+                })
+                .min()
+                .unwrap_or(u32::MAX);
+            (distance, *region_index)
+        })
+        .map(|(region_index, _)| region_index)
+    else {
+        return;
+    };
+    for region in regions.iter_mut() {
+        region
+            .state
+            .cells
+            .retain(|position| !footprint.contains(position));
+    }
+    regions[region_index].state.cells.extend(footprint);
+}
+
 fn carve_generated_room(
     terrain: &mut [String],
     width: u16,
@@ -8452,6 +8751,7 @@ fn terrain_feature_placement_candidates(
     terrain: &[String],
     width: u16,
     floor_terrain_id: &str,
+    room_floor_terrain_ids: &BTreeSet<String>,
     rooms: &[GeneratedRoom],
     reserved: &BTreeSet<Position>,
     placement: TerrainFeaturePlacement,
@@ -8460,9 +8760,6 @@ fn terrain_feature_placement_candidates(
         .iter()
         .enumerate()
         .filter_map(|(index, terrain_id)| {
-            if terrain_id != floor_terrain_id {
-                return None;
-            }
             let position = Position {
                 x: i32::try_from(index % usize::from(width))
                     .expect("terrain feature x must fit i32"),
@@ -8474,8 +8771,19 @@ fn terrain_feature_placement_candidates(
             }
             let inside_room = rooms.iter().any(|room| room.contains(position));
             match placement {
-                TerrainFeaturePlacement::Room if inside_room => Some(position),
-                TerrainFeaturePlacement::Corridor if !inside_room => Some(position),
+                TerrainFeaturePlacement::Room
+                    if inside_room
+                        && (room_floor_terrain_ids.is_empty()
+                            && terrain_id == floor_terrain_id
+                            || room_floor_terrain_ids.contains(terrain_id)) =>
+                {
+                    Some(position)
+                }
+                TerrainFeaturePlacement::Corridor
+                    if !inside_room && terrain_id == floor_terrain_id =>
+                {
+                    Some(position)
+                }
                 _ => None,
             }
         })
@@ -8900,6 +9208,13 @@ mod tests {
         game.traverse_stairs(false)
             .expect("connection traversal should resolve")
             .expect("connection traversal should transition");
+    }
+
+    fn region_at(game: &Game, position: Position) -> &FloorRegionState {
+        game.floor_regions
+            .iter()
+            .find(|region| region.cells.contains(&position))
+            .unwrap_or_else(|| panic!("position {position:?} should belong to a floor region"))
     }
 
     fn visual_at(snapshot: &GameSnapshot, position: Position) -> CellVisualDto {
@@ -10207,10 +10522,14 @@ mod tests {
         assert_eq!(game.current_floor_id, "demo.floor.echo-depth-3");
         let mut payload = game.to_save();
         payload.dungeon_states[0].guardian_defeated = true;
-        assert!(matches!(
-            Game::from_save(payload),
-            Err(CoreError::InvalidSave("dungeon guardian state is invalid"))
-        ));
+        let result = Game::from_save(payload);
+        assert!(
+            matches!(
+                result,
+                Err(CoreError::InvalidSave("dungeon guardian state is invalid"))
+            ),
+            "unexpected guardian mismatch result: {result:?}"
+        );
     }
 
     #[test]
@@ -10582,17 +10901,22 @@ mod tests {
             .expect("a harmonic sepulcher seed should remain reachable");
 
         assert_eq!(game.current_floor_id, "demo.floor.echo-depth-2");
-        assert_eq!(game.entities.len(), 4);
-        assert!(game.entities.iter().any(|entity| {
-            entity.id == "demo.floor.echo-depth-2.encounter.1"
-                && matches!(
-                    entity.kind_id.as_str(),
-                    "demo.actor.echo-hound"
-                        | "demo.actor.frost-wisp"
-                        | "demo.actor.storm-spark"
-                        | "demo.actor.venom-spore"
-                )
-        }));
+        assert_eq!(game.floor_connections.len(), 4);
+        assert_eq!(game.floor_regions.len(), 2);
+        assert_eq!(game.entities.len(), 5);
+        let regional_encounters = game
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".encounter.plain."))
+            .collect::<Vec<_>>();
+        assert_eq!(regional_encounters.len(), 2);
+        assert!(regional_encounters.iter().all(|entity| matches!(
+            entity.kind_id.as_str(),
+            "demo.actor.echo-hound"
+                | "demo.actor.storm-spark"
+                | "demo.actor.acid-seep"
+                | "demo.actor.venom-spore"
+        )));
         let vault_members = game
             .entities
             .iter()
@@ -10618,6 +10942,28 @@ mod tests {
             x: first_member.position.x - 1,
             y: first_member.position.y - 1,
         };
+        let vault_region_id = region_at(&game, first_member.position).region_id.clone();
+        for y in vault_origin.y..vault_origin.y + 5 {
+            for x in vault_origin.x..vault_origin.x + 6 {
+                assert_eq!(
+                    region_at(&game, Position { x, y }).region_id,
+                    vault_region_id
+                );
+            }
+        }
+        assert!(regional_encounters.iter().all(|entity| {
+            match region_at(&game, entity.position).region_id.as_str() {
+                "demo.region.resonance-grotto" => matches!(
+                    entity.kind_id.as_str(),
+                    "demo.actor.acid-seep" | "demo.actor.venom-spore"
+                ),
+                "demo.region.resonance-gallery" => matches!(
+                    entity.kind_id.as_str(),
+                    "demo.actor.echo-hound" | "demo.actor.storm-spark"
+                ),
+                _ => false,
+            }
+        }));
         assert_eq!(
             game.terrain_at(Position {
                 x: vault_origin.x + 3,
@@ -10637,6 +10983,31 @@ mod tests {
                     "demo.item.echo-blade" | "demo.item.echo-charm"
                 )
         }));
+        assert!(game.items.iter().all(|item| {
+            matches!(item.location, ItemLocation::Ground(position) if !region_at(&game, position).region_id.is_empty())
+        }));
+        let mut instance_ids = BTreeSet::from([game.player.id.clone()]);
+        instance_ids.extend(game.entities.iter().map(|entity| entity.id.clone()));
+        for item in &game.items {
+            assert!(
+                instance_ids.insert(item.id.clone()),
+                "duplicate item ID: {}",
+                item.id
+            );
+            let definition = game
+                .content
+                .item(&item.kind_id)
+                .expect("generated item kind must remain available");
+            assert!(item.quantity <= definition.max_stack);
+            if let ItemLocation::Ground(position) = item.location {
+                assert!(
+                    game.is_walkable(position),
+                    "item {} is on non-walkable {} at {position:?}",
+                    item.id,
+                    game.terrain_at(position)
+                );
+            }
+        }
 
         let restored = Game::from_save(game.to_save()).expect("vault floor save should restore");
         assert_eq!(restored.state_hash(), game.state_hash());
@@ -10829,15 +11200,23 @@ mod tests {
             .expect("pressure dungeon entry should transition");
 
         let actor_slots = [2_usize, 4, 4, 5, 6, 7, 8, 9, 1, 30];
-        let loot_placements = [1_usize, 2, 1, 1, 2, 2, 2, 3, 3, 3];
+        let loot_placements = [1_usize, 2, 1, 1, 2, 2, 2, 4, 3, 3];
         let feature_placements = [0_usize, 0, 2, 3, 4, 4, 4, 4, 0, 4];
         for depth in 1..=10 {
             assert_eq!(
                 game.current_floor_id,
                 format!("demo.floor.resonance-depth-{depth}")
             );
-            assert_eq!(game.entities.len(), actor_slots[depth - 1]);
-            assert_eq!(game.items.len(), loot_placements[depth - 1]);
+            assert_eq!(
+                game.entities.len(),
+                actor_slots[depth - 1],
+                "depth {depth} actor budget"
+            );
+            assert_eq!(
+                game.items.len(),
+                loot_placements[depth - 1],
+                "depth {depth} loot budget"
+            );
             let terrain_feature_tiles = game
                 .terrain
                 .iter()
@@ -10906,7 +11285,7 @@ mod tests {
                         .iter()
                         .filter(|terrain| *terrain == "demo.terrain.door-secret")
                         .count(),
-                    4
+                    3
                 );
             }
             if depth == 10 {
@@ -11014,6 +11393,138 @@ mod tests {
         let restored = Game::from_save(game.to_save())
             .expect("pressure dungeon final floor should round-trip");
         assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn regional_vault_and_pit_composition_is_deterministic_and_persistent() {
+        let mut game = Game::new(49);
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("pressure dungeon entry should resolve")
+            .expect("pressure dungeon entry should transition");
+        for _ in 1..8 {
+            descend_one_floor(&mut game);
+        }
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-8");
+        assert_eq!(game.floor_regions.len(), 2);
+        assert_eq!(
+            game.entities
+                .iter()
+                .filter(|entity| entity.id.contains(".vault."))
+                .count(),
+            2
+        );
+        assert!(game.entities.iter().all(|entity| {
+            !entity.id.contains(".vault.")
+                || !region_at(&game, entity.position).region_id.is_empty()
+        }));
+        assert!(game.items.iter().all(|item| {
+            matches!(item.location, ItemLocation::Ground(position) if !region_at(&game, position).region_id.is_empty())
+        }));
+        let mut all_region_cells = BTreeSet::new();
+        for region in &game.floor_regions {
+            assert!(
+                region
+                    .cells
+                    .iter()
+                    .all(|cell| all_region_cells.insert(*cell))
+            );
+        }
+        let depth_eight_hash = game.state_hash();
+        let restored =
+            Game::from_save(game.to_save()).expect("regional Vault floor should restore");
+        assert_eq!(restored.state_hash(), depth_eight_hash);
+
+        descend_one_floor(&mut game);
+        descend_one_floor(&mut game);
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-10");
+        for terrain_id in [
+            "demo.terrain.resonance-cavern",
+            "demo.terrain.resonance-water-deep",
+            "demo.terrain.resonance-water-shallow",
+            "demo.terrain.resonance-ruin",
+            "demo.terrain.resonance-vein",
+        ] {
+            assert!(
+                game.terrain.iter().any(|candidate| candidate == terrain_id),
+                "depth ten should contain {terrain_id}"
+            );
+        }
+        let pit = game
+            .entities
+            .iter()
+            .filter(|entity| entity.id.contains(".pit."))
+            .collect::<Vec<_>>();
+        assert_eq!(pit.len(), 25);
+        let pit_region_id = region_at(&game, pit[0].position).region_id.clone();
+        let min_x = pit
+            .iter()
+            .map(|entity| entity.position.x)
+            .min()
+            .expect("pit x");
+        let max_x = pit
+            .iter()
+            .map(|entity| entity.position.x)
+            .max()
+            .expect("pit x");
+        let min_y = pit
+            .iter()
+            .map(|entity| entity.position.y)
+            .min()
+            .expect("pit y");
+        let max_y = pit
+            .iter()
+            .map(|entity| entity.position.y)
+            .max()
+            .expect("pit y");
+        for y in min_y - 3..=max_y + 3 {
+            for x in min_x - 3..=max_x + 3 {
+                assert_eq!(region_at(&game, Position { x, y }).region_id, pit_region_id);
+            }
+        }
+        assert!(game.entities.iter().all(|entity| {
+            !entity.id.contains(".pit.")
+                || region_at(&game, entity.position).region_id == pit_region_id
+        }));
+        assert!(game.entities.iter().any(|entity| {
+            entity.id == "demo.guardian.resonance-descent.1"
+                && !region_at(&game, entity.position).region_id.is_empty()
+        }));
+        assert!(game.items.iter().all(|item| {
+            matches!(item.location, ItemLocation::Ground(position) if !region_at(&game, position).region_id.is_empty())
+        }));
+        let final_hash = game.state_hash();
+        let mut same_seed = Game::new(49);
+        same_seed.player.position = Position { x: 3, y: 2 };
+        same_seed
+            .traverse_stairs(false)
+            .expect("matching pressure dungeon entry should resolve")
+            .expect("matching pressure dungeon entry should transition");
+        for _ in 1..10 {
+            descend_one_floor(&mut same_seed);
+        }
+        assert_eq!(same_seed.state_hash(), final_hash);
+        let restored = Game::from_save(game.to_save()).expect("regional pit floor should restore");
+        assert_eq!(restored.state_hash(), final_hash);
+    }
+
+    #[test]
+    fn regional_composition_round_trips_across_pressure_seeds() {
+        for seed in [49, 77, 97, 156, 173, 211] {
+            let mut game = Game::new(seed);
+            game.player.position = Position { x: 3, y: 2 };
+            game.traverse_stairs(false)
+                .expect("pressure dungeon entry should resolve")
+                .expect("pressure dungeon entry should transition");
+            for depth in 1..=10 {
+                Game::from_save(game.to_save()).unwrap_or_else(|error| {
+                    panic!("seed {seed} depth {depth} should round-trip: {error}")
+                });
+                if depth < 10 {
+                    descend_one_floor(&mut game);
+                }
+            }
+        }
     }
 
     #[test]
@@ -11467,6 +11978,52 @@ mod tests {
                     && pack.behavior == MonsterPackBehaviorDto::GuardLeader
             })
         }));
+        let captain_region_id = region_at(&game, captain_position).region_id.clone();
+        assert!(
+            game.entities
+                .iter()
+                .filter(|entity| entity.pack.is_some())
+                .all(|entity| region_at(&game, entity.position).region_id == captain_region_id)
+        );
+        assert!(
+            game.entities
+                .iter()
+                .filter(|entity| entity.pack.is_none())
+                .all(
+                    |entity| match region_at(&game, entity.position).region_id.as_str() {
+                        "demo.region.resonance-grotto" => matches!(
+                            entity.kind_id.as_str(),
+                            "demo.actor.acid-seep" | "demo.actor.venom-spore"
+                        ),
+                        "demo.region.resonance-gallery" => matches!(
+                            entity.kind_id.as_str(),
+                            "demo.actor.echo-hound" | "demo.actor.storm-spark"
+                        ),
+                        _ => false,
+                    }
+                )
+        );
+        let room_feature_positions = game
+            .terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, terrain_id)| {
+                matches!(
+                    terrain_id.as_str(),
+                    "demo.terrain.trap-echo-snare" | "demo.terrain.echo-rubble"
+                )
+                .then_some(Position {
+                    x: i32::try_from(index % usize::from(game.width)).expect("x must fit i32"),
+                    y: i32::try_from(index / usize::from(game.width)).expect("y must fit i32"),
+                })
+            })
+            .collect::<Vec<_>>();
+        assert!(room_feature_positions.len() >= 2);
+        assert!(
+            room_feature_positions
+                .iter()
+                .all(|position| !region_at(&game, *position).region_id.is_empty())
+        );
         descend_one_floor(&mut game);
         assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-7");
         assert_eq!(game.entities.len(), 8);
@@ -11499,6 +12056,13 @@ mod tests {
                 "demo.actor.venom-spore" | "demo.actor.echo-hound"
             ) && adjacent(escort.position, shepherd_position)
         }));
+        let shepherd_region_id = region_at(&game, shepherd_position).region_id.clone();
+        assert!(
+            game.entities
+                .iter()
+                .filter(|entity| entity.pack.is_some())
+                .all(|entity| region_at(&game, entity.position).region_id == shepherd_region_id)
+        );
 
         let restored =
             Game::from_save(game.to_save()).expect("dynamic encounter groups should round-trip");
@@ -11729,9 +12293,12 @@ mod tests {
         let placements = game.place_terrain_features(
             &definition,
             &entries,
-            &rooms,
-            &BTreeSet::new(),
-            "demo.terrain.floor",
+            TerrainFeaturePlacementContext {
+                rooms: &rooms,
+                reserved: &BTreeSet::new(),
+                floor_terrain_id: "demo.terrain.floor",
+                room_floor_terrain_ids: &BTreeSet::new(),
+            },
             &mut terrain,
         );
 
@@ -11743,6 +12310,7 @@ mod tests {
                 &terrain,
                 definition.width,
                 "demo.terrain.floor",
+                &BTreeSet::new(),
                 &rooms,
                 &BTreeSet::new(),
                 TerrainFeaturePlacement::Room,
@@ -11806,6 +12374,9 @@ mod tests {
             &rooms,
             "remote",
             0,
+            1,
+            true,
+            &definition.id,
             &mut occupied,
         );
         assert_eq!(shrunk.len(), 3);
@@ -11833,6 +12404,9 @@ mod tests {
             &rooms,
             "remote",
             0,
+            1,
+            true,
+            &definition.id,
             &mut left_occupied,
         );
         let right_generated = right.generate_dynamic_encounter_groups(
@@ -11842,6 +12416,9 @@ mod tests {
             &rooms,
             "remote",
             0,
+            1,
+            true,
+            &definition.id,
             &mut right_occupied,
         );
         assert_eq!(left_generated, right_generated);
@@ -12011,11 +12588,7 @@ mod tests {
         let mut payload = game.to_save();
         payload.content_hash =
             "7eea25faef326b6d2250af357359902d0acf32d393c831655508a7e7eee5f2f0".to_owned();
-        payload.entities.retain(|entity| {
-            !entity
-                .id
-                .starts_with("demo.floor.resonance-depth-6.encounter.1")
-        });
+        payload.entities.retain(|entity| entity.pack.is_none());
         let expected_terrain = payload.terrain.clone();
         let expected_entities = payload.entities.clone();
         let saved_draw_counter = payload.rng.draw_counter;
