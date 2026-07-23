@@ -154,7 +154,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV23 {
+struct StateHashPayloadV24 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -185,6 +185,7 @@ struct StateHashPayloadV23 {
     content_hash: String,
     world_id: String,
     current_floor_id: String,
+    current_dungeon_instance_id: Option<String>,
     stored_floors: Vec<FloorSaveDto>,
 }
 
@@ -303,6 +304,7 @@ struct TaskState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct DungeonState {
     guardian_defeated: bool,
+    next_instance_ordinal: u32,
 }
 
 struct TaskRestoreContext<'a> {
@@ -329,6 +331,7 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
                 dungeon.id.clone(),
                 DungeonState {
                     guardian_defeated: false,
+                    next_instance_ordinal: 0,
                 },
             )
         })
@@ -352,6 +355,7 @@ fn restore_dungeon_states(
                     saved.dungeon_id.clone(),
                     DungeonState {
                         guardian_defeated: saved.guardian_defeated,
+                        next_instance_ordinal: saved.next_instance_ordinal,
                     },
                 )
                 .is_some()
@@ -364,6 +368,32 @@ fn restore_dungeon_states(
     }
     states.extend(restored);
     Ok(states)
+}
+
+fn dungeon_instance_storage_key(instance_id: Option<&str>, floor_id: &str) -> String {
+    match instance_id {
+        Some(instance_id) => format!("{instance_id}::{floor_id}"),
+        None => floor_id.to_owned(),
+    }
+}
+
+fn floor_dungeon_id(world: &rfb_content::WorldDefinition, floor_id: &str) -> Option<String> {
+    world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == floor_id)
+        .and_then(|floor| floor.dungeon_id.clone())
+}
+
+fn dungeon_instance_id(dungeon_id: &str, ordinal: u32) -> String {
+    format!("{dungeon_id}.instance.{ordinal}")
+}
+
+fn parse_dungeon_instance_ordinal(instance_id: &str, dungeon_id: &str) -> Option<u32> {
+    instance_id
+        .strip_prefix(&format!("{dungeon_id}.instance."))
+        .and_then(|ordinal| ordinal.parse::<u32>().ok())
+        .filter(|ordinal| *ordinal > 0)
 }
 
 fn task_objectives<'a>(
@@ -455,9 +485,12 @@ fn restore_task_states(
                 floor_id == context.current_floor_id
                     && members.iter().any(|floor| floor.id == *floor_id)
             });
-            let paused_floor_exists = members
-                .iter()
-                .any(|floor| context.stored_floors.contains_key(&floor.id));
+            let paused_floor_exists = members.iter().any(|floor| {
+                context
+                    .stored_floors
+                    .values()
+                    .any(|stored| stored.id == floor.id)
+            });
             let max_retakes = members.first().and_then(|floor| floor.max_retakes);
             let status_is_valid = match saved.status {
                 TaskStatusKindDto::Active => active_floor_is_valid,
@@ -549,10 +582,12 @@ fn restore_task_states(
             })
         }) {
             TaskStatusKindDto::Abandoned
-        } else if members
-            .iter()
-            .any(|floor| context.stored_floors.contains_key(&floor.id))
-        {
+        } else if members.iter().any(|floor| {
+            context
+                .stored_floors
+                .values()
+                .any(|stored| stored.id == floor.id)
+        }) {
             TaskStatusKindDto::Paused
         } else {
             TaskStatusKindDto::Available
@@ -603,6 +638,7 @@ pub struct Game {
     content: Arc<ContentCatalog>,
     world_id: String,
     current_floor_id: String,
+    current_dungeon_instance_id: Option<String>,
     stored_floors: BTreeMap<String, FloorState>,
     width: u16,
     height: u16,
@@ -712,6 +748,7 @@ impl Game {
             content,
             world_id: world_id.to_owned(),
             current_floor_id: initial_floor_id,
+            current_dungeon_instance_id: None,
             stored_floors: BTreeMap::new(),
             width,
             height,
@@ -807,6 +844,25 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("current floor ID is invalid"));
         }
+        let mut current_dungeon_instance_id = payload.current_dungeon_instance_id.clone();
+        if let Some(dungeon_id) = floor_dungeon_id(world, &current_floor_id) {
+            if current_dungeon_instance_id.is_none() {
+                current_dungeon_instance_id = Some(dungeon_instance_id(&dungeon_id, 1));
+            }
+            if current_dungeon_instance_id
+                .as_deref()
+                .and_then(|instance| parse_dungeon_instance_ordinal(instance, &dungeon_id))
+                .is_none()
+            {
+                return Err(CoreError::InvalidSave(
+                    "current dungeon instance ID is invalid",
+                ));
+            }
+        } else if current_dungeon_instance_id.is_some() {
+            return Err(CoreError::InvalidSave(
+                "surface or task floor cannot have a dungeon instance ID",
+            ));
+        }
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0 || payload.terrain.terrain_ids.len() != expected_len {
             return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
@@ -856,14 +912,32 @@ impl Game {
         );
         let mut stored_floors = BTreeMap::new();
         for floor in payload.stored_floors {
+            let mut floor = floor;
+            if floor.dungeon_instance_id.is_none()
+                && let Some(dungeon_id) = floor_dungeon_id(world, &floor.id)
+            {
+                floor.dungeon_instance_id = Some(
+                    current_dungeon_instance_id
+                        .as_deref()
+                        .filter(|_| {
+                            current_floor_id != world.initial_floor_id
+                                && floor_dungeon_id(world, &current_floor_id).as_deref()
+                                    == Some(dungeon_id.as_str())
+                        })
+                        .map_or_else(|| dungeon_instance_id(&dungeon_id, 1), str::to_owned),
+                );
+            }
             let floor = floor_from_save(floor, &content)?;
-            if floor.id == current_floor_id
+            let storage_key =
+                dungeon_instance_storage_key(floor.dungeon_instance_id.as_deref(), &floor.id);
+            if (floor.id == current_floor_id
+                && floor.dungeon_instance_id == current_dungeon_instance_id)
                 || (floor.id != world.initial_floor_id
                     && !world
                         .procedural_floors
                         .iter()
                         .any(|definition| definition.id == floor.id))
-                || stored_floors.insert(floor.id.clone(), floor).is_some()
+                || stored_floors.insert(storage_key, floor).is_some()
             {
                 return Err(CoreError::InvalidSave("stored floor state is invalid"));
             }
@@ -946,12 +1020,29 @@ impl Game {
                 allow_missing_states: migrating_previous_content,
             },
         )?;
-        let dungeon_states =
+        let mut dungeon_states =
             restore_dungeon_states(world, &payload.dungeon_states, migrating_previous_content)?;
+        for instance_id in current_dungeon_instance_id.iter().chain(
+            stored_floors
+                .values()
+                .filter_map(|floor| floor.dungeon_instance_id.as_ref()),
+        ) {
+            if let Some(dungeon_id) = floor_dungeon_id(world, &current_floor_id).or_else(|| {
+                stored_floors
+                    .values()
+                    .find(|floor| floor.dungeon_instance_id.as_deref() == Some(instance_id))
+                    .and_then(|floor| floor_dungeon_id(world, &floor.id))
+            }) && let Some(ordinal) = parse_dungeon_instance_ordinal(instance_id, &dungeon_id)
+                && let Some(state) = dungeon_states.get_mut(&dungeon_id)
+            {
+                state.next_instance_ordinal = state.next_instance_ordinal.max(ordinal);
+            }
+        }
         let mut game = Self {
             content,
             world_id: payload.world_id,
             current_floor_id,
+            current_dungeon_instance_id,
             stored_floors,
             width: payload.terrain.width,
             height: payload.terrain.height,
@@ -1042,6 +1133,7 @@ impl Game {
             content_hash: self.content.content_hash().to_owned(),
             world_id: self.world_id.clone(),
             current_floor_id: self.current_floor_id.clone(),
+            current_dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             stored_floors: self.stored_floors.values().map(floor_to_save).collect(),
         }
     }
@@ -1078,6 +1170,7 @@ impl Game {
             content_visuals: self.content_visuals(),
             world_id: self.world_id.clone(),
             floor_id: self.current_floor_id.clone(),
+            dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             terrain_interactions: self.terrain_interactions(),
             tasks: self.task_statuses(),
             state_hash: self.state_hash(),
@@ -1435,6 +1528,7 @@ impl Game {
             world_tick: self.world_tick,
             command_seq: self.last_command_seq,
             floor_id: self.current_floor_id.clone(),
+            dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             events,
             changed_cells: changed
                 .into_iter()
@@ -1455,8 +1549,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV23 {
-            schema_version: 23,
+        let payload = StateHashPayloadV24 {
+            schema_version: 24,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -1486,6 +1580,7 @@ impl Game {
             content_hash: self.content.content_hash().to_owned(),
             world_id: self.world_id.clone(),
             current_floor_id: self.current_floor_id.clone(),
+            current_dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             stored_floors: self
                 .stored_floors
                 .values()
@@ -2161,6 +2256,7 @@ impl Game {
             .map(|(dungeon_id, state)| DungeonStateSaveDto {
                 dungeon_id: dungeon_id.clone(),
                 guardian_defeated: state.guardian_defeated,
+                next_instance_ordinal: state.next_instance_ordinal,
             })
             .collect()
     }
@@ -4059,6 +4155,20 @@ impl Game {
             .retain(|item_id, _| !discarded_item_ids.contains(item_id));
     }
 
+    fn discard_stored_dungeon_instance(&mut self, instance_id: &str) {
+        let mut discarded_item_ids = BTreeSet::new();
+        self.stored_floors.retain(|_, floor| {
+            if floor.dungeon_instance_id.as_deref() == Some(instance_id) {
+                discarded_item_ids.extend(floor.items.iter().map(|item| item.id.clone()));
+                false
+            } else {
+                true
+            }
+        });
+        self.item_property_knowledge
+            .retain(|item_id, _| !discarded_item_ids.contains(item_id));
+    }
+
     fn abandon_paused_task(&mut self, task_id: &str) -> Option<Vec<Position>> {
         let world = self.content.world(&self.world_id)?;
         if self.current_floor_id != world.initial_floor_id
@@ -4209,11 +4319,45 @@ impl Game {
         }
 
         let from_floor_id = self.current_floor_id.clone();
+        let from_dungeon_instance_id = self.current_dungeon_instance_id.clone();
         let source_definition = procedural_floors
             .iter()
             .find(|floor| floor.id == from_floor_id);
         let expedition_ended = target_floor_id == initial_floor_id
             && source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Dungeon);
+        let mut allocated_dungeon_instance = None;
+        let target_dungeon_instance_id = if let Some(target) = procedural_floors
+            .iter()
+            .find(|floor| floor.id == target_floor_id)
+            .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
+        {
+            let dungeon_id = target
+                .dungeon_id
+                .as_deref()
+                .expect("dungeon floor must retain a dungeon ID");
+            if source_definition
+                .is_some_and(|source| source.dungeon_id.as_deref() == Some(dungeon_id))
+            {
+                from_dungeon_instance_id.clone()
+            } else if from_floor_id == initial_floor_id {
+                let state = self
+                    .dungeon_states
+                    .get(dungeon_id)
+                    .expect("target dungeon state must remain available");
+                let ordinal = state
+                    .next_instance_ordinal
+                    .checked_add(1)
+                    .ok_or(CoreError::InvalidSave("dungeon instance ordinal overflow"))?;
+                allocated_dungeon_instance = Some((dungeon_id.to_owned(), ordinal));
+                Some(dungeon_instance_id(dungeon_id, ordinal))
+            } else {
+                return Err(CoreError::InvalidSave(
+                    "cross-dungeon floor transition is invalid",
+                ));
+            }
+        } else {
+            None
+        };
         let one_shot_source = source_definition
             .filter(|floor| {
                 target_floor_id == initial_floor_id && floor.lifecycle == FloorLifecycle::OneShot
@@ -4268,6 +4412,7 @@ impl Game {
             });
         let current = FloorState {
             id: from_floor_id.clone(),
+            dungeon_instance_id: from_dungeon_instance_id.clone(),
             width: self.width,
             height: self.height,
             terrain: std::mem::take(&mut self.terrain),
@@ -4279,7 +4424,10 @@ impl Game {
             connections: std::mem::take(&mut self.floor_connections),
             regions: std::mem::take(&mut self.floor_regions),
         };
-        self.stored_floors.insert(from_floor_id.clone(), current);
+        self.stored_floors.insert(
+            dungeon_instance_storage_key(from_dungeon_instance_id.as_deref(), &from_floor_id),
+            current,
+        );
 
         let task_resumed = procedural_floors
             .iter()
@@ -4310,13 +4458,15 @@ impl Game {
                 .collect::<Vec<_>>();
             self.discard_stored_task_floors(&resumed_members);
         }
-        let mut destination = if let Some(floor) = self.stored_floors.remove(&target_floor_id) {
+        let target_storage_key =
+            dungeon_instance_storage_key(target_dungeon_instance_id.as_deref(), &target_floor_id);
+        let mut destination = if let Some(floor) = self.stored_floors.remove(&target_storage_key) {
             floor
         } else if let Some(definition) = procedural_floors
             .iter()
             .find(|floor| floor.id == target_floor_id)
         {
-            self.generate_procedural_floor(definition)?
+            self.generate_procedural_floor(definition, target_dungeon_instance_id.clone())?
         } else {
             return Err(CoreError::InvalidSave("return floor state is missing"));
         };
@@ -4333,8 +4483,19 @@ impl Game {
                 ));
             }
         }
+        if let Some((dungeon_id, ordinal)) = allocated_dungeon_instance {
+            self.dungeon_states
+                .get_mut(&dungeon_id)
+                .expect("target dungeon state must remain available")
+                .next_instance_ordinal = ordinal;
+        }
         if expedition_ended {
-            self.stored_floors.clear();
+            let instance_id = from_dungeon_instance_id
+                .as_deref()
+                .ok_or(CoreError::InvalidSave(
+                    "active dungeon floor is missing its instance ID",
+                ))?;
+            self.discard_stored_dungeon_instance(instance_id);
         }
         if one_shot_source.is_some()
             && let Some(task_resolution) = task_resolution
@@ -4439,6 +4600,7 @@ impl Game {
 
     fn activate_floor(&mut self, floor: FloorState, mut global_items: Vec<ItemInstance>) {
         self.current_floor_id = floor.id;
+        self.current_dungeon_instance_id = floor.dungeon_instance_id;
         self.width = floor.width;
         self.height = floor.height;
         self.terrain = floor.terrain;
@@ -4456,6 +4618,7 @@ impl Game {
     fn generate_procedural_floor(
         &mut self,
         definition: &ProceduralFloorDefinition,
+        dungeon_instance_id: Option<String>,
     ) -> Result<FloorState, CoreError> {
         let maze_only = definition
             .layout
@@ -5648,6 +5811,7 @@ impl Game {
         generated_regions.sort_by(|left, right| left.state.region_id.cmp(&right.state.region_id));
         Ok(FloorState {
             id: definition.id.clone(),
+            dungeon_instance_id,
             width,
             height,
             terrain,
@@ -7146,10 +7310,29 @@ impl Game {
         if !valid_floor(&self.current_floor_id)
             || self
                 .stored_floors
-                .keys()
-                .any(|floor_id| !valid_floor(floor_id))
+                .values()
+                .any(|floor| !valid_floor(&floor.id))
         {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
+        }
+        let current_dungeon_id = floor_dungeon_id(world, &self.current_floor_id);
+        match (&current_dungeon_id, &self.current_dungeon_instance_id) {
+            (Some(dungeon_id), Some(instance_id))
+                if parse_dungeon_instance_ordinal(instance_id, dungeon_id).is_some() => {}
+            (None, None) => {}
+            _ => {
+                return Err(CoreError::InvalidSave(
+                    "active floor dungeon instance identity is invalid",
+                ));
+            }
+        }
+        for floor in self.stored_floors.values() {
+            let expected_instance = floor_dungeon_id(world, &floor.id).is_some();
+            if expected_instance != floor.dungeon_instance_id.is_some() {
+                return Err(CoreError::InvalidSave(
+                    "stored floor dungeon instance identity is invalid",
+                ));
+            }
         }
         if !floor_connections_are_valid(
             &self.current_floor_id,
@@ -7297,7 +7480,8 @@ impl Game {
                     floor.height,
                     &self.content,
                 )
-                || floor.id == self.current_floor_id
+                || (floor.id == self.current_floor_id
+                    && floor.dungeon_instance_id == self.current_dungeon_instance_id)
                 || !floor_position_is_walkable(floor, floor.player_position, &self.content)
             {
                 return Err(CoreError::InvalidSave("stored floor state is invalid"));
@@ -7413,9 +7597,11 @@ impl Game {
                 floor_id == &self.current_floor_id
                     && members.iter().any(|floor| floor.id == *floor_id)
             });
-            let paused_is_valid = members
-                .iter()
-                .any(|floor| self.stored_floors.contains_key(&floor.id));
+            let paused_is_valid = members.iter().any(|floor| {
+                self.stored_floors
+                    .values()
+                    .any(|stored| stored.id == floor.id)
+            });
             let status_is_valid = match state.status {
                 TaskStatusKindDto::Active => active_is_valid,
                 TaskStatusKindDto::Paused => state.active_floor_id.is_none() && paused_is_valid,
@@ -7462,7 +7648,8 @@ impl Game {
                     Some(self.entities.iter().any(|actor| &actor.id == guardian_id))
                 } else {
                     self.stored_floors
-                        .get(&final_floor.id)
+                        .values()
+                        .find(|stored| stored.id == final_floor.id)
                         .map(|floor| floor.entities.iter().any(|actor| &actor.id == guardian_id))
                 };
                 if guardian_present.is_some_and(|present| present == state.guardian_defeated) {
@@ -9499,6 +9686,13 @@ mod tests {
             .expect("connection traversal should transition");
     }
 
+    fn stored_floor<'a>(game: &'a Game, floor_id: &str) -> &'a FloorState {
+        game.stored_floors
+            .values()
+            .find(|floor| floor.id == floor_id)
+            .unwrap_or_else(|| panic!("stored floor {floor_id} should exist"))
+    }
+
     fn region_at(game: &Game, position: Position) -> &FloorRegionState {
         game.floor_regions
             .iter()
@@ -9704,6 +9898,101 @@ mod tests {
         assert!(restored.rng.draw_counter > draws_before_reentry);
         assert_eq!(restored.entities.len(), 4);
         assert_eq!(restored.items.len(), 1);
+    }
+
+    #[test]
+    fn dungeon_instances_are_numbered_and_old_instance_lifecycle_is_scoped() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("first dungeon entry should resolve")
+            .expect("first dungeon entry should transition");
+        assert_eq!(
+            game.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.echo-depths.instance.1")
+        );
+        assert_eq!(
+            game.stored_floors["demo.floor.surface"].dungeon_instance_id,
+            None
+        );
+        let first_payload = game.to_save();
+        assert_eq!(
+            first_payload.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.echo-depths.instance.1")
+        );
+        assert_eq!(
+            first_payload
+                .dungeon_states
+                .iter()
+                .find(|state| state.dungeon_id == "demo.dungeon.echo-depths")
+                .map(|state| state.next_instance_ordinal),
+            Some(1)
+        );
+        let mut legacy_v64_payload = first_payload.clone();
+        legacy_v64_payload.current_dungeon_instance_id = None;
+        for floor in &mut legacy_v64_payload.stored_floors {
+            floor.dungeon_instance_id = None;
+        }
+        for state in &mut legacy_v64_payload.dungeon_states {
+            state.next_instance_ordinal = 0;
+        }
+        let migrated = Game::from_save(legacy_v64_payload)
+            .expect("v64 dungeon save should migrate its first instance");
+        assert_eq!(
+            migrated.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.echo-depths.instance.1")
+        );
+        assert_eq!(
+            migrated.dungeon_states["demo.dungeon.echo-depths"].next_instance_ordinal,
+            1
+        );
+        assert_eq!(migrated.state_hash(), game.state_hash());
+
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.surface-up");
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert!(game.stored_floors.values().all(|floor| {
+            floor.dungeon_instance_id.as_deref() != Some("demo.dungeon.echo-depths.instance.1")
+        }));
+
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("second dungeon entry should resolve")
+            .expect("second dungeon entry should transition");
+        assert_eq!(
+            game.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.echo-depths.instance.2")
+        );
+        assert_eq!(
+            game.dungeon_states["demo.dungeon.echo-depths"].next_instance_ordinal,
+            2
+        );
+    }
+
+    #[test]
+    fn ending_a_dungeon_instance_does_not_clear_stored_task_floors() {
+        let mut game = Game::new(27);
+        game.player.position = Position { x: 3, y: 4 };
+        game.traverse_stairs(false)
+            .expect("dungeon entry should resolve")
+            .expect("dungeon entry should transition");
+        let task_definition = game
+            .content
+            .world(&game.world_id)
+            .expect("world should remain available")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.lifecycle == FloorLifecycle::OneShot)
+            .cloned()
+            .expect("demo should contain a task floor");
+        let task_floor = game
+            .generate_procedural_floor(&task_definition, None)
+            .expect("task floor should generate for the fixture");
+        game.stored_floors.insert(task_floor.id.clone(), task_floor);
+        traverse_connection(&mut game, "demo.connection.echo-depth-1.surface-up");
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert!(game.stored_floors.values().any(|floor| {
+            floor.id == task_definition.id && floor.dungeon_instance_id.is_none()
+        }));
     }
 
     #[test]
@@ -10843,7 +11132,7 @@ mod tests {
         traverse_connection(&mut game, "demo.connection.echo-depth-2-mirror.down-a");
 
         assert!(
-            game.stored_floors["demo.floor.echo-depth-3-mirror"]
+            stored_floor(&game, "demo.floor.echo-depth-3-mirror")
                 .entities
                 .iter()
                 .any(|actor| actor.id == "demo.guardian.echo-depths.2")
@@ -10875,12 +11164,12 @@ mod tests {
         );
         assert_eq!(removed_entities, ["demo.guardian.echo-depths.3"]);
         assert!(
-            game.stored_floors["demo.floor.echo-depth-3-mirror"]
+            stored_floor(&game, "demo.floor.echo-depth-3-mirror")
                 .entities
                 .iter()
                 .all(|actor| actor.id != "demo.guardian.echo-depths.2")
         );
-        assert!(game.stored_floors["demo.floor.echo-depth-3-mirror"]
+        assert!(stored_floor(&game, "demo.floor.echo-depth-3-mirror")
             .items
             .iter()
             .all(|item| {

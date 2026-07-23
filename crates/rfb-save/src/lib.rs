@@ -209,6 +209,7 @@ mod tests {
             content_hash: "0".repeat(64),
             world_id: "test.world.fixture".to_owned(),
             current_floor_id: "test.floor.surface".to_owned(),
+            current_dungeon_instance_id: None,
             floor_connections: Vec::new(),
             floor_regions: Vec::new(),
             stored_floors: Vec::new(),

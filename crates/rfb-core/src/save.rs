@@ -391,6 +391,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
 pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
     FloorSaveDto {
         id: floor.id.clone(),
+        dungeon_instance_id: floor.dungeon_instance_id.clone(),
         player_position: floor.player_position,
         terrain: TerrainSaveDto {
             width: floor.width,
@@ -445,6 +446,7 @@ pub(crate) fn floor_from_save(
     );
     Ok(FloorState {
         id: floor.id,
+        dungeon_instance_id: floor.dungeon_instance_id,
         width: floor.terrain.width,
         height: floor.terrain.height,
         terrain: floor.terrain.terrain_ids,

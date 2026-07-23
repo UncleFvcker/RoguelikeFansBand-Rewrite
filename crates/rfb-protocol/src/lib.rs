@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.64";
+pub const PROTOCOL_VERSION: &str = "1.65";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -693,6 +693,8 @@ pub struct GameSnapshot {
     pub content_visuals: Vec<ContentVisualDto>,
     pub world_id: String,
     pub floor_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dungeon_instance_id: Option<String>,
     #[serde(default)]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default)]
@@ -711,6 +713,8 @@ pub struct GameUpdate {
     pub world_tick: u32,
     pub command_seq: u32,
     pub floor_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dungeon_instance_id: Option<String>,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
     #[serde(default)]
@@ -980,6 +984,8 @@ pub struct FloorRegionSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct FloorSaveDto {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dungeon_instance_id: Option<String>,
     pub player_position: Position,
     pub terrain: TerrainSaveDto,
     pub entities: Vec<ActorSaveDto>,
@@ -1048,6 +1054,12 @@ pub struct DungeonStateSaveDto {
     pub dungeon_id: String,
     #[serde(default, skip_serializing_if = "is_false")]
     pub guardian_defeated: bool,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub next_instance_ordinal: u32,
+}
+
+fn is_zero_u32(value: &u32) -> bool {
+    *value == 0
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1097,6 +1109,8 @@ pub struct SavePayloadV1 {
     pub world_id: String,
     #[serde(default)]
     pub current_floor_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_dungeon_instance_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub stored_floors: Vec<FloorSaveDto>,
 }

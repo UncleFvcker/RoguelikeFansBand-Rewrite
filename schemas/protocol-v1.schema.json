@@ -883,6 +883,12 @@
             "$ref": "#/$defs/ContentVisualDto"
           }
         },
+        "dungeonInstanceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "entities": {
           "type": "array",
           "items": {
@@ -1023,6 +1029,12 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "dungeonInstanceId": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "entities": {
           "type": "array",

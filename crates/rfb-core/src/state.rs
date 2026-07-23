@@ -50,6 +50,7 @@ pub(crate) struct ItemInstance {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FloorState {
     pub(crate) id: String,
+    pub(crate) dungeon_instance_id: Option<String>,
     pub(crate) width: u16,
     pub(crate) height: u16,
     pub(crate) terrain: Vec<String>,

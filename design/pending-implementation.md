@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v64、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v65、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -12,7 +12,16 @@
 | P1 | 区域组合扩展 | 已由 contract-v62 完成 | 区域与 Vault、pit、动态群体、feature、分阶段地貌和多连接组合 |
 | P2 | 树状地牢与共享守护者镜像 | 已由 contract-v63 完成 | 不同楼梯进入不同子层、多个程序化最终叶层和一次性共享征服 |
 | P3 | Vault 多入口与连通拼接 | 已由 contract-v64 完成 | 1–8 个边界入口、模板/整层连通证明和确定性 BFS connector |
-| P4 | 地牢实例与动态探索树 | 下一切片 | 显式 `DungeonInstanceId`、同一楼层模板多实例和探索生命周期 |
+| P4 | 地牢实例与动态探索树 | 已由 contract-v65 完成首版 | 实例序号、实例+floor 仓库键、实例级清理和 v64 存档迁移 |
+| P5 | 动态探索树与实例选择 | 下一切片 | 同一 dungeon 多实例并存、显式选择、进入条件与实例淘汰 |
+
+## contract-v65 明确遗留
+
+- 同一 dungeon 多实例的 UI 选择、并行访问和跨实例传送；
+- 多 dungeon 进入条件、胜利/退休评分、实例 TTL/淘汰策略和更一般的动态探索树；
+- Vault 内运行时破坏导致的动态重连与跨实例协作。
+
+来源：[contract-v65](contract-v65-dungeon-instance-identity.md)。
 
 ## contract-v64 明确遗留
 
