@@ -175,6 +175,8 @@ interface GameCoreV1 {
 
 协议 1.65 新增可选 `currentDungeonInstanceId`、`FloorSaveDto.dungeonInstanceId` 和 `DungeonStateSaveDto.nextInstanceOrdinal`。地表/任务层使用空实例，dungeon 层按 `<dungeonId>.instance.<ordinal>` 分配并在同实例上下楼传递；离层仓库键由实例+floor 组成，回地表只清理当前实例。v64 旧存档缺失字段时迁移为首实例，不补生成、不推进 RNG。snapshot/update 同步暴露实例 ID，state hash 升至 Schema v24。当前规则边界见 [Contract v65](contract-v65-dungeon-instance-identity.md)。
 
+协议 1.66 为 `FloorConnectionSaveDto` 增加可选 `targetFloorId` 与 `targetConnectionId`。楼层连接可由内容 `targetCandidates` 按权重无放回解析为实例级探索树；首次到达动态目标时，目标连接的返回目标写入实际父连接。v65 及更早存档缺字段时使用内容固定目标，不重建楼层或推进 RNG。普通 dungeon 回地表继续清理当前实例；save 容器仍为 v1，state hash 升至 Schema v25。当前规则边界见 [Contract v66](contract-v66-dynamic-exploration-tree.md)。
+
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。

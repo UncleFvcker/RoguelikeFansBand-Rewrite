@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.65 / contract-v65
+状态：长期规则实现路线；当前基线为协议 1.66 / contract-v66
 
 ## 1. 目的与边界
 
@@ -88,7 +88,7 @@ flowchart TD
 | 视野、记忆、光照 | LOS、FOV、探索记忆、怪物/物品光源 | 已建立基础版 | 保持 Rust 权威；后续增加隐身、黑暗、红外、感知和特殊视觉通道 |
 | 交互地形 | 开门、关门、挖掘、撞门、解除陷阱、上/下楼 | 部分建立 | contract-v26 已建立楼梯，contract-v28–v30 已建立门与权威交互，contract-v31 已建立主动搜索；下一步建立陷阱触发与解除 |
 | 楼层生命周期 | 新生成、离开、持久楼层、返回、任务楼层 | 已建立基础版 | contract-v26 已建立稳定 `FloorId`、显式 `FloorState`、离层仓库、save v1 往返和首次生成；后续增加多深度连接、临时/持久策略、任务层和旧层淘汰 |
-| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53–v55 建立 cavern/lake/river/maze/destroyed/streamer 管线，contract-v56 建立原版式复合 pit 与等级阵列，contract-v57 建立完全替代 rooms 的 maze-only 专用楼层，contract-v58 建立多楼梯、权威连接 ID、独立到达点与 shaft，contract-v59 建立持久 pack identity 与首版 pack AI，contract-v60 建立同层房间区域、局部表与持久边界，contract-v62 建立区域与特殊生成阶段组合，contract-v63 建立树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 建立 Vault 多入口、模板/整层连通证明与确定性跨走廊拼接，contract-v65 建立实例身份、实例序号和实例级生命周期；下一步扩展动态探索树与多实例选择 |
+| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53–v55 建立 cavern/lake/river/maze/destroyed/streamer 管线，contract-v56 建立原版式复合 pit 与等级阵列，contract-v57 建立完全替代 rooms 的 maze-only 专用楼层，contract-v58 建立多楼梯、权威连接 ID、独立到达点与 shaft，contract-v59 建立持久 pack identity 与首版 pack AI，contract-v60 建立同层房间区域、局部表与持久边界，contract-v62 建立区域与特殊生成阶段组合，contract-v63 建立树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 建立 Vault 多入口、模板/整层连通证明与确定性跨走廊拼接，contract-v65 建立实例身份、实例序号和实例级生命周期，contract-v66 建立动态楼梯候选、无放回目标解析与持久实例级探索树；普通地牢回地表仍清理实例 |
 
 ### 4.3 角色创建与身份
 
@@ -312,6 +312,8 @@ crates/rfb-core/src/
 
 当前进度：阶段 A 已完成。前置重构拆分了 `rfb-core` 游戏聚合、运行状态、RNG、战斗公式、事件构造、存档转换和错误模块；存档使用独立权威 DTO，物品运行状态统一为 `ItemInstance + ItemLocation`，规则事件使用强类型 `DomainEvent`。contract-v8 进一步加入 `GameAction`、标准成本 100、原创确定性速度曲线、`worldTick`、玩家/怪物剩余能量、稳定实例 ID 调度、八方向 BFS 追踪、占位避让和玩家死亡后的队列中止，并通过 Schema v8、32 个 exact fixtures、存档回环及 10,000 命令回放固定行为。
 
+contract-v66 继续完成动态楼梯候选、同层无放回目标解析、arrival 返回目标修正和解析目标持久化。内容包升至 1.58.0，active baseline 共 132 个 exact fixtures，save v1 / state hash Schema v25。普通 dungeon 回地表仍立即清理，后续不安排暂停实例选择。详细边界见 [Contract v66](contract-v66-dynamic-exploration-tree.md)。
+
 实现：
 
 - 拆分 `rfb-core` 单文件，不改变现有 v7 行为；
@@ -368,7 +370,7 @@ crates/rfb-core/src/
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理。内容包为 1.57.0，active baseline 共 131 个 exact fixtures，save v1 / state hash Schema v24。下一切片应推进多实例显式选择与动态探索树。详细边界见 [Contract v65](contract-v65-dungeon-instance-identity.md)。
+当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树。普通 dungeon 回地表立即清理实例，下一次进入重新生成。内容包为 1.58.0，active baseline 共 132 个 exact fixtures，save v1 / state hash Schema v25。下一切片应推进多 dungeon 进入条件、胜利/退休评分和可配置实例生命周期。详细边界见 [Contract v66](contract-v66-dynamic-exploration-tree.md)。
 
 实现：
 
@@ -475,7 +477,7 @@ crates/rfb-core/src/
    - 射击与投掷均已复用既有 `DamagePacket` / effect pipeline；
    - 延后：返回武器、药水破裂、鼠标预览和动画事件。
 
-阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成最终层和持久守护者，contract-v47 完成第一类深度主题 Vault、固定群体和专属 loot，contract-v48 完成楼层级 encounter/loot/theme 表、Vault 加权选择、回退与首类巢穴，contract-v49 完成十层压力场景、actor/loot 预算和深度区域主题，contract-v50 完成 Vault 变换、自由落位、多模板空间预算与失败回退，contract-v51 完成动态群体，contract-v52 完成 terrain feature 表和额外特殊地形预算，contract-v53 完成 cavern/room 几何预算，contract-v54 完成 lake/river，contract-v55 完成 maze/destroyed/streamer，contract-v56 完成原版式复合 pit 与等级阵列，contract-v57 完成 maze-only 专用楼层，contract-v58 完成多楼梯、独立到达点和 shaft，contract-v59 完成持久 pack identity 与首版 pack AI，contract-v60 完成同层房间区域与局部内容，contract-v62 完成区域与既有特殊生成阶段组合，contract-v63 完成树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 完成 Vault 多入口、大模板连通性证明与跨走廊拼接；下一步扩展显式地牢实例、同模板多实例与动态探索树。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标，contract-v61 补齐地表暂停任务管理、重接上限和确定性重建。
+阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成最终层和持久守护者，contract-v47 完成第一类深度主题 Vault、固定群体和专属 loot，contract-v48 完成楼层级 encounter/loot/theme 表、Vault 加权选择、回退与首类巢穴，contract-v49 完成十层压力场景、actor/loot 预算和深度区域主题，contract-v50 完成 Vault 变换、自由落位、多模板空间预算与失败回退，contract-v51 完成动态群体，contract-v52 完成 terrain feature 表和额外特殊地形预算，contract-v53 完成 cavern/room 几何预算，contract-v54 完成 lake/river，contract-v55 完成 maze/destroyed/streamer，contract-v56 完成原版式复合 pit 与等级阵列，contract-v57 完成 maze-only 专用楼层，contract-v58 完成多楼梯、独立到达点和 shaft，contract-v59 完成持久 pack identity 与首版 pack AI，contract-v60 完成同层房间区域与局部内容，contract-v62 完成区域与既有特殊生成阶段组合，contract-v63 完成树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 完成 Vault 多入口、大模板连通性证明与跨走廊拼接，contract-v65 完成实例身份与实例级生命周期，contract-v66 完成动态连接目标与持久探索树。普通 dungeon 返回地表即清空，下一次进入重新生成；下一步扩展多 dungeon 进入条件、胜利/退休评分和可配置实例生命周期。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标，contract-v61 补齐地表暂停任务管理、重接上限和确定性重建。
 
 ## 9. 内容迁移策略
 

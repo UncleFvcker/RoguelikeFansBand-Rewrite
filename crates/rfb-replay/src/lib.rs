@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 24;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 25;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";

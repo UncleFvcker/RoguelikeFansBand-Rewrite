@@ -539,6 +539,8 @@ pub(crate) fn floor_connections_to_save(
         .map(|connection| FloorConnectionSaveDto {
             id: connection.id.clone(),
             position: connection.position,
+            target_floor_id: connection.target_floor_id.clone(),
+            target_connection_id: connection.target_connection_id.clone(),
         })
         .collect::<Vec<_>>();
     connections.sort_by(|left, right| left.id.cmp(&right.id));
@@ -564,6 +566,8 @@ pub(crate) fn floor_connections_from_save(
             Ok(FloorConnectionState {
                 id: connection.id,
                 position: connection.position,
+                target_floor_id: connection.target_floor_id,
+                target_connection_id: connection.target_connection_id,
             })
         })
         .collect::<Result<Vec<_>, CoreError>>()?;

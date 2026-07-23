@@ -184,6 +184,29 @@
       ],
       "type": "object"
     },
+    "ProceduralFloorConnectionCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "targetConnectionId": {
+          "type": "string"
+        },
+        "targetFloorId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "targetFloorId",
+        "targetConnectionId",
+        "weight"
+      ],
+      "type": "object"
+    },
     "ProceduralFloorConnectionDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -192,6 +215,13 @@
         },
         "kind": {
           "$ref": "#/$defs/FloorConnectionKind"
+        },
+        "targetCandidates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProceduralFloorConnectionCandidateDefinition"
+          },
+          "type": "array"
         },
         "targetConnectionId": {
           "default": null,

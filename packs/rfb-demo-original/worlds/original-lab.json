@@ -162,13 +162,37 @@
       "kind": "stairs",
       "terrainId": "demo.terrain.stairs-down",
       "targetFloorId": "demo.floor.echo-depth-2",
-      "targetConnectionId": "demo.connection.echo-depth-2.up-a"
+      "targetConnectionId": "demo.connection.echo-depth-2.up-a",
+      "targetCandidates": [
+        {
+          "targetFloorId": "demo.floor.echo-depth-2",
+          "targetConnectionId": "demo.connection.echo-depth-2.up-a",
+          "weight": 3
+        },
+        {
+          "targetFloorId": "demo.floor.echo-depth-2-mirror",
+          "targetConnectionId": "demo.connection.echo-depth-2-mirror.up-a",
+          "weight": 1
+        }
+      ]
     }, {
       "id": "demo.connection.echo-depth-1.down-b",
       "kind": "stairs",
       "terrainId": "demo.terrain.stairs-down",
       "targetFloorId": "demo.floor.echo-depth-2-mirror",
-      "targetConnectionId": "demo.connection.echo-depth-2-mirror.up-a"
+      "targetConnectionId": "demo.connection.echo-depth-2-mirror.up-a",
+      "targetCandidates": [
+        {
+          "targetFloorId": "demo.floor.echo-depth-2",
+          "targetConnectionId": "demo.connection.echo-depth-2.up-a",
+          "weight": 3
+        },
+        {
+          "targetFloorId": "demo.floor.echo-depth-2-mirror",
+          "targetConnectionId": "demo.connection.echo-depth-2-mirror.up-a",
+          "weight": 1
+        }
+      ]
     }, {
       "id": "demo.connection.echo-depth-1.shaft-down",
       "kind": "shaft",

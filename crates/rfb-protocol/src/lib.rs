@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.65";
+pub const PROTOCOL_VERSION: &str = "1.66";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -968,6 +968,10 @@ pub struct CarriedItemSaveDto {
 pub struct FloorConnectionSaveDto {
     pub id: String,
     pub position: Position,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_floor_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_connection_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

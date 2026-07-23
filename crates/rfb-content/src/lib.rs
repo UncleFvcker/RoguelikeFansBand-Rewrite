@@ -809,6 +809,18 @@ pub struct ProceduralFloorConnectionDefinition {
     pub target_floor_id: String,
     #[serde(default)]
     pub target_connection_id: Option<String>,
+    #[serde(default)]
+    pub target_candidates: Vec<ProceduralFloorConnectionCandidateDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralFloorConnectionCandidateDefinition {
+    pub target_floor_id: String,
+    pub target_connection_id: String,
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1)))]
+    pub weight: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -2752,6 +2764,13 @@ fn validate_world(
             if let Some(target_connection_id) = &connection.target_connection_id {
                 validate_definition_id(target_connection_id, "connection")?;
             }
+            for candidate in &connection.target_candidates {
+                if candidate.weight == 0 {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                validate_definition_id(&candidate.target_floor_id, "floor")?;
+                validate_definition_id(&candidate.target_connection_id, "connection")?;
+            }
         }
         if procedural.id == world.initial_floor_id
             || procedural.width != world.width
@@ -3836,6 +3855,50 @@ fn validate_world(
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
         for connection in &procedural.connections {
+            for candidate in &connection.target_candidates {
+                if candidate.target_floor_id == world.initial_floor_id
+                    || !floor_ids.contains(&candidate.target_floor_id)
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                let target = world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == candidate.target_floor_id)
+                    .expect("validated dynamic connection target must remain available");
+                let Some(target_connection) = target.connections.iter().find(|target_connection| {
+                    target_connection.id == candidate.target_connection_id
+                }) else {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                };
+                let depth_delta = target.depth.abs_diff(procedural.depth);
+                if target_connection.kind != connection.kind
+                    || (matches!(connection.kind, FloorConnectionKind::Stairs) && depth_delta != 1)
+                    || (matches!(connection.kind, FloorConnectionKind::Shaft) && depth_delta != 2)
+                    || (target.lifecycle != procedural.lifecycle)
+                    || (target.dungeon_id != procedural.dungeon_id)
+                    || !terrain_tags
+                        .get(&connection.terrain_id)
+                        .is_some_and(|tags| {
+                            if target.depth > procedural.depth {
+                                tags.contains("stairs-down")
+                            } else {
+                                tags.contains("stairs-up")
+                            }
+                        })
+                    || !terrain_tags
+                        .get(&target_connection.terrain_id)
+                        .is_some_and(|tags| {
+                            if target.depth > procedural.depth {
+                                tags.contains("stairs-up")
+                            } else {
+                                tags.contains("stairs-down")
+                            }
+                        })
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+            }
             if !floor_ids.contains(&connection.target_floor_id)
                 && connection.target_floor_id != world.initial_floor_id
             {
@@ -4859,7 +4922,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.57.0");
+        assert_eq!(catalog.pack_version(), "1.58.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -6153,6 +6216,7 @@ mod tests {
                 terrain_id: "demo.terrain.stairs-down".to_owned(),
                 target_floor_id: "demo.floor.echo-depth-3-mirror".to_owned(),
                 target_connection_id: Some("demo.connection.test.second-parent-up".to_owned()),
+                target_candidates: Vec::new(),
             });
         let child = converging_tree.worlds[0]
             .procedural_floors
@@ -6165,6 +6229,7 @@ mod tests {
             terrain_id: "demo.terrain.stairs-up".to_owned(),
             target_floor_id: "demo.floor.echo-depth-2-mirror".to_owned(),
             target_connection_id: Some("demo.connection.test.second-parent-down".to_owned()),
+            target_candidates: Vec::new(),
         });
         assert!(matches!(
             validate_and_normalize(&mut converging_tree),

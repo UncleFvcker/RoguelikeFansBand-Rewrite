@@ -67,6 +67,8 @@ pub(crate) struct FloorState {
 pub(crate) struct FloorConnectionState {
     pub(crate) id: String,
     pub(crate) position: Position,
+    pub(crate) target_floor_id: Option<String>,
+    pub(crate) target_connection_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
