@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.66";
+pub const PROTOCOL_VERSION: &str = "1.69";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -103,6 +103,7 @@ pub enum GameCommand {
         direction: Direction,
     },
     PickUp,
+    Retire,
     Search,
     Throw {
         item_id: String,
@@ -667,6 +668,29 @@ pub struct GameEventDto {
     pub trace: Option<ProjectileTraceDto>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum CampaignStatusDto {
+    Active,
+    Victorious,
+    Retired,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CampaignStateDto {
+    pub status: CampaignStatusDto,
+    pub score: u64,
+    pub conquered_dungeons: u32,
+    pub completed_tasks: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub victory_turn: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retired_turn: Option<u32>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -699,6 +723,7 @@ pub struct GameSnapshot {
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+    pub campaign: CampaignStateDto,
     pub state_hash: String,
 }
 
@@ -730,6 +755,7 @@ pub struct GameUpdate {
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+    pub campaign: CampaignStateDto,
     pub state_hash: String,
 }
 
@@ -802,6 +828,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(InventoryItemDto);
     push_declaration!(EquipmentItemDto);
     push_declaration!(GameEventDto);
+    push_declaration!(CampaignStatusDto);
+    push_declaration!(CampaignStateDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
 
@@ -893,6 +921,7 @@ pub enum MonsterPackBehaviorDto {
     Seek,
     Surround,
     GuardLeader,
+    GuardPosition,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1058,8 +1087,26 @@ pub struct DungeonStateSaveDto {
     pub dungeon_id: String,
     #[serde(default, skip_serializing_if = "is_false")]
     pub guardian_defeated: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entrance_guardian_defeated: Option<bool>,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub next_instance_ordinal: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retained_instance_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retained_at_turn: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CampaignStateSaveDto {
+    pub status: CampaignStatusDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub victory_turn: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retired_turn: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub final_score: Option<u64>,
 }
 
 fn is_zero_u32(value: &u32) -> bool {
@@ -1096,6 +1143,8 @@ pub struct SavePayloadV1 {
     pub task_states: Vec<TaskStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub campaign_state: Option<CampaignStateSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

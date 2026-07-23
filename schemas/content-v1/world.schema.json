@@ -20,6 +20,51 @@
       ],
       "type": "object"
     },
+    "CampaignDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "dungeonConquestPoints": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "taskCompletionPoints": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "turnPenaltyInterval": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "turnPenaltyPoints": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "victoryBonus": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "victoryDungeonIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "victoryDungeonIds",
+        "dungeonConquestPoints",
+        "taskCompletionPoints",
+        "victoryBonus",
+        "turnPenaltyInterval",
+        "turnPenaltyPoints"
+      ],
+      "type": "object"
+    },
     "ContentPosition": {
       "additionalProperties": false,
       "properties": {
@@ -45,11 +90,35 @@
     "DungeonDefinition": {
       "additionalProperties": false,
       "properties": {
+        "entranceGuardian": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DungeonEntranceGuardianDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "entryRequirements": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DungeonEntryRequirementDefinition"
+          },
+          "type": "array"
+        },
         "guardianActorKindId": {
           "type": "string"
         },
         "id": {
           "type": "string"
+        },
+        "instanceLifecycle": {
+          "$ref": "#/$defs/DungeonInstanceLifecycle",
+          "default": {
+            "kind": "reset-on-surface"
+          }
         },
         "rootFloorId": {
           "type": "string"
@@ -61,6 +130,102 @@
         "guardianActorKindId"
       ],
       "type": "object"
+    },
+    "DungeonEntranceGuardianDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        }
+      },
+      "required": [
+        "instanceId",
+        "actorKindId",
+        "position"
+      ],
+      "type": "object"
+    },
+    "DungeonEntryRequirementDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "task-status",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/DungeonEntryTaskStatus"
+            },
+            "task_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "task_id",
+            "status"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "dungeon_id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "dungeon-conquered",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "dungeon_id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "item_kind_id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "carried-item",
+              "type": "string"
+            },
+            "quantity": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "item_kind_id",
+            "quantity"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "DungeonEntryTaskStatus": {
+      "enum": [
+        "available",
+        "active",
+        "paused",
+        "completed",
+        "failed",
+        "abandoned"
+      ],
+      "type": "string"
     },
     "DungeonGuardianDefinition": {
       "additionalProperties": false,
@@ -77,6 +242,55 @@
         "actorKindId"
       ],
       "type": "object"
+    },
+    "DungeonInstanceLifecycle": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "reset-on-surface",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "persistent",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "turn-ttl",
+              "type": "string"
+            },
+            "ttlTurns": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "ttlTurns"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "FloorConnectionKind": {
       "enum": [
@@ -1193,6 +1407,17 @@
     },
     "borderTerrainId": {
       "type": "string"
+    },
+    "campaign": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CampaignDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "dungeons": {
       "default": [],

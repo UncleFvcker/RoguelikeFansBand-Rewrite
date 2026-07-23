@@ -58,6 +58,9 @@
 - [Contract v64：多入口 Vault 与连通拼接](contract-v64-multi-entry-vault-connectivity.md)
 - [Contract v65：地牢实例身份与生命周期](contract-v65-dungeon-instance-identity.md)
 - [Contract v66：动态探索树与楼梯目标解析](contract-v66-dynamic-exploration-tree.md)
+- [Contract v67：地牢入口守卫与可选进入条件](contract-v67-dungeon-entrance-guardians.md)
+- [Contract v68：胜利、退休与角色评分](contract-v68-victory-retirement-scoring.md)
+- [Contract v69：可配置地牢实例生命周期](contract-v69-configurable-instance-lifecycle.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -625,12 +628,15 @@ interface SaveGame {
 - 协议 1.64 和 contract-v64 已建立；内容包 1.57.0 将 Vault 升级为 1–8 个边界入口，加载时证明模板内部连通，落位时为每个入口生成最长 12 格的确定性 BFS connector，并以整层连通证明和原子回退拒绝失败候选。save v1 与 state hash Schema v23 不变，active baseline 共 129 个 exact fixtures。
 - 协议 1.65 和 contract-v65 已建立；运行时 dungeon floor 分配稳定实例序号，当前/离层存档保存实例 ID，仓库键按实例+floor 隔离，返回地表只清理当前实例，v64 存档缺失字段按首实例迁移。save v1 仍为容器 v1，state hash 升至 Schema v24，active baseline 共 131 个 exact fixtures。
 - 协议 1.66 和 contract-v66 已建立；内容包 1.58.0 为楼层连接增加加权动态目标，同层按稳定连接 ID 无放回选择不同分支，解析目标随楼层存档并在首次到达时修正返回连接；v65 旧存档缺失字段时回退内容固定目标且不重建或推进 RNG。普通 dungeon 返回地表立即清空实例，下一次进入重新生成。save v1 仍为容器 v1，state hash 升至 Schema v25，active baseline 共 132 个 exact fixtures。
+- 协议 1.67 和 contract-v67 已建立；内容包 1.59.0 增加原版式地牢入口守卫、`GuardPosition` 和原创内容可选进入条件。守卫可绕过且不阻止楼梯，击败状态持久化；硬条件在实例序号与 RNG 前原子检查。v66 旧存档抑制新增守卫且不回填实体。普通 dungeon 返回地表仍立即清空实例。save v1 仍为容器 v1，state hash 升至 Schema v26，active baseline 共 135 个 exact fixtures。
+- 协议 1.68 和 contract-v68 已建立；内容包 1.60.0 增加 campaign 胜利、退休结算、内容驱动角色评分和旧存档状态推导。Resonance 是 demo 唯一 victory dungeon，Echo 征服只增加分数；胜利后必须在地表退休，退休冻结最终分数并拒绝后续命令。普通 dungeon 返回地表仍立即清空实例。save v1 仍为容器 v1，state hash 升至 Schema v27，content hash 为 `1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c`，active baseline 共 137 个 exact fixtures。
+- 协议 1.69 和 contract-v69 已建立；内容包 1.61.0 增加 `reset-on-surface`、`persistent`、`turn-ttl` 生命周期与 Archive TTL 示例，retained 实例字段进入存档，TTL 惰性淘汰清理对应实例物品属性知识。普通 Echo/Resonance 返回地表仍立即清空，state hash 升至 Schema v28，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage E 地牢生态，推进多 dungeon 进入条件、胜利/退休评分和可配置实例生命周期；普通 dungeon 的返回地表清理规则保持不变；
+1. 进入 Stage F 角色成长基础；运行时地形破坏直接成为权威地图状态，不做自动连通修复，玩家可通过挖掘自行恢复通路；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

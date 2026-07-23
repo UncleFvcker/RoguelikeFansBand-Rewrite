@@ -11,6 +11,8 @@ pub enum CoreError {
     CommandSequence { expected: u32, received: u32 },
     #[error("the player is dead and cannot act")]
     PlayerDead,
+    #[error("the campaign has ended and cannot accept more commands")]
+    CampaignEnded,
     #[error("unsupported save schema version {0}")]
     UnsupportedSaveVersion(u16),
     #[error("save uses unsupported RNG algorithm {0}")]

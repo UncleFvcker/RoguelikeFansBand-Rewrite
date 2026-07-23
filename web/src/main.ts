@@ -57,6 +57,7 @@ const nativeSaveStorage = new NativeSaveStorage();
 const renderer = new MapRenderer();
 let busy = false;
 let playerDead = false;
+let campaignEnded = false;
 let nativeSaveBusy = false;
 let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
@@ -80,6 +81,11 @@ const effectsValue = element<HTMLElement>("effects-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
 const taskLogList = element<HTMLUListElement>("task-log-list");
+const campaignStatusValue = element<HTMLElement>("campaign-status-value");
+const campaignScoreValue = element<HTMLElement>("campaign-score-value");
+const campaignDungeonsValue = element<HTMLElement>("campaign-dungeons-value");
+const campaignTasksValue = element<HTMLElement>("campaign-tasks-value");
+const campaignRetire = element<HTMLButtonElement>("campaign-retire");
 const inventoryCount = element<HTMLElement>("inventory-count");
 const inventorySelectionCount = element<HTMLElement>("inventory-selection-count");
 const inventoryUse = element<HTMLButtonElement>("inventory-use");
@@ -409,7 +415,7 @@ function announceCrashDiagnostic(status: CrashDiagnosticStatus): void {
 }
 
 async function dispatch(command: GameCommand): Promise<void> {
-  if (playerDead) return;
+  if (playerDead || campaignEnded) return;
   busy = true;
   updateInventoryActions();
   renderTargeting();
@@ -427,6 +433,8 @@ async function dispatch(command: GameCommand): Promise<void> {
     renderTargeting();
   }
 }
+
+campaignRetire.addEventListener("click", () => void dispatch({ type: "retire" }));
 
 async function exportSave(): Promise<void> {
   try {
@@ -750,6 +758,7 @@ async function changeTileset(): Promise<void> {
 function renderStatus(state: GameSnapshot | GameUpdate): void {
   currentStatus = state;
   playerDead = state.player.isDead;
+  campaignEnded = state.campaign.status === "retired";
   if (
     targeting &&
     (targeting.origin.x !== state.player.position.x ||
@@ -829,6 +838,13 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
       return row;
     }),
   );
+  campaignStatusValue.textContent = localization.format(
+    `campaign-status-${state.campaign.status}` as MessageKey,
+  );
+  campaignScoreValue.textContent = String(state.campaign.score);
+  campaignDungeonsValue.textContent = String(state.campaign.conqueredDungeons);
+  campaignTasksValue.textContent = String(state.campaign.completedTasks);
+  updateCampaignAction();
   positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
   hashValue.textContent = state.stateHash.slice(0, 12);
   hashValue.title = state.stateHash;
@@ -1004,6 +1020,7 @@ function selectedInventoryItems(): InventoryItemDto[] {
 }
 
 function updateInventoryActions(): void {
+  updateCampaignAction();
   const selected = selectedInventoryItems();
   inventorySelectionCount.textContent = localization.format("inventory-selected-count", {
     count: selected.length,
@@ -1037,6 +1054,17 @@ function updateInventoryActions(): void {
   for (const button of equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
     button.disabled = busy || playerDead;
   }
+}
+
+function updateCampaignAction(): void {
+  const state = currentStatus;
+  campaignRetire.disabled =
+    busy ||
+    playerDead ||
+    !state ||
+    state.campaign.status !== "victorious" ||
+    state.floorId !== "demo.floor.surface" ||
+    state.dungeonInstanceId != null;
 }
 
 function selectedDropQuantity(item: InventoryItemDto): number | undefined {
@@ -1134,6 +1162,20 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-floor-transition-unavailable");
     case "floor-expedition-ended":
       return localization.format("message-floor-expedition-ended");
+    case "dungeon-entrance-guardian-defeated":
+      return localization.format("message-dungeon-entrance-guardian-defeated", {
+        dungeon: event.args.dungeon ?? "?",
+      });
+    case "campaign-victorious":
+      return localization.format("message-campaign-victorious", {
+        score: event.args.score ?? "?",
+      });
+    case "campaign-retired":
+      return localization.format("message-campaign-retired", {
+        score: event.args.score ?? "?",
+      });
+    case "campaign-retire-unavailable":
+      return localization.format("message-campaign-retire-unavailable");
     case "floor-one-shot-closed":
       return localization.format("message-floor-one-shot-closed");
     case "task-completed":

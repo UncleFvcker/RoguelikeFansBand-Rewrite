@@ -4,10 +4,10 @@ use std::collections::BTreeSet;
 
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
-    CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, MonsterPackSaveDto, PROTOCOL_VERSION, Position, ResistanceDto,
-    ResistanceSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto,
-    TerrainInteractionDto,
+    CampaignStateDto, CampaignStateSaveDto, CharacterSummary, GameCommand, GameCommandEnvelope,
+    GameEventDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, MonsterPackSaveDto,
+    PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto,
+    StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -54,6 +54,10 @@ pub struct Preconditions {
     pub player_resistances: Vec<ResistanceSaveDto>,
     #[serde(default)]
     pub entity_effects: Vec<EntityEffectsPrecondition>,
+    #[serde(default)]
+    pub campaign_conquered_dungeons: Vec<String>,
+    #[serde(default)]
+    pub campaign_state: Option<CampaignStateSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -103,6 +107,8 @@ pub struct FinalStateAssertion {
     pub last_command_seq: u32,
     #[serde(default)]
     pub floor_id: String,
+    #[serde(default)]
+    pub dungeon_instance_id: Option<String>,
     pub player_position: Position,
     #[serde(default)]
     pub player_hp: Option<i32>,
@@ -144,6 +150,8 @@ pub struct FinalStateAssertion {
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
     #[serde(default)]
+    pub campaign: Option<CampaignStateDto>,
+    #[serde(default)]
     pub revealed_terrain: Vec<Position>,
     pub state_hash: String,
 }
@@ -176,6 +184,7 @@ pub enum CommandErrorKind {
     RevisionMismatch,
     CommandSequence,
     PlayerDead,
+    CampaignEnded,
 }
 
 pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, ContractError> {
@@ -187,6 +196,15 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
+    for dungeon_id in &fixture.preconditions.campaign_conquered_dungeons {
+        let state = payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| &state.dungeon_id == dungeon_id)
+            .ok_or_else(|| ContractError::UnknownDungeonPrecondition(dungeon_id.clone()))?;
+        state.guardian_defeated = true;
+    }
+    payload.campaign_state = fixture.preconditions.campaign_state.clone();
     for effects in &fixture.preconditions.entity_effects {
         let entity = payload
             .entities
@@ -253,6 +271,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             world_tick: snapshot.world_tick,
             last_command_seq: snapshot.last_command_seq,
             floor_id: snapshot.floor_id.clone(),
+            dungeon_instance_id: snapshot.dungeon_instance_id.clone(),
             player_position: snapshot.player.position,
             player_hp: Some(snapshot.player.hp),
             player_max_hp: Some(snapshot.player.max_hp),
@@ -290,6 +309,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             next_item_instance_serial: Some(save.next_item_instance_serial),
             terrain_interactions: snapshot.terrain_interactions,
             tasks: snapshot.tasks,
+            campaign: Some(snapshot.campaign),
             revealed_terrain: save.revealed_terrain,
             state_hash: snapshot.state_hash,
         },
@@ -362,6 +382,7 @@ fn command_error_kind(error: &CoreError) -> Result<CommandErrorKind, ContractErr
         CoreError::RevisionMismatch { .. } => Ok(CommandErrorKind::RevisionMismatch),
         CoreError::CommandSequence { .. } => Ok(CommandErrorKind::CommandSequence),
         CoreError::PlayerDead => Ok(CommandErrorKind::PlayerDead),
+        CoreError::CampaignEnded => Ok(CommandErrorKind::CampaignEnded),
         other => Err(ContractError::UnexpectedCoreError(other.to_string())),
     }
 }
@@ -407,6 +428,8 @@ pub enum ContractError {
     EmptyId,
     #[error("contract fixture references unknown entity precondition {0}")]
     UnknownEntityPrecondition(String),
+    #[error("unknown dungeon campaign precondition {0}")]
+    UnknownDungeonPrecondition(String),
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

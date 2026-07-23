@@ -33,6 +33,7 @@ pub(crate) enum GameAction {
     },
     Wait,
     PickUp,
+    Retire,
     Search,
     Equip {
         item_id: String,
@@ -83,6 +84,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },
             GameCommand::Wait => Self::Wait,
             GameCommand::PickUp => Self::PickUp,
+            GameCommand::Retire => Self::Retire,
             GameCommand::Search => Self::Search,
             GameCommand::Equip { item_id } => Self::Equip { item_id },
             GameCommand::Fire { direction } => Self::Fire { direction },

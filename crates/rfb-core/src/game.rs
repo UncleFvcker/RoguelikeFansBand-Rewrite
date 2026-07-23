@@ -42,32 +42,34 @@ use crate::{
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
 use rfb_content::{
-    ActorRole, ContentCatalog, ContentPosition, EncounterEntryDefinition, EncounterFormation,
-    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
-    ProceduralFloorDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
-    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, RetakeFloorPolicy, TaskObjectiveDefinition,
-    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
-    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    ActorRole, CampaignDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
+    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
+    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, FloorLifecycle,
+    ItemUseEffectDefinition, MonsterPackBehavior, ProceduralFloorDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RetakeFloorPolicy,
+    TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
+    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    ActorSaveDto, AttackProfileDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto,
-    ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto,
-    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
-    GameCommandEnvelope, GameSnapshot, GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto,
-    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto,
-    Position, ProjectileProfileDto, RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
-    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
-    TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    ActorSaveDto, AttackProfileDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
+    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
+    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
+    GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto,
+    ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto,
+    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 58] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 61] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -126,9 +128,12 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 58] = [
     "9d25687c1296bc6f9953024bd76bb9eefc4c1e3955280b96d34d565ff7ca289d",
     "246f51864965fac494c7a39959f591caa0434d9fa4eac839501f9d09526eb617",
     "9f3e3d5dee1e8777179179259380990b9253aa7f195f08cd29cbbd58562793df",
+    "834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc",
+    "71d2f947fe2bb7b5e2190a12fdff12ba47ea9f7fc17b1eb26390b46d8abd092b",
+    "1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc";
+    "06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -155,7 +160,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV25 {
+struct StateHashPayloadV28 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -172,6 +177,7 @@ struct StateHashPayloadV25 {
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
     dungeon_states: Vec<DungeonStateSaveDto>,
+    campaign_state: CampaignStateSaveDto,
     next_item_instance_serial: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     explored: Vec<bool>,
@@ -302,10 +308,32 @@ struct TaskState {
     retakes_used: u16,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct DungeonState {
     guardian_defeated: bool,
+    entrance_guardian_defeated: bool,
     next_instance_ordinal: u32,
+    retained_instance_id: Option<String>,
+    retained_at_turn: Option<u32>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct CampaignState {
+    status: CampaignStatusDto,
+    victory_turn: Option<u32>,
+    retired_turn: Option<u32>,
+    final_score: Option<u64>,
+}
+
+impl Default for CampaignState {
+    fn default() -> Self {
+        Self {
+            status: CampaignStatusDto::Active,
+            victory_turn: None,
+            retired_turn: None,
+            final_score: None,
+        }
+    }
 }
 
 struct TaskRestoreContext<'a> {
@@ -332,7 +360,10 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
                 dungeon.id.clone(),
                 DungeonState {
                     guardian_defeated: false,
+                    entrance_guardian_defeated: false,
                     next_instance_ordinal: 0,
+                    retained_instance_id: None,
+                    retained_at_turn: None,
                 },
             )
         })
@@ -345,6 +376,16 @@ fn restore_dungeon_states(
     allow_missing_states: bool,
 ) -> Result<BTreeMap<String, DungeonState>, CoreError> {
     let mut states = initial_dungeon_states(world);
+    if allow_missing_states {
+        for dungeon in &world.dungeons {
+            if dungeon.entrance_guardian.is_some() {
+                states
+                    .get_mut(&dungeon.id)
+                    .expect("defined dungeon state must remain available")
+                    .entrance_guardian_defeated = true;
+            }
+        }
+    }
     if saved_states.is_empty() {
         return Ok(states);
     }
@@ -356,7 +397,20 @@ fn restore_dungeon_states(
                     saved.dungeon_id.clone(),
                     DungeonState {
                         guardian_defeated: saved.guardian_defeated,
+                        entrance_guardian_defeated: if allow_missing_states {
+                            saved
+                                .entrance_guardian_defeated
+                                .unwrap_or(states[&saved.dungeon_id].entrance_guardian_defeated)
+                        } else {
+                            saved
+                                .entrance_guardian_defeated
+                                .ok_or(CoreError::InvalidSave(
+                                    "dungeon entrance guardian state is missing",
+                                ))?
+                        },
                         next_instance_ordinal: saved.next_instance_ordinal,
+                        retained_instance_id: saved.retained_instance_id.clone(),
+                        retained_at_turn: saved.retained_at_turn,
                     },
                 )
                 .is_some()
@@ -369,6 +423,42 @@ fn restore_dungeon_states(
     }
     states.extend(restored);
     Ok(states)
+}
+
+fn restore_campaign_state(
+    saved: Option<&CampaignStateSaveDto>,
+) -> Result<CampaignState, CoreError> {
+    let Some(saved) = saved else {
+        return Ok(CampaignState::default());
+    };
+    let valid = match saved.status {
+        CampaignStatusDto::Active => {
+            saved.victory_turn.is_none()
+                && saved.retired_turn.is_none()
+                && saved.final_score.is_none()
+        }
+        CampaignStatusDto::Victorious => {
+            saved.victory_turn.is_some()
+                && saved.retired_turn.is_none()
+                && saved.final_score.is_none()
+        }
+        CampaignStatusDto::Retired => {
+            saved
+                .victory_turn
+                .zip(saved.retired_turn)
+                .is_some_and(|(victory, retired)| victory <= retired)
+                && saved.final_score.is_some()
+        }
+    };
+    if !valid {
+        return Err(CoreError::InvalidSave("campaign state is invalid"));
+    }
+    Ok(CampaignState {
+        status: saved.status,
+        victory_turn: saved.victory_turn,
+        retired_turn: saved.retired_turn,
+        final_score: saved.final_score,
+    })
 }
 
 fn dungeon_instance_storage_key(instance_id: Option<&str>, floor_id: &str) -> String {
@@ -651,6 +741,7 @@ pub struct Game {
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
     task_states: BTreeMap<String, TaskState>,
     dungeon_states: BTreeMap<String, DungeonState>,
+    campaign_state: CampaignState,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
@@ -711,7 +802,7 @@ impl Game {
             player_definition.speed,
             INITIAL_PLAYER_ENERGY_NEED,
         );
-        let entities = world
+        let mut entities = world
             .actors
             .iter()
             .map(|spawn| {
@@ -728,6 +819,29 @@ impl Game {
                 ))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
+        for dungeon in &world.dungeons {
+            let Some(guardian) = &dungeon.entrance_guardian else {
+                continue;
+            };
+            let definition = content
+                .actor(&guardian.actor_kind_id)
+                .ok_or_else(|| CoreError::UnknownActor(guardian.actor_kind_id.clone()))?;
+            let mut actor = actor_from_spawn(
+                &guardian.instance_id,
+                &guardian.actor_kind_id,
+                guardian.position,
+                definition.max_hp,
+                definition.speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+            );
+            actor.pack = Some(MonsterPackIdentity {
+                id: guardian.instance_id.clone(),
+                leader_id: guardian.instance_id.clone(),
+                role: MonsterPackRoleDto::Leader,
+                behavior: MonsterPackBehaviorDto::GuardPosition,
+            });
+            entities.push(actor);
+        }
         let items = world
             .items
             .iter()
@@ -761,6 +875,7 @@ impl Game {
             item_property_knowledge: BTreeMap::new(),
             task_states,
             dungeon_states,
+            campaign_state: CampaignState::default(),
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
@@ -864,6 +979,8 @@ impl Game {
                 "surface or task floor cannot have a dungeon instance ID",
             ));
         }
+        let mut dungeon_states =
+            restore_dungeon_states(world, &payload.dungeon_states, migrating_previous_content)?;
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0 || payload.terrain.terrain_ids.len() != expected_len {
             return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
@@ -944,12 +1061,21 @@ impl Game {
             }
         }
         if current_floor_id == world.initial_floor_id {
-            stored_floors.retain(|floor_id, _| {
-                world.procedural_floors.iter().any(|floor| {
-                    floor.id == *floor_id
+            stored_floors.retain(|_, stored| {
+                if world.procedural_floors.iter().any(|floor| {
+                    floor.id == stored.id
                         && floor.lifecycle == FloorLifecycle::OneShot
                         && floor.retakeable
-                })
+                }) {
+                    return true;
+                }
+                let Some(dungeon_id) = floor_dungeon_id(world, &stored.id) else {
+                    return false;
+                };
+                dungeon_states
+                    .get(&dungeon_id)
+                    .and_then(|state| state.retained_instance_id.as_deref())
+                    == stored.dungeon_instance_id.as_deref()
             });
         }
         let mut allocator_entities = entities.clone();
@@ -996,8 +1122,11 @@ impl Game {
             &content,
         )?;
         let item_knowledge = item_knowledge_from_save(payload.item_knowledge, &content)?;
-        let mut item_property_knowledge =
-            item_property_knowledge_from_save(payload.item_property_knowledge, &items, &content)?;
+        let mut item_property_knowledge = item_property_knowledge_from_save(
+            payload.item_property_knowledge,
+            &allocator_items,
+            &content,
+        )?;
         for item in &items {
             if matches!(item.location, ItemLocation::Equipped { .. }) {
                 let knowledge = item_property_knowledge.entry(item.id.clone()).or_default();
@@ -1021,8 +1150,6 @@ impl Game {
                 allow_missing_states: migrating_previous_content,
             },
         )?;
-        let mut dungeon_states =
-            restore_dungeon_states(world, &payload.dungeon_states, migrating_previous_content)?;
         for instance_id in current_dungeon_instance_id.iter().chain(
             stored_floors
                 .values()
@@ -1039,6 +1166,8 @@ impl Game {
                 state.next_instance_ordinal = state.next_instance_ordinal.max(ordinal);
             }
         }
+        let campaign_state_missing = payload.campaign_state.is_none();
+        let campaign_state = restore_campaign_state(payload.campaign_state.as_ref())?;
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -1055,6 +1184,7 @@ impl Game {
             item_property_knowledge,
             task_states,
             dungeon_states,
+            campaign_state,
             next_item_instance_serial,
             explored,
             revealed_terrain,
@@ -1066,12 +1196,40 @@ impl Game {
             world_tick: payload.world_tick,
             last_command_seq: payload.last_command_seq,
         };
+        if campaign_state_missing && game.campaign_victory_reached() {
+            game.campaign_state.status = CampaignStatusDto::Victorious;
+            game.campaign_state.victory_turn = Some(game.turn);
+        }
         if migrating_previous_content {
             let world = game
                 .content
                 .world(&game.world_id)
                 .expect("restored world must remain available")
                 .clone();
+            let entrance_guardian_ids = world
+                .dungeons
+                .iter()
+                .filter_map(|dungeon| {
+                    dungeon
+                        .entrance_guardian
+                        .as_ref()
+                        .filter(|_| {
+                            game.dungeon_states
+                                .get(&dungeon.id)
+                                .is_some_and(|state| state.entrance_guardian_defeated)
+                        })
+                        .map(|guardian| guardian.instance_id.as_str())
+                })
+                .collect::<BTreeSet<_>>();
+            game.entities
+                .retain(|entity| !entrance_guardian_ids.contains(entity.id.as_str()));
+            for floor in game.stored_floors.values_mut() {
+                if floor.id == world.initial_floor_id {
+                    floor
+                        .entities
+                        .retain(|entity| !entrance_guardian_ids.contains(entity.id.as_str()));
+                }
+            }
             if !floor_connections_are_valid(
                 &game.current_floor_id,
                 game.width,
@@ -1124,6 +1282,7 @@ impl Game {
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
+            campaign_state: Some(self.campaign_state_to_save()),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: self.explored.clone(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
@@ -1174,6 +1333,7 @@ impl Game {
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             terrain_interactions: self.terrain_interactions(),
             tasks: self.task_statuses(),
+            campaign: self.campaign_state_dto(),
             state_hash: self.state_hash(),
         }
     }
@@ -1192,6 +1352,9 @@ impl Game {
                 received: envelope.command_seq,
             });
         }
+        if self.campaign_state.status == CampaignStatusDto::Retired {
+            return Err(CoreError::CampaignEnded);
+        }
         if self.player_is_dead() {
             return Err(CoreError::PlayerDead);
         }
@@ -1203,6 +1366,7 @@ impl Game {
         let mut removed_entities = Vec::new();
         let action = GameAction::from(envelope.command);
         let action_cost = action.energy_cost();
+        let advances_world = !matches!(&action, GameAction::Retire);
 
         match action {
             GameAction::AbandonPausedTask { task_id } => {
@@ -1383,6 +1547,22 @@ impl Game {
             GameAction::UseItem { item_id } => {
                 self.use_inventory_item(&item_id, &mut events);
             }
+            GameAction::Retire => {
+                let on_surface = self.content.world(&self.world_id).is_some_and(|world| {
+                    self.current_floor_id == world.initial_floor_id
+                        && self.current_dungeon_instance_id.is_none()
+                });
+                if self.campaign_state.status == CampaignStatusDto::Victorious && on_surface {
+                    let retired_turn = self.turn.saturating_add(1);
+                    let score = self.campaign_score_at(retired_turn);
+                    self.campaign_state.status = CampaignStatusDto::Retired;
+                    self.campaign_state.retired_turn = Some(retired_turn);
+                    self.campaign_state.final_score = Some(score);
+                    events.push(DomainEvent::CampaignRetired { score });
+                } else {
+                    events.push(DomainEvent::CampaignRetireUnavailable);
+                }
+            }
             GameAction::Wait => events.push(DomainEvent::Waited),
             GameAction::PickUp => match self.pick_up_at_player()? {
                 PickUpOutcome::Picked { kind_id, quantity } => {
@@ -1511,9 +1691,12 @@ impl Game {
             },
         }
 
-        spend_energy(&mut self.player.energy_need, action_cost);
-        self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities)?;
+        if advances_world {
+            spend_energy(&mut self.player.energy_need, action_cost);
+            self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities)?;
+        }
         self.apply_task_events(&events);
+        self.apply_campaign_events(&mut events);
 
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(1);
@@ -1544,14 +1727,15 @@ impl Game {
             removed_entities,
             terrain_interactions: self.terrain_interactions(),
             tasks: self.task_statuses(),
+            campaign: self.campaign_state_dto(),
             state_hash: self.state_hash(),
         })
     }
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV25 {
-            schema_version: 25,
+        let payload = StateHashPayloadV28 {
+            schema_version: 28,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -1571,6 +1755,7 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
+            campaign_state: self.campaign_state_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
             explored: Vec::new(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
@@ -2257,9 +2442,102 @@ impl Game {
             .map(|(dungeon_id, state)| DungeonStateSaveDto {
                 dungeon_id: dungeon_id.clone(),
                 guardian_defeated: state.guardian_defeated,
+                entrance_guardian_defeated: Some(state.entrance_guardian_defeated),
                 next_instance_ordinal: state.next_instance_ordinal,
+                retained_instance_id: state.retained_instance_id.clone(),
+                retained_at_turn: state.retained_at_turn,
             })
             .collect()
+    }
+
+    fn campaign_definition(&self) -> Option<&CampaignDefinition> {
+        self.content
+            .world(&self.world_id)
+            .and_then(|world| world.campaign.as_ref())
+    }
+
+    fn campaign_victory_reached(&self) -> bool {
+        self.campaign_definition().is_some_and(|campaign| {
+            campaign.victory_dungeon_ids.iter().all(|dungeon_id| {
+                self.dungeon_states
+                    .get(dungeon_id)
+                    .is_some_and(|state| state.guardian_defeated)
+            })
+        })
+    }
+
+    fn campaign_counts(&self) -> (u32, u32) {
+        let conquered = self
+            .dungeon_states
+            .values()
+            .filter(|state| state.guardian_defeated)
+            .count()
+            .try_into()
+            .unwrap_or(u32::MAX);
+        let completed = self
+            .task_states
+            .values()
+            .filter(|state| state.status == TaskStatusKindDto::Completed)
+            .count()
+            .try_into()
+            .unwrap_or(u32::MAX);
+        (conquered, completed)
+    }
+
+    fn campaign_score_at(&self, turn: u32) -> u64 {
+        let Some(campaign) = self.campaign_definition() else {
+            return 0;
+        };
+        let (conquered, completed) = self.campaign_counts();
+        let base = u64::from(conquered)
+            .saturating_mul(u64::from(campaign.dungeon_conquest_points))
+            .saturating_add(
+                u64::from(completed).saturating_mul(u64::from(campaign.task_completion_points)),
+            )
+            .saturating_add(if self.campaign_state.status != CampaignStatusDto::Active {
+                u64::from(campaign.victory_bonus)
+            } else {
+                0
+            });
+        let penalty = u64::from(turn / campaign.turn_penalty_interval)
+            .saturating_mul(u64::from(campaign.turn_penalty_points));
+        base.saturating_sub(penalty)
+    }
+
+    fn campaign_state_to_save(&self) -> CampaignStateSaveDto {
+        CampaignStateSaveDto {
+            status: self.campaign_state.status,
+            victory_turn: self.campaign_state.victory_turn,
+            retired_turn: self.campaign_state.retired_turn,
+            final_score: self.campaign_state.final_score,
+        }
+    }
+
+    fn campaign_state_dto(&self) -> CampaignStateDto {
+        let (conquered_dungeons, completed_tasks) = self.campaign_counts();
+        CampaignStateDto {
+            status: self.campaign_state.status,
+            score: self
+                .campaign_state
+                .final_score
+                .unwrap_or_else(|| self.campaign_score_at(self.turn)),
+            conquered_dungeons,
+            completed_tasks,
+            victory_turn: self.campaign_state.victory_turn,
+            retired_turn: self.campaign_state.retired_turn,
+        }
+    }
+
+    fn apply_campaign_events(&mut self, events: &mut Vec<DomainEvent>) {
+        if self.campaign_state.status == CampaignStatusDto::Active
+            && self.campaign_victory_reached()
+        {
+            self.campaign_state.status = CampaignStatusDto::Victorious;
+            self.campaign_state.victory_turn = Some(self.turn.saturating_add(1));
+            events.push(DomainEvent::CampaignVictorious {
+                score: self.campaign_score_at(self.turn.saturating_add(1)),
+            });
+        }
     }
 
     fn equipment_modifiers(&self) -> StatModifiersDto {
@@ -3386,6 +3664,7 @@ impl Game {
                     None => self.next_monster_step(index),
                 }
             }
+            MonsterPackBehaviorDto::GuardPosition => None,
         };
         let Some(next_position) = next_position else {
             return;
@@ -3785,6 +4064,28 @@ impl Game {
                 }
             }
         }
+        let defeated_entrance_guardian = self.content.world(&self.world_id).and_then(|world| {
+            world.dungeons.iter().find_map(|dungeon| {
+                dungeon.entrance_guardian.as_ref().and_then(|guardian| {
+                    (self.current_floor_id == world.initial_floor_id
+                        && guardian.instance_id == removed.id)
+                        .then(|| (dungeon.id.clone(), guardian.actor_kind_id.clone()))
+                })
+            })
+        });
+        if let Some((dungeon_id, target_kind_id)) = defeated_entrance_guardian {
+            let state = self
+                .dungeon_states
+                .get_mut(&dungeon_id)
+                .expect("entrance guardian dungeon state must remain available");
+            if !state.entrance_guardian_defeated {
+                state.entrance_guardian_defeated = true;
+                events.push(DomainEvent::DungeonEntranceGuardianDefeated {
+                    dungeon_id,
+                    target_kind_id,
+                });
+            }
+        }
 
         for (item_id, target_kind_id, quantity) in carried {
             let item = self
@@ -3824,8 +4125,9 @@ impl Game {
         let world = self
             .content
             .world(&self.world_id)
+            .cloned()
             .expect("active world must remain available");
-        let objectives = task_objectives(world, &task_id);
+        let objectives = task_objectives(&world, &task_id);
         let Some(objective) = usize::try_from(stage_index)
             .ok()
             .and_then(|stage| objectives.get(stage))
@@ -4170,6 +4472,49 @@ impl Game {
             .retain(|item_id, _| !discarded_item_ids.contains(item_id));
     }
 
+    fn take_retained_dungeon_instance(
+        &mut self,
+        dungeon_id: &str,
+        lifecycle: &DungeonInstanceLifecycle,
+    ) -> Result<Option<String>, CoreError> {
+        let Some(state) = self.dungeon_states.get(dungeon_id) else {
+            return Err(CoreError::InvalidSave("dungeon state is missing"));
+        };
+        let Some(instance_id) = state.retained_instance_id.clone() else {
+            return Ok(None);
+        };
+        let retained_at_turn = state
+            .retained_at_turn
+            .ok_or(CoreError::InvalidSave("retained dungeon turn is missing"))?;
+        if !self
+            .stored_floors
+            .values()
+            .any(|floor| floor.dungeon_instance_id.as_deref() == Some(instance_id.as_str()))
+        {
+            return Err(CoreError::InvalidSave(
+                "retained dungeon instance is missing",
+            ));
+        }
+        let expired = matches!(
+            lifecycle,
+            DungeonInstanceLifecycle::TurnTtl { ttl_turns }
+                if self.turn.saturating_sub(retained_at_turn) >= *ttl_turns
+        );
+        if expired {
+            self.discard_stored_dungeon_instance(&instance_id);
+            if let Some(state) = self.dungeon_states.get_mut(dungeon_id) {
+                state.retained_instance_id = None;
+                state.retained_at_turn = None;
+            }
+            return Ok(None);
+        }
+        if let Some(state) = self.dungeon_states.get_mut(dungeon_id) {
+            state.retained_instance_id = None;
+            state.retained_at_turn = None;
+        }
+        Ok(Some(instance_id))
+    }
+
     fn abandon_paused_task(&mut self, task_id: &str) -> Option<Vec<Position>> {
         let world = self.content.world(&self.world_id)?;
         if self.current_floor_id != world.initial_floor_id
@@ -4226,6 +4571,55 @@ impl Game {
         Some(changed.into_iter().collect())
     }
 
+    fn dungeon_entry_requirements_met(&self, dungeon: &DungeonDefinition) -> bool {
+        dungeon
+            .entry_requirements
+            .iter()
+            .all(|requirement| match requirement {
+                DungeonEntryRequirementDefinition::TaskStatus { task_id, status } => {
+                    self.task_states.get(task_id).is_some_and(|state| {
+                        matches!(
+                            (state.status, status),
+                            (
+                                TaskStatusKindDto::Available,
+                                DungeonEntryTaskStatus::Available
+                            ) | (TaskStatusKindDto::Active, DungeonEntryTaskStatus::Active)
+                                | (TaskStatusKindDto::Paused, DungeonEntryTaskStatus::Paused)
+                                | (
+                                    TaskStatusKindDto::Completed,
+                                    DungeonEntryTaskStatus::Completed
+                                )
+                                | (TaskStatusKindDto::Failed, DungeonEntryTaskStatus::Failed)
+                                | (
+                                    TaskStatusKindDto::Abandoned,
+                                    DungeonEntryTaskStatus::Abandoned
+                                )
+                        )
+                    })
+                }
+                DungeonEntryRequirementDefinition::DungeonConquered { dungeon_id } => self
+                    .dungeon_states
+                    .get(dungeon_id)
+                    .is_some_and(|state| state.guardian_defeated),
+                DungeonEntryRequirementDefinition::CarriedItem {
+                    item_kind_id,
+                    quantity,
+                } => {
+                    self.items
+                        .iter()
+                        .filter(|item| {
+                            item.kind_id == *item_kind_id
+                                && matches!(
+                                    item.location,
+                                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                                )
+                        })
+                        .fold(0_u32, |total, item| total.saturating_add(item.quantity))
+                        >= *quantity
+                }
+            })
+    }
+
     fn traverse_stairs(
         &mut self,
         abandon_task: bool,
@@ -4238,10 +4632,11 @@ impl Game {
         let world = self
             .content
             .world(&self.world_id)
+            .cloned()
             .expect("active world must remain available");
         let initial_floor_id = world.initial_floor_id.clone();
         let procedural_floors = world.procedural_floors.clone();
-        let initial_task_states_by_id = initial_task_states(world);
+        let initial_task_states_by_id = initial_task_states(&world);
         if abandon_task
             && !procedural_floors.iter().any(|floor| {
                 floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::OneShot
@@ -4306,6 +4701,21 @@ impl Game {
             return Ok(None);
         };
 
+        if self.current_floor_id == initial_floor_id
+            && let Some(target) = procedural_floors.iter().find(|floor| {
+                floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::Dungeon
+            })
+        {
+            let dungeon = world
+                .dungeons
+                .iter()
+                .find(|dungeon| target.dungeon_id.as_deref() == Some(dungeon.id.as_str()))
+                .expect("validated dungeon floor must retain its dungeon definition");
+            if !self.dungeon_entry_requirements_met(dungeon) {
+                return Ok(None);
+            }
+        }
+
         if let Some(target) = procedural_floors
             .iter()
             .find(|floor| floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::OneShot)
@@ -4322,7 +4732,7 @@ impl Game {
             {
                 return Ok(None);
             }
-            let required_floor_id = task_objectives(world, task_id)
+            let required_floor_id = task_objectives(&world, task_id)
                 .get(usize::try_from(state.stage_index).unwrap_or(usize::MAX))
                 .and_then(|objective| objective.floor_id.as_deref());
             if required_floor_id.is_some_and(|floor_id| floor_id != target_floor_id) {
@@ -4347,21 +4757,34 @@ impl Game {
                 .dungeon_id
                 .as_deref()
                 .expect("dungeon floor must retain a dungeon ID");
+            let lifecycle = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == dungeon_id)
+                .expect("validated dungeon floor must retain its definition")
+                .instance_lifecycle
+                .clone();
             if source_definition
                 .is_some_and(|source| source.dungeon_id.as_deref() == Some(dungeon_id))
             {
                 from_dungeon_instance_id.clone()
             } else if from_floor_id == initial_floor_id {
-                let state = self
-                    .dungeon_states
-                    .get(dungeon_id)
-                    .expect("target dungeon state must remain available");
-                let ordinal = state
-                    .next_instance_ordinal
-                    .checked_add(1)
-                    .ok_or(CoreError::InvalidSave("dungeon instance ordinal overflow"))?;
-                allocated_dungeon_instance = Some((dungeon_id.to_owned(), ordinal));
-                Some(dungeon_instance_id(dungeon_id, ordinal))
+                if let Some(instance_id) =
+                    self.take_retained_dungeon_instance(dungeon_id, &lifecycle)?
+                {
+                    Some(instance_id)
+                } else {
+                    let state = self
+                        .dungeon_states
+                        .get(dungeon_id)
+                        .expect("target dungeon state must remain available");
+                    let ordinal = state
+                        .next_instance_ordinal
+                        .checked_add(1)
+                        .ok_or(CoreError::InvalidSave("dungeon instance ordinal overflow"))?;
+                    allocated_dungeon_instance = Some((dungeon_id.to_owned(), ordinal));
+                    Some(dungeon_instance_id(dungeon_id, ordinal))
+                }
             } else {
                 return Err(CoreError::InvalidSave(
                     "cross-dungeon floor transition is invalid",
@@ -4391,7 +4814,7 @@ impl Game {
         let task_succeeded = one_shot_task_id.as_ref().is_some_and(|task_id| {
             self.task_states
                 .get(task_id)
-                .is_some_and(|state| task_succeeded(world, task_id, state))
+                .is_some_and(|state| task_succeeded(&world, task_id, state))
         });
         if !abandon_task
             && one_shot_source.as_ref().is_some_and(|floor| {
@@ -4518,11 +4941,32 @@ impl Game {
         }
         if expedition_ended {
             let instance_id = from_dungeon_instance_id
-                .as_deref()
+                .clone()
                 .ok_or(CoreError::InvalidSave(
                     "active dungeon floor is missing its instance ID",
                 ))?;
-            self.discard_stored_dungeon_instance(instance_id);
+            let dungeon_id = source_definition
+                .and_then(|floor| floor.dungeon_id.as_deref())
+                .ok_or(CoreError::InvalidSave(
+                    "active dungeon floor is missing its dungeon ID",
+                ))?;
+            let lifecycle = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == dungeon_id)
+                .expect("validated dungeon floor must retain its definition")
+                .instance_lifecycle
+                .clone();
+            if lifecycle == DungeonInstanceLifecycle::ResetOnSurface {
+                self.discard_stored_dungeon_instance(&instance_id);
+            } else {
+                let state = self
+                    .dungeon_states
+                    .get_mut(dungeon_id)
+                    .expect("active dungeon state must remain available");
+                state.retained_instance_id = Some(instance_id);
+                state.retained_at_turn = Some(self.turn.saturating_add(1));
+            }
         }
         if one_shot_source.is_some()
             && let Some(task_resolution) = task_resolution
@@ -7703,6 +8147,63 @@ impl Game {
             if !expected_dungeons.contains_key(dungeon_id) {
                 return Err(CoreError::InvalidSave("dungeon state ID is invalid"));
             }
+            let dungeon = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == *dungeon_id)
+                .expect("validated dungeon state must retain its definition");
+            if dungeon.entrance_guardian.is_none() && state.entrance_guardian_defeated {
+                return Err(CoreError::InvalidSave(
+                    "dungeon entrance guardian state is invalid",
+                ));
+            }
+            match (&state.retained_instance_id, state.retained_at_turn) {
+                (None, None) => {}
+                (Some(instance_id), Some(retained_at_turn)) => {
+                    if dungeon.instance_lifecycle == DungeonInstanceLifecycle::ResetOnSurface
+                        || parse_dungeon_instance_ordinal(instance_id, dungeon_id).is_none()
+                        || retained_at_turn > self.turn
+                        || !self.stored_floors.values().any(|floor| {
+                            floor.dungeon_instance_id.as_deref() == Some(instance_id.as_str())
+                        })
+                    {
+                        return Err(CoreError::InvalidSave(
+                            "retained dungeon instance state is invalid",
+                        ));
+                    }
+                }
+                _ => {
+                    return Err(CoreError::InvalidSave(
+                        "retained dungeon instance state is incomplete",
+                    ));
+                }
+            }
+            if let Some(guardian) = &dungeon.entrance_guardian {
+                let guardian_present = if self.current_floor_id == world.initial_floor_id {
+                    Some(
+                        self.entities
+                            .iter()
+                            .any(|actor| actor.id == guardian.instance_id),
+                    )
+                } else {
+                    self.stored_floors
+                        .values()
+                        .find(|stored| stored.id == world.initial_floor_id)
+                        .map(|floor| {
+                            floor
+                                .entities
+                                .iter()
+                                .any(|actor| actor.id == guardian.instance_id)
+                        })
+                };
+                if guardian_present
+                    .is_none_or(|present| present == state.entrance_guardian_defeated)
+                {
+                    return Err(CoreError::InvalidSave(
+                        "dungeon entrance guardian state is invalid",
+                    ));
+                }
+            }
             for final_floor in world.procedural_floors.iter().filter(|floor| {
                 floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.final_floor
             }) {
@@ -7723,6 +8224,58 @@ impl Game {
                     return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
                 }
             }
+        }
+        let campaign_victory_reached = self.campaign_victory_reached();
+        match self.campaign_definition() {
+            None if self.campaign_state.status != CampaignStatusDto::Active => {
+                return Err(CoreError::InvalidSave("campaign state is invalid"));
+            }
+            None => {}
+            Some(_) => match self.campaign_state.status {
+                CampaignStatusDto::Active => {
+                    if self.campaign_state.victory_turn.is_some()
+                        || self.campaign_state.retired_turn.is_some()
+                        || self.campaign_state.final_score.is_some()
+                        || campaign_victory_reached
+                    {
+                        return Err(CoreError::InvalidSave("campaign state is invalid"));
+                    }
+                }
+                CampaignStatusDto::Victorious => {
+                    if !campaign_victory_reached
+                        || self.campaign_state.retired_turn.is_some()
+                        || self.campaign_state.final_score.is_some()
+                        || self
+                            .campaign_state
+                            .victory_turn
+                            .is_none_or(|turn| turn > self.turn)
+                    {
+                        return Err(CoreError::InvalidSave("campaign state is invalid"));
+                    }
+                }
+                CampaignStatusDto::Retired => {
+                    let valid_turns = self
+                        .campaign_state
+                        .victory_turn
+                        .zip(self.campaign_state.retired_turn)
+                        .is_some_and(|(victory, retired)| {
+                            victory <= retired && retired <= self.turn
+                        });
+                    let valid_score = self.campaign_state.final_score.is_some_and(|score| {
+                        self.campaign_state
+                            .retired_turn
+                            .is_some_and(|turn| score == self.campaign_score_at(turn))
+                    });
+                    if !campaign_victory_reached
+                        || self.current_floor_id != world.initial_floor_id
+                        || self.current_dungeon_instance_id.is_some()
+                        || !valid_turns
+                        || !valid_score
+                    {
+                        return Err(CoreError::InvalidSave("campaign state is invalid"));
+                    }
+                }
+            },
         }
         for (item_id, knowledge) in &self.item_property_knowledge {
             let Some(item) = self
@@ -8251,6 +8804,7 @@ const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPack
         MonsterPackBehavior::Seek => MonsterPackBehaviorDto::Seek,
         MonsterPackBehavior::Surround => MonsterPackBehaviorDto::Surround,
         MonsterPackBehavior::GuardLeader => MonsterPackBehaviorDto::GuardLeader,
+        MonsterPackBehavior::GuardPosition => MonsterPackBehaviorDto::GuardPosition,
     }
 }
 
@@ -9742,6 +10296,7 @@ pub fn load_built_in_content() -> Result<Arc<ContentCatalog>, CoreError> {
 #[cfg(test)]
 mod tests {
     use crate::effect::StatusInstance;
+    use crate::resistance::ResistanceLevel;
     use rfb_protocol::{
         DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, GameEventOutcomeDto,
         ResistanceLevelDto, ResistanceSaveDto, StatusSaveDto, VisibilityState,
@@ -9998,7 +10553,13 @@ mod tests {
             .expect("ascending should restore the entrance floor");
         assert_eq!(return_update.floor_id, "demo.floor.surface");
         assert_eq!(restored.player.position, Position { x: 3, y: 4 });
-        assert_eq!(restored.entities.len(), 1);
+        assert_eq!(restored.entities.len(), 2);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .any(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+        );
         assert!(restored.stored_floors.is_empty());
         assert!(
             return_update
@@ -10083,6 +10644,335 @@ mod tests {
             game.dungeon_states["demo.dungeon.echo-depths"].next_instance_ordinal,
             2
         );
+    }
+
+    #[test]
+    fn configurable_dungeon_lifecycle_retains_then_expires_instances() {
+        let mut game = Game::new(73);
+        game.player.position = Position { x: 7, y: 2 };
+        game.traverse_stairs(false)
+            .expect("archive entry should resolve")
+            .expect("archive entry should transition");
+        assert_eq!(game.current_floor_id, "demo.floor.archive-depth-1");
+        assert_eq!(
+            game.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.archive-depths.instance.1")
+        );
+        let archive_item_id = game
+            .items
+            .iter()
+            .find_map(|item| {
+                matches!(item.location, ItemLocation::Ground(_)).then(|| item.id.clone())
+            })
+            .expect("archive generation should create ground loot");
+        game.explored[0] = true;
+        game.item_property_knowledge.insert(
+            archive_item_id.clone(),
+            ItemPropertyKnowledgeState {
+                appraised: true,
+                identified: false,
+                known_affix_ids: BTreeSet::new(),
+            },
+        );
+
+        let archive_up = connection_position(&game, "demo.connection.archive-depth-1.surface-up");
+        game.player.position = archive_up;
+        game.traverse_stairs(false)
+            .expect("archive return should resolve")
+            .expect("archive return should transition");
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert_eq!(
+            game.dungeon_states["demo.dungeon.archive-depths"]
+                .retained_instance_id
+                .as_deref(),
+            Some("demo.dungeon.archive-depths.instance.1")
+        );
+        game.turn = game.dungeon_states["demo.dungeon.archive-depths"]
+            .retained_at_turn
+            .expect("archive should record the completed return turn");
+        assert!(game.item_property_knowledge.contains_key(&archive_item_id));
+
+        let saved = game.to_save();
+        let retained_state = saved
+            .dungeon_states
+            .iter()
+            .find(|state| state.dungeon_id == "demo.dungeon.archive-depths")
+            .expect("archive dungeon save state should exist");
+        assert_eq!(
+            retained_state.retained_instance_id.as_deref(),
+            Some("demo.dungeon.archive-depths.instance.1")
+        );
+        assert_eq!(retained_state.retained_at_turn, Some(1));
+        let mut restored = Game::from_save(saved).expect("retained archive should round trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        restored.player.position = Position { x: 7, y: 2 };
+        restored
+            .traverse_stairs(false)
+            .expect("retained archive reentry should resolve")
+            .expect("retained archive reentry should transition");
+        assert_eq!(
+            restored.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.archive-depths.instance.1")
+        );
+        assert!(restored.explored[0]);
+        assert!(restored.items.iter().any(|item| item.id == archive_item_id));
+        assert!(
+            restored
+                .item_property_knowledge
+                .contains_key(&archive_item_id)
+        );
+
+        let archive_up =
+            connection_position(&restored, "demo.connection.archive-depth-1.surface-up");
+        restored.player.position = archive_up;
+        restored
+            .traverse_stairs(false)
+            .expect("archive second return should resolve")
+            .expect("archive second return should transition");
+        let retained_at_turn = restored.dungeon_states["demo.dungeon.archive-depths"]
+            .retained_at_turn
+            .expect("archive should record retention turn");
+        restored.turn = retained_at_turn.saturating_add(3);
+        restored.player.position = Position { x: 7, y: 2 };
+        restored
+            .traverse_stairs(false)
+            .expect("expired archive reentry should resolve")
+            .expect("expired archive reentry should transition");
+        assert_eq!(
+            restored.current_dungeon_instance_id.as_deref(),
+            Some("demo.dungeon.archive-depths.instance.2")
+        );
+        assert!(
+            !restored
+                .item_property_knowledge
+                .contains_key(&archive_item_id)
+        );
+        assert!(
+            !restored
+                .stored_floors
+                .values()
+                .any(|floor| floor.dungeon_instance_id.as_deref()
+                    == Some("demo.dungeon.archive-depths.instance.1"))
+        );
+
+        let mut malformed = restored.to_save();
+        let archive_state = malformed
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.archive-depths")
+            .expect("archive dungeon save state should exist");
+        archive_state.retained_instance_id =
+            Some("demo.dungeon.archive-depths.instance.2".to_owned());
+        archive_state.retained_at_turn = None;
+        assert!(matches!(
+            Game::from_save(malformed),
+            Err(CoreError::InvalidSave(
+                "retained dungeon instance state is incomplete"
+            ))
+        ));
+    }
+
+    #[test]
+    fn entrance_guardian_holds_position_but_does_not_block_dungeon_entry() {
+        let mut game = Game::new(42);
+        let guardian_id = "demo.z-entrance-guardian.resonance-descent.1";
+        let guardian_index = game
+            .entities
+            .iter()
+            .position(|entity| entity.id == guardian_id)
+            .expect("resonance entrance guardian should spawn");
+        let guardian_position = game.entities[guardian_index].position;
+        assert_eq!(guardian_position, Position { x: 2, y: 1 });
+        assert!(
+            game.entities[guardian_index]
+                .pack
+                .as_ref()
+                .is_some_and(|pack| {
+                    pack.role == MonsterPackRoleDto::Leader
+                        && pack.behavior == MonsterPackBehaviorDto::GuardPosition
+                })
+        );
+
+        game.resolve_monster_action(
+            guardian_index,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut BTreeSet::new(),
+        );
+        assert_eq!(game.entities[guardian_index].position, guardian_position);
+
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("resonance entry should resolve")
+            .expect("a living entrance guardian must remain a soft gate");
+        assert_eq!(game.current_floor_id, "demo.floor.resonance-depth-1");
+        assert!(
+            stored_floor(&game, "demo.floor.surface")
+                .entities
+                .iter()
+                .any(|entity| entity.id == guardian_id)
+        );
+
+        game.traverse_stairs(false)
+            .expect("surface return should resolve")
+            .expect("root stairs should return to the surface");
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert!(game.entities.iter().any(|entity| entity.id == guardian_id));
+    }
+
+    #[test]
+    fn entrance_guardian_defeat_persists_and_v66_migration_does_not_backfill_it() {
+        let guardian_id = "demo.z-entrance-guardian.resonance-descent.1";
+        let mut game = Game::new(42);
+        let guardian_index = game
+            .entities
+            .iter()
+            .position(|entity| entity.id == guardian_id)
+            .expect("resonance entrance guardian should spawn");
+        let mut events = Vec::new();
+        let mut changed = BTreeSet::new();
+        let mut removed = Vec::new();
+        game.resolve_actor_death(
+            guardian_index,
+            DomainEvent::EntityDiedFromStatus {
+                target_kind_id: "demo.actor.resonant-warden".to_owned(),
+                status_kind_id: STATUS_POISON.to_owned(),
+                damage: DamageOutcome {
+                    raw: 6,
+                    armor_reduction: 0,
+                    requested: 6,
+                    applied: 6,
+                    resistance_delta: 0,
+                    damage_type: DamageType::Poison,
+                    resistance: crate::resistance::ResistanceLevel::Normal,
+                },
+            },
+            &mut events,
+            &mut changed,
+            &mut removed,
+        )
+        .expect("entrance guardian death should resolve");
+        assert!(game.dungeon_states["demo.dungeon.resonance-descent"].entrance_guardian_defeated);
+        assert_eq!(removed, [guardian_id]);
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::DungeonEntranceGuardianDefeated { dungeon_id, .. }
+                if dungeon_id == "demo.dungeon.resonance-descent"
+        )));
+        let restored = Game::from_save(game.to_save()).expect("guardian defeat should round-trip");
+        assert!(
+            !restored
+                .entities
+                .iter()
+                .any(|entity| entity.id == guardian_id)
+        );
+
+        let mut v66 = Game::new(42).to_save();
+        v66.content_hash =
+            "834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc".to_owned();
+        v66.entities.retain(|entity| entity.id != guardian_id);
+        for state in &mut v66.dungeon_states {
+            state.entrance_guardian_defeated = None;
+        }
+        let draws = v66.rng.draw_counter;
+        let migrated = Game::from_save(v66).expect("v66 surface should migrate without backfill");
+        assert!(
+            migrated.dungeon_states["demo.dungeon.resonance-descent"].entrance_guardian_defeated
+        );
+        assert!(
+            !migrated
+                .entities
+                .iter()
+                .any(|entity| entity.id == guardian_id)
+        );
+        assert_eq!(migrated.rng.draw_counter, draws);
+    }
+
+    #[test]
+    fn dungeon_entry_requirements_use_existing_authoritative_state() {
+        let mut game = Game::new(42);
+        let mut dungeon = game
+            .content
+            .world(&game.world_id)
+            .expect("demo world should exist")
+            .dungeons[0]
+            .clone();
+
+        dungeon.entry_requirements = vec![DungeonEntryRequirementDefinition::TaskStatus {
+            task_id: "demo.task.echo-bounty".to_owned(),
+            status: DungeonEntryTaskStatus::Completed,
+        }];
+        assert!(!game.dungeon_entry_requirements_met(&dungeon));
+        game.task_states
+            .get_mut("demo.task.echo-bounty")
+            .expect("bounty task state should exist")
+            .status = TaskStatusKindDto::Completed;
+        assert!(game.dungeon_entry_requirements_met(&dungeon));
+
+        dungeon.entry_requirements = vec![DungeonEntryRequirementDefinition::CarriedItem {
+            item_kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 5,
+        }];
+        assert!(!game.dungeon_entry_requirements_met(&dungeon));
+        game.items
+            .iter_mut()
+            .find(|item| item.kind_id == "demo.item.luminous-shard")
+            .expect("surface shard should exist")
+            .location = ItemLocation::Inventory;
+        assert!(game.dungeon_entry_requirements_met(&dungeon));
+
+        dungeon.entry_requirements = vec![DungeonEntryRequirementDefinition::DungeonConquered {
+            dungeon_id: "demo.dungeon.resonance-descent".to_owned(),
+        }];
+        assert!(!game.dungeon_entry_requirements_met(&dungeon));
+        game.dungeon_states
+            .get_mut("demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .guardian_defeated = true;
+        assert!(game.dungeon_entry_requirements_met(&dungeon));
+    }
+
+    #[test]
+    fn unmet_dungeon_entry_requirement_is_atomic_before_instance_allocation() {
+        let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(std::path::Path::parent)
+            .expect("core crate should be inside the workspace")
+            .join("packs/rfb-demo-original");
+        let mut artifact = rfb_content::compile_pack_dir(&pack_root)
+            .expect("demo pack should compile for the requirement test");
+        artifact
+            .content
+            .worlds
+            .first_mut()
+            .expect("demo world should exist")
+            .dungeons
+            .iter_mut()
+            .find(|dungeon| dungeon.id == "demo.dungeon.echo-depths")
+            .expect("echo dungeon should exist")
+            .entry_requirements = vec![DungeonEntryRequirementDefinition::CarriedItem {
+            item_kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 99,
+        }];
+        let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+            rfb_content::encode_content(artifact.content)
+                .expect("custom requirement content should remain valid"),
+        ));
+        let mut game = Game::from_content(27, catalog, BUILT_IN_WORLD_ID)
+            .expect("custom requirement game should initialize");
+        game.player.position = Position { x: 3, y: 4 };
+        let draws = game.rng.draw_counter;
+        let result = game
+            .traverse_stairs(false)
+            .expect("unmet requirement should be a normal unavailable transition");
+        assert!(result.is_none());
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+        assert_eq!(game.rng.draw_counter, draws);
+        assert_eq!(
+            game.dungeon_states["demo.dungeon.echo-depths"].next_instance_ordinal,
+            0
+        );
+        assert!(game.stored_floors.is_empty());
     }
 
     #[test]
@@ -10913,7 +11803,11 @@ mod tests {
             .dispatch(command(1, 0, GameCommand::Wait))
             .expect("wait should process monster poison");
 
-        assert!(update.entities.is_empty());
+        assert_eq!(update.entities.len(), 1);
+        assert_eq!(
+            update.entities[0].id,
+            "demo.z-entrance-guardian.resonance-descent.1"
+        );
         assert_eq!(update.removed_entities, ["demo.monster.ember-mote.1"]);
         assert!(
             update
@@ -10956,9 +11850,13 @@ mod tests {
         game.dispatch(command(1, 0, GameCommand::Wait))
             .expect("leader death should resolve");
 
-        assert_eq!(game.entities.len(), 1);
-        assert_eq!(game.entities[0].id, "test.pack.member");
-        assert!(game.entities[0].pack.is_none());
+        assert_eq!(game.entities.len(), 2);
+        let member = game
+            .entities
+            .iter()
+            .find(|entity| entity.id == "test.pack.member")
+            .expect("pack member should remain");
+        assert!(member.pack.is_none());
         Game::from_save(game.to_save()).expect("dissolved pack should remain saveable");
     }
 
@@ -11273,7 +12171,12 @@ mod tests {
                 .any(|floor| floor.id == game.current_floor_id && floor.final_floor)
         );
         let mut payload = game.to_save();
-        payload.dungeon_states[0].guardian_defeated = true;
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.echo-depths")
+            .expect("echo dungeon state should exist")
+            .guardian_defeated = true;
         let result = Game::from_save(payload);
         assert!(
             matches!(
@@ -12997,6 +13900,10 @@ mod tests {
             MonsterPackBehaviorDto::GuardLeader,
         );
         game.entities = vec![leader, friend_one, friend_two, escort];
+        game.dungeon_states
+            .get_mut("demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = true;
         game.items.clear();
 
         let mut reservations = BTreeSet::new();
@@ -15096,6 +16003,71 @@ mod tests {
         assert!(death_command.is_some());
     }
 
+    #[test]
+    fn campaign_guardian_death_emits_victory_and_old_save_derives_it() {
+        let mut game = Game::new(49);
+        for damage_type in [
+            DamageType::Physical,
+            DamageType::Acid,
+            DamageType::Electricity,
+            DamageType::Fire,
+            DamageType::Cold,
+            DamageType::Poison,
+        ] {
+            game.player
+                .resistances
+                .set(damage_type, ResistanceLevel::Immune);
+        }
+        game.player.position = Position { x: 3, y: 2 };
+        game.traverse_stairs(false)
+            .expect("campaign dungeon entry should resolve")
+            .expect("campaign dungeon entry should transition");
+        for _ in 1..10 {
+            descend_one_floor(&mut game);
+        }
+        let guardian_index = game
+            .entities
+            .iter()
+            .position(|entity| entity.id == "demo.guardian.resonance-descent.1")
+            .expect("campaign final floor should spawn its guardian");
+        let guardian_position = game.entities[guardian_index].position;
+        game.entities[guardian_index].hp = 1;
+        let (direction, player_position) = TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .find_map(|direction| {
+                let (dx, dy) = direction.delta();
+                let position = Position {
+                    x: guardian_position.x - dx,
+                    y: guardian_position.y - dy,
+                };
+                game.index(position)
+                    .and_then(|index| game.content.terrain(&game.terrain[index]))
+                    .filter(|terrain| terrain.walkable)
+                    .map(|_| (*direction, position))
+            })
+            .expect("guardian should have a walkable approach");
+        game.player.position = player_position;
+        let update = dispatch_next(&mut game, GameCommand::Move { direction });
+        assert!(update.events.iter().any(|event| {
+            event.message_key == "campaign-victorious"
+                && event
+                    .args
+                    .get("score")
+                    .is_some_and(|score| score == "60000")
+        }));
+        assert_eq!(update.campaign.status, CampaignStatusDto::Victorious);
+        assert_eq!(game.campaign_state.victory_turn, Some(1));
+
+        let mut old_payload = game.to_save();
+        old_payload.campaign_state = None;
+        let restored = Game::from_save(old_payload).expect("old save should derive victory state");
+        assert_eq!(
+            restored.snapshot().campaign.status,
+            CampaignStatusDto::Victorious
+        );
+        assert_eq!(restored.snapshot().state_hash, game.snapshot().state_hash);
+    }
+
     fn collect_both_demo_items(game: &mut Game) {
         game.dispatch(command(
             1,
@@ -15121,6 +16093,10 @@ mod tests {
 
     fn clear_monsters(game: &mut Game) {
         game.entities.clear();
+        game.dungeon_states
+            .get_mut("demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = true;
         game.items
             .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
     }

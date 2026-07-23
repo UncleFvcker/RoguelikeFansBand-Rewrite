@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.66 / contract-v66
+状态：长期规则实现路线；当前基线为协议 1.69 / contract-v69
 
 ## 1. 目的与边界
 
@@ -13,6 +13,8 @@
 - 规则行为可以高保真复刻，C 结构体布局、数组下标、全局变量、`Term` 绘制和存档字段顺序不复刻；
 - 当前内容包继续使用原创测试内容。若未来迁移旧内容，必须先单独完成许可证和内容审计，并通过显式内容转换流程；
 - 每个系统进入主线前都必须拥有固定种子、contract fixture、存档回环和回放检查点。
+
+当前阶段定位：截至 contract-v69，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑；项目尚未达到旧 RFB 的角色构筑、法术、怪物生态、世界经济或内容规模，下一主线转入阶段 F 的角色成长基础。
 
 ## 2. 旧 RFB 的系统规模
 
@@ -88,7 +90,7 @@ flowchart TD
 | 视野、记忆、光照 | LOS、FOV、探索记忆、怪物/物品光源 | 已建立基础版 | 保持 Rust 权威；后续增加隐身、黑暗、红外、感知和特殊视觉通道 |
 | 交互地形 | 开门、关门、挖掘、撞门、解除陷阱、上/下楼 | 部分建立 | contract-v26 已建立楼梯，contract-v28–v30 已建立门与权威交互，contract-v31 已建立主动搜索；下一步建立陷阱触发与解除 |
 | 楼层生命周期 | 新生成、离开、持久楼层、返回、任务楼层 | 已建立基础版 | contract-v26 已建立稳定 `FloorId`、显式 `FloorState`、离层仓库、save v1 往返和首次生成；后续增加多深度连接、临时/持久策略、任务层和旧层淘汰 |
-| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53–v55 建立 cavern/lake/river/maze/destroyed/streamer 管线，contract-v56 建立原版式复合 pit 与等级阵列，contract-v57 建立完全替代 rooms 的 maze-only 专用楼层，contract-v58 建立多楼梯、权威连接 ID、独立到达点与 shaft，contract-v59 建立持久 pack identity 与首版 pack AI，contract-v60 建立同层房间区域、局部表与持久边界，contract-v62 建立区域与特殊生成阶段组合，contract-v63 建立树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 建立 Vault 多入口、模板/整层连通证明与确定性跨走廊拼接，contract-v65 建立实例身份、实例序号和实例级生命周期，contract-v66 建立动态楼梯候选、无放回目标解析与持久实例级探索树；普通地牢回地表仍清理实例 |
+| 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53–v55 建立 cavern/lake/river/maze/destroyed/streamer 管线，contract-v56 建立原版式复合 pit 与等级阵列，contract-v57 建立完全替代 rooms 的 maze-only 专用楼层，contract-v58 建立多楼梯、权威连接 ID、独立到达点与 shaft，contract-v59 建立持久 pack identity 与首版 pack AI，contract-v60 建立同层房间区域、局部表与持久边界，contract-v62 建立区域与特殊生成阶段组合，contract-v63 建立树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 建立 Vault 多入口、模板/整层连通证明与确定性跨走廊拼接，contract-v65 建立实例身份、实例序号和实例级生命周期，contract-v66 建立动态楼梯候选、无放回目标解析与持久实例级探索树，contract-v67 建立入口守卫软门槛和可选硬进入条件；普通地牢回地表仍清理实例 |
 
 ### 4.3 角色创建与身份
 
@@ -312,7 +314,7 @@ crates/rfb-core/src/
 
 当前进度：阶段 A 已完成。前置重构拆分了 `rfb-core` 游戏聚合、运行状态、RNG、战斗公式、事件构造、存档转换和错误模块；存档使用独立权威 DTO，物品运行状态统一为 `ItemInstance + ItemLocation`，规则事件使用强类型 `DomainEvent`。contract-v8 进一步加入 `GameAction`、标准成本 100、原创确定性速度曲线、`worldTick`、玩家/怪物剩余能量、稳定实例 ID 调度、八方向 BFS 追踪、占位避让和玩家死亡后的队列中止，并通过 Schema v8、32 个 exact fixtures、存档回环及 10,000 命令回放固定行为。
 
-contract-v66 继续完成动态楼梯候选、同层无放回目标解析、arrival 返回目标修正和解析目标持久化。内容包升至 1.58.0，active baseline 共 132 个 exact fixtures，save v1 / state hash Schema v25。普通 dungeon 回地表仍立即清理，后续不安排暂停实例选择。详细边界见 [Contract v66](contract-v66-dynamic-exploration-tree.md)。
+contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-surface` 保持 Echo/Resonance 默认清理，`persistent` 与 `turn-ttl` 为原创 dungeon 提供 retained 实例策略；Archive Depths 以 3 回合 TTL 覆盖存档续接、惰性淘汰和物品属性知识清理。协议升至 1.69，内容包 1.61.0，active baseline 共 140 个 exact fixtures，save v1 / state hash Schema v28。详细边界见 [Contract v69](contract-v69-configurable-instance-lifecycle.md)。
 
 实现：
 
@@ -328,7 +330,7 @@ contract-v66 继续完成动态楼梯候选、同层无放回目标解析、arri
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 又复用结构化 check 完成门与搜索检定。当前 active baseline 已进入 contract-v64，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
+当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 又复用结构化 check 完成门与搜索检定。当前 active baseline 已进入 contract-v69，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -370,7 +372,7 @@ contract-v66 继续完成动态楼梯候选、同层无放回目标解析、arri
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树。普通 dungeon 回地表立即清理实例，下一次进入重新生成。内容包为 1.58.0，active baseline 共 132 个 exact fixtures，save v1 / state hash Schema v25。下一切片应推进多 dungeon 进入条件、胜利/退休评分和可配置实例生命周期。详细边界见 [Contract v66](contract-v66-dynamic-exploration-tree.md)。
+当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树；contract-v67 完成入口守卫软门槛、可选硬进入条件和原子拒绝；contract-v68 完成 campaign 胜利、退休状态、确定性评分、存档迁移和结算 UI；contract-v69 完成 `reset-on-surface`/`persistent`/`turn-ttl` 生命周期、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理。普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。内容包为 1.61.0，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures，save v1 / state hash Schema v28。下一步转入阶段 F 的角色成长基础。详细边界见 [Contract v69](contract-v69-configurable-instance-lifecycle.md)。
 
 实现：
 
@@ -453,31 +455,46 @@ contract-v66 继续完成动态楼梯候选、同层无放回目标解析、arri
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. 最近三次迭代的具体建议
+## 8. contract-v69 阶段性里程碑
 
-当前最合适的执行顺序：
+### 8.1 基线与完成度判断
 
-1. **contract-v11：继续完成阶段 B 与检定接口（已完成）**
-   - 已完成：伤害类型、抗性结果和死亡结算进入强类型领域/协议事件；
-   - 已完成：为酸、电、冷、毒增加原创怪物近战入口；
-   - 已完成：建立带来源的派生属性与基础检定管线；
-   - 已完成：在检定接口上实现眩晕能力削弱和恐惧行动限制。
-2. **contract-v12：武器与多 blow 战斗**
-   - 已完成：统一 `AttackProfile` 与武器实例命中、伤害和骰子；
-   - 已完成：玩家攻击次数和稳定中断顺序；
-   - 已由 contract-v13 完成：怪物 `MeleeRoutine` / blow 列表；
-   - `DeathOutcome`、死亡/掉落订阅边界和 on-hit effect。
-3. **contract-v14–v18：射击、投掷与 projectile（已完成基础纵切）**
-   - 已完成：方向、射程、轨迹、碰撞点和可放置落点；
-   - 已完成：发射器 profile、稳定弹药引用/消费与投掷实例拆分；
-   - 已完成：核心方向/格子/实体目标规格、稳定选择与非八方向整数轨迹；
-   - 已完成：前端键盘/按钮目标模式、稳定实体/格子选择和相机同步准星；
-   - 已完成：内容驱动的弹药破损、无碰撞回收和持久化地面实例；
-   - 已完成：投掷攻击 profile、整数重量射程、独立命中/伤害和持久化落点；
-   - 射击与投掷均已复用既有 `DamagePacket` / effect pipeline；
-   - 延后：返回武器、药水破裂、鼠标预览和动画事件。
+当前权威基线为协议 1.69、内容包 1.61.0、contract-v69、save v1 和 state hash Schema v28；内容 hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`。active baseline 包含 140 个 exact fixtures，零 waiver。
 
-阶段 D 已由 contract-v25 完成背包重量/容量、种类级 aware/tried、消耗品、实例词条、鉴别状态机、确定性死亡掉落和怪物真实携带物。阶段 E 的 contract-v26–v35 已完成楼层生命周期、程序化内容、门、秘密地形、陷阱、挖掘、多深度楼层和离开后重置的地牢探索实例，contract-v46 完成最终层和持久守护者，contract-v47 完成第一类深度主题 Vault、固定群体和专属 loot，contract-v48 完成楼层级 encounter/loot/theme 表、Vault 加权选择、回退与首类巢穴，contract-v49 完成十层压力场景、actor/loot 预算和深度区域主题，contract-v50 完成 Vault 变换、自由落位、多模板空间预算与失败回退，contract-v51 完成动态群体，contract-v52 完成 terrain feature 表和额外特殊地形预算，contract-v53 完成 cavern/room 几何预算，contract-v54 完成 lake/river，contract-v55 完成 maze/destroyed/streamer，contract-v56 完成原版式复合 pit 与等级阵列，contract-v57 完成 maze-only 专用楼层，contract-v58 完成多楼梯、独立到达点和 shaft，contract-v59 完成持久 pack identity 与首版 pack AI，contract-v60 完成同层房间区域与局部内容，contract-v62 完成区域与既有特殊生成阶段组合，contract-v63 完成树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 完成 Vault 多入口、大模板连通性证明与跨走廊拼接，contract-v65 完成实例身份与实例级生命周期，contract-v66 完成动态连接目标与持久探索树。普通 dungeon 返回地表即清空，下一次进入重新生成；下一步扩展多 dungeon 进入条件、胜利/退休评分和可配置实例生命周期。阶段 I 已由 contract-v36–v45 建立任务层、目标、奖励、退出政策、暂停恢复、共享任务 ID、权威任务状态机和有序多阶段目标，contract-v61 补齐地表暂停任务管理、重接上限和确定性重建。
+这一里程碑代表“规则架构和地牢纵切已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 45 种 terrain、10 种 actor、5 种 item、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版 1396 种怪物、545 种基础物品、392 件固定神器、44 座地牢和 92 个任务的内容规模。
+
+| 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
+| --- | --- | --- |
+| 核心模拟、存档与回放 | 已建立 | 新实现已具备强类型命令/事件、单一 RNG、迁移链、state hash 和长回放无漂移；工程边界比旧全局 C 状态更明确 |
+| 状态、抗性与基础战斗 | 基础纵切已建立 | 已覆盖近战、多 blow、射击、投掷和代表性状态/元素；仍缺暴击、品牌、克制、吸血、反击、姿态和骑乘等广度 |
+| 物品、装备与知识 | 基础闭环已建立 | 已覆盖背包、地面堆、装备、affix、质量、鉴别、携带物和掉落；仍缺完整神器、诅咒、激活、随机神器和锻造 |
+| 地图、地牢与探索 | 阶段 E 里程碑完成 | 已覆盖原版式房间外地貌、Vault、pit、maze-only、多区域、多楼梯、树状分支、共享守护者镜像和可配置实例生命周期 |
+| 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围和守卫；仍缺远程决策、施法、召唤、逃跑、繁殖、unique 生态、智能学习和回忆 |
+| 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
+| 角色创建与成长 | 未建立 | Race/Class/Personality、六维属性、经验、等级、HP 成长、技能和熟练度仍是主缺口 |
+| 法术、能力与设备 | 未建立 | 19 个旧版领域所依赖的能力学习、MP、失败率、冷却、法术书和设备激活尚未形成 |
+| 荒野、城镇与经济 | 未建立 | 多城镇旅行、商店、家、建筑服务、交易、声望和长期经济循环尚未形成 |
+| 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
+
+### 8.2 已达到或扩展旧版的边界
+
+- 确定性命令、存档迁移、回放和 state hash 已成为所有规则的共同验收基础；
+- 地牢生成已经覆盖房间/走廊之外的 cavern、lake/river、maze、destroyed、streamer、pit、Vault 和同层区域主题；
+- 不同楼梯可以解析为不同子层，形成实例级树状探索；多个最终叶层共享同一守护者征服状态，击败任一镜像会移除其他已生成镜像；
+- `reset-on-surface`、`persistent` 和 `turn-ttl` 把实例生命周期变为显式内容规则；普通 Echo/Resonance 返回地表即清空，Archive 验证 retained/TTL；
+- 物品种类知识与具体实例属性知识显式分离；运行时地形破坏直接成为权威地图状态，不做自动连通修复。
+
+### 8.3 下一执行里程碑
+
+下一候选为 P10“角色成长基础”，建议由 contract-v70 承接最小升级循环：
+
+1. 建立经验、等级、六维属性和确定性 HP 成长的权威状态；
+2. 将等级与属性来源接入既有 `DerivedStatsPipeline`，避免保存可重算最终值；
+3. 增加升级事件、协议投影、save 迁移和 state hash 覆盖；
+4. 使用 exact fixtures 验证单次升级、连续升级、上限、存档回读和回放确定性；
+5. 暂不展开完整 Race/Class/Personality 矩阵，先证明普通角色从出生基线到升级后的闭环。
+
+在这一里程碑完成前，不再把更多地貌生成器或大型内容录入作为主线；地牢系统只修复阻塞角色成长验证的缺陷。阶段 G 的法术能力和阶段 H 的怪物施法在角色资源、等级与技能来源稳定后进入。
 
 ## 9. 内容迁移策略
 

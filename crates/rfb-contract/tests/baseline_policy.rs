@@ -13,11 +13,15 @@ fn committed_baseline_policy_and_waivers_are_valid() {
         "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37", "v38", "v39", "v40",
         "v41", "v42", "v43", "v44", "v45", "v46", "v47", "v48", "v49", "v50", "v51", "v52", "v53",
         "v54", "v55", "v56", "v57", "v58", "v59", "v60", "v61", "v62", "v63", "v64", "v65", "v66",
+        "v67", "v68", "v69",
     ] {
         let policy = root.join(format!("contract-{version}/baseline-policy.json"));
         let report = validate_policy_file(&policy).expect("baseline policy should validate");
         assert_eq!(report.policy_id, format!("rfb-contract-baseline-{version}"));
         let minimum = match version {
+            "v69" => 140,
+            "v68" => 137,
+            "v67" => 135,
             "v66" => 132,
             "v65" => 131,
             "v64" => 129,

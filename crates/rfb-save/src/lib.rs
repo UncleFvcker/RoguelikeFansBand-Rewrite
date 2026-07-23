@@ -213,6 +213,7 @@ mod tests {
             floor_connections: Vec::new(),
             floor_regions: Vec::new(),
             stored_floors: Vec::new(),
+            campaign_state: None,
         };
         (header, payload)
     }

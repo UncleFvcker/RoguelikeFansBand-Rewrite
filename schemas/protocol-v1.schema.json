@@ -54,6 +54,59 @@
         "damage"
       ]
     },
+    "CampaignStateDto": {
+      "type": "object",
+      "properties": {
+        "completedTasks": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "conqueredDungeons": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "retiredTurn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "score": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/$defs/CampaignStatusDto"
+        },
+        "victoryTurn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "status",
+        "score",
+        "conqueredDungeons",
+        "completedTasks"
+      ]
+    },
+    "CampaignStatusDto": {
+      "type": "string",
+      "enum": [
+        "active",
+        "victorious",
+        "retired"
+      ]
+    },
     "CellDto": {
       "type": "object",
       "properties": {
@@ -660,6 +713,18 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "retire"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "search"
             }
           },
@@ -865,6 +930,9 @@
     "GameSnapshot": {
       "type": "object",
       "properties": {
+        "campaign": {
+          "$ref": "#/$defs/CampaignStateDto"
+        },
         "cells": {
           "type": "array",
           "items": {
@@ -1001,6 +1069,7 @@
         "contentVisuals",
         "worldId",
         "floorId",
+        "campaign",
         "stateHash"
       ]
     },
@@ -1011,6 +1080,9 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "campaign": {
+          "$ref": "#/$defs/CampaignStateDto"
         },
         "changedCells": {
           "type": "array",
@@ -1126,6 +1198,7 @@
         "items",
         "inventory",
         "removedEntities",
+        "campaign",
         "stateHash"
       ]
     },

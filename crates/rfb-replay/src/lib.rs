@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 25;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 28;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -914,9 +914,13 @@ mod tests {
 
     fn quiet_game(seed: u64) -> Game {
         let mut payload = Game::new(seed).to_save();
-        payload.entities.clear();
+        payload.entities.retain(|entity| {
+            entity.pack.as_ref().is_some_and(|pack| {
+                pack.behavior == rfb_protocol::MonsterPackBehaviorDto::GuardPosition
+            })
+        });
         payload.carried_items.clear();
-        Game::from_save(payload).expect("monster-free replay fixture should restore")
+        Game::from_save(payload).expect("quiet replay fixture should restore")
     }
 
     fn path_to_monster_and_three_attacks() -> Vec<GameCommand> {

@@ -161,7 +161,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.23");
+  assert.equal(state.protocolVersion, "1.69");
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -176,10 +176,10 @@ async function runScenario(driver) {
   assert.equal(state.contentId, "rfb.demo.original-v1");
   assert.equal(
     state.contentHash,
-    "cb56a8e9dd6d7280b38fe4e388fc0f7ce08fd4a40cef2c8886907e3c662ffc96",
+    "06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70",
   );
   assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.contentVisualCount, "14");
+  assert.equal(state.contentVisualCount, "60");
   assert.equal(state.itemCount, "5");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");
@@ -214,7 +214,7 @@ async function runScenario(driver) {
 
   await dispatchKey(driver, "KeyG", "g");
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent === "1 堆"`,
+    `return document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
     "ground item pickup",
   );
   state = await readState(driver);
@@ -222,9 +222,9 @@ async function runScenario(driver) {
   assert.equal(state.appliedCells, "1");
   assert.equal(state.itemCount, "4");
   assert.equal(state.inventoryStackCount, "1");
-  assert.match(state.inventory, /发光碎片/);
+  assert.match(state.inventory, /陌生的浅色碎片/);
   assert.match(state.inventory, /×5/);
-  assert.match(state.messages, /你将 5 个发光碎片收入了背包/);
+  assert.match(state.messages, /你将 5 个陌生的浅色碎片收入了背包/);
 
   const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
   const nativeSaveHash = state.stateHash;
@@ -348,13 +348,13 @@ async function runScenario(driver) {
   );
   await dispatchKey(driver, "KeyG", "g");
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "6" && document.querySelector("#inventory-count")?.textContent === "2 堆"`,
+    `return document.querySelector("#turn-value")?.textContent === "6" && document.querySelector("#inventory-count")?.textContent?.startsWith("2 堆")`,
     "second item pickup",
   );
   state = await readState(driver);
   assert.equal(state.itemCount, "4");
   assert.equal(state.inventoryStackCount, "2");
-  assert.match(state.inventory, /回声护符/);
+  assert.match(state.inventory, /陌生的/);
   assert.match(state.inventory, /可装备：护符/);
   assert.match(state.inventory, /攻击 \+1/);
   assert.match(state.inventory, /防御 \+1/);
@@ -378,11 +378,11 @@ async function runScenario(driver) {
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.equipmentCount, "1");
   assert.match(state.equipment, /回声护符/);
-  assert.match(state.equipment, /攻击 \+1/);
+  assert.match(state.equipment, /攻击 \+2/);
   assert.match(state.equipment, /防御 \+1/);
   assert.match(state.equipment, /最大生命 \+4/);
   assert.match(state.health, /10 \/ 14（装备 \+4）/);
-  assert.equal(state.attack, "3（装备 +1）");
+  assert.equal(state.attack, "4（装备 +2）");
   assert.equal(state.defense, "2（装备 +1）");
   assert.match(state.messages, /装备在护符槽位/);
 
@@ -410,7 +410,7 @@ async function runScenario(driver) {
   );
   await click(driver, "#inventory-drop");
   await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "9" && document.querySelector("#inventory-count")?.textContent === "0 堆"`,
+    `return document.querySelector("#turn-value")?.textContent === "9" && document.querySelector("#inventory-count")?.textContent?.startsWith("0 堆")`,
     "batch item drop",
   );
   state = await readState(driver);
@@ -428,7 +428,7 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent === "1 堆"`,
+    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
     "inventory action save reset",
   );
   state = await readState(driver);
@@ -549,7 +549,7 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent === "1 堆"`,
+    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
     "save restore",
   );
   state = await readState(driver);
@@ -560,7 +560,7 @@ async function runScenario(driver) {
   assert.equal(state.cameraMode, "player-centered");
   assert.equal(state.cameraX, "0");
   assert.equal(state.visibleChunkCount, "1");
-  assert.match(state.inventory, /发光碎片/);
+  assert.match(state.inventory, /陌生的浅色碎片/);
   assert.match(state.messages, /存档校验与载入成功/);
 
   await click(driver, "#replay-button");
@@ -619,8 +619,8 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.stateHash, hashBeforeLanguageSwitch);
   assert.equal(state.canvasUnchanged, true);
-  assert.match(state.inventory, /luminous shard/);
-  assert.match(state.messages, /You pick up luminous shard ×5/);
+  assert.match(state.inventory, /unfamiliar pale shard/);
+  assert.match(state.messages, /You pick up unfamiliar pale shard ×5/);
   assert.match(state.controls, /Numpad 1–9 moves in eight directions/);
 
   await driver.execute(`

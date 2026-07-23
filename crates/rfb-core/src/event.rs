@@ -66,6 +66,17 @@ pub(crate) enum DomainEvent {
         floor_id: String,
         target_kind_id: String,
     },
+    DungeonEntranceGuardianDefeated {
+        dungeon_id: String,
+        target_kind_id: String,
+    },
+    CampaignVictorious {
+        score: u64,
+    },
+    CampaignRetired {
+        score: u64,
+    },
+    CampaignRetireUnavailable,
     OneShotFloorClosed {
         floor_id: String,
     },
@@ -368,6 +379,27 @@ impl DomainEvent {
                     ("target", target_kind_id),
                 ],
             ),
+            Self::DungeonEntranceGuardianDefeated {
+                dungeon_id,
+                target_kind_id,
+            } => dto(
+                "dungeon.entrance-guardian-defeated",
+                "dungeon-entrance-guardian-defeated",
+                [("dungeon", dungeon_id), ("target", target_kind_id)],
+            ),
+            Self::CampaignVictorious { score } => dto(
+                "campaign.victorious",
+                "campaign-victorious",
+                [("score", score.to_string())],
+            ),
+            Self::CampaignRetired { score } => dto(
+                "campaign.retired",
+                "campaign-retired",
+                [("score", score.to_string())],
+            ),
+            Self::CampaignRetireUnavailable => {
+                dto_without_args("campaign.retire-unavailable", "campaign-retire-unavailable")
+            }
             Self::OneShotFloorClosed { floor_id } => dto(
                 "floor.one-shot-closed",
                 "floor-one-shot-closed",

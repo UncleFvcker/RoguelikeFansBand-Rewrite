@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "id": "item.drop.partial-stack",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "playerHp": null,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [],
+    "campaignConqueredDungeons": [],
+    "campaignState": null
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "pick-up"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "drop-quantity",
+        "itemId": "demo.item.luminous-shard.1",
+        "quantity": 2
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "drop-quantity",
+        "itemId": "demo.item.luminous-shard.1",
+        "quantity": 1
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 4,
+      "turn": 4,
+      "worldTick": 40,
+      "lastCommandSeq": 4,
+      "floorId": "demo.floor.surface",
+      "dungeonInstanceId": null,
+      "playerPosition": {
+        "x": 4,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 20,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "entityCount": 2,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 5,
+            "y": 3
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": []
+        },
+        {
+          "id": "demo.z-entrance-guardian.resonance-descent.1",
+          "position": {
+            "x": 2,
+            "y": 1
+          },
+          "hp": 6,
+          "speed": 110,
+          "energyNeed": 100,
+          "statuses": [],
+          "pack": {
+            "id": "demo.z-entrance-guardian.resonance-descent.1",
+            "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
+            "role": "leader",
+            "behavior": "guard-position"
+          }
+        }
+      ],
+      "groundItemCount": 6,
+      "inventoryStackCount": 1,
+      "equipmentCount": 0,
+      "itemKnowledge": [],
+      "itemPropertyKnowledge": [],
+      "nextItemInstanceSerial": 4,
+      "terrainInteractions": [],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0,
+          "maxRetakes": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3,
+          "retakesUsed": 0,
+          "maxRetakes": 2
+        }
+      ],
+      "campaign": {
+        "status": "active",
+        "score": 0,
+        "conqueredDungeons": 0,
+        "completedTasks": 0
+      },
+      "revealedTerrain": [],
+      "stateHash": "928094d7ce0bb652a677c1c803009f212ddab3a63d6b42e744c874ffc1718e0c"
+    },
+    "events": [
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "5",
+          "target": "demo.item.luminous-shard"
+        }
+      },
+      {
+        "kind": "item.drop",
+        "messageKey": "item-drop-success",
+        "args": {
+          "quantity": "2",
+          "stacks": "1"
+        }
+      },
+      {
+        "kind": "item.drop",
+        "messageKey": "item-drop-success",
+        "args": {
+          "quantity": "1",
+          "stacks": "1"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.ember-mote"
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "928094d7ce0bb652a677c1c803009f212ddab3a63d6b42e744c874ffc1718e0c"
+  }
+}

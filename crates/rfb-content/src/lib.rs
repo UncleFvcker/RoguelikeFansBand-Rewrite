@@ -462,6 +462,7 @@ pub enum MonsterPackBehavior {
     Seek,
     Surround,
     GuardLeader,
+    GuardPosition,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -707,7 +708,21 @@ pub struct WorldDefinition {
     pub items: Vec<ItemSpawn>,
     #[serde(default)]
     pub dungeons: Vec<DungeonDefinition>,
+    #[serde(default)]
+    pub campaign: Option<CampaignDefinition>,
     pub procedural_floors: Vec<ProceduralFloorDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CampaignDefinition {
+    pub victory_dungeon_ids: Vec<String>,
+    pub dungeon_conquest_points: u32,
+    pub task_completion_points: u32,
+    pub victory_bonus: u32,
+    pub turn_penalty_interval: u32,
+    pub turn_penalty_points: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -717,6 +732,69 @@ pub struct DungeonDefinition {
     pub id: String,
     pub root_floor_id: String,
     pub guardian_actor_kind_id: String,
+    #[serde(default)]
+    pub instance_lifecycle: DungeonInstanceLifecycle,
+    #[serde(default)]
+    pub entrance_guardian: Option<DungeonEntranceGuardianDefinition>,
+    #[serde(default)]
+    pub entry_requirements: Vec<DungeonEntryRequirementDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "kind",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+#[derive(Default)]
+pub enum DungeonInstanceLifecycle {
+    #[default]
+    ResetOnSurface,
+    Persistent,
+    TurnTtl {
+        #[cfg_attr(feature = "schemas", schemars(range(min = 1)))]
+        ttl_turns: u32,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DungeonEntranceGuardianDefinition {
+    pub instance_id: String,
+    pub actor_kind_id: String,
+    pub position: ContentPosition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum DungeonEntryRequirementDefinition {
+    TaskStatus {
+        task_id: String,
+        status: DungeonEntryTaskStatus,
+    },
+    DungeonConquered {
+        dungeon_id: String,
+    },
+    CarriedItem {
+        item_kind_id: String,
+        quantity: u32,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum DungeonEntryTaskStatus {
+    Available,
+    Active,
+    Paused,
+    Completed,
+    Failed,
+    Abandoned,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2703,9 +2781,17 @@ fn validate_world(
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
     }
     let mut dungeon_definition_ids = BTreeSet::new();
-    for dungeon in &world.dungeons {
+    for dungeon in &mut world.dungeons {
         validate_definition_id(&dungeon.id, "dungeon")?;
         validate_definition_id(&dungeon.root_floor_id, "floor")?;
+        dungeon.entry_requirements.sort();
+        if dungeon
+            .entry_requirements
+            .windows(2)
+            .any(|requirements| requirements[0] == requirements[1])
+        {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
         if !dungeon_definition_ids.insert(dungeon.id.clone())
             || !floor_ids.contains(&dungeon.root_floor_id)
         {
@@ -2719,6 +2805,43 @@ fn validate_world(
             ActorRole::Monster,
             &dungeon.id,
         )?;
+        if matches!(
+            dungeon.instance_lifecycle,
+            DungeonInstanceLifecycle::TurnTtl { ttl_turns: 0 }
+        ) {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
+        if let Some(guardian) = &dungeon.entrance_guardian {
+            validate_id(&guardian.instance_id)?;
+            require_actor_role(
+                actor_roles,
+                &guardian.actor_kind_id,
+                ActorRole::Monster,
+                &dungeon.id,
+            )?;
+            validate_position(guardian.position, world.width, world.height, &dungeon.id)?;
+            if !procedural_actor_ids.insert(guardian.instance_id.clone()) {
+                return Err(ContentError::DuplicateInstanceId(
+                    guardian.instance_id.clone(),
+                ));
+            }
+        }
+    }
+    if let Some(campaign) = &mut world.campaign {
+        campaign.victory_dungeon_ids.sort();
+        if campaign.victory_dungeon_ids.is_empty()
+            || campaign.turn_penalty_interval == 0
+            || campaign
+                .victory_dungeon_ids
+                .windows(2)
+                .any(|ids| ids[0] == ids[1])
+            || campaign
+                .victory_dungeon_ids
+                .iter()
+                .any(|id| !dungeon_definition_ids.contains(id))
+        {
+            return Err(ContentError::InvalidProceduralFloor(world.id.clone()));
+        }
     }
     for procedural in &mut world.procedural_floors {
         validate_definition_id(&procedural.id, "floor")?;
@@ -4186,6 +4309,38 @@ fn validate_world(
             return Err(ContentError::InvalidProceduralFloor(root.id.clone()));
         }
     }
+    let task_ids = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot)
+        .map(|floor| floor.task_id.as_deref().unwrap_or(&floor.id))
+        .collect::<BTreeSet<_>>();
+    for dungeon in &world.dungeons {
+        for requirement in &dungeon.entry_requirements {
+            match requirement {
+                DungeonEntryRequirementDefinition::TaskStatus { task_id, .. } => {
+                    validate_definition_id(task_id, "task")?;
+                    if !task_ids.contains(task_id.as_str()) {
+                        return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+                    }
+                }
+                DungeonEntryRequirementDefinition::DungeonConquered { dungeon_id } => {
+                    validate_definition_id(dungeon_id, "dungeon")?;
+                    if !dungeon_definition_ids.contains(dungeon_id) || dungeon_id == &dungeon.id {
+                        return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+                    }
+                }
+                DungeonEntryRequirementDefinition::CarriedItem {
+                    item_kind_id,
+                    quantity,
+                } => {
+                    if *quantity == 0 || !item_limits.contains_key(item_kind_id) {
+                        return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+                    }
+                }
+            }
+        }
+    }
     let mut entry_terrain_ids = BTreeSet::new();
     for floor in world
         .procedural_floors
@@ -4223,6 +4378,14 @@ fn validate_world(
         require_actor_role(actor_roles, &actor.kind_id, ActorRole::Monster, &world.id)?;
         validate_position(actor.position, world.width, world.height, &world.id)?;
         if !actor_positions.insert(actor.position) {
+            return Err(ContentError::DuplicateActorPosition(world.id.clone()));
+        }
+    }
+    for dungeon in &world.dungeons {
+        let Some(guardian) = &dungeon.entrance_guardian else {
+            continue;
+        };
+        if !actor_positions.insert(guardian.position) {
             return Err(ContentError::DuplicateActorPosition(world.id.clone()));
         }
     }
@@ -4302,6 +4465,26 @@ fn validate_world(
             &override_terrain,
             terrain_walkability,
         )?;
+    }
+    for dungeon in &world.dungeons {
+        let Some(guardian) = &dungeon.entrance_guardian else {
+            continue;
+        };
+        require_walkable_spawn(
+            world,
+            guardian.position,
+            &override_terrain,
+            terrain_walkability,
+        )?;
+        let terrain_id = override_terrain
+            .get(&guardian.position)
+            .unwrap_or(&world.fill_terrain_id);
+        if world.procedural_floors.iter().any(|floor| {
+            floor.return_floor_id == world.initial_floor_id
+                && floor.entry_terrain_id.as_deref() == Some(terrain_id.as_str())
+        }) {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
     }
     for item in &world.items {
         require_walkable_spawn(world, item.position, &override_terrain, terrain_walkability)?;
@@ -4902,7 +5085,7 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 44);
+        assert_eq!(first.content.terrain.len(), 45);
         assert_eq!(first.content.actors.len(), 10);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
@@ -4922,7 +5105,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.58.0");
+        assert_eq!(catalog.pack_version(), "1.61.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -5001,8 +5184,8 @@ mod tests {
             .world("demo.world.original-v1")
             .expect("demo world should remain available");
         assert_eq!(world.initial_floor_id, "demo.floor.surface");
-        assert_eq!(world.dungeons.len(), 2);
-        assert_eq!(world.procedural_floors.len(), 23);
+        assert_eq!(world.dungeons.len(), 3);
+        assert_eq!(world.procedural_floors.len(), 24);
         assert_eq!(world.procedural_floors[0].id, "demo.floor.echo-depth-1");
         assert_eq!(world.procedural_floors[0].depth, 1);
         let regional_floor = world
@@ -6233,6 +6416,82 @@ mod tests {
         });
         assert!(matches!(
             validate_and_normalize(&mut converging_tree),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+    }
+
+    #[test]
+    fn dungeon_entrance_guardians_and_entry_requirements_are_validated() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let world = &artifact.content.worlds[0];
+        let resonance = world
+            .dungeons
+            .iter()
+            .find(|dungeon| dungeon.id == "demo.dungeon.resonance-descent")
+            .expect("demo should contain the resonance dungeon");
+        let entrance = resonance
+            .entrance_guardian
+            .as_ref()
+            .expect("resonance should declare an entrance guardian");
+        assert_eq!(entrance.position, ContentPosition { x: 2, y: 1 });
+        assert!(resonance.entry_requirements.is_empty());
+
+        let mut zero_ttl = artifact.content.clone();
+        zero_ttl.worlds[0]
+            .dungeons
+            .iter_mut()
+            .find(|dungeon| dungeon.id == "demo.dungeon.archive-depths")
+            .expect("archive dungeon should remain available")
+            .instance_lifecycle = DungeonInstanceLifecycle::TurnTtl { ttl_turns: 0 };
+        assert!(matches!(
+            validate_and_normalize(&mut zero_ttl),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut blocked_guardian = artifact.content.clone();
+        blocked_guardian.worlds[0]
+            .dungeons
+            .iter_mut()
+            .find(|dungeon| dungeon.id == resonance.id)
+            .expect("resonance should remain available")
+            .entrance_guardian
+            .as_mut()
+            .expect("entrance guardian should remain available")
+            .position = ContentPosition { x: 3, y: 2 };
+        assert!(matches!(
+            validate_and_normalize(&mut blocked_guardian),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut duplicate_requirement = artifact.content.clone();
+        let dungeon = duplicate_requirement.worlds[0]
+            .dungeons
+            .iter_mut()
+            .find(|dungeon| dungeon.id == "demo.dungeon.echo-depths")
+            .expect("echo dungeon should remain available");
+        let requirement = DungeonEntryRequirementDefinition::CarriedItem {
+            item_kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 1,
+        };
+        dungeon.entry_requirements = vec![requirement.clone(), requirement];
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_requirement),
+            Err(ContentError::InvalidProceduralFloor(_))
+        ));
+
+        let mut dangling_requirement = artifact.content.clone();
+        dangling_requirement.worlds[0]
+            .dungeons
+            .iter_mut()
+            .find(|dungeon| dungeon.id == "demo.dungeon.echo-depths")
+            .expect("echo dungeon should remain available")
+            .entry_requirements = vec![DungeonEntryRequirementDefinition::TaskStatus {
+            task_id: "demo.task.missing".to_owned(),
+            status: DungeonEntryTaskStatus::Completed,
+        }];
+        assert!(matches!(
+            validate_and_normalize(&mut dangling_requirement),
             Err(ContentError::InvalidProceduralFloor(_))
         ));
     }

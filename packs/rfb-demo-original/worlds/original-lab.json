@@ -58,6 +58,12 @@
       ]
     },
     {
+      "terrainId": "demo.terrain.archive-rift",
+      "positions": [
+        { "x": 7, "y": 2 }
+      ]
+    },
+    {
       "terrainId": "demo.terrain.wall",
       "positions": [
         { "x": 11, "y": 3 },
@@ -135,8 +141,29 @@
   }, {
     "id": "demo.dungeon.resonance-descent",
     "rootFloorId": "demo.floor.resonance-depth-1",
-    "guardianActorKindId": "demo.actor.resonant-warden"
+    "guardianActorKindId": "demo.actor.resonant-warden",
+    "entranceGuardian": {
+      "instanceId": "demo.z-entrance-guardian.resonance-descent.1",
+      "actorKindId": "demo.actor.resonant-warden",
+      "position": { "x": 2, "y": 1 }
+    }
+  }, {
+    "id": "demo.dungeon.archive-depths",
+    "rootFloorId": "demo.floor.archive-depth-1",
+    "guardianActorKindId": "demo.actor.echo-hound",
+    "instanceLifecycle": {
+      "kind": "turn-ttl",
+      "ttlTurns": 3
+    }
   }],
+  "campaign": {
+    "victoryDungeonIds": ["demo.dungeon.resonance-descent"],
+    "dungeonConquestPoints": 10000,
+    "taskCompletionPoints": 1000,
+    "victoryBonus": 50000,
+    "turnPenaltyInterval": 100,
+    "turnPenaltyPoints": 1
+  },
   "proceduralFloors": [{
     "id": "demo.floor.echo-depth-1",
     "nameKey": "floor-demo-echo-depth-1-name",
@@ -284,6 +311,39 @@
       "targetConnectionId": "demo.connection.echo-depth-2.down-a"
     }],
     "depth": 3,
+    "width": 20,
+    "height": 20,
+    "wallTerrainId": "demo.terrain.wall",
+    "floorTerrainId": "demo.terrain.floor",
+    "upStairTerrainId": "demo.terrain.stairs-up",
+    "closedDoorTerrainId": "demo.terrain.door-secret",
+    "trapTerrainId": "demo.terrain.trap-echo-snare",
+    "actorSpawns": [],
+    "lootSpawns": []
+  }, {
+    "id": "demo.floor.archive-depth-1",
+    "nameKey": "floor-demo-archive-depth-1-name",
+    "returnFloorId": "demo.floor.surface",
+    "lifecycle": "dungeon",
+    "dungeonId": "demo.dungeon.archive-depths",
+    "encounterTableId": "demo.encounter-table.echo-depths",
+    "lootTableId": "demo.loot-table.echo-depth-1-room",
+    "themeTableId": "demo.theme-table.echo-depths",
+    "generationBudget": { "actorSlots": 2, "lootPlacements": 1 },
+    "finalFloor": true,
+    "guardian": {
+      "instanceId": "demo.guardian.archive-depths.1",
+      "actorKindId": "demo.actor.echo-hound"
+    },
+    "entryTerrainId": "demo.terrain.archive-rift",
+    "entryConnectionId": "demo.connection.archive-depth-1.surface-up",
+    "connections": [{
+      "id": "demo.connection.archive-depth-1.surface-up",
+      "kind": "stairs",
+      "terrainId": "demo.terrain.stairs-up",
+      "targetFloorId": "demo.floor.surface"
+    }],
+    "depth": 1,
     "width": 20,
     "height": 20,
     "wallTerrainId": "demo.terrain.wall",

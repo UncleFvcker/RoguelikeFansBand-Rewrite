@@ -148,6 +148,12 @@ fn initial_game(seed: u64) -> Game {
 fn initial_game(seed: u64) -> Game {
     let mut payload = Game::new(seed).to_save();
     payload.entities.clear();
+    payload.carried_items.clear();
+    payload
+        .dungeon_states
+        .iter_mut()
+        .filter(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+        .for_each(|state| state.entrance_guardian_defeated = Some(true));
     Game::from_save(payload)
         .expect("webdriver fixture should remove monsters without invalid state")
 }

@@ -199,7 +199,8 @@
       "enum": [
         "seek",
         "surround",
-        "guard-leader"
+        "guard-leader",
+        "guard-position"
       ],
       "type": "string"
     }

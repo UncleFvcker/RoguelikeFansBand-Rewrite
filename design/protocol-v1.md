@@ -177,6 +177,12 @@ interface GameCoreV1 {
 
 协议 1.66 为 `FloorConnectionSaveDto` 增加可选 `targetFloorId` 与 `targetConnectionId`。楼层连接可由内容 `targetCandidates` 按权重无放回解析为实例级探索树；首次到达动态目标时，目标连接的返回目标写入实际父连接。v65 及更早存档缺字段时使用内容固定目标，不重建楼层或推进 RNG。普通 dungeon 回地表继续清理当前实例；save 容器仍为 v1，state hash 升至 Schema v25。当前规则边界见 [Contract v66](contract-v66-dynamic-exploration-tree.md)。
 
+协议 1.67 为内容侧 `DungeonDefinition` 增加可选 `entranceGuardian` 与 `entryRequirements`，并增加 `GuardPosition` pack behavior。入口守卫固守地表位置但不阻止楼梯交互；硬条件支持任务状态、前置 dungeon 征服和携带物数量，并在实例序号与生成 RNG 之前原子检查。`DungeonStateSaveDto` 增加可选 `entranceGuardianDefeated`；v66 及更早存档缺字段时抑制新守卫，不补实体或推进 RNG。save 容器仍为 v1，state hash 升至 Schema v26。当前规则边界见 [Contract v67](contract-v67-dungeon-entrance-guardians.md)。
+
+协议 1.68 增加可选世界 `campaign` 定义、`GameCommand.Retire`、`CampaignStateDto` 和 `CampaignStateSaveDto`。`GameSnapshot`/`GameUpdate` 都携带 campaign 状态；事件增加胜利、退休和不可退休投影。只有 campaign victory dungeon 全部征服后才进入 victorious，只有 victorious 且位于地表才可退休；退休保存最终分数并拒绝后续命令。`SavePayloadV1.campaignState` 缺失时按旧 dungeon 状态推导，save 容器仍为 v1，state hash 升至 Schema v27。完整边界见 [Contract v68](contract-v68-victory-retirement-scoring.md)。
+
+协议 1.69 为 `DungeonStateSaveDto` 增加可选 `retainedInstanceId` 与 `retainedAtTurn`，并为内容 `DungeonDefinition` 增加 `instanceLifecycle`（`reset-on-surface`、`persistent`、`turn-ttl`）。返回地表的 dungeon 实例按策略清理或保留；TTL 在下一次进入时按回合差惰性淘汰。v68 及更早存档缺失 retained 字段时按默认清理迁移，不生成内容或推进 RNG；state hash 升至 Schema v28，save 容器仍为 v1。完整边界见 [Contract v69](contract-v69-configurable-instance-lifecycle.md)。
+
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。

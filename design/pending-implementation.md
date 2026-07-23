@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v66、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v69、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -14,12 +14,41 @@
 | P3 | Vault 多入口与连通拼接 | 已由 contract-v64 完成 | 1–8 个边界入口、模板/整层连通证明和确定性 BFS connector |
 | P4 | 地牢实例身份与生命周期 | 已由 contract-v65 完成 | 实例序号、实例+floor 仓库键、实例级清理和 v64 存档迁移 |
 | P5 | 动态探索树连接解析 | 已由 contract-v66 完成 | 加权楼梯候选、同层目标去重、解析目标持久化与旧存档固定目标回退 |
-| P6 | 地牢进入条件与跨实例策略 | 延后 | 普通地牢回地表即清空；仅在未来生命周期改变后讨论暂停实例、显式选择、TTL/淘汰 |
+| P6 | 地牢入口守卫与可选进入条件 | 已由 contract-v67 完成 | 原版式可绕过软门槛、原创内容硬条件、原子拒绝和旧存档抑制迁移 |
+| P7 | 胜利、退休与角色评分 | 已由 contract-v68 完成 | campaign victory dungeon、胜利/退休状态、确定性评分、存档迁移和 UI 结算 |
+| P8 | 可配置实例生命周期 | 已由 contract-v69 完成 | `reset-on-surface`、`persistent`、`turn-ttl`、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理；普通地牢继续回地表即清空 |
+| P9 | 运行时连通修复 | 明确不实现 | 地形破坏直接成为权威状态，不做自动重连、楼梯迁移或整层修复；玩家可使用挖掘能力自行恢复通路 |
+| P10 | 角色成长基础 | 下一候选 | 经验、等级、六维属性、HP 成长与最小升级循环；暂不展开完整 Race/Class/Personality 矩阵 |
+
+## contract-v69 明确遗留
+
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路；
+- 非楼梯回忆、传送、死亡退出与实例生命周期的统一结算；
+- 并行实例 UI 选择、跨实例传送和多 retained 实例并存仍不在当前规则内。
+
+Archive Depths 是 `turn-ttl=3` 的 demo 验证包；Echo/Resonance 继续使用默认 reset。来源：[contract-v69](contract-v69-configurable-instance-lifecycle.md)。
+
+## contract-v68 明确遗留
+
+- 原创 dungeon 的可配置永久实例、TTL/淘汰与显式生命周期策略已由 contract-v69 完成；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
+
+原版 demo dungeon 不使用硬进入条件；玩家仍可绕过入口守卫直接进入。Resonance 是 demo campaign 唯一 victory dungeon；Echo 征服只增加分数。胜利后必须在地表退休，退休冻结最终分数并结束 dispatch。普通 dungeon 返回地表即清理，下一次进入重新生成。
+
+来源：[contract-v68](contract-v68-victory-retirement-scoring.md)。
+
+## contract-v67 明确遗留
+
+- 地牢征服后的胜利/退休结算和角色评分已由 contract-v68 完成；
+- 原创 dungeon 的可配置永久实例、TTL/淘汰与显式实例选择；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
+
+来源：[contract-v67](contract-v67-dungeon-entrance-guardians.md)。
 
 ## contract-v66 明确遗留
 
-- 多 dungeon 进入条件、胜利/退休评分和可配置生命周期策略；
-- Vault 内运行时破坏导致的动态重连与跨实例协作。
+- 多 dungeon 的可选进入条件已由 contract-v67 完成，胜利/退休评分已由 contract-v68 完成；仍缺面向未来原创内容的可配置生命周期策略；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
 
 同一 dungeon 的暂停实例 UI 选择、并行访问和跨实例传送不在当前规则内：普通 dungeon 返回地表即清理，下一次进入重新生成。
 
@@ -28,16 +57,16 @@
 ## contract-v65 明确遗留
 
 - 动态楼梯目标与实例级探索树已由 contract-v66 完成；
-- 多 dungeon 进入条件、胜利/退休评分和可配置生命周期策略；
-- Vault 内运行时破坏导致的动态重连与跨实例协作。
+- 可配置实例生命周期策略；多 dungeon 进入条件与胜利/退休评分已由 contract-v67/v68 完成；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
 
 来源：[contract-v65](contract-v65-dungeon-instance-identity.md)。
 
 ## contract-v64 明确遗留
 
 - 同一楼层模板生成多个运行时实例、显式 `DungeonInstanceId`、楼层淘汰和更一般的动态探索树；
-- 多座地牢同时存在的探索实例、进入条件、胜利/退休、角色分数和可配置重置策略；
-- Vault 内运行时破坏导致的动态重连、任意多边形/噪声区域连接和跨区域群体协作。
+- 多座地牢同时存在的探索实例和可配置重置策略；进入条件、胜利/退休与角色分数已由 contract-v67/v68 完成；
+- 运行时地形破坏不触发自动重连；任意多边形/噪声区域连接和跨区域群体协作仍不在规则内。
 
 来源：[contract-v64](contract-v64-multi-entry-vault-connectivity.md)。
 
@@ -45,7 +74,7 @@
 
 - Vault 多入口、大模板成功落位后的连通性证明与跨走廊拼接已由 contract-v64 完成；
 - 同一楼层模板生成多个运行时实例、楼层淘汰和更一般的动态探索树；
-- 多座地牢同时存在的探索实例、显式 `DungeonInstanceId`、进入条件、胜利/退休和角色分数。
+- 多座地牢同时存在的探索实例与可配置重置策略；显式 `DungeonInstanceId`、进入条件、胜利/退休和角色分数已由 contract-v65/v67/v68 建立。
 
 来源：[contract-v63](contract-v63-dungeon-tree-guardian-mirrors.md)。
 

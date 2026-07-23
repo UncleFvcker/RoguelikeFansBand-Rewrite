@@ -85,6 +85,9 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v64：多入口 Vault 与连通拼接](design/contract-v64-multi-entry-vault-connectivity.md)
 - [Contract v65：地牢实例身份与生命周期](design/contract-v65-dungeon-instance-identity.md)
 - [Contract v66：动态楼梯目标与探索树](design/contract-v66-dynamic-exploration-tree.md)
+- [Contract v67：地牢入口守卫与可选进入条件](design/contract-v67-dungeon-entrance-guardians.md)
+- [Contract v68：胜利、退休与角色评分](design/contract-v68-victory-retirement-scoring.md)
+- [Contract v69：可配置地牢实例生命周期](design/contract-v69-configurable-instance-lifecycle.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -102,7 +105,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v66/scenarios`](tests/fixtures/contract-v66/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v65` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v69/scenarios`](tests/fixtures/contract-v69/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v68` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -157,7 +160,13 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.66 / contract-v66 已增加动态楼梯目标与实例级探索树解析。连接可声明多个加权候选，同层按稳定连接 ID 无放回选择不同目标 floor；解析后的 target floor/connection 随楼层存档，目标 arrival connection 在首次到达时原子修正，v65 旧存档缺字段时固定目标回退且不推进 RNG。普通 dungeon 回到地表仍立即清空，下一次进入重新生成。active baseline 共 132 个 exact fixtures，内容包为 1.58.0、content hash 为 `834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc`；save v1 / state-hash 升至 Schema v25。完整边界见 [Contract v66 说明](design/contract-v66-dynamic-exploration-tree.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft 与实例级探索生命周期已经建立；普通 dungeon 返回地表即清空，下一次进入重新生成。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。下一步推进多 dungeon 进入条件、胜利/退休评分和可配置实例生命周期。
+协议 1.67 / contract-v67 已增加原版式 dungeon 入口守卫和原创内容可选硬进入条件。入口守卫使用 `GuardPosition` 固守入口附近、仍可相邻攻击，但不会阻止楼梯交互，玩家可以绕过直接进入；击败状态随 dungeon 持久化。任务状态、前置 dungeon 征服和携带物条件在实例序号与 RNG 消耗前原子检查，demo 原版 dungeon 默认不配置这些硬条件。普通 dungeon 回到地表仍立即清空，下一次进入重新生成。完整边界见 [Contract v67 说明](design/contract-v67-dungeon-entrance-guardians.md)。
+
+协议 1.68 / contract-v68 已建立 campaign 胜利、退休结算与内容驱动角色评分。Resonance 是 demo 唯一 campaign victory dungeon；Echo 守护者可被征服但不会提前结束战役。击败所有 victory dungeon 的最终守护者后发布 `CampaignVictorious`，玩家回到地表后可执行 `Retire`，结算后状态冻结且拒绝继续命令。评分为征服地牢、完成任务和胜利奖励之和，再扣除按回合间隔计算的惩罚，最低为 0。内容包升至 1.60.0，content hash 为 `1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c`，active baseline 共 137 个 exact fixtures，save v1 / state-hash 升至 Schema v27。完整边界见 [Contract v68 说明](design/contract-v68-victory-retirement-scoring.md)。
+
+协议 1.69 / contract-v69 已建立内容驱动的 dungeon `instanceLifecycle`：默认 `reset-on-surface`、`persistent` 和带惰性淘汰的 `turn-ttl`。新增 Archive Depths 作为 3 回合 TTL 示例；返回地表可保存一个 retained instance，下次进入续接同一实例，过期后确定性分配下一个实例序号并清理已淘汰实例的物品属性知识。协议 DTO 增加可选 `retainedInstanceId`/`retainedAtTurn`，state hash 升至 Schema v28；v68 及更早存档缺失字段时按默认清理迁移。内容包升至 1.61.0，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures，零 waiver。普通 Echo/Resonance 仍返回地表即清空。完整边界见 [Contract v69 说明](design/contract-v69-configurable-instance-lifecycle.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步转入阶段 F 的角色成长基础。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -229,10 +238,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v66/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v69/baseline-policy.json
 ```
 
-当前 132 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 140 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web
