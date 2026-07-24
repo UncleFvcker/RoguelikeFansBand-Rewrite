@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.69";
+pub const PROTOCOL_VERSION: &str = "1.70";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -21,6 +21,10 @@ const fn default_monster_energy_need() -> i32 {
 
 fn is_false(value: &bool) -> bool {
     !*value
+}
+
+fn is_default_player_progress(value: &PlayerProgressDto) -> bool {
+    value == &PlayerProgressDto::default()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -64,6 +68,9 @@ pub enum GameCommand {
     AbandonTask,
     AbandonPausedTask {
         task_id: String,
+    },
+    IncreaseAttribute {
+        attribute: AttributeKindDto,
     },
     Appraise {
         item_id: String,
@@ -129,6 +136,18 @@ pub struct StatModifiersDto {
     pub defense: i32,
     #[serde(default)]
     pub max_hp: i32,
+    #[serde(default)]
+    pub strength: i32,
+    #[serde(default)]
+    pub intelligence: i32,
+    #[serde(default)]
+    pub wisdom: i32,
+    #[serde(default)]
+    pub dexterity: i32,
+    #[serde(default)]
+    pub constitution: i32,
+    #[serde(default)]
+    pub charisma: i32,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -274,6 +293,57 @@ pub enum TerrainInteractionKindDto {
     BashDoor,
     DisarmTrap,
     DigTerrain,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AttributeKindDto {
+    Strength,
+    Intelligence,
+    Wisdom,
+    Dexterity,
+    Constitution,
+    Charisma,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AttributeValueDto {
+    pub natural: u16,
+    pub effective: u16,
+    pub index: u8,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AttributeSetDto {
+    pub strength: AttributeValueDto,
+    pub intelligence: AttributeValueDto,
+    pub wisdom: AttributeValueDto,
+    pub dexterity: AttributeValueDto,
+    pub constitution: AttributeValueDto,
+    pub charisma: AttributeValueDto,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerProgressDto {
+    pub level: u16,
+    pub max_level: u16,
+    pub experience: u64,
+    pub level_cap: u16,
+    #[serde(default)]
+    pub attribute_cap: u16,
+    pub attribute_index_cap: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub experience_for_next_level: Option<u64>,
+    pub pending_attribute_increases: u16,
+    pub victory_level_cap_unlocked: bool,
+    pub attributes: AttributeSetDto,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -505,6 +575,8 @@ pub struct PlayerDto {
     pub statuses: Vec<StatusDto>,
     #[serde(default)]
     pub resistances: Vec<ResistanceDto>,
+    #[serde(default, skip_serializing_if = "is_default_player_progress")]
+    pub progress: PlayerProgressDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -790,6 +862,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
+    push_declaration!(AttributeKindDto);
+    push_declaration!(AttributeValueDto);
+    push_declaration!(AttributeSetDto);
+    push_declaration!(PlayerProgressDto);
     push_declaration!(DamageDiceDto);
     push_declaration!(AttackProfileDto);
     push_declaration!(MeleeBlowDto);
@@ -876,6 +952,30 @@ pub struct PlayerSaveDto {
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<PlayerProgressSaveDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NaturalAttributeSetSaveDto {
+    pub strength: u16,
+    pub intelligence: u16,
+    pub wisdom: u16,
+    pub dexterity: u16,
+    pub constitution: u16,
+    pub charisma: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlayerProgressSaveDto {
+    pub attributes: NaturalAttributeSetSaveDto,
+    pub experience: u64,
+    pub level: u16,
+    pub max_level: u16,
+    pub pending_attribute_increases: u16,
+    pub hp_progression: Vec<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1373,9 +1473,11 @@ mod tests {
                     attack: 1,
                     defense: 1,
                     max_hp: 4,
+                    ..StatModifiersDto::default()
                 },
                 statuses: Vec::new(),
                 resistances: Vec::new(),
+                progress: PlayerProgressDto::default(),
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -1419,6 +1521,7 @@ mod tests {
                     attack: 1,
                     defense: 1,
                     max_hp: 4,
+                    ..StatModifiersDto::default()
                 },
                 identification: ItemIdentificationDto::Unexamined,
                 quality: None,
@@ -1439,6 +1542,7 @@ mod tests {
                     attack: 1,
                     defense: 1,
                     max_hp: 4,
+                    ..StatModifiersDto::default()
                 },
                 identification: ItemIdentificationDto::Unexamined,
                 quality: None,
@@ -1501,6 +1605,7 @@ mod tests {
             energy_need: 0,
             statuses: Vec::new(),
             resistances: Vec::new(),
+            progress: None,
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

@@ -61,6 +61,7 @@
 - [Contract v67：地牢入口守卫与可选进入条件](contract-v67-dungeon-entrance-guardians.md)
 - [Contract v68：胜利、退休与角色评分](contract-v68-victory-retirement-scoring.md)
 - [Contract v69：可配置地牢实例生命周期](contract-v69-configurable-instance-lifecycle.md)
+- [Contract v70：RFB 角色成长基础](contract-v70-rfb-character-progression.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -631,6 +632,7 @@ interface SaveGame {
 - 协议 1.67 和 contract-v67 已建立；内容包 1.59.0 增加原版式地牢入口守卫、`GuardPosition` 和原创内容可选进入条件。守卫可绕过且不阻止楼梯，击败状态持久化；硬条件在实例序号与 RNG 前原子检查。v66 旧存档抑制新增守卫且不回填实体。普通 dungeon 返回地表仍立即清空实例。save v1 仍为容器 v1，state hash 升至 Schema v26，active baseline 共 135 个 exact fixtures。
 - 协议 1.68 和 contract-v68 已建立；内容包 1.60.0 增加 campaign 胜利、退休结算、内容驱动角色评分和旧存档状态推导。Resonance 是 demo 唯一 victory dungeon，Echo 征服只增加分数；胜利后必须在地表退休，退休冻结最终分数并拒绝后续命令。普通 dungeon 返回地表仍立即清空实例。save v1 仍为容器 v1，state hash 升至 Schema v27，content hash 为 `1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c`，active baseline 共 137 个 exact fixtures。
 - 协议 1.69 和 contract-v69 已建立；内容包 1.61.0 增加 `reset-on-surface`、`persistent`、`turn-ttl` 生命周期与 Archive TTL 示例，retained 实例字段进入存档，TTL 惰性淘汰清理对应实例物品属性知识。普通 Echo/Resonance 返回地表仍立即清空，state hash 升至 Schema v28，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures。
+- 协议 1.70 和 contract-v70 已建立；内容包 1.62.0 增加击杀经验、RFB 1–50 级阈值、未胜利 50 级封顶后的经验保留、胜利后等级 100/`18/820` 解锁、出生 HP 序列、六维自然/有效属性、装备 modifier 与属性点命令。缺少 progress 的旧存档按固定 legacy 规则迁移，state hash 升至 Schema v29，content hash 为 `ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6`，active baseline 共 148 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 

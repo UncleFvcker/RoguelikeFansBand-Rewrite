@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.69 / contract-v69
+状态：长期规则实现路线；当前基线为协议 1.70 / contract-v70
 
 ## 1. 目的与边界
 
@@ -14,7 +14,7 @@
 - 当前内容包继续使用原创测试内容。若未来迁移旧内容，必须先单独完成许可证和内容审计，并通过显式内容转换流程；
 - 每个系统进入主线前都必须拥有固定种子、contract fixture、存档回环和回放检查点。
 
-当前阶段定位：截至 contract-v69，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑；项目尚未达到旧 RFB 的角色构筑、法术、怪物生态、世界经济或内容规模，下一主线转入阶段 F 的角色成长基础。
+当前阶段定位：截至 contract-v70，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑，阶段 F 已建立原版式经验、等级、HP 成长、六维属性和胜利解锁上限的基础闭环；项目尚未达到旧 RFB 的角色构筑、法术、怪物生态、世界经济或内容规模。
 
 ## 2. 旧 RFB 的系统规模
 
@@ -106,7 +106,7 @@ flowchart TD
 
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
-| 六维属性 | 力量、智力、智慧、敏捷、体质、魅力及损伤/恢复 | 未建立 | `AttributeSet` 保存自然值；装备、状态和形态仅提供 modifier，不覆盖基础值 |
+| 六维属性 | 力量、智力、智慧、敏捷、体质、魅力及损伤/恢复 | 已建立基础版 | contract-v70 的 `AttributeSet` 保存自然值；装备六维 modifier、原版 18/xx 桶、体质生命倍率和胜利前/后的 `18/220`、`18/820` 上限已进入快照、存档与 hash；尚缺属性损伤/恢复和职业/种族来源 |
 | 生命/法力等资源 | HP、SP、生命倍率、职业特殊资源 | 部分建立 | 通用 `ResourcePool`，核心内置 HP/MP；怒气、专注、鲜血等通过稳定资源 ID 扩展 |
 | 技能 | 近战、射击、投掷、潜行、感知、搜索、解除、设备等 | 未建立 | `SkillSet` 使用稳定 skill ID；等级成长通过曲线计算，不保存可重算的最终值 |
 | 派生属性 | AC、速度、命中、伤害、攻击次数、抗性、感知等多来源叠加 | 已建立基础版 | `DerivedStatsPipeline` 已按基础 → 种族 → 职业 → 性格 → 装备 → 状态 → 姿态 → 环境排序并保留来源；当前覆盖最大生命、攻防、速度、近战能力、AC、攻击次数和近战伤害修正，后续扩展抗性和感知 |
@@ -176,8 +176,8 @@ flowchart TD
 
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
-| 经验与等级 | 击杀经验、经验倍率、等级升降、最高等级 | 未建立 | `ProgressionTrack`；升级产生事件，派生属性重算但不直接修改装备/内容 |
-| HP 成长 | 种族、职业、生命倍率和随机成长 | 未建立 | 出生时生成并保存 HP 成长序列，保证存档和回放稳定 |
+| 经验与等级 | 击杀经验、经验倍率、等级升降、最高等级 | 已建立基础版 | contract-v70 使用内容 `experienceValue` 和 RFB 1–50 阈值；未胜利封顶 50，胜利后解锁 100，经验可在封顶时保留并自动连续升级 |
+| HP 成长 | 种族、职业、生命倍率和随机成长 | 已建立基础版 | contract-v70 出生时用独立 RNG 生成并保存 100 级 HP 序列，升级按比例调整当前 HP；尚缺种族/职业成长曲线 |
 | 技能熟练 | 武器、射击、法术、骑术等熟练度 | 未建立 | 稳定 skill/proficiency ID；每次增长有上限和来源事件 |
 | 职业专属成长 | 技能点、契约、姿态、领域选择、进化树 | 未建立 | 通用 `ChoiceGrant` 与 `ProgressionNode`；特别复杂职业可有自己的小型状态组件 |
 | 声望、金钱、德行 | 商店价格、任务奖励、建筑服务和特殊职业资源 | 仅金钱未建立 | 分成经济、声望、德行三个明确系统，禁止复用一个字段表达不同语义 |
@@ -330,7 +330,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 又复用结构化 check 完成门与搜索检定。当前 active baseline 已进入 contract-v69，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
+当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 又复用结构化 check 完成门与搜索检定。当前 active baseline 已进入 contract-v70，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -372,7 +372,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树；contract-v67 完成入口守卫软门槛、可选硬进入条件和原子拒绝；contract-v68 完成 campaign 胜利、退休状态、确定性评分、存档迁移和结算 UI；contract-v69 完成 `reset-on-surface`/`persistent`/`turn-ttl` 生命周期、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理。普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。内容包为 1.61.0，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures，save v1 / state hash Schema v28。下一步转入阶段 F 的角色成长基础。详细边界见 [Contract v69](contract-v69-configurable-instance-lifecycle.md)。
+当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树；contract-v67 完成入口守卫软门槛、可选硬进入条件和原子拒绝；contract-v68 完成 campaign 胜利、退休状态、确定性评分、存档迁移和结算 UI；contract-v69 完成 `reset-on-surface`/`persistent`/`turn-ttl` 生命周期、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理；contract-v70 完成击杀经验、RFB 1–50 经验阈值、未胜利 50 级封顶、胜利后 100 级解锁、出生 HP 序列、六维属性、装备 modifier、属性点命令和 `18/220`→`18/820` 上限。普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。内容包为 1.62.0，content hash 为 `ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6`，active baseline 共 148 个 exact fixtures，save v1 / state hash Schema v29。下一步转入阶段 F 的 Race/Class/Personality 与技能成长。详细边界见 [Contract v70](contract-v70-rfb-character-progression.md)。
 
 实现：
 
@@ -455,13 +455,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v69 阶段性里程碑
+## 8. contract-v70 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.69、内容包 1.61.0、contract-v69、save v1 和 state hash Schema v28；内容 hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`。active baseline 包含 140 个 exact fixtures，零 waiver。
+当前权威基线为协议 1.70、内容包 1.62.0、contract-v70、save v1 和 state hash Schema v29；内容 hash 为 `ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6`。active baseline 包含 148 个 exact fixtures，零 waiver。v70 将角色成长作为阶段性成果：自然属性和 HP 序列进入存档与 hash，装备属性只在派生层合并，最终 Boss 胜利自动释放封顶经验并解锁等级 100 / `18/820`。
 
-这一里程碑代表“规则架构和地牢纵切已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 45 种 terrain、10 种 actor、5 种 item、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版 1396 种怪物、545 种基础物品、392 件固定神器、44 座地牢和 92 个任务的内容规模。
+这一里程碑代表“规则架构和地牢纵切已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 45 种 terrain、11 种 actor、5 种 item、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版 1396 种怪物、545 种基础物品、392 件固定神器、44 座地牢和 92 个任务的内容规模。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |

@@ -144,12 +144,42 @@
           "format": "int32",
           "type": "integer"
         },
+        "charisma": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "constitution": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "defense": {
           "default": 0,
           "format": "int32",
           "type": "integer"
         },
+        "dexterity": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "intelligence": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "maxHp": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "strength": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "wisdom": {
           "default": 0,
           "format": "int32",
           "type": "integer"
@@ -257,8 +287,14 @@
       "$ref": "#/$defs/StatModifiers",
       "default": {
         "attack": 0,
+        "charisma": 0,
+        "constitution": 0,
         "defense": 0,
-        "maxHp": 0
+        "dexterity": 0,
+        "intelligence": 0,
+        "maxHp": 0,
+        "strength": 0,
+        "wisdom": 0
       }
     },
     "nameKey": {

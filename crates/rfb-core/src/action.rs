@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::{Direction, GameCommand, TargetSelection};
+use rfb_protocol::{AttributeKindDto, Direction, GameCommand, TargetSelection};
 
-use crate::scheduler::STANDARD_ACTION_COST;
+use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
     AbandonTask,
     AbandonPausedTask {
         task_id: String,
+    },
+    IncreaseAttribute {
+        attribute: AttributeKind,
     },
     Appraise {
         item_id: String,
@@ -66,7 +69,10 @@ pub(crate) enum GameAction {
 
 impl GameAction {
     pub(crate) const fn energy_cost(&self) -> i32 {
-        STANDARD_ACTION_COST
+        match self {
+            Self::IncreaseAttribute { .. } | Self::Retire => 0,
+            _ => STANDARD_ACTION_COST,
+        }
     }
 }
 
@@ -75,6 +81,16 @@ impl From<GameCommand> for GameAction {
         match command {
             GameCommand::AbandonTask => Self::AbandonTask,
             GameCommand::AbandonPausedTask { task_id } => Self::AbandonPausedTask { task_id },
+            GameCommand::IncreaseAttribute { attribute } => Self::IncreaseAttribute {
+                attribute: match attribute {
+                    AttributeKindDto::Strength => AttributeKind::Strength,
+                    AttributeKindDto::Intelligence => AttributeKind::Intelligence,
+                    AttributeKindDto::Wisdom => AttributeKind::Wisdom,
+                    AttributeKindDto::Dexterity => AttributeKind::Dexterity,
+                    AttributeKindDto::Constitution => AttributeKind::Constitution,
+                    AttributeKindDto::Charisma => AttributeKind::Charisma,
+                },
+            },
             GameCommand::Appraise { item_id } => Self::Appraise { item_id },
             GameCommand::BashDoor { direction } => Self::BashDoor { direction },
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },

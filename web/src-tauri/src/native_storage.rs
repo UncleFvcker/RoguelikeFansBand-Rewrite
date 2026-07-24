@@ -426,7 +426,7 @@ mod tests {
             saved_at: saved_at.to_owned(),
             character_summary: CharacterSummary {
                 display_name: "测试探索者".to_owned(),
-                level: 1,
+                level: snapshot.player.progress.level.into(),
                 location_key: game.location_key().to_owned(),
                 turn: snapshot.turn,
             },

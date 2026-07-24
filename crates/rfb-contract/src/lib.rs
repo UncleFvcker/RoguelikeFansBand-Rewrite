@@ -6,8 +6,8 @@ use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     CampaignStateDto, CampaignStateSaveDto, CharacterSummary, GameCommand, GameCommandEnvelope,
     GameEventDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, MonsterPackSaveDto,
-    PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto,
-    StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
+    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto,
+    SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -48,6 +48,18 @@ pub struct Preconditions {
     pub world: String,
     #[serde(default)]
     pub player_hp: Option<i32>,
+    #[serde(default)]
+    pub player_level: Option<u16>,
+    #[serde(default)]
+    pub player_experience: Option<u64>,
+    #[serde(default)]
+    pub player_max_level: Option<u16>,
+    #[serde(default)]
+    pub player_pending_attribute_increases: Option<u16>,
+    #[serde(default)]
+    pub player_attributes: Option<NaturalAttributeSetSaveDto>,
+    #[serde(default)]
+    pub legacy_player_progress: bool,
     #[serde(default)]
     pub player_statuses: Vec<StatusSaveDto>,
     #[serde(default)]
@@ -130,6 +142,16 @@ pub struct FinalStateAssertion {
     pub player_statuses: Vec<StatusDto>,
     #[serde(default)]
     pub player_resistances: Vec<ResistanceDto>,
+    #[serde(default)]
+    pub player_level: Option<u16>,
+    #[serde(default)]
+    pub player_experience: Option<u64>,
+    #[serde(default)]
+    pub player_max_level: Option<u16>,
+    #[serde(default)]
+    pub player_pending_attribute_increases: Option<u16>,
+    #[serde(default)]
+    pub player_attributes: Option<rfb_protocol::PlayerProgressDto>,
     pub entity_count: usize,
     #[serde(default)]
     pub entities: Vec<ActorStateAssertion>,
@@ -193,6 +215,41 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     let mut payload = Game::new(seed).to_save();
     if let Some(player_hp) = fixture.preconditions.player_hp {
         payload.player.hp = player_hp;
+    }
+    if fixture.preconditions.player_level.is_some()
+        || fixture.preconditions.player_experience.is_some()
+        || fixture.preconditions.player_max_level.is_some()
+        || fixture
+            .preconditions
+            .player_pending_attribute_increases
+            .is_some()
+        || fixture.preconditions.player_attributes.is_some()
+    {
+        let progress = payload
+            .player
+            .progress
+            .as_mut()
+            .ok_or(ContractError::MissingProgressPrecondition)?;
+        if let Some(level) = fixture.preconditions.player_level {
+            progress.level = level;
+        }
+        if let Some(experience) = fixture.preconditions.player_experience {
+            progress.experience = experience;
+        }
+        if let Some(max_level) = fixture.preconditions.player_max_level {
+            progress.max_level = max_level;
+        } else if fixture.preconditions.player_level.is_some() {
+            progress.max_level = progress.level;
+        }
+        if let Some(pending) = fixture.preconditions.player_pending_attribute_increases {
+            progress.pending_attribute_increases = pending;
+        }
+        if let Some(attributes) = &fixture.preconditions.player_attributes {
+            progress.attributes = *attributes;
+        }
+    }
+    if fixture.preconditions.legacy_player_progress {
+        payload.player.progress = None;
     }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
@@ -283,6 +340,13 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_carry_capacity_tenths_pound: Some(snapshot.player.carry_capacity_tenths_pound),
             player_statuses: snapshot.player.statuses.clone(),
             player_resistances: snapshot.player.resistances.clone(),
+            player_level: Some(snapshot.player.progress.level),
+            player_experience: Some(snapshot.player.progress.experience),
+            player_max_level: Some(snapshot.player.progress.max_level),
+            player_pending_attribute_increases: Some(
+                snapshot.player.progress.pending_attribute_increases,
+            ),
+            player_attributes: Some(snapshot.player.progress.clone()),
             entity_count: snapshot.entities.len(),
             entities: snapshot
                 .entities
@@ -399,7 +463,7 @@ fn save_round_trip(game: &Game) -> Result<String, ContractError> {
         saved_at: "2026-07-15T00:01:00Z".to_owned(),
         character_summary: CharacterSummary {
             display_name: "原创契约测试探索者".to_owned(),
-            level: 1,
+            level: snapshot.player.progress.level.into(),
             location_key: game.location_key().to_owned(),
             turn: snapshot.turn,
         },
@@ -430,6 +494,8 @@ pub enum ContractError {
     UnknownEntityPrecondition(String),
     #[error("unknown dungeon campaign precondition {0}")]
     UnknownDungeonPrecondition(String),
+    #[error("player progress precondition is unavailable in the generated save")]
+    MissingProgressPrecondition,
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

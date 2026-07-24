@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.63、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.70、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -182,6 +182,8 @@ interface GameCoreV1 {
 协议 1.68 增加可选世界 `campaign` 定义、`GameCommand.Retire`、`CampaignStateDto` 和 `CampaignStateSaveDto`。`GameSnapshot`/`GameUpdate` 都携带 campaign 状态；事件增加胜利、退休和不可退休投影。只有 campaign victory dungeon 全部征服后才进入 victorious，只有 victorious 且位于地表才可退休；退休保存最终分数并拒绝后续命令。`SavePayloadV1.campaignState` 缺失时按旧 dungeon 状态推导，save 容器仍为 v1，state hash 升至 Schema v27。完整边界见 [Contract v68](contract-v68-victory-retirement-scoring.md)。
 
 协议 1.69 为 `DungeonStateSaveDto` 增加可选 `retainedInstanceId` 与 `retainedAtTurn`，并为内容 `DungeonDefinition` 增加 `instanceLifecycle`（`reset-on-surface`、`persistent`、`turn-ttl`）。返回地表的 dungeon 实例按策略清理或保留；TTL 在下一次进入时按回合差惰性淘汰。v68 及更早存档缺失 retained 字段时按默认清理迁移，不生成内容或推进 RNG；state hash 升至 Schema v28，save 容器仍为 v1。完整边界见 [Contract v69](contract-v69-configurable-instance-lifecycle.md)。
+
+协议 1.70 为 `PlayerSaveDto` 增加可选 `progress`，其中保存六维自然属性、经验、当前/历史最高等级、待分配属性点和独立 HP 成长序列；`PlayerDto`/`GameSnapshot` 暴露 `PlayerProgressDto`，包含阶段等级上限、属性上限、18/xx 桶索引、下一等级阈值和装备合并后的有效属性。新增 `IncreaseAttribute` 命令及属性增加/不可用事件；命令不推进世界脉冲。缺少 `progress` 的旧存档按确定性 legacy 序列迁移，胜利/退休存档载入时会先结算封顶经验。state hash 升至 Schema v29，save 容器仍为 v1。完整边界见 [Contract v70](contract-v70-rfb-character-progression.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 

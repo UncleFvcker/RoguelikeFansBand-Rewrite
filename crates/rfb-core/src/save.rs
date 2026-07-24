@@ -10,12 +10,14 @@ use crate::{
         Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
         MonsterPackIdentity,
     },
+    stats::CharacterProgress,
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
     FloorRegionSaveDto, FloorSaveDto, InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto,
-    PlayerSaveDto, Position, ResistanceSaveDto, StatusSaveDto, TerrainSaveDto,
+    NaturalAttributeSetSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceSaveDto,
+    StatusSaveDto, TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -199,7 +201,7 @@ pub(crate) fn carried_item_from_dto(
     })
 }
 
-pub(crate) fn player_to_save(player: &Actor) -> PlayerSaveDto {
+pub(crate) fn player_to_save(player: &Actor, progress: &CharacterProgress) -> PlayerSaveDto {
     PlayerSaveDto {
         id: player.id.clone(),
         kind_id: player.kind_id.clone(),
@@ -214,6 +216,21 @@ pub(crate) fn player_to_save(player: &Actor) -> PlayerSaveDto {
             .map(StatusInstance::to_save_dto)
             .collect(),
         resistances: player.resistances.to_save_dtos(),
+        progress: Some(PlayerProgressSaveDto {
+            attributes: NaturalAttributeSetSaveDto {
+                strength: progress.attributes.strength,
+                intelligence: progress.attributes.intelligence,
+                wisdom: progress.attributes.wisdom,
+                dexterity: progress.attributes.dexterity,
+                constitution: progress.attributes.constitution,
+                charisma: progress.attributes.charisma,
+            },
+            experience: progress.experience,
+            level: progress.level,
+            max_level: progress.max_level,
+            pending_attribute_increases: progress.pending_attribute_increases,
+            hp_progression: progress.hp_progression.clone(),
+        }),
     }
 }
 

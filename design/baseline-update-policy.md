@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v69/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v68` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v70/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v69` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v69/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v70/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v69/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v69`：Archive 的 retained/TTL 生命周期与 140 个 exact fixtures 由 [Contract v69](contract-v69-configurable-instance-lifecycle.md) 定义；`contract-v1` 至 `contract-v68` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v70`：角色成长、胜利后等级/属性上限解锁、progress 存档迁移和 148 个 exact fixtures 由 [Contract v70](contract-v70-rfb-character-progression.md) 定义；[Contract v69](contract-v69-configurable-instance-lifecycle.md) 及 `contract-v1` 至 `contract-v69` 继续作为历史基准保留。

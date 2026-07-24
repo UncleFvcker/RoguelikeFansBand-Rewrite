@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.serpent-of-chaos",
+  "role": "monster",
+  "nameKey": "actor-demo-serpent-of-chaos-name",
+  "descriptionKey": "actor-demo-serpent-of-chaos-description",
+  "glyph": "S",
+  "level": 3,
+  "experienceValue": 5000000,
+  "maxHp": 6,
+  "speed": 110,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "lootTableId": "demo.loot-table.resonant-warden",
+  "tags": ["guardian", "final-boss", "serpent-of-chaos"]
+}

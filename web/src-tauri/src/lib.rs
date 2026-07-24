@@ -90,7 +90,7 @@ impl AppState {
             saved_at,
             character_summary: CharacterSummary {
                 display_name: "原创测试探索者".to_owned(),
-                level: 1,
+                level: snapshot.player.progress.level.into(),
                 location_key: session.recorder.game().location_key().to_owned(),
                 turn: snapshot.turn,
             },

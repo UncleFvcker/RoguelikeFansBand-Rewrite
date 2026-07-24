@@ -3,11 +3,19 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "abandon-task" } | { "type": "abandon-paused-task", taskId: string, } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "retire" } | { "type": "search" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "abandon-task" } | { "type": "abandon-paused-task", taskId: string, } | { "type": "increase-attribute", attribute: AttributeKindDto, } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "retire" } | { "type": "search" } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
-export type StatModifiersDto = { attack: number, defense: number, maxHp: number, };
+export type StatModifiersDto = { attack: number, defense: number, maxHp: number, strength: number, intelligence: number, wisdom: number, dexterity: number, constitution: number, charisma: number, };
+
+export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
+
+export type AttributeValueDto = { natural: number, effective: number, index: number, };
+
+export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
+
+export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, };
 
 export type DamageDiceDto = { dice: number, sides: number, damageType: DamageTypeDto, };
 
@@ -65,7 +73,7 @@ export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResoluti
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, };
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, };
 
 export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, };
 

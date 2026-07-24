@@ -242,6 +242,40 @@ h1 {
   text-overflow: ellipsis;
 }
 
+.attribute-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.65rem 0.85rem 0.8rem;
+  list-style: none;
+}
+
+.attribute-row {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 0.8fr) minmax(0, 1.5fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+  color: #c8d5e3;
+  font-size: 0.78rem;
+}
+
+.attribute-name {
+  color: #9fb5ca;
+}
+
+.attribute-value {
+  overflow: hidden;
+  color: #dcecff;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attribute-increase {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.68rem;
+}
+
 .inventory-list {
   min-height: 88px;
   max-height: 180px;

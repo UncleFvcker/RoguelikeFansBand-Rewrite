@@ -54,6 +54,76 @@
         "damage"
       ]
     },
+    "AttributeKindDto": {
+      "type": "string",
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ]
+    },
+    "AttributeSetDto": {
+      "type": "object",
+      "properties": {
+        "charisma": {
+          "$ref": "#/$defs/AttributeValueDto"
+        },
+        "constitution": {
+          "$ref": "#/$defs/AttributeValueDto"
+        },
+        "dexterity": {
+          "$ref": "#/$defs/AttributeValueDto"
+        },
+        "intelligence": {
+          "$ref": "#/$defs/AttributeValueDto"
+        },
+        "strength": {
+          "$ref": "#/$defs/AttributeValueDto"
+        },
+        "wisdom": {
+          "$ref": "#/$defs/AttributeValueDto"
+        }
+      },
+      "required": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ]
+    },
+    "AttributeValueDto": {
+      "type": "object",
+      "properties": {
+        "effective": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "index": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "natural": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "natural",
+        "effective",
+        "index"
+      ]
+    },
     "CampaignStateDto": {
       "type": "object",
       "properties": {
@@ -408,8 +478,14 @@
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
             "attack": 0,
+            "charisma": 0,
+            "constitution": 0,
             "defense": 0,
-            "maxHp": 0
+            "dexterity": 0,
+            "intelligence": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "wisdom": 0
           }
         },
         "projectileProfile": {
@@ -493,6 +569,22 @@
           "required": [
             "type",
             "taskId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "attribute": {
+              "$ref": "#/$defs/AttributeKindDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "increase-attribute"
+            }
+          },
+          "required": [
+            "type",
+            "attribute"
           ]
         },
         {
@@ -1267,8 +1359,14 @@
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
             "attack": 0,
+            "charisma": 0,
+            "constitution": 0,
             "defense": 0,
-            "maxHp": 0
+            "dexterity": 0,
+            "intelligence": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "wisdom": 0
           }
         },
         "projectileProfile": {
@@ -1383,8 +1481,14 @@
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
             "attack": 0,
+            "charisma": 0,
+            "constitution": 0,
             "defense": 0,
-            "maxHp": 0
+            "dexterity": 0,
+            "intelligence": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "wisdom": 0
           }
         },
         "nameKey": {
@@ -1492,8 +1596,14 @@
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
             "attack": 0,
+            "charisma": 0,
+            "constitution": 0,
             "defense": 0,
-            "maxHp": 0
+            "dexterity": 0,
+            "intelligence": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "wisdom": 0
           }
         },
         "hp": {
@@ -1543,6 +1653,9 @@
         "position": {
           "$ref": "#/$defs/Position"
         },
+        "progress": {
+          "$ref": "#/$defs/PlayerProgressDto"
+        },
         "projectileProfile": {
           "anyOf": [
             {
@@ -1581,6 +1694,77 @@
         "position",
         "hp",
         "maxHp"
+      ]
+    },
+    "PlayerProgressDto": {
+      "type": "object",
+      "properties": {
+        "attributeCap": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "attributeIndexCap": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "attributes": {
+          "$ref": "#/$defs/AttributeSetDto"
+        },
+        "experience": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "experienceForNextLevel": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "level": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "levelCap": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "maxLevel": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "pendingAttributeIncreases": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "victoryLevelCapUnlocked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "level",
+        "maxLevel",
+        "experience",
+        "levelCap",
+        "attributeIndexCap",
+        "pendingAttributeIncreases",
+        "victoryLevelCapUnlocked",
+        "attributes"
       ]
     },
     "Position": {
@@ -1706,12 +1890,42 @@
           "format": "int32",
           "default": 0
         },
+        "charisma": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "constitution": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "defense": {
           "type": "integer",
           "format": "int32",
           "default": 0
         },
+        "dexterity": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "intelligence": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "maxHp": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "strength": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "wisdom": {
           "type": "integer",
           "format": "int32",
           "default": 0

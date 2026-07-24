@@ -39,7 +39,10 @@ use crate::{
         Actor, EquipOutcome, FloorConnectionState, FloorRegionState, FloorState, ItemInstance,
         ItemLocation, MonsterPackIdentity,
     },
-    stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
+    stats::{
+        AttributeKind, AttributeSet, CharacterProgress, DerivedStat, DerivedStatsPipeline,
+        StatBounds, StatKind, StatLayer, experience_required_for_level, modify_attribute_value,
+    },
 };
 use rfb_content::{
     ActorRole, CampaignDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
@@ -52,14 +55,15 @@ use rfb_content::{
     TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    ActorSaveDto, AttackProfileDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
-    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
-    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
-    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
-    GameUpdate, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto,
-    ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
+    CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto,
+    CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto,
+    EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
+    FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, InventoryItemDto,
+    InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
+    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
+    MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto,
+    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
     RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
     TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
     TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
@@ -69,7 +73,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 61] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 63] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -131,9 +135,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 61] = [
     "834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc",
     "71d2f947fe2bb7b5e2190a12fdff12ba47ea9f7fc17b1eb26390b46d8abd092b",
     "1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c",
+    "06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70",
+    "84a8696e872a53ff24800645e5df8db49059f4f8cac0b4ebf17a982b16e529d5",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70";
+    "ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -160,7 +166,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV28 {
+struct StateHashPayloadV29 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -724,6 +730,30 @@ fn restore_task_states(
     Ok(states)
 }
 
+fn restore_character_progress(
+    saved: Option<&PlayerProgressSaveDto>,
+    base_max_hp: i32,
+) -> CharacterProgress {
+    let Some(saved) = saved else {
+        return CharacterProgress::legacy(base_max_hp);
+    };
+    CharacterProgress {
+        attributes: AttributeSet {
+            strength: saved.attributes.strength,
+            intelligence: saved.attributes.intelligence,
+            wisdom: saved.attributes.wisdom,
+            dexterity: saved.attributes.dexterity,
+            constitution: saved.attributes.constitution,
+            charisma: saved.attributes.charisma,
+        },
+        experience: saved.experience,
+        level: saved.level,
+        max_level: saved.max_level,
+        pending_attribute_increases: saved.pending_attribute_increases,
+        hp_progression: saved.hp_progression.clone(),
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Game {
     content: Arc<ContentCatalog>,
@@ -735,6 +765,7 @@ pub struct Game {
     height: u16,
     terrain: Vec<String>,
     player: Actor,
+    progress: CharacterProgress,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
@@ -802,6 +833,7 @@ impl Game {
             player_definition.speed,
             INITIAL_PLAYER_ENERGY_NEED,
         );
+        let progress = CharacterProgress::new(seed, player_definition.max_hp);
         let mut entities = world
             .actors
             .iter()
@@ -869,6 +901,7 @@ impl Game {
             height,
             terrain,
             player,
+            progress,
             entities,
             items,
             item_knowledge: BTreeMap::new(),
@@ -996,6 +1029,11 @@ impl Game {
                     .ok_or_else(|| CoreError::UnknownTerrain(id.clone()))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
+        let player_definition = content
+            .actor(&payload.player.kind_id)
+            .ok_or_else(|| CoreError::UnknownActor(payload.player.kind_id.clone()))?;
+        let progress =
+            restore_character_progress(payload.player.progress.as_ref(), player_definition.max_hp);
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1178,6 +1216,7 @@ impl Game {
             height: payload.terrain.height,
             terrain,
             player,
+            progress,
             entities,
             items,
             item_knowledge,
@@ -1253,6 +1292,10 @@ impl Game {
                 }
             }
         }
+        // A victorious/retired v70 save may contain experience banked at the
+        // pre-victory cap. Reconcile the newly unlocked cap during load so
+        // the authoritative level and HP are not dependent on a later input.
+        game.apply_player_experience(0, &mut Vec::new());
         game.reveal_current_visibility();
         game.validate_state()?;
         Ok(game)
@@ -1271,7 +1314,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: player_to_save(&self.player),
+            player: player_to_save(&self.player, &self.progress),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
@@ -1366,7 +1409,10 @@ impl Game {
         let mut removed_entities = Vec::new();
         let action = GameAction::from(envelope.command);
         let action_cost = action.energy_cost();
-        let advances_world = !matches!(&action, GameAction::Retire);
+        let advances_world = !matches!(
+            &action,
+            GameAction::Retire | GameAction::IncreaseAttribute { .. }
+        );
 
         match action {
             GameAction::AbandonPausedTask { task_id } => {
@@ -1388,6 +1434,20 @@ impl Game {
                     });
                 } else {
                     events.push(DomainEvent::ItemAppraiseUnavailable);
+                }
+            }
+            GameAction::IncreaseAttribute { attribute } => {
+                if let Some((natural, effective, index)) = self.increase_player_attribute(attribute)
+                {
+                    events.push(DomainEvent::PlayerAttributeIncreased {
+                        attribute,
+                        natural,
+                        effective,
+                        index,
+                        pending_attribute_increases: self.progress.pending_attribute_increases,
+                    });
+                } else {
+                    events.push(DomainEvent::PlayerAttributeIncreaseUnavailable { attribute });
                 }
             }
             GameAction::BashDoor { direction } => match self.bash_door(direction) {
@@ -1734,8 +1794,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV28 {
-            schema_version: 28,
+        let payload = StateHashPayloadV29 {
+            schema_version: 29,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -1745,7 +1805,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: player_to_save(&self.player),
+            player: player_to_save(&self.player, &self.progress),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
@@ -1877,6 +1937,7 @@ impl Game {
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             resistances: self.player.resistances.to_dtos(),
+            progress: self.player_progress_dto(),
         }
     }
 
@@ -2236,6 +2297,12 @@ impl Game {
                 attack: definition.modifiers.attack,
                 defense: definition.modifiers.defense,
                 max_hp: definition.modifiers.max_hp,
+                strength: definition.modifiers.strength,
+                intelligence: definition.modifiers.intelligence,
+                wisdom: definition.modifiers.wisdom,
+                dexterity: definition.modifiers.dexterity,
+                constitution: definition.modifiers.constitution,
+                charisma: definition.modifiers.charisma,
             })
     }
 
@@ -2251,6 +2318,16 @@ impl Game {
                     attack: total.attack.saturating_add(affix.modifiers.attack),
                     defense: total.defense.saturating_add(affix.modifiers.defense),
                     max_hp: total.max_hp.saturating_add(affix.modifiers.max_hp),
+                    strength: total.strength.saturating_add(affix.modifiers.strength),
+                    intelligence: total
+                        .intelligence
+                        .saturating_add(affix.modifiers.intelligence),
+                    wisdom: total.wisdom.saturating_add(affix.modifiers.wisdom),
+                    dexterity: total.dexterity.saturating_add(affix.modifiers.dexterity),
+                    constitution: total
+                        .constitution
+                        .saturating_add(affix.modifiers.constitution),
+                    charisma: total.charisma.saturating_add(affix.modifiers.charisma),
                 }
             },
         )
@@ -2333,6 +2410,16 @@ impl Game {
                     attack: total.attack.saturating_add(affix.modifiers.attack),
                     defense: total.defense.saturating_add(affix.modifiers.defense),
                     max_hp: total.max_hp.saturating_add(affix.modifiers.max_hp),
+                    strength: total.strength.saturating_add(affix.modifiers.strength),
+                    intelligence: total
+                        .intelligence
+                        .saturating_add(affix.modifiers.intelligence),
+                    wisdom: total.wisdom.saturating_add(affix.modifiers.wisdom),
+                    dexterity: total.dexterity.saturating_add(affix.modifiers.dexterity),
+                    constitution: total
+                        .constitution
+                        .saturating_add(affix.modifiers.constitution),
+                    charisma: total.charisma.saturating_add(affix.modifiers.charisma),
                 }
             },
         )
@@ -2351,6 +2438,12 @@ impl Game {
                         attack: affix.modifiers.attack,
                         defense: affix.modifiers.defense,
                         max_hp: affix.modifiers.max_hp,
+                        strength: affix.modifiers.strength,
+                        intelligence: affix.modifiers.intelligence,
+                        wisdom: affix.modifiers.wisdom,
+                        dexterity: affix.modifiers.dexterity,
+                        constitution: affix.modifiers.constitution,
+                        charisma: affix.modifiers.charisma,
                     },
                 })
             })
@@ -2537,6 +2630,62 @@ impl Game {
             events.push(DomainEvent::CampaignVictorious {
                 score: self.campaign_score_at(self.turn.saturating_add(1)),
             });
+            events.push(DomainEvent::PlayerLevelCapUnlocked {
+                level_cap: CharacterProgress::level_cap(true),
+                attribute_index_cap: CharacterProgress::attribute_index_cap(true),
+            });
+            self.apply_player_experience(0, events);
+        }
+    }
+
+    fn player_max_hp_at_level(&self, level: u16) -> i32 {
+        let base = self
+            .progress
+            .hp_progression
+            .get(usize::from(level.saturating_sub(1)))
+            .copied()
+            .unwrap_or(1);
+        let percent = i32::from(self.effective_player_attributes().constitution_hp_percent());
+        base.saturating_mul(percent)
+            .saturating_add(50)
+            .saturating_div(100)
+            .saturating_add(self.equipment_modifiers().max_hp)
+    }
+
+    fn apply_player_experience(&mut self, amount: u64, events: &mut Vec<DomainEvent>) {
+        let previous_level = self.progress.level;
+        let mut previous_max_hp = self.player_max_hp_at_level(previous_level);
+        let levels = self
+            .progress
+            .gain_experience(amount, self.victory_level_cap_unlocked());
+        if amount > 0 {
+            events.push(DomainEvent::ExperienceGained {
+                amount,
+                total: self.progress.experience,
+            });
+        }
+        for level in levels {
+            let max_hp = self.player_max_hp_at_level(level);
+            if previous_max_hp > 0 {
+                self.player.hp = i32::try_from(
+                    i64::from(self.player.hp)
+                        .saturating_mul(i64::from(max_hp))
+                        .saturating_div(i64::from(previous_max_hp)),
+                )
+                .unwrap_or_else(|_| {
+                    if self.player.hp.is_negative() {
+                        i32::MIN
+                    } else {
+                        i32::MAX
+                    }
+                });
+            }
+            previous_max_hp = max_hp;
+            events.push(DomainEvent::PlayerLevelGained {
+                level,
+                max_hp,
+                pending_attribute_increases: self.progress.pending_attribute_increases,
+            });
         }
     }
 
@@ -2550,8 +2699,91 @@ impl Game {
                     attack: total.attack.saturating_add(item.attack),
                     defense: total.defense.saturating_add(item.defense),
                     max_hp: total.max_hp.saturating_add(item.max_hp),
+                    strength: total.strength.saturating_add(item.strength),
+                    intelligence: total.intelligence.saturating_add(item.intelligence),
+                    wisdom: total.wisdom.saturating_add(item.wisdom),
+                    dexterity: total.dexterity.saturating_add(item.dexterity),
+                    constitution: total.constitution.saturating_add(item.constitution),
+                    charisma: total.charisma.saturating_add(item.charisma),
                 }
             })
+    }
+
+    fn victory_level_cap_unlocked(&self) -> bool {
+        self.campaign_state.status != CampaignStatusDto::Active
+    }
+
+    fn effective_player_attributes(&self) -> AttributeSet {
+        let modifiers = self.equipment_modifiers();
+        let cap = CharacterProgress::attribute_cap(self.victory_level_cap_unlocked());
+        let natural = self.progress.attributes;
+        AttributeSet {
+            strength: modify_attribute_value(natural.strength, modifiers.strength, cap),
+            intelligence: modify_attribute_value(natural.intelligence, modifiers.intelligence, cap),
+            wisdom: modify_attribute_value(natural.wisdom, modifiers.wisdom, cap),
+            dexterity: modify_attribute_value(natural.dexterity, modifiers.dexterity, cap),
+            constitution: modify_attribute_value(natural.constitution, modifiers.constitution, cap),
+            charisma: modify_attribute_value(natural.charisma, modifiers.charisma, cap),
+        }
+    }
+
+    fn player_progress_dto(&self) -> PlayerProgressDto {
+        let natural = self.progress.attributes;
+        let effective = self.effective_player_attributes();
+        let value = |kind| AttributeValueDto {
+            natural: natural.value(kind),
+            effective: effective.value(kind),
+            index: effective.index(kind),
+        };
+        let victory_unlocked = self.victory_level_cap_unlocked();
+        let level_cap = CharacterProgress::level_cap(victory_unlocked);
+        PlayerProgressDto {
+            level: self.progress.level,
+            max_level: self.progress.max_level,
+            experience: self.progress.experience,
+            level_cap,
+            attribute_cap: CharacterProgress::attribute_cap(victory_unlocked),
+            attribute_index_cap: CharacterProgress::attribute_index_cap(victory_unlocked),
+            experience_for_next_level: (self.progress.level < level_cap)
+                .then(|| experience_required_for_level(self.progress.level.saturating_add(1))),
+            pending_attribute_increases: self.progress.pending_attribute_increases,
+            victory_level_cap_unlocked: victory_unlocked,
+            attributes: AttributeSetDto {
+                strength: value(AttributeKind::Strength),
+                intelligence: value(AttributeKind::Intelligence),
+                wisdom: value(AttributeKind::Wisdom),
+                dexterity: value(AttributeKind::Dexterity),
+                constitution: value(AttributeKind::Constitution),
+                charisma: value(AttributeKind::Charisma),
+            },
+        }
+    }
+
+    fn increase_player_attribute(&mut self, attribute: AttributeKind) -> Option<(u16, u16, u8)> {
+        let previous_max_hp = self.effective_player_max_hp();
+        let victorious = self.victory_level_cap_unlocked();
+        self.progress.increase_attribute(attribute, victorious)?;
+        let next_max_hp = self.effective_player_max_hp();
+        if previous_max_hp > 0 && next_max_hp != previous_max_hp {
+            self.player.hp = i32::try_from(
+                i64::from(self.player.hp)
+                    .saturating_mul(i64::from(next_max_hp))
+                    .saturating_div(i64::from(previous_max_hp)),
+            )
+            .unwrap_or_else(|_| {
+                if self.player.hp.is_negative() {
+                    i32::MIN
+                } else {
+                    i32::MAX
+                }
+            });
+        }
+        let effective = self.effective_player_attributes();
+        Some((
+            self.progress.attributes.value(attribute),
+            effective.value(attribute),
+            effective.index(attribute),
+        ))
     }
 
     fn effective_player_max_hp(&self) -> i32 {
@@ -2732,7 +2964,22 @@ impl Game {
     ) -> ActorDerivedStats {
         let mut pipeline = DerivedStatsPipeline::new();
         let base_source = definition.id.as_str();
-        pipeline.add(StatKind::MaxHp, StatLayer::Base, base_source, actor.max_hp);
+        pipeline.add(
+            StatKind::MaxHp,
+            StatLayer::Base,
+            base_source,
+            if include_equipment {
+                self.progress
+                    .base_max_hp()
+                    .saturating_mul(i32::from(
+                        self.effective_player_attributes().constitution_hp_percent(),
+                    ))
+                    .saturating_add(50)
+                    / 100
+            } else {
+                actor.max_hp
+            },
+        );
         pipeline.add(
             StatKind::Attack,
             StatLayer::Base,
@@ -4001,6 +4248,12 @@ impl Game {
         }
         removed_entities.push(removed.id.clone());
         events.push(death_event);
+        let experience_value = self
+            .content
+            .actor(&removed.kind_id)
+            .expect("removed actor definition must remain available")
+            .experience_value;
+        self.apply_player_experience(experience_value, events);
         let defeated_guardian = self
             .content
             .world(&self.world_id)
@@ -7890,6 +8143,16 @@ impl Game {
             if self.content.terrain(terrain_id).is_none() {
                 return Err(CoreError::UnknownTerrain(terrain_id.clone()));
             }
+        }
+        let victory_cap_unlocked = self.campaign_state.status != CampaignStatusDto::Active;
+        if !self.progress.validate(victory_cap_unlocked)
+            || self.progress.hp_progression.first().copied() != Some(self.player.max_hp)
+            || self.progress.hp_progression.windows(2).any(|window| {
+                let increase = window[1].saturating_sub(window[0]);
+                !(1..=10).contains(&increase)
+            })
+        {
+            return Err(CoreError::InvalidSave("character progress is invalid"));
         }
         self.validate_actor(&self.player, ActorRole::Player)?;
         if !self.is_walkable(self.player.position) {
@@ -16030,6 +16293,10 @@ mod tests {
             .iter()
             .position(|entity| entity.id == "demo.guardian.resonance-descent.1")
             .expect("campaign final floor should spawn its guardian");
+        assert_eq!(
+            game.entities[guardian_index].kind_id,
+            "demo.actor.serpent-of-chaos"
+        );
         let guardian_position = game.entities[guardian_index].position;
         game.entities[guardian_index].hp = 1;
         let (direction, player_position) = TERRAIN_INTERACTION_DIRECTIONS
@@ -16057,6 +16324,14 @@ mod tests {
         }));
         assert_eq!(update.campaign.status, CampaignStatusDto::Victorious);
         assert_eq!(game.campaign_state.victory_turn, Some(1));
+        assert_eq!(game.progress.level, 51);
+        assert_eq!(CharacterProgress::level_cap(true), 100);
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == "player-level-cap-unlocked")
+        );
 
         let mut old_payload = game.to_save();
         old_payload.campaign_state = None;

@@ -141,7 +141,7 @@
   }, {
     "id": "demo.dungeon.resonance-descent",
     "rootFloorId": "demo.floor.resonance-depth-1",
-    "guardianActorKindId": "demo.actor.resonant-warden",
+    "guardianActorKindId": "demo.actor.serpent-of-chaos",
     "entranceGuardian": {
       "instanceId": "demo.z-entrance-guardian.resonance-descent.1",
       "actorKindId": "demo.actor.resonant-warden",
@@ -778,7 +778,7 @@
     "finalFloor": true,
     "guardian": {
       "instanceId": "demo.guardian.resonance-descent.1",
-      "actorKindId": "demo.actor.resonant-warden"
+      "actorKindId": "demo.actor.serpent-of-chaos"
     },
     "depth": 10,
     "width": 20,

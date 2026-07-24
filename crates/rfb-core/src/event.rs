@@ -55,6 +55,29 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         quantity: u32,
     },
+    ExperienceGained {
+        amount: u64,
+        total: u64,
+    },
+    PlayerLevelGained {
+        level: u16,
+        max_hp: i32,
+        pending_attribute_increases: u16,
+    },
+    PlayerLevelCapUnlocked {
+        level_cap: u16,
+        attribute_index_cap: u8,
+    },
+    PlayerAttributeIncreased {
+        attribute: crate::stats::AttributeKind,
+        natural: u16,
+        effective: u16,
+        index: u8,
+        pending_attribute_increases: u16,
+    },
+    PlayerAttributeIncreaseUnavailable {
+        attribute: crate::stats::AttributeKind,
+    },
     FloorTransitioned {
         from_floor_id: String,
         to_floor_id: String,
@@ -350,6 +373,63 @@ impl DomainEvent {
                     ("target", target_kind_id),
                     ("quantity", quantity.to_string()),
                 ],
+            ),
+            Self::ExperienceGained { amount, total } => dto(
+                "player.experience-gained",
+                "player-experience-gained",
+                [("amount", amount.to_string()), ("total", total.to_string())],
+            ),
+            Self::PlayerLevelGained {
+                level,
+                max_hp,
+                pending_attribute_increases,
+            } => dto(
+                "player.level-gained",
+                "player-level-gained",
+                [
+                    ("level", level.to_string()),
+                    ("maxHp", max_hp.to_string()),
+                    (
+                        "pendingAttributeIncreases",
+                        pending_attribute_increases.to_string(),
+                    ),
+                ],
+            ),
+            Self::PlayerLevelCapUnlocked {
+                level_cap,
+                attribute_index_cap,
+            } => dto(
+                "player.level-cap-unlocked",
+                "player-level-cap-unlocked",
+                [
+                    ("levelCap", level_cap.to_string()),
+                    ("attributeIndexCap", attribute_index_cap.to_string()),
+                ],
+            ),
+            Self::PlayerAttributeIncreased {
+                attribute,
+                natural,
+                effective,
+                index,
+                pending_attribute_increases,
+            } => dto(
+                "player.attribute-increased",
+                "player-attribute-increased",
+                [
+                    ("attribute", attribute_kind_id(attribute).to_owned()),
+                    ("natural", natural.to_string()),
+                    ("effective", effective.to_string()),
+                    ("index", index.to_string()),
+                    (
+                        "pendingAttributeIncreases",
+                        pending_attribute_increases.to_string(),
+                    ),
+                ],
+            ),
+            Self::PlayerAttributeIncreaseUnavailable { attribute } => dto(
+                "player.attribute-increase-unavailable",
+                "player-attribute-increase-unavailable",
+                [("attribute", attribute_kind_id(attribute).to_owned())],
             ),
             Self::FloorTransitioned {
                 from_floor_id,
@@ -867,6 +947,17 @@ fn item_quality_id(quality: ItemQualityDto) -> &'static str {
         ItemQualityDto::Ordinary => "ordinary",
         ItemQualityDto::Fine => "fine",
         ItemQualityDto::Exceptional => "exceptional",
+    }
+}
+
+fn attribute_kind_id(attribute: crate::stats::AttributeKind) -> &'static str {
+    match attribute {
+        crate::stats::AttributeKind::Strength => "strength",
+        crate::stats::AttributeKind::Intelligence => "intelligence",
+        crate::stats::AttributeKind::Wisdom => "wisdom",
+        crate::stats::AttributeKind::Dexterity => "dexterity",
+        crate::stats::AttributeKind::Constitution => "constitution",
+        crate::stats::AttributeKind::Charisma => "charisma",
     }
 }
 

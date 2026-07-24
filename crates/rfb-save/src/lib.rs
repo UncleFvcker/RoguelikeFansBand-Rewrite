@@ -186,6 +186,7 @@ mod tests {
                 energy_need: 0,
                 statuses: Vec::new(),
                 resistances: Vec::new(),
+                progress: None,
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

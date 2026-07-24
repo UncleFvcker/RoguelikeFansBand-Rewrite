@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v69、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v70、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -18,7 +18,17 @@
 | P7 | 胜利、退休与角色评分 | 已由 contract-v68 完成 | campaign victory dungeon、胜利/退休状态、确定性评分、存档迁移和 UI 结算 |
 | P8 | 可配置实例生命周期 | 已由 contract-v69 完成 | `reset-on-surface`、`persistent`、`turn-ttl`、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理；普通地牢继续回地表即清空 |
 | P9 | 运行时连通修复 | 明确不实现 | 地形破坏直接成为权威状态，不做自动重连、楼梯迁移或整层修复；玩家可使用挖掘能力自行恢复通路 |
-| P10 | 角色成长基础 | 下一候选 | 经验、等级、六维属性、HP 成长与最小升级循环；暂不展开完整 Race/Class/Personality 矩阵 |
+| P10 | 角色成长基础 | 已由 contract-v70 完成 | 击杀经验、RFB 1–50 阈值、未胜利 50 级封顶、胜利后 100 级与 `18/820` 解锁、六维自然/有效属性、HP 序列、装备 modifier、属性点命令和存档迁移 |
+| P11 | 角色创建与构筑基础 | 下一候选 | Race/Class/Personality、技能集合、初始构筑和来源可解释的派生属性；复用 v70 progression，不提前引入完整法术系统 |
+
+## contract-v70 明确遗留
+
+- Race/Class/Personality 角色创建、种族/职业成长曲线和初始装备模板；
+- 属性损伤、临时恢复、技能熟练、经验倍率和职业专属资源；
+- 法力、能力书、法术失败率和完整的角色构筑选择；
+- 属性点重置、自动分配策略和更复杂的等级奖励节点。
+
+v70 的经验、HP 序列、自然属性、装备 modifier 和胜利解锁已进入协议 1.70、save v1 与 state hash Schema v29。详细边界见 [contract-v70](contract-v70-rfb-character-progression.md)。
 
 ## contract-v69 明确遗留
 

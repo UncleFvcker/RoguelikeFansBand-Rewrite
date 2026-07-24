@@ -123,6 +123,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.69 为 `DungeonStateSaveDto` 增加可选 `retainedInstanceId` 与 `retainedAtTurn`。只有 `persistent`/`turn-ttl` dungeon 可以保存一个 retained 实例；其 stored floors、实例 ID 和物品属性知识一起参与存档校验。载入时 retained 实例缺楼层、生命周期为 reset、回合顺序非法或字段不完整都会拒绝。v68 及更早存档缺少字段时按默认 `reset-on-surface` 迁移，不回填 retained 实例、不重建地图、不推进 RNG。TTL 到期清理实例及其已删除物品的实例属性知识；种类级物品知识继续保留。state hash 使用 Schema v28，save 容器仍为 v1。
 
+协议 1.70 为 `PlayerSaveDto.progress` 增加角色成长权威字段：六维自然属性、经验、等级、历史最高等级、待分配属性点和 100 项出生 HP 序列。缺少该可选字段的 v69 及更早存档按固定初始属性、等级 1、经验 0、每级生命 +6 的 legacy 规则迁移，不重建地图或推进正式 RNG；迁移后的 progress 与玩家生命校验一起进入 state hash Schema v29。未胜利存档可保留 50 级封顶后的额外经验，胜利或退休载入会在校验前确定性解锁并结算到 100 级。装备属性只作为派生有效属性，不写入自然属性字段。save 容器仍为 v1。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

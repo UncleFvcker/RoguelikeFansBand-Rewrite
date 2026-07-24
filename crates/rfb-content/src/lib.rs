@@ -176,6 +176,8 @@ pub struct ActorDefinition {
     pub description_key: String,
     pub glyph: String,
     pub level: u32,
+    #[serde(default)]
+    pub experience_value: u64,
     pub max_hp: i32,
     #[serde(default = "default_actor_speed")]
     pub speed: u16,
@@ -216,6 +218,18 @@ pub struct StatModifiers {
     pub defense: i32,
     #[serde(default)]
     pub max_hp: i32,
+    #[serde(default)]
+    pub strength: i32,
+    #[serde(default)]
+    pub intelligence: i32,
+    #[serde(default)]
+    pub wisdom: i32,
+    #[serde(default)]
+    pub dexterity: i32,
+    #[serde(default)]
+    pub constitution: i32,
+    #[serde(default)]
+    pub charisma: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1800,6 +1814,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_text(&actor.id, &actor.name_key, &actor.description_key)?;
         validate_glyph(&actor.id, &actor.glyph)?;
         if actor.level > 10_000
+            || actor.experience_value > 999_999_999
+            || (actor.role == ActorRole::Player && actor.experience_value != 0)
             || actor.max_hp <= 0
             || actor.max_hp > 1_000_000
             || actor.speed > 199
@@ -1875,6 +1891,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || modifiers.attack > 1_000_000
             || modifiers.defense < -1_000_000
             || modifiers.defense > 1_000_000
+            || attribute_modifiers_out_of_range(modifiers)
         {
             return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
         }
@@ -1916,6 +1933,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || item.modifiers.attack > 1_000_000
             || item.modifiers.defense < -1_000_000
             || item.modifiers.defense > 1_000_000
+            || attribute_modifiers_out_of_range(&item.modifiers)
             || (item.equipment_slot.is_none() && item.modifiers != StatModifiers::default())
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
@@ -4707,6 +4725,19 @@ fn validate_equipment_slot(slot: &str) -> Result<(), ContentError> {
     Ok(())
 }
 
+fn attribute_modifiers_out_of_range(modifiers: &StatModifiers) -> bool {
+    [
+        modifiers.strength,
+        modifiers.intelligence,
+        modifiers.wisdom,
+        modifiers.dexterity,
+        modifiers.constitution,
+        modifiers.charisma,
+    ]
+    .into_iter()
+    .any(|value| !(-100..=100).contains(&value))
+}
+
 fn validate_definition_text(
     id: &str,
     name_key: &str,
@@ -5086,7 +5117,7 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 45);
-        assert_eq!(first.content.actors.len(), 10);
+        assert_eq!(first.content.actors.len(), 11);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 5);
         assert_eq!(first.content.encounter_tables.len(), 6);
@@ -5105,7 +5136,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.61.0");
+        assert_eq!(catalog.pack_version(), "1.62.0");
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -6826,6 +6857,7 @@ mod tests {
             .find(|actor| actor.id == "demo.actor.echo-hound")
             .expect("fixture should contain the echo hound");
         hound.role = ActorRole::Player;
+        hound.experience_value = 0;
         hound.carry_capacity_tenths_pound = 100;
         assert!(matches!(
             validate_and_normalize(&mut invalid),

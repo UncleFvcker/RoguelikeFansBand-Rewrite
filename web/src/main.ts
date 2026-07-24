@@ -25,12 +25,14 @@ import type {
   DamageTypeDto,
   Direction,
   EquipmentItemDto,
+  AttributeKindDto,
   GameCommand,
   GameEventDto,
   GameSnapshot,
   GameUpdate,
   InventoryItemDto,
   ItemPropertyDto,
+  PlayerProgressDto,
   StatModifiersDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
@@ -80,6 +82,11 @@ const defenseValue = element<HTMLElement>("defense-value");
 const effectsValue = element<HTMLElement>("effects-value");
 const positionValue = element<HTMLElement>("position-value");
 const hashValue = element<HTMLElement>("hash-value");
+const progressionLevelValue = element<HTMLElement>("progression-level-value");
+const progressionExperienceValue = element<HTMLElement>("progression-experience-value");
+const progressionCapValue = element<HTMLElement>("progression-cap-value");
+const progressionPointsValue = element<HTMLElement>("progression-points-value");
+const attributeList = element<HTMLUListElement>("attribute-list");
 const taskLogList = element<HTMLUListElement>("task-log-list");
 const campaignStatusValue = element<HTMLElement>("campaign-status-value");
 const campaignScoreValue = element<HTMLElement>("campaign-score-value");
@@ -143,6 +150,14 @@ let currentEquipment: EquipmentItemDto[] = [];
 const selectedInventoryIds = new Set<string>();
 let nativeSaves: NativeSaveSummary[] = [];
 const messageRecords: MessageRecord[] = [];
+const ATTRIBUTE_KINDS: AttributeKindDto[] = [
+  "strength",
+  "intelligence",
+  "wisdom",
+  "dexterity",
+  "constitution",
+  "charisma",
+];
 inputPresetSelect.value = inputPreset;
 tilesetPresetSelect.value = tilesetPreset;
 cameraModeSelect.value = cameraMode;
@@ -430,6 +445,7 @@ async function dispatch(command: GameCommand): Promise<void> {
   } finally {
     busy = false;
     updateInventoryActions();
+    renderProgression(currentStatus?.player.progress);
     renderTargeting();
   }
 }
@@ -785,6 +801,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.defense,
     state.player.equipmentModifiers.defense,
   );
+  renderProgression(state.player.progress);
   effectsValue.textContent =
     state.player.statuses.length === 0
       ? localization.format("status-effects-none")
@@ -860,6 +877,65 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   mapHost.dataset.playerStatusCount = String(state.player.statuses.length);
   updateInventoryActions();
   renderTargeting();
+}
+
+function renderProgression(progress: PlayerProgressDto | undefined): void {
+  if (!progress) {
+    const unavailable = localization.format("progression-unavailable");
+    progressionLevelValue.textContent = unavailable;
+    progressionExperienceValue.textContent = unavailable;
+    progressionCapValue.textContent = unavailable;
+    progressionPointsValue.textContent = unavailable;
+    attributeList.replaceChildren();
+    return;
+  }
+  progressionLevelValue.textContent = localization.format("progression-level-value", {
+    level: progress.level,
+    maxLevel: progress.maxLevel,
+  });
+  progressionExperienceValue.textContent = localization.format("progression-experience-value", {
+    experience: String(progress.experience),
+    next: progress.experienceForNextLevel === undefined || progress.experienceForNextLevel === null
+      ? "—"
+      : String(progress.experienceForNextLevel),
+  });
+  progressionCapValue.textContent = localization.format("progression-cap-value", {
+    levelCap: progress.levelCap,
+    attributeCap: formatAttributeValue(progress.attributeCap),
+    attributeIndexCap: progress.attributeIndexCap,
+  });
+  progressionPointsValue.textContent = String(progress.pendingAttributeIncreases);
+  attributeList.replaceChildren(
+    ...ATTRIBUTE_KINDS.map((attribute) => {
+      const value = progress.attributes[attribute];
+      const row = document.createElement("li");
+      row.className = "attribute-row";
+      const label = document.createElement("span");
+      label.className = "attribute-name";
+      label.textContent = localization.format(`attribute-${attribute}` as MessageKey);
+      const values = document.createElement("span");
+      values.className = "attribute-value";
+      values.textContent = localization.format("attribute-value", {
+        natural: formatAttributeValue(value.natural),
+        effective: formatAttributeValue(value.effective),
+        index: value.index,
+      });
+      const increase = document.createElement("button");
+      increase.type = "button";
+      increase.className = "attribute-increase";
+      increase.textContent = localization.format("action-increase-attribute");
+      increase.disabled =
+        busy ||
+        playerDead ||
+        progress.pendingAttributeIncreases === 0 ||
+        value.index >= progress.attributeIndexCap;
+      increase.addEventListener("click", () =>
+        void dispatch({ type: "increase-attribute", attribute }),
+      );
+      row.append(label, values, increase);
+      return row;
+    }),
+  );
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
@@ -1137,6 +1213,16 @@ function signedModifier(value: number): string {
   return value > 0 ? `+${value}` : String(value);
 }
 
+function formatAttributeValue(value: number): string {
+  return value > 18 ? `18/${value - 18}` : String(value);
+}
+
+function formatAttributeValueArgument(value: string | undefined): string {
+  if (value === undefined) return "?";
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 3 ? formatAttributeValue(parsed) : "?";
+}
+
 function formatTenthsPound(value: number): string {
   return `${Math.trunc(value / 10)}.${Math.abs(value % 10)}`;
 }
@@ -1176,6 +1262,37 @@ function formatEvent(event: GameEventDto): string {
       });
     case "campaign-retire-unavailable":
       return localization.format("message-campaign-retire-unavailable");
+    case "player-experience-gained":
+      return localization.format("message-player-experience-gained", {
+        amount: event.args.amount ?? "?",
+        total: event.args.total ?? "?",
+      });
+    case "player-level-gained":
+      return localization.format("message-player-level-gained", {
+        level: event.args.level ?? "?",
+        maxHp: event.args.maxHp ?? "?",
+        pending: event.args.pendingAttributeIncreases ?? "?",
+      });
+    case "player-level-cap-unlocked":
+      return localization.format("message-player-level-cap-unlocked", {
+        levelCap: event.args.levelCap ?? "?",
+        attributeCap: event.args.attributeIndexCap ?? "?",
+      });
+    case "player-attribute-increased":
+      return localization.format("message-player-attribute-increased", {
+        attribute: localization.format(
+          `attribute-${event.args.attribute ?? "unknown"}` as MessageKey,
+        ),
+        natural: formatAttributeValueArgument(event.args.natural),
+        effective: formatAttributeValueArgument(event.args.effective),
+        pending: event.args.pendingAttributeIncreases ?? "?",
+      });
+    case "player-attribute-increase-unavailable":
+      return localization.format("message-player-attribute-increase-unavailable", {
+        attribute: localization.format(
+          `attribute-${event.args.attribute ?? "unknown"}` as MessageKey,
+        ),
+      });
     case "floor-one-shot-closed":
       return localization.format("message-floor-one-shot-closed");
     case "task-completed":

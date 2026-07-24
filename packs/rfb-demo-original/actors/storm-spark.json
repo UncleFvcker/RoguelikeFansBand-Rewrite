@@ -7,6 +7,7 @@
   "descriptionKey": "actor-demo-storm-spark-description",
   "glyph": "*",
   "level": 1,
+  "experienceValue": 9,
   "maxHp": 3,
   "speed": 110,
   "attack": 1,

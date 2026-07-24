@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::rng::RfbRng;
+
+pub const MAX_LEVEL: u16 = 100;
+pub const PRE_VICTORY_LEVEL_CAP: u16 = 50;
+pub const PRE_VICTORY_ATTRIBUTE_CAP: u16 = 238;
+pub const VICTORY_ATTRIBUTE_CAP: u16 = 838;
+pub const PRE_VICTORY_ATTRIBUTE_INDEX_CAP: u8 = 37;
+pub const VICTORY_ATTRIBUTE_INDEX_CAP: u8 = 97;
+pub const MAX_EXPERIENCE: u64 = 999_999_999;
+const HP_SEQUENCE_SEED_SALT: u64 = 0x5246_425f_4850_7637;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StatKind {
     MaxHp,
@@ -18,6 +29,305 @@ pub enum StatKind {
     DigSkill,
     ArmorClass,
     ActionDifficulty,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum AttributeKind {
+    Strength,
+    Intelligence,
+    Wisdom,
+    Dexterity,
+    Constitution,
+    Charisma,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AttributeSet {
+    pub strength: u16,
+    pub intelligence: u16,
+    pub wisdom: u16,
+    pub dexterity: u16,
+    pub constitution: u16,
+    pub charisma: u16,
+}
+
+impl Default for AttributeSet {
+    fn default() -> Self {
+        Self {
+            strength: 13,
+            intelligence: 13,
+            wisdom: 13,
+            dexterity: 13,
+            constitution: 13,
+            charisma: 13,
+        }
+    }
+}
+
+impl AttributeSet {
+    #[must_use]
+    pub const fn value(self, kind: AttributeKind) -> u16 {
+        match kind {
+            AttributeKind::Strength => self.strength,
+            AttributeKind::Intelligence => self.intelligence,
+            AttributeKind::Wisdom => self.wisdom,
+            AttributeKind::Dexterity => self.dexterity,
+            AttributeKind::Constitution => self.constitution,
+            AttributeKind::Charisma => self.charisma,
+        }
+    }
+
+    #[must_use]
+    pub const fn index(self, kind: AttributeKind) -> u8 {
+        stat_index(self.value(kind))
+    }
+
+    #[must_use]
+    pub const fn constitution_hp_percent(self) -> u16 {
+        constitution_hp_percent(stat_index(self.constitution))
+    }
+}
+
+/// RFB's 3..18/220 representation uses 38 non-linear buckets. The rewrite
+/// extends the same ten-point progression through 18/820 after victory.
+#[must_use]
+pub const fn stat_index(value: u16) -> u8 {
+    let index = if value <= 18 {
+        value.saturating_sub(3)
+    } else if value <= 237 {
+        15 + (value - 18) / 10
+    } else {
+        37 + (value - 238) / 10
+    };
+    if index > VICTORY_ATTRIBUTE_INDEX_CAP as u16 {
+        VICTORY_ATTRIBUTE_INDEX_CAP
+    } else {
+        index as u8
+    }
+}
+
+#[must_use]
+pub fn modify_attribute_value(value: u16, modifier: i32, cap: u16) -> u16 {
+    let mut value = value.clamp(3, cap);
+    if modifier > 0 {
+        for _ in 0..modifier {
+            value = if value < 18 {
+                value.saturating_add(1)
+            } else {
+                value.saturating_add(10)
+            }
+            .min(cap);
+        }
+    } else {
+        for _ in modifier..0 {
+            value = if value >= 28 {
+                value - 10
+            } else if value > 18 {
+                18
+            } else {
+                value.saturating_sub(1).max(3)
+            };
+        }
+    }
+    value
+}
+
+const ORIGINAL_CONSTITUTION_HP_PERCENT: [u16; 38] = [
+    80, 84, 87, 90, 92, 94, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 109, 111, 113,
+    115, 117, 119, 121, 124, 127, 130, 133, 136, 139, 142, 145, 148, 151, 154, 157, 160,
+];
+
+const fn constitution_hp_percent(index: u8) -> u16 {
+    if index <= PRE_VICTORY_ATTRIBUTE_INDEX_CAP {
+        ORIGINAL_CONSTITUTION_HP_PERCENT[index as usize]
+    } else {
+        160 + (index as u16 - PRE_VICTORY_ATTRIBUTE_INDEX_CAP as u16) * 3
+    }
+}
+
+const ORIGINAL_EXPERIENCE_THRESHOLDS: [u64; 50] = [
+    10, 25, 45, 70, 100, 140, 200, 280, 380, 500, 650, 850, 1_100, 1_400, 1_800, 2_300, 2_900,
+    3_600, 4_400, 5_400, 6_800, 8_400, 10_200, 12_500, 17_500, 25_000, 35_000, 50_000, 75_000,
+    100_000, 150_000, 200_000, 275_000, 350_000, 450_000, 550_000, 700_000, 850_000, 1_000_000,
+    1_250_000, 1_500_000, 1_800_000, 2_100_000, 2_400_000, 2_700_000, 3_000_000, 3_500_000,
+    4_000_000, 4_500_000, 5_000_000,
+];
+
+#[must_use]
+pub fn experience_to_next_level(level: u16) -> Option<u64> {
+    if level == 0 || level >= MAX_LEVEL {
+        return None;
+    }
+    if level <= 50 {
+        return Some(ORIGINAL_EXPERIENCE_THRESHOLDS[usize::from(level - 1)]);
+    }
+    Some(5_500_000 + u64::from(level - 51) * 500_000)
+}
+
+#[must_use]
+pub fn experience_required_for_level(level: u16) -> u64 {
+    level
+        .checked_sub(1)
+        .and_then(experience_to_next_level)
+        .unwrap_or(0)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CharacterProgress {
+    pub attributes: AttributeSet,
+    pub experience: u64,
+    pub level: u16,
+    pub max_level: u16,
+    pub pending_attribute_increases: u16,
+    pub hp_progression: Vec<i32>,
+}
+
+impl CharacterProgress {
+    #[must_use]
+    pub fn new(seed: u64, base_max_hp: i32) -> Self {
+        let mut hp_rng = RfbRng::seeded(seed ^ HP_SEQUENCE_SEED_SALT);
+        let mut hp_progression = Vec::with_capacity(usize::from(MAX_LEVEL));
+        let mut hp = base_max_hp.max(1);
+        hp_progression.push(hp);
+        for _ in 1..MAX_LEVEL {
+            hp = hp.saturating_add(
+                i32::try_from(hp_rng.bounded(10)).expect("HP roll must fit i32") + 1,
+            );
+            hp_progression.push(hp);
+        }
+        Self {
+            attributes: AttributeSet::default(),
+            experience: 0,
+            level: 1,
+            max_level: 1,
+            pending_attribute_increases: 0,
+            hp_progression,
+        }
+    }
+
+    #[must_use]
+    pub fn legacy(base_max_hp: i32) -> Self {
+        let mut progress = Self::new(0, base_max_hp);
+        let mut hp = base_max_hp.max(1);
+        progress.hp_progression.clear();
+        progress.hp_progression.push(hp);
+        for _ in 1..MAX_LEVEL {
+            hp = hp.saturating_add(6);
+            progress.hp_progression.push(hp);
+        }
+        progress
+    }
+
+    #[must_use]
+    pub const fn level_cap(victorious: bool) -> u16 {
+        if victorious {
+            MAX_LEVEL
+        } else {
+            PRE_VICTORY_LEVEL_CAP
+        }
+    }
+
+    #[must_use]
+    pub const fn attribute_cap(victorious: bool) -> u16 {
+        if victorious {
+            VICTORY_ATTRIBUTE_CAP
+        } else {
+            PRE_VICTORY_ATTRIBUTE_CAP
+        }
+    }
+
+    #[must_use]
+    pub const fn attribute_index_cap(victorious: bool) -> u8 {
+        if victorious {
+            VICTORY_ATTRIBUTE_INDEX_CAP
+        } else {
+            PRE_VICTORY_ATTRIBUTE_INDEX_CAP
+        }
+    }
+
+    #[must_use]
+    pub fn base_max_hp(&self) -> i32 {
+        self.hp_progression
+            .get(usize::from(self.level.saturating_sub(1)))
+            .copied()
+            .unwrap_or(1)
+    }
+
+    #[must_use]
+    pub fn effective_base_max_hp(&self) -> i32 {
+        let base = self.base_max_hp();
+        let percent = i32::from(self.attributes.constitution_hp_percent());
+        base.saturating_mul(percent).saturating_add(50) / 100
+    }
+
+    pub fn gain_experience(&mut self, amount: u64, victorious: bool) -> Vec<u16> {
+        self.experience = self.experience.saturating_add(amount).min(MAX_EXPERIENCE);
+        let cap = Self::level_cap(victorious);
+        let mut gained = Vec::new();
+        while self.level < cap
+            && self.experience >= experience_required_for_level(self.level.saturating_add(1))
+        {
+            self.level += 1;
+            self.max_level = self.max_level.max(self.level);
+            if self.level.is_multiple_of(5) {
+                self.pending_attribute_increases =
+                    self.pending_attribute_increases.saturating_add(1);
+            }
+            gained.push(self.level);
+        }
+        gained
+    }
+
+    /// Spend one earned attribute increase using the original RFB bucket
+    /// progression: values below 18 advance by one, while 18/xx buckets
+    /// advance by ten. Equipment modifiers never consume an increase.
+    pub fn increase_attribute(&mut self, kind: AttributeKind, victorious: bool) -> Option<u16> {
+        if self.pending_attribute_increases == 0 {
+            return None;
+        }
+        let cap = Self::attribute_cap(victorious);
+        let value = self.attributes.value(kind);
+        if value >= cap {
+            return None;
+        }
+        let next = modify_attribute_value(value, 1, cap);
+        if next == value {
+            return None;
+        }
+        match kind {
+            AttributeKind::Strength => self.attributes.strength = next,
+            AttributeKind::Intelligence => self.attributes.intelligence = next,
+            AttributeKind::Wisdom => self.attributes.wisdom = next,
+            AttributeKind::Dexterity => self.attributes.dexterity = next,
+            AttributeKind::Constitution => self.attributes.constitution = next,
+            AttributeKind::Charisma => self.attributes.charisma = next,
+        }
+        self.pending_attribute_increases -= 1;
+        Some(next)
+    }
+
+    pub fn validate(&self, victorious: bool) -> bool {
+        self.level >= 1
+            && self.level <= Self::level_cap(victorious)
+            && self.max_level >= self.level
+            && self.max_level <= MAX_LEVEL
+            && self.experience <= MAX_EXPERIENCE
+            && self.hp_progression.len() == usize::from(MAX_LEVEL)
+            && self.hp_progression.iter().all(|hp| *hp > 0)
+            && [
+                self.attributes.strength,
+                self.attributes.intelligence,
+                self.attributes.wisdom,
+                self.attributes.dexterity,
+                self.attributes.constitution,
+                self.attributes.charisma,
+            ]
+            .into_iter()
+            .all(|value| (3..=Self::attribute_cap(victorious)).contains(&value))
+            && self.pending_attribute_increases <= self.max_level / 5
+            && (self.level == Self::level_cap(victorious)
+                || self.experience < experience_required_for_level(self.level + 1))
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -276,5 +586,96 @@ mod tests {
 
         assert_eq!(result.value, 199);
         assert_eq!(result.contributions.len(), 2);
+    }
+
+    #[test]
+    fn rfb_attribute_buckets_extend_from_18_220_to_18_820_after_victory() {
+        assert_eq!(stat_index(3), 0);
+        assert_eq!(stat_index(18), 15);
+        assert_eq!(stat_index(PRE_VICTORY_ATTRIBUTE_CAP), 37);
+        assert_eq!(stat_index(VICTORY_ATTRIBUTE_CAP), 97);
+        assert_eq!(stat_index(u16::MAX), 97);
+
+        assert_eq!(
+            modify_attribute_value(PRE_VICTORY_ATTRIBUTE_CAP, 60, PRE_VICTORY_ATTRIBUTE_CAP),
+            PRE_VICTORY_ATTRIBUTE_CAP
+        );
+        assert_eq!(
+            modify_attribute_value(PRE_VICTORY_ATTRIBUTE_CAP, 60, VICTORY_ATTRIBUTE_CAP),
+            VICTORY_ATTRIBUTE_CAP
+        );
+        assert_eq!(
+            modify_attribute_value(VICTORY_ATTRIBUTE_CAP, -60, VICTORY_ATTRIBUTE_CAP),
+            PRE_VICTORY_ATTRIBUTE_CAP
+        );
+    }
+
+    #[test]
+    fn experience_thresholds_preserve_rfb_then_extend_to_level_100() {
+        assert_eq!(experience_required_for_level(1), 0);
+        assert_eq!(experience_required_for_level(2), 10);
+        assert_eq!(experience_required_for_level(50), 4_500_000);
+        assert_eq!(experience_required_for_level(51), 5_000_000);
+        assert_eq!(experience_required_for_level(52), 5_500_000);
+        assert_eq!(experience_required_for_level(100), 29_500_000);
+    }
+
+    #[test]
+    fn victory_unlocks_banked_experience_through_level_100() {
+        let mut progress = CharacterProgress::new(7, 10);
+        let capped = progress.gain_experience(29_500_000, false);
+        assert_eq!(capped.last(), Some(&50));
+        assert_eq!(progress.level, 50);
+        assert_eq!(progress.pending_attribute_increases, 10);
+
+        let unlocked = progress.gain_experience(0, true);
+        assert_eq!(unlocked.first(), Some(&51));
+        assert_eq!(unlocked.last(), Some(&100));
+        assert_eq!(progress.level, 100);
+        assert_eq!(progress.pending_attribute_increases, 20);
+        assert!(progress.validate(true));
+    }
+
+    #[test]
+    fn hp_progression_is_seeded_without_using_the_simulation_rng() {
+        let first = CharacterProgress::new(17, 10);
+        let repeated = CharacterProgress::new(17, 10);
+        let other = CharacterProgress::new(18, 10);
+
+        assert_eq!(first.hp_progression.len(), usize::from(MAX_LEVEL));
+        assert_eq!(first.hp_progression, repeated.hp_progression);
+        assert_ne!(first.hp_progression, other.hp_progression);
+        assert!(
+            first
+                .hp_progression
+                .windows(2)
+                .all(|window| (1..=10).contains(&(window[1] - window[0])))
+        );
+    }
+
+    #[test]
+    fn attribute_increases_spend_points_and_respect_stage_caps() {
+        let mut progress = CharacterProgress::new(1, 10);
+        progress.pending_attribute_increases = 3;
+        assert_eq!(
+            progress.increase_attribute(AttributeKind::Strength, false),
+            Some(14)
+        );
+        progress.attributes.strength = 18;
+        assert_eq!(
+            progress.increase_attribute(AttributeKind::Strength, false),
+            Some(28)
+        );
+        progress.attributes.strength = PRE_VICTORY_ATTRIBUTE_CAP;
+        assert_eq!(
+            progress.increase_attribute(AttributeKind::Strength, false),
+            None
+        );
+        assert_eq!(progress.pending_attribute_increases, 1);
+        assert_eq!(
+            progress.increase_attribute(AttributeKind::Constitution, false),
+            Some(14)
+        );
+        assert_eq!(progress.pending_attribute_increases, 0);
     }
 }

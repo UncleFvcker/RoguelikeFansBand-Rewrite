@@ -7,6 +7,7 @@
   "descriptionKey": "actor-demo-chorus-captain-description",
   "glyph": "C",
   "level": 4,
+  "experienceValue": 45,
   "maxHp": 5,
   "speed": 110,
   "attack": 2,
