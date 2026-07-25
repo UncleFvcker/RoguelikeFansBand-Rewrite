@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/personality.schema.json",
+  "formatVersion": 1,
+  "id": "demo.personality.cautious",
+  "nameKey": "personality-demo-cautious-name",
+  "descriptionKey": "personality-demo-cautious-description",
+  "modifiers": {
+    "strength": -1,
+    "intelligence": 1,
+    "wisdom": 1,
+    "dexterity": 1,
+    "constitution": -1
+  },
+  "lifePercent": 99,
+  "skillSetId": "demo.skill-set.cautious",
+  "tags": ["careful"]
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill.disarming",
+  "nameKey": "skill-demo-disarming-name",
+  "descriptionKey": "skill-demo-disarming-description",
+  "kind": "disarming",
+  "maximum": 1000,
+  "tags": ["exploration", "general"]
+}

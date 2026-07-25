@@ -28,6 +28,14 @@
         },
         "disarmToTerrainId": {
           "type": "string"
+        },
+        "savingThrowDifficulty": {
+          "default": null,
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [
@@ -122,6 +130,14 @@
       "default": null,
       "type": [
         "string",
+        "null"
+      ]
+    },
+    "perceptionCheckDifficulty": {
+      "default": null,
+      "format": "int32",
+      "type": [
+        "integer",
         "null"
       ]
     },

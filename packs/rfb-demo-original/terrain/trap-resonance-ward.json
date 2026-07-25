@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.trap-resonance-ward",
+  "nameKey": "terrain-demo-trap-resonance-ward-name",
+  "descriptionKey": "terrain-demo-trap-resonance-ward-description",
+  "glyph": "^",
+  "walkable": true,
+  "blocksSight": false,
+  "concealedAsTerrainId": "demo.terrain.floor",
+  "searchCheckDifficulty": 10,
+  "trap": {
+    "damage": 4,
+    "damageType": "poison",
+    "disarmToTerrainId": "demo.terrain.floor",
+    "disarmCheckDifficulty": 12,
+    "savingThrowDifficulty": 40
+  },
+  "tags": ["echo", "saving-throw", "trap", "ward"]
+}

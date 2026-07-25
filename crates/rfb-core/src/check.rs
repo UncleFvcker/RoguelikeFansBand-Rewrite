@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::{rng::RfbRng, stats::DerivedStat};
+use rfb_protocol::{CheckOutcomeDto, CheckResolutionDto};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CheckKind {
@@ -13,6 +14,10 @@ pub enum CheckKind {
     SearchTerrain,
     DisarmTrap,
     DigTerrain,
+    UseDevice,
+    SavingThrow,
+    StealthDetection,
+    PassivePerception,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,6 +53,24 @@ impl CheckResult {
             self.outcome,
             CheckOutcome::AutomaticSuccess | CheckOutcome::Success
         )
+    }
+
+    #[must_use]
+    pub fn to_dto(&self, skill_id: impl Into<String>) -> CheckResolutionDto {
+        CheckResolutionDto {
+            skill_id: skill_id.into(),
+            ability: self.context.ability.value,
+            difficulty: self.context.difficulty.value,
+            percentile_roll: self.percentile_roll,
+            contest_roll: self.contest_roll,
+            threshold: self.threshold,
+            outcome: match self.outcome {
+                CheckOutcome::AutomaticSuccess => CheckOutcomeDto::AutomaticSuccess,
+                CheckOutcome::AutomaticFailure => CheckOutcomeDto::AutomaticFailure,
+                CheckOutcome::Success => CheckOutcomeDto::Success,
+                CheckOutcome::Failure => CheckOutcomeDto::Failure,
+            },
+        }
     }
 }
 

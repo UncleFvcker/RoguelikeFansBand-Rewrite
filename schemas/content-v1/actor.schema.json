@@ -1,5 +1,29 @@
 {
   "$defs": {
+    "ActorAwarenessDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "detectionDifficulty": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "detectionRange": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "startsAlerted": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "detectionDifficulty",
+        "detectionRange"
+      ],
+      "type": "object"
+    },
     "ActorDamageType": {
       "enum": [
         "physical",
@@ -79,6 +103,17 @@
     "attack": {
       "format": "int32",
       "type": "integer"
+    },
+    "awareness": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActorAwarenessDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "bashPower": {
       "default": 0,

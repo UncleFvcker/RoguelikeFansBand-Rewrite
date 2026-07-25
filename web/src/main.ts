@@ -32,6 +32,7 @@ import type {
   GameUpdate,
   InventoryItemDto,
   ItemPropertyDto,
+  PlayerBuildDto,
   PlayerProgressDto,
   StatModifiersDto,
 } from "./protocol";
@@ -86,7 +87,13 @@ const progressionLevelValue = element<HTMLElement>("progression-level-value");
 const progressionExperienceValue = element<HTMLElement>("progression-experience-value");
 const progressionCapValue = element<HTMLElement>("progression-cap-value");
 const progressionPointsValue = element<HTMLElement>("progression-points-value");
+const progressionBuildValue = element<HTMLElement>("progression-build-value");
+const progressionRaceValue = element<HTMLElement>("progression-race-value");
+const progressionClassValue = element<HTMLElement>("progression-class-value");
+const progressionPersonalityValue = element<HTMLElement>("progression-personality-value");
+const progressionMultipliersValue = element<HTMLElement>("progression-multipliers-value");
 const attributeList = element<HTMLUListElement>("attribute-list");
+const skillList = element<HTMLUListElement>("skill-list");
 const taskLogList = element<HTMLUListElement>("task-log-list");
 const campaignStatusValue = element<HTMLElement>("campaign-status-value");
 const campaignScoreValue = element<HTMLElement>("campaign-score-value");
@@ -445,7 +452,7 @@ async function dispatch(command: GameCommand): Promise<void> {
   } finally {
     busy = false;
     updateInventoryActions();
-    renderProgression(currentStatus?.player.progress);
+    renderProgression(currentStatus?.player.progress, currentStatus?.player.build);
     renderTargeting();
   }
 }
@@ -801,7 +808,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.defense,
     state.player.equipmentModifiers.defense,
   );
-  renderProgression(state.player.progress);
+  renderProgression(state.player.progress, state.player.build);
   effectsValue.textContent =
     state.player.statuses.length === 0
       ? localization.format("status-effects-none")
@@ -879,14 +886,23 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
   renderTargeting();
 }
 
-function renderProgression(progress: PlayerProgressDto | undefined): void {
+function renderProgression(
+  progress: PlayerProgressDto | undefined,
+  build: PlayerBuildDto | null | undefined,
+): void {
   if (!progress) {
     const unavailable = localization.format("progression-unavailable");
     progressionLevelValue.textContent = unavailable;
     progressionExperienceValue.textContent = unavailable;
     progressionCapValue.textContent = unavailable;
     progressionPointsValue.textContent = unavailable;
+    progressionBuildValue.textContent = unavailable;
+    progressionRaceValue.textContent = unavailable;
+    progressionClassValue.textContent = unavailable;
+    progressionPersonalityValue.textContent = unavailable;
+    progressionMultipliersValue.textContent = unavailable;
     attributeList.replaceChildren();
+    skillList.replaceChildren();
     return;
   }
   progressionLevelValue.textContent = localization.format("progression-level-value", {
@@ -905,6 +921,24 @@ function renderProgression(progress: PlayerProgressDto | undefined): void {
     attributeIndexCap: progress.attributeIndexCap,
   });
   progressionPointsValue.textContent = String(progress.pendingAttributeIncreases);
+  progressionBuildValue.textContent = build
+    ? localization.format(build.buildNameKey as MessageKey)
+    : localization.format("progression-unavailable");
+  progressionRaceValue.textContent = build
+    ? localization.format(build.raceNameKey as MessageKey)
+    : localization.format("progression-unavailable");
+  progressionClassValue.textContent = build
+    ? localization.format(build.classNameKey as MessageKey)
+    : localization.format("progression-unavailable");
+  progressionPersonalityValue.textContent = build
+    ? localization.format(build.personalityNameKey as MessageKey)
+    : localization.format("progression-unavailable");
+  progressionMultipliersValue.textContent = build
+    ? localization.format("progression-multipliers-value", {
+        life: build.lifePercent,
+        experience: build.experiencePercent,
+      })
+    : localization.format("progression-unavailable");
   attributeList.replaceChildren(
     ...ATTRIBUTE_KINDS.map((attribute) => {
       const value = progress.attributes[attribute];
@@ -933,6 +967,24 @@ function renderProgression(progress: PlayerProgressDto | undefined): void {
         void dispatch({ type: "increase-attribute", attribute }),
       );
       row.append(label, values, increase);
+      return row;
+    }),
+  );
+  skillList.replaceChildren(
+    ...progress.skills.map((skill) => {
+      const row = document.createElement("li");
+      row.className = "skill-row";
+      const name = document.createElement("span");
+      name.className = "skill-name";
+      name.textContent = localization.format(skill.nameKey as MessageKey);
+      const value = document.createElement("span");
+      value.className = "skill-value";
+      value.textContent = localization.format("skill-value", {
+        current: skill.current,
+        maximum: skill.maximum,
+        growth: skill.growthPerTenLevels,
+      });
+      row.append(name, value);
       return row;
     }),
   );

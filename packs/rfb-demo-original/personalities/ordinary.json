@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/personality.schema.json",
+  "formatVersion": 1,
+  "id": "demo.personality.ordinary",
+  "nameKey": "personality-demo-ordinary-name",
+  "descriptionKey": "personality-demo-ordinary-description",
+  "skillSetId": "demo.skill-set.ordinary",
+  "tags": ["neutral"]
+}

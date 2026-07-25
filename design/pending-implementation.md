@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v70、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v72、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -19,7 +19,28 @@
 | P8 | 可配置实例生命周期 | 已由 contract-v69 完成 | `reset-on-surface`、`persistent`、`turn-ttl`、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理；普通地牢继续回地表即清空 |
 | P9 | 运行时连通修复 | 明确不实现 | 地形破坏直接成为权威状态，不做自动重连、楼梯迁移或整层修复；玩家可使用挖掘能力自行恢复通路 |
 | P10 | 角色成长基础 | 已由 contract-v70 完成 | 击杀经验、RFB 1–50 阈值、未胜利 50 级封顶、胜利后 100 级与 `18/820` 解锁、六维自然/有效属性、HP 序列、装备 modifier、属性点命令和存档迁移 |
-| P11 | 角色创建与构筑基础 | 下一候选 | Race/Class/Personality、技能集合、初始构筑和来源可解释的派生属性；复用 v70 progression，不提前引入完整法术系统 |
+| P11 | 角色创建与构筑基础 | 已由 contract-v71 完成 | Race/Class/Personality、技能集合、五个代表性初始构筑、出生装备、来源可解释的派生属性、技能成长和 v70 存档迁移 |
+| P12 | 可观察技能检定 | 已由 contract-v72 完成 | device、saving-throw、stealth、perception 的权威消费、结构化事件、警戒存档和相同 seed 构筑对照 |
+| P13 | 法术与能力书基础 | 下一候选 | 可保存的资源/法术身份、学习与可用性、首个目标模式和可观察施法；暂不扩展完整职业矩阵 |
+
+## contract-v72 明确遗留
+
+- 技能练习/下降、属性损伤/恢复、职业专属资源和更复杂等级奖励；
+- 失明、无光、混乱、幻觉、距离、噪声和环境亮度对技能检定的完整修正；
+- 怪物警戒传播、睡眠深度、气味/flow、智能学习和完整潜行模式；
+- 法力、能力书、法术学习/失败率/冷却，以及玩家与怪物完整施法系统；
+- 完整原版 Race/Class/Personality 名单、创建 UI 和角色重建流程。
+
+v72 的四类技能消费、结构化 check outcome、actor `alerted` 兼容恢复和 160 个 exact fixtures 已进入协议 1.72、save v1 与 state hash Schema v31。详细边界见 [contract-v72](contract-v72-observable-skill-checks.md)。
+
+## contract-v71 明确遗留
+
+- 完整原版 Race/Class/Personality 名单、职业选择界面和角色重建流程；
+- 技能练习/下降、属性损伤/恢复、职业专属资源和更复杂的等级奖励；
+- device、saving-throw、stealth、perception 的实际检定消费已由 contract-v72 完成；
+- 法力、能力书、法术失败率和完整法术系统。
+
+v71 的构筑身份、技能聚合、出生装备和 v70 缺字段迁移已进入协议 1.71、save v1 与 state hash Schema v30；v72 在其上补齐四类首轮技能消费。详细边界见 [contract-v71](contract-v71-rfb-character-builds.md)。
 
 ## contract-v70 明确遗留
 
@@ -28,7 +49,7 @@
 - 法力、能力书、法术失败率和完整的角色构筑选择；
 - 属性点重置、自动分配策略和更复杂的等级奖励节点。
 
-v70 的经验、HP 序列、自然属性、装备 modifier 和胜利解锁已进入协议 1.70、save v1 与 state hash Schema v29。详细边界见 [contract-v70](contract-v70-rfb-character-progression.md)。
+v70 的经验、HP 序列、自然属性、装备 modifier 和胜利解锁已进入协议 1.70、save v1 与 state hash Schema v29；v71 已在其上补齐角色来源层。详细边界见 [contract-v70](contract-v70-rfb-character-progression.md)。
 
 ## contract-v69 明确遗留
 
@@ -124,7 +145,7 @@ Archive Depths 是 `turn-ttl=3` 的 demo 验证包；Echo/Resonance 继续使用
 
 - 解除失败触发陷阱、重复解除命令和经验奖励；
 - 箱子陷阱、随机陷阱类型、状态/传送/落层等复杂效果；
-- 被动搜索、失明/无光/混乱/幻觉修正，以及怪物触发或规避陷阱；
+- 移动后邻近 terrain 的 perception 已由 contract-v72 建立；仍缺隐藏陷阱的被动发现、失明/无光/混乱/幻觉修正，以及怪物触发或规避陷阱；
 - 一次性/耗尽陷阱、陷阱生成密度和多深度内容表。
 
 来源：[contract-v32](contract-v32-hidden-traps-disarm.md)。
@@ -319,7 +340,7 @@ Archive Depths 是 `turn-ttl=3` 的 demo 验证包；Echo/Resonance 继续使用
 ### 搜索与地形知识
 
 - 基础秘密门、主动搜索和知识安全投影已由 [contract-v31](contract-v31-secret-door-search.md) 完成；
-- 尚未实现被动搜索、搜索模式/命令重复、玩家自身格搜索和固定 3×3 RNG 扫描；
+- contract-v72 已建立成功移动后的邻近 perception 检定；仍缺搜索模式/命令重复、玩家自身格搜索和原版固定 3×3 RNG 扫描；
 - 失明、无光、混乱、幻觉对搜索能力的修正；
 - 隐藏陷阱和箱子陷阱发现。
 

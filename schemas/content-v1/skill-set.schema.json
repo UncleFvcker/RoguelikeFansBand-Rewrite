@@ -1,0 +1,57 @@
+{
+  "$defs": {
+    "SkillSetEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "growthPerTenLevels": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "skillId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "skillId",
+        "base"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/SkillSetEntryDefinition"
+      },
+      "type": "array"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "entries"
+  ],
+  "title": "SkillSetDefinition",
+  "type": "object"
+}

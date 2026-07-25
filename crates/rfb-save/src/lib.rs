@@ -187,6 +187,7 @@ mod tests {
                 statuses: Vec::new(),
                 resistances: Vec::new(),
                 progress: None,
+                build: None,
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

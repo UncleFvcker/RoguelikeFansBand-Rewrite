@@ -243,6 +243,59 @@
         "light"
       ]
     },
+    "CheckOutcomeDto": {
+      "type": "string",
+      "enum": [
+        "automatic-success",
+        "automatic-failure",
+        "success",
+        "failure"
+      ]
+    },
+    "CheckResolutionDto": {
+      "type": "object",
+      "properties": {
+        "ability": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "contestRoll": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
+        "difficulty": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "outcome": {
+          "$ref": "#/$defs/CheckOutcomeDto"
+        },
+        "percentileRoll": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "skillId": {
+          "type": "string"
+        },
+        "threshold": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "skillId",
+        "ability",
+        "difficulty",
+        "percentileRoll",
+        "threshold",
+        "outcome"
+      ]
+    },
     "ContentVisualDto": {
       "type": "object",
       "properties": {
@@ -345,6 +398,10 @@
     "EntityDto": {
       "type": "object",
       "properties": {
+        "alerted": {
+          "type": "boolean",
+          "default": true
+        },
         "armorClass": {
           "type": "integer",
           "format": "int32",
@@ -973,6 +1030,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/CheckResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "check"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/DamageResolutionDto"
             },
             "type": {
@@ -1542,6 +1615,59 @@
         "blows"
       ]
     },
+    "PlayerBuildDto": {
+      "type": "object",
+      "properties": {
+        "buildId": {
+          "type": "string"
+        },
+        "buildNameKey": {
+          "type": "string"
+        },
+        "classId": {
+          "type": "string"
+        },
+        "classNameKey": {
+          "type": "string"
+        },
+        "experiencePercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "lifePercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "personalityId": {
+          "type": "string"
+        },
+        "personalityNameKey": {
+          "type": "string"
+        },
+        "raceId": {
+          "type": "string"
+        },
+        "raceNameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "buildId",
+        "buildNameKey",
+        "raceId",
+        "raceNameKey",
+        "classId",
+        "classNameKey",
+        "personalityId",
+        "personalityNameKey",
+        "lifePercent",
+        "experiencePercent"
+      ]
+    },
     "PlayerDto": {
       "type": "object",
       "properties": {
@@ -1569,6 +1695,16 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "build": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlayerBuildDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "carriedWeightTenthsPound": {
           "type": "integer",
@@ -1752,6 +1888,13 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "skills": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SkillProgressDto"
+          }
+        },
         "victoryLevelCapUnlocked": {
           "type": "boolean"
         }
@@ -1880,6 +2023,41 @@
         "resistant",
         "strong",
         "immune"
+      ]
+    },
+    "SkillProgressDto": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "current": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "growthPerTenLevels": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "string"
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "nameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "current",
+        "maximum",
+        "base",
+        "growthPerTenLevels"
       ]
     },
     "StatModifiersDto": {

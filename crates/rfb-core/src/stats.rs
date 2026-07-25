@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::BTreeMap;
+
 use crate::rng::RfbRng;
 
 pub const MAX_LEVEL: u16 = 100;
@@ -25,6 +27,10 @@ pub enum StatKind {
     DoorSkill,
     BashPower,
     SearchSkill,
+    DeviceSkill,
+    SavingThrowSkill,
+    StealthSkill,
+    PerceptionSkill,
     DisarmSkill,
     DigSkill,
     ArmorClass,
@@ -180,6 +186,38 @@ pub struct CharacterProgress {
     pub max_level: u16,
     pub pending_attribute_increases: u16,
     pub hp_progression: Vec<i32>,
+    pub skills: BTreeMap<String, SkillProgress>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillProgress {
+    pub current: i32,
+    pub maximum: i32,
+    pub base: i32,
+    pub growth_per_ten_levels: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CharacterBuildIdentity {
+    pub build_id: String,
+    pub race_id: String,
+    pub class_id: String,
+    pub personality_id: String,
+}
+
+impl SkillProgress {
+    #[must_use]
+    pub fn at_level(base: i32, growth_per_ten_levels: i32, maximum: i32, level: u16) -> Self {
+        let growth = growth_per_ten_levels
+            .saturating_mul(i32::from(level))
+            .saturating_div(10);
+        Self {
+            current: base.saturating_add(growth).clamp(0, maximum),
+            maximum,
+            base,
+            growth_per_ten_levels,
+        }
+    }
 }
 
 impl CharacterProgress {
@@ -202,6 +240,7 @@ impl CharacterProgress {
             max_level: 1,
             pending_attribute_increases: 0,
             hp_progression,
+            skills: BTreeMap::new(),
         }
     }
 
@@ -278,6 +317,15 @@ impl CharacterProgress {
         gained
     }
 
+    pub fn replace_skills(&mut self, skills: BTreeMap<String, SkillProgress>) {
+        self.skills = skills;
+    }
+
+    #[must_use]
+    pub fn skill(&self, id: &str) -> Option<&SkillProgress> {
+        self.skills.get(id)
+    }
+
     /// Spend one earned attribute increase using the original RFB bucket
     /// progression: values below 18 advance by one, while 18/xx buckets
     /// advance by ten. Equipment modifiers never consume an increase.
@@ -325,6 +373,14 @@ impl CharacterProgress {
             .into_iter()
             .all(|value| (3..=Self::attribute_cap(victorious)).contains(&value))
             && self.pending_attribute_increases <= self.max_level / 5
+            && self.skills.iter().all(|(id, skill)| {
+                !id.is_empty()
+                    && skill.maximum > 0
+                    && skill.current >= 0
+                    && skill.current <= skill.maximum
+                    && (-1_000_000..=1_000_000).contains(&skill.base)
+                    && (-1_000_000..=1_000_000).contains(&skill.growth_per_ten_levels)
+            })
             && (self.level == Self::level_cap(victorious)
                 || self.experience < experience_required_for_level(self.level + 1))
     }
@@ -651,6 +707,17 @@ mod tests {
                 .windows(2)
                 .all(|window| (1..=10).contains(&(window[1] - window[0])))
         );
+    }
+
+    #[test]
+    fn skill_growth_uses_deterministic_per_ten_level_proration() {
+        let level_one = SkillProgress::at_level(70, 30, 1000, 1);
+        let level_ten = SkillProgress::at_level(70, 30, 1000, 10);
+        let capped = SkillProgress::at_level(900, 30, 1000, 100);
+
+        assert_eq!(level_one.current, 73);
+        assert_eq!(level_ten.current, 100);
+        assert_eq!(capped.current, 1000);
     }
 
     #[test]

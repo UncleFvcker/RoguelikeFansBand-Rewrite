@@ -10,14 +10,14 @@ use crate::{
         Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
         MonsterPackIdentity,
     },
-    stats::CharacterProgress,
+    stats::{CharacterBuildIdentity, CharacterProgress},
 };
 use rfb_content::{ContentCatalog, ContentPosition};
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
     FloorRegionSaveDto, FloorSaveDto, InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceSaveDto,
-    StatusSaveDto, TerrainSaveDto,
+    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ResistanceSaveDto, SkillProgressSaveDto, StatusSaveDto, TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -29,6 +29,7 @@ pub(crate) fn actor_from_spawn(
     max_hp: i32,
     speed: u16,
     energy_need: i32,
+    alerted: bool,
 ) -> Actor {
     Actor {
         id: id.to_owned(),
@@ -38,6 +39,7 @@ pub(crate) fn actor_from_spawn(
         max_hp,
         speed,
         energy_need,
+        alerted,
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
@@ -74,6 +76,7 @@ pub(crate) fn actor_from_player(
         max_hp: definition.max_hp,
         speed: player.base_speed,
         energy_need: player.energy_need,
+        alerted: true,
         statuses,
         resistances,
         pack: None,
@@ -121,6 +124,12 @@ pub(crate) fn actor_from_entity(
         max_hp: definition.max_hp,
         speed: entity.base_speed,
         energy_need: entity.energy_need,
+        alerted: entity.alerted.unwrap_or_else(|| {
+            definition
+                .awareness
+                .as_ref()
+                .is_none_or(|awareness| awareness.starts_alerted)
+        }),
         statuses,
         resistances,
         pack: entity.pack.map(|pack| MonsterPackIdentity {
@@ -201,7 +210,11 @@ pub(crate) fn carried_item_from_dto(
     })
 }
 
-pub(crate) fn player_to_save(player: &Actor, progress: &CharacterProgress) -> PlayerSaveDto {
+pub(crate) fn player_to_save(
+    player: &Actor,
+    progress: &CharacterProgress,
+    build: Option<&CharacterBuildIdentity>,
+) -> PlayerSaveDto {
     PlayerSaveDto {
         id: player.id.clone(),
         kind_id: player.kind_id.clone(),
@@ -230,6 +243,23 @@ pub(crate) fn player_to_save(player: &Actor, progress: &CharacterProgress) -> Pl
             max_level: progress.max_level,
             pending_attribute_increases: progress.pending_attribute_increases,
             hp_progression: progress.hp_progression.clone(),
+            skills: progress
+                .skills
+                .iter()
+                .map(|(id, skill)| SkillProgressSaveDto {
+                    id: id.clone(),
+                    current: skill.current,
+                    maximum: skill.maximum,
+                    base: skill.base,
+                    growth_per_ten_levels: skill.growth_per_ten_levels,
+                })
+                .collect(),
+        }),
+        build: build.map(|build| PlayerBuildSaveDto {
+            build_id: build.build_id.clone(),
+            race_id: build.race_id.clone(),
+            class_id: build.class_id.clone(),
+            personality_id: build.personality_id.clone(),
         }),
     }
 }
@@ -245,6 +275,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             max_hp: entity.max_hp,
             base_speed: entity.speed,
             energy_need: entity.energy_need,
+            alerted: Some(entity.alerted),
             statuses: entity
                 .statuses
                 .iter()

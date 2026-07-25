@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.artificer",
+  "nameKey": "class-demo-artificer-name",
+  "descriptionKey": "class-demo-artificer-description",
+  "modifiers": {
+    "strength": -1,
+    "intelligence": 2,
+    "wisdom": 1,
+    "dexterity": 1,
+    "constitution": -1
+  },
+  "lifePercent": 98,
+  "experiencePercent": 125,
+  "baseHp": 2,
+  "skillSetId": "demo.skill-set.artificer",
+  "startingItems": [
+    { "itemKindId": "demo.item.echo-charm", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.luminous-shard", "quantity": 3 },
+    { "itemKindId": "demo.item.resonance-stabilizer", "quantity": 1 }
+  ],
+  "tags": ["device-user", "prototype"]
+}

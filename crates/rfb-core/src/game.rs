@@ -40,19 +40,22 @@ use crate::{
         ItemLocation, MonsterPackIdentity,
     },
     stats::{
-        AttributeKind, AttributeSet, CharacterProgress, DerivedStat, DerivedStatsPipeline,
-        StatBounds, StatKind, StatLayer, experience_required_for_level, modify_attribute_value,
+        AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
+        DerivedStatsPipeline, SkillProgress, StatBounds, StatKind, StatLayer,
+        experience_required_for_level, modify_attribute_value,
     },
 };
 use rfb_content::{
-    ActorRole, CampaignDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
-    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
-    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, FloorLifecycle,
-    ItemUseEffectDefinition, MonsterPackBehavior, ProceduralFloorDefinition, ProceduralLayoutMode,
+    ActorRole, CampaignDefinition, CharacterBuildDefinition, ClassDefinition, ContentCatalog,
+    ContentPosition, DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
+    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterFormation,
+    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
+    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
     ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RetakeFloorPolicy,
-    TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
-    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
+    SkillKind, SkillSetDefinition, StartingItemDefinition, StatModifiers, TaskObjectiveDefinition,
+    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
+    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
@@ -62,18 +65,18 @@ use rfb_protocol::{
     FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, InventoryItemDto,
     InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
     ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
-    MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerDto,
-    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
-    RngSaveDto, SavePayloadV1, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
-    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
-    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
-    ThrowProfileDto, VisibilityState,
+    MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto,
+    PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ProjectileProfileDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
+    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
+    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 63] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 65] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -137,9 +140,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 63] = [
     "1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c",
     "06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70",
     "84a8696e872a53ff24800645e5df8db49059f4f8cac0b4ebf17a982b16e529d5",
+    "ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6",
+    "1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6";
+    "3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -166,7 +171,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV29 {
+struct StateHashPayloadV31 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -733,11 +738,36 @@ fn restore_task_states(
 fn restore_character_progress(
     saved: Option<&PlayerProgressSaveDto>,
     base_max_hp: i32,
-) -> CharacterProgress {
+    expected_skills: BTreeMap<String, SkillProgress>,
+) -> Result<CharacterProgress, CoreError> {
     let Some(saved) = saved else {
-        return CharacterProgress::legacy(base_max_hp);
+        let mut progress = CharacterProgress::legacy(base_max_hp);
+        progress.replace_skills(expected_skills);
+        return Ok(progress);
     };
-    CharacterProgress {
+    let mut skills = BTreeMap::new();
+    for skill in &saved.skills {
+        if skills
+            .insert(
+                skill.id.clone(),
+                SkillProgress {
+                    current: skill.current,
+                    maximum: skill.maximum,
+                    base: skill.base,
+                    growth_per_ten_levels: skill.growth_per_ten_levels,
+                },
+            )
+            .is_some()
+        {
+            return Err(CoreError::InvalidSave("player skill state is invalid"));
+        }
+    }
+    if skills.is_empty() {
+        skills = expected_skills;
+    } else if skills != expected_skills {
+        return Err(CoreError::InvalidSave("player skill state is invalid"));
+    }
+    Ok(CharacterProgress {
         attributes: AttributeSet {
             strength: saved.attributes.strength,
             intelligence: saved.attributes.intelligence,
@@ -751,6 +781,194 @@ fn restore_character_progress(
         max_level: saved.max_level,
         pending_attribute_increases: saved.pending_attribute_increases,
         hp_progression: saved.hp_progression.clone(),
+        skills,
+    })
+}
+
+fn resolve_character_build(
+    content: &ContentCatalog,
+    build_id: Option<&str>,
+) -> Result<Option<CharacterBuildIdentity>, CoreError> {
+    let Some(build_id) = build_id else {
+        return Ok(None);
+    };
+    let build = content
+        .build(build_id)
+        .ok_or_else(|| CoreError::UnknownCharacterBuild(build_id.to_owned()))?;
+    Ok(Some(CharacterBuildIdentity {
+        build_id: build.id.clone(),
+        race_id: build.race_id.clone(),
+        class_id: build.class_id.clone(),
+        personality_id: build.personality_id.clone(),
+    }))
+}
+
+fn build_definitions<'a>(
+    content: &'a ContentCatalog,
+    identity: &'a CharacterBuildIdentity,
+) -> Result<
+    (
+        &'a CharacterBuildDefinition,
+        &'a RaceDefinition,
+        &'a ClassDefinition,
+        &'a PersonalityDefinition,
+    ),
+    CoreError,
+> {
+    let build = content
+        .build(&identity.build_id)
+        .ok_or_else(|| CoreError::UnknownCharacterBuild(identity.build_id.clone()))?;
+    let race = content
+        .race(&identity.race_id)
+        .ok_or_else(|| CoreError::UnknownCharacterBuild(identity.build_id.clone()))?;
+    let class = content
+        .class(&identity.class_id)
+        .ok_or_else(|| CoreError::UnknownCharacterBuild(identity.build_id.clone()))?;
+    let personality = content
+        .personality(&identity.personality_id)
+        .ok_or_else(|| CoreError::UnknownCharacterBuild(identity.build_id.clone()))?;
+    Ok((build, race, class, personality))
+}
+
+fn character_skill_progress(
+    content: &ContentCatalog,
+    identity: Option<&CharacterBuildIdentity>,
+    level: u16,
+) -> Result<BTreeMap<String, SkillProgress>, CoreError> {
+    let Some(identity) = identity else {
+        return Ok(BTreeMap::new());
+    };
+    let (_, race, class, personality) = build_definitions(content, identity)?;
+    let mut totals = BTreeMap::<String, (i32, i32, i32)>::new();
+    for skill_set_id in [
+        race.skill_set_id.as_str(),
+        class.skill_set_id.as_str(),
+        personality.skill_set_id.as_str(),
+    ] {
+        let skill_set = content
+            .skill_set(skill_set_id)
+            .ok_or_else(|| CoreError::UnknownCharacterBuild(identity.build_id.clone()))?;
+        accumulate_skill_set(content, skill_set, &mut totals, identity)?;
+    }
+    Ok(totals
+        .into_iter()
+        .map(|(id, (base, growth, maximum))| {
+            (id, SkillProgress::at_level(base, growth, maximum, level))
+        })
+        .collect())
+}
+
+fn accumulate_skill_set(
+    content: &ContentCatalog,
+    skill_set: &SkillSetDefinition,
+    totals: &mut BTreeMap<String, (i32, i32, i32)>,
+    identity: &CharacterBuildIdentity,
+) -> Result<(), CoreError> {
+    for entry in &skill_set.entries {
+        let maximum = content
+            .skill(&entry.skill_id)
+            .ok_or_else(|| CoreError::UnknownCharacterBuild(identity.build_id.clone()))?
+            .maximum;
+        let total = totals
+            .entry(entry.skill_id.clone())
+            .or_insert((0, 0, maximum));
+        total.0 = total.0.saturating_add(entry.base);
+        total.1 = total.1.saturating_add(entry.growth_per_ten_levels);
+        total.2 = total.2.min(maximum);
+    }
+    Ok(())
+}
+
+fn append_starting_items(
+    content: &ContentCatalog,
+    identity: Option<&CharacterBuildIdentity>,
+    items: &mut Vec<ItemInstance>,
+    next_serial: &mut u64,
+) -> Result<(), CoreError> {
+    let Some(identity) = identity else {
+        return Ok(());
+    };
+    let (build, race, class, personality) = build_definitions(content, identity)?;
+    for starting_item in race
+        .starting_items
+        .iter()
+        .chain(class.starting_items.iter())
+        .chain(personality.starting_items.iter())
+        .chain(build.starting_items.iter())
+    {
+        append_starting_item(content, starting_item, items, next_serial)?;
+    }
+    Ok(())
+}
+
+fn append_starting_item(
+    content: &ContentCatalog,
+    starting_item: &StartingItemDefinition,
+    items: &mut Vec<ItemInstance>,
+    next_serial: &mut u64,
+) -> Result<(), CoreError> {
+    let definition = content
+        .item(&starting_item.item_kind_id)
+        .ok_or_else(|| CoreError::UnknownItem(starting_item.item_kind_id.clone()))?;
+    let location = if starting_item.equipped {
+        ItemLocation::Equipped {
+            slot_id: definition
+                .equipment_slot
+                .clone()
+                .ok_or(CoreError::InvalidSave("starting equipment is invalid"))?,
+        }
+    } else {
+        ItemLocation::Inventory
+    };
+    let id = format!("{GENERATED_ITEM_ID_PREFIX}{next_serial}");
+    *next_serial = next_serial
+        .checked_add(1)
+        .ok_or(CoreError::ItemIdExhausted)?;
+    items.push(ItemInstance {
+        id,
+        kind_id: starting_item.item_kind_id.clone(),
+        quantity: starting_item.quantity,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        location,
+    });
+    Ok(())
+}
+
+fn combine_percentages(percentages: [u16; 3]) -> u16 {
+    let product = percentages.into_iter().fold(1_u64, |total, percentage| {
+        total.saturating_mul(u64::from(percentage))
+    });
+    u16::try_from(product.saturating_add(5_000).saturating_div(10_000)).unwrap_or(u16::MAX)
+}
+
+fn apply_attribute_modifiers(
+    attributes: AttributeSet,
+    modifiers: &StatModifiers,
+    cap: u16,
+) -> AttributeSet {
+    AttributeSet {
+        strength: modify_attribute_value(attributes.strength, modifiers.strength, cap),
+        intelligence: modify_attribute_value(attributes.intelligence, modifiers.intelligence, cap),
+        wisdom: modify_attribute_value(attributes.wisdom, modifiers.wisdom, cap),
+        dexterity: modify_attribute_value(attributes.dexterity, modifiers.dexterity, cap),
+        constitution: modify_attribute_value(attributes.constitution, modifiers.constitution, cap),
+        charisma: modify_attribute_value(attributes.charisma, modifiers.charisma, cap),
+    }
+}
+
+fn apply_attribute_dto_modifiers(
+    attributes: AttributeSet,
+    modifiers: StatModifiersDto,
+    cap: u16,
+) -> AttributeSet {
+    AttributeSet {
+        strength: modify_attribute_value(attributes.strength, modifiers.strength, cap),
+        intelligence: modify_attribute_value(attributes.intelligence, modifiers.intelligence, cap),
+        wisdom: modify_attribute_value(attributes.wisdom, modifiers.wisdom, cap),
+        dexterity: modify_attribute_value(attributes.dexterity, modifiers.dexterity, cap),
+        constitution: modify_attribute_value(attributes.constitution, modifiers.constitution, cap),
+        charisma: modify_attribute_value(attributes.charisma, modifiers.charisma, cap),
     }
 }
 
@@ -765,6 +983,7 @@ pub struct Game {
     height: u16,
     terrain: Vec<String>,
     player: Actor,
+    build: Option<CharacterBuildIdentity>,
     progress: CharacterProgress,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
@@ -796,14 +1015,43 @@ impl Game {
         .expect("built-in world should create a game")
     }
 
+    pub fn new_with_build(seed: u64, build_id: &str) -> Result<Self, CoreError> {
+        Self::from_content_with_build(
+            seed,
+            load_built_in_content().expect("built-in content should decode"),
+            BUILT_IN_WORLD_ID,
+            build_id,
+        )
+    }
+
     pub fn from_content(
         seed: u64,
         content: Arc<ContentCatalog>,
         world_id: &str,
     ) -> Result<Self, CoreError> {
+        Self::from_content_internal(seed, content, world_id, None)
+    }
+
+    pub fn from_content_with_build(
+        seed: u64,
+        content: Arc<ContentCatalog>,
+        world_id: &str,
+        build_id: &str,
+    ) -> Result<Self, CoreError> {
+        Self::from_content_internal(seed, content, world_id, Some(build_id))
+    }
+
+    fn from_content_internal(
+        seed: u64,
+        content: Arc<ContentCatalog>,
+        world_id: &str,
+        build_id: Option<&str>,
+    ) -> Result<Self, CoreError> {
         let world = content
             .world(world_id)
             .ok_or_else(|| CoreError::UnknownWorld(world_id.to_owned()))?;
+        let build =
+            resolve_character_build(&content, build_id.or(world.player_build_id.as_deref()))?;
         let width = world.width;
         let height = world.height;
         let mut terrain =
@@ -832,8 +1080,25 @@ impl Game {
             player_definition.max_hp,
             player_definition.speed,
             INITIAL_PLAYER_ENERGY_NEED,
+            true,
         );
-        let progress = CharacterProgress::new(seed, player_definition.max_hp);
+        let mut progress = CharacterProgress::new(seed, player_definition.max_hp);
+        if let Some(identity) = build.as_ref() {
+            let (definition, _, _, _) = build_definitions(&content, identity)?;
+            progress.attributes = AttributeSet {
+                strength: definition.attributes.strength,
+                intelligence: definition.attributes.intelligence,
+                wisdom: definition.attributes.wisdom,
+                dexterity: definition.attributes.dexterity,
+                constitution: definition.attributes.constitution,
+                charisma: definition.attributes.charisma,
+            };
+        }
+        progress.replace_skills(character_skill_progress(
+            &content,
+            build.as_ref(),
+            progress.level,
+        )?);
         let mut entities = world
             .actors
             .iter()
@@ -848,6 +1113,7 @@ impl Game {
                     definition.max_hp,
                     definition.speed,
                     INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(definition),
                 ))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
@@ -865,6 +1131,7 @@ impl Game {
                 definition.max_hp,
                 definition.speed,
                 INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(definition),
             );
             actor.pack = Some(MonsterPackIdentity {
                 id: guardian.instance_id.clone(),
@@ -874,7 +1141,7 @@ impl Game {
             });
             entities.push(actor);
         }
-        let items = world
+        let mut items = world
             .items
             .iter()
             .map(|spawn| ItemInstance {
@@ -886,8 +1153,14 @@ impl Game {
                 location: ItemLocation::Ground(position_from_content(spawn.position)),
             })
             .collect::<Vec<_>>();
-        let next_item_instance_serial =
+        let mut next_item_instance_serial =
             derive_next_item_instance_serial(&player, &entities, &items)?;
+        append_starting_items(
+            &content,
+            build.as_ref(),
+            &mut items,
+            &mut next_item_instance_serial,
+        )?;
         let initial_floor_id = world.initial_floor_id.clone();
         let task_states = initial_task_states(world);
         let dungeon_states = initial_dungeon_states(world);
@@ -901,6 +1174,7 @@ impl Game {
             height,
             terrain,
             player,
+            build,
             progress,
             entities,
             items,
@@ -920,6 +1194,8 @@ impl Game {
             world_tick: 0,
             last_command_seq: 0,
         };
+        game.initialize_starting_item_knowledge();
+        game.player.hp = game.effective_player_max_hp();
         game.initialize_carried_loot()?;
         game.reveal_current_visibility();
         game.validate_state()?;
@@ -1032,8 +1308,33 @@ impl Game {
         let player_definition = content
             .actor(&payload.player.kind_id)
             .ok_or_else(|| CoreError::UnknownActor(payload.player.kind_id.clone()))?;
-        let progress =
-            restore_character_progress(payload.player.progress.as_ref(), player_definition.max_hp);
+        let build = resolve_character_build(
+            &content,
+            payload
+                .player
+                .build
+                .as_ref()
+                .map(|build| build.build_id.as_str())
+                .or(world.player_build_id.as_deref()),
+        )?;
+        if let (Some(saved), Some(identity)) = (payload.player.build.as_ref(), build.as_ref())
+            && (saved.race_id != identity.race_id
+                || saved.class_id != identity.class_id
+                || saved.personality_id != identity.personality_id)
+        {
+            return Err(CoreError::InvalidSave("player build identity is invalid"));
+        }
+        let saved_level = payload
+            .player
+            .progress
+            .as_ref()
+            .map_or(1, |progress| progress.level);
+        let expected_skills = character_skill_progress(&content, build.as_ref(), saved_level)?;
+        let progress = restore_character_progress(
+            payload.player.progress.as_ref(),
+            player_definition.max_hp,
+            expected_skills,
+        )?;
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1216,6 +1517,7 @@ impl Game {
             height: payload.terrain.height,
             terrain,
             player,
+            build,
             progress,
             entities,
             items,
@@ -1314,7 +1616,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: player_to_save(&self.player, &self.progress),
+            player: player_to_save(&self.player, &self.progress, self.build.as_ref()),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
@@ -1688,7 +1990,14 @@ impl Game {
                     self.player.position = target;
                     changed.insert(old_position);
                     changed.insert(target);
-                    if let Some((source_kind_id, damage)) = self.trigger_player_trap(target) {
+                    for position in self.passive_perception(&mut events) {
+                        changed.insert(position);
+                    }
+                    if let Some(PlayerTrapOutcome::Triggered {
+                        source_kind_id,
+                        damage,
+                    }) = self.trigger_player_trap(target, &mut events)
+                    {
                         events.push(DomainEvent::TrapTriggered {
                             position: target,
                             damage,
@@ -1794,8 +2103,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV29 {
-            schema_version: 29,
+        let payload = StateHashPayloadV31 {
+            schema_version: 31,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -1805,7 +2114,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: player_to_save(&self.player, &self.progress),
+            player: player_to_save(&self.player, &self.progress, self.build.as_ref()),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
@@ -1938,6 +2247,7 @@ impl Game {
                 .collect(),
             resistances: self.player.resistances.to_dtos(),
             progress: self.player_progress_dto(),
+            build: self.player_build_dto(),
         }
     }
 
@@ -1959,6 +2269,7 @@ impl Game {
                     max_hp: entity.max_hp,
                     speed: derived_speed(&stats.speed),
                     energy_need: entity.energy_need,
+                    alerted: entity.alerted,
                     attack: stats.attack.value,
                     defense: stats.defense.value,
                     melee_skill: stats.melee_skill.value,
@@ -2639,25 +2950,56 @@ impl Game {
     }
 
     fn player_max_hp_at_level(&self, level: u16) -> i32 {
-        let base = self
+        self.character_base_max_hp_at_level(level)
+            .saturating_add(self.character_modifier_total(|modifiers| modifiers.max_hp))
+            .saturating_add(self.equipment_modifiers().max_hp)
+            .max(1)
+    }
+
+    fn character_base_max_hp_at_level(&self, level: u16) -> i32 {
+        let mut base = self
             .progress
             .hp_progression
             .get(usize::from(level.saturating_sub(1)))
             .copied()
             .unwrap_or(1);
-        let percent = i32::from(self.effective_player_attributes().constitution_hp_percent());
-        base.saturating_mul(percent)
+        let mut life_percent = 100_u16;
+        if let Some((_, race, class, personality)) = self.character_definitions() {
+            base = base
+                .saturating_add(race.base_hp)
+                .saturating_add(class.base_hp)
+                .saturating_add(personality.base_hp)
+                .max(1);
+            life_percent = combine_percentages([
+                race.life_percent,
+                class.life_percent,
+                personality.life_percent,
+            ]);
+        }
+        let constitution_percent =
+            i32::from(self.effective_player_attributes().constitution_hp_percent());
+        base.saturating_mul(i32::from(life_percent))
             .saturating_add(50)
             .saturating_div(100)
-            .saturating_add(self.equipment_modifiers().max_hp)
+            .saturating_mul(constitution_percent)
+            .saturating_add(50)
+            .saturating_div(100)
+            .max(1)
     }
 
     fn apply_player_experience(&mut self, amount: u64, events: &mut Vec<DomainEvent>) {
+        let amount = amount
+            .saturating_mul(u64::from(self.character_experience_percent()))
+            .saturating_add(50)
+            .saturating_div(100);
         let previous_level = self.progress.level;
         let mut previous_max_hp = self.player_max_hp_at_level(previous_level);
         let levels = self
             .progress
             .gain_experience(amount, self.victory_level_cap_unlocked());
+        if !levels.is_empty() {
+            self.refresh_character_skills();
+        }
         if amount > 0 {
             events.push(DomainEvent::ExperienceGained {
                 amount,
@@ -2714,17 +3056,14 @@ impl Game {
     }
 
     fn effective_player_attributes(&self) -> AttributeSet {
-        let modifiers = self.equipment_modifiers();
         let cap = CharacterProgress::attribute_cap(self.victory_level_cap_unlocked());
-        let natural = self.progress.attributes;
-        AttributeSet {
-            strength: modify_attribute_value(natural.strength, modifiers.strength, cap),
-            intelligence: modify_attribute_value(natural.intelligence, modifiers.intelligence, cap),
-            wisdom: modify_attribute_value(natural.wisdom, modifiers.wisdom, cap),
-            dexterity: modify_attribute_value(natural.dexterity, modifiers.dexterity, cap),
-            constitution: modify_attribute_value(natural.constitution, modifiers.constitution, cap),
-            charisma: modify_attribute_value(natural.charisma, modifiers.charisma, cap),
+        let mut attributes = self.progress.attributes;
+        if let Some((_, race, class, personality)) = self.character_definitions() {
+            for modifiers in [&race.modifiers, &class.modifiers, &personality.modifiers] {
+                attributes = apply_attribute_modifiers(attributes, modifiers, cap);
+            }
         }
+        apply_attribute_dto_modifiers(attributes, self.equipment_modifiers(), cap)
     }
 
     fn player_progress_dto(&self) -> PlayerProgressDto {
@@ -2756,7 +3095,89 @@ impl Game {
                 constitution: value(AttributeKind::Constitution),
                 charisma: value(AttributeKind::Charisma),
             },
+            skills: self
+                .progress
+                .skills
+                .iter()
+                .map(|(id, skill)| SkillProgressDto {
+                    id: id.clone(),
+                    name_key: self
+                        .content
+                        .skill(id)
+                        .map_or_else(|| id.clone(), |definition| definition.name_key.clone()),
+                    current: skill.current,
+                    maximum: skill.maximum,
+                    base: skill.base,
+                    growth_per_ten_levels: skill.growth_per_ten_levels,
+                })
+                .collect(),
         }
+    }
+
+    fn player_build_dto(&self) -> Option<PlayerBuildDto> {
+        let (build, race, class, personality) = self.character_definitions()?;
+        Some(PlayerBuildDto {
+            build_id: build.id.clone(),
+            build_name_key: build.name_key.clone(),
+            race_id: race.id.clone(),
+            race_name_key: race.name_key.clone(),
+            class_id: class.id.clone(),
+            class_name_key: class.name_key.clone(),
+            personality_id: personality.id.clone(),
+            personality_name_key: personality.name_key.clone(),
+            life_percent: combine_percentages([
+                race.life_percent,
+                class.life_percent,
+                personality.life_percent,
+            ]),
+            experience_percent: combine_percentages([
+                race.experience_percent,
+                class.experience_percent,
+                personality.experience_percent,
+            ]),
+        })
+    }
+
+    fn character_definitions(
+        &self,
+    ) -> Option<(
+        &CharacterBuildDefinition,
+        &RaceDefinition,
+        &ClassDefinition,
+        &PersonalityDefinition,
+    )> {
+        self.build
+            .as_ref()
+            .map(|identity| build_definitions(&self.content, identity))
+            .transpose()
+            .expect("validated character build must remain available")
+    }
+
+    fn character_experience_percent(&self) -> u16 {
+        self.character_definitions()
+            .map_or(100, |(_, race, class, personality)| {
+                combine_percentages([
+                    race.experience_percent,
+                    class.experience_percent,
+                    personality.experience_percent,
+                ])
+            })
+    }
+
+    fn character_modifier_total(&self, value: impl Fn(&StatModifiers) -> i32) -> i32 {
+        self.character_definitions()
+            .map_or(0, |(_, race, class, personality)| {
+                value(&race.modifiers)
+                    .saturating_add(value(&class.modifiers))
+                    .saturating_add(value(&personality.modifiers))
+            })
+    }
+
+    fn refresh_character_skills(&mut self) {
+        let skills =
+            character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)
+                .expect("validated character skills must remain available");
+        self.progress.replace_skills(skills);
     }
 
     fn increase_player_attribute(&mut self, attribute: AttributeKind) -> Option<(u16, u16, u8)> {
@@ -2956,6 +3377,128 @@ impl Game {
         }
     }
 
+    fn add_character_stat_contributions(&self, pipeline: &mut DerivedStatsPipeline) {
+        let Some((_, race, class, personality)) = self.character_definitions() else {
+            return;
+        };
+        for (layer, source_id, modifiers) in [
+            (StatLayer::Species, race.id.as_str(), &race.modifiers),
+            (StatLayer::Class, class.id.as_str(), &class.modifiers),
+            (
+                StatLayer::Personality,
+                personality.id.as_str(),
+                &personality.modifiers,
+            ),
+        ] {
+            add_nonzero_stat(
+                pipeline,
+                StatKind::MaxHp,
+                layer,
+                source_id,
+                modifiers.max_hp,
+            );
+            add_nonzero_stat(
+                pipeline,
+                StatKind::Attack,
+                layer,
+                source_id,
+                modifiers.attack,
+            );
+            add_nonzero_stat(
+                pipeline,
+                StatKind::Defense,
+                layer,
+                source_id,
+                modifiers.defense,
+            );
+        }
+    }
+
+    fn add_character_skill_contributions(&self, pipeline: &mut DerivedStatsPipeline) {
+        let Some((_, race, class, personality)) = self.character_definitions() else {
+            return;
+        };
+        for (layer, source_id, skill_set_id) in [
+            (
+                StatLayer::Species,
+                race.id.as_str(),
+                race.skill_set_id.as_str(),
+            ),
+            (
+                StatLayer::Class,
+                class.id.as_str(),
+                class.skill_set_id.as_str(),
+            ),
+            (
+                StatLayer::Personality,
+                personality.id.as_str(),
+                personality.skill_set_id.as_str(),
+            ),
+        ] {
+            let skill_set = self
+                .content
+                .skill_set(skill_set_id)
+                .expect("validated skill set must remain available");
+            for entry in &skill_set.entries {
+                let definition = self
+                    .content
+                    .skill(&entry.skill_id)
+                    .expect("validated skill must remain available");
+                let amount = entry.base.saturating_add(
+                    entry
+                        .growth_per_ten_levels
+                        .saturating_mul(i32::from(self.progress.level))
+                        .saturating_div(10),
+                );
+                match definition.kind {
+                    SkillKind::Disarming => {
+                        add_nonzero_stat(pipeline, StatKind::DoorSkill, layer, source_id, amount);
+                        add_nonzero_stat(pipeline, StatKind::DisarmSkill, layer, source_id, amount);
+                    }
+                    SkillKind::Search => {
+                        add_nonzero_stat(pipeline, StatKind::SearchSkill, layer, source_id, amount)
+                    }
+                    SkillKind::Melee => {
+                        add_nonzero_stat(pipeline, StatKind::MeleeSkill, layer, source_id, amount)
+                    }
+                    SkillKind::Ranged => {
+                        add_nonzero_stat(pipeline, StatKind::RangedSkill, layer, source_id, amount)
+                    }
+                    SkillKind::Throwing => add_nonzero_stat(
+                        pipeline,
+                        StatKind::ThrowingSkill,
+                        layer,
+                        source_id,
+                        amount,
+                    ),
+                    SkillKind::Digging => {
+                        add_nonzero_stat(pipeline, StatKind::DigSkill, layer, source_id, amount)
+                    }
+                    SkillKind::Device => {
+                        add_nonzero_stat(pipeline, StatKind::DeviceSkill, layer, source_id, amount)
+                    }
+                    SkillKind::SavingThrow => add_nonzero_stat(
+                        pipeline,
+                        StatKind::SavingThrowSkill,
+                        layer,
+                        source_id,
+                        amount,
+                    ),
+                    SkillKind::Stealth => {
+                        add_nonzero_stat(pipeline, StatKind::StealthSkill, layer, source_id, amount)
+                    }
+                    SkillKind::Perception => add_nonzero_stat(
+                        pipeline,
+                        StatKind::PerceptionSkill,
+                        layer,
+                        source_id,
+                        amount,
+                    ),
+                }
+            }
+        }
+    }
+
     fn actor_derived_stats(
         &self,
         actor: &Actor,
@@ -2969,13 +3512,7 @@ impl Game {
             StatLayer::Base,
             base_source,
             if include_equipment {
-                self.progress
-                    .base_max_hp()
-                    .saturating_mul(i32::from(
-                        self.effective_player_attributes().constitution_hp_percent(),
-                    ))
-                    .saturating_add(50)
-                    / 100
+                self.character_base_max_hp_at_level(self.progress.level)
             } else {
                 actor.max_hp
             },
@@ -3004,6 +3541,8 @@ impl Game {
             base_source,
             if definition.role == ActorRole::Monster {
                 monster_melee_skill(definition.attack, definition.level)
+            } else if include_equipment && self.build.is_some() {
+                0
             } else {
                 rating_to_combat_value(definition.attack)
             },
@@ -3020,19 +3559,31 @@ impl Game {
             StatKind::RangedSkill,
             StatLayer::Base,
             base_source,
-            rating_to_combat_value(definition.attack),
+            if include_equipment && self.build.is_some() {
+                0
+            } else {
+                rating_to_combat_value(definition.attack)
+            },
         );
         pipeline.add(
             StatKind::ThrowingSkill,
             StatLayer::Base,
             base_source,
-            rating_to_combat_value(definition.attack),
+            if include_equipment && self.build.is_some() {
+                0
+            } else {
+                rating_to_combat_value(definition.attack)
+            },
         );
         pipeline.add(
             StatKind::DoorSkill,
             StatLayer::Base,
             base_source,
-            definition.door_skill,
+            if include_equipment && self.build.is_some() {
+                0
+            } else {
+                definition.door_skill
+            },
         );
         pipeline.add(
             StatKind::BashPower,
@@ -3044,22 +3595,40 @@ impl Game {
             StatKind::SearchSkill,
             StatLayer::Base,
             base_source,
-            definition.search_skill,
+            if include_equipment && self.build.is_some() {
+                0
+            } else {
+                definition.search_skill
+            },
         );
+        pipeline.add(StatKind::DeviceSkill, StatLayer::Base, base_source, 0);
+        pipeline.add(StatKind::SavingThrowSkill, StatLayer::Base, base_source, 0);
+        pipeline.add(StatKind::StealthSkill, StatLayer::Base, base_source, 0);
+        pipeline.add(StatKind::PerceptionSkill, StatLayer::Base, base_source, 0);
         pipeline.add(
             StatKind::DisarmSkill,
             StatLayer::Base,
             base_source,
-            definition.disarm_skill,
+            if include_equipment && self.build.is_some() {
+                0
+            } else {
+                definition.disarm_skill
+            },
         );
         pipeline.add(
             StatKind::DigSkill,
             StatLayer::Base,
             base_source,
-            definition.dig_skill,
+            if include_equipment && self.build.is_some() {
+                0
+            } else {
+                definition.dig_skill
+            },
         );
 
         if include_equipment {
+            self.add_character_stat_contributions(&mut pipeline);
+            self.add_character_skill_contributions(&mut pipeline);
             for item in self
                 .items
                 .iter()
@@ -3180,6 +3749,11 @@ impl Game {
             door_skill: pipeline.resolve(StatKind::DoorSkill, StatBounds::NON_NEGATIVE),
             bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
             search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
+            device_skill: pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE),
+            saving_throw_skill: pipeline
+                .resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE),
+            stealth_skill: pipeline.resolve(StatKind::StealthSkill, StatBounds::NON_NEGATIVE),
+            perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),
             disarm_skill: pipeline.resolve(StatKind::DisarmSkill, StatBounds::NON_NEGATIVE),
             dig_skill: pipeline.resolve(StatKind::DigSkill, StatBounds::NON_NEGATIVE),
         }
@@ -3214,6 +3788,7 @@ impl Game {
                 .expect("projectile target definition must remain available")
                 .clone();
             let target_kind_id = definition.id.clone();
+            self.entities[index].alerted = true;
             let attacker = self.player_derived_stats();
             let target = self.actor_derived_stats(&self.entities[index], &definition, false);
             changed.insert(self.entities[index].position);
@@ -3483,6 +4058,7 @@ impl Game {
                 .expect("throw target definition must remain available")
                 .clone();
             let target_kind_id = target_definition.id.clone();
+            self.entities[index].alerted = true;
             let attacker = self.player_derived_stats();
             let target = self.actor_derived_stats(&self.entities[index], &target_definition, false);
             let ability = attacker.throwing_skill.with_modifier(
@@ -3597,14 +4173,50 @@ impl Game {
             return;
         };
 
+        self.mark_item_tried(&kind_id);
+        if let Some(difficulty) = action.device_check_difficulty {
+            let ability = self.player_derived_stats().device_skill;
+            let mut difficulty_pipeline = DerivedStatsPipeline::new();
+            difficulty_pipeline.add(
+                StatKind::ActionDifficulty,
+                StatLayer::Environment,
+                &kind_id,
+                difficulty,
+            );
+            let check = resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::UseDevice,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(item_id.to_owned()),
+                    ability,
+                    difficulty: difficulty_pipeline
+                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                },
+            );
+            let succeeded = check.succeeded();
+            let skill_id = self
+                .content
+                .skill_by_kind(SkillKind::Device)
+                .expect("validated device skill must remain available")
+                .id
+                .clone();
+            events.push(DomainEvent::DeviceSkillChecked {
+                source_kind_id: kind_id.clone(),
+                succeeded,
+                resolution: check.to_dto(skill_id),
+            });
+            if !succeeded {
+                return;
+            }
+        }
+
         if self.items[index].quantity == 1 {
             let removed = self.items.remove(index);
             self.item_property_knowledge.remove(&removed.id);
         } else {
             self.items[index].quantity -= 1;
         }
-        self.mark_item_tried(&kind_id);
-
         let (requested, applied) = match action.effect {
             ItemUseEffectDefinition::Heal { amount } => {
                 let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
@@ -3686,6 +4298,7 @@ impl Game {
             .expect("monster actor definition must remain available")
             .clone();
         let target_kind = self.entities[index].kind_id.clone();
+        self.entities[index].alerted = true;
         let attacker = self.player_derived_stats();
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
         let profile = self.player_melee_profile(&attacker);
@@ -3882,6 +4495,9 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         surround_reservations: &mut BTreeSet<Position>,
     ) {
+        if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
+            return;
+        }
         let behavior = self.entities[index]
             .pack
             .as_ref()
@@ -3920,6 +4536,65 @@ impl Game {
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
+    }
+
+    fn resolve_monster_detection(&mut self, index: usize, events: &mut Vec<DomainEvent>) -> bool {
+        let kind_id = self.entities[index].kind_id.clone();
+        let Some(awareness) = self
+            .content
+            .actor(&kind_id)
+            .and_then(|definition| definition.awareness.clone())
+        else {
+            self.entities[index].alerted = true;
+            return true;
+        };
+        let monster_position = self.entities[index].position;
+        let distance = monster_position
+            .x
+            .abs_diff(self.player.position.x)
+            .max(monster_position.y.abs_diff(self.player.position.y));
+        if distance > u32::from(awareness.detection_range)
+            || !has_line_of_sight(self, monster_position, self.player.position)
+        {
+            return false;
+        }
+        let ability = self.player_derived_stats().stealth_skill;
+        let mut difficulty_pipeline = DerivedStatsPipeline::new();
+        difficulty_pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            &kind_id,
+            awareness.detection_difficulty,
+        );
+        let check = resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::StealthDetection,
+                actor_id: self.player.id.clone(),
+                target_id: Some(self.entities[index].id.clone()),
+                ability,
+                difficulty: difficulty_pipeline
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        );
+        let stayed_hidden = check.succeeded();
+        let skill_id = self
+            .content
+            .skill_by_kind(SkillKind::Stealth)
+            .expect("validated stealth skill must remain available")
+            .id
+            .clone();
+        events.push(DomainEvent::StealthChecked {
+            source_kind_id: kind_id,
+            succeeded: stayed_hidden,
+            resolution: check.to_dto(skill_id),
+        });
+        if stayed_hidden {
+            false
+        } else {
+            self.entities[index].alerted = true;
+            true
+        }
     }
 
     fn resolve_monster_melee(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
@@ -4166,6 +4841,39 @@ impl Game {
                 .saturating_add(1);
             total.saturating_add(roll)
         })
+    }
+
+    fn initialize_starting_item_knowledge(&mut self) {
+        for item in self.items.iter().filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        }) {
+            if self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.appearance_name_key.is_some())
+            {
+                self.item_knowledge.insert(
+                    item.kind_id.clone(),
+                    ItemKnowledgeState {
+                        tried: true,
+                        aware: true,
+                    },
+                );
+            }
+            if matches!(item.location, ItemLocation::Equipped { .. }) {
+                self.item_property_knowledge.insert(
+                    item.id.clone(),
+                    ItemPropertyKnowledgeState {
+                        appraised: true,
+                        identified: true,
+                        known_affix_ids: item.affix_ids.iter().cloned().collect(),
+                    },
+                );
+            }
+        }
     }
 
     fn initialize_carried_loot(&mut self) -> Result<(), CoreError> {
@@ -6209,6 +6917,7 @@ impl Game {
                         actor.max_hp,
                         actor.speed,
                         INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(actor),
                     ));
                 }
             }
@@ -6249,6 +6958,7 @@ impl Game {
                     actor.max_hp,
                     actor.speed,
                     INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(actor),
                 ));
             }
         }
@@ -6307,6 +7017,7 @@ impl Game {
                         actor.max_hp,
                         actor.speed,
                         INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(actor),
                     ));
                 }
             }
@@ -6329,6 +7040,7 @@ impl Game {
                 max_hp,
                 speed,
                 INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(actor),
             ));
         }
         let mut items =
@@ -6487,6 +7199,7 @@ impl Game {
                         actor.max_hp,
                         actor.speed,
                         INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(actor),
                     ));
                 }
                 TaskObjectiveKind::KillActorKind => {
@@ -6522,6 +7235,7 @@ impl Game {
                             actor.max_hp,
                             actor.speed,
                             INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
                         ));
                     }
                 }
@@ -7030,6 +7744,7 @@ impl Game {
             actor.max_hp,
             actor.speed,
             INITIAL_MONSTER_ENERGY_NEED,
+            actor_starts_alerted(actor),
         )
     }
 
@@ -7769,18 +8484,62 @@ impl Game {
             .collect()
     }
 
-    fn trigger_player_trap(&mut self, position: Position) -> Option<(String, DamageOutcome)> {
+    fn trigger_player_trap(
+        &mut self,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<PlayerTrapOutcome> {
         let index = self.index(position)?;
         let terrain = self.content.terrain(&self.terrain[index])?;
         let source_kind_id = terrain.id.clone();
-        let trap = terrain.trap.as_ref()?;
+        let trap = terrain.trap.clone()?;
+        self.revealed_terrain.insert(position);
+        if let Some(difficulty) = trap.saving_throw_difficulty {
+            let ability = self.player_derived_stats().saving_throw_skill;
+            let mut difficulty_pipeline = DerivedStatsPipeline::new();
+            difficulty_pipeline.add(
+                StatKind::ActionDifficulty,
+                StatLayer::Environment,
+                &source_kind_id,
+                difficulty,
+            );
+            let check = resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::SavingThrow,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(source_kind_id.clone()),
+                    ability,
+                    difficulty: difficulty_pipeline
+                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                },
+            );
+            let succeeded = check.succeeded();
+            let skill_id = self
+                .content
+                .skill_by_kind(SkillKind::SavingThrow)
+                .expect("validated saving throw skill must remain available")
+                .id
+                .clone();
+            events.push(DomainEvent::SavingThrowChecked {
+                source_kind_id: source_kind_id.clone(),
+                position,
+                succeeded,
+                resolution: check.to_dto(skill_id),
+            });
+            if succeeded {
+                return Some(PlayerTrapOutcome::Resisted);
+            }
+        }
         let damage = resolve_damage(
             DamagePacket::new(trap.damage, trap.damage_type.into()),
             self.player.resistances.level(trap.damage_type.into()),
         );
         self.player.hp = self.player.hp.saturating_sub(damage.applied);
-        self.revealed_terrain.insert(position);
-        Some((source_kind_id, damage))
+        Some(PlayerTrapOutcome::Triggered {
+            source_kind_id,
+            damage,
+        })
     }
 
     fn disarm_trap(&mut self, direction: Direction) -> Option<TrapDisarmOutcome> {
@@ -7904,6 +8663,67 @@ impl Game {
                 },
             );
             if check.succeeded() {
+                self.revealed_terrain.insert(position);
+                discovered.push(position);
+            }
+        }
+        discovered
+    }
+
+    fn passive_perception(&mut self, events: &mut Vec<DomainEvent>) -> Vec<Position> {
+        let candidates = TERRAIN_INTERACTION_DIRECTIONS
+            .into_iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(direction);
+                let index = self.index(position)?;
+                if self.revealed_terrain.contains(&position) {
+                    return None;
+                }
+                let terrain = self.content.terrain(&self.terrain[index])?;
+                Some((
+                    position,
+                    terrain.id.clone(),
+                    terrain.perception_check_difficulty?,
+                ))
+            })
+            .collect::<Vec<_>>();
+        if candidates.is_empty() {
+            return Vec::new();
+        }
+        let ability = self.player_derived_stats().perception_skill;
+        let skill_id = self
+            .content
+            .skill_by_kind(SkillKind::Perception)
+            .expect("validated perception skill must remain available")
+            .id
+            .clone();
+        let mut discovered = Vec::new();
+        for (position, terrain_id, difficulty) in candidates {
+            let mut difficulty_pipeline = DerivedStatsPipeline::new();
+            difficulty_pipeline.add(
+                StatKind::ActionDifficulty,
+                StatLayer::Environment,
+                &terrain_id,
+                difficulty,
+            );
+            let check = resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::PassivePerception,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(terrain_id),
+                    ability: ability.clone(),
+                    difficulty: difficulty_pipeline
+                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                },
+            );
+            let succeeded = check.succeeded();
+            events.push(DomainEvent::PerceptionChecked {
+                position,
+                succeeded,
+                resolution: check.to_dto(skill_id.clone()),
+            });
+            if succeeded {
                 self.revealed_terrain.insert(position);
                 discovered.push(position);
             }
@@ -8145,7 +8965,10 @@ impl Game {
             }
         }
         let victory_cap_unlocked = self.campaign_state.status != CampaignStatusDto::Active;
+        let expected_skills =
+            character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)?;
         if !self.progress.validate(victory_cap_unlocked)
+            || self.progress.skills != expected_skills
             || self.progress.hp_progression.first().copied() != Some(self.player.max_hp)
             || self.progress.hp_progression.windows(2).any(|window| {
                 let increase = window[1].saturating_sub(window[0]);
@@ -8706,6 +9529,10 @@ struct ActorDerivedStats {
     door_skill: DerivedStat,
     bash_power: DerivedStat,
     search_skill: DerivedStat,
+    device_skill: DerivedStat,
+    saving_throw_skill: DerivedStat,
+    stealth_skill: DerivedStat,
+    perception_skill: DerivedStat,
     disarm_skill: DerivedStat,
     dig_skill: DerivedStat,
 }
@@ -8713,6 +9540,14 @@ struct ActorDerivedStats {
 enum TrapDisarmOutcome {
     Succeeded { position: Position },
     Failed { position: Position },
+}
+
+enum PlayerTrapOutcome {
+    Resisted,
+    Triggered {
+        source_kind_id: String,
+        damage: DamageOutcome,
+    },
 }
 
 enum TerrainDigOutcome {
@@ -8991,6 +9826,18 @@ impl ResolvedAttackProfile {
     }
 }
 
+fn add_nonzero_stat(
+    pipeline: &mut DerivedStatsPipeline,
+    kind: StatKind,
+    layer: StatLayer,
+    source_id: &str,
+    amount: i32,
+) {
+    if amount != 0 {
+        pipeline.add(kind, layer, source_id, amount);
+    }
+}
+
 fn add_equipment_stat(
     pipeline: &mut DerivedStatsPipeline,
     kind: StatKind,
@@ -9069,6 +9916,13 @@ const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPack
         MonsterPackBehavior::GuardLeader => MonsterPackBehaviorDto::GuardLeader,
         MonsterPackBehavior::GuardPosition => MonsterPackBehaviorDto::GuardPosition,
     }
+}
+
+fn actor_starts_alerted(definition: &rfb_content::ActorDefinition) -> bool {
+    definition
+        .awareness
+        .as_ref()
+        .is_none_or(|awareness| awareness.starts_alerted)
 }
 
 fn generated_non_entry_room_id(rooms: &[GeneratedRoom], ordinal: u16) -> &str {
@@ -10561,8 +11415,9 @@ mod tests {
     use crate::effect::StatusInstance;
     use crate::resistance::ResistanceLevel;
     use rfb_protocol::{
-        DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, GameEventOutcomeDto,
-        ResistanceLevelDto, ResistanceSaveDto, StatusSaveDto, VisibilityState,
+        CheckOutcomeDto, CheckResolutionDto, DamageTypeDto, Direction, GameCommand,
+        GameCommandEnvelope, GameEventOutcomeDto, ResistanceLevelDto, ResistanceSaveDto,
+        StatusSaveDto, VisibilityState,
     };
 
     use super::*;
@@ -16341,6 +17196,416 @@ mod tests {
             CampaignStatusDto::Victorious
         );
         assert_eq!(restored.snapshot().state_hash, game.snapshot().state_hash);
+    }
+
+    #[test]
+    fn default_character_build_preserves_the_v70_player_baseline() {
+        let game = Game::new(42);
+        let snapshot = game.snapshot();
+        let build = snapshot
+            .player
+            .build
+            .expect("default build should be projected");
+
+        assert_eq!(build.build_id, "demo.build.explorer");
+        assert_eq!(build.race_id, "demo.race.human");
+        assert_eq!(build.class_id, "demo.class.explorer");
+        assert_eq!(build.personality_id, "demo.personality.ordinary");
+        assert_eq!(snapshot.player.max_hp, 10);
+        assert_eq!(snapshot.player.melee_skill, 40);
+        assert_eq!(snapshot.player.progress.skills.len(), 10);
+        assert!(snapshot.inventory.is_empty());
+        assert!(snapshot.equipment.is_empty());
+    }
+
+    #[test]
+    fn v70_save_migrates_default_build_and_skills_without_rng_drift() {
+        let canonical = Game::new(42);
+        let mut legacy = canonical.to_save();
+        legacy.content_hash =
+            "ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6".to_owned();
+        legacy.player.build = None;
+        legacy
+            .player
+            .progress
+            .as_mut()
+            .expect("v70 save should contain character progress")
+            .skills
+            .clear();
+        let draw_counter = legacy.rng.draw_counter;
+
+        let migrated = Game::from_save(legacy).expect("v70 save should migrate character build");
+        let snapshot = migrated.snapshot();
+        assert_eq!(
+            snapshot
+                .player
+                .build
+                .as_ref()
+                .map(|build| build.build_id.as_str()),
+            Some("demo.build.explorer")
+        );
+        assert_eq!(snapshot.player.progress.skills.len(), 10);
+        assert_eq!(migrated.rng_draw_counter(), draw_counter);
+        assert_eq!(migrated.state_hash(), canonical.state_hash());
+
+        let restored = Game::from_save(migrated.to_save())
+            .expect("migrated character build should survive another round trip");
+        assert_eq!(restored.state_hash(), migrated.state_hash());
+    }
+
+    #[test]
+    fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
+        let vanguard =
+            Game::new_with_build(42, "demo.build.vanguard").expect("vanguard build should create");
+        let snapshot = vanguard.snapshot();
+        assert_eq!(snapshot.player.build.as_ref().unwrap().life_percent, 115);
+        assert_eq!(snapshot.player.max_hp, 33);
+        assert_eq!(snapshot.player.progress.attributes.strength.effective, 18);
+        assert_eq!(
+            snapshot
+                .player
+                .progress
+                .skills
+                .iter()
+                .find(|skill| skill.id == "demo.skill.melee")
+                .map(|skill| skill.current),
+            Some(78)
+        );
+        assert_eq!(snapshot.player.melee_skill, 88);
+        assert_eq!(snapshot.inventory.len(), 2);
+        assert_eq!(snapshot.equipment.len(), 1);
+        assert_eq!(snapshot.equipment[0].kind_id, "demo.item.echo-blade");
+
+        let scholar =
+            Game::new_with_build(42, "demo.build.scholar").expect("scholar build should create");
+        let scholar_snapshot = scholar.snapshot();
+        assert_eq!(
+            scholar_snapshot
+                .player
+                .build
+                .as_ref()
+                .unwrap()
+                .experience_percent,
+            156
+        );
+        assert!(
+            scholar_snapshot
+                .equipment
+                .iter()
+                .any(|item| item.kind_id == "demo.item.echo-charm")
+        );
+
+        let pathfinder = Game::new_with_build(42, "demo.build.pathfinder")
+            .expect("pathfinder build should create");
+        assert!(pathfinder.snapshot().player.projectile_profile.is_some());
+
+        let tinkerer =
+            Game::new_with_build(42, "demo.build.tinkerer").expect("tinkerer build should create");
+        assert!(
+            tinkerer
+                .snapshot()
+                .player
+                .progress
+                .skills
+                .iter()
+                .find(|skill| skill.id == "demo.skill.device")
+                .is_some_and(|skill| skill.current > 60)
+        );
+        assert_eq!(vanguard.rng_draw_counter(), scholar.rng_draw_counter());
+    }
+
+    #[test]
+    fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic() {
+        let mut vanguard =
+            Game::new_with_build(17, "demo.build.vanguard").expect("vanguard build should create");
+        vanguard.apply_player_experience(380, &mut Vec::new());
+        assert_eq!(vanguard.progress.level, 10);
+        assert_eq!(
+            vanguard
+                .progress
+                .skill("demo.skill.melee")
+                .map(|skill| skill.current),
+            Some(105)
+        );
+
+        let mut scholar =
+            Game::new_with_build(17, "demo.build.scholar").expect("scholar build should create");
+        scholar.apply_player_experience(100, &mut Vec::new());
+        assert_eq!(scholar.progress.experience, 156);
+
+        let restored = Game::from_save(vanguard.to_save()).expect("build save should reload");
+        assert_eq!(restored.build, vanguard.build);
+        assert_eq!(restored.progress.skills, vanguard.progress.skills);
+        assert_eq!(restored.snapshot(), vanguard.snapshot());
+        assert!(matches!(
+            Game::new_with_build(17, "demo.build.missing"),
+            Err(CoreError::UnknownCharacterBuild(_))
+        ));
+    }
+
+    #[test]
+    fn device_skill_check_distinguishes_builds_without_consuming_on_failure() {
+        const ITEM_ID: &str = "test.item.resonance-stabilizer.1";
+        let mut tinkerer = skill_check_game(0, "demo.build.tinkerer");
+        let mut vanguard = skill_check_game(0, "demo.build.vanguard");
+        for game in [&mut tinkerer, &mut vanguard] {
+            game.player.hp = 5;
+            give_inventory_item(game, ITEM_ID, "demo.item.resonance-stabilizer");
+        }
+        assert_eq!(tinkerer.rng_draw_counter(), vanguard.rng_draw_counter());
+
+        let tinkerer_update = dispatch_next(
+            &mut tinkerer,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+            },
+        );
+        let vanguard_update = dispatch_next(
+            &mut vanguard,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+            },
+        );
+        let success = check_resolution(&tinkerer_update, "skill.device-success");
+        let failure = check_resolution(&vanguard_update, "skill.device-failure");
+
+        assert_check(success, "demo.skill.device", 69, 60, 32, Some(54), 45);
+        assert_eq!(success.outcome, CheckOutcomeDto::Success);
+        assert_check(failure, "demo.skill.device", 16, 60, 32, Some(9), 45);
+        assert_eq!(failure.outcome, CheckOutcomeDto::Failure);
+        assert_eq!(tinkerer.player.hp, 11);
+        assert_eq!(vanguard.player.hp, 5);
+        assert!(!tinkerer.items.iter().any(|item| item.id == ITEM_ID));
+        assert!(vanguard.items.iter().any(|item| item.id == ITEM_ID));
+        assert!(
+            tinkerer
+                .item_knowledge
+                .get("demo.item.resonance-stabilizer")
+                .is_some_and(|knowledge| knowledge.tried && knowledge.aware)
+        );
+        assert!(
+            vanguard
+                .item_knowledge
+                .get("demo.item.resonance-stabilizer")
+                .is_some_and(|knowledge| knowledge.tried && !knowledge.aware)
+        );
+    }
+
+    #[test]
+    fn saving_throw_skill_check_resists_or_applies_the_same_trap() {
+        let trap_position = Position { x: 4, y: 3 };
+        let mut tinkerer = skill_check_game(2, "demo.build.tinkerer");
+        let mut vanguard = skill_check_game(2, "demo.build.vanguard");
+        for game in [&mut tinkerer, &mut vanguard] {
+            replace_terrain(game, trap_position, "demo.terrain.trap-resonance-ward");
+        }
+        let tinkerer_hp = tinkerer.player.hp;
+        let vanguard_hp = vanguard.player.hp;
+
+        let tinkerer_update = dispatch_next(
+            &mut tinkerer,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        let vanguard_update = dispatch_next(
+            &mut vanguard,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        let success = check_resolution(&tinkerer_update, "skill.saving-throw-success");
+        let failure = check_resolution(&vanguard_update, "skill.saving-throw-failure");
+
+        assert_check(success, "demo.skill.saving-throw", 45, 40, 13, Some(33), 30);
+        assert_eq!(success.outcome, CheckOutcomeDto::Success);
+        assert_check(failure, "demo.skill.saving-throw", 29, 40, 13, Some(20), 30);
+        assert_eq!(failure.outcome, CheckOutcomeDto::Failure);
+        assert_eq!(tinkerer.player.hp, tinkerer_hp);
+        assert!(vanguard.player.hp < vanguard_hp);
+        assert!(tinkerer.revealed_terrain.contains(&trap_position));
+        assert!(vanguard.revealed_terrain.contains(&trap_position));
+        assert!(
+            !tinkerer_update
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.trap-triggered")
+        );
+        assert!(
+            vanguard_update
+                .events
+                .iter()
+                .any(|event| event.kind == "terrain.trap-triggered")
+        );
+    }
+
+    #[test]
+    fn passive_perception_skill_check_reveals_only_for_the_high_skill_build() {
+        let rune_position = Position { x: 5, y: 3 };
+        let mut tinkerer = skill_check_game(1, "demo.build.tinkerer");
+        let mut vanguard = skill_check_game(1, "demo.build.vanguard");
+        for game in [&mut tinkerer, &mut vanguard] {
+            replace_terrain(game, rune_position, "demo.terrain.echo-rune-hidden");
+        }
+
+        let tinkerer_update = dispatch_next(
+            &mut tinkerer,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        let vanguard_update = dispatch_next(
+            &mut vanguard,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        let success = check_resolution(&tinkerer_update, "skill.perception-success");
+        let failure = check_resolution(&vanguard_update, "skill.perception-failure");
+
+        assert_check(success, "demo.skill.perception", 25, 24, 83, Some(21), 18);
+        assert_eq!(success.outcome, CheckOutcomeDto::Success);
+        assert_check(failure, "demo.skill.perception", 4, 24, 83, Some(3), 18);
+        assert_eq!(failure.outcome, CheckOutcomeDto::Failure);
+        assert!(tinkerer.revealed_terrain.contains(&rune_position));
+        assert!(!vanguard.revealed_terrain.contains(&rune_position));
+        assert_eq!(
+            tinkerer.known_terrain_at(rune_position),
+            "demo.terrain.echo-rune-hidden"
+        );
+        assert_eq!(
+            vanguard.known_terrain_at(rune_position),
+            "demo.terrain.wall"
+        );
+    }
+
+    #[test]
+    fn stealth_skill_check_controls_alertness_and_alerted_save_compatibility() {
+        const LISTENER_ID: &str = "test.monster.echo-listener.1";
+        let listener_position = Position { x: 7, y: 3 };
+        let mut tinkerer = skill_check_game(5, "demo.build.tinkerer");
+        let mut vanguard = skill_check_game(5, "demo.build.vanguard");
+        for game in [&mut tinkerer, &mut vanguard] {
+            game.entities.push(game.generated_actor(
+                LISTENER_ID.to_owned(),
+                "demo.actor.echo-listener",
+                listener_position,
+            ));
+        }
+
+        let tinkerer_update = dispatch_next(&mut tinkerer, GameCommand::Wait);
+        let vanguard_update = dispatch_next(&mut vanguard, GameCommand::Wait);
+        let success = check_resolution(&tinkerer_update, "skill.stealth-success");
+        let failure = check_resolution(&vanguard_update, "skill.stealth-failure");
+
+        assert_check(success, "demo.skill.stealth", 7, 7, 93, Some(5), 5);
+        assert_eq!(success.outcome, CheckOutcomeDto::Success);
+        assert_check(failure, "demo.skill.stealth", 1, 7, 93, Some(0), 5);
+        assert_eq!(failure.outcome, CheckOutcomeDto::Failure);
+        assert!(
+            tinkerer
+                .entities
+                .iter()
+                .find(|entity| entity.id == LISTENER_ID)
+                .is_some_and(|entity| !entity.alerted && entity.position == listener_position)
+        );
+        assert!(
+            vanguard
+                .entities
+                .iter()
+                .find(|entity| entity.id == LISTENER_ID)
+                .is_some_and(|entity| entity.alerted && entity.position != listener_position)
+        );
+
+        let saved = vanguard.to_save();
+        assert!(
+            saved
+                .entities
+                .iter()
+                .find(|entity| entity.id == LISTENER_ID)
+                .is_some_and(|entity| entity.alerted == Some(true))
+        );
+        let restored = Game::from_save(saved.clone()).expect("alerted actor should reload");
+        assert_eq!(restored.state_hash(), vanguard.state_hash());
+        assert!(
+            restored
+                .entities
+                .iter()
+                .find(|entity| entity.id == LISTENER_ID)
+                .is_some_and(|entity| entity.alerted)
+        );
+
+        let mut legacy = saved;
+        legacy
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == LISTENER_ID)
+            .expect("listener save should exist")
+            .alerted = None;
+        let migrated =
+            Game::from_save(legacy).expect("missing alert state should use content default");
+        assert!(
+            migrated
+                .entities
+                .iter()
+                .find(|entity| entity.id == LISTENER_ID)
+                .is_some_and(|entity| !entity.alerted)
+        );
+    }
+
+    fn skill_check_game(seed: u64, build_id: &str) -> Game {
+        let mut game =
+            Game::new_with_build(seed, build_id).expect("skill-check build should create");
+        clear_monsters(&mut game);
+        game
+    }
+
+    fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
+        game.items.push(ItemInstance {
+            id: id.to_owned(),
+            kind_id: kind_id.to_owned(),
+            quantity: 1,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            location: ItemLocation::Inventory,
+        });
+    }
+
+    fn replace_terrain(game: &mut Game, position: Position, terrain_id: &str) {
+        let index = game
+            .index(position)
+            .expect("test terrain should be in bounds");
+        game.terrain[index] = terrain_id.to_owned();
+    }
+
+    fn check_resolution<'a>(update: &'a GameUpdate, event_kind: &str) -> &'a CheckResolutionDto {
+        update
+            .events
+            .iter()
+            .find(|event| event.kind == event_kind)
+            .and_then(|event| event.outcome.as_ref())
+            .and_then(|outcome| match outcome {
+                GameEventOutcomeDto::Check { resolution } => Some(resolution),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("check event {event_kind} should exist"))
+    }
+
+    fn assert_check(
+        resolution: &CheckResolutionDto,
+        skill_id: &str,
+        ability: i32,
+        difficulty: i32,
+        percentile_roll: u8,
+        contest_roll: Option<i32>,
+        threshold: i32,
+    ) {
+        assert_eq!(resolution.skill_id, skill_id);
+        assert_eq!(resolution.ability, ability);
+        assert_eq!(resolution.difficulty, difficulty);
+        assert_eq!(resolution.percentile_roll, percentile_roll);
+        assert_eq!(resolution.contest_roll, contest_roll);
+        assert_eq!(resolution.threshold, threshold);
     }
 
     fn collect_both_demo_items(game: &mut Game) {

@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "StartingItemDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "equipped": {
+          "default": false,
+          "type": "boolean"
+        },
+        "itemKindId": {
+          "type": "string"
+        },
+        "quantity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "quantity"
+      ],
+      "type": "object"
+    },
+    "StatModifiers": {
+      "additionalProperties": false,
+      "properties": {
+        "attack": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "charisma": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "constitution": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "dexterity": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "intelligence": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "maxHp": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "strength": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "wisdom": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/personality.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "baseHp": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "experiencePercent": {
+      "default": 100,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "lifePercent": {
+      "default": 100,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "modifiers": {
+      "$ref": "#/$defs/StatModifiers",
+      "default": {
+        "attack": 0,
+        "charisma": 0,
+        "constitution": 0,
+        "defense": 0,
+        "dexterity": 0,
+        "intelligence": 0,
+        "maxHp": 0,
+        "strength": 0,
+        "wisdom": 0
+      }
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "skillSetId": {
+      "type": "string"
+    },
+    "startingItems": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/StartingItemDefinition"
+      },
+      "type": "array"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "skillSetId",
+    "tags"
+  ],
+  "title": "PersonalityDefinition",
+  "type": "object"
+}

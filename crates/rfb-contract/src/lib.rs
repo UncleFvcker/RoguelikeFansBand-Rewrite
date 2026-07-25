@@ -5,9 +5,10 @@ use std::collections::BTreeSet;
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     CampaignStateDto, CampaignStateSaveDto, CharacterSummary, GameCommand, GameCommandEnvelope,
-    GameEventDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, Position, ResistanceDto, ResistanceSaveDto,
-    SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
+    GameEventDto, InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
+    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
+    PlayerBuildDto, Position, ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto,
+    StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -47,6 +48,8 @@ pub enum Determinism {
 pub struct Preconditions {
     pub world: String,
     #[serde(default)]
+    pub player_build_id: Option<String>,
+    #[serde(default)]
     pub player_hp: Option<i32>,
     #[serde(default)]
     pub player_level: Option<u16>,
@@ -67,6 +70,12 @@ pub struct Preconditions {
     #[serde(default)]
     pub entity_effects: Vec<EntityEffectsPrecondition>,
     #[serde(default)]
+    pub inventory_items: Vec<InventoryItemPrecondition>,
+    #[serde(default)]
+    pub terrain_overrides: Vec<TerrainOverridePrecondition>,
+    #[serde(default)]
+    pub revealed_terrain: Vec<Position>,
+    #[serde(default)]
     pub campaign_conquered_dungeons: Vec<String>,
     #[serde(default)]
     pub campaign_state: Option<CampaignStateSaveDto>,
@@ -83,11 +92,35 @@ pub struct EntityEffectsPrecondition {
     #[serde(default)]
     pub hp: Option<i32>,
     #[serde(default)]
+    pub max_hp: Option<i32>,
+    #[serde(default)]
     pub energy_need: Option<i32>,
+    #[serde(default)]
+    pub alerted: Option<bool>,
     #[serde(default)]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default)]
     pub resistances: Vec<ResistanceSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InventoryItemPrecondition {
+    pub id: String,
+    pub kind_id: String,
+    #[serde(default = "default_precondition_quantity")]
+    pub quantity: u32,
+}
+
+const fn default_precondition_quantity() -> u32 {
+    1
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerrainOverridePrecondition {
+    pub position: Position,
+    pub terrain_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -152,6 +185,8 @@ pub struct FinalStateAssertion {
     pub player_pending_attribute_increases: Option<u16>,
     #[serde(default)]
     pub player_attributes: Option<rfb_protocol::PlayerProgressDto>,
+    #[serde(default)]
+    pub player_build: Option<PlayerBuildDto>,
     pub entity_count: usize,
     #[serde(default)]
     pub entities: Vec<ActorStateAssertion>,
@@ -186,10 +221,16 @@ pub struct ActorStateAssertion {
     pub hp: i32,
     pub speed: u16,
     pub energy_need: i32,
+    #[serde(default = "default_assertion_alerted")]
+    pub alerted: bool,
     #[serde(default)]
     pub statuses: Vec<StatusDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pack: Option<MonsterPackSaveDto>,
+}
+
+const fn default_assertion_alerted() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -212,7 +253,15 @@ pub enum CommandErrorKind {
 pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, ContractError> {
     validate_fixture(fixture)?;
     let seed = parse_seed(&fixture.seed)?;
-    let mut payload = Game::new(seed).to_save();
+    let mut payload = fixture
+        .preconditions
+        .player_build_id
+        .as_deref()
+        .map_or_else(
+            || Ok(Game::new(seed)),
+            |build_id| Game::new_with_build(seed, build_id),
+        )?
+        .to_save();
     if let Some(player_hp) = fixture.preconditions.player_hp {
         payload.player.hp = player_hp;
     }
@@ -232,6 +281,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             .ok_or(ContractError::MissingProgressPrecondition)?;
         if let Some(level) = fixture.preconditions.player_level {
             progress.level = level;
+            progress.skills.clear();
         }
         if let Some(experience) = fixture.preconditions.player_experience {
             progress.experience = experience;
@@ -253,6 +303,35 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
+    for item in &fixture.preconditions.inventory_items {
+        payload.inventory.push(InventoryItemSaveDto {
+            id: item.id.clone(),
+            kind_id: item.kind_id.clone(),
+            quantity: item.quantity,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+        });
+    }
+    for terrain_override in &fixture.preconditions.terrain_overrides {
+        if terrain_override.position.x < 0
+            || terrain_override.position.y < 0
+            || terrain_override.position.x >= i32::from(payload.terrain.width)
+            || terrain_override.position.y >= i32::from(payload.terrain.height)
+        {
+            return Err(ContractError::InvalidTerrainPrecondition(
+                terrain_override.position,
+            ));
+        }
+        let index = usize::try_from(terrain_override.position.y)
+            .expect("validated terrain y must fit usize")
+            * usize::from(payload.terrain.width)
+            + usize::try_from(terrain_override.position.x)
+                .expect("validated terrain x must fit usize");
+        payload.terrain.terrain_ids[index].clone_from(&terrain_override.terrain_id);
+    }
+    payload
+        .revealed_terrain
+        .extend(fixture.preconditions.revealed_terrain.iter().copied());
     for dungeon_id in &fixture.preconditions.campaign_conquered_dungeons {
         let state = payload
             .dungeon_states
@@ -277,8 +356,14 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         if let Some(hp) = effects.hp {
             entity.hp = hp;
         }
+        if let Some(max_hp) = effects.max_hp {
+            entity.max_hp = max_hp;
+        }
         if let Some(energy_need) = effects.energy_need {
             entity.energy_need = energy_need;
+        }
+        if let Some(alerted) = effects.alerted {
+            entity.alerted = Some(alerted);
         }
         entity.statuses = effects.statuses.clone();
         entity.resistances = effects.resistances.clone();
@@ -347,6 +432,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                 snapshot.player.progress.pending_attribute_increases,
             ),
             player_attributes: Some(snapshot.player.progress.clone()),
+            player_build: snapshot.player.build.clone(),
             entity_count: snapshot.entities.len(),
             entities: snapshot
                 .entities
@@ -357,6 +443,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                     hp: entity.hp,
                     speed: entity.speed,
                     energy_need: entity.energy_need,
+                    alerted: entity.alerted,
                     statuses: entity.statuses.clone(),
                     pack: save
                         .entities
@@ -496,6 +583,8 @@ pub enum ContractError {
     UnknownDungeonPrecondition(String),
     #[error("player progress precondition is unavailable in the generated save")]
     MissingProgressPrecondition,
+    #[error("terrain precondition position is outside the active floor: {0:?}")]
+    InvalidTerrainPrecondition(Position),
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

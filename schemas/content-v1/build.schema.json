@@ -1,0 +1,138 @@
+{
+  "$defs": {
+    "InitialAttributeSetDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "charisma": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "constitution": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "dexterity": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "intelligence": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "strength": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "wisdom": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "object"
+    },
+    "StartingItemDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "equipped": {
+          "default": false,
+          "type": "boolean"
+        },
+        "itemKindId": {
+          "type": "string"
+        },
+        "quantity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "quantity"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "attributes": {
+      "$ref": "#/$defs/InitialAttributeSetDefinition"
+    },
+    "classId": {
+      "type": "string"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "personalityId": {
+      "type": "string"
+    },
+    "raceId": {
+      "type": "string"
+    },
+    "startingItems": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/StartingItemDefinition"
+      },
+      "type": "array"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "raceId",
+    "classId",
+    "personalityId",
+    "attributes",
+    "tags"
+  ],
+  "title": "CharacterBuildDefinition",
+  "type": "object"
+}

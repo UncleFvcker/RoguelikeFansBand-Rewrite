@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "formatVersion": 1,
+  "id": "demo.race.elf",
+  "nameKey": "race-demo-elf-name",
+  "descriptionKey": "race-demo-elf-description",
+  "modifiers": {
+    "strength": -1,
+    "intelligence": 2,
+    "wisdom": 1,
+    "dexterity": 1,
+    "constitution": -1,
+    "charisma": 1
+  },
+  "lifePercent": 98,
+  "experiencePercent": 120,
+  "baseHp": -1,
+  "skillSetId": "demo.skill-set.elf",
+  "tags": ["humanoid", "mystic"]
+}

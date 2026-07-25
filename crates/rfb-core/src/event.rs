@@ -3,8 +3,8 @@
 use std::collections::BTreeMap;
 
 use rfb_protocol::{
-    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, Position,
-    ProjectileTraceDto,
+    CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
+    Position, ProjectileTraceDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -155,6 +155,27 @@ pub(crate) enum DomainEvent {
         position: Position,
     },
     TrapDisarmUnavailable,
+    DeviceSkillChecked {
+        source_kind_id: String,
+        succeeded: bool,
+        resolution: CheckResolutionDto,
+    },
+    SavingThrowChecked {
+        source_kind_id: String,
+        position: Position,
+        succeeded: bool,
+        resolution: CheckResolutionDto,
+    },
+    StealthChecked {
+        source_kind_id: String,
+        succeeded: bool,
+        resolution: CheckResolutionDto,
+    },
+    PerceptionChecked {
+        position: Position,
+        succeeded: bool,
+        resolution: CheckResolutionDto,
+    },
     TerrainDug {
         position: Position,
     },
@@ -571,6 +592,85 @@ impl DomainEvent {
             Self::TrapDisarmUnavailable => dto_without_args(
                 "terrain.trap-disarm-unavailable",
                 "terrain-trap-disarm-unavailable",
+            ),
+            Self::DeviceSkillChecked {
+                source_kind_id,
+                succeeded,
+                resolution,
+            } => dto_with_outcome(
+                if succeeded {
+                    "skill.device-success"
+                } else {
+                    "skill.device-failure"
+                },
+                if succeeded {
+                    "skill-check-device-success"
+                } else {
+                    "skill-check-device-failure"
+                },
+                [("target", source_kind_id)],
+                GameEventOutcomeDto::Check { resolution },
+            ),
+            Self::SavingThrowChecked {
+                source_kind_id,
+                position,
+                succeeded,
+                resolution,
+            } => dto_with_outcome(
+                if succeeded {
+                    "skill.saving-throw-success"
+                } else {
+                    "skill.saving-throw-failure"
+                },
+                if succeeded {
+                    "skill-check-saving-throw-success"
+                } else {
+                    "skill-check-saving-throw-failure"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("x", position.x.to_string()),
+                    ("y", position.y.to_string()),
+                ],
+                GameEventOutcomeDto::Check { resolution },
+            ),
+            Self::StealthChecked {
+                source_kind_id,
+                succeeded,
+                resolution,
+            } => dto_with_outcome(
+                if succeeded {
+                    "skill.stealth-success"
+                } else {
+                    "skill.stealth-failure"
+                },
+                if succeeded {
+                    "skill-check-stealth-success"
+                } else {
+                    "skill-check-stealth-failure"
+                },
+                [("source", source_kind_id)],
+                GameEventOutcomeDto::Check { resolution },
+            ),
+            Self::PerceptionChecked {
+                position,
+                succeeded: true,
+                resolution,
+            } => dto_with_outcome(
+                "skill.perception-success",
+                "skill-check-perception-success",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+                GameEventOutcomeDto::Check { resolution },
+            ),
+            Self::PerceptionChecked {
+                succeeded: false,
+                resolution,
+                ..
+            } => dto_with_outcome(
+                "skill.perception-failure",
+                "skill-check-perception-failure",
+                [],
+                GameEventOutcomeDto::Check { resolution },
             ),
             Self::TerrainDug { position } => dto(
                 "terrain.dug",

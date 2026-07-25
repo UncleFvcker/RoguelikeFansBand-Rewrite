@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.70、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.72、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -184,6 +184,10 @@ interface GameCoreV1 {
 协议 1.69 为 `DungeonStateSaveDto` 增加可选 `retainedInstanceId` 与 `retainedAtTurn`，并为内容 `DungeonDefinition` 增加 `instanceLifecycle`（`reset-on-surface`、`persistent`、`turn-ttl`）。返回地表的 dungeon 实例按策略清理或保留；TTL 在下一次进入时按回合差惰性淘汰。v68 及更早存档缺失 retained 字段时按默认清理迁移，不生成内容或推进 RNG；state hash 升至 Schema v28，save 容器仍为 v1。完整边界见 [Contract v69](contract-v69-configurable-instance-lifecycle.md)。
 
 协议 1.70 为 `PlayerSaveDto` 增加可选 `progress`，其中保存六维自然属性、经验、当前/历史最高等级、待分配属性点和独立 HP 成长序列；`PlayerDto`/`GameSnapshot` 暴露 `PlayerProgressDto`，包含阶段等级上限、属性上限、18/xx 桶索引、下一等级阈值和装备合并后的有效属性。新增 `IncreaseAttribute` 命令及属性增加/不可用事件；命令不推进世界脉冲。缺少 `progress` 的旧存档按确定性 legacy 序列迁移，胜利/退休存档载入时会先结算封顶经验。state hash 升至 Schema v29，save 容器仍为 v1。完整边界见 [Contract v70](contract-v70-rfb-character-progression.md)。
+
+协议 1.71 为内容和玩家 DTO 增加构筑基础：`PlayerDto.build` 暴露 `PlayerBuildDto`，其中包含 build/Race/Class/Personality 身份和合并后的生命、经验倍率；`PlayerProgressDto.skills` 暴露技能当前值、最大值、base 与每十级成长值。`PlayerSaveDto.build` 和 `PlayerProgressSaveDto.skills` 保存权威身份与聚合结果。v70 及更早存档缺少这些字段时按世界默认构筑迁移，技能按当前等级和内容确定性重算；不一致的构筑或技能状态拒绝载入。state hash 升至 Schema v30，save 容器仍为 v1。完整边界见 [Contract v71](contract-v71-rfb-character-builds.md)。
+
+协议 1.72 新增 `CheckOutcomeDto`、`CheckResolutionDto` 和 `GameEventOutcomeDto.check`，让 device、saving-throw、stealth、perception 事件携带技能 ID、ability、difficulty、百分位骰、对抗骰、阈值与结果。`EntityDto.alerted` 暴露怪物警戒状态，`ActorSaveDto.alerted` 以可选字段保存；旧存档缺字段时按 actor 内容默认值恢复。警戒状态进入 state hash Schema v31，save 容器仍为 v1。完整边界见 [Contract v72](contract-v72-observable-skill-checks.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
 

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.70";
+pub const PROTOCOL_VERSION: &str = "1.72";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -17,6 +17,10 @@ const fn default_actor_speed() -> u16 {
 
 const fn default_monster_energy_need() -> i32 {
     100
+}
+
+const fn default_actor_alerted() -> bool {
+    true
 }
 
 fn is_false(value: &bool) -> bool {
@@ -344,6 +348,36 @@ pub struct PlayerProgressDto {
     pub pending_attribute_increases: u16,
     pub victory_level_cap_unlocked: bool,
     pub attributes: AttributeSetDto,
+    #[serde(default)]
+    pub skills: Vec<SkillProgressDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SkillProgressDto {
+    pub id: String,
+    pub name_key: String,
+    pub current: i32,
+    pub maximum: i32,
+    pub base: i32,
+    pub growth_per_ten_levels: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerBuildDto {
+    pub build_id: String,
+    pub build_name_key: String,
+    pub race_id: String,
+    pub race_name_key: String,
+    pub class_id: String,
+    pub class_name_key: String,
+    pub personality_id: String,
+    pub personality_name_key: String,
+    pub life_percent: u16,
+    pub experience_percent: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -502,12 +536,37 @@ pub struct DamageResolutionDto {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum CheckOutcomeDto {
+    AutomaticSuccess,
+    AutomaticFailure,
+    Success,
+    Failure,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CheckResolutionDto {
+    pub skill_id: String,
+    pub ability: i32,
+    pub difficulty: i32,
+    pub percentile_roll: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contest_roll: Option<i32>,
+    pub threshold: i32,
+    pub outcome: CheckOutcomeDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
     tag = "type",
     rename_all = "kebab-case",
     rename_all_fields = "camelCase"
 )]
 pub enum GameEventOutcomeDto {
+    Check { resolution: CheckResolutionDto },
     Damage { resolution: DamageResolutionDto },
     Death { resolution: DamageResolutionDto },
     Heal { resolution: HealingResolutionDto },
@@ -577,6 +636,8 @@ pub struct PlayerDto {
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "is_default_player_progress")]
     pub progress: PlayerProgressDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub build: Option<PlayerBuildDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -592,6 +653,8 @@ pub struct EntityDto {
     pub speed: u16,
     #[serde(default = "default_monster_energy_need")]
     pub energy_need: i32,
+    #[serde(default = "default_actor_alerted")]
+    pub alerted: bool,
     #[serde(default)]
     pub attack: i32,
     #[serde(default)]
@@ -866,6 +929,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(AttributeValueDto);
     push_declaration!(AttributeSetDto);
     push_declaration!(PlayerProgressDto);
+    push_declaration!(SkillProgressDto);
+    push_declaration!(PlayerBuildDto);
     push_declaration!(DamageDiceDto);
     push_declaration!(AttackProfileDto);
     push_declaration!(MeleeBlowDto);
@@ -891,6 +956,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(ResistanceLevelDto);
     push_declaration!(ResistanceDto);
     push_declaration!(DamageResolutionDto);
+    push_declaration!(CheckOutcomeDto);
+    push_declaration!(CheckResolutionDto);
     push_declaration!(HealingResolutionDto);
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
@@ -954,6 +1021,17 @@ pub struct PlayerSaveDto {
     pub resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub progress: Option<PlayerProgressSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub build: Option<PlayerBuildSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlayerBuildSaveDto {
+    pub build_id: String,
+    pub race_id: String,
+    pub class_id: String,
+    pub personality_id: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -976,6 +1054,18 @@ pub struct PlayerProgressSaveDto {
     pub max_level: u16,
     pub pending_attribute_increases: u16,
     pub hp_progression: Vec<i32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub skills: Vec<SkillProgressSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SkillProgressSaveDto {
+    pub id: String,
+    pub current: i32,
+    pub maximum: i32,
+    pub base: i32,
+    pub growth_per_ten_levels: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -991,6 +1081,8 @@ pub struct ActorSaveDto {
     pub base_speed: u16,
     #[serde(default = "default_monster_energy_need")]
     pub energy_need: i32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alerted: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1478,6 +1570,7 @@ mod tests {
                 statuses: Vec::new(),
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
+                build: None,
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -1487,6 +1580,7 @@ mod tests {
                 max_hp: 3,
                 speed: 110,
                 energy_need: 100,
+                alerted: true,
                 attack: 1,
                 defense: 1,
                 melee_skill: 32,
@@ -1606,6 +1700,7 @@ mod tests {
             statuses: Vec::new(),
             resistances: Vec::new(),
             progress: None,
+            build: None,
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");
@@ -1631,6 +1726,9 @@ mod tests {
         assert!(typescript.contains("baseDefense: number"));
         assert!(typescript.contains("attack: number"));
         assert!(typescript.contains("defense: number"));
+        assert!(typescript.contains("CheckOutcomeDto"));
+        assert!(typescript.contains("{ \"type\": \"check\""));
+        assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
 

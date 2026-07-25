@@ -27,6 +27,8 @@ pub enum CoreError {
     UnknownActor(String),
     #[error("content set does not define item {0}")]
     UnknownItem(String),
+    #[error("content set does not define character build {0}")]
+    UnknownCharacterBuild(String),
     #[error("generated item instance ID space is exhausted")]
     ItemIdExhausted,
     #[error("invalid save: {0}")]

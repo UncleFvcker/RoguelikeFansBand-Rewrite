@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "formatVersion": 1,
+  "id": "demo.race.gnome",
+  "nameKey": "race-demo-gnome-name",
+  "descriptionKey": "race-demo-gnome-description",
+  "modifiers": {
+    "strength": -1,
+    "intelligence": 2,
+    "dexterity": 1,
+    "constitution": -1
+  },
+  "lifePercent": 96,
+  "experiencePercent": 115,
+  "baseHp": -2,
+  "skillSetId": "demo.skill-set.gnome",
+  "tags": ["device-affinity", "humanoid"]
+}

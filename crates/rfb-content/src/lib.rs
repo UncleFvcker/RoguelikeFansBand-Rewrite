@@ -27,6 +27,12 @@ pub const REGION_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFv
 pub const TERRAIN_FEATURE_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json";
 pub const VAULT_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/vault.schema.json";
 pub const WORLD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/world.schema.json";
+pub const SKILL_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill.schema.json";
+pub const SKILL_SET_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json";
+pub const RACE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json";
+pub const CLASS_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json";
+pub const PERSONALITY_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/personality.schema.json";
+pub const BUILD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -39,13 +45,19 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 11] = [
+const SUPPORTED_ROOTS: [&str; 17] = [
     "actors",
     "affixes",
+    "builds",
+    "classes",
     "encounterTables",
     "items",
     "lootTables",
+    "personalities",
+    "races",
     "regionTables",
+    "skills",
+    "skillSets",
     "terrain",
     "terrainFeatureTables",
     "themeTables",
@@ -108,6 +120,8 @@ pub struct TerrainDefinition {
     #[serde(default)]
     pub search_check_difficulty: Option<i32>,
     #[serde(default)]
+    pub perception_check_difficulty: Option<i32>,
+    #[serde(default)]
     pub trap: Option<TerrainTrapDefinition>,
     pub tags: Vec<String>,
 }
@@ -121,6 +135,8 @@ pub struct TerrainTrapDefinition {
     pub damage_type: ActorDamageType,
     pub disarm_to_terrain_id: String,
     pub disarm_check_difficulty: i32,
+    #[serde(default)]
+    pub saving_throw_difficulty: Option<i32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -202,10 +218,22 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
     #[serde(default)]
+    pub awareness: Option<ActorAwarenessDefinition>,
+    #[serde(default)]
     pub loot_table_id: Option<String>,
     #[serde(default)]
     pub carried_loot_table_id: Option<String>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActorAwarenessDefinition {
+    pub detection_difficulty: i32,
+    pub detection_range: u16,
+    #[serde(default)]
+    pub starts_alerted: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -230,6 +258,175 @@ pub struct StatModifiers {
     pub constitution: i32,
     #[serde(default)]
     pub charisma: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SkillDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub kind: SkillKind,
+    pub maximum: i32,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum SkillKind {
+    Disarming,
+    Device,
+    SavingThrow,
+    Stealth,
+    Search,
+    Perception,
+    Melee,
+    Ranged,
+    Throwing,
+    Digging,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SkillSetDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub entries: Vec<SkillSetEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SkillSetEntryDefinition {
+    pub skill_id: String,
+    pub base: i32,
+    #[serde(default)]
+    pub growth_per_ten_levels: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StartingItemDefinition {
+    pub item_kind_id: String,
+    pub quantity: u32,
+    #[serde(default)]
+    pub equipped: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RaceDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    #[serde(default)]
+    pub modifiers: StatModifiers,
+    #[serde(default = "default_percent")]
+    pub life_percent: u16,
+    #[serde(default = "default_percent")]
+    pub experience_percent: u16,
+    #[serde(default)]
+    pub base_hp: i32,
+    pub skill_set_id: String,
+    #[serde(default)]
+    pub starting_items: Vec<StartingItemDefinition>,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ClassDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    #[serde(default)]
+    pub modifiers: StatModifiers,
+    #[serde(default = "default_percent")]
+    pub life_percent: u16,
+    #[serde(default = "default_percent")]
+    pub experience_percent: u16,
+    #[serde(default)]
+    pub base_hp: i32,
+    pub skill_set_id: String,
+    #[serde(default)]
+    pub starting_items: Vec<StartingItemDefinition>,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PersonalityDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    #[serde(default)]
+    pub modifiers: StatModifiers,
+    #[serde(default = "default_percent")]
+    pub life_percent: u16,
+    #[serde(default = "default_percent")]
+    pub experience_percent: u16,
+    #[serde(default)]
+    pub base_hp: i32,
+    pub skill_set_id: String,
+    #[serde(default)]
+    pub starting_items: Vec<StartingItemDefinition>,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InitialAttributeSetDefinition {
+    pub strength: u16,
+    pub intelligence: u16,
+    pub wisdom: u16,
+    pub dexterity: u16,
+    pub constitution: u16,
+    pub charisma: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CharacterBuildDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub race_id: String,
+    pub class_id: String,
+    pub personality_id: String,
+    pub attributes: InitialAttributeSetDefinition,
+    #[serde(default)]
+    pub starting_items: Vec<StartingItemDefinition>,
+    pub tags: Vec<String>,
+}
+
+const fn default_percent() -> u16 {
+    100
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -302,6 +499,8 @@ pub enum ItemUseEffectDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemUseActionDefinition {
+    #[serde(default)]
+    pub device_check_difficulty: Option<i32>,
     pub effect: ItemUseEffectDefinition,
 }
 
@@ -718,6 +917,8 @@ pub struct WorldDefinition {
     pub border_terrain_id: String,
     pub terrain_overrides: Vec<TerrainOverride>,
     pub player: ActorSpawn,
+    #[serde(default)]
+    pub player_build_id: Option<String>,
     pub actors: Vec<ActorSpawn>,
     pub items: Vec<ItemSpawn>,
     #[serde(default)]
@@ -1200,6 +1401,18 @@ pub struct CompiledContentV1 {
     pub affixes: Vec<AffixDefinition>,
     pub items: Vec<ItemDefinition>,
     #[serde(default)]
+    pub skills: Vec<SkillDefinition>,
+    #[serde(default)]
+    pub skill_sets: Vec<SkillSetDefinition>,
+    #[serde(default)]
+    pub races: Vec<RaceDefinition>,
+    #[serde(default)]
+    pub classes: Vec<ClassDefinition>,
+    #[serde(default)]
+    pub personalities: Vec<PersonalityDefinition>,
+    #[serde(default)]
+    pub builds: Vec<CharacterBuildDefinition>,
+    #[serde(default)]
     pub encounter_tables: Vec<EncounterTableDefinition>,
     #[serde(default)]
     pub loot_tables: Vec<LootTableDefinition>,
@@ -1230,6 +1443,12 @@ pub struct ContentCatalog {
     actors: BTreeMap<String, ActorDefinition>,
     affixes: BTreeMap<String, AffixDefinition>,
     items: BTreeMap<String, ItemDefinition>,
+    skills: BTreeMap<String, SkillDefinition>,
+    skill_sets: BTreeMap<String, SkillSetDefinition>,
+    races: BTreeMap<String, RaceDefinition>,
+    classes: BTreeMap<String, ClassDefinition>,
+    personalities: BTreeMap<String, PersonalityDefinition>,
+    builds: BTreeMap<String, CharacterBuildDefinition>,
     encounter_tables: BTreeMap<String, EncounterTableDefinition>,
     loot_tables: BTreeMap<String, LootTableDefinition>,
     theme_tables: BTreeMap<String, ThemeTableDefinition>,
@@ -1249,6 +1468,12 @@ pub struct ContentSummary {
     pub actor_count: usize,
     pub affix_count: usize,
     pub item_count: usize,
+    pub skill_count: usize,
+    pub skill_set_count: usize,
+    pub race_count: usize,
+    pub class_count: usize,
+    pub personality_count: usize,
+    pub build_count: usize,
     pub encounter_table_count: usize,
     pub loot_table_count: usize,
     pub theme_table_count: usize,
@@ -1278,6 +1503,12 @@ impl CompiledArtifact {
             actor_count: self.content.actors.len(),
             affix_count: self.content.affixes.len(),
             item_count: self.content.items.len(),
+            skill_count: self.content.skills.len(),
+            skill_set_count: self.content.skill_sets.len(),
+            race_count: self.content.races.len(),
+            class_count: self.content.classes.len(),
+            personality_count: self.content.personalities.len(),
+            build_count: self.content.builds.len(),
             encounter_table_count: self.content.encounter_tables.len(),
             loot_table_count: self.content.loot_tables.len(),
             theme_table_count: self.content.theme_tables.len(),
@@ -1318,6 +1549,36 @@ impl ContentCatalog {
                 .collect(),
             items: content
                 .items
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            skills: content
+                .skills
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            skill_sets: content
+                .skill_sets
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            races: content
+                .races
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            classes: content
+                .classes
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            personalities: content
+                .personalities
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            builds: content
+                .builds
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -1396,6 +1657,45 @@ impl ContentCatalog {
     #[must_use]
     pub fn affix(&self, id: &str) -> Option<&AffixDefinition> {
         self.affixes.get(id)
+    }
+
+    #[must_use]
+    pub fn skill(&self, id: &str) -> Option<&SkillDefinition> {
+        self.skills.get(id)
+    }
+
+    #[must_use]
+    pub fn skill_by_kind(&self, kind: SkillKind) -> Option<&SkillDefinition> {
+        self.skills.values().find(|skill| skill.kind == kind)
+    }
+
+    #[must_use]
+    pub fn skill_set(&self, id: &str) -> Option<&SkillSetDefinition> {
+        self.skill_sets.get(id)
+    }
+
+    #[must_use]
+    pub fn race(&self, id: &str) -> Option<&RaceDefinition> {
+        self.races.get(id)
+    }
+
+    #[must_use]
+    pub fn class(&self, id: &str) -> Option<&ClassDefinition> {
+        self.classes.get(id)
+    }
+
+    #[must_use]
+    pub fn personality(&self, id: &str) -> Option<&PersonalityDefinition> {
+        self.personalities.get(id)
+    }
+
+    #[must_use]
+    pub fn build(&self, id: &str) -> Option<&CharacterBuildDefinition> {
+        self.builds.get(id)
+    }
+
+    pub fn builds(&self) -> impl Iterator<Item = &CharacterBuildDefinition> {
+        self.builds.values()
     }
 
     #[must_use]
@@ -1479,6 +1779,12 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         actors: load_root(root, "actors", &roots, &mut budget)?,
         affixes: load_root(root, "affixes", &roots, &mut budget)?,
         items: load_root(root, "items", &roots, &mut budget)?,
+        skills: load_root(root, "skills", &roots, &mut budget)?,
+        skill_sets: load_root(root, "skillSets", &roots, &mut budget)?,
+        races: load_root(root, "races", &roots, &mut budget)?,
+        classes: load_root(root, "classes", &roots, &mut budget)?,
+        personalities: load_root(root, "personalities", &roots, &mut budget)?,
+        builds: load_root(root, "builds", &roots, &mut budget)?,
         encounter_tables: load_root(root, "encounterTables", &roots, &mut budget)?,
         loot_tables: load_root(root, "lootTables", &roots, &mut budget)?,
         theme_tables: load_root(root, "themeTables", &roots, &mut budget)?,
@@ -1617,6 +1923,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .affixes
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.items.sort_by(|left, right| left.id.cmp(&right.id));
+    content.skills.sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .skill_sets
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content.races.sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .classes
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .personalities
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content.builds.sort_by(|left, right| left.id.cmp(&right.id));
     content
         .encounter_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
@@ -1686,6 +2004,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if terrain.concealed_as_terrain_id.is_some() != terrain.search_check_difficulty.is_some() {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
         }
+        if terrain.perception_check_difficulty.is_some()
+            && terrain.concealed_as_terrain_id.is_none()
+        {
+            return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
+        }
         if terrain
             .open_check_difficulty
             .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
@@ -1697,6 +2020,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
             || terrain
                 .search_check_difficulty
+                .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
+            || terrain
+                .perception_check_difficulty
                 .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
         {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
@@ -1792,6 +2118,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 .expect("validated trap target must remain available");
             if trap.damage <= 0
                 || !(1..=1_000_000).contains(&trap.disarm_check_difficulty)
+                || trap
+                    .saving_throw_difficulty
+                    .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
                 || trap.disarm_to_terrain_id == terrain.id
                 || !terrain.walkable
                 || terrain.blocks_sight
@@ -1842,6 +2171,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || (actor.role == ActorRole::Monster && actor.carry_capacity_tenths_pound != 0)
         {
             return Err(ContentError::InvalidActorCarryCapacity(actor.id.clone()));
+        }
+        if actor.awareness.as_ref().is_some_and(|awareness| {
+            actor.role != ActorRole::Monster
+                || !(1..=1_000_000).contains(&awareness.detection_difficulty)
+                || awareness.detection_range == 0
+                || awareness.detection_range > 64
+        }) {
+            return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
         if let Some(routine) = &actor.melee_routine
             && (actor.role != ActorRole::Monster
@@ -1986,7 +2323,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             let valid_effect = match action.effect {
                 ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
             };
-            if item.equipment_slot.is_some() || !valid_effect {
+            if item.equipment_slot.is_some()
+                || !valid_effect
+                || action
+                    .device_check_difficulty
+                    .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
+                || (action.device_check_difficulty.is_some()
+                    && !item.tags.iter().any(|tag| tag == "device"))
+            {
                 return Err(ContentError::InvalidItemUseAction(item.id.clone()));
             }
         }
@@ -2015,6 +2359,247 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if ammo.max_stack <= 1 || !ammo.tags.iter().any(|tag| tag == "ammunition") {
             return Err(ContentError::InvalidProjectileProfile(item.id.clone()));
         }
+    }
+
+    let item_starting_metadata = content
+        .items
+        .iter()
+        .map(|item| {
+            (
+                item.id.clone(),
+                (item.max_stack, item.equipment_slot.clone()),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let mut skill_maxima = BTreeMap::new();
+    let mut skill_kinds = BTreeSet::new();
+    for skill in &mut content.skills {
+        require_schema(&skill.schema, SKILL_SCHEMA, &skill.id)?;
+        require_format_version(skill.format_version, &skill.id)?;
+        validate_definition_id(&skill.id, "skill")?;
+        validate_definition_text(&skill.id, &skill.name_key, &skill.description_key)?;
+        if !(1..=1_000_000).contains(&skill.maximum) || !skill_kinds.insert(skill.kind) {
+            return Err(ContentError::InvalidSkill(skill.id.clone()));
+        }
+        normalize_tags(&skill.id, &mut skill.tags)?;
+        insert_definition_id(&mut all_ids, &skill.id)?;
+        skill_maxima.insert(skill.id.clone(), skill.maximum);
+    }
+    for (required, kind, name) in [
+        (
+            content.items.iter().any(|item| {
+                item.use_action
+                    .as_ref()
+                    .is_some_and(|action| action.device_check_difficulty.is_some())
+            }),
+            SkillKind::Device,
+            "device",
+        ),
+        (
+            content.terrain.iter().any(|terrain| {
+                terrain
+                    .trap
+                    .as_ref()
+                    .is_some_and(|trap| trap.saving_throw_difficulty.is_some())
+            }),
+            SkillKind::SavingThrow,
+            "saving-throw",
+        ),
+        (
+            content.actors.iter().any(|actor| actor.awareness.is_some()),
+            SkillKind::Stealth,
+            "stealth",
+        ),
+        (
+            content
+                .terrain
+                .iter()
+                .any(|terrain| terrain.perception_check_difficulty.is_some()),
+            SkillKind::Perception,
+            "perception",
+        ),
+    ] {
+        if required && !skill_kinds.contains(&kind) {
+            return Err(ContentError::MissingRequiredSkillKind(name.to_owned()));
+        }
+    }
+
+    let mut skill_sets_by_id = BTreeMap::new();
+    for skill_set in &mut content.skill_sets {
+        require_schema(&skill_set.schema, SKILL_SET_SCHEMA, &skill_set.id)?;
+        require_format_version(skill_set.format_version, &skill_set.id)?;
+        validate_definition_id(&skill_set.id, "skill-set")?;
+        skill_set
+            .entries
+            .sort_by(|left, right| left.skill_id.cmp(&right.skill_id));
+        if skill_set.entries.len() > 64 {
+            return Err(ContentError::InvalidSkillSet(skill_set.id.clone()));
+        }
+        let mut skill_ids = BTreeSet::new();
+        for entry in &skill_set.entries {
+            let Some(maximum) = skill_maxima.get(&entry.skill_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: skill_set.id.clone(),
+                    target: entry.skill_id.clone(),
+                });
+            };
+            if !skill_ids.insert(entry.skill_id.clone())
+                || !(-1_000_000..=1_000_000).contains(&entry.base)
+                || !(-1_000_000..=1_000_000).contains(&entry.growth_per_ten_levels)
+                || entry.base > *maximum
+            {
+                return Err(ContentError::InvalidSkillSet(skill_set.id.clone()));
+            }
+        }
+        insert_definition_id(&mut all_ids, &skill_set.id)?;
+        skill_sets_by_id.insert(skill_set.id.clone(), skill_set.clone());
+    }
+
+    let mut race_ids = BTreeSet::new();
+    for race in &mut content.races {
+        require_schema(&race.schema, RACE_SCHEMA, &race.id)?;
+        require_format_version(race.format_version, &race.id)?;
+        validate_definition_id(&race.id, "race")?;
+        validate_definition_text(&race.id, &race.name_key, &race.description_key)?;
+        validate_character_source(
+            &race.id,
+            CharacterSourceValidation {
+                modifiers: &race.modifiers,
+                life_percent: race.life_percent,
+                experience_percent: race.experience_percent,
+                base_hp: race.base_hp,
+                skill_set_id: &race.skill_set_id,
+                starting_items: &mut race.starting_items,
+            },
+            &skill_sets_by_id,
+            &item_starting_metadata,
+        )?;
+        normalize_tags(&race.id, &mut race.tags)?;
+        insert_definition_id(&mut all_ids, &race.id)?;
+        race_ids.insert(race.id.clone());
+    }
+
+    let mut class_ids = BTreeSet::new();
+    for class in &mut content.classes {
+        require_schema(&class.schema, CLASS_SCHEMA, &class.id)?;
+        require_format_version(class.format_version, &class.id)?;
+        validate_definition_id(&class.id, "class")?;
+        validate_definition_text(&class.id, &class.name_key, &class.description_key)?;
+        validate_character_source(
+            &class.id,
+            CharacterSourceValidation {
+                modifiers: &class.modifiers,
+                life_percent: class.life_percent,
+                experience_percent: class.experience_percent,
+                base_hp: class.base_hp,
+                skill_set_id: &class.skill_set_id,
+                starting_items: &mut class.starting_items,
+            },
+            &skill_sets_by_id,
+            &item_starting_metadata,
+        )?;
+        normalize_tags(&class.id, &mut class.tags)?;
+        insert_definition_id(&mut all_ids, &class.id)?;
+        class_ids.insert(class.id.clone());
+    }
+
+    let mut personality_ids = BTreeSet::new();
+    for personality in &mut content.personalities {
+        require_schema(&personality.schema, PERSONALITY_SCHEMA, &personality.id)?;
+        require_format_version(personality.format_version, &personality.id)?;
+        validate_definition_id(&personality.id, "personality")?;
+        validate_definition_text(
+            &personality.id,
+            &personality.name_key,
+            &personality.description_key,
+        )?;
+        validate_character_source(
+            &personality.id,
+            CharacterSourceValidation {
+                modifiers: &personality.modifiers,
+                life_percent: personality.life_percent,
+                experience_percent: personality.experience_percent,
+                base_hp: personality.base_hp,
+                skill_set_id: &personality.skill_set_id,
+                starting_items: &mut personality.starting_items,
+            },
+            &skill_sets_by_id,
+            &item_starting_metadata,
+        )?;
+        normalize_tags(&personality.id, &mut personality.tags)?;
+        insert_definition_id(&mut all_ids, &personality.id)?;
+        personality_ids.insert(personality.id.clone());
+    }
+
+    let races_by_id = content
+        .races
+        .iter()
+        .map(|definition| (definition.id.as_str(), definition))
+        .collect::<BTreeMap<_, _>>();
+    let classes_by_id = content
+        .classes
+        .iter()
+        .map(|definition| (definition.id.as_str(), definition))
+        .collect::<BTreeMap<_, _>>();
+    let personalities_by_id = content
+        .personalities
+        .iter()
+        .map(|definition| (definition.id.as_str(), definition))
+        .collect::<BTreeMap<_, _>>();
+    let mut build_ids = BTreeSet::new();
+    for build in &mut content.builds {
+        require_schema(&build.schema, BUILD_SCHEMA, &build.id)?;
+        require_format_version(build.format_version, &build.id)?;
+        validate_definition_id(&build.id, "build")?;
+        validate_definition_text(&build.id, &build.name_key, &build.description_key)?;
+        let Some(race) = races_by_id.get(build.race_id.as_str()) else {
+            return Err(ContentError::DanglingReference {
+                owner: build.id.clone(),
+                target: build.race_id.clone(),
+            });
+        };
+        let Some(class) = classes_by_id.get(build.class_id.as_str()) else {
+            return Err(ContentError::DanglingReference {
+                owner: build.id.clone(),
+                target: build.class_id.clone(),
+            });
+        };
+        let Some(personality) = personalities_by_id.get(build.personality_id.as_str()) else {
+            return Err(ContentError::DanglingReference {
+                owner: build.id.clone(),
+                target: build.personality_id.clone(),
+            });
+        };
+        if [
+            build.attributes.strength,
+            build.attributes.intelligence,
+            build.attributes.wisdom,
+            build.attributes.dexterity,
+            build.attributes.constitution,
+            build.attributes.charisma,
+        ]
+        .into_iter()
+        .any(|value| !(3..=18).contains(&value))
+        {
+            return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
+        }
+        validate_starting_items(
+            &build.id,
+            &mut build.starting_items,
+            &item_starting_metadata,
+        )?;
+        validate_combined_starting_items(
+            &build.id,
+            race.starting_items
+                .iter()
+                .chain(class.starting_items.iter())
+                .chain(personality.starting_items.iter())
+                .chain(build.starting_items.iter()),
+            &item_starting_metadata,
+        )?;
+        normalize_tags(&build.id, &mut build.tags)?;
+        insert_definition_id(&mut all_ids, &build.id)?;
+        build_ids.insert(build.id.clone());
     }
 
     let mut loot_table_ids = BTreeSet::new();
@@ -2640,6 +3225,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 region_tables: &region_tables_by_id,
                 terrain_feature_tables: &terrain_feature_tables_by_id,
                 vaults: &vaults_by_id,
+                build_ids: &build_ids,
             },
         )?;
     }
@@ -2662,6 +3248,7 @@ struct WorldValidationRefs<'a> {
     region_tables: &'a BTreeMap<String, RegionTableDefinition>,
     terrain_feature_tables: &'a BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: &'a BTreeMap<String, VaultDefinition>,
+    build_ids: &'a BTreeSet<String>,
 }
 
 fn validate_task_objective(
@@ -2775,6 +3362,7 @@ fn validate_world(
         region_tables,
         terrain_feature_tables,
         vaults,
+        build_ids,
     } = refs;
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
@@ -4377,6 +4965,9 @@ fn validate_world(
         ActorRole::Player,
         &world.id,
     )?;
+    if let Some(build_id) = &world.player_build_id {
+        require_reference(build_ids, build_id, &world.id)?;
+    }
     validate_position(world.player.position, world.width, world.height, &world.id)?;
     validate_id(&world.player.instance_id)?;
 
@@ -4598,6 +5189,113 @@ fn read_json<T: DeserializeOwned>(
         path: path.to_path_buf(),
         source,
     })
+}
+
+struct CharacterSourceValidation<'a> {
+    modifiers: &'a StatModifiers,
+    life_percent: u16,
+    experience_percent: u16,
+    base_hp: i32,
+    skill_set_id: &'a str,
+    starting_items: &'a mut Vec<StartingItemDefinition>,
+}
+
+fn validate_character_source(
+    owner_id: &str,
+    source: CharacterSourceValidation<'_>,
+    skill_sets: &BTreeMap<String, SkillSetDefinition>,
+    item_metadata: &BTreeMap<String, (u32, Option<String>)>,
+) -> Result<(), ContentError> {
+    if source.modifiers.max_hp < -1_000_000
+        || source.modifiers.max_hp > 1_000_000
+        || source.modifiers.attack < -1_000_000
+        || source.modifiers.attack > 1_000_000
+        || source.modifiers.defense < -1_000_000
+        || source.modifiers.defense > 1_000_000
+        || attribute_modifiers_out_of_range(source.modifiers)
+        || !(25..=400).contains(&source.life_percent)
+        || !(25..=500).contains(&source.experience_percent)
+        || !(-1_000..=1_000).contains(&source.base_hp)
+    {
+        return Err(ContentError::InvalidCharacterSource(owner_id.to_owned()));
+    }
+    if !skill_sets.contains_key(source.skill_set_id) {
+        return Err(ContentError::DanglingReference {
+            owner: owner_id.to_owned(),
+            target: source.skill_set_id.to_owned(),
+        });
+    }
+    validate_starting_items(owner_id, source.starting_items, item_metadata)
+}
+
+fn validate_starting_items(
+    owner_id: &str,
+    starting_items: &mut Vec<StartingItemDefinition>,
+    item_metadata: &BTreeMap<String, (u32, Option<String>)>,
+) -> Result<(), ContentError> {
+    starting_items.sort_by(|left, right| {
+        left.item_kind_id
+            .cmp(&right.item_kind_id)
+            .then(left.equipped.cmp(&right.equipped))
+    });
+    if starting_items.len() > 32 {
+        return Err(ContentError::InvalidStartingItems(owner_id.to_owned()));
+    }
+    let mut item_ids = BTreeSet::new();
+    let mut equipment_slots = BTreeSet::new();
+    for item in starting_items {
+        let Some((max_stack, slot)) = item_metadata.get(&item.item_kind_id) else {
+            return Err(ContentError::DanglingReference {
+                owner: owner_id.to_owned(),
+                target: item.item_kind_id.clone(),
+            });
+        };
+        if item.quantity == 0
+            || item.quantity > *max_stack
+            || !item_ids.insert(item.item_kind_id.clone())
+            || (item.equipped
+                && (item.quantity != 1
+                    || slot
+                        .as_ref()
+                        .is_none_or(|slot| !equipment_slots.insert(slot.clone()))))
+        {
+            return Err(ContentError::InvalidStartingItems(owner_id.to_owned()));
+        }
+    }
+    Ok(())
+}
+
+fn validate_combined_starting_items<'a>(
+    owner_id: &str,
+    items: impl Iterator<Item = &'a StartingItemDefinition>,
+    item_metadata: &BTreeMap<String, (u32, Option<String>)>,
+) -> Result<(), ContentError> {
+    let mut quantities = BTreeMap::<&str, u32>::new();
+    let mut equipment_slots = BTreeSet::new();
+    let mut count = 0_usize;
+    for item in items {
+        count += 1;
+        let Some((max_stack, slot)) = item_metadata.get(&item.item_kind_id) else {
+            return Err(ContentError::DanglingReference {
+                owner: owner_id.to_owned(),
+                target: item.item_kind_id.clone(),
+            });
+        };
+        let quantity = quantities.entry(item.item_kind_id.as_str()).or_default();
+        *quantity = quantity.saturating_add(item.quantity);
+        if *quantity > *max_stack
+            || (item.equipped
+                && slot
+                    .as_ref()
+                    .is_none_or(|slot| !equipment_slots.insert(slot.clone())))
+        {
+            return Err(ContentError::InvalidCharacterBuild(owner_id.to_owned()));
+        }
+    }
+    if count > 32 {
+        return Err(ContentError::InvalidCharacterBuild(owner_id.to_owned()));
+    }
+    Ok(())
 }
 
 fn validate_definition_id(id: &str, category: &str) -> Result<(), ContentError> {
@@ -4885,6 +5583,32 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
         )?,
         schema_document("item.schema.json", ITEM_SCHEMA, schema_for!(ItemDefinition))?,
         schema_document(
+            "skill.schema.json",
+            SKILL_SCHEMA,
+            schema_for!(SkillDefinition),
+        )?,
+        schema_document(
+            "skill-set.schema.json",
+            SKILL_SET_SCHEMA,
+            schema_for!(SkillSetDefinition),
+        )?,
+        schema_document("race.schema.json", RACE_SCHEMA, schema_for!(RaceDefinition))?,
+        schema_document(
+            "class.schema.json",
+            CLASS_SCHEMA,
+            schema_for!(ClassDefinition),
+        )?,
+        schema_document(
+            "personality.schema.json",
+            PERSONALITY_SCHEMA,
+            schema_for!(PersonalityDefinition),
+        )?,
+        schema_document(
+            "build.schema.json",
+            BUILD_SCHEMA,
+            schema_for!(CharacterBuildDefinition),
+        )?,
+        schema_document(
             "affix.schema.json",
             AFFIX_SCHEMA,
             schema_for!(AffixDefinition),
@@ -5034,6 +5758,18 @@ pub enum ContentError {
     InvalidItemUseAction(String),
     #[error("affix stat modifiers are invalid: {0}")]
     InvalidAffixModifiers(String),
+    #[error("skill definition is invalid: {0}")]
+    InvalidSkill(String),
+    #[error("content rule requires a missing skill kind: {0}")]
+    MissingRequiredSkillKind(String),
+    #[error("skill set definition is invalid: {0}")]
+    InvalidSkillSet(String),
+    #[error("race, class, or personality definition is invalid: {0}")]
+    InvalidCharacterSource(String),
+    #[error("starting item definition is invalid: {0}")]
+    InvalidStartingItems(String),
+    #[error("character build definition is invalid: {0}")]
+    InvalidCharacterBuild(String),
     #[error("loot table weights, entries, or generated item constraints are invalid: {0}")]
     InvalidLootTable(String),
     #[error("encounter table weights, depth ranges, or actor entries are invalid: {0}")]
@@ -5116,10 +5852,16 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 45);
-        assert_eq!(first.content.actors.len(), 11);
+        assert_eq!(first.content.terrain.len(), 47);
+        assert_eq!(first.content.actors.len(), 12);
         assert_eq!(first.content.affixes.len(), 1);
-        assert_eq!(first.content.items.len(), 5);
+        assert_eq!(first.content.items.len(), 6);
+        assert_eq!(first.content.skills.len(), 10);
+        assert_eq!(first.content.skill_sets.len(), 11);
+        assert_eq!(first.content.races.len(), 3);
+        assert_eq!(first.content.classes.len(), 5);
+        assert_eq!(first.content.personalities.len(), 3);
+        assert_eq!(first.content.builds.len(), 5);
         assert_eq!(first.content.encounter_tables.len(), 6);
         assert_eq!(first.content.loot_tables.len(), 7);
         assert_eq!(first.content.theme_tables.len(), 3);
@@ -5136,7 +5878,19 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.62.0");
+        assert_eq!(catalog.pack_version(), "1.64.0");
+        assert_eq!(
+            catalog.build("demo.build.vanguard").map(|build| (
+                build.race_id.as_str(),
+                build.class_id.as_str(),
+                build.personality_id.as_str(),
+            )),
+            Some((
+                "demo.race.human",
+                "demo.class.warrior",
+                "demo.personality.combat",
+            ))
+        );
         assert_eq!(
             catalog
                 .actor("demo.actor.ember-mote")
@@ -5502,6 +6256,37 @@ mod tests {
         ));
         assert_eq!(
             catalog
+                .item("demo.item.resonance-stabilizer")
+                .and_then(|item| item.use_action.as_ref())
+                .and_then(|action| action.device_check_difficulty),
+            Some(60)
+        );
+        assert_eq!(
+            catalog
+                .actor("demo.actor.echo-listener")
+                .and_then(|actor| actor.awareness.as_ref())
+                .map(|awareness| (
+                    awareness.detection_difficulty,
+                    awareness.detection_range,
+                    awareness.starts_alerted,
+                )),
+            Some((7, 8, false))
+        );
+        assert_eq!(
+            catalog
+                .terrain("demo.terrain.echo-rune-hidden")
+                .and_then(|terrain| terrain.perception_check_difficulty),
+            Some(24)
+        );
+        assert_eq!(
+            catalog
+                .terrain("demo.terrain.trap-resonance-ward")
+                .and_then(|terrain| terrain.trap.as_ref())
+                .and_then(|trap| trap.saving_throw_difficulty),
+            Some(40)
+        );
+        assert_eq!(
+            catalog
                 .item("demo.item.echo-charm")
                 .and_then(|item| item.equipment_slot.as_deref()),
             Some("charm")
@@ -5542,6 +6327,26 @@ mod tests {
             catalog.visual_glyphs().get("demo.item.luminous-shard"),
             Some(&"!".to_owned())
         );
+    }
+
+    #[test]
+    fn observable_rule_entries_require_their_skill_kinds() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        for (kind, expected) in [
+            (SkillKind::Device, "device"),
+            (SkillKind::SavingThrow, "saving-throw"),
+            (SkillKind::Stealth, "stealth"),
+            (SkillKind::Perception, "perception"),
+        ] {
+            let mut invalid = artifact.content.clone();
+            invalid.skills.retain(|skill| skill.kind != kind);
+            assert!(matches!(
+                validate_and_normalize(&mut invalid),
+                Err(ContentError::MissingRequiredSkillKind(actual)) if actual == expected
+            ));
+        }
     }
 
     #[test]
@@ -6723,6 +7528,7 @@ mod tests {
             .find(|item| item.id == "demo.item.luminous-shard")
             .expect("fixture should contain the usable shard");
         shard.use_action = Some(ItemUseActionDefinition {
+            device_check_difficulty: None,
             effect: ItemUseEffectDefinition::Heal { amount: 0 },
         });
         assert!(matches!(

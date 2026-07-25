@@ -62,6 +62,8 @@
 - [Contract v68：胜利、退休与角色评分](contract-v68-victory-retirement-scoring.md)
 - [Contract v69：可配置地牢实例生命周期](contract-v69-configurable-instance-lifecycle.md)
 - [Contract v70：RFB 角色成长基础](contract-v70-rfb-character-progression.md)
+- [Contract v71：RFB 角色构筑、种族职业与技能集合](contract-v71-rfb-character-builds.md)
+- [Contract v72：可观察技能检定](contract-v72-observable-skill-checks.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -633,12 +635,14 @@ interface SaveGame {
 - 协议 1.68 和 contract-v68 已建立；内容包 1.60.0 增加 campaign 胜利、退休结算、内容驱动角色评分和旧存档状态推导。Resonance 是 demo 唯一 victory dungeon，Echo 征服只增加分数；胜利后必须在地表退休，退休冻结最终分数并拒绝后续命令。普通 dungeon 返回地表仍立即清空实例。save v1 仍为容器 v1，state hash 升至 Schema v27，content hash 为 `1614fadbf4cd1d3ee03fc011eac069de3a1b8c23ec65b6f09e210f20008dbc4c`，active baseline 共 137 个 exact fixtures。
 - 协议 1.69 和 contract-v69 已建立；内容包 1.61.0 增加 `reset-on-surface`、`persistent`、`turn-ttl` 生命周期与 Archive TTL 示例，retained 实例字段进入存档，TTL 惰性淘汰清理对应实例物品属性知识。普通 Echo/Resonance 返回地表仍立即清空，state hash 升至 Schema v28，content hash 为 `06c054a8c083e05b9d0396aa1076fbe2133a6a1ce5f6c32f101e5d1dabd14b70`，active baseline 共 140 个 exact fixtures。
 - 协议 1.70 和 contract-v70 已建立；内容包 1.62.0 增加击杀经验、RFB 1–50 级阈值、未胜利 50 级封顶后的经验保留、胜利后等级 100/`18/820` 解锁、出生 HP 序列、六维自然/有效属性、装备 modifier 与属性点命令。缺少 progress 的旧存档按固定 legacy 规则迁移，state hash 升至 Schema v29，content hash 为 `ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6`，active baseline 共 148 个 exact fixtures。
+- 协议 1.71 和 contract-v71 已建立；内容包 1.63.0 新增 skills/skillSets/Race/Class/Personality/build 内容根、五个代表性构筑、出生装备、生命/经验倍率和等级技能成长。构筑身份与技能聚合进入 save、Web UI 和 state hash Schema v30；v70 缺字段存档迁移为 Explorer，content hash 为 `1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4`，active baseline 共 152 个 exact fixtures。
+- 协议 1.72 和 contract-v72 已建立；内容包 1.64.0 为 terrain/trap/item/actor 增加 perception、saving throw、device 和 awareness 入口，结构化 check outcome 与怪物 `alerted` 进入协议、save 和 state hash Schema v31。相同 seed 的 Tinkerer/Vanguard 对照覆盖四类成功失败与回读，content hash 为 `3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a`，active baseline 共 160 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 进入 Stage F 角色成长基础；运行时地形破坏直接成为权威地图状态，不做自动连通修复，玩家可通过挖掘自行恢复通路；
+1. 进入 Stage G 法术与能力书基础；先建立可保存资源/法术身份、学习与可用性，以及首个目标模式和可观察施法；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

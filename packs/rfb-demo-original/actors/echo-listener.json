@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.echo-listener",
+  "role": "monster",
+  "nameKey": "actor-demo-echo-listener-name",
+  "descriptionKey": "actor-demo-echo-listener-description",
+  "glyph": "l",
+  "level": 1,
+  "experienceValue": 4,
+  "maxHp": 4,
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 1,
+  "awareness": {
+    "detectionDifficulty": 7,
+    "detectionRange": 8,
+    "startsAlerted": false
+  },
+  "tags": ["echo", "listener", "stealth-check"]
+}

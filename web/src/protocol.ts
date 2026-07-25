@@ -15,7 +15,11 @@ export type AttributeValueDto = { natural: number, effective: number, index: num
 
 export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
 
-export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, };
+export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, skills: Array<SkillProgressDto>, };
+
+export type SkillProgressDto = { id: string, nameKey: string, current: number, maximum: number, base: number, growthPerTenLevels: number, };
+
+export type PlayerBuildDto = { buildId: string, buildNameKey: string, raceId: string, raceNameKey: string, classId: string, classNameKey: string, personalityId: string, personalityNameKey: string, lifePercent: number, experiencePercent: number, };
 
 export type DamageDiceDto = { dice: number, sides: number, damageType: DamageTypeDto, };
 
@@ -67,15 +71,19 @@ export type ResistanceDto = { damageType: DamageTypeDto, level: ResistanceLevelD
 
 export type DamageResolutionDto = { rawDamage: number, armorReduction: number, resistanceAdjustment: number, finalDamage: number, damageType: DamageTypeDto, resistance: ResistanceLevelDto, };
 
+export type CheckOutcomeDto = "automatic-success" | "automatic-failure" | "success" | "failure";
+
+export type CheckResolutionDto = { skillId: string, ability: number, difficulty: number, percentileRoll: number, contestRoll?: number | null, threshold: number, outcome: CheckOutcomeDto, };
+
 export type HealingResolutionDto = { requested: number, applied: number, };
 
-export type GameEventOutcomeDto = { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, };
+export type GameEventOutcomeDto = { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, };
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, };
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, };
 
 export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, position: Position, quantity: number, };
 

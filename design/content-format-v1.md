@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.64.0
 
 ## 1. 目标
 
@@ -21,9 +21,15 @@ packs/base/
 ├─ pack.json
 ├─ actors/
 ├─ affixes/
+├─ builds/
+├─ classes/
 ├─ encounterTables/
 ├─ items/
 ├─ lootTables/
+├─ personalities/
+├─ races/
+├─ skills/
+├─ skillSets/
 ├─ terrain/
 ├─ themeTables/
 ├─ vaults/
@@ -32,7 +38,7 @@ packs/base/
 └─ assets/
 ```
 
-当前 v1 编译器实现 `actors`、`affixes`、`encounterTables`、`items`、`lootTables`、`terrain`、`themeTables`、`vaults` 和 `worlds` 九个严格类型根。后续怪物能力、职业、种族、法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
+当前 v1 编译器实现 `actors`、`affixes`、`builds`、`classes`、`encounterTables`、`items`、`lootTables`、`personalities`、`races`、`skills`、`skillSets`、`terrain`、`themeTables`、`vaults` 和 `worlds` 十五个严格类型根。法术、任务和视觉映射会在相同稳定 ID/Schema 规则下增加独立根；扩展包可以只声明自己实际提供的根。
 
 `pack.json`：
 
@@ -149,6 +155,10 @@ contract-v63 为世界新增 `dungeons`，每项以稳定 ID 引用 `rootFloorId
 
 contract-v64 将 Vault 的规范入口字段升级为 `entrancePositions`：允许 1–8 个互不重复的边界位置，旧 `entrancePosition` 只在列表缺失时规范化为单元素列表。入口必须可连接；加载器展开 base terrain 与 overrides 后，以固定四向 BFS 证明全部潜在可通行格和全部入口属于同一分量。运行时还会为每个变换后入口寻找最长 12 格的确定性 wall connector，并只提交能让整层潜在可通行格保持单一分量的候选。失败候选继续走稳定回退，不写入部分 terrain。
 
+contract-v71 新增 `skills`、`skillSets`、`races`、`classes`、`personalities` 和 `builds` 六个独立根。技能集合按 `base` 与 `growthPerTenLevels` 聚合；Race/Class/Personality 分别提供属性、生命/经验倍率、基础 HP、技能集合和出生物品；build 绑定三者并声明出生自然属性。世界可选 `playerBuildId`，缺省时 demo 使用 Explorer。编译器验证技能最大值、技能集合引用、来源范围、出生装备堆叠/槽位和构筑组合的总容量，并把所有根按稳定 ID 排序后写入 content hash。
+
+contract-v72 为既有定义增加可选技能消费字段：terrain 的 `perceptionCheckDifficulty`、trap 的 `savingThrowDifficulty`、item `useAction.deviceCheckDifficulty`，以及 actor 的 `awareness.detectionDifficulty/detectionRange/startsAlerted`。编译器验证 difficulty/range 的正整数边界、trap/useAction 字段组合，并要求每种运行时检定都能解析唯一对应 `SkillKind`。缺字段内容保持历史行为。
+
 contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结算组，共享进度与结果；组内目标种类、required 和重接策略必须一致，并且整组恰好声明一个奖励。`kill-actor-kind` 可用 `spawnCount` 控制单个成员楼层生成的目标数量。
 
 当前已完成第 1、2、3、7、8 项的单包版本，包括：
@@ -161,9 +171,9 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 - 定义、tag、spawn 和地形覆盖的规范化排序；
 - `RFBCONT\0`、MessagePack payload、长度和 SHA-256 校验；
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
-- 十二份提交到 `schemas/content-v1/` 的 JSON Schema。
+- 十八份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，并可用 `doorSkill` / `bashPower` / `searchSkill` 声明开锁、破门和搜索基础能力。怪物可声明 `meleeRoutine.blows`、出生携带用 `carriedLootTableId` 和死亡生成用 `lootTableId`。物品必须声明整数重量，并可声明近战、发射、投掷或使用 profile。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。独立 `LootTableDefinition` 声明加权物品、品质和词条。独立 `EncounterTableDefinition` 声明楼层怪物 roll 与深度加权候选；独立 `ThemeTableDefinition` 声明楼层主题 terrain 与加权 Vault 候选；独立 `RegionTableDefinition` 把稳定区域 ID 绑定到明确主题与局部 encounter/loot 表；独立 `VaultDefinition` 声明主题 terrain、空间变换、深度加权 encounter group 与主题掉落。地形可声明互斥的 `openToTerrainId` 或 `closeToTerrainId`；普通门互反转换要求关闭态不可行走/阻光、开启态可行走/透光。带 `openCheckDifficulty` 的锁门允许单向解锁到普通开启态；`bashToTerrainId` / `bashCheckDifficulty` 成对声明破门结果；`concealedAsTerrainId` / `searchCheckDifficulty` 成对声明隐藏投影和搜索难度，真实/伪装 terrain 必须保持相同碰撞与阻光语义。世界定义必须声明稳定 `initialFloorId` 和程序化楼层；含 dungeon lifecycle 楼层时还必须在 `dungeons` 中逐一声明地牢。程序化楼层固定楼层 ID、名称、深度、尺寸、地形引用、楼层表引用、连接以及可选 actor/loot/Vault/region 空间预算。怪物候选必须引用怪物定义且至少包含一个等级不高于该层深度的候选；运行时只从符合深度的候选中抽取。旧 `actorSpawns/lootSpawns/themeId/vaultId` 保留为兼容输入，但不能与对应新表引用混用。原创包 1.56.0 覆盖固定词条、鉴别、怪物携带物、确定性死亡掉落、楼层/任务/地牢生命周期、可重接任务限制与重建、树状地牢、多个程序化最终层和共享守护者镜像、预算化十层压力地牢、多 Vault 空间场景、动态群体与持久 pack AI、同层多区域主题及其与特殊生成阶段组合、分阶段地貌、原版式 pit、maze-only、多楼梯与 shaft。
+角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，并可用 `doorSkill` / `bashPower` / `searchSkill` 声明开锁、破门和搜索基础能力。怪物可声明 `meleeRoutine.blows`、出生携带用 `carriedLootTableId`、死亡生成用 `lootTableId` 和可选 awareness。物品必须声明整数重量，并可声明近战、发射、投掷或使用 profile；使用 profile 可声明 device difficulty。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。独立 `LootTableDefinition` 声明加权物品、品质和词条。独立 `EncounterTableDefinition` 声明楼层怪物 roll 与深度加权候选；独立 `ThemeTableDefinition` 声明楼层主题 terrain 与加权 Vault 候选；独立 `RegionTableDefinition` 把稳定区域 ID 绑定到明确主题与局部 encounter/loot 表；独立 `VaultDefinition` 声明主题 terrain、空间变换、深度加权 encounter group 与主题掉落。地形可声明互斥的 `openToTerrainId` 或 `closeToTerrainId`；普通门互反转换要求关闭态不可行走/阻光、开启态可行走/透光。带 `openCheckDifficulty` 的锁门允许单向解锁到普通开启态；`bashToTerrainId` / `bashCheckDifficulty` 成对声明破门结果；`concealedAsTerrainId` 可配合主动搜索或被动 perception difficulty 声明隐藏投影，真实/伪装 terrain 必须保持相同碰撞与阻光语义。世界定义必须声明稳定 `initialFloorId` 和程序化楼层；含 dungeon lifecycle 楼层时还必须在 `dungeons` 中逐一声明地牢。程序化楼层固定楼层 ID、名称、深度、尺寸、地形引用、楼层表引用、连接以及可选 actor/loot/Vault/region 空间预算。怪物候选必须引用怪物定义且至少包含一个等级不高于该层深度的候选；运行时只从符合深度的候选中抽取。旧 `actorSpawns/lootSpawns/themeId/vaultId` 保留为兼容输入，但不能与对应新表引用混用。原创包 1.64.0 覆盖角色成长与构筑、可观察技能检定、固定词条与鉴别、怪物携带物/掉落、楼层/任务/地牢生命周期、树状地牢、共享守护者镜像、预算化十层压力地牢、多 Vault、动态群体与 pack AI、同层多区域主题、分阶段地貌、原版式 pit、maze-only、多楼梯与 shaft。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 

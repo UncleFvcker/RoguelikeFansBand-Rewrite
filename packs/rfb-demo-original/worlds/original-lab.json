@@ -93,6 +93,7 @@
     "kindId": "demo.actor.explorer",
     "position": { "x": 3, "y": 3 }
   },
+  "playerBuildId": "demo.build.explorer",
   "actors": [
     {
       "instanceId": "demo.monster.ember-mote.1",

@@ -57,6 +57,14 @@
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
+        "deviceCheckDifficulty": {
+          "default": null,
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "effect": {
           "$ref": "#/$defs/ItemUseEffectDefinition"
         }

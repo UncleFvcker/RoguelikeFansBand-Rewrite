@@ -1459,6 +1459,13 @@
     "player": {
       "$ref": "#/$defs/ActorSpawn"
     },
+    "playerBuildId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "proceduralFloors": {
       "items": {
         "$ref": "#/$defs/ProceduralFloorDefinition"

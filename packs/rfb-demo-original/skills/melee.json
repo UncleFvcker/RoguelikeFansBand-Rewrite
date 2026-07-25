@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill.melee",
+  "nameKey": "skill-demo-melee-name",
+  "descriptionKey": "skill-demo-melee-description",
+  "kind": "melee",
+  "maximum": 1000,
+  "tags": ["combat", "general"]
+}

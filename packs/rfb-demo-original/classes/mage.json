@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.mage",
+  "nameKey": "class-demo-mage-name",
+  "descriptionKey": "class-demo-mage-description",
+  "modifiers": {
+    "strength": -4,
+    "intelligence": 3,
+    "dexterity": 1,
+    "constitution": -2,
+    "charisma": -2
+  },
+  "lifePercent": 95,
+  "experiencePercent": 130,
+  "skillSetId": "demo.skill-set.mage",
+  "startingItems": [
+    { "itemKindId": "demo.item.echo-charm", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.luminous-shard", "quantity": 2 }
+  ],
+  "tags": ["book-caster", "prototype"]
+}

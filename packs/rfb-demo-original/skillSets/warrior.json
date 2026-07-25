@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.warrior",
+  "entries": [
+    { "skillId": "demo.skill.device", "base": 18, "growthPerTenLevels": 7 },
+    { "skillId": "demo.skill.digging", "base": 30, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.disarming", "base": 25, "growthPerTenLevels": 12 },
+    { "skillId": "demo.skill.melee", "base": 70, "growthPerTenLevels": 30 },
+    { "skillId": "demo.skill.perception", "base": 2 },
+    { "skillId": "demo.skill.ranged", "base": 55, "growthPerTenLevels": 30 },
+    { "skillId": "demo.skill.saving-throw", "base": 31, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.search", "base": 14 },
+    { "skillId": "demo.skill.stealth", "base": 1 },
+    { "skillId": "demo.skill.throwing", "base": 55, "growthPerTenLevels": 20 }
+  ]
+}

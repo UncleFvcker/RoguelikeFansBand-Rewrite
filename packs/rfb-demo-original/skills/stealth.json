@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill.stealth",
+  "nameKey": "skill-demo-stealth-name",
+  "descriptionKey": "skill-demo-stealth-description",
+  "kind": "stealth",
+  "maximum": 1000,
+  "tags": ["exploration", "general"]
+}

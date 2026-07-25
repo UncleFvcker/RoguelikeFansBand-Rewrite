@@ -250,6 +250,45 @@ h1 {
   list-style: none;
 }
 
+.progression-subheading {
+  padding: 0.6rem 0.85rem 0.2rem;
+  color: #7890a7;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 0.8rem;
+  margin: 0;
+  padding: 0.45rem 0.85rem 0.8rem;
+  list-style: none;
+}
+
+.skill-row {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #c8d5e3;
+  font-size: 0.76rem;
+}
+
+.skill-name {
+  overflow: hidden;
+  color: #9fb5ca;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-value {
+  flex: none;
+  color: #dcecff;
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
 .attribute-row {
   display: grid;
   grid-template-columns: minmax(5.5rem, 0.8fr) minmax(0, 1.5fr) auto;

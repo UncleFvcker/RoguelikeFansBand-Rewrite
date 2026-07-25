@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.ranger",
+  "nameKey": "class-demo-ranger-name",
+  "descriptionKey": "class-demo-ranger-description",
+  "modifiers": {
+    "strength": 2,
+    "wisdom": 2,
+    "dexterity": 1,
+    "constitution": 1
+  },
+  "lifePercent": 106,
+  "experiencePercent": 140,
+  "baseHp": 8,
+  "skillSetId": "demo.skill-set.ranger",
+  "startingItems": [
+    { "itemKindId": "demo.item.echo-blade", "quantity": 1 },
+    { "itemKindId": "demo.item.resonance-pellet", "quantity": 16 },
+    { "itemKindId": "demo.item.resonance-sling", "quantity": 1, "equipped": true }
+  ],
+  "tags": ["hybrid-ranged", "prototype"]
+}

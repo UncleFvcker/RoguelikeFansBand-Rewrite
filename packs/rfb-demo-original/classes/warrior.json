@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.warrior",
+  "nameKey": "class-demo-warrior-name",
+  "descriptionKey": "class-demo-warrior-description",
+  "modifiers": {
+    "strength": 4,
+    "intelligence": -2,
+    "wisdom": -2,
+    "dexterity": 2,
+    "constitution": 2,
+    "charisma": 1
+  },
+  "lifePercent": 115,
+  "experiencePercent": 100,
+  "baseHp": 18,
+  "skillSetId": "demo.skill-set.warrior",
+  "startingItems": [
+    { "itemKindId": "demo.item.echo-blade", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.resonance-pellet", "quantity": 12 },
+    { "itemKindId": "demo.item.resonance-sling", "quantity": 1 }
+  ],
+  "tags": ["martial", "prototype"]
+}
