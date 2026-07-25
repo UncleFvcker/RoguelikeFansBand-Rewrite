@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v74、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v75、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -23,19 +23,19 @@
 | P12 | 可观察技能检定 | 已由 contract-v72 完成 | device、saving-throw、stealth、perception 的权威消费、结构化事件、警戒存档和相同 seed 构筑对照 |
 | P13 | 法术与能力书基础 | 已由 contract-v73 完成 | resource/ability/ability-book 内容根、Class casting profile、可保存 Mana/已学能力、学习/失败率/目标施法、Web 面板和旧存档迁移 |
 | P14 | 法术恢复与多效果能力 | 已由 contract-v74 完成 | Mana 等待/休息恢复、真实调度与危险中断、稳定自身目标、Stillwater Notes 和固定治疗 |
-| P15 | 能力熟练度与冷却 | 下一候选 | 每能力持久状态、练习/成功增长、失败率或效果修正、独立/共享冷却与零 RNG 拒绝；多资源和怪物施法继续后置 |
+| P15 | 能力熟练度与冷却 | 已由 contract-v75 完成 | RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝、存档迁移和 Web 展示 |
+| P16 | 学习容量与遗忘 | 下一候选 | 参考 RFB 的可学习数量/等级容量、主动遗忘与重新学习；保持能力进度和书本状态确定性，先不引入多资源或怪物施法 |
 
-## contract-v74 明确遗留
+## contract-v75 明确遗留
 
-- 能力学习容量、随机学习、遗忘、首次成功奖励、熟练度成长和下降；
-- 每能力、每书本或共享组冷却，以及存档、回放和 Web 剩余回合显示；
+- 能力学习容量、随机学习、遗忘和首次成功奖励；
 - 怒气、专注、鲜血等多种职业资源，资源互转与职业专属恢复条件；
 - 范围、锥形、位移、召唤、侦测、地形改变和多 effect 组合；
 - 装备负重、状态、环境与职业规则对失败率、恢复率和效果强度的完整修正；
 - 怪物施法、能力选择 AI、智能学习和完整领域/职业矩阵；
 - 饥饿、HP 自然恢复、旅行、自动探索和更高层的安全休息策略。
 
-v74 的 Mana 等待/休息恢复、可见敌人/受伤/死亡中断、自身目标、固定治疗、结构化 resource-recovery/rest outcome、旧存档兼容和 174 个 exact fixtures 已进入协议 1.74、save v1 与 state hash Schema v33。详细边界见 [contract-v74](contract-v74-resource-recovery-and-healing.md)。
+v75 的 RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝、能力进度存档迁移和 182 个 exact fixtures 已进入协议 1.75、内容包 1.67.0、save v1 与 state hash Schema v34。详细边界见 [contract-v75](contract-v75-ability-proficiency-and-cooldowns.md)。
 
 ## contract-v73 明确遗留
 
@@ -52,7 +52,7 @@ v73 的 Mana、能力书、学习、失败率、目标施法、结构化 ability
 - 技能练习/下降、属性损伤/恢复、职业专属资源和更复杂等级奖励；
 - 失明、无光、混乱、幻觉、距离、噪声和环境亮度对技能检定的完整修正；
 - 怪物警戒传播、睡眠深度、气味/flow、智能学习和完整潜行模式；
-- 法力、能力书、学习、失败率与首轮恢复/治疗已由 contract-v73–v74 完成；冷却、熟练度和玩家/怪物完整施法系统仍未实现；
+- 法力、能力书、学习、失败率、恢复、熟练度和冷却已由 contract-v73–v75 完成；玩家/怪物完整施法系统仍未实现；
 - 完整原版 Race/Class/Personality 名单、创建 UI 和角色重建流程。
 
 v72 的四类技能消费、结构化 check outcome、actor `alerted` 兼容恢复和 160 个 exact fixtures 已进入协议 1.72、save v1 与 state hash Schema v31。详细边界见 [contract-v72](contract-v72-observable-skill-checks.md)。
@@ -62,7 +62,7 @@ v72 的四类技能消费、结构化 check outcome、actor `alerted` 兼容恢�
 - 完整原版 Race/Class/Personality 名单、职业选择界面和角色重建流程；
 - 技能练习/下降、属性损伤/恢复、职业专属资源和更复杂的等级奖励；
 - device、saving-throw、stealth、perception 的实际检定消费已由 contract-v72 完成；
-- Mana、能力书、失败率、恢复和自身治疗已由 contract-v73–v74 完成；熟练度、冷却和完整法术系统仍未实现。
+- Mana、能力书、失败率、恢复、自身治疗、熟练度和冷却已由 contract-v73–v75 完成；学习容量、遗忘和完整法术系统仍未实现。
 
 v71 的构筑身份、技能聚合、出生装备和 v70 缺字段迁移已进入协议 1.71、save v1 与 state hash Schema v30；v72 在其上补齐四类首轮技能消费。详细边界见 [contract-v71](contract-v71-rfb-character-builds.md)。
 
@@ -70,7 +70,7 @@ v71 的构筑身份、技能聚合、出生装备和 v70 缺字段迁移已进�
 
 - Race/Class/Personality 角色创建、种族/职业成长曲线和初始装备模板；
 - 属性损伤、临时恢复、技能熟练、经验倍率和职业专属资源；
-- Mana、能力书、失败率、恢复和自身治疗已由 contract-v73–v74 完成；职业专属资源、熟练度和冷却仍未实现；
+- Mana、能力书、失败率、恢复、自身治疗、熟练度和冷却已由 contract-v73–v75 完成；职业专属资源仍未实现；
 - 属性点重置、自动分配策略和更复杂的等级奖励节点。
 
 v70 的经验、HP 序列、自然属性、装备 modifier 和胜利解锁已进入协议 1.70、save v1 与 state hash Schema v29；v71 已在其上补齐角色来源层。详细边界见 [contract-v70](contract-v70-rfb-character-progression.md)。

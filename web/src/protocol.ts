@@ -35,7 +35,9 @@ export type TargetSpecDto = { modes: Array<TargetModeDto>, range: number, requir
 
 export type ResourcePoolDto = { id: string, nameKey: string, current: number, maximum: number, waitRecoveryAmount: number, restRecoveryAmount: number, };
 
-export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, resourceCost: number, failurePercent: number, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canCast: boolean, };
+export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
+
+export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canCast: boolean, };
 
 export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "self" };
 
@@ -79,7 +81,7 @@ export type CheckOutcomeDto = "automatic-success" | "automatic-failure" | "succe
 
 export type CheckResolutionDto = { skillId: string, ability: number, difficulty: number, percentileRoll: number, contestRoll?: number | null, threshold: number, outcome: CheckOutcomeDto, };
 
-export type AbilityCastResolutionDto = { abilityId: string, resourceId: string, resourceCost: number, resourceBefore: number, resourceAfter: number, failurePercent: number, percentileRoll: number, succeeded: boolean, };
+export type AbilityCastResolutionDto = { abilityId: string, resourceId: string, baseResourceCost: number, resourceCost: number, resourceBefore: number, resourceAfter: number, failurePercent: number, percentileRoll: number, succeeded: boolean, proficiencyBefore: number, proficiencyAfter: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownBefore: number, cooldownAfter: number, };
 
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 

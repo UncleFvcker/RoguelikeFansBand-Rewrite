@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.74";
+pub const PROTOCOL_VERSION: &str = "1.75";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -335,6 +335,18 @@ pub struct ResourcePoolDto {
     pub rest_recovery_amount: u32,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityProficiencyRankDto {
+    #[default]
+    Unskilled,
+    Beginner,
+    Skilled,
+    Expert,
+    Master,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -344,8 +356,26 @@ pub struct AbilityDto {
     pub description_key: String,
     pub minimum_level: u16,
     pub resource_id: String,
+    #[serde(default)]
+    pub base_resource_cost: u32,
     pub resource_cost: u32,
     pub failure_percent: u8,
+    #[serde(default)]
+    pub proficiency: u16,
+    #[serde(default)]
+    pub proficiency_cap: u16,
+    #[serde(default)]
+    pub proficiency_rank: AbilityProficiencyRankDto,
+    #[serde(default)]
+    pub cast_count: u32,
+    #[serde(default)]
+    pub fail_count: u32,
+    #[serde(default)]
+    pub cooldown_remaining: u16,
+    #[serde(default)]
+    pub cooldown_turns: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cooldown_group_id: Option<String>,
     pub target_spec: TargetSpecDto,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -619,12 +649,28 @@ pub struct CheckResolutionDto {
 pub struct AbilityCastResolutionDto {
     pub ability_id: String,
     pub resource_id: String,
+    #[serde(default)]
+    pub base_resource_cost: u32,
     pub resource_cost: u32,
     pub resource_before: u32,
     pub resource_after: u32,
     pub failure_percent: u8,
     pub percentile_roll: u8,
     pub succeeded: bool,
+    #[serde(default)]
+    pub proficiency_before: u16,
+    #[serde(default)]
+    pub proficiency_after: u16,
+    #[serde(default)]
+    pub proficiency_rank: AbilityProficiencyRankDto,
+    #[serde(default)]
+    pub cast_count: u32,
+    #[serde(default)]
+    pub fail_count: u32,
+    #[serde(default)]
+    pub cooldown_before: u16,
+    #[serde(default)]
+    pub cooldown_after: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1060,6 +1106,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetModeDto);
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
+    push_declaration!(AbilityProficiencyRankDto);
     push_declaration!(AbilityDto);
     push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);
@@ -1155,6 +1202,22 @@ pub struct PlayerSaveDto {
     pub resources: Vec<ResourcePoolSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub learned_ability_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ability_progress: Vec<AbilityProgressSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityProgressSaveDto {
+    pub id: String,
+    pub proficiency: u16,
+    pub proficiency_cap: u16,
+    #[serde(default)]
+    pub cast_count: u32,
+    #[serde(default)]
+    pub fail_count: u32,
+    #[serde(default)]
+    pub cooldown_remaining: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1850,6 +1913,7 @@ mod tests {
             build: None,
             resources: Vec::new(),
             learned_ability_ids: Vec::new(),
+            ability_progress: Vec::new(),
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

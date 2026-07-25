@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.74、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.75、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.74";
+  protocolVersion: "1.75";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -192,6 +192,8 @@ interface GameCoreV1 {
 协议 1.73 新增 `StudyAbility { bookItemId, abilityId }` 与 `CastAbility { abilityId, target }`，以及 `ResourcePoolDto`、`AbilityDto`、`AbilityCastResolutionDto` 和 `GameEventOutcomeDto.ability-cast`。`PlayerDto` 暴露资源池、已学状态、书本实例、当前失败率与学习/施放可用性；拒绝原因和施法成功/失败、落空、命中、击杀均使用结构化事件。`PlayerSaveDto` 保存资源池与已学能力 ID，旧存档缺字段时确定性恢复满资源和空已学列表。state hash 升至 Schema v32，save 容器仍为 v1。完整边界见 [Contract v73](contract-v73-ability-books.md)。
 
 协议 1.74 新增 `Rest { turns }`、稳定 `TargetSelection.self`、`ResourceRecoveryResolutionDto`、`RestResolutionDto`、`RestStopReasonDto`，以及 `GameEventOutcomeDto.resource-recovery/rest`。`ResourcePoolDto` 输出带兼容默认值的等待/休息恢复量；普通 `Wait` 在调度完成且玩家仍存活时应用等待恢复。`Rest` 最多请求 100 回合，每步真实运行能量调度器，并在资源已满、可见敌人、受伤或死亡时停止；治疗能力复用既有 `HealResolutionDto`。state hash 升至 Schema v33，save 容器仍为 v1。完整边界见 [Contract v74](contract-v74-resource-recovery-and-healing.md)。
+
+协议 1.75 为 `AbilityDto` 增加基础/实际资源成本、熟练度、熟练等级、成功/失败统计和冷却字段；`AbilityCastResolutionDto` 输出施法前后进度；`PlayerSaveDto` 增加 `abilityProgress`。内容能力可声明 `proficiency` 与可选 `cooldown`/`groupId`。熟练度采用 RFB 五档阈值 `0/900/1200/1400/1600`，影响 Mana 成本和 Expert/Master 失败率；成功施法增加熟练度/次数，失败增加失败次数，冷却拒绝在扣资源与 RNG 前返回。缺少 `abilityProgress` 的旧存档按当前内容初值迁移，不推进 RNG。state hash 升至 Schema v34，save 容器仍为 v1。完整边界见 [Contract v75](contract-v75-ability-proficiency-and-cooldowns.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

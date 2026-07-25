@@ -93,6 +93,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v72：可观察技能检定](design/contract-v72-observable-skill-checks.md)
 - [Contract v73：法术资源与能力书基础](design/contract-v73-ability-books.md)
 - [Contract v74：法术资源恢复与自身治疗](design/contract-v74-resource-recovery-and-healing.md)
+- [Contract v75：能力熟练度与冷却](design/contract-v75-ability-proficiency-and-cooldowns.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -110,7 +111,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v74/scenarios`](tests/fixtures/contract-v74/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v73` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v75/scenarios`](tests/fixtures/contract-v75/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v74` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -179,9 +180,11 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.73 / contract-v73 已建立首个能力书施法闭环：内容包新增独立 resource、ability 与 ability-book 根，Mage 以 Intelligence 计算 Mana 上限和失败率，Scholar 出生携带 Echo Primer，可学习并施放 Resonant Bolt。资源在失败检定前扣除，失败仍耗 Mana；资源不足、未学习或缺少书本会结构化拒绝且不推进施法 RNG。资源池、已学能力、施法 outcome、存档迁移和 Web 能力面板进入 state hash Schema v32。内容包升至 1.65.0，content hash 为 `fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d`；该历史基准共 166 个 exact fixtures、零 waiver。完整边界见 [Contract v73 说明](design/contract-v73-ability-books.md)。
 
-协议 1.74 / contract-v74 已补齐首轮资源恢复与非伤害能力：Mana 在等待后恢复 1，`Rest { turns }` 每个实际休息回合恢复 3 并真实推进调度器；满资源、可见敌人、受伤与死亡都有结构化停止原因。协议新增稳定 `self` 目标、`heal` 能力效果、资源恢复与休息 outcome；Stillwater Notes 让 Scholar 学习 Mending Echo，以 4 Mana 治疗自身 6 点生命。Web 显示恢复速率、提供休息按钮，并直接提交自身目标。内容包升至 1.66.0，content hash 为 `9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0`；资源恢复、休息时序、自身治疗和回读进入 state hash Schema v33，active baseline 共 174 个 exact fixtures、零 waiver。完整边界见 [Contract v74 说明](design/contract-v74-resource-recovery-and-healing.md)。
+协议 1.74 / contract-v74 已补齐首轮资源恢复与非伤害能力：Mana 在等待后恢复 1，`Rest { turns }` 每个实际休息回合恢复 3 并真实推进调度器；满资源、可见敌人、受伤与死亡都有结构化停止原因。协议新增稳定 `self` 目标、`heal` 能力效果、资源恢复与休息 outcome；Stillwater Notes 让 Scholar 学习 Mending Echo，以 4 Mana 治疗自身 6 点生命。Web 显示恢复速率、提供休息按钮，并直接提交自身目标。完整历史边界见 [Contract v74 说明](design/contract-v74-resource-recovery-and-healing.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；v73–v74 又建立了 Mana、能力书、学习、失败率、目标施法、等待/休息恢复、自身治疗和存档回读的首个玩家施法循环。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步适合推进能力熟练度与冷却；多资源和怪物施法继续后置。
+协议 1.75 / contract-v75 在此基础上加入参考 RFB 原版的五档能力熟练度、Mana 成本曲线、Expert/Master 失败率修正、成功/失败统计、可选每能力/共享组冷却和存档迁移。能力进度进入 state hash Schema v34；普通能力默认无冷却，冷却拒绝不扣资源且不抽 RNG。内容包升至 1.67.0，content hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`，active baseline 共 182 个 exact fixtures、零 waiver。完整边界见 [Contract v75 说明](design/contract-v75-ability-proficiency-and-cooldowns.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v75 固定：Mana、能力书、学习、失败率、等待/休息恢复、自身治疗、熟练度、统计、冷却和存档回读。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步适合推进学习容量/遗忘与更多能力效果，随后再进入多资源和怪物施法。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -253,10 +256,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v74/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v75/baseline-policy.json
 ```
 
-当前 174 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 182 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

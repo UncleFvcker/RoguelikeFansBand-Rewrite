@@ -96,6 +96,7 @@ ability-unavailable-book-mismatch = 所选书本不包含该能力
 ability-unavailable-not-learned = 你尚未学会它
 ability-unavailable-resource-unavailable = 对应的施法资源不可用
 ability-unavailable-insufficient-resource = 施法资源不足
+ability-unavailable-cooldown = 能力仍在冷却
 ability-unavailable-unknown = 当前无法执行该操作
 message-status-player-damage = { $status }令你受到 { $damage } 点伤害。
 message-status-entity-damage = { $target }因{ $status }受到 { $damage } 点伤害。

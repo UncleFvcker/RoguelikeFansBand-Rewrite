@@ -263,6 +263,7 @@ pub(crate) fn player_to_save(
         }),
         resources: Vec::new(),
         learned_ability_ids: Vec::new(),
+        ability_progress: Vec::new(),
     }
 }
 

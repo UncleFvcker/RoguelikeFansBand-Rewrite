@@ -1043,15 +1043,34 @@ function renderAbilities(abilities: AbilityDto[], resources: ResourcePoolDto[]):
     summary.className = "ability-summary";
     summary.textContent = localization.format("ability-summary", {
       level: ability.minimumLevel,
+      baseCost: ability.baseResourceCost,
       cost: ability.resourceCost,
       failure: ability.failurePercent,
+    });
+    const proficiency = document.createElement("span");
+    proficiency.className = "ability-summary";
+    proficiency.textContent = localization.format("ability-proficiency-summary", {
+      rank: localization.format(`ability-proficiency-${ability.proficiencyRank}` as MessageKey),
+      current: ability.proficiency,
+      maximum: ability.proficiencyCap,
+      casts: ability.castCount,
+      fails: ability.failCount,
     });
     const status = document.createElement("span");
     status.className = "ability-status";
     status.textContent = localization.format(
       ability.learned ? "ability-status-learned" : "ability-status-unlearned",
     );
-    details.append(name, summary, status);
+    details.append(name, summary, proficiency, status);
+    if (ability.cooldownTurns > 0) {
+      const cooldown = document.createElement("span");
+      cooldown.className = "ability-status";
+      cooldown.textContent = localization.format("ability-cooldown-summary", {
+        remaining: ability.cooldownRemaining,
+        turns: ability.cooldownTurns,
+      });
+      details.append(cooldown);
+    }
 
     const actions = document.createElement("div");
     actions.className = "ability-actions";

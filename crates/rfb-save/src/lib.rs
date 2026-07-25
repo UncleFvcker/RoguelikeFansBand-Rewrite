@@ -190,6 +190,7 @@ mod tests {
                 build: None,
                 resources: Vec::new(),
                 learned_ability_ids: Vec::new(),
+                ability_progress: Vec::new(),
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

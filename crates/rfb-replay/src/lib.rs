@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 33;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 34;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -632,7 +632,7 @@ mod tests {
         let (final_game, replay) = recorder.finish();
 
         let snapshot = final_game.snapshot();
-        assert_eq!(snapshot.player.resources[0].current, 18);
+        assert_eq!(snapshot.player.resources[0].current, 16);
         assert!(
             snapshot
                 .player
@@ -696,7 +696,7 @@ mod tests {
         let snapshot = final_game.snapshot();
         assert_eq!(snapshot.player.hp, 11);
         assert_eq!(snapshot.player.resources[0].current, 21);
-        assert_eq!(snapshot.turn, 7);
+        assert_eq!(snapshot.turn, 8);
         let verification = verify(&replay, initial).expect("healing rest replay should verify");
         assert_eq!(verification.commands_verified, 3);
         assert_eq!(verification.final_state_hash, final_game.state_hash());

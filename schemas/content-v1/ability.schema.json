@@ -1,5 +1,27 @@
 {
   "$defs": {
+    "AbilityCooldownDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "groupId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "turns": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "turns"
+      ],
+      "type": "object"
+    },
     "AbilityEffectDefinition": {
       "oneOf": [
         {
@@ -53,6 +75,40 @@
           "type": "object"
         }
       ]
+    },
+    "AbilityProficiencyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cap": {
+          "default": 1600,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "failureGain": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "initial": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "successGain": {
+          "default": 128,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
     },
     "AbilityTargetDefinition": {
       "additionalProperties": false,
@@ -114,6 +170,17 @@
       "minimum": 0,
       "type": "integer"
     },
+    "cooldown": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AbilityCooldownDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "descriptionKey": {
       "type": "string"
     },
@@ -137,6 +204,15 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "proficiency": {
+      "$ref": "#/$defs/AbilityProficiencyDefinition",
+      "default": {
+        "cap": 1600,
+        "failureGain": 0,
+        "initial": 0,
+        "successGain": 128
+      }
     },
     "resourceCost": {
       "format": "uint32",

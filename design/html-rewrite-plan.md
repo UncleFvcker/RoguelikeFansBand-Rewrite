@@ -66,6 +66,7 @@
 - [Contract v72：可观察技能检定](contract-v72-observable-skill-checks.md)
 - [Contract v73：法术资源与能力书基础](contract-v73-ability-books.md)
 - [Contract v74：法术资源恢复与自身治疗](contract-v74-resource-recovery-and-healing.md)
+- [Contract v75：能力熟练度与冷却](contract-v75-ability-proficiency-and-cooldowns.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -640,7 +641,9 @@ interface SaveGame {
 - 协议 1.71 和 contract-v71 已建立；内容包 1.63.0 新增 skills/skillSets/Race/Class/Personality/build 内容根、五个代表性构筑、出生装备、生命/经验倍率和等级技能成长。构筑身份与技能聚合进入 save、Web UI 和 state hash Schema v30；v70 缺字段存档迁移为 Explorer，content hash 为 `1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4`，active baseline 共 152 个 exact fixtures。
 - 协议 1.72 和 contract-v72 已建立；内容包 1.64.0 为 terrain/trap/item/actor 增加 perception、saving throw、device 和 awareness 入口，结构化 check outcome 与怪物 `alerted` 进入协议、save 和 state hash Schema v31。相同 seed 的 Tinkerer/Vanguard 对照覆盖四类成功失败与回读，content hash 为 `3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a`，active baseline 共 160 个 exact fixtures。
 - 协议 1.73 和 contract-v73 已建立；内容包 1.65.0 增加 resource/ability/ability-book、Class casting profile、Echo Primer 与 Resonant Bolt。Web 新增资源/能力面板并复用目标模式，结构化学习/施法事件、资源池和已学能力进入 save 与 state hash Schema v32；content hash 为 `fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d`，历史基准共 166 个 exact fixtures。
-- 协议 1.74 和 contract-v74 已建立；内容包 1.66.0 为 Mana 增加等待/休息恢复，加入 Stillwater Notes、Mending Echo、稳定自身目标与治疗效果。Web 资源行显示恢复速率，休息按钮提交最多 100 回合的确定性宏命令，自身能力无需进入准星模式；结构化恢复/休息 outcome 与真实调度结果进入 state hash Schema v33。content hash 为 `9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0`，active baseline 共 174 个 exact fixtures。
+- 协议 1.74 和 contract-v74 已建立；内容包 1.66.0 为 Mana 增加等待/休息恢复，加入 Stillwater Notes、Mending Echo、稳定自身目标与治疗效果。Web 资源行显示恢复速率，休息按钮提交最多 100 回合的确定性宏命令，自身能力无需进入准星模式；结构化恢复/休息 outcome 与真实调度结果进入 state hash Schema v33。
+
+- 协议 1.75 和 contract-v75 已建立；内容包 1.67.0 增加能力熟练度、Mana 成本/失败率修正、统计和冷却。Web 能力行显示实际成本、熟练度、统计和剩余冷却；能力进度与旧存档迁移进入 state hash Schema v34。content hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`，active baseline 共 182 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 

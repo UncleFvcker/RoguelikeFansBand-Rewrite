@@ -133,6 +133,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.74 不增加正式 save 字段。等待/休息恢复量来自当前内容中的 `ResourceDefinition`，存档继续只保存资源当前值/上限与已学能力 ID；`Rest` 的请求回合数和停止 outcome 只存在于命令/事件/回放中。载入 v73 内容 hash 的存档时不会补发 Stillwater Notes、自动学习 Mending Echo 或推进 RNG，既有资源值、物品与已学能力原样校验后进入当前规则。恢复后的资源、真实 `turn/worldTick`、生命、状态和 RNG 位置进入 state hash Schema v33；save 容器仍为 v1。
 
+协议 1.75 为 `PlayerSaveDto` 增加可选 `abilityProgress`。每项保存稳定能力 ID、熟练度、内容上限、成功/失败次数和冷却剩余；能力定义中的初值、增量、冷却回合与组 ID不重复写入存档。载入 v73/v74 或其他缺少该字段的旧存档时，运行时按当前 Class casting profile 与内容能力建立默认进度，再恢复已有资源和已学能力；不自动学习、不补发物品、不推进 RNG。显式进度必须匹配当前能力上限，熟练度与冷却不能越界，重复/未知能力 ID 原子拒绝。能力进度、冷却和统计进入 state hash Schema v34；save 容器仍为 v1。完整边界见 [Contract v75](contract-v75-ability-proficiency-and-cooldowns.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

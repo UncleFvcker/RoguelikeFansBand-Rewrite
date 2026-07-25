@@ -26,6 +26,38 @@
         "abilityId": {
           "type": "string"
         },
+        "baseResourceCost": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
+        "castCount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
+        "cooldownAfter": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "cooldownBefore": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "failCount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
         "failurePercent": {
           "type": "integer",
           "format": "uint8",
@@ -37,6 +69,24 @@
           "format": "uint8",
           "maximum": 255,
           "minimum": 0
+        },
+        "proficiencyAfter": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "proficiencyBefore": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "proficiencyRank": {
+          "$ref": "#/$defs/AbilityProficiencyRankDto",
+          "default": "unskilled"
         },
         "resourceAfter": {
           "type": "integer",
@@ -74,6 +124,12 @@
     "AbilityDto": {
       "type": "object",
       "properties": {
+        "baseResourceCost": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
         "bookItemId": {
           "type": [
             "string",
@@ -86,8 +142,40 @@
         "canStudy": {
           "type": "boolean"
         },
+        "castCount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
+        "cooldownGroupId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cooldownRemaining": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "cooldownTurns": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "descriptionKey": {
           "type": "string"
+        },
+        "failCount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
         },
         "failurePercent": {
           "type": "integer",
@@ -109,6 +197,24 @@
         },
         "nameKey": {
           "type": "string"
+        },
+        "proficiency": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "proficiencyCap": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "proficiencyRank": {
+          "$ref": "#/$defs/AbilityProficiencyRankDto",
+          "default": "unskilled"
         },
         "resourceCost": {
           "type": "integer",
@@ -134,6 +240,16 @@
         "learned",
         "canStudy",
         "canCast"
+      ]
+    },
+    "AbilityProficiencyRankDto": {
+      "type": "string",
+      "enum": [
+        "unskilled",
+        "beginner",
+        "skilled",
+        "expert",
+        "master"
       ]
     },
     "AttackProfileDto": {

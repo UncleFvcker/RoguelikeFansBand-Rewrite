@@ -96,6 +96,7 @@ ability-unavailable-book-mismatch = the selected book does not contain it
 ability-unavailable-not-learned = you have not learned it
 ability-unavailable-resource-unavailable = its casting resource is unavailable
 ability-unavailable-insufficient-resource = you do not have enough casting resource
+ability-unavailable-cooldown = the ability is still cooling down
 ability-unavailable-unknown = the attempt is unavailable
 message-status-player-damage = { $status } deals { $damage } damage to you.
 message-status-entity-damage = { $target } takes { $damage } damage from { $status }.

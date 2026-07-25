@@ -4,8 +4,8 @@ use std::collections::BTreeSet;
 
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
-    AbilityDto, CampaignStateDto, CampaignStateSaveDto, CharacterSummary, GameCommand,
-    GameCommandEnvelope, GameEventDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
+    AbilityDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto, CharacterSummary,
+    GameCommand, GameCommandEnvelope, GameEventDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
     ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
     PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
     ResourcePoolSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto,
@@ -70,6 +70,8 @@ pub struct Preconditions {
     pub player_resources: Option<Vec<ResourcePoolSaveDto>>,
     #[serde(default)]
     pub player_learned_ability_ids: Option<Vec<String>>,
+    #[serde(default)]
+    pub player_ability_progress: Option<Vec<AbilityProgressSaveDto>>,
     #[serde(default)]
     pub legacy_player_ability_state: bool,
     #[serde(default)]
@@ -319,12 +321,16 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     if fixture.preconditions.legacy_player_ability_state {
         payload.player.resources.clear();
         payload.player.learned_ability_ids.clear();
+        payload.player.ability_progress.clear();
     } else {
         if let Some(resources) = &fixture.preconditions.player_resources {
             payload.player.resources.clone_from(resources);
         }
         if let Some(ability_ids) = &fixture.preconditions.player_learned_ability_ids {
             payload.player.learned_ability_ids.clone_from(ability_ids);
+        }
+        if let Some(progress) = &fixture.preconditions.player_ability_progress {
+            payload.player.ability_progress.clone_from(progress);
         }
     }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();

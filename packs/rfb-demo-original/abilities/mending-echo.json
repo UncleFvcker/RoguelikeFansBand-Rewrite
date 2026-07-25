@@ -17,5 +17,15 @@
     "type": "heal",
     "amount": 6
   },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "cooldown": {
+    "turns": 2,
+    "groupId": "demo.cooldown.mending"
+  },
   "tags": ["healing", "spell"]
 }

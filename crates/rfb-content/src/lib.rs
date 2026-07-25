@@ -492,6 +492,48 @@ pub struct AbilityTargetDefinition {
     pub requires_line_of_effect: bool,
 }
 
+const fn default_ability_proficiency_cap() -> u16 {
+    1600
+}
+
+const fn default_ability_proficiency_gain() -> u16 {
+    128
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityProficiencyDefinition {
+    #[serde(default)]
+    pub initial: u16,
+    #[serde(default = "default_ability_proficiency_cap")]
+    pub cap: u16,
+    #[serde(default = "default_ability_proficiency_gain")]
+    pub success_gain: u16,
+    #[serde(default)]
+    pub failure_gain: u16,
+}
+
+impl Default for AbilityProficiencyDefinition {
+    fn default() -> Self {
+        Self {
+            initial: 0,
+            cap: default_ability_proficiency_cap(),
+            success_gain: default_ability_proficiency_gain(),
+            failure_gain: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityCooldownDefinition {
+    pub turns: u16,
+    #[serde(default)]
+    pub group_id: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(
@@ -528,6 +570,10 @@ pub struct AbilityDefinition {
     pub base_failure_percent: u8,
     pub target: AbilityTargetDefinition,
     pub effect: AbilityEffectDefinition,
+    #[serde(default)]
+    pub proficiency: AbilityProficiencyDefinition,
+    #[serde(default)]
+    pub cooldown: Option<AbilityCooldownDefinition>,
     pub tags: Vec<String>,
 }
 
@@ -2470,6 +2516,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if !(1..=100).contains(&ability.minimum_level)
             || !(1..=1_000_000).contains(&ability.resource_cost)
             || ability.base_failure_percent > 95
+            || ability.proficiency.initial > ability.proficiency.cap
+            || ability.proficiency.cap > 1600
+            || ability
+                .proficiency
+                .success_gain
+                .saturating_add(ability.proficiency.failure_gain)
+                > 10_000
+            || ability
+                .cooldown
+                .as_ref()
+                .is_some_and(|cooldown| cooldown.turns == 0)
+            || ability
+                .cooldown
+                .as_ref()
+                .and_then(|cooldown| cooldown.group_id.as_deref())
+                .is_some_and(|group_id| validate_id(group_id).is_err())
             || ability.target.modes.is_empty()
             || ability.target.modes.len() > 4
             || ability.target.modes.iter().any(|mode| !modes.insert(*mode))
@@ -6220,7 +6282,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.66.0");
+        assert_eq!(catalog.pack_version(), "1.67.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8034,6 +8096,28 @@ mod tests {
             .range = 1;
         assert!(matches!(
             validate_and_normalize(&mut invalid_healing_target),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_proficiency = artifact.content.clone();
+        invalid_proficiency.abilities[0].proficiency.cap = 1_601;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_proficiency),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_cooldown = artifact.content.clone();
+        invalid_cooldown
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.mending-echo")
+            .expect("fixture should contain the healing ability")
+            .cooldown
+            .as_mut()
+            .expect("healing ability should declare a cooldown")
+            .turns = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_cooldown),
             Err(ContentError::InvalidAbility(_))
         ));
 

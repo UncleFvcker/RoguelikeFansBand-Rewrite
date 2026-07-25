@@ -6,6 +6,6 @@
 
 旧 RoguelikeFansBand、FrogComposband 和 Angband 的数据、文本、专名与素材不会复制到这里。`rfb-demo-original` 是用于验证稳定 ID、内容编译、地图与 tileset 接口的最小原创包。
 
-当前 `rfb-demo-original` 为内容包 `1.66.0`，content hash 为
-`9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0`。
+当前 `rfb-demo-original` 为内容包 `1.67.0`，content hash 为
+`bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`。
 它包含 v70 角色成长、v71 Race/Class/Personality/技能集合/初始构筑、v72 可观察技能检定、v73 的 Mana/Echo Primer/Resonant Bolt 施法基础，以及 v74 的等待/休息恢复、Stillwater Notes 与 Mending Echo 自身治疗；现有 dungeon/Vault/encounter/loot/theme 内容继续保留。完整内容锁定见 [`content.lock.json`](rfb-demo-original/content.lock.json)。

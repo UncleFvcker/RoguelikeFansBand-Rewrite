@@ -19,5 +19,11 @@
     "damageSides": 4,
     "damageType": "electricity"
   },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
   "tags": ["electricity", "spell"]
 }

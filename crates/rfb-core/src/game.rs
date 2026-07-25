@@ -59,27 +59,28 @@ use rfb_content::{
     TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    AbilityCastResolutionDto, AbilityDto, ActorSaveDto, AttackProfileDto, AttributeSetDto,
-    AttributeValueDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
-    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
-    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
-    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
-    GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto,
-    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
-    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
-    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
-    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
-    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    AbilityCastResolutionDto, AbilityDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
+    ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
+    CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto,
+    CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto,
+    EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
+    FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
+    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
+    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
+    PlayerSaveDto, Position, ProjectileProfileDto, ResourcePoolDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto, SavePayloadV1,
+    SkillProgressDto, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 67] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 68] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -147,9 +148,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 67] = [
     "1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4",
     "3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a",
     "fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d",
+    "9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0";
+    "bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -174,10 +176,37 @@ const ITEM_LIGHT_RADIUS: i32 = 4;
 const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
 const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
 const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
+const SPELL_EXP_BEGINNER: u16 = 900;
+const SPELL_EXP_SKILLED: u16 = 1200;
+const SPELL_EXP_EXPERT: u16 = 1400;
+const SPELL_EXP_MASTER: u16 = 1600;
+const SPELL_MANA_CONST: u64 = 2400;
+const SPELL_MANA_EXPERT: u64 = 1400;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct AbilityProgress {
+    proficiency: u16,
+    proficiency_cap: u16,
+    cast_count: u32,
+    fail_count: u32,
+    cooldown_remaining: u16,
+}
+
+impl AbilityProgress {
+    const fn new(initial: u16, cap: u16) -> Self {
+        Self {
+            proficiency: initial,
+            proficiency_cap: cap,
+            cast_count: 0,
+            fail_count: 0,
+            cooldown_remaining: 0,
+        }
+    }
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV33 {
+struct StateHashPayloadV34 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -993,6 +1022,7 @@ pub struct Game {
     progress: CharacterProgress,
     resources: BTreeMap<String, ResourcePool>,
     learned_abilities: BTreeSet<String>,
+    ability_progress: BTreeMap<String, AbilityProgress>,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
@@ -1186,6 +1216,7 @@ impl Game {
             progress,
             resources: BTreeMap::new(),
             learned_abilities: BTreeSet::new(),
+            ability_progress: BTreeMap::new(),
             entities,
             items,
             item_knowledge: BTreeMap::new(),
@@ -1348,6 +1379,7 @@ impl Game {
         )?;
         let saved_resources = payload.player.resources.clone();
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
+        let saved_ability_progress = payload.player.ability_progress.clone();
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1534,6 +1566,7 @@ impl Game {
             progress,
             resources: BTreeMap::new(),
             learned_abilities: BTreeSet::new(),
+            ability_progress: BTreeMap::new(),
             entities,
             items,
             item_knowledge,
@@ -1552,7 +1585,11 @@ impl Game {
             world_tick: payload.world_tick,
             last_command_seq: payload.last_command_seq,
         };
-        game.restore_player_ability_state(saved_resources, saved_learned_ability_ids)?;
+        game.restore_player_ability_state(
+            saved_resources,
+            saved_learned_ability_ids,
+            saved_ability_progress,
+        )?;
         if campaign_state_missing && game.campaign_victory_reached() {
             game.campaign_state.status = CampaignStatusDto::Victorious;
             game.campaign_state.victory_turn = Some(game.turn);
@@ -1733,6 +1770,9 @@ impl Game {
             &action,
             GameAction::Retire | GameAction::IncreaseAttribute { .. } | GameAction::Rest { .. }
         );
+        if advances_world {
+            self.decrement_ability_cooldowns(1);
+        }
 
         match action {
             GameAction::AbandonPausedTask { task_id } => {
@@ -1970,6 +2010,7 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
+                self.decrement_ability_cooldowns(resolution.completed_turns);
                 turn_advance = u32::from(resolution.completed_turns).max(1);
                 if matches!(
                     resolution.stop_reason,
@@ -2166,8 +2207,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV33 {
-            schema_version: 33,
+        let payload = StateHashPayloadV34 {
+            schema_version: 34,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2328,6 +2369,18 @@ impl Game {
             })
             .collect();
         player.learned_ability_ids = self.learned_abilities.iter().cloned().collect();
+        player.ability_progress = self
+            .ability_progress
+            .iter()
+            .map(|(id, progress)| AbilityProgressSaveDto {
+                id: id.clone(),
+                proficiency: progress.proficiency,
+                proficiency_cap: progress.proficiency_cap,
+                cast_count: progress.cast_count,
+                fail_count: progress.fail_count,
+                cooldown_remaining: progress.cooldown_remaining,
+            })
+            .collect();
         player
     }
 
@@ -2366,6 +2419,7 @@ impl Game {
     fn initialize_player_ability_state(&mut self) {
         self.resources.clear();
         self.learned_abilities.clear();
+        self.ability_progress.clear();
         let Some(profile) = self.casting_profile().cloned() else {
             return;
         };
@@ -2377,12 +2431,28 @@ impl Game {
                 maximum,
             },
         );
+        let ability_ids = profile
+            .ability_book_ids
+            .iter()
+            .filter_map(|book_id| self.content.ability_book(book_id))
+            .flat_map(|book| book.ability_ids.iter())
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        for ability_id in ability_ids {
+            if let Some(ability) = self.content.ability(&ability_id) {
+                self.ability_progress.insert(
+                    ability_id,
+                    AbilityProgress::new(ability.proficiency.initial, ability.proficiency.cap),
+                );
+            }
+        }
     }
 
     fn restore_player_ability_state(
         &mut self,
         saved_resources: Vec<ResourcePoolSaveDto>,
         saved_learned_ability_ids: Vec<String>,
+        saved_ability_progress: Vec<AbilityProgressSaveDto>,
     ) -> Result<(), CoreError> {
         self.initialize_player_ability_state();
         if !saved_resources.is_empty() {
@@ -2405,7 +2475,7 @@ impl Game {
         }
 
         let Some(profile) = self.casting_profile().cloned() else {
-            if saved_learned_ability_ids.is_empty() {
+            if saved_learned_ability_ids.is_empty() && saved_ability_progress.is_empty() {
                 return Ok(());
             }
             return Err(CoreError::InvalidSave(
@@ -2422,6 +2492,28 @@ impl Game {
             {
                 return Err(CoreError::InvalidSave("learned ability set is invalid"));
             }
+        }
+        let mut seen_progress = BTreeSet::new();
+        for saved in saved_ability_progress {
+            if !seen_progress.insert(saved.id.clone()) {
+                return Err(CoreError::InvalidSave("ability progress set is invalid"));
+            }
+            let cooldown_turns = self.ability_cooldown_turns(&saved.id);
+            let Some(progress) = self.ability_progress.get_mut(&saved.id) else {
+                return Err(CoreError::InvalidSave("ability progress ID is invalid"));
+            };
+            if saved.proficiency_cap != progress.proficiency_cap
+                || saved.proficiency > saved.proficiency_cap
+                || saved.cooldown_remaining > cooldown_turns
+            {
+                return Err(CoreError::InvalidSave(
+                    "ability progress values are invalid",
+                ));
+            }
+            progress.proficiency = saved.proficiency;
+            progress.cast_count = saved.cast_count;
+            progress.fail_count = saved.fail_count;
+            progress.cooldown_remaining = saved.cooldown_remaining;
         }
         Ok(())
     }
@@ -2483,6 +2575,154 @@ impl Game {
             .min()
     }
 
+    fn ability_progress_value(&self, ability: &AbilityDefinition) -> AbilityProgress {
+        self.ability_progress
+            .get(&ability.id)
+            .copied()
+            .unwrap_or_else(|| {
+                AbilityProgress::new(ability.proficiency.initial, ability.proficiency.cap)
+            })
+    }
+
+    fn ability_proficiency_rank(proficiency: u16) -> AbilityProficiencyRankDto {
+        if proficiency < SPELL_EXP_BEGINNER {
+            AbilityProficiencyRankDto::Unskilled
+        } else if proficiency < SPELL_EXP_SKILLED {
+            AbilityProficiencyRankDto::Beginner
+        } else if proficiency < SPELL_EXP_EXPERT {
+            AbilityProficiencyRankDto::Skilled
+        } else if proficiency < SPELL_EXP_MASTER {
+            AbilityProficiencyRankDto::Expert
+        } else {
+            AbilityProficiencyRankDto::Master
+        }
+    }
+
+    fn ability_effective_resource_cost(
+        &self,
+        ability: &AbilityDefinition,
+        progress: AbilityProgress,
+    ) -> u32 {
+        let proficiency = u64::from(progress.proficiency.min(SPELL_EXP_MASTER));
+        let factor = SPELL_MANA_CONST
+            .saturating_add(SPELL_MANA_EXPERT)
+            .saturating_sub(proficiency);
+        let numerator = u64::from(ability.resource_cost)
+            .saturating_mul(factor)
+            .saturating_add(SPELL_MANA_CONST.saturating_sub(1));
+        u32::try_from((numerator / SPELL_MANA_CONST).max(1))
+            .expect("validated ability mana cost must fit u32")
+    }
+
+    fn ability_cooldown_turns(&self, ability_id: &str) -> u16 {
+        let Some(ability) = self.content.ability(ability_id) else {
+            return 0;
+        };
+        let Some(cooldown) = ability.cooldown.as_ref() else {
+            return 0;
+        };
+        let Some(group_id) = cooldown.group_id.as_deref() else {
+            return cooldown.turns;
+        };
+        self.content
+            .abilities()
+            .filter_map(|candidate| {
+                candidate.cooldown.as_ref().and_then(|candidate_cooldown| {
+                    (candidate_cooldown.group_id.as_deref() == Some(group_id))
+                        .then_some(candidate_cooldown.turns)
+                })
+            })
+            .max()
+            .unwrap_or(cooldown.turns)
+    }
+
+    fn ability_cooldown_remaining(&self, ability: &AbilityDefinition) -> u16 {
+        let Some(cooldown) = ability.cooldown.as_ref() else {
+            return 0;
+        };
+        if let Some(group_id) = cooldown.group_id.as_deref() {
+            self.content
+                .abilities()
+                .filter(|candidate| {
+                    candidate
+                        .cooldown
+                        .as_ref()
+                        .and_then(|value| value.group_id.as_deref())
+                        == Some(group_id)
+                })
+                .filter_map(|candidate| self.ability_progress.get(&candidate.id))
+                .map(|progress| progress.cooldown_remaining)
+                .max()
+                .unwrap_or(0)
+        } else {
+            self.ability_progress
+                .get(&ability.id)
+                .map_or(0, |progress| progress.cooldown_remaining)
+        }
+    }
+
+    fn decrement_ability_cooldowns(&mut self, turns: u16) {
+        if turns == 0 {
+            return;
+        }
+        for progress in self.ability_progress.values_mut() {
+            progress.cooldown_remaining = progress.cooldown_remaining.saturating_sub(turns);
+        }
+    }
+
+    fn record_ability_cast(
+        &mut self,
+        ability: &AbilityDefinition,
+        succeeded: bool,
+    ) -> AbilityProgress {
+        let progress = self
+            .ability_progress
+            .entry(ability.id.clone())
+            .or_insert_with(|| {
+                AbilityProgress::new(ability.proficiency.initial, ability.proficiency.cap)
+            });
+        if succeeded {
+            progress.cast_count = progress.cast_count.saturating_add(1);
+            progress.proficiency = progress
+                .proficiency
+                .saturating_add(ability.proficiency.success_gain)
+                .min(progress.proficiency_cap);
+        } else {
+            progress.fail_count = progress.fail_count.saturating_add(1);
+            progress.proficiency = progress
+                .proficiency
+                .saturating_add(ability.proficiency.failure_gain)
+                .min(progress.proficiency_cap);
+        }
+        if succeeded && let Some(cooldown) = ability.cooldown.as_ref() {
+            if let Some(group_id) = cooldown.group_id.as_deref() {
+                let group_ids = self
+                    .content
+                    .abilities()
+                    .filter(|candidate| {
+                        candidate
+                            .cooldown
+                            .as_ref()
+                            .and_then(|value| value.group_id.as_deref())
+                            == Some(group_id)
+                    })
+                    .map(|candidate| candidate.id.clone())
+                    .collect::<Vec<_>>();
+                for id in group_ids {
+                    if let Some(member) = self.ability_progress.get_mut(&id) {
+                        member.cooldown_remaining = cooldown.turns;
+                    }
+                }
+            } else {
+                progress.cooldown_remaining = cooldown.turns;
+            }
+        }
+        self.ability_progress
+            .get(&ability.id)
+            .copied()
+            .expect("ability progress must remain available")
+    }
+
     fn ability_failure_percent(
         &self,
         profile: &CastingProfileDefinition,
@@ -2494,9 +2734,13 @@ impl Game {
         );
         let level_adjustment =
             i32::from(self.progress.level.saturating_sub(ability.minimum_level)).saturating_mul(3);
+        let proficiency = self.ability_progress_value(ability).proficiency;
+        let proficiency_adjustment =
+            i32::from(proficiency >= SPELL_EXP_EXPERT) + i32::from(proficiency >= SPELL_EXP_MASTER);
         let chance = i32::from(ability.base_failure_percent)
             .saturating_sub(level_adjustment)
             .saturating_sub(attribute_index)
+            .saturating_sub(proficiency_adjustment)
             .clamp(i32::from(profile.minimum_failure_percent), 95);
         u8::try_from(chance).expect("validated ability failure chance must fit u8")
     }
@@ -2663,21 +2907,36 @@ impl Game {
             .into_iter()
             .filter_map(|ability_id| {
                 let ability = self.content.ability(&ability_id)?;
+                let progress = self.ability_progress_value(ability);
+                let resource_cost = self.ability_effective_resource_cost(ability, progress);
+                let cooldown_remaining = self.ability_cooldown_remaining(ability);
                 let learned = self.learned_abilities.contains(&ability_id);
                 let book_item_id = self.ability_book_item_id(profile, &ability_id);
                 let level_available = self.progress.level >= ability.minimum_level;
                 let resource_available = self
                     .resources
                     .get(&ability.resource_id)
-                    .is_some_and(|pool| pool.current >= ability.resource_cost);
+                    .is_some_and(|pool| pool.current >= resource_cost);
                 Some(AbilityDto {
                     id: ability.id.clone(),
                     name_key: ability.name_key.clone(),
                     description_key: ability.description_key.clone(),
                     minimum_level: ability.minimum_level,
                     resource_id: ability.resource_id.clone(),
-                    resource_cost: ability.resource_cost,
+                    base_resource_cost: ability.resource_cost,
+                    resource_cost,
                     failure_percent: self.ability_failure_percent(profile, ability),
+                    proficiency: progress.proficiency,
+                    proficiency_cap: progress.proficiency_cap,
+                    proficiency_rank: Self::ability_proficiency_rank(progress.proficiency),
+                    cast_count: progress.cast_count,
+                    fail_count: progress.fail_count,
+                    cooldown_remaining,
+                    cooldown_turns: ability.cooldown.as_ref().map_or(0, |value| value.turns),
+                    cooldown_group_id: ability
+                        .cooldown
+                        .as_ref()
+                        .and_then(|value| value.group_id.clone()),
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -2685,6 +2944,7 @@ impl Game {
                     can_cast: learned
                         && level_available
                         && resource_available
+                        && cooldown_remaining == 0
                         && book_item_id.is_some(),
                 })
             })
@@ -4376,6 +4636,8 @@ impl Game {
             Some("ability-not-supported")
         } else if self.ability_book_item_id(&profile, ability_id).is_none() {
             Some("book-unavailable")
+        } else if self.ability_cooldown_remaining(&ability) > 0 {
+            Some("cooldown")
         } else {
             None
         };
@@ -4387,6 +4649,9 @@ impl Game {
             return Ok(());
         }
 
+        let progress_before = self.ability_progress_value(&ability);
+        let cooldown_before = self.ability_cooldown_remaining(&ability);
+        let resource_cost = self.ability_effective_resource_cost(&ability, progress_before);
         let failure_percent = self.ability_failure_percent(&profile, &ability);
         let Some(pool) = self.resources.get_mut(&ability.resource_id) else {
             events.push(DomainEvent::AbilityCastUnavailable {
@@ -4395,7 +4660,7 @@ impl Game {
             });
             return Ok(());
         };
-        if pool.current < ability.resource_cost {
+        if pool.current < resource_cost {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "insufficient-resource".to_owned(),
@@ -4403,20 +4668,29 @@ impl Game {
             return Ok(());
         }
         let resource_before = pool.current;
-        pool.current -= ability.resource_cost;
+        pool.current -= resource_cost;
         let resource_after = pool.current;
         let percentile_roll =
             u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
         let succeeded = percentile_roll >= failure_percent;
+        let progress_after = self.record_ability_cast(&ability, succeeded);
         let resolution = AbilityCastResolutionDto {
             ability_id: ability.id.clone(),
             resource_id: ability.resource_id.clone(),
-            resource_cost: ability.resource_cost,
+            base_resource_cost: ability.resource_cost,
+            resource_cost,
             resource_before,
             resource_after,
             failure_percent,
             percentile_roll,
             succeeded,
+            proficiency_before: progress_before.proficiency,
+            proficiency_after: progress_after.proficiency,
+            proficiency_rank: Self::ability_proficiency_rank(progress_after.proficiency),
+            cast_count: progress_after.cast_count,
+            fail_count: progress_after.fail_count,
+            cooldown_before,
+            cooldown_after: self.ability_cooldown_remaining(&ability),
         };
         if !succeeded {
             events.push(DomainEvent::AbilityCastFailed { resolution });
@@ -10049,6 +10323,12 @@ impl Game {
         }
         if let Some(profile) = self.casting_profile() {
             let expected_maximum = self.casting_resource_maximum(profile);
+            let expected_ability_ids = profile
+                .ability_book_ids
+                .iter()
+                .filter_map(|book_id| self.content.ability_book(book_id))
+                .flat_map(|book| book.ability_ids.iter().cloned())
+                .collect::<BTreeSet<_>>();
             if self.resources.len() != 1
                 || self.resources.get(&profile.resource_id).is_none_or(|pool| {
                     pool.maximum != expected_maximum || pool.current > pool.maximum
@@ -10059,10 +10339,26 @@ impl Game {
                             || !self.profile_supports_ability(profile, ability_id)
                     })
                 })
+                || self
+                    .ability_progress
+                    .keys()
+                    .cloned()
+                    .collect::<BTreeSet<_>>()
+                    != expected_ability_ids
+                || self.ability_progress.iter().any(|(ability_id, progress)| {
+                    self.content.ability(ability_id).is_none_or(|ability| {
+                        progress.proficiency_cap != ability.proficiency.cap
+                            || progress.proficiency > progress.proficiency_cap
+                            || progress.cooldown_remaining > self.ability_cooldown_turns(ability_id)
+                    })
+                })
             {
                 return Err(CoreError::InvalidSave("player ability state is invalid"));
             }
-        } else if !self.resources.is_empty() || !self.learned_abilities.is_empty() {
+        } else if !self.resources.is_empty()
+            || !self.learned_abilities.is_empty()
+            || !self.ability_progress.is_empty()
+        {
             return Err(CoreError::InvalidSave(
                 "non-caster player ability state is invalid",
             ));
@@ -18117,10 +18413,16 @@ mod tests {
         );
         let resolution = ability_cast_resolution(&cast);
         assert_eq!(resolution.resource_before, 21);
-        assert_eq!(resolution.resource_after, 18);
+        assert_eq!(resolution.base_resource_cost, 3);
+        assert_eq!(resolution.resource_cost, 5);
+        assert_eq!(resolution.resource_after, 16);
         assert_eq!(resolution.failure_percent, 20);
         assert_eq!(resolution.percentile_roll, 32);
         assert!(resolution.succeeded);
+        assert_eq!(resolution.proficiency_before, 0);
+        assert_eq!(resolution.proficiency_after, 128);
+        assert_eq!(resolution.cast_count, 1);
+        assert_eq!(resolution.fail_count, 0);
         assert!(cast.events.iter().any(|event| event.kind == "ability.hit"));
         assert!(cast.events.iter().any(|event| event.kind == "ability.slay"));
         assert!(
@@ -18130,12 +18432,48 @@ mod tests {
                 .any(|entity| entity.id == "demo.monster.ember-mote.1")
         );
         let snapshot = game.snapshot();
-        assert_eq!(snapshot.player.resources[0].current, 18);
+        assert_eq!(snapshot.player.resources[0].current, 16);
         assert_eq!(snapshot.player.resources[0].maximum, 23);
         assert_eq!(snapshot.player.progress.level, 2);
 
         let restored = Game::from_save(game.to_save()).expect("ability state should reload");
         assert_eq!(restored.snapshot(), snapshot);
+    }
+
+    #[test]
+    fn spell_proficiency_uses_rfb_ranks_mana_costs_and_failure_adjustments() {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let ability = game
+            .content
+            .ability("demo.ability.resonant-bolt")
+            .expect("resonant bolt should exist")
+            .clone();
+        let profile = game
+            .casting_profile()
+            .expect("scholar should have a casting profile")
+            .clone();
+        let cases = [
+            (0, AbilityProficiencyRankDto::Unskilled, 5, 20),
+            (900, AbilityProficiencyRankDto::Beginner, 4, 20),
+            (1200, AbilityProficiencyRankDto::Skilled, 4, 20),
+            (1400, AbilityProficiencyRankDto::Expert, 3, 19),
+            (1600, AbilityProficiencyRankDto::Master, 3, 18),
+        ];
+        for (proficiency, rank, cost, failure) in cases {
+            let progress = game
+                .ability_progress
+                .get_mut(&ability.id)
+                .expect("ability progress should exist");
+            progress.proficiency = proficiency;
+            let progress = *progress;
+            assert_eq!(Game::ability_proficiency_rank(proficiency), rank);
+            assert_eq!(
+                game.ability_effective_resource_cost(&ability, progress),
+                cost
+            );
+            assert_eq!(game.ability_failure_percent(&profile, &ability), failure);
+        }
     }
 
     #[test]
@@ -18162,8 +18500,13 @@ mod tests {
         let resolution = ability_cast_resolution(&failed_cast);
         assert_eq!(resolution.percentile_roll, 13);
         assert_eq!(resolution.resource_before, 21);
-        assert_eq!(resolution.resource_after, 18);
+        assert_eq!(resolution.resource_cost, 5);
+        assert_eq!(resolution.resource_after, 16);
         assert!(!resolution.succeeded);
+        assert_eq!(resolution.proficiency_before, 0);
+        assert_eq!(resolution.proficiency_after, 0);
+        assert_eq!(resolution.cast_count, 0);
+        assert_eq!(resolution.fail_count, 1);
         assert_eq!(
             failure
                 .entities
@@ -18222,6 +18565,7 @@ mod tests {
         let mut legacy = canonical.to_save();
         legacy.player.resources.clear();
         legacy.player.learned_ability_ids.clear();
+        legacy.player.ability_progress.clear();
         let draw_counter = legacy.rng.draw_counter;
 
         let migrated = Game::from_save(legacy).expect("legacy caster save should migrate");
@@ -18381,7 +18725,12 @@ mod tests {
         assert_eq!(cast_resolution.percentile_roll, 32);
         assert!(cast_resolution.succeeded);
         assert_eq!(cast_resolution.resource_before, 21);
-        assert_eq!(cast_resolution.resource_after, 17);
+        assert_eq!(cast_resolution.base_resource_cost, 4);
+        assert_eq!(cast_resolution.resource_cost, 7);
+        assert_eq!(cast_resolution.resource_after, 14);
+        assert_eq!(cast_resolution.proficiency_before, 0);
+        assert_eq!(cast_resolution.proficiency_after, 128);
+        assert_eq!(cast_resolution.cooldown_after, 2);
         assert_eq!(game.player.hp, 11);
         assert!(cast.events.iter().any(|event| {
             event.kind == "ability.healed"
@@ -18391,6 +18740,48 @@ mod tests {
                         if resolution.requested == 6 && resolution.applied == 6
                 )
         }));
+
+        let mana_before_rejection = game.resources["demo.resource.mana"].current;
+        let draws_before_rejection = game.rng_draw_counter();
+        let rejected = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.mending-echo".to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        assert_eq!(
+            game.resources["demo.resource.mana"].current,
+            mana_before_rejection
+        );
+        assert_eq!(game.rng_draw_counter(), draws_before_rejection);
+        assert!(rejected.events.iter().any(|event| {
+            event.kind == "ability.cast-unavailable"
+                && event
+                    .args
+                    .get("reason")
+                    .is_some_and(|reason| reason == "cooldown")
+        }));
+        assert_eq!(
+            game.snapshot()
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.mending-echo")
+                .map(|ability| ability.cooldown_remaining),
+            Some(1)
+        );
+
+        dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(
+            game.snapshot()
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.mending-echo")
+                .map(|ability| ability.cooldown_remaining),
+            Some(0)
+        );
 
         let restored =
             Game::from_save(game.to_save()).expect("healing ability state should reload");
