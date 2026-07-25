@@ -59,28 +59,29 @@ use rfb_content::{
     TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    AbilityAreaDamageResolutionDto, AbilityCastResolutionDto, AbilityDto, AbilityLearningDto,
-    AbilityProficiencyRankDto, AbilityProgressSaveDto, ActorSaveDto, AttackProfileDto,
-    AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
-    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
-    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
-    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
-    GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto,
-    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
-    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
-    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
-    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
-    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
+    AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
+    ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
+    CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto,
+    CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto,
+    EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
+    FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
+    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
+    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
+    PlayerSaveDto, Position, ProjectileProfileDto, ResourcePoolDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto, SavePayloadV1,
+    SkillProgressDto, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 70] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 71] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -151,9 +152,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 70] = [
     "9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0",
     "bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316",
     "c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04",
+    "acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62";
+    "6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -2995,6 +2997,10 @@ impl Game {
                         AbilityEffectDefinition::AreaDamage { radius, .. } => Some(radius),
                         _ => None,
                     },
+                    beam_damage: matches!(
+                        ability.effect,
+                        AbilityEffectDefinition::BeamDamage { .. }
+                    ),
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -4873,6 +4879,49 @@ impl Game {
                     )?;
                 }
             }
+            (
+                AbilityEffectDefinition::BeamDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_type,
+                },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+                let affected_positions = trace.traversed.clone();
+                let targets = self.beam_damage_targets(&affected_positions);
+                changed.extend(affected_positions.iter().copied());
+                let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                events.push(DomainEvent::AbilityBeamDamage {
+                    ability_id: ability.id.clone(),
+                    resolution: AbilityBeamDamageResolutionDto {
+                        base_raw_damage,
+                        damage_type: DamageType::from(damage_type).into(),
+                        affected_positions,
+                        target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+                    },
+                    trace: trace.clone(),
+                });
+                for entity_id in targets {
+                    let Some(index) = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.id == entity_id && entity.hp > 0)
+                    else {
+                        continue;
+                    };
+                    self.resolve_ability_damage_to_entity(
+                        index,
+                        &ability.id,
+                        DamageType::from(damage_type),
+                        base_raw_damage,
+                        trace.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
             (AbilityEffectDefinition::Heal { amount }, AbilityTargetPlan::SelfTarget) => {
                 let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
                 let max_hp = self.effective_player_max_hp();
@@ -4922,6 +4971,13 @@ impl Game {
                     .map(|path| AbilityTargetPlan::Projectile {
                         path,
                         stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                    })
+            }
+            AbilityEffectDefinition::BeamDamage { .. } => {
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Projectile {
+                        path,
+                        stop_at_actor: false,
                     })
             }
         }
@@ -5138,6 +5194,17 @@ impl Game {
             })
             .collect();
         (affected_positions, targets)
+    }
+
+    fn beam_damage_targets(&self, path: &[Position]) -> Vec<String> {
+        path.iter()
+            .flat_map(|position| {
+                self.entities
+                    .iter()
+                    .filter(move |entity| entity.hp > 0 && entity.position == *position)
+                    .map(|entity| entity.id.clone())
+            })
+            .collect()
     }
 
     fn take_inventory_item_kind(
@@ -18911,6 +18978,187 @@ mod tests {
     }
 
     #[test]
+    fn beam_damage_passes_through_actors_with_one_roll_and_stops_at_walls() {
+        let ability_id = "demo.ability.echo-lance";
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        game.learned_abilities.insert(ability_id.to_owned());
+        for x in 4..=9 {
+            replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+        }
+        let ember = game
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist");
+        ember.position = Position { x: 5, y: 3 };
+        ember.hp = 100;
+        ember.energy_need = 1_000;
+        let guardian = game
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+            .expect("entrance guardian should exist");
+        guardian.position = Position { x: 7, y: 3 };
+        guardian.hp = 100;
+        guardian.energy_need = 1_000;
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        let beam = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityBeamDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("successful beam should expose its line");
+        assert_eq!(beam.target_count, 2);
+        assert_eq!(beam.affected_positions.len(), 6);
+        assert_eq!(game.rng_draw_counter(), draws_before + 3);
+        let hits = update
+            .events
+            .iter()
+            .filter(|event| event.kind == "ability.hit")
+            .collect::<Vec<_>>();
+        assert_eq!(hits.len(), 2);
+        assert_eq!(hits[0].args["target"], "demo.actor.ember-mote");
+        assert_eq!(hits[1].args["target"], "demo.actor.resonant-warden");
+        let first_damage = match hits[0].outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution }) => resolution.raw_damage,
+            _ => panic!("beam hit should expose damage"),
+        };
+        let second_damage = match hits[1].outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution }) => resolution.raw_damage,
+            _ => panic!("beam hit should expose damage"),
+        };
+        assert_eq!(first_damage, beam.base_raw_damage);
+        assert_eq!(second_damage, beam.base_raw_damage);
+
+        let mut blocked =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        blocked.learned_abilities.insert(ability_id.to_owned());
+        for x in 4..=9 {
+            replace_terrain(&mut blocked, Position { x, y: 3 }, "demo.terrain.floor");
+        }
+        replace_terrain(&mut blocked, Position { x: 6, y: 3 }, "demo.terrain.wall");
+        for entity in &mut blocked.entities {
+            entity.energy_need = 1_000;
+        }
+        blocked
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist")
+            .position = Position { x: 5, y: 3 };
+        let guardian = blocked
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+            .expect("entrance guardian should exist");
+        guardian.position = Position { x: 7, y: 3 };
+        let guardian_hp = guardian.hp;
+        let blocked_update = dispatch_next(
+            &mut blocked,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        let blocked_beam = blocked_update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityBeamDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("blocked beam should expose its line");
+        assert_eq!(blocked_beam.target_count, 1);
+        assert_eq!(
+            blocked_beam.affected_positions,
+            vec![Position { x: 4, y: 3 }, Position { x: 5, y: 3 }]
+        );
+        assert_eq!(
+            blocked
+                .entities
+                .iter()
+                .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+                .map(|entity| entity.hp),
+            Some(guardian_hp)
+        );
+    }
+
+    #[test]
+    fn beam_invalid_mode_is_zero_rng_and_empty_beam_still_rolls_once() {
+        let ability_id = "demo.ability.echo-lance";
+        let mut invalid =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        invalid.learned_abilities.insert(ability_id.to_owned());
+        for entity in &mut invalid.entities {
+            entity.energy_need = 1_000;
+        }
+        let mana_before = invalid.resources["demo.resource.mana"].current;
+        let draws_before = invalid.rng_draw_counter();
+        let rejected = dispatch_next(
+            &mut invalid,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Position {
+                    position: Position { x: 8, y: 3 },
+                },
+            },
+        );
+        assert_eq!(invalid.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(invalid.rng_draw_counter(), draws_before);
+        assert!(
+            rejected
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+
+        let mut empty =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        empty.learned_abilities.insert(ability_id.to_owned());
+        clear_monsters(&mut empty);
+        for x in 4..=9 {
+            replace_terrain(&mut empty, Position { x, y: 3 }, "demo.terrain.floor");
+        }
+        replace_terrain(&mut empty, Position { x: 4, y: 3 }, "demo.terrain.wall");
+        let draws_before = empty.rng_draw_counter();
+        let update = dispatch_next(
+            &mut empty,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        let beam = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityBeamDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("empty beam should still resolve");
+        assert_eq!(beam.target_count, 0);
+        assert!(beam.affected_positions.is_empty());
+        assert_eq!(empty.rng_draw_counter(), draws_before + 3);
+    }
+
+    #[test]
     fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
         let mut game =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -18926,7 +19174,7 @@ mod tests {
                 remaining_slots: 2,
             })
         );
-        assert_eq!(initial.player.abilities.len(), 4);
+        assert_eq!(initial.player.abilities.len(), 5);
         assert!(
             initial
                 .player

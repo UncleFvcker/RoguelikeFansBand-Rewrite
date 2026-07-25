@@ -75,6 +75,7 @@ ability-resource-value = { $resource }：{ $current } / { $maximum } · 等待 +
 ability-learning-value = 已学 { $learned } / { $capacity } · 剩余 { $remaining } 个容量
 ability-summary = 等级 { $level } · 消耗 { $cost }（基础 { $baseCost }）· 失败率 { $failure }%
 ability-area-summary = 爆发半径 { $radius }
+ability-beam-summary = 射线 · 穿透生物
 ability-proficiency-summary = 熟练度 { $rank } { $current }/{ $maximum } · 成功 { $casts } · 失败 { $fails }
 ability-cooldown-summary = 冷却 { $remaining }/{ $turns } 回合
 ability-proficiency-unskilled = 生疏

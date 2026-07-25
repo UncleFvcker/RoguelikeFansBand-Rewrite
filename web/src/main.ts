@@ -1093,6 +1093,12 @@ function renderAbilities(
       });
       details.append(area);
     }
+    if (ability.beamDamage) {
+      const beam = document.createElement("span");
+      beam.className = "ability-status";
+      beam.textContent = localization.format("ability-beam-summary");
+      details.append(beam);
+    }
     if (ability.cooldownTurns > 0) {
       const cooldown = document.createElement("span");
       cooldown.className = "ability-status";
@@ -1493,6 +1499,11 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-ability-area-damage", {
         ability: contentName(event.args.target),
         radius: event.args.radius ?? "?",
+        targets: event.args.targets ?? "0",
+      });
+    case "ability-beam-damage":
+      return localization.format("message-ability-beam-damage", {
+        ability: contentName(event.args.target),
         targets: event.args.targets ?? "0",
       });
     case "ability-hit":

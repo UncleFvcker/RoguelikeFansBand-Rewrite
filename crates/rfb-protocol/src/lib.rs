@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.77";
+pub const PROTOCOL_VERSION: &str = "1.78";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -390,6 +390,8 @@ pub struct AbilityDto {
     pub cooldown_group_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub area_radius: Option<u8>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub beam_damage: bool,
     pub target_spec: TargetSpecDto,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -704,6 +706,16 @@ pub struct AbilityAreaDamageResolutionDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct AbilityBeamDamageResolutionDto {
+    pub base_raw_damage: i32,
+    pub damage_type: DamageTypeDto,
+    pub affected_positions: Vec<Position>,
+    pub target_count: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceRecoveryResolutionDto {
     pub resource_id: String,
     pub before: u32,
@@ -743,6 +755,9 @@ pub struct RestResolutionDto {
 pub enum GameEventOutcomeDto {
     AbilityAreaDamage {
         resolution: AbilityAreaDamageResolutionDto,
+    },
+    AbilityBeamDamage {
+        resolution: AbilityBeamDamageResolutionDto,
     },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
@@ -1165,6 +1180,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CheckResolutionDto);
     push_declaration!(AbilityCastResolutionDto);
     push_declaration!(AbilityAreaDamageResolutionDto);
+    push_declaration!(AbilityBeamDamageResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);

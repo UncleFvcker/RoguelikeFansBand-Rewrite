@@ -75,6 +75,7 @@ ability-resource-value = { $resource }: { $current } / { $maximum } · wait +{ $
 ability-learning-value = Learned { $learned } / { $capacity } · { $remaining } slots remaining
 ability-summary = Level { $level } · cost { $cost } (base { $baseCost }) · failure { $failure }%
 ability-area-summary = Burst radius { $radius }
+ability-beam-summary = Beam · passes through creatures
 ability-proficiency-summary = Proficiency { $rank } { $current }/{ $maximum } · casts { $casts } · fails { $fails }
 ability-cooldown-summary = Cooldown { $remaining }/{ $turns } turns
 ability-proficiency-unskilled = Unskilled

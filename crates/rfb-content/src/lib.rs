@@ -560,6 +560,12 @@ pub enum AbilityEffectDefinition {
         damage_type: ActorDamageType,
         radius: u8,
     },
+    BeamDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+    },
     Heal {
         amount: u32,
     },
@@ -2516,14 +2522,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=10_000).contains(&damage_sides)
                     && (1..=9).contains(&radius)
             }
+            AbilityEffectDefinition::BeamDamage {
+                damage_dice,
+                damage_sides,
+                ..
+            } => (1..=100).contains(&damage_dice) && (1..=10_000).contains(&damage_sides),
             AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
         };
         let self_targeted = ability
             .target
             .modes
             .contains(&AbilityTargetModeDefinition::SelfTarget);
+        let beam_effect = matches!(ability.effect, AbilityEffectDefinition::BeamDamage { .. });
         let valid_target = match ability.effect {
-            AbilityEffectDefinition::Damage { .. } | AbilityEffectDefinition::AreaDamage { .. } => {
+            AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::AreaDamage { .. }
+            | AbilityEffectDefinition::BeamDamage { .. } => {
                 !self_targeted
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
@@ -2534,6 +2548,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && !ability.target.requires_line_of_effect
             }
         };
+        let beam_target = !beam_effect
+            || ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction];
         if !(1..=100).contains(&ability.minimum_level)
             || !(1..=1_000_000).contains(&ability.resource_cost)
             || ability.base_failure_percent > 95
@@ -2558,6 +2574,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || ability.target.modes.iter().any(|mode| !modes.insert(*mode))
             || !valid_target
             || !valid_effect
+            || !beam_target
         {
             return Err(ContentError::InvalidAbility(ability.id.clone()));
         }
@@ -6287,7 +6304,7 @@ mod tests {
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 4);
+        assert_eq!(first.content.abilities.len(), 5);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
@@ -6311,7 +6328,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.69.0");
+        assert_eq!(catalog.pack_version(), "1.70.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -6327,6 +6344,7 @@ mod tests {
             Some(
                 [
                     "demo.ability.echo-burst".to_owned(),
+                    "demo.ability.echo-lance".to_owned(),
                     "demo.ability.harmonic-spark".to_owned(),
                     "demo.ability.resonant-bolt".to_owned(),
                 ]
@@ -8156,6 +8174,19 @@ mod tests {
         *radius = 10;
         assert!(matches!(
             validate_and_normalize(&mut invalid_area_radius),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_beam_target = artifact.content.clone();
+        invalid_beam_target
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-lance")
+            .expect("fixture should contain the beam damage ability")
+            .target
+            .modes = vec![AbilityTargetModeDefinition::Entity];
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_beam_target),
             Err(ContentError::InvalidAbility(_))
         ));
 

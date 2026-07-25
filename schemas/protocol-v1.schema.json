@@ -61,6 +61,36 @@
         "targetCount"
       ]
     },
+    "AbilityBeamDamageResolutionDto": {
+      "type": "object",
+      "properties": {
+        "affectedPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "baseRawDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "baseRawDamage",
+        "damageType",
+        "affectedPositions",
+        "targetCount"
+      ]
+    },
     "AbilityCastResolutionDto": {
       "type": "object",
       "properties": {
@@ -179,6 +209,9 @@
           "format": "uint32",
           "default": 0,
           "minimum": 0
+        },
+        "beamDamage": {
+          "type": "boolean"
         },
         "bookItemId": {
           "type": [
@@ -1424,6 +1457,22 @@
             "type": {
               "type": "string",
               "const": "ability-area-damage"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityBeamDamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-beam-damage"
             }
           },
           "required": [
