@@ -75,6 +75,7 @@ message-ability-cast-success = 你成功施放了{ $ability }（掷骰 { $roll }
 message-ability-cast-failure = 你施放{ $ability }失败了（掷骰 { $roll }，失败率 { $failure }%，消耗 { $cost }）。
 message-ability-target-unavailable = { $ability }无法触及该目标。
 message-ability-landed = { $ability }没有命中目标便消散了。
+message-ability-area-damage = { $ability }在半径 { $radius } 内爆发，波及 { $targets } 个目标。
 message-ability-hit = { $ability }击中了{ $target }，造成 { $damage } 点伤害。
 message-ability-slay = { $ability }消灭了{ $target }。
 message-ability-healed = { $ability }令你恢复了 { $amount } 点生命。

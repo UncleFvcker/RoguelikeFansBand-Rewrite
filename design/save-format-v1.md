@@ -137,6 +137,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.76 不新增 save 字段：学习容量是 Class 内容与角色 progress 的派生值，主动遗忘只修改已有 `learnedAbilityIds`，不清除 `abilityProgress`。重新学习同一能力恢复原熟练度、统计与冷却；载入时若已学数量超过当前内容容量则原子拒绝。缺少 `abilityProgress` 的 v75 及更早存档继续按内容初值迁移，save 容器仍为 v1。完整边界见 [Contract v76](contract-v76-learning-capacity-and-forgetting.md)。
 
+协议 1.77 不新增 save 字段：范围半径、伤害骰、伤害类型和目标模式来自当前内容；资源当前值、已学集合与 `abilityProgress` 继续使用既有字段。载入 v76 及更早存档时，缺失范围能力只按当前内容能力集合验证，不补学习、不生成物品、不重建地图、不推进 RNG。范围爆发的 footprint、目标顺序和事件只存在于命令执行结果/回放中，权威终态仍由既有 actor HP、资源、物品、任务和 RNG 字段表达。save 容器仍为 v1，state hash 仍为 Schema v34。完整边界见 [Contract v77](contract-v77-area-damage.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

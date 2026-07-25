@@ -75,6 +75,7 @@ message-ability-cast-success = You cast { $ability } (roll { $roll }, failure { 
 message-ability-cast-failure = Your attempt to cast { $ability } fails (roll { $roll }, failure { $failure }%, cost { $cost }).
 message-ability-target-unavailable = { $ability } cannot reach that target.
 message-ability-landed = { $ability } dissipates without striking a target.
+message-ability-area-damage = { $ability } erupts across radius { $radius }, catching { $targets } targets.
 message-ability-hit = { $ability } hits { $target } for { $damage } damage.
 message-ability-slay = { $ability } destroys { $target }.
 message-ability-healed = { $ability } restores { $amount } HP.

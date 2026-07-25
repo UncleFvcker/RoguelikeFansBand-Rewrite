@@ -4,6 +4,10 @@
   "id": "demo.ability-book.echo-primer",
   "nameKey": "ability-book-demo-echo-primer-name",
   "descriptionKey": "ability-book-demo-echo-primer-description",
-  "abilityIds": ["demo.ability.resonant-bolt", "demo.ability.harmonic-spark"],
+  "abilityIds": [
+    "demo.ability.echo-burst",
+    "demo.ability.harmonic-spark",
+    "demo.ability.resonant-bolt"
+  ],
   "tags": ["primer", "spellbook"]
 }

@@ -20,6 +20,47 @@
     "update"
   ],
   "$defs": {
+    "AbilityAreaDamageResolutionDto": {
+      "type": "object",
+      "properties": {
+        "affectedPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "baseRawDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "center": {
+          "$ref": "#/$defs/Position"
+        },
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "center",
+        "radius",
+        "baseRawDamage",
+        "damageType",
+        "affectedPositions",
+        "targetCount"
+      ]
+    },
     "AbilityCastResolutionDto": {
       "type": "object",
       "properties": {
@@ -124,6 +165,15 @@
     "AbilityDto": {
       "type": "object",
       "properties": {
+        "areaRadius": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "baseResourceCost": {
           "type": "integer",
           "format": "uint32",
@@ -1365,6 +1415,22 @@
     },
     "GameEventOutcomeDto": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityAreaDamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-area-damage"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
         {
           "type": "object",
           "properties": {

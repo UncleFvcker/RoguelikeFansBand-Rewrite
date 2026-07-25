@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.76";
+pub const PROTOCOL_VERSION: &str = "1.77";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -388,6 +388,8 @@ pub struct AbilityDto {
     pub cooldown_turns: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cooldown_group_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub area_radius: Option<u8>,
     pub target_spec: TargetSpecDto,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -690,6 +692,18 @@ pub struct AbilityCastResolutionDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct AbilityAreaDamageResolutionDto {
+    pub center: Position,
+    pub radius: u8,
+    pub base_raw_damage: i32,
+    pub damage_type: DamageTypeDto,
+    pub affected_positions: Vec<Position>,
+    pub target_count: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceRecoveryResolutionDto {
     pub resource_id: String,
     pub before: u32,
@@ -727,6 +741,9 @@ pub struct RestResolutionDto {
     rename_all_fields = "camelCase"
 )]
 pub enum GameEventOutcomeDto {
+    AbilityAreaDamage {
+        resolution: AbilityAreaDamageResolutionDto,
+    },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
     },
@@ -1147,6 +1164,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CheckOutcomeDto);
     push_declaration!(CheckResolutionDto);
     push_declaration!(AbilityCastResolutionDto);
+    push_declaration!(AbilityAreaDamageResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);

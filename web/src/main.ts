@@ -1085,6 +1085,14 @@ function renderAbilities(
       ability.learned ? "ability-status-learned" : "ability-status-unlearned",
     );
     details.append(name, summary, proficiency, status);
+    if (ability.areaRadius != null) {
+      const area = document.createElement("span");
+      area.className = "ability-status";
+      area.textContent = localization.format("ability-area-summary", {
+        radius: ability.areaRadius,
+      });
+      details.append(area);
+    }
     if (ability.cooldownTurns > 0) {
       const cooldown = document.createElement("span");
       cooldown.className = "ability-status";
@@ -1480,6 +1488,12 @@ function formatEvent(event: GameEventDto): string {
     case "ability-landed":
       return localization.format("message-ability-landed", {
         ability: contentName(event.args.target),
+      });
+    case "ability-area-damage":
+      return localization.format("message-ability-area-damage", {
+        ability: contentName(event.args.target),
+        radius: event.args.radius ?? "?",
+        targets: event.args.targets ?? "0",
       });
     case "ability-hit":
       return localization.format("message-ability-hit", {
@@ -1890,6 +1904,9 @@ function contentName(id: string | undefined): string {
   }
   if (id === "demo.ability.harmonic-spark") {
     return localization.format("ability-demo-harmonic-spark-name");
+  }
+  if (id === "demo.ability.echo-burst") {
+    return localization.format("ability-demo-echo-burst-name");
   }
   if (id === "demo.ability.mending-echo") {
     return localization.format("ability-demo-mending-echo-name");

@@ -59,28 +59,28 @@ use rfb_content::{
     TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    AbilityCastResolutionDto, AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto,
-    AbilityProgressSaveDto, ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
-    CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
-    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
-    EntityDto, EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
-    FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
-    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
-    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
-    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
-    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
-    PlayerSaveDto, Position, ProjectileProfileDto, ResourcePoolDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto, SavePayloadV1,
-    SkillProgressDto, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
-    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
-    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
-    ThrowProfileDto, VisibilityState,
+    AbilityAreaDamageResolutionDto, AbilityCastResolutionDto, AbilityDto, AbilityLearningDto,
+    AbilityProficiencyRankDto, AbilityProgressSaveDto, ActorSaveDto, AttackProfileDto,
+    AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
+    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
+    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
+    GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto,
+    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
+    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
+    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
+    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 69] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 70] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -150,9 +150,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 69] = [
     "fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d",
     "9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0",
     "bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316",
+    "c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04";
+    "acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -203,6 +204,15 @@ impl AbilityProgress {
             cooldown_remaining: 0,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum AbilityTargetPlan {
+    SelfTarget,
+    Projectile {
+        path: Vec<Position>,
+        stop_at_actor: bool,
+    },
 }
 
 #[derive(Serialize)]
@@ -2981,6 +2991,10 @@ impl Game {
                         .cooldown
                         .as_ref()
                         .and_then(|value| value.group_id.clone()),
+                    area_radius: match ability.effect {
+                        AbilityEffectDefinition::AreaDamage { radius, .. } => Some(radius),
+                        _ => None,
+                    },
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -4718,6 +4732,17 @@ impl Game {
             return Ok(());
         }
 
+        // Validate the target before charging Mana or drawing the spell
+        // failure/damage RNG.  The command is still a normal action (the
+        // scheduler and cooldown tick remain governed by dispatch), but an
+        // impossible target cannot consume spell resources or proficiency.
+        let Some(target_plan) = self.ability_target_plan(&ability, &target) else {
+            events.push(DomainEvent::AbilityTargetUnavailable {
+                ability_id: ability.id,
+            });
+            return Ok(());
+        };
+
         let progress_before = self.ability_progress_value(&ability);
         let cooldown_before = self.ability_cooldown_remaining(&ability);
         let resource_cost = self.ability_effective_resource_cost(&ability, progress_before);
@@ -4769,18 +4794,15 @@ impl Game {
             resolution: resolution.clone(),
         });
 
-        match ability.effect.clone() {
-            AbilityEffectDefinition::Damage {
-                damage_dice,
-                damage_sides,
-                damage_type,
-            } => {
-                let Some(path) = self.ability_path(&ability, &target) else {
-                    events.push(DomainEvent::AbilityTargetUnavailable {
-                        ability_id: ability.id,
-                    });
-                    return Ok(());
-                };
+        match (ability.effect.clone(), target_plan) {
+            (
+                AbilityEffectDefinition::Damage {
+                    damage_dice,
+                    damage_sides,
+                    damage_type,
+                },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
                 let (trace, target_index) = self.trace_projectile_path(path);
                 let Some(index) = target_index else {
                     events.push(DomainEvent::AbilityLanded {
@@ -4789,62 +4811,69 @@ impl Game {
                     });
                     return Ok(());
                 };
-
-                let definition = self
-                    .content
-                    .actor(&self.entities[index].kind_id)
-                    .expect("ability target definition must remain available")
-                    .clone();
-                let target_kind_id = definition.id.clone();
-                self.entities[index].alerted = true;
-                changed.insert(self.entities[index].position);
-                let damage_type = DamageType::from(damage_type);
                 let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
-                let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-                let prepared = if damage_type == DamageType::Physical {
-                    apply_melee_armor_reduction(raw_damage, target.armor_class.value)
-                } else {
-                    raw_damage
-                };
-                let resistance = self.entities[index].resistances.level(damage_type);
-                let damage = resolve_damage(
-                    DamagePacket::after_armor(raw_damage, prepared, damage_type),
-                    resistance,
-                );
-                self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-                events.push(DomainEvent::AbilityHit {
+                self.resolve_ability_damage_to_entity(
+                    index,
+                    &ability.id,
+                    DamageType::from(damage_type),
+                    raw_damage,
+                    trace,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::AreaDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_type,
+                    radius,
+                },
+                AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor,
+                },
+            ) => {
+                let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
+                let center = trace.landing;
+                let (affected_positions, targets) = self.area_damage_targets(center, radius);
+                changed.extend(affected_positions.iter().copied());
+                let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                events.push(DomainEvent::AbilityAreaDamage {
                     ability_id: ability.id.clone(),
-                    target_kind_id: target_kind_id.clone(),
-                    damage,
+                    resolution: AbilityAreaDamageResolutionDto {
+                        center,
+                        radius,
+                        base_raw_damage,
+                        damage_type: DamageType::from(damage_type).into(),
+                        affected_positions,
+                        target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+                    },
                     trace: trace.clone(),
                 });
-                if self.entities[index].hp <= 0 {
-                    self.resolve_actor_death(
+                for (entity_id, distance) in targets {
+                    let Some(index) = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.id == entity_id && entity.hp > 0)
+                    else {
+                        continue;
+                    };
+                    let falloff_damage = rfb_area_damage(base_raw_damage, distance);
+                    self.resolve_ability_damage_to_entity(
                         index,
-                        DomainEvent::AbilitySlew {
-                            ability_id: ability.id,
-                            target_kind_id,
-                            damage,
-                            trace,
-                        },
+                        &ability.id,
+                        DamageType::from(damage_type),
+                        falloff_damage,
+                        trace.clone(),
                         events,
                         changed,
                         removed_entities,
                     )?;
                 }
             }
-            AbilityEffectDefinition::Heal { amount } => {
-                if !matches!(target, TargetSelection::SelfTarget)
-                    || !ability
-                        .target
-                        .modes
-                        .contains(&AbilityTargetModeDefinition::SelfTarget)
-                {
-                    events.push(DomainEvent::AbilityTargetUnavailable {
-                        ability_id: ability.id,
-                    });
-                    return Ok(());
-                }
+            (AbilityEffectDefinition::Heal { amount }, AbilityTargetPlan::SelfTarget) => {
                 let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
                 let max_hp = self.effective_player_max_hp();
                 let outcome = apply_effect(
@@ -4864,6 +4893,91 @@ impl Game {
                     resolution: HealingResolutionDto { requested, applied },
                 });
             }
+            _ => unreachable!("validated ability target plan must match its effect"),
+        }
+        Ok(())
+    }
+
+    fn ability_target_plan(
+        &self,
+        ability: &AbilityDefinition,
+        target: &TargetSelection,
+    ) -> Option<AbilityTargetPlan> {
+        match ability.effect {
+            AbilityEffectDefinition::Heal { .. } => (matches!(target, TargetSelection::SelfTarget)
+                && ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget))
+            .then_some(AbilityTargetPlan::SelfTarget),
+            AbilityEffectDefinition::Damage { .. } => {
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Projectile {
+                        path,
+                        stop_at_actor: true,
+                    })
+            }
+            AbilityEffectDefinition::AreaDamage { .. } => {
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Projectile {
+                        path,
+                        stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                    })
+            }
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_damage_to_entity(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        damage_type: DamageType,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("ability target definition must remain available")
+            .clone();
+        let target_kind_id = definition.id.clone();
+        self.entities[index].alerted = true;
+        changed.insert(self.entities[index].position);
+        let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+        let prepared = if damage_type == DamageType::Physical {
+            apply_melee_armor_reduction(raw_damage, target.armor_class.value)
+        } else {
+            raw_damage
+        };
+        let resistance = self.entities[index].resistances.level(damage_type);
+        let damage = resolve_damage(
+            DamagePacket::after_armor(raw_damage, prepared, damage_type),
+            resistance,
+        );
+        self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
+        events.push(DomainEvent::AbilityHit {
+            ability_id: ability_id.to_owned(),
+            target_kind_id: target_kind_id.clone(),
+            damage,
+            trace: trace.clone(),
+        });
+        if self.entities[index].hp <= 0 {
+            self.resolve_actor_death(
+                index,
+                DomainEvent::AbilitySlew {
+                    ability_id: ability_id.to_owned(),
+                    target_kind_id,
+                    damage,
+                    trace,
+                },
+                events,
+                changed,
+                removed_entities,
+            )?;
         }
         Ok(())
     }
@@ -4948,6 +5062,14 @@ impl Game {
     }
 
     fn trace_projectile_path(&self, path: Vec<Position>) -> (ProjectileTrace, Option<usize>) {
+        self.trace_projectile_path_with_actor_policy(path, true)
+    }
+
+    fn trace_projectile_path_with_actor_policy(
+        &self,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+    ) -> (ProjectileTrace, Option<usize>) {
         let origin = self.player.position;
         let mut impact = origin;
         let mut landing = origin;
@@ -4966,7 +5088,9 @@ impl Game {
                 .position(|entity| entity.position == position)
             {
                 target_index = Some(index);
-                break;
+                if stop_at_actor {
+                    break;
+                }
             }
         }
         (
@@ -4978,6 +5102,42 @@ impl Game {
             },
             target_index,
         )
+    }
+
+    fn area_damage_targets(
+        &self,
+        center: Position,
+        radius: u8,
+    ) -> (Vec<Position>, Vec<(String, u32)>) {
+        let mut cells = Vec::new();
+        let radius_limit = u32::from(radius);
+        let radius = i32::from(radius);
+        for y in center.y - radius..=center.y + radius {
+            for x in center.x - radius..=center.x + radius {
+                let position = Position { x, y };
+                let distance = rfb_distance(center, position);
+                if distance > radius_limit
+                    || !self
+                        .index(position)
+                        .is_some_and(|_| has_line_of_effect(self, center, position))
+                {
+                    continue;
+                }
+                cells.push((distance, position));
+            }
+        }
+        cells.sort_by_key(|(distance, position)| (*distance, position.y, position.x));
+        let affected_positions = cells.iter().map(|(_, position)| *position).collect();
+        let targets = cells
+            .iter()
+            .flat_map(|(distance, position)| {
+                self.entities
+                    .iter()
+                    .filter(move |entity| entity.hp > 0 && entity.position == *position)
+                    .map(move |entity| (entity.id.clone(), *distance))
+            })
+            .collect();
+        (affected_positions, targets)
     }
 
     fn take_inventory_item_kind(
@@ -12460,6 +12620,69 @@ fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8
     .unwrap_or(maximum)
 }
 
+/// Angband/RFB's integer distance approximation: a rounded Euclidean
+/// distance with the familiar max + min/2 fast path.  Keeping this separate
+/// from the UI's Chebyshev targeting distance makes ball falloff and rings
+/// match the original projection routine.
+fn rfb_distance(from: Position, to: Position) -> u32 {
+    let dy = from.y.abs_diff(to.y);
+    let dx = from.x.abs_diff(to.x);
+    let target = dy.saturating_mul(dy).saturating_add(dx.saturating_mul(dx));
+    let mut distance = if dy > dx {
+        dy + (dx >> 1)
+    } else {
+        dx + (dy >> 1)
+    };
+    if dy == 0 || dx == 0 {
+        return distance;
+    }
+    loop {
+        let denominator = distance.saturating_mul(2).max(1);
+        let error = (target as i64 - distance.saturating_mul(distance) as i64) / denominator as i64;
+        if error == 0 {
+            return distance;
+        }
+        let next = (distance as i64 + error).max(0);
+        distance = u32::try_from(next).unwrap_or(u32::MAX);
+    }
+}
+
+fn rfb_area_damage(base_damage: i32, distance: u32) -> i32 {
+    let numerator = i64::from(base_damage.max(0)).saturating_add(i64::from(distance));
+    i32::try_from(numerator / i64::from(distance.saturating_add(1))).unwrap_or(i32::MAX)
+}
+
+fn has_line_of_effect(game: &Game, from: Position, to: Position) -> bool {
+    let mut x = from.x;
+    let mut y = from.y;
+    let dx = (to.x - from.x).abs();
+    let dy = (to.y - from.y).abs();
+    let step_x = if from.x < to.x { 1 } else { -1 };
+    let step_y = if from.y < to.y { 1 } else { -1 };
+    let mut error = dx - dy;
+
+    loop {
+        if x == to.x && y == to.y {
+            return true;
+        }
+        if !(game.is_walkable(Position { x, y }) || (x == from.x && y == from.y)) {
+            return false;
+        }
+        let double_error = error * 2;
+        if double_error > -dy {
+            error -= dy;
+            x += step_x;
+        }
+        if double_error < dx {
+            error += dx;
+            y += step_y;
+        }
+        if game.index(Position { x, y }).is_none() {
+            return false;
+        }
+    }
+}
+
 fn has_line_of_sight(game: &Game, from: Position, to: Position) -> bool {
     let mut x = from.x;
     let mut y = from.y;
@@ -18512,6 +18735,182 @@ mod tests {
     }
 
     #[test]
+    fn area_damage_uses_rfb_targeted_ball_path_falloff_and_ordering() {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let ability_id = "demo.ability.echo-burst";
+        game.learned_abilities.insert(ability_id.to_owned());
+        for position in [
+            Position { x: 4, y: 3 },
+            Position { x: 5, y: 3 },
+            Position { x: 6, y: 3 },
+        ] {
+            replace_terrain(&mut game, position, "demo.terrain.floor");
+        }
+        let ember = game
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist");
+        ember.position = Position { x: 6, y: 3 };
+        ember.hp = 100;
+        ember.energy_need = 1_000;
+        let guardian = game
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+            .expect("entrance guardian should exist");
+        guardian.position = Position { x: 4, y: 3 };
+        guardian.hp = 100;
+        guardian.energy_need = 1_000;
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
+            },
+        );
+
+        let area = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityAreaDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("successful area spell should expose its resolved footprint");
+        assert_eq!(area.center, Position { x: 6, y: 3 });
+        assert_eq!(area.radius, 2);
+        assert_eq!(area.target_count, 2);
+        assert_eq!(game.rng_draw_counter(), draws_before + 3);
+        assert!(area.affected_positions.windows(2).all(|positions| {
+            let left = positions[0];
+            let right = positions[1];
+            (rfb_distance(area.center, left), left.y, left.x)
+                <= (rfb_distance(area.center, right), right.y, right.x)
+        }));
+
+        let hits = update
+            .events
+            .iter()
+            .filter(|event| event.kind == "ability.hit")
+            .collect::<Vec<_>>();
+        assert_eq!(hits.len(), 2);
+        assert_eq!(hits[0].args["target"], "demo.actor.ember-mote");
+        assert_eq!(hits[1].args["target"], "demo.actor.resonant-warden");
+        let center_damage = match hits[0].outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution }) => resolution.raw_damage,
+            _ => panic!("center hit should expose damage"),
+        };
+        let edge_damage = match hits[1].outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution }) => resolution.raw_damage,
+            _ => panic!("edge hit should expose damage"),
+        };
+        assert_eq!(center_damage, area.base_raw_damage);
+        assert_eq!(edge_damage, rfb_area_damage(area.base_raw_damage, 2));
+    }
+
+    #[test]
+    fn area_damage_respects_walls_and_invalid_targets_are_zero_rng() {
+        let ability_id = "demo.ability.echo-burst";
+        let mut blocked =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        blocked.learned_abilities.insert(ability_id.to_owned());
+        for position in [
+            Position { x: 4, y: 3 },
+            Position { x: 5, y: 3 },
+            Position { x: 6, y: 3 },
+            Position { x: 6, y: 5 },
+        ] {
+            replace_terrain(&mut blocked, position, "demo.terrain.floor");
+        }
+        replace_terrain(&mut blocked, Position { x: 6, y: 4 }, "demo.terrain.wall");
+        let ember = blocked
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist");
+        ember.position = Position { x: 6, y: 3 };
+        ember.hp = 100;
+        ember.energy_need = 1_000;
+        let guardian = blocked
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+            .expect("entrance guardian should exist");
+        guardian.position = Position { x: 6, y: 5 };
+        guardian.hp = 100;
+        guardian.energy_need = 1_000;
+        let guardian_hp = guardian.hp;
+
+        let update = dispatch_next(
+            &mut blocked,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
+            },
+        );
+        let area = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityAreaDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("area outcome should exist");
+        assert_eq!(area.target_count, 1);
+        assert!(!area.affected_positions.contains(&Position { x: 6, y: 5 }));
+        assert_eq!(
+            blocked
+                .entities
+                .iter()
+                .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+                .map(|entity| entity.hp),
+            Some(guardian_hp)
+        );
+
+        let mut invalid =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        invalid.learned_abilities.insert(ability_id.to_owned());
+        for entity in &mut invalid.entities {
+            entity.energy_need = 1_000;
+        }
+        let mana_before = invalid.resources["demo.resource.mana"].current;
+        let draws_before = invalid.rng_draw_counter();
+        let progress_before = invalid.ability_progress[ability_id];
+        let rejected = dispatch_next(
+            &mut invalid,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Position {
+                    position: Position { x: 19, y: 19 },
+                },
+            },
+        );
+        assert_eq!(invalid.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(invalid.rng_draw_counter(), draws_before);
+        assert_eq!(invalid.ability_progress[ability_id], progress_before);
+        assert!(
+            rejected
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+        assert!(!rejected.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(GameEventOutcomeDto::AbilityCast { .. })
+            )
+        }));
+    }
+
+    #[test]
     fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
         let mut game =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -18527,7 +18926,7 @@ mod tests {
                 remaining_slots: 2,
             })
         );
-        assert_eq!(initial.player.abilities.len(), 3);
+        assert_eq!(initial.player.abilities.len(), 4);
         assert!(
             initial
                 .player

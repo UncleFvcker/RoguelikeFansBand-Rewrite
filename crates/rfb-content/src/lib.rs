@@ -553,6 +553,13 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    AreaDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        radius: u8,
+    },
     Heal {
         amount: u32,
     },
@@ -2499,6 +2506,16 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 damage_sides,
                 ..
             } => (1..=100).contains(&damage_dice) && (1..=10_000).contains(&damage_sides),
+            AbilityEffectDefinition::AreaDamage {
+                damage_dice,
+                damage_sides,
+                radius,
+                ..
+            } => {
+                (1..=100).contains(&damage_dice)
+                    && (1..=10_000).contains(&damage_sides)
+                    && (1..=9).contains(&radius)
+            }
             AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
         };
         let self_targeted = ability
@@ -2506,7 +2523,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             .modes
             .contains(&AbilityTargetModeDefinition::SelfTarget);
         let valid_target = match ability.effect {
-            AbilityEffectDefinition::Damage { .. } => {
+            AbilityEffectDefinition::Damage { .. } | AbilityEffectDefinition::AreaDamage { .. } => {
                 !self_targeted
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
@@ -6270,7 +6287,7 @@ mod tests {
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 3);
+        assert_eq!(first.content.abilities.len(), 4);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
@@ -6294,7 +6311,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.68.0");
+        assert_eq!(catalog.pack_version(), "1.69.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -6309,6 +6326,7 @@ mod tests {
                 .map(|book| book.ability_ids.as_slice()),
             Some(
                 [
+                    "demo.ability.echo-burst".to_owned(),
                     "demo.ability.harmonic-spark".to_owned(),
                     "demo.ability.resonant-bolt".to_owned(),
                 ]
@@ -8122,6 +8140,22 @@ mod tests {
             .range = 1;
         assert!(matches!(
             validate_and_normalize(&mut invalid_healing_target),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_area_radius = artifact.content.clone();
+        let AbilityEffectDefinition::AreaDamage { radius, .. } = &mut invalid_area_radius
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-burst")
+            .expect("fixture should contain the area damage ability")
+            .effect
+        else {
+            panic!("echo burst should use area damage");
+        };
+        *radius = 10;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_area_radius),
             Err(ContentError::InvalidAbility(_))
         ));
 
