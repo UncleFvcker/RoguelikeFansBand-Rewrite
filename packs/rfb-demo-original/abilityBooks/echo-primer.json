@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.echo-primer",
+  "nameKey": "ability-book-demo-echo-primer-name",
+  "descriptionKey": "ability-book-demo-echo-primer-description",
+  "abilityIds": ["demo.ability.resonant-bolt"],
+  "tags": ["primer", "spellbook"]
+}

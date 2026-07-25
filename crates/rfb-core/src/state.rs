@@ -22,6 +22,12 @@ pub(crate) struct Actor {
     pub(crate) pack: Option<MonsterPackIdentity>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ResourcePool {
+    pub(crate) current: u32,
+    pub(crate) maximum: u32,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct MonsterPackIdentity {
     pub(crate) id: String,

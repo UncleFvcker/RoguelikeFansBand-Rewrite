@@ -20,6 +20,122 @@
     "update"
   ],
   "$defs": {
+    "AbilityCastResolutionDto": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "failurePercent": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "percentileRoll": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "resourceAfter": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceBefore": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceCost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "succeeded": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "abilityId",
+        "resourceId",
+        "resourceCost",
+        "resourceBefore",
+        "resourceAfter",
+        "failurePercent",
+        "percentileRoll",
+        "succeeded"
+      ]
+    },
+    "AbilityDto": {
+      "type": "object",
+      "properties": {
+        "bookItemId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canCast": {
+          "type": "boolean"
+        },
+        "canStudy": {
+          "type": "boolean"
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "failurePercent": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "id": {
+          "type": "string"
+        },
+        "learned": {
+          "type": "boolean"
+        },
+        "minimumLevel": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "resourceCost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "targetSpec": {
+          "$ref": "#/$defs/TargetSpecDto"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey",
+        "minimumLevel",
+        "resourceId",
+        "resourceCost",
+        "failurePercent",
+        "targetSpec",
+        "learned",
+        "canStudy",
+        "canCast"
+      ]
+    },
     "AttackProfileDto": {
       "type": "object",
       "properties": {
@@ -679,6 +795,26 @@
         {
           "type": "object",
           "properties": {
+            "abilityId": {
+              "type": "string"
+            },
+            "target": {
+              "$ref": "#/$defs/TargetSelection"
+            },
+            "type": {
+              "type": "string",
+              "const": "cast-ability"
+            }
+          },
+          "required": [
+            "type",
+            "abilityId",
+            "target"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -872,6 +1008,25 @@
         {
           "type": "object",
           "properties": {
+            "turns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "type": {
+              "type": "string",
+              "const": "rest"
+            }
+          },
+          "required": [
+            "type",
+            "turns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "search"
@@ -879,6 +1034,26 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "abilityId": {
+              "type": "string"
+            },
+            "bookItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "study-ability"
+            }
+          },
+          "required": [
+            "type",
+            "bookItemId",
+            "abilityId"
           ]
         },
         {
@@ -1030,6 +1205,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/AbilityCastResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-cast"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/CheckResolutionDto"
             },
             "type": {
@@ -1083,6 +1274,38 @@
             "type": {
               "type": "string",
               "const": "heal"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/ResourceRecoveryResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "resource-recovery"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/RestResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "rest"
             }
           },
           "required": [
@@ -1671,6 +1894,12 @@
     "PlayerDto": {
       "type": "object",
       "properties": {
+        "abilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AbilityDto"
+          }
+        },
         "armorClass": {
           "type": "integer",
           "format": "int32",
@@ -1807,6 +2036,12 @@
           "default": [],
           "items": {
             "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResourcePoolDto"
           }
         },
         "speed": {
@@ -2025,6 +2260,117 @@
         "immune"
       ]
     },
+    "ResourcePoolDto": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "type": "string"
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "restRecoveryAmount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
+        "waitRecoveryAmount": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "current",
+        "maximum"
+      ]
+    },
+    "ResourceRecoveryResolutionDto": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "before": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "recovered": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resourceId",
+        "before",
+        "after",
+        "recovered"
+      ]
+    },
+    "RestResolutionDto": {
+      "type": "object",
+      "properties": {
+        "completedTurns": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "requestedTurns": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "resourceRecoveries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResourceRecoveryResolutionDto"
+          }
+        },
+        "stopReason": {
+          "$ref": "#/$defs/RestStopReasonDto"
+        }
+      },
+      "required": [
+        "requestedTurns",
+        "completedTurns",
+        "stopReason",
+        "resourceRecoveries"
+      ]
+    },
+    "RestStopReasonDto": {
+      "type": "string",
+      "enum": [
+        "damaged",
+        "enemy-visible",
+        "full-resources",
+        "invalid-turns",
+        "player-died",
+        "turn-limit"
+      ]
+    },
     "SkillProgressDto": {
       "type": "object",
       "properties": {
@@ -2139,7 +2485,8 @@
       "enum": [
         "direction",
         "position",
-        "entity"
+        "entity",
+        "self"
       ]
     },
     "TargetSelection": {
@@ -2190,6 +2537,18 @@
           "required": [
             "type",
             "entityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "self"
+            }
+          },
+          "required": [
+            "type"
           ]
         }
       ]

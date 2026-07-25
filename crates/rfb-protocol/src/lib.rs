@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.72";
+pub const PROTOCOL_VERSION: &str = "1.74";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -82,6 +82,10 @@ pub enum GameCommand {
     BashDoor {
         direction: Direction,
     },
+    CastAbility {
+        ability_id: String,
+        target: TargetSelection,
+    },
     CloseDoor {
         direction: Direction,
     },
@@ -115,7 +119,15 @@ pub enum GameCommand {
     },
     PickUp,
     Retire,
+    Rest {
+        #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 100)))]
+        turns: u16,
+    },
     Search,
+    StudyAbility {
+        book_item_id: String,
+        ability_id: String,
+    },
     Throw {
         item_id: String,
         direction: Direction,
@@ -211,6 +223,8 @@ pub enum TargetModeDto {
     Direction,
     Position,
     Entity,
+    #[serde(rename = "self")]
+    SelfTarget,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -230,9 +244,17 @@ pub struct TargetSpecDto {
     rename_all_fields = "camelCase"
 )]
 pub enum TargetSelection {
-    Direction { direction: Direction },
-    Position { position: Position },
-    Entity { entity_id: String },
+    Direction {
+        direction: Direction,
+    },
+    Position {
+        position: Position,
+    },
+    Entity {
+        entity_id: String,
+    },
+    #[serde(rename = "self")]
+    SelfTarget,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -297,6 +319,39 @@ pub enum TerrainInteractionKindDto {
     BashDoor,
     DisarmTrap,
     DigTerrain,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResourcePoolDto {
+    pub id: String,
+    pub name_key: String,
+    pub current: u32,
+    pub maximum: u32,
+    #[serde(default)]
+    pub wait_recovery_amount: u32,
+    #[serde(default)]
+    pub rest_recovery_amount: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityDto {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub minimum_level: u16,
+    pub resource_id: String,
+    pub resource_cost: u32,
+    pub failure_percent: u8,
+    pub target_spec: TargetSpecDto,
+    pub learned: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub book_item_id: Option<String>,
+    pub can_study: bool,
+    pub can_cast: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -560,16 +615,79 @@ pub struct CheckResolutionDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityCastResolutionDto {
+    pub ability_id: String,
+    pub resource_id: String,
+    pub resource_cost: u32,
+    pub resource_before: u32,
+    pub resource_after: u32,
+    pub failure_percent: u8,
+    pub percentile_roll: u8,
+    pub succeeded: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResourceRecoveryResolutionDto {
+    pub resource_id: String,
+    pub before: u32,
+    pub after: u32,
+    pub recovered: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum RestStopReasonDto {
+    Damaged,
+    EnemyVisible,
+    FullResources,
+    InvalidTurns,
+    PlayerDied,
+    TurnLimit,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct RestResolutionDto {
+    pub requested_turns: u16,
+    pub completed_turns: u16,
+    pub stop_reason: RestStopReasonDto,
+    pub resource_recoveries: Vec<ResourceRecoveryResolutionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
     tag = "type",
     rename_all = "kebab-case",
     rename_all_fields = "camelCase"
 )]
 pub enum GameEventOutcomeDto {
-    Check { resolution: CheckResolutionDto },
-    Damage { resolution: DamageResolutionDto },
-    Death { resolution: DamageResolutionDto },
-    Heal { resolution: HealingResolutionDto },
+    AbilityCast {
+        resolution: AbilityCastResolutionDto,
+    },
+    Check {
+        resolution: CheckResolutionDto,
+    },
+    Damage {
+        resolution: DamageResolutionDto,
+    },
+    Death {
+        resolution: DamageResolutionDto,
+    },
+    Heal {
+        resolution: HealingResolutionDto,
+    },
+    ResourceRecovery {
+        resolution: ResourceRecoveryResolutionDto,
+    },
+    Rest {
+        resolution: RestResolutionDto,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -638,6 +756,10 @@ pub struct PlayerDto {
     pub progress: PlayerProgressDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<PlayerBuildDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resources: Vec<ResourcePoolDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub abilities: Vec<AbilityDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -937,6 +1059,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(MeleeRoutineDto);
     push_declaration!(TargetModeDto);
     push_declaration!(TargetSpecDto);
+    push_declaration!(ResourcePoolDto);
+    push_declaration!(AbilityDto);
     push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);
     push_declaration!(ThrowProfileDto);
@@ -958,6 +1082,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(DamageResolutionDto);
     push_declaration!(CheckOutcomeDto);
     push_declaration!(CheckResolutionDto);
+    push_declaration!(AbilityCastResolutionDto);
+    push_declaration!(ResourceRecoveryResolutionDto);
+    push_declaration!(RestStopReasonDto);
+    push_declaration!(RestResolutionDto);
     push_declaration!(HealingResolutionDto);
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
@@ -1023,6 +1151,18 @@ pub struct PlayerSaveDto {
     pub progress: Option<PlayerProgressSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<PlayerBuildSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resources: Vec<ResourcePoolSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub learned_ability_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ResourcePoolSaveDto {
+    pub id: String,
+    pub current: u32,
+    pub maximum: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1491,6 +1631,11 @@ mod tests {
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
             },
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.mending-echo".to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+            GameCommand::Rest { turns: 100 },
             GameCommand::Wait,
         ]
         .into_iter()
@@ -1571,6 +1716,8 @@ mod tests {
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
                 build: None,
+                resources: Vec::new(),
+                abilities: Vec::new(),
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -1701,6 +1848,8 @@ mod tests {
             resistances: Vec::new(),
             progress: None,
             build: None,
+            resources: Vec::new(),
+            learned_ability_ids: Vec::new(),
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

@@ -69,6 +69,15 @@ attribute-dexterity = Dexterity
 attribute-constitution = Constitution
 attribute-charisma = Charisma
 action-increase-attribute = Raise
+panel-ability-title = Abilities
+ability-unavailable = This build has no ability-book casting profile.
+ability-resource-value = { $resource }: { $current } / { $maximum } · wait +{ $wait } · rest +{ $rest }
+ability-summary = Level { $level } · cost { $cost } · failure { $failure }%
+ability-status-learned = Learned
+ability-status-unlearned = Not learned
+action-ability-study = Study
+action-ability-cast = Cast
+action-resource-rest = Rest
 panel-inventory-title = HTML INVENTORY LAYER
 inventory-stack-count =
     { $count ->

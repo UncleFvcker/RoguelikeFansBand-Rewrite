@@ -40,6 +40,16 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
     "2 stacks · 9.7 / 10.0 lb",
   );
   assert.equal(
+    localization.format("ability-resource-value", {
+      resource: "Mana",
+      current: 10,
+      maximum: 21,
+      wait: 1,
+      rest: 3,
+    }),
+    "Mana: 10 / 21 · wait +1 · rest +3",
+  );
+  assert.equal(
     localization.format("message-item-drop-success", { stacks: 1, quantity: 2 }),
     "You drop 1 stack containing 2 items.",
   );
@@ -60,6 +70,16 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
       capacity: "10.0",
     }),
     "2 堆 · 9.7 / 10.0 磅",
+  );
+  assert.equal(
+    localization.format("ability-resource-value", {
+      resource: "法力",
+      current: 10,
+      maximum: 21,
+      wait: 1,
+      rest: 3,
+    }),
+    "法力：10 / 21 · 等待 +1 · 休息 +3",
   );
   assert.equal(
     localization.format("message-item-pickup-success", {

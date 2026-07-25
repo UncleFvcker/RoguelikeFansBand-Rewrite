@@ -239,6 +239,13 @@
     "$schema": {
       "type": "string"
     },
+    "abilityBookId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "appearanceNameKey": {
       "default": null,
       "type": [

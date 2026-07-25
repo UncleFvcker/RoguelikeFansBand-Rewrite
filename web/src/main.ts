@@ -21,6 +21,7 @@ import {
   type NativeSaveSummary,
 } from "./native-save-storage";
 import type {
+  AbilityDto,
   DamageResolutionDto,
   DamageTypeDto,
   Direction,
@@ -34,7 +35,9 @@ import type {
   ItemPropertyDto,
   PlayerBuildDto,
   PlayerProgressDto,
+  ResourcePoolDto,
   StatModifiersDto,
+  TargetSpecDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
@@ -66,6 +69,7 @@ let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
 let dropQuantityItemId: string | undefined;
 let targeting: TargetingState | undefined;
+let targetingIntent: TargetingIntent | undefined;
 let terrainInteractionMode: TerrainInteractionMode | undefined;
 let mapWidth = 0;
 let mapHeight = 0;
@@ -94,6 +98,9 @@ const progressionPersonalityValue = element<HTMLElement>("progression-personalit
 const progressionMultipliersValue = element<HTMLElement>("progression-multipliers-value");
 const attributeList = element<HTMLUListElement>("attribute-list");
 const skillList = element<HTMLUListElement>("skill-list");
+const resourceList = element<HTMLUListElement>("resource-list");
+const abilityList = element<HTMLUListElement>("ability-list");
+const resourceRest = element<HTMLButtonElement>("resource-rest");
 const taskLogList = element<HTMLUListElement>("task-log-list");
 const campaignStatusValue = element<HTMLElement>("campaign-status-value");
 const campaignScoreValue = element<HTMLElement>("campaign-score-value");
@@ -127,6 +134,9 @@ const languageSelect = element<HTMLSelectElement>("language-select");
 type InputPreset = "numpad" | "vi" | "wasd";
 type TilesetPreset = "ascii" | "image";
 type ConnectionState = "starting" | "ready" | "error";
+type TargetingIntent =
+  | { type: "projectile" }
+  | { type: "ability"; abilityId: string };
 type MessageRecord =
   | {
       source: "key";
@@ -319,7 +329,7 @@ window.addEventListener("keydown", (event) => {
   }
   if (event.key.toLowerCase() === "f") {
     event.preventDefault();
-    startTargeting();
+    startProjectileTargeting();
     return;
   }
   const command = commandForKeyboardEvent(event);
@@ -342,7 +352,7 @@ inventoryDrop.addEventListener("click", () => void dropSelectedInventoryItems())
 inventoryDropQuantity.addEventListener("input", updateInventoryActions);
 targetModeToggle.addEventListener("click", () => {
   if (targeting) cancelTargeting();
-  else startTargeting();
+  else startProjectileTargeting();
 });
 clearMessages.addEventListener("click", () => {
   messageRecords.length = 0;
@@ -453,11 +463,13 @@ async function dispatch(command: GameCommand): Promise<void> {
     busy = false;
     updateInventoryActions();
     renderProgression(currentStatus?.player.progress, currentStatus?.player.build);
+    renderAbilities(currentStatus?.player.abilities ?? [], currentStatus?.player.resources ?? []);
     renderTargeting();
   }
 }
 
 campaignRetire.addEventListener("click", () => void dispatch({ type: "retire" }));
+resourceRest.addEventListener("click", () => void dispatch({ type: "rest", turns: 100 }));
 
 async function exportSave(): Promise<void> {
   try {
@@ -786,7 +798,8 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     targeting &&
     (targeting.origin.x !== state.player.position.x ||
       targeting.origin.y !== state.player.position.y ||
-      !state.player.projectileProfile)
+      !targetingIntent ||
+      !targetSpecForIntent(state, targetingIntent))
   ) {
     cancelTargeting(false);
   }
@@ -809,6 +822,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.equipmentModifiers.defense,
   );
   renderProgression(state.player.progress, state.player.build);
+  renderAbilities(state.player.abilities ?? [], state.player.resources ?? []);
   effectsValue.textContent =
     state.player.statuses.length === 0
       ? localization.format("status-effects-none")
@@ -988,6 +1002,90 @@ function renderProgression(
       return row;
     }),
   );
+}
+
+function renderAbilities(abilities: AbilityDto[], resources: ResourcePoolDto[]): void {
+  resourceList.replaceChildren();
+  abilityList.replaceChildren();
+  resourceRest.disabled =
+    busy || playerDead || !resources.some((resource) => resource.current < resource.maximum);
+  if (resources.length === 0 && abilities.length === 0) {
+    const unavailable = document.createElement("li");
+    unavailable.className = "ability-empty";
+    unavailable.textContent = localization.format("ability-unavailable");
+    abilityList.append(unavailable);
+    return;
+  }
+
+  for (const resource of resources) {
+    const row = document.createElement("li");
+    row.className = "resource-row";
+    const name = localization.format(resource.nameKey as MessageKey);
+    row.textContent = localization.format("ability-resource-value", {
+      resource: name,
+      current: resource.current,
+      maximum: resource.maximum,
+      wait: resource.waitRecoveryAmount,
+      rest: resource.restRecoveryAmount,
+    });
+    resourceList.append(row);
+  }
+
+  for (const ability of abilities) {
+    const row = document.createElement("li");
+    row.className = "ability-row";
+    const details = document.createElement("div");
+    details.className = "ability-details";
+    const name = document.createElement("span");
+    name.className = "ability-name";
+    name.textContent = localization.format(ability.nameKey as MessageKey);
+    const summary = document.createElement("span");
+    summary.className = "ability-summary";
+    summary.textContent = localization.format("ability-summary", {
+      level: ability.minimumLevel,
+      cost: ability.resourceCost,
+      failure: ability.failurePercent,
+    });
+    const status = document.createElement("span");
+    status.className = "ability-status";
+    status.textContent = localization.format(
+      ability.learned ? "ability-status-learned" : "ability-status-unlearned",
+    );
+    details.append(name, summary, status);
+
+    const actions = document.createElement("div");
+    actions.className = "ability-actions";
+    const study = document.createElement("button");
+    study.type = "button";
+    study.textContent = localization.format("action-ability-study");
+    study.disabled = busy || playerDead || !ability.canStudy || !ability.bookItemId;
+    study.addEventListener("click", () => {
+      if (!ability.bookItemId) return;
+      void dispatch({
+        type: "study-ability",
+        bookItemId: ability.bookItemId,
+        abilityId: ability.id,
+      });
+    });
+    const cast = document.createElement("button");
+    cast.type = "button";
+    cast.textContent = localization.format("action-ability-cast");
+    cast.disabled = busy || playerDead || !ability.canCast;
+    cast.addEventListener("click", () => {
+      if (ability.targetSpec.modes.includes("self")) {
+        void dispatch({
+          type: "cast-ability",
+          abilityId: ability.id,
+          target: { type: "self" },
+        });
+        return;
+      }
+      startAbilityTargeting(ability);
+    });
+    actions.append(study, cast);
+    row.append(details, actions);
+    abilityList.append(row);
+  }
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {
@@ -1287,6 +1385,76 @@ function formatTenthsPoundArgument(value: string | undefined): string {
 
 function formatEvent(event: GameEventDto): string {
   switch (event.messageKey) {
+    case "ability-studied":
+      return localization.format("message-ability-studied", {
+        ability: contentName(event.args.target),
+      });
+    case "ability-study-unavailable":
+      return localization.format("message-ability-study-unavailable", {
+        ability: contentName(event.args.target),
+        reason: abilityUnavailableReason(event.args.reason),
+      });
+    case "ability-cast-unavailable":
+      return localization.format("message-ability-cast-unavailable", {
+        ability: contentName(event.args.target),
+        reason: abilityUnavailableReason(event.args.reason),
+      });
+    case "ability-cast-success":
+    case "ability-cast-failure": {
+      const resolution =
+        event.outcome?.type === "ability-cast" ? event.outcome.resolution : undefined;
+      return localization.format(
+        event.messageKey === "ability-cast-success"
+          ? "message-ability-cast-success"
+          : "message-ability-cast-failure",
+        {
+          ability: contentName(event.args.target),
+          roll: resolution?.percentileRoll ?? "?",
+          failure: resolution?.failurePercent ?? "?",
+          cost: resolution?.resourceCost ?? "?",
+        },
+      );
+    }
+    case "ability-target-unavailable":
+      return localization.format("message-ability-target-unavailable", {
+        ability: contentName(event.args.target),
+      });
+    case "ability-landed":
+      return localization.format("message-ability-landed", {
+        ability: contentName(event.args.target),
+      });
+    case "ability-hit":
+      return localization.format("message-ability-hit", {
+        ability: contentName(event.args.source),
+        target: contentName(event.args.target),
+        damage: event.args.damage ?? "?",
+      });
+    case "ability-slay":
+      return localization.format("message-ability-slay", {
+        ability: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "ability-healed":
+      return localization.format("message-ability-healed", {
+        ability: contentName(event.args.source),
+        amount: event.args.amount ?? "?",
+      });
+    case "resource-recovered":
+      return localization.format("message-resource-recovered", {
+        resource: contentName(event.args.target),
+        amount: event.args.amount ?? "?",
+      });
+    case "rest-completed":
+    case "rest-interrupted":
+      return localization.format(
+        event.messageKey === "rest-completed"
+          ? "message-rest-completed"
+          : "message-rest-interrupted",
+        {
+          turns: event.args.turns ?? "0",
+          reason: restStopReason(event.args.reason),
+        },
+      );
     case "game-wait":
       return localization.format("message-game-wait");
     case "game-move-blocked":
@@ -1656,6 +1824,21 @@ function floorName(id: string | undefined): string {
 }
 
 function contentName(id: string | undefined): string {
+  if (id === "demo.resource.mana") {
+    return localization.format("resource-demo-mana-name");
+  }
+  if (id === "demo.ability.resonant-bolt") {
+    return localization.format("ability-demo-resonant-bolt-name");
+  }
+  if (id === "demo.ability.mending-echo") {
+    return localization.format("ability-demo-mending-echo-name");
+  }
+  if (id === "demo.item.echo-primer") {
+    return localization.format("item-demo-echo-primer-name");
+  }
+  if (id === "demo.item.stillwater-notes") {
+    return localization.format("item-demo-stillwater-notes-name");
+  }
   if (id === "demo.item.luminous-shard") {
     return localization.format("item-demo-luminous-shard-name");
   }
@@ -1694,6 +1877,14 @@ function contentName(id: string | undefined): string {
   );
 }
 
+function abilityUnavailableReason(reason: string | undefined): string {
+  return localization.format(`ability-unavailable-${reason ?? "unknown"}` as MessageKey);
+}
+
+function restStopReason(reason: string | undefined): string {
+  return localization.format(`rest-stop-${reason ?? "unknown"}` as MessageKey);
+}
+
 function visibleItemName(
   displayNameKey: string | undefined,
   fallbackKindId: string | undefined,
@@ -1703,6 +1894,8 @@ function visibleItemName(
     case "item-demo-unfamiliar-shard-name":
     case "item-demo-echo-charm-name":
     case "item-demo-echo-blade-name":
+    case "item-demo-echo-primer-name":
+    case "item-demo-stillwater-notes-name":
     case "item-demo-resonance-sling-name":
     case "item-demo-resonance-pellet-name":
     case "item-unknown-name":
@@ -1858,18 +2051,35 @@ function downloadBytes(bytes: Uint8Array, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
-function startTargeting(): void {
+function startProjectileTargeting(): void {
   if (busy || playerDead || !currentStatus) return;
-  const next = beginTargeting(
-    currentStatus.player.position,
+  startTargetingWithSpec(
     currentStatus.player.projectileProfile?.targetSpec,
+    { type: "projectile" },
   );
+}
+
+function startAbilityTargeting(ability: AbilityDto): void {
+  if (busy || playerDead || !currentStatus || !ability.canCast) return;
+  startTargetingWithSpec(ability.targetSpec, {
+    type: "ability",
+    abilityId: ability.id,
+  });
+}
+
+function startTargetingWithSpec(
+  spec: TargetSpecDto | null | undefined,
+  intent: TargetingIntent,
+): void {
+  if (!currentStatus) return;
+  const next = beginTargeting(currentStatus.player.position, spec ?? undefined);
   if (!next) {
     addLocalizedMessage("message-target-mode-unavailable", undefined, "system");
     renderTargeting();
     return;
   }
   targeting = next;
+  targetingIntent = intent;
   addLocalizedMessage("message-target-mode-started", undefined, "system");
   renderTargeting();
 }
@@ -1877,6 +2087,7 @@ function startTargeting(): void {
 function cancelTargeting(announce = true): void {
   if (!targeting) return;
   targeting = undefined;
+  targetingIntent = undefined;
   if (announce) addLocalizedMessage("message-target-mode-cancelled", undefined, "system");
   renderTargeting();
 }
@@ -1884,14 +2095,29 @@ function cancelTargeting(announce = true): void {
 async function confirmTargeting(): Promise<void> {
   const state = targeting;
   const status = currentStatus;
-  if (!state || !status || busy || playerDead) return;
+  const intent = targetingIntent;
+  if (!state || !status || !intent || busy || playerDead) return;
   const target = targetSelectionAtCursor(state, status.entities);
   if (!target) {
     addLocalizedMessage("message-target-selection-invalid", undefined, "system");
     return;
   }
   cancelTargeting(false);
-  await dispatch({ type: "fire-target", target });
+  await dispatch(
+    intent.type === "ability"
+      ? { type: "cast-ability", abilityId: intent.abilityId, target }
+      : { type: "fire-target", target },
+  );
+}
+
+function targetSpecForIntent(
+  state: GameSnapshot | GameUpdate,
+  intent: TargetingIntent,
+): TargetSpecDto | null | undefined {
+  if (intent.type === "projectile") return state.player.projectileProfile?.targetSpec;
+  return (state.player.abilities ?? []).find(
+    (ability) => ability.id === intent.abilityId && ability.canCast,
+  )?.targetSpec;
 }
 
 function renderTargeting(): void {
@@ -1908,6 +2134,7 @@ function renderTargeting(): void {
   targetModeToggle.setAttribute("aria-pressed", targeting ? "true" : "false");
   targetModeToggle.disabled = busy || playerDead || (!targeting && !available);
   mapHost.dataset.targeting = targeting ? "true" : "false";
+  mapHost.dataset.targetingAction = targetingIntent?.type ?? "none";
   targetCursor.hidden = !targeting;
   if (!targeting) {
     targetModeStatus.textContent = localization.format(

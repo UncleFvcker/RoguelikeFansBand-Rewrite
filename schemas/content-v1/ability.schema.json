@@ -1,0 +1,175 @@
+{
+  "$defs": {
+    "AbilityEffectDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "type": {
+              "const": "damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "heal",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "amount"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "AbilityTargetDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "modes": {
+          "items": {
+            "$ref": "#/$defs/AbilityTargetModeDefinition"
+          },
+          "type": "array"
+        },
+        "range": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requiresLineOfEffect": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "modes",
+        "range",
+        "requiresLineOfEffect"
+      ],
+      "type": "object"
+    },
+    "AbilityTargetModeDefinition": {
+      "enum": [
+        "direction",
+        "position",
+        "entity",
+        "self"
+      ],
+      "type": "string"
+    },
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "baseFailurePercent": {
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "effect": {
+      "$ref": "#/$defs/AbilityEffectDefinition"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "minimumLevel": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "resourceCost": {
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "resourceId": {
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "target": {
+      "$ref": "#/$defs/AbilityTargetDefinition"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "minimumLevel",
+    "resourceId",
+    "resourceCost",
+    "baseFailurePercent",
+    "target",
+    "effect",
+    "tags"
+  ],
+  "title": "AbilityDefinition",
+  "type": "object"
+}

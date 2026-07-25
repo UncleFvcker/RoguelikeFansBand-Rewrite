@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 30;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 33;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -600,6 +600,105 @@ mod tests {
 
         let verification = verify(&replay, initial).expect("target selection replay should verify");
         assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn ability_study_and_cast_round_trip_through_replay() {
+        let initial = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-primer")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the echo primer");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            })
+            .expect("ability study should execute");
+        recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+                target: rfb_protocol::TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
+            })
+            .expect("ability cast should execute");
+        let (final_game, replay) = recorder.finish();
+
+        let snapshot = final_game.snapshot();
+        assert_eq!(snapshot.player.resources[0].current, 18);
+        assert!(
+            snapshot
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.resonant-bolt")
+                .is_some_and(|ability| ability.learned)
+        );
+        assert!(
+            !snapshot
+                .entities
+                .iter()
+                .any(|entity| entity.id == "demo.monster.ember-mote.1")
+        );
+        let verification = verify(&replay, initial).expect("ability replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn healing_and_multi_turn_rest_round_trip_through_replay() {
+        let mut payload = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create")
+            .to_save();
+        payload.entities.clear();
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        payload.player.hp = 5;
+        payload.player.resources[0].current = 10;
+        let initial = Game::from_save(payload).expect("healing replay fixture should load");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.stillwater-notes")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the stillwater notes");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.mending-echo".to_owned(),
+            })
+            .expect("healing ability study should execute");
+        recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.mending-echo".to_owned(),
+                target: rfb_protocol::TargetSelection::SelfTarget,
+            })
+            .expect("healing ability cast should execute");
+        recorder
+            .dispatch(GameCommand::Rest { turns: 100 })
+            .expect("multi-turn rest should execute");
+        let (final_game, replay) = recorder.finish();
+
+        let snapshot = final_game.snapshot();
+        assert_eq!(snapshot.player.hp, 11);
+        assert_eq!(snapshot.player.resources[0].current, 21);
+        assert_eq!(snapshot.turn, 7);
+        let verification = verify(&replay, initial).expect("healing rest replay should verify");
+        assert_eq!(verification.commands_verified, 3);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 

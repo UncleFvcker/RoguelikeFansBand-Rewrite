@@ -188,6 +188,8 @@ mod tests {
                 resistances: Vec::new(),
                 progress: None,
                 build: None,
+                resources: Vec::new(),
+                learned_ability_ids: Vec::new(),
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

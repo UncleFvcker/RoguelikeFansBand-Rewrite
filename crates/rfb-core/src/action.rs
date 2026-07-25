@@ -19,6 +19,10 @@ pub(crate) enum GameAction {
     BashDoor {
         direction: Direction,
     },
+    CastAbility {
+        ability_id: String,
+        target: TargetSelection,
+    },
     CloseDoor {
         direction: Direction,
     },
@@ -37,7 +41,14 @@ pub(crate) enum GameAction {
     Wait,
     PickUp,
     Retire,
+    Rest {
+        turns: u16,
+    },
     Search,
+    StudyAbility {
+        book_item_id: String,
+        ability_id: String,
+    },
     Equip {
         item_id: String,
     },
@@ -93,6 +104,9 @@ impl From<GameCommand> for GameAction {
             },
             GameCommand::Appraise { item_id } => Self::Appraise { item_id },
             GameCommand::BashDoor { direction } => Self::BashDoor { direction },
+            GameCommand::CastAbility { ability_id, target } => {
+                Self::CastAbility { ability_id, target }
+            }
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
@@ -101,7 +115,15 @@ impl From<GameCommand> for GameAction {
             GameCommand::Wait => Self::Wait,
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,
+            GameCommand::Rest { turns } => Self::Rest { turns },
             GameCommand::Search => Self::Search,
+            GameCommand::StudyAbility {
+                book_item_id,
+                ability_id,
+            } => Self::StudyAbility {
+                book_item_id,
+                ability_id,
+            },
             GameCommand::Equip { item_id } => Self::Equip { item_id },
             GameCommand::Fire { direction } => Self::Fire { direction },
             GameCommand::FireTarget { target } => Self::FireTarget { target },

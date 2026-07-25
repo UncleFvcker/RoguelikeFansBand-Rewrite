@@ -4,11 +4,12 @@ use std::collections::BTreeSet;
 
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
-    CampaignStateDto, CampaignStateSaveDto, CharacterSummary, GameCommand, GameCommandEnvelope,
-    GameEventDto, InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
-    PlayerBuildDto, Position, ResistanceDto, ResistanceSaveDto, SaveHeaderV1, StatusDto,
-    StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
+    AbilityDto, CampaignStateDto, CampaignStateSaveDto, CharacterSummary, GameCommand,
+    GameCommandEnvelope, GameEventDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
+    PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
+    ResourcePoolSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto,
+    TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -48,6 +49,8 @@ pub enum Determinism {
 pub struct Preconditions {
     pub world: String,
     #[serde(default)]
+    pub debug_clear_entities: bool,
+    #[serde(default)]
     pub player_build_id: Option<String>,
     #[serde(default)]
     pub player_hp: Option<i32>,
@@ -63,6 +66,12 @@ pub struct Preconditions {
     pub player_attributes: Option<NaturalAttributeSetSaveDto>,
     #[serde(default)]
     pub legacy_player_progress: bool,
+    #[serde(default)]
+    pub player_resources: Option<Vec<ResourcePoolSaveDto>>,
+    #[serde(default)]
+    pub player_learned_ability_ids: Option<Vec<String>>,
+    #[serde(default)]
+    pub legacy_player_ability_state: bool,
     #[serde(default)]
     pub player_statuses: Vec<StatusSaveDto>,
     #[serde(default)]
@@ -151,6 +160,8 @@ pub struct FinalStateAssertion {
     pub world_tick: u32,
     pub last_command_seq: u32,
     #[serde(default)]
+    pub rng_draw_counter: u64,
+    #[serde(default)]
     pub floor_id: String,
     #[serde(default)]
     pub dungeon_instance_id: Option<String>,
@@ -187,6 +198,10 @@ pub struct FinalStateAssertion {
     pub player_attributes: Option<rfb_protocol::PlayerProgressDto>,
     #[serde(default)]
     pub player_build: Option<PlayerBuildDto>,
+    #[serde(default)]
+    pub player_resources: Vec<ResourcePoolDto>,
+    #[serde(default)]
+    pub player_abilities: Vec<AbilityDto>,
     pub entity_count: usize,
     #[serde(default)]
     pub entities: Vec<ActorStateAssertion>,
@@ -301,6 +316,17 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     if fixture.preconditions.legacy_player_progress {
         payload.player.progress = None;
     }
+    if fixture.preconditions.legacy_player_ability_state {
+        payload.player.resources.clear();
+        payload.player.learned_ability_ids.clear();
+    } else {
+        if let Some(resources) = &fixture.preconditions.player_resources {
+            payload.player.resources.clone_from(resources);
+        }
+        if let Some(ability_ids) = &fixture.preconditions.player_learned_ability_ids {
+            payload.player.learned_ability_ids.clone_from(ability_ids);
+        }
+    }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
     for item in &fixture.preconditions.inventory_items {
@@ -368,6 +394,15 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         entity.statuses = effects.statuses.clone();
         entity.resistances = effects.resistances.clone();
     }
+    if fixture.preconditions.debug_clear_entities {
+        payload.entities.clear();
+        payload.carried_items.clear();
+        for state in &mut payload.dungeon_states {
+            if state.dungeon_id == "demo.dungeon.resonance-descent" {
+                state.entrance_guardian_defeated = Some(true);
+            }
+        }
+    }
     let mut game = Game::from_save(payload)?;
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
@@ -412,6 +447,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             turn: snapshot.turn,
             world_tick: snapshot.world_tick,
             last_command_seq: snapshot.last_command_seq,
+            rng_draw_counter: game.rng_draw_counter(),
             floor_id: snapshot.floor_id.clone(),
             dungeon_instance_id: snapshot.dungeon_instance_id.clone(),
             player_position: snapshot.player.position,
@@ -433,6 +469,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             ),
             player_attributes: Some(snapshot.player.progress.clone()),
             player_build: snapshot.player.build.clone(),
+            player_resources: snapshot.player.resources.clone(),
+            player_abilities: snapshot.player.abilities.clone(),
             entity_count: snapshot.entities.len(),
             entities: snapshot
                 .entities

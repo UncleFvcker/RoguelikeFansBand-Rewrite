@@ -14,9 +14,23 @@
   "lifePercent": 95,
   "experiencePercent": 130,
   "skillSetId": "demo.skill-set.mage",
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "intelligence",
+    "baseCapacity": 4,
+    "capacityPerLevel": 2,
+    "capacityPerAttributeIndex": 1,
+    "minimumFailurePercent": 5,
+    "abilityBookIds": [
+      "demo.ability-book.echo-primer",
+      "demo.ability-book.stillwater-notes"
+    ]
+  },
   "startingItems": [
     { "itemKindId": "demo.item.echo-charm", "quantity": 1, "equipped": true },
-    { "itemKindId": "demo.item.luminous-shard", "quantity": 2 }
+    { "itemKindId": "demo.item.luminous-shard", "quantity": 2 },
+    { "itemKindId": "demo.item.echo-primer", "quantity": 1 },
+    { "itemKindId": "demo.item.stillwater-notes", "quantity": 1 }
   ],
   "tags": ["book-caster", "prototype"]
 }

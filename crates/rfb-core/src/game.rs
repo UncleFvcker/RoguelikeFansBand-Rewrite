@@ -37,7 +37,7 @@ use crate::{
     },
     state::{
         Actor, EquipOutcome, FloorConnectionState, FloorRegionState, FloorState, ItemInstance,
-        ItemLocation, MonsterPackIdentity,
+        ItemLocation, MonsterPackIdentity, ResourcePool,
     },
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -46,28 +46,31 @@ use crate::{
     },
 };
 use rfb_content::{
-    ActorRole, CampaignDefinition, CharacterBuildDefinition, ClassDefinition, ContentCatalog,
-    ContentPosition, DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
-    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterFormation,
-    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
-    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
-    SkillKind, SkillSetDefinition, StartingItemDefinition, StatModifiers, TaskObjectiveDefinition,
-    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
-    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    AbilityDefinition, AbilityEffectDefinition, AbilityTargetModeDefinition, ActorRole,
+    CampaignDefinition, CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition,
+    ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
+    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
+    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, FloorLifecycle,
+    ItemUseEffectDefinition, MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition,
+    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
+    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
+    RaceDefinition, RetakeFloorPolicy, SkillKind, SkillSetDefinition, StartingItemDefinition,
+    StatModifiers, TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
+    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
-    CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto,
-    CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto,
-    EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
-    FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, InventoryItemDto,
-    InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
-    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
-    MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto,
-    PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ProjectileProfileDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
+    AbilityCastResolutionDto, AbilityDto, ActorSaveDto, AttackProfileDto, AttributeSetDto,
+    AttributeValueDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
+    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
+    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
+    GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto,
+    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
+    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
     TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
     TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
     TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
@@ -76,7 +79,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 65] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 67] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -142,15 +145,18 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 65] = [
     "84a8696e872a53ff24800645e5df8db49059f4f8cac0b4ebf17a982b16e529d5",
     "ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6",
     "1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4",
+    "3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a",
+    "fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a";
+    "9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
 const MAX_THROW_RANGE: u16 = 10;
+const MAX_REST_TURNS: u16 = 100;
 const AMBIENT_LIGHT: u8 = 28;
 const PLAYER_LIGHT_RADIUS: i32 = 6;
 const TERRAIN_INTERACTION_DIRECTIONS: [Direction; 8] = [
@@ -171,7 +177,7 @@ const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV31 {
+struct StateHashPayloadV33 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -985,6 +991,8 @@ pub struct Game {
     player: Actor,
     build: Option<CharacterBuildIdentity>,
     progress: CharacterProgress,
+    resources: BTreeMap<String, ResourcePool>,
+    learned_abilities: BTreeSet<String>,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
@@ -1176,6 +1184,8 @@ impl Game {
             player,
             build,
             progress,
+            resources: BTreeMap::new(),
+            learned_abilities: BTreeSet::new(),
             entities,
             items,
             item_knowledge: BTreeMap::new(),
@@ -1194,6 +1204,7 @@ impl Game {
             world_tick: 0,
             last_command_seq: 0,
         };
+        game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
         game.player.hp = game.effective_player_max_hp();
         game.initialize_carried_loot()?;
@@ -1335,6 +1346,8 @@ impl Game {
             player_definition.max_hp,
             expected_skills,
         )?;
+        let saved_resources = payload.player.resources.clone();
+        let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1519,6 +1532,8 @@ impl Game {
             player,
             build,
             progress,
+            resources: BTreeMap::new(),
+            learned_abilities: BTreeSet::new(),
             entities,
             items,
             item_knowledge,
@@ -1537,6 +1552,7 @@ impl Game {
             world_tick: payload.world_tick,
             last_command_seq: payload.last_command_seq,
         };
+        game.restore_player_ability_state(saved_resources, saved_learned_ability_ids)?;
         if campaign_state_missing && game.campaign_victory_reached() {
             game.campaign_state.status = CampaignStatusDto::Victorious;
             game.campaign_state.victory_turn = Some(game.turn);
@@ -1616,7 +1632,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: player_to_save(&self.player, &self.progress, self.build.as_ref()),
+            player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
@@ -1711,9 +1727,11 @@ impl Game {
         let mut removed_entities = Vec::new();
         let action = GameAction::from(envelope.command);
         let action_cost = action.energy_cost();
+        let recover_after_wait = matches!(&action, GameAction::Wait);
+        let mut turn_advance = 1_u32;
         let advances_world = !matches!(
             &action,
-            GameAction::Retire | GameAction::IncreaseAttribute { .. }
+            GameAction::Retire | GameAction::IncreaseAttribute { .. } | GameAction::Rest { .. }
         );
 
         match action {
@@ -1793,6 +1811,7 @@ impl Game {
             }
             GameAction::Equip { item_id } => {
                 if let Some(outcome) = self.equip_inventory_item(&item_id) {
+                    self.refresh_player_resource_maxima();
                     let discovered_affix_ids = outcome.discovered_affix_ids.clone();
                     let equipped_kind_id = outcome.kind_id.clone();
                     events.push(DomainEvent::ItemEquipped {
@@ -1815,6 +1834,15 @@ impl Game {
                 } else {
                     events.push(DomainEvent::ItemEquipUnavailable);
                 }
+            }
+            GameAction::CastAbility { ability_id, target } => {
+                self.resolve_player_ability(
+                    &ability_id,
+                    target,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
             }
             GameAction::Fire { direction } => self.resolve_player_projectile(
                 TargetSelection::Direction { direction },
@@ -1909,6 +1937,16 @@ impl Game {
             GameAction::UseItem { item_id } => {
                 self.use_inventory_item(&item_id, &mut events);
             }
+            GameAction::StudyAbility {
+                book_item_id,
+                ability_id,
+            } => match self.study_player_ability(&book_item_id, &ability_id) {
+                Ok(()) => events.push(DomainEvent::AbilityStudied { ability_id }),
+                Err(reason) => events.push(DomainEvent::AbilityStudyUnavailable {
+                    ability_id,
+                    reason: reason.to_owned(),
+                }),
+            },
             GameAction::Retire => {
                 let on_surface = self.content.world(&self.world_id).is_some_and(|world| {
                     self.current_floor_id == world.initial_floor_id
@@ -1923,6 +1961,23 @@ impl Game {
                     events.push(DomainEvent::CampaignRetired { score });
                 } else {
                     events.push(DomainEvent::CampaignRetireUnavailable);
+                }
+            }
+            GameAction::Rest { turns } => {
+                let resolution = self.resolve_player_rest(
+                    turns,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+                turn_advance = u32::from(resolution.completed_turns).max(1);
+                if matches!(
+                    resolution.stop_reason,
+                    RestStopReasonDto::FullResources | RestStopReasonDto::TurnLimit
+                ) {
+                    events.push(DomainEvent::RestCompleted { resolution });
+                } else {
+                    events.push(DomainEvent::RestInterrupted { resolution });
                 }
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
@@ -1951,6 +2006,7 @@ impl Game {
             },
             GameAction::Unequip { slot_id } => {
                 if let Some(kind_id) = self.unequip_slot(&slot_id) {
+                    self.refresh_player_resource_maxima();
                     events.push(DomainEvent::ItemUnequipped {
                         target_kind_id: kind_id,
                         slot_id,
@@ -2063,12 +2119,19 @@ impl Game {
         if advances_world {
             spend_energy(&mut self.player.energy_need, action_cost);
             self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities)?;
+            if recover_after_wait && !self.player_is_dead() {
+                events.extend(
+                    self.recover_player_resources(false)
+                        .into_iter()
+                        .map(|resolution| DomainEvent::ResourceRecovered { resolution }),
+                );
+            }
         }
         self.apply_task_events(&events);
         self.apply_campaign_events(&mut events);
 
         self.last_command_seq = envelope.command_seq;
-        self.turn = self.turn.saturating_add(1);
+        self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
         self.reveal_current_visibility();
         let changed_visual_cells = self.changed_visual_cells(&previous_visuals);
@@ -2103,8 +2166,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV31 {
-            schema_version: 31,
+        let payload = StateHashPayloadV33 {
+            schema_version: 33,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2114,7 +2177,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
             },
-            player: player_to_save(&self.player, &self.progress, self.build.as_ref()),
+            player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
             inventory: inventory_to_save(&self.items),
@@ -2248,7 +2311,384 @@ impl Game {
             resistances: self.player.resistances.to_dtos(),
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
+            resources: self.player_resource_dtos(),
+            abilities: self.player_ability_dtos(),
         }
+    }
+
+    fn player_save_dto(&self) -> PlayerSaveDto {
+        let mut player = player_to_save(&self.player, &self.progress, self.build.as_ref());
+        player.resources = self
+            .resources
+            .iter()
+            .map(|(id, pool)| ResourcePoolSaveDto {
+                id: id.clone(),
+                current: pool.current,
+                maximum: pool.maximum,
+            })
+            .collect();
+        player.learned_ability_ids = self.learned_abilities.iter().cloned().collect();
+        player
+    }
+
+    fn casting_profile(&self) -> Option<&CastingProfileDefinition> {
+        self.character_definitions()
+            .and_then(|(_, _, class, _)| class.casting_profile.as_ref())
+    }
+
+    fn casting_attribute_kind(attribute: CastingAttribute) -> AttributeKind {
+        match attribute {
+            CastingAttribute::Intelligence => AttributeKind::Intelligence,
+            CastingAttribute::Wisdom => AttributeKind::Wisdom,
+            CastingAttribute::Charisma => AttributeKind::Charisma,
+        }
+    }
+
+    fn casting_resource_maximum(&self, profile: &CastingProfileDefinition) -> u32 {
+        let attribute_index = u32::from(
+            self.effective_player_attributes()
+                .index(Self::casting_attribute_kind(profile.casting_attribute)),
+        );
+        profile
+            .base_capacity
+            .saturating_add(
+                profile
+                    .capacity_per_level
+                    .saturating_mul(u32::from(self.progress.level)),
+            )
+            .saturating_add(
+                profile
+                    .capacity_per_attribute_index
+                    .saturating_mul(attribute_index),
+            )
+    }
+
+    fn initialize_player_ability_state(&mut self) {
+        self.resources.clear();
+        self.learned_abilities.clear();
+        let Some(profile) = self.casting_profile().cloned() else {
+            return;
+        };
+        let maximum = self.casting_resource_maximum(&profile);
+        self.resources.insert(
+            profile.resource_id,
+            ResourcePool {
+                current: maximum,
+                maximum,
+            },
+        );
+    }
+
+    fn restore_player_ability_state(
+        &mut self,
+        saved_resources: Vec<ResourcePoolSaveDto>,
+        saved_learned_ability_ids: Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.initialize_player_ability_state();
+        if !saved_resources.is_empty() {
+            if saved_resources.len() != self.resources.len() {
+                return Err(CoreError::InvalidSave("player resource set is invalid"));
+            }
+            let mut seen = BTreeSet::new();
+            for saved in saved_resources {
+                let Some(pool) = self.resources.get_mut(&saved.id) else {
+                    return Err(CoreError::InvalidSave("player resource ID is invalid"));
+                };
+                if !seen.insert(saved.id)
+                    || saved.maximum != pool.maximum
+                    || saved.current > saved.maximum
+                {
+                    return Err(CoreError::InvalidSave("player resource pool is invalid"));
+                }
+                pool.current = saved.current;
+            }
+        }
+
+        let Some(profile) = self.casting_profile().cloned() else {
+            if saved_learned_ability_ids.is_empty() {
+                return Ok(());
+            }
+            return Err(CoreError::InvalidSave(
+                "non-caster cannot have learned abilities",
+            ));
+        };
+        for ability_id in saved_learned_ability_ids {
+            let Some(ability) = self.content.ability(&ability_id) else {
+                return Err(CoreError::InvalidSave("learned ability ID is invalid"));
+            };
+            if ability.minimum_level > self.progress.level
+                || !self.profile_supports_ability(&profile, &ability_id)
+                || !self.learned_abilities.insert(ability_id)
+            {
+                return Err(CoreError::InvalidSave("learned ability set is invalid"));
+            }
+        }
+        Ok(())
+    }
+
+    fn refresh_player_resource_maxima(&mut self) {
+        let Some(profile) = self.casting_profile().cloned() else {
+            self.resources.clear();
+            return;
+        };
+        let maximum = self.casting_resource_maximum(&profile);
+        let pool = self
+            .resources
+            .entry(profile.resource_id.clone())
+            .or_insert(ResourcePool {
+                current: maximum,
+                maximum,
+            });
+        pool.maximum = maximum;
+        pool.current = pool.current.min(maximum);
+        self.resources.retain(|id, _| id == &profile.resource_id);
+    }
+
+    fn profile_supports_ability(
+        &self,
+        profile: &CastingProfileDefinition,
+        ability_id: &str,
+    ) -> bool {
+        profile.ability_book_ids.iter().any(|book_id| {
+            self.content
+                .ability_book(book_id)
+                .is_some_and(|book| book.ability_ids.iter().any(|id| id == ability_id))
+        })
+    }
+
+    fn ability_book_item_id(
+        &self,
+        profile: &CastingProfileDefinition,
+        ability_id: &str,
+    ) -> Option<String> {
+        self.items
+            .iter()
+            .filter(|item| item.location == ItemLocation::Inventory)
+            .filter_map(|item| {
+                let book_id = self
+                    .content
+                    .item(&item.kind_id)?
+                    .ability_book_id
+                    .as_deref()?;
+                if !profile.ability_book_ids.iter().any(|id| id == book_id)
+                    || !self
+                        .content
+                        .ability_book(book_id)
+                        .is_some_and(|book| book.ability_ids.iter().any(|id| id == ability_id))
+                {
+                    return None;
+                }
+                Some(item.id.clone())
+            })
+            .min()
+    }
+
+    fn ability_failure_percent(
+        &self,
+        profile: &CastingProfileDefinition,
+        ability: &AbilityDefinition,
+    ) -> u8 {
+        let attribute_index = i32::from(
+            self.effective_player_attributes()
+                .index(Self::casting_attribute_kind(profile.casting_attribute)),
+        );
+        let level_adjustment =
+            i32::from(self.progress.level.saturating_sub(ability.minimum_level)).saturating_mul(3);
+        let chance = i32::from(ability.base_failure_percent)
+            .saturating_sub(level_adjustment)
+            .saturating_sub(attribute_index)
+            .clamp(i32::from(profile.minimum_failure_percent), 95);
+        u8::try_from(chance).expect("validated ability failure chance must fit u8")
+    }
+
+    fn player_resource_dtos(&self) -> Vec<ResourcePoolDto> {
+        self.resources
+            .iter()
+            .map(|(id, pool)| ResourcePoolDto {
+                id: id.clone(),
+                name_key: self
+                    .content
+                    .resource(id)
+                    .expect("player resource definition must remain available")
+                    .name_key
+                    .clone(),
+                current: pool.current,
+                maximum: pool.maximum,
+                wait_recovery_amount: self
+                    .content
+                    .resource(id)
+                    .expect("player resource definition must remain available")
+                    .wait_recovery_amount,
+                rest_recovery_amount: self
+                    .content
+                    .resource(id)
+                    .expect("player resource definition must remain available")
+                    .rest_recovery_amount,
+            })
+            .collect()
+    }
+
+    fn recover_player_resources(&mut self, resting: bool) -> Vec<ResourceRecoveryResolutionDto> {
+        let recovery_amounts = self
+            .resources
+            .keys()
+            .map(|id| {
+                let definition = self
+                    .content
+                    .resource(id)
+                    .expect("player resource definition must remain available");
+                let amount = if resting {
+                    definition.rest_recovery_amount
+                } else {
+                    definition.wait_recovery_amount
+                };
+                (id.clone(), amount)
+            })
+            .collect::<BTreeMap<_, _>>();
+        let mut recovered = Vec::new();
+        for (id, pool) in &mut self.resources {
+            let before = pool.current;
+            pool.current = pool
+                .current
+                .saturating_add(recovery_amounts[id])
+                .min(pool.maximum);
+            if pool.current > before {
+                recovered.push(ResourceRecoveryResolutionDto {
+                    resource_id: id.clone(),
+                    before,
+                    after: pool.current,
+                    recovered: pool.current - before,
+                });
+            }
+        }
+        recovered
+    }
+
+    fn player_has_depleted_recoverable_resource(&self, resting: bool) -> bool {
+        self.resources.iter().any(|(id, pool)| {
+            if pool.current >= pool.maximum {
+                return false;
+            }
+            self.content.resource(id).is_some_and(|definition| {
+                if resting {
+                    definition.rest_recovery_amount > 0
+                } else {
+                    definition.wait_recovery_amount > 0
+                }
+            })
+        })
+    }
+
+    fn visible_hostile_exists(&self) -> bool {
+        self.entities
+            .iter()
+            .any(|entity| entity.hp > 0 && self.is_visible(entity.position))
+    }
+
+    fn resolve_player_rest(
+        &mut self,
+        requested_turns: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<RestResolutionDto, CoreError> {
+        let resource_before = self
+            .resources
+            .iter()
+            .map(|(id, pool)| (id.clone(), pool.current))
+            .collect::<BTreeMap<_, _>>();
+        let mut completed_turns = 0_u16;
+        let stop_reason = if requested_turns == 0 || requested_turns > MAX_REST_TURNS {
+            RestStopReasonDto::InvalidTurns
+        } else if !self.player_has_depleted_recoverable_resource(true) {
+            RestStopReasonDto::FullResources
+        } else if self.visible_hostile_exists() {
+            RestStopReasonDto::EnemyVisible
+        } else {
+            loop {
+                let hp_before = self.player.hp;
+                spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
+                self.advance_until_player_ready(events, changed, removed_entities)?;
+                completed_turns = completed_turns.saturating_add(1);
+                if self.player_is_dead() {
+                    break RestStopReasonDto::PlayerDied;
+                }
+                if self.player.hp < hp_before {
+                    break RestStopReasonDto::Damaged;
+                }
+                if self.visible_hostile_exists() {
+                    break RestStopReasonDto::EnemyVisible;
+                }
+                self.recover_player_resources(true);
+                if !self.player_has_depleted_recoverable_resource(true) {
+                    break RestStopReasonDto::FullResources;
+                }
+                if completed_turns >= requested_turns {
+                    break RestStopReasonDto::TurnLimit;
+                }
+            }
+        };
+        let resource_recoveries = self
+            .resources
+            .iter()
+            .filter_map(|(id, pool)| {
+                let before = resource_before.get(id).copied().unwrap_or(pool.current);
+                (pool.current > before).then(|| ResourceRecoveryResolutionDto {
+                    resource_id: id.clone(),
+                    before,
+                    after: pool.current,
+                    recovered: pool.current - before,
+                })
+            })
+            .collect();
+        Ok(RestResolutionDto {
+            requested_turns,
+            completed_turns,
+            stop_reason,
+            resource_recoveries,
+        })
+    }
+
+    fn player_ability_dtos(&self) -> Vec<AbilityDto> {
+        let Some(profile) = self.casting_profile() else {
+            return Vec::new();
+        };
+        let ability_ids = profile
+            .ability_book_ids
+            .iter()
+            .filter_map(|book_id| self.content.ability_book(book_id))
+            .flat_map(|book| book.ability_ids.iter().cloned())
+            .collect::<BTreeSet<_>>();
+        ability_ids
+            .into_iter()
+            .filter_map(|ability_id| {
+                let ability = self.content.ability(&ability_id)?;
+                let learned = self.learned_abilities.contains(&ability_id);
+                let book_item_id = self.ability_book_item_id(profile, &ability_id);
+                let level_available = self.progress.level >= ability.minimum_level;
+                let resource_available = self
+                    .resources
+                    .get(&ability.resource_id)
+                    .is_some_and(|pool| pool.current >= ability.resource_cost);
+                Some(AbilityDto {
+                    id: ability.id.clone(),
+                    name_key: ability.name_key.clone(),
+                    description_key: ability.description_key.clone(),
+                    minimum_level: ability.minimum_level,
+                    resource_id: ability.resource_id.clone(),
+                    resource_cost: ability.resource_cost,
+                    failure_percent: self.ability_failure_percent(profile, ability),
+                    target_spec: ability_target_spec_dto(ability),
+                    learned,
+                    book_item_id: book_item_id.clone(),
+                    can_study: !learned && level_available && book_item_id.is_some(),
+                    can_cast: learned
+                        && level_available
+                        && resource_available
+                        && book_item_id.is_some(),
+                })
+            })
+            .collect()
     }
 
     fn entities_dto(&self) -> Vec<EntityDto> {
@@ -2999,6 +3439,7 @@ impl Game {
             .gain_experience(amount, self.victory_level_cap_unlocked());
         if !levels.is_empty() {
             self.refresh_character_skills();
+            self.refresh_player_resource_maxima();
         }
         if amount > 0 {
             events.push(DomainEvent::ExperienceGained {
@@ -3200,6 +3641,7 @@ impl Game {
             });
         }
         let effective = self.effective_player_attributes();
+        self.refresh_player_resource_maxima();
         Some((
             self.progress.attributes.value(attribute),
             effective.value(attribute),
@@ -3859,6 +4301,247 @@ impl Game {
         Ok(())
     }
 
+    fn study_player_ability(
+        &mut self,
+        book_item_id: &str,
+        ability_id: &str,
+    ) -> Result<(), &'static str> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            return Err("no-casting-profile");
+        };
+        let Some(ability) = self.content.ability(ability_id) else {
+            return Err("unknown-ability");
+        };
+        if self.learned_abilities.contains(ability_id) {
+            return Err("already-learned");
+        }
+        if self.progress.level < ability.minimum_level {
+            return Err("level-too-low");
+        }
+        if !self.profile_supports_ability(&profile, ability_id) {
+            return Err("ability-not-supported");
+        }
+        let Some(book_id) = self
+            .items
+            .iter()
+            .find(|item| {
+                item.id == book_item_id
+                    && item.location == ItemLocation::Inventory
+                    && item.quantity == 1
+            })
+            .and_then(|item| self.content.item(&item.kind_id))
+            .and_then(|item| item.ability_book_id.as_deref())
+        else {
+            return Err("book-unavailable");
+        };
+        if !profile.ability_book_ids.iter().any(|id| id == book_id)
+            || !self
+                .content
+                .ability_book(book_id)
+                .is_some_and(|book| book.ability_ids.iter().any(|id| id == ability_id))
+        {
+            return Err("book-mismatch");
+        }
+        self.learned_abilities.insert(ability_id.to_owned());
+        Ok(())
+    }
+
+    fn resolve_player_ability(
+        &mut self,
+        ability_id: &str,
+        target: TargetSelection,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "no-casting-profile".to_owned(),
+            });
+            return Ok(());
+        };
+        let Some(ability) = self.content.ability(ability_id).cloned() else {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "unknown-ability".to_owned(),
+            });
+            return Ok(());
+        };
+        let unavailable_reason = if !self.learned_abilities.contains(ability_id) {
+            Some("not-learned")
+        } else if self.progress.level < ability.minimum_level {
+            Some("level-too-low")
+        } else if !self.profile_supports_ability(&profile, ability_id) {
+            Some("ability-not-supported")
+        } else if self.ability_book_item_id(&profile, ability_id).is_none() {
+            Some("book-unavailable")
+        } else {
+            None
+        };
+        if let Some(reason) = unavailable_reason {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: reason.to_owned(),
+            });
+            return Ok(());
+        }
+
+        let failure_percent = self.ability_failure_percent(&profile, &ability);
+        let Some(pool) = self.resources.get_mut(&ability.resource_id) else {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "resource-unavailable".to_owned(),
+            });
+            return Ok(());
+        };
+        if pool.current < ability.resource_cost {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "insufficient-resource".to_owned(),
+            });
+            return Ok(());
+        }
+        let resource_before = pool.current;
+        pool.current -= ability.resource_cost;
+        let resource_after = pool.current;
+        let percentile_roll =
+            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
+        let succeeded = percentile_roll >= failure_percent;
+        let resolution = AbilityCastResolutionDto {
+            ability_id: ability.id.clone(),
+            resource_id: ability.resource_id.clone(),
+            resource_cost: ability.resource_cost,
+            resource_before,
+            resource_after,
+            failure_percent,
+            percentile_roll,
+            succeeded,
+        };
+        if !succeeded {
+            events.push(DomainEvent::AbilityCastFailed { resolution });
+            return Ok(());
+        }
+        events.push(DomainEvent::AbilityCastSucceeded {
+            resolution: resolution.clone(),
+        });
+
+        match ability.effect.clone() {
+            AbilityEffectDefinition::Damage {
+                damage_dice,
+                damage_sides,
+                damage_type,
+            } => {
+                let Some(path) = self.ability_path(&ability, &target) else {
+                    events.push(DomainEvent::AbilityTargetUnavailable {
+                        ability_id: ability.id,
+                    });
+                    return Ok(());
+                };
+                let (trace, target_index) = self.trace_projectile_path(path);
+                let Some(index) = target_index else {
+                    events.push(DomainEvent::AbilityLanded {
+                        ability_id: ability.id,
+                        trace,
+                    });
+                    return Ok(());
+                };
+
+                let definition = self
+                    .content
+                    .actor(&self.entities[index].kind_id)
+                    .expect("ability target definition must remain available")
+                    .clone();
+                let target_kind_id = definition.id.clone();
+                self.entities[index].alerted = true;
+                changed.insert(self.entities[index].position);
+                let damage_type = DamageType::from(damage_type);
+                let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+                let prepared = if damage_type == DamageType::Physical {
+                    apply_melee_armor_reduction(raw_damage, target.armor_class.value)
+                } else {
+                    raw_damage
+                };
+                let resistance = self.entities[index].resistances.level(damage_type);
+                let damage = resolve_damage(
+                    DamagePacket::after_armor(raw_damage, prepared, damage_type),
+                    resistance,
+                );
+                self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
+                events.push(DomainEvent::AbilityHit {
+                    ability_id: ability.id.clone(),
+                    target_kind_id: target_kind_id.clone(),
+                    damage,
+                    trace: trace.clone(),
+                });
+                if self.entities[index].hp <= 0 {
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::AbilitySlew {
+                            ability_id: ability.id,
+                            target_kind_id,
+                            damage,
+                            trace,
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+            AbilityEffectDefinition::Heal { amount } => {
+                if !matches!(target, TargetSelection::SelfTarget)
+                    || !ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                {
+                    events.push(DomainEvent::AbilityTargetUnavailable {
+                        ability_id: ability.id,
+                    });
+                    return Ok(());
+                }
+                let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
+                let max_hp = self.effective_player_max_hp();
+                let outcome = apply_effect(
+                    &mut EffectTarget {
+                        hp: &mut self.player.hp,
+                        max_hp,
+                        resistances: &self.player.resistances,
+                        statuses: &mut self.player.statuses,
+                    },
+                    EffectSpec::Heal { amount },
+                );
+                let EffectOutcome::Healed { requested, applied } = outcome else {
+                    unreachable!("healing abilities must produce healing outcomes");
+                };
+                events.push(DomainEvent::AbilityHealed {
+                    ability_id: ability.id,
+                    resolution: HealingResolutionDto { requested, applied },
+                });
+            }
+        }
+        Ok(())
+    }
+
+    fn ability_path(
+        &self,
+        ability: &AbilityDefinition,
+        target: &TargetSelection,
+    ) -> Option<Vec<Position>> {
+        let mode = match target {
+            TargetSelection::Direction { .. } => AbilityTargetModeDefinition::Direction,
+            TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
+            TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
+            TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
+        };
+        if !ability.target.modes.contains(&mode) {
+            return None;
+        }
+        self.projectile_path(target, ability.target.range)
+    }
+
     fn projectile_path(&self, target: &TargetSelection, range: u16) -> Option<Vec<Position>> {
         let origin = self.player.position;
         match target {
@@ -3884,6 +4567,7 @@ impl Game {
                     .map(|entity| entity.position)?;
                 self.targeted_projectile_path(position, range)
             }
+            TargetSelection::SelfTarget => None,
         }
     }
 
@@ -9363,6 +10047,26 @@ impl Game {
                 }
             },
         }
+        if let Some(profile) = self.casting_profile() {
+            let expected_maximum = self.casting_resource_maximum(profile);
+            if self.resources.len() != 1
+                || self.resources.get(&profile.resource_id).is_none_or(|pool| {
+                    pool.maximum != expected_maximum || pool.current > pool.maximum
+                })
+                || self.learned_abilities.iter().any(|ability_id| {
+                    self.content.ability(ability_id).is_none_or(|ability| {
+                        ability.minimum_level > self.progress.level
+                            || !self.profile_supports_ability(profile, ability_id)
+                    })
+                })
+            {
+                return Err(CoreError::InvalidSave("player ability state is invalid"));
+            }
+        } else if !self.resources.is_empty() || !self.learned_abilities.is_empty() {
+            return Err(CoreError::InvalidSave(
+                "non-caster player ability state is invalid",
+            ));
+        }
         for (item_id, knowledge) in &self.item_property_knowledge {
             let Some(item) = self
                 .items
@@ -9743,6 +10447,24 @@ fn projectile_target_spec(range: u16) -> TargetSpecDto {
         ],
         range,
         requires_line_of_effect: true,
+    }
+}
+
+fn ability_target_spec_dto(ability: &AbilityDefinition) -> TargetSpecDto {
+    TargetSpecDto {
+        modes: ability
+            .target
+            .modes
+            .iter()
+            .map(|mode| match mode {
+                AbilityTargetModeDefinition::Direction => TargetModeDto::Direction,
+                AbilityTargetModeDefinition::Position => TargetModeDto::Position,
+                AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
+                AbilityTargetModeDefinition::SelfTarget => TargetModeDto::SelfTarget,
+            })
+            .collect(),
+        range: ability.target.range,
+        requires_line_of_effect: ability.target.requires_line_of_effect,
     }
 }
 
@@ -17344,6 +18066,338 @@ mod tests {
     }
 
     #[test]
+    fn scholar_studies_and_casts_an_ability_book_spell_deterministically() {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let book_item_id = ability_book_item_id(&game);
+        let initial_draws = game.rng_draw_counter();
+        let initial = game.snapshot();
+        assert_eq!(initial.player.resources[0].current, 21);
+        assert_eq!(initial.player.resources[0].maximum, 21);
+        let resonant_bolt = initial
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.resonant-bolt")
+            .expect("scholar should expose resonant bolt");
+        assert!(!resonant_bolt.learned);
+        assert!(resonant_bolt.can_study);
+
+        let study = dispatch_next(
+            &mut game,
+            GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
+        );
+        assert!(
+            study
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.studied")
+        );
+        assert_eq!(game.rng_draw_counter(), initial_draws);
+        assert!(
+            game.snapshot()
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.resonant-bolt")
+                .is_some_and(|ability| ability.learned)
+        );
+
+        let cast = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
+            },
+        );
+        let resolution = ability_cast_resolution(&cast);
+        assert_eq!(resolution.resource_before, 21);
+        assert_eq!(resolution.resource_after, 18);
+        assert_eq!(resolution.failure_percent, 20);
+        assert_eq!(resolution.percentile_roll, 32);
+        assert!(resolution.succeeded);
+        assert!(cast.events.iter().any(|event| event.kind == "ability.hit"));
+        assert!(cast.events.iter().any(|event| event.kind == "ability.slay"));
+        assert!(
+            !game
+                .entities
+                .iter()
+                .any(|entity| entity.id == "demo.monster.ember-mote.1")
+        );
+        let snapshot = game.snapshot();
+        assert_eq!(snapshot.player.resources[0].current, 18);
+        assert_eq!(snapshot.player.resources[0].maximum, 23);
+        assert_eq!(snapshot.player.progress.level, 2);
+
+        let restored = Game::from_save(game.to_save()).expect("ability state should reload");
+        assert_eq!(restored.snapshot(), snapshot);
+    }
+
+    #[test]
+    fn failed_cast_costs_mana_but_insufficient_mana_does_not_draw_rng() {
+        let mut failure =
+            Game::new_with_build(2, "demo.build.scholar").expect("scholar build should create");
+        let failure_book_item_id = ability_book_item_id(&failure);
+        dispatch_next(
+            &mut failure,
+            GameCommand::StudyAbility {
+                book_item_id: failure_book_item_id,
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
+        );
+        let failed_cast = dispatch_next(
+            &mut failure,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
+            },
+        );
+        let resolution = ability_cast_resolution(&failed_cast);
+        assert_eq!(resolution.percentile_roll, 13);
+        assert_eq!(resolution.resource_before, 21);
+        assert_eq!(resolution.resource_after, 18);
+        assert!(!resolution.succeeded);
+        assert_eq!(
+            failure
+                .entities
+                .iter()
+                .find(|entity| entity.id == "demo.monster.ember-mote.1")
+                .map(|entity| entity.hp),
+            Some(3)
+        );
+
+        let mut insufficient =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let insufficient_book_item_id = ability_book_item_id(&insufficient);
+        dispatch_next(
+            &mut insufficient,
+            GameCommand::StudyAbility {
+                book_item_id: insufficient_book_item_id,
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
+        );
+        insufficient
+            .resources
+            .get_mut("demo.resource.mana")
+            .expect("scholar mana pool should exist")
+            .current = 2;
+        let draws = insufficient.rng_draw_counter();
+        let rejected = dispatch_next(
+            &mut insufficient,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                },
+            },
+        );
+        assert_eq!(insufficient.rng_draw_counter(), draws);
+        assert_eq!(insufficient.resources["demo.resource.mana"].current, 2);
+        assert!(rejected.events.iter().any(|event| {
+            event.kind == "ability.cast-unavailable"
+                && event
+                    .args
+                    .get("reason")
+                    .is_some_and(|reason| reason == "insufficient-resource")
+        }));
+        assert!(!rejected.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(GameEventOutcomeDto::AbilityCast { .. })
+            )
+        }));
+    }
+
+    #[test]
+    fn legacy_caster_save_restores_full_resources_without_rng_drift() {
+        let canonical =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let mut legacy = canonical.to_save();
+        legacy.player.resources.clear();
+        legacy.player.learned_ability_ids.clear();
+        let draw_counter = legacy.rng.draw_counter;
+
+        let migrated = Game::from_save(legacy).expect("legacy caster save should migrate");
+        let snapshot = migrated.snapshot();
+        assert_eq!(migrated.rng_draw_counter(), draw_counter);
+        assert_eq!(snapshot.player.resources[0].current, 21);
+        assert_eq!(snapshot.player.resources[0].maximum, 21);
+        assert!(
+            snapshot
+                .player
+                .abilities
+                .iter()
+                .all(|ability| !ability.learned)
+        );
+        assert_eq!(migrated.state_hash(), canonical.state_hash());
+
+        let restored = Game::from_save(migrated.to_save())
+            .expect("migrated caster state should survive another round trip");
+        assert_eq!(restored.state_hash(), migrated.state_hash());
+    }
+
+    #[test]
+    fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut game);
+        game.resources
+            .get_mut("demo.resource.mana")
+            .expect("scholar mana pool should exist")
+            .current = 10;
+        let initial_draws = game.rng_draw_counter();
+
+        let waited = dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(game.resources["demo.resource.mana"].current, 11);
+        assert!(waited.events.iter().any(|event| {
+            event.kind == "resource.recovered"
+                && matches!(
+                    event.outcome.as_ref(),
+                    Some(GameEventOutcomeDto::ResourceRecovery { resolution })
+                        if resolution.before == 10
+                            && resolution.after == 11
+                            && resolution.recovered == 1
+                )
+        }));
+
+        let rested = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
+        let resolution = rest_resolution(&rested);
+        assert_eq!(resolution.completed_turns, 4);
+        assert_eq!(resolution.stop_reason, RestStopReasonDto::FullResources);
+        assert_eq!(resolution.resource_recoveries.len(), 1);
+        assert_eq!(resolution.resource_recoveries[0].before, 11);
+        assert_eq!(resolution.resource_recoveries[0].after, 21);
+        assert_eq!(game.resources["demo.resource.mana"].current, 21);
+        assert_eq!(rested.turn, 5);
+        assert_eq!(rested.world_tick, 50);
+        assert_eq!(game.rng_draw_counter(), initial_draws);
+
+        let world_tick = game.world_tick;
+        let full = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
+        let full_resolution = rest_resolution(&full);
+        assert_eq!(full_resolution.completed_turns, 0);
+        assert_eq!(
+            full_resolution.stop_reason,
+            RestStopReasonDto::FullResources
+        );
+        assert!(full_resolution.resource_recoveries.is_empty());
+        assert_eq!(game.world_tick, world_tick);
+        assert_eq!(game.rng_draw_counter(), initial_draws);
+
+        let restored = Game::from_save(game.to_save()).expect("recovered mana should reload");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn rest_interrupts_for_visible_enemies_and_damage_before_recovery() {
+        let mut visible =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        visible
+            .resources
+            .get_mut("demo.resource.mana")
+            .expect("scholar mana pool should exist")
+            .current = 10;
+        visible.entities[0].position = Position { x: 4, y: 3 };
+        let visible_draws = visible.rng_draw_counter();
+        let blocked = dispatch_next(&mut visible, GameCommand::Rest { turns: 10 });
+        let blocked_resolution = rest_resolution(&blocked);
+        assert_eq!(blocked_resolution.completed_turns, 0);
+        assert_eq!(
+            blocked_resolution.stop_reason,
+            RestStopReasonDto::EnemyVisible
+        );
+        assert_eq!(visible.world_tick, 0);
+        assert_eq!(visible.rng_draw_counter(), visible_draws);
+        assert_eq!(visible.resources["demo.resource.mana"].current, 10);
+
+        let mut payload = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar build should create")
+            .to_save();
+        payload.entities.clear();
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        payload.player.resources[0].current = 10;
+        payload.player.statuses = vec![StatusSaveDto {
+            kind_id: STATUS_BLEEDING.to_owned(),
+            intensity: 1,
+            remaining_ticks: 1,
+            source_id: None,
+        }];
+        let mut damaged = Game::from_save(payload).expect("bleeding rest fixture should load");
+        let interrupted = dispatch_next(&mut damaged, GameCommand::Rest { turns: 10 });
+        let interrupted_resolution = rest_resolution(&interrupted);
+        assert_eq!(interrupted_resolution.completed_turns, 1);
+        assert_eq!(
+            interrupted_resolution.stop_reason,
+            RestStopReasonDto::Damaged
+        );
+        assert!(interrupted_resolution.resource_recoveries.is_empty());
+        assert_eq!(damaged.resources["demo.resource.mana"].current, 10);
+        assert_eq!(damaged.player.hp, 11);
+        assert!(
+            interrupted
+                .events
+                .iter()
+                .any(|event| event.kind == "rest.interrupted")
+        );
+    }
+
+    #[test]
+    fn scholar_studies_and_casts_a_self_targeted_healing_ability() {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut game);
+        game.player.hp = 5;
+        let book_item_id = ability_book_item_id_for(&game, "demo.item.stillwater-notes");
+
+        dispatch_next(
+            &mut game,
+            GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.mending-echo".to_owned(),
+            },
+        );
+        let cast = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.mending-echo".to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        let cast_resolution = ability_cast_resolution(&cast);
+        assert_eq!(cast_resolution.failure_percent, 15);
+        assert_eq!(cast_resolution.percentile_roll, 32);
+        assert!(cast_resolution.succeeded);
+        assert_eq!(cast_resolution.resource_before, 21);
+        assert_eq!(cast_resolution.resource_after, 17);
+        assert_eq!(game.player.hp, 11);
+        assert!(cast.events.iter().any(|event| {
+            event.kind == "ability.healed"
+                && matches!(
+                    event.outcome.as_ref(),
+                    Some(GameEventOutcomeDto::Heal { resolution })
+                        if resolution.requested == 6 && resolution.applied == 6
+                )
+        }));
+
+        let restored =
+            Game::from_save(game.to_save()).expect("healing ability state should reload");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
     fn device_skill_check_distinguishes_builds_without_consuming_on_failure() {
         const ITEM_ID: &str = "test.item.resonance-stabilizer.1";
         let mut tinkerer = skill_check_game(0, "demo.build.tinkerer");
@@ -17589,6 +18643,40 @@ mod tests {
                 _ => None,
             })
             .unwrap_or_else(|| panic!("check event {event_kind} should exist"))
+    }
+
+    fn ability_book_item_id(game: &Game) -> String {
+        ability_book_item_id_for(game, "demo.item.echo-primer")
+    }
+
+    fn ability_book_item_id_for(game: &Game, kind_id: &str) -> String {
+        game.items
+            .iter()
+            .find(|item| item.kind_id == kind_id && item.location == ItemLocation::Inventory)
+            .map(|item| item.id.clone())
+            .unwrap_or_else(|| panic!("scholar should carry {kind_id}"))
+    }
+
+    fn ability_cast_resolution(update: &GameUpdate) -> &AbilityCastResolutionDto {
+        update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityCast { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("ability cast resolution should exist")
+    }
+
+    fn rest_resolution(update: &GameUpdate) -> &RestResolutionDto {
+        update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::Rest { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("rest resolution should exist")
     }
 
     fn assert_check(

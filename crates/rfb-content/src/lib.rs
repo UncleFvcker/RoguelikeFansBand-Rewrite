@@ -33,6 +33,9 @@ pub const RACE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Rog
 pub const CLASS_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json";
 pub const PERSONALITY_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/personality.schema.json";
 pub const BUILD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json";
+pub const RESOURCE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/resource.schema.json";
+pub const ABILITY_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json";
+pub const ABILITY_BOOK_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -45,7 +48,9 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 2048;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 17] = [
+const SUPPORTED_ROOTS: [&str; 20] = [
+    "abilities",
+    "abilityBooks",
     "actors",
     "affixes",
     "builds",
@@ -56,6 +61,7 @@ const SUPPORTED_ROOTS: [&str; 17] = [
     "personalities",
     "races",
     "regionTables",
+    "resources",
     "skills",
     "skillSets",
     "terrain",
@@ -366,8 +372,32 @@ pub struct ClassDefinition {
     pub base_hp: i32,
     pub skill_set_id: String,
     #[serde(default)]
+    pub casting_profile: Option<CastingProfileDefinition>,
+    #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum CastingAttribute {
+    Intelligence,
+    Wisdom,
+    Charisma,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CastingProfileDefinition {
+    pub resource_id: String,
+    pub casting_attribute: CastingAttribute,
+    pub base_capacity: u32,
+    pub capacity_per_level: u32,
+    pub capacity_per_attribute_index: u32,
+    pub minimum_failure_percent: u8,
+    pub ability_book_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -422,6 +452,96 @@ pub struct CharacterBuildDefinition {
     pub attributes: InitialAttributeSetDefinition,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ResourceDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    #[serde(default)]
+    pub wait_recovery_amount: u32,
+    #[serde(default)]
+    pub rest_recovery_amount: u32,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityTargetModeDefinition {
+    Direction,
+    Position,
+    Entity,
+    #[serde(rename = "self")]
+    SelfTarget,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityTargetDefinition {
+    pub modes: Vec<AbilityTargetModeDefinition>,
+    pub range: u16,
+    pub requires_line_of_effect: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum AbilityEffectDefinition {
+    Damage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+    },
+    Heal {
+        amount: u32,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub minimum_level: u16,
+    pub resource_id: String,
+    pub resource_cost: u32,
+    pub base_failure_percent: u8,
+    pub target: AbilityTargetDefinition,
+    pub effect: AbilityEffectDefinition,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityBookDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub ability_ids: Vec<String>,
     pub tags: Vec<String>,
 }
 
@@ -531,6 +651,8 @@ pub struct ItemDefinition {
     pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
     pub use_action: Option<ItemUseActionDefinition>,
+    #[serde(default)]
+    pub ability_book_id: Option<String>,
     #[serde(default)]
     pub break_chance_percent: u8,
     pub tags: Vec<String>,
@@ -1401,6 +1523,12 @@ pub struct CompiledContentV1 {
     pub affixes: Vec<AffixDefinition>,
     pub items: Vec<ItemDefinition>,
     #[serde(default)]
+    pub resources: Vec<ResourceDefinition>,
+    #[serde(default)]
+    pub abilities: Vec<AbilityDefinition>,
+    #[serde(default)]
+    pub ability_books: Vec<AbilityBookDefinition>,
+    #[serde(default)]
     pub skills: Vec<SkillDefinition>,
     #[serde(default)]
     pub skill_sets: Vec<SkillSetDefinition>,
@@ -1443,6 +1571,9 @@ pub struct ContentCatalog {
     actors: BTreeMap<String, ActorDefinition>,
     affixes: BTreeMap<String, AffixDefinition>,
     items: BTreeMap<String, ItemDefinition>,
+    resources: BTreeMap<String, ResourceDefinition>,
+    abilities: BTreeMap<String, AbilityDefinition>,
+    ability_books: BTreeMap<String, AbilityBookDefinition>,
     skills: BTreeMap<String, SkillDefinition>,
     skill_sets: BTreeMap<String, SkillSetDefinition>,
     races: BTreeMap<String, RaceDefinition>,
@@ -1468,6 +1599,9 @@ pub struct ContentSummary {
     pub actor_count: usize,
     pub affix_count: usize,
     pub item_count: usize,
+    pub resource_count: usize,
+    pub ability_count: usize,
+    pub ability_book_count: usize,
     pub skill_count: usize,
     pub skill_set_count: usize,
     pub race_count: usize,
@@ -1503,6 +1637,9 @@ impl CompiledArtifact {
             actor_count: self.content.actors.len(),
             affix_count: self.content.affixes.len(),
             item_count: self.content.items.len(),
+            resource_count: self.content.resources.len(),
+            ability_count: self.content.abilities.len(),
+            ability_book_count: self.content.ability_books.len(),
             skill_count: self.content.skills.len(),
             skill_set_count: self.content.skill_sets.len(),
             race_count: self.content.races.len(),
@@ -1549,6 +1686,21 @@ impl ContentCatalog {
                 .collect(),
             items: content
                 .items
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            resources: content
+                .resources
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            abilities: content
+                .abilities
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            ability_books: content
+                .ability_books
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -1657,6 +1809,25 @@ impl ContentCatalog {
     #[must_use]
     pub fn affix(&self, id: &str) -> Option<&AffixDefinition> {
         self.affixes.get(id)
+    }
+
+    #[must_use]
+    pub fn resource(&self, id: &str) -> Option<&ResourceDefinition> {
+        self.resources.get(id)
+    }
+
+    #[must_use]
+    pub fn ability(&self, id: &str) -> Option<&AbilityDefinition> {
+        self.abilities.get(id)
+    }
+
+    pub fn abilities(&self) -> impl Iterator<Item = &AbilityDefinition> {
+        self.abilities.values()
+    }
+
+    #[must_use]
+    pub fn ability_book(&self, id: &str) -> Option<&AbilityBookDefinition> {
+        self.ability_books.get(id)
     }
 
     #[must_use]
@@ -1779,6 +1950,9 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         actors: load_root(root, "actors", &roots, &mut budget)?,
         affixes: load_root(root, "affixes", &roots, &mut budget)?,
         items: load_root(root, "items", &roots, &mut budget)?,
+        resources: load_root(root, "resources", &roots, &mut budget)?,
+        abilities: load_root(root, "abilities", &roots, &mut budget)?,
+        ability_books: load_root(root, "abilityBooks", &roots, &mut budget)?,
         skills: load_root(root, "skills", &roots, &mut budget)?,
         skill_sets: load_root(root, "skillSets", &roots, &mut budget)?,
         races: load_root(root, "races", &roots, &mut budget)?,
@@ -1923,6 +2097,15 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         .affixes
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.items.sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .resources
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .abilities
+        .sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .ability_books
+        .sort_by(|left, right| left.id.cmp(&right.id));
     content.skills.sort_by(|left, right| left.id.cmp(&right.id));
     content
         .skill_sets
@@ -2237,6 +2420,98 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         affix_ids.insert(affix.id.clone());
     }
 
+    let mut resource_ids = BTreeSet::new();
+    for resource in &mut content.resources {
+        require_schema(&resource.schema, RESOURCE_SCHEMA, &resource.id)?;
+        require_format_version(resource.format_version, &resource.id)?;
+        validate_definition_id(&resource.id, "resource")?;
+        validate_definition_text(&resource.id, &resource.name_key, &resource.description_key)?;
+        if resource.wait_recovery_amount > 1_000_000 || resource.rest_recovery_amount > 1_000_000 {
+            return Err(ContentError::InvalidResource(resource.id.clone()));
+        }
+        normalize_tags(&resource.id, &mut resource.tags)?;
+        insert_definition_id(&mut all_ids, &resource.id)?;
+        resource_ids.insert(resource.id.clone());
+    }
+
+    let mut ability_resources = BTreeMap::new();
+    let mut ability_ids = BTreeSet::new();
+    for ability in &mut content.abilities {
+        require_schema(&ability.schema, ABILITY_SCHEMA, &ability.id)?;
+        require_format_version(ability.format_version, &ability.id)?;
+        validate_definition_id(&ability.id, "ability")?;
+        validate_definition_text(&ability.id, &ability.name_key, &ability.description_key)?;
+        ability.target.modes.sort();
+        let mut modes = BTreeSet::new();
+        let valid_effect = match ability.effect {
+            AbilityEffectDefinition::Damage {
+                damage_dice,
+                damage_sides,
+                ..
+            } => (1..=100).contains(&damage_dice) && (1..=10_000).contains(&damage_sides),
+            AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
+        };
+        let self_targeted = ability
+            .target
+            .modes
+            .contains(&AbilityTargetModeDefinition::SelfTarget);
+        let valid_target = match ability.effect {
+            AbilityEffectDefinition::Damage { .. } => {
+                !self_targeted
+                    && (1..=64).contains(&ability.target.range)
+                    && ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::Heal { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
+                    && ability.target.range == 0
+                    && !ability.target.requires_line_of_effect
+            }
+        };
+        if !(1..=100).contains(&ability.minimum_level)
+            || !(1..=1_000_000).contains(&ability.resource_cost)
+            || ability.base_failure_percent > 95
+            || ability.target.modes.is_empty()
+            || ability.target.modes.len() > 4
+            || ability.target.modes.iter().any(|mode| !modes.insert(*mode))
+            || !valid_target
+            || !valid_effect
+        {
+            return Err(ContentError::InvalidAbility(ability.id.clone()));
+        }
+        require_reference(&resource_ids, &ability.resource_id, &ability.id)?;
+        normalize_tags(&ability.id, &mut ability.tags)?;
+        insert_definition_id(&mut all_ids, &ability.id)?;
+        ability_resources.insert(ability.id.clone(), ability.resource_id.clone());
+        ability_ids.insert(ability.id.clone());
+    }
+
+    let mut ability_books_by_id = BTreeMap::new();
+    let mut ability_book_ids = BTreeSet::new();
+    for book in &mut content.ability_books {
+        require_schema(&book.schema, ABILITY_BOOK_SCHEMA, &book.id)?;
+        require_format_version(book.format_version, &book.id)?;
+        validate_definition_id(&book.id, "ability-book")?;
+        validate_definition_text(&book.id, &book.name_key, &book.description_key)?;
+        book.ability_ids.sort();
+        let mut members = BTreeSet::new();
+        if book.ability_ids.is_empty()
+            || book.ability_ids.len() > 64
+            || book
+                .ability_ids
+                .iter()
+                .any(|ability_id| !members.insert(ability_id.clone()))
+        {
+            return Err(ContentError::InvalidAbilityBook(book.id.clone()));
+        }
+        for ability_id in &book.ability_ids {
+            require_reference(&ability_ids, ability_id, &book.id)?;
+        }
+        normalize_tags(&book.id, &mut book.tags)?;
+        insert_definition_id(&mut all_ids, &book.id)?;
+        ability_book_ids.insert(book.id.clone());
+        ability_books_by_id.insert(book.id.clone(), book.clone());
+    }
+
     let mut item_limits = BTreeMap::new();
     for item in &mut content.items {
         require_schema(&item.schema, ITEM_SCHEMA, &item.id)?;
@@ -2333,6 +2608,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             {
                 return Err(ContentError::InvalidItemUseAction(item.id.clone()));
             }
+        }
+        if let Some(ability_book_id) = &item.ability_book_id {
+            if item.max_stack != 1 || item.equipment_slot.is_some() || item.use_action.is_some() {
+                return Err(ContentError::InvalidAbilityBookItem(item.id.clone()));
+            }
+            require_reference(&ability_book_ids, ability_book_id, &item.id)?;
         }
         normalize_tags(&item.id, &mut item.tags)?;
         insert_definition_id(&mut all_ids, &item.id)?;
@@ -2498,6 +2779,39 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             &skill_sets_by_id,
             &item_starting_metadata,
         )?;
+        if let Some(profile) = &mut class.casting_profile {
+            profile.ability_book_ids.sort();
+            let mut books = BTreeSet::new();
+            let maximum_capacity = u64::from(profile.base_capacity)
+                .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
+                .saturating_add(
+                    u64::from(profile.capacity_per_attribute_index).saturating_mul(100),
+                );
+            if profile.minimum_failure_percent > 95
+                || profile.ability_book_ids.is_empty()
+                || profile.ability_book_ids.len() > 16
+                || profile
+                    .ability_book_ids
+                    .iter()
+                    .any(|book_id| !books.insert(book_id.clone()))
+                || maximum_capacity == 0
+                || maximum_capacity > 1_000_000_000
+            {
+                return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+            }
+            require_reference(&resource_ids, &profile.resource_id, &class.id)?;
+            for book_id in &profile.ability_book_ids {
+                require_reference(&ability_book_ids, book_id, &class.id)?;
+                let book = ability_books_by_id
+                    .get(book_id)
+                    .expect("validated ability book must remain available");
+                if book.ability_ids.iter().any(|ability_id| {
+                    ability_resources.get(ability_id) != Some(&profile.resource_id)
+                }) {
+                    return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+                }
+            }
+        }
         normalize_tags(&class.id, &mut class.tags)?;
         insert_definition_id(&mut all_ids, &class.id)?;
         class_ids.insert(class.id.clone());
@@ -5583,6 +5897,21 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
         )?,
         schema_document("item.schema.json", ITEM_SCHEMA, schema_for!(ItemDefinition))?,
         schema_document(
+            "resource.schema.json",
+            RESOURCE_SCHEMA,
+            schema_for!(ResourceDefinition),
+        )?,
+        schema_document(
+            "ability.schema.json",
+            ABILITY_SCHEMA,
+            schema_for!(AbilityDefinition),
+        )?,
+        schema_document(
+            "ability-book.schema.json",
+            ABILITY_BOOK_SCHEMA,
+            schema_for!(AbilityBookDefinition),
+        )?,
+        schema_document(
             "skill.schema.json",
             SKILL_SCHEMA,
             schema_for!(SkillDefinition),
@@ -5756,6 +6085,16 @@ pub enum ContentError {
     InvalidThrowProfile(String),
     #[error("item use action is invalid: {0}")]
     InvalidItemUseAction(String),
+    #[error("resource definition is invalid: {0}")]
+    InvalidResource(String),
+    #[error("ability definition is invalid: {0}")]
+    InvalidAbility(String),
+    #[error("ability book definition is invalid: {0}")]
+    InvalidAbilityBook(String),
+    #[error("ability book item must be a single non-equippable, non-usable item: {0}")]
+    InvalidAbilityBookItem(String),
+    #[error("class casting profile is invalid: {0}")]
+    InvalidCastingProfile(String),
     #[error("affix stat modifiers are invalid: {0}")]
     InvalidAffixModifiers(String),
     #[error("skill definition is invalid: {0}")]
@@ -5855,7 +6194,10 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 12);
         assert_eq!(first.content.affixes.len(), 1);
-        assert_eq!(first.content.items.len(), 6);
+        assert_eq!(first.content.items.len(), 8);
+        assert_eq!(first.content.resources.len(), 1);
+        assert_eq!(first.content.abilities.len(), 2);
+        assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
         assert_eq!(first.content.races.len(), 3);
@@ -5878,7 +6220,54 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.64.0");
+        assert_eq!(catalog.pack_version(), "1.66.0");
+        assert_eq!(
+            catalog.resource("demo.resource.mana").map(|resource| (
+                resource.name_key.as_str(),
+                resource.wait_recovery_amount,
+                resource.rest_recovery_amount,
+            )),
+            Some(("resource-demo-mana-name", 1, 3))
+        );
+        assert_eq!(
+            catalog
+                .ability_book("demo.ability-book.echo-primer")
+                .map(|book| book.ability_ids.as_slice()),
+            Some(["demo.ability.resonant-bolt".to_owned()].as_slice())
+        );
+        assert_eq!(
+            catalog
+                .item("demo.item.echo-primer")
+                .and_then(|item| item.ability_book_id.as_deref()),
+            Some("demo.ability-book.echo-primer")
+        );
+        assert_eq!(
+            catalog
+                .class("demo.class.mage")
+                .and_then(|class| class.casting_profile.as_ref())
+                .map(|profile| (
+                    profile.resource_id.as_str(),
+                    profile.casting_attribute,
+                    profile.base_capacity,
+                    profile.capacity_per_level,
+                    profile.capacity_per_attribute_index,
+                    profile.minimum_failure_percent,
+                    profile.ability_book_ids.as_slice(),
+                )),
+            Some((
+                "demo.resource.mana",
+                CastingAttribute::Intelligence,
+                4,
+                2,
+                1,
+                5,
+                [
+                    "demo.ability-book.echo-primer".to_owned(),
+                    "demo.ability-book.stillwater-notes".to_owned(),
+                ]
+                .as_slice(),
+            ))
+        );
         assert_eq!(
             catalog.build("demo.build.vanguard").map(|build| (
                 build.race_id.as_str(),
@@ -7620,6 +8009,69 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::DanglingReference { .. })
+        ));
+    }
+
+    #[test]
+    fn ability_books_require_consistent_resources_items_and_casting_profiles() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut invalid_recovery = artifact.content.clone();
+        invalid_recovery.resources[0].rest_recovery_amount = 1_000_001;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_recovery),
+            Err(ContentError::InvalidResource(_))
+        ));
+
+        let mut invalid_healing_target = artifact.content.clone();
+        invalid_healing_target
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.mending-echo")
+            .expect("fixture should contain the healing ability")
+            .target
+            .range = 1;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_healing_target),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut dangling_resource = artifact.content.clone();
+        dangling_resource.abilities[0].resource_id = "demo.resource.missing".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut dangling_resource),
+            Err(ContentError::DanglingReference { .. })
+        ));
+
+        let mut invalid_book_item = artifact.content.clone();
+        let primer = invalid_book_item
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.echo-primer")
+            .expect("fixture should contain the ability book item");
+        primer.max_stack = 2;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_book_item),
+            Err(ContentError::InvalidAbilityBookItem(_))
+        ));
+
+        let mut mismatched_profile = artifact.content;
+        let mut focus = mismatched_profile.resources[0].clone();
+        focus.id = "demo.resource.focus".to_owned();
+        mismatched_profile.resources.push(focus);
+        mismatched_profile
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.mage")
+            .expect("fixture should contain the mage class")
+            .casting_profile
+            .as_mut()
+            .expect("mage should have a casting profile")
+            .resource_id = "demo.resource.focus".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut mismatched_profile),
+            Err(ContentError::InvalidCastingProfile(_))
         ));
     }
 

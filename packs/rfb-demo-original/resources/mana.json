@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/resource.schema.json",
+  "formatVersion": 1,
+  "id": "demo.resource.mana",
+  "nameKey": "resource-demo-mana-name",
+  "descriptionKey": "resource-demo-mana-description",
+  "waitRecoveryAmount": 1,
+  "restRecoveryAmount": 3,
+  "tags": ["casting", "mana"]
+}

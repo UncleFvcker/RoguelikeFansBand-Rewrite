@@ -64,6 +64,8 @@
 - [Contract v70：RFB 角色成长基础](contract-v70-rfb-character-progression.md)
 - [Contract v71：RFB 角色构筑、种族职业与技能集合](contract-v71-rfb-character-builds.md)
 - [Contract v72：可观察技能检定](contract-v72-observable-skill-checks.md)
+- [Contract v73：法术资源与能力书基础](contract-v73-ability-books.md)
+- [Contract v74：法术资源恢复与自身治疗](contract-v74-resource-recovery-and-healing.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -637,12 +639,14 @@ interface SaveGame {
 - 协议 1.70 和 contract-v70 已建立；内容包 1.62.0 增加击杀经验、RFB 1–50 级阈值、未胜利 50 级封顶后的经验保留、胜利后等级 100/`18/820` 解锁、出生 HP 序列、六维自然/有效属性、装备 modifier 与属性点命令。缺少 progress 的旧存档按固定 legacy 规则迁移，state hash 升至 Schema v29，content hash 为 `ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6`，active baseline 共 148 个 exact fixtures。
 - 协议 1.71 和 contract-v71 已建立；内容包 1.63.0 新增 skills/skillSets/Race/Class/Personality/build 内容根、五个代表性构筑、出生装备、生命/经验倍率和等级技能成长。构筑身份与技能聚合进入 save、Web UI 和 state hash Schema v30；v70 缺字段存档迁移为 Explorer，content hash 为 `1c94890a0f39d42a4b496a7222b8c9d191f24fe94b3c9d47d4a1eeea5364c5b4`，active baseline 共 152 个 exact fixtures。
 - 协议 1.72 和 contract-v72 已建立；内容包 1.64.0 为 terrain/trap/item/actor 增加 perception、saving throw、device 和 awareness 入口，结构化 check outcome 与怪物 `alerted` 进入协议、save 和 state hash Schema v31。相同 seed 的 Tinkerer/Vanguard 对照覆盖四类成功失败与回读，content hash 为 `3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a`，active baseline 共 160 个 exact fixtures。
+- 协议 1.73 和 contract-v73 已建立；内容包 1.65.0 增加 resource/ability/ability-book、Class casting profile、Echo Primer 与 Resonant Bolt。Web 新增资源/能力面板并复用目标模式，结构化学习/施法事件、资源池和已学能力进入 save 与 state hash Schema v32；content hash 为 `fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d`，历史基准共 166 个 exact fixtures。
+- 协议 1.74 和 contract-v74 已建立；内容包 1.66.0 为 Mana 增加等待/休息恢复，加入 Stillwater Notes、Mending Echo、稳定自身目标与治疗效果。Web 资源行显示恢复速率，休息按钮提交最多 100 回合的确定性宏命令，自身能力无需进入准星模式；结构化恢复/休息 outcome 与真实调度结果进入 state hash Schema v33。content hash 为 `9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0`，active baseline 共 174 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 进入 Stage G 法术与能力书基础；先建立可保存资源/法术身份、学习与可用性，以及首个目标模式和可观察施法；
+1. 继续 Stage G：在已完成恢复与自身治疗的基础上建立能力熟练度与冷却；多资源和怪物施法继续后置；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

@@ -89,7 +89,7 @@ interface SavePayloadV1 {
 
 Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明确区分 `Ground(position)`、`Inventory`、`Equipped(slotId)` 和 `CarriedBy(actorId)`。拾取、整堆丢弃、装备、卸下和怪物死亡放下携带物只改变同一实例的位置；部分拆堆才分配新的稳定实例 ID。v1 存档线格式投影为 `items`、`inventory`、`equipment` 和带默认值的 `carriedItems` 列表，但这些列表不对应多套核心结构体。
 
-玩家存档保存实例 ID、种类 ID、位置、当前生命、自然最大生命、基础速度、当前 `energyNeed`、状态列表与抗性 profile；怪物保存相同的权威运行状态。状态保存稳定 kind ID、强度、剩余 tick 和可选来源 ID；普通抗性不显式写入稀疏列表。最终速度、攻击、防御、近战能力、AC、伤害骰、装备 modifier、死亡标志、glyph 和本地化文本均不写入新存档，而是在载入后重新派生。旧 v1 存档缺失状态/抗性字段时按空集合迁移。
+玩家存档保存实例 ID、种类 ID、位置、当前生命、自然最大生命、基础速度、当前 `energyNeed`、状态列表、抗性 profile、资源池与已学能力 ID；怪物保存相同的基础权威运行状态。状态保存稳定 kind ID、强度、剩余 tick 和可选来源 ID；普通抗性不显式写入稀疏列表。最终速度、攻击、防御、近战能力、AC、伤害骰、装备 modifier、能力失败率、目标规格、学习/施放可用性、死亡标志、glyph 和本地化文本均不写入新存档，而是在载入后重新派生。旧 v1 存档缺失状态/抗性字段时按空集合迁移。
 
 背包与装备项保存稳定实例 ID、内容 kind ID、数量及装备槽 ID，不保存选择复选框或 HTML 面板状态。种类级 `itemKnowledge` 只保存非空 tried/aware 记录，并要求 aware 蕴含 tried；旧存档缺失该字段时按空知识表载入。载入后必须验证内容引用、实例 ID 唯一性、`maxStack`、槽位匹配、槽位唯一性、知识记录唯一且引用带外观名称的种类，以及生成实例序号不能落后于任何 `generated.item.N`。旧存档缺失 `equipment` 时按空列表载入，缺失分配序号时从所有现有实例 ID 推导。玩家负生命值代表已死亡，可安全保存和重载；`isDead` 仅是协议派生字段。
 
@@ -128,6 +128,10 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 协议 1.71 在 `PlayerSaveDto` 中增加可选 `build`，保存 build/Race/Class/Personality 的稳定 ID；`PlayerProgressSaveDto` 增加可选 `skills`，保存按当前内容和等级聚合的技能状态。v70 及更早存档缺少构筑或技能字段时使用世界默认构筑（demo 为 Explorer），并在载入时按保存等级重算技能；不生成出生装备、不覆盖已有物品、不推进正式 RNG。带出生装备的构筑同时保存种类知识和实例属性知识，确保 round-trip 后不丢失已知状态。构筑身份、技能聚合和出生装备实例进入 state hash Schema v30；save 容器仍为 v1。
 
 协议 1.72 为 `ActorSaveDto` 增加可选 `alerted`。新存档显式保存怪物是否已经察觉玩家；v71 及更早存档缺少字段时按当前 actor 内容恢复，声明 `awareness.startsAlerted=false` 的怪物保持未警戒，其他怪物保持历史默认警戒。迁移不补做 stealth 检定、不移动怪物、不推进 RNG。警戒状态与技能检定造成的生命、物品知识和 terrain 揭示结果进入 state hash Schema v31；save 容器仍为 v1。
+
+协议 1.73 为 `PlayerSaveDto` 增加可选 `resources` 与 `learnedAbilityIds`。每个 `ResourcePoolSaveDto` 保存稳定资源 ID、当前值和最大值；已学能力只保存稳定能力 ID。载入会依据当前 Class casting profile、等级和有效属性验证资源集合与最大值，并验证每个已学能力的等级、资源和能力书支持关系。v72 及更早存档缺少这些字段时，施法职业恢复按当前构筑计算的满资源和空已学列表，非施法职业保持空集合；迁移不补学习、不改变物品、不推进 RNG。资源和已学能力进入 state hash Schema v32；save 容器仍为 v1。
+
+协议 1.74 不增加正式 save 字段。等待/休息恢复量来自当前内容中的 `ResourceDefinition`，存档继续只保存资源当前值/上限与已学能力 ID；`Rest` 的请求回合数和停止 outcome 只存在于命令/事件/回放中。载入 v73 内容 hash 的存档时不会补发 Stillwater Notes、自动学习 Mending Echo 或推进 RNG，既有资源值、物品与已学能力原样校验后进入当前规则。恢复后的资源、真实 `turn/worldTick`、生命、状态和 RNG 位置进入 state hash Schema v33；save 容器仍为 v1。
 
 禁止保存：
 

@@ -261,6 +261,8 @@ pub(crate) fn player_to_save(
             class_id: build.class_id.clone(),
             personality_id: build.personality_id.clone(),
         }),
+        resources: Vec::new(),
+        learned_ability_ids: Vec::new(),
     }
 }
 

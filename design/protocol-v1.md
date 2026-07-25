@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.72、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.74、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.49";
+  protocolVersion: "1.74";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -189,7 +189,11 @@ interface GameCoreV1 {
 
 协议 1.72 新增 `CheckOutcomeDto`、`CheckResolutionDto` 和 `GameEventOutcomeDto.check`，让 device、saving-throw、stealth、perception 事件携带技能 ID、ability、difficulty、百分位骰、对抗骰、阈值与结果。`EntityDto.alerted` 暴露怪物警戒状态，`ActorSaveDto.alerted` 以可选字段保存；旧存档缺字段时按 actor 内容默认值恢复。警戒状态进入 state hash Schema v31，save 容器仍为 v1。完整边界见 [Contract v72](contract-v72-observable-skill-checks.md)。
 
-当前命令集包括八向 `Move`、`Wait`、`PickUp`、`Equip`、`Unequip`、`Drop`、`DropQuantity`、`Fire`、`FireTarget` 和 `Throw`。`PickUp` 在玩家脚下按实例 ID 确定性选择物品堆；`Equip`/`Unequip` 在背包与稳定槽位之间移动完整物品；`Drop` 原子移动多个所选完整物品堆；`DropQuantity` 拆分单个物品堆并使用持久化生成实例 ID；`Fire` 保留方向快捷入口，`FireTarget` 提交稳定方向/格子/实体目标并原子消费匹配弹药；`Throw` 原子拆分或移动一件背包物品到权威落点。命令先转换为 `GameAction`；当前所有已接入且被核心接受的行动消耗 100 能量、增加一个玩家 `turn`，随后调度世界脉冲直到玩家再次就绪或死亡。
+协议 1.73 新增 `StudyAbility { bookItemId, abilityId }` 与 `CastAbility { abilityId, target }`，以及 `ResourcePoolDto`、`AbilityDto`、`AbilityCastResolutionDto` 和 `GameEventOutcomeDto.ability-cast`。`PlayerDto` 暴露资源池、已学状态、书本实例、当前失败率与学习/施放可用性；拒绝原因和施法成功/失败、落空、命中、击杀均使用结构化事件。`PlayerSaveDto` 保存资源池与已学能力 ID，旧存档缺字段时确定性恢复满资源和空已学列表。state hash 升至 Schema v32，save 容器仍为 v1。完整边界见 [Contract v73](contract-v73-ability-books.md)。
+
+协议 1.74 新增 `Rest { turns }`、稳定 `TargetSelection.self`、`ResourceRecoveryResolutionDto`、`RestResolutionDto`、`RestStopReasonDto`，以及 `GameEventOutcomeDto.resource-recovery/rest`。`ResourcePoolDto` 输出带兼容默认值的等待/休息恢复量；普通 `Wait` 在调度完成且玩家仍存活时应用等待恢复。`Rest` 最多请求 100 回合，每步真实运行能量调度器，并在资源已满、可见敌人、受伤或死亡时停止；治疗能力复用既有 `HealResolutionDto`。state hash 升至 Schema v33，save 容器仍为 v1。完整边界见 [Contract v74](contract-v74-resource-recovery-and-healing.md)。
+
+当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
 

@@ -1,5 +1,61 @@
 {
   "$defs": {
+    "CastingAttribute": {
+      "enum": [
+        "intelligence",
+        "wisdom",
+        "charisma"
+      ],
+      "type": "string"
+    },
+    "CastingProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilityBookIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseCapacity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "capacityPerAttributeIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "capacityPerLevel": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "castingAttribute": {
+          "$ref": "#/$defs/CastingAttribute"
+        },
+        "minimumFailurePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resourceId",
+        "castingAttribute",
+        "baseCapacity",
+        "capacityPerLevel",
+        "capacityPerAttributeIndex",
+        "minimumFailurePercent",
+        "abilityBookIds"
+      ],
+      "type": "object"
+    },
     "StartingItemDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -85,6 +141,17 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "castingProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CastingProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "descriptionKey": {
       "type": "string"

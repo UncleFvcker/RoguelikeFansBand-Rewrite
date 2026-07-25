@@ -1,6 +1,6 @@
 # Contract v72：可观察技能检定
 
-状态：协议 1.72 / contract-v72 active baseline；内容包 1.64.0；state hash Schema v31
+状态：协议 1.72 / contract-v72 历史基准；内容包 1.64.0；state hash Schema v31；active baseline 已由 contract-v74 接替
 
 ## 范围
 
@@ -82,4 +82,4 @@ active baseline 位于 [`tests/fixtures/contract-v72/scenarios`](../tests/fixtur
 - 法力、能力书、法术学习、施法失败率、冷却和完整职业能力系统；
 - 完整原版 Race/Class/Personality 与内容规模。
 
-下一纵切转入法术/能力书基础：先建立可保存的资源与法术身份、学习/可用性和一次可观察施法，再扩展职业矩阵与怪物施法。
+法术/能力书基础已由 [Contract v73](contract-v73-ability-books.md) 完成；后续转入资源恢复、多效果能力与更完整的施法修正。

@@ -1,0 +1,53 @@
+{
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/resource.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "restRecoveryAmount": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "waitRecoveryAmount": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "tags"
+  ],
+  "title": "ResourceDefinition",
+  "type": "object"
+}

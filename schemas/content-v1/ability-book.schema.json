@@ -1,0 +1,48 @@
+{
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "abilityIds": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "abilityIds",
+    "tags"
+  ],
+  "title": "AbilityBookDefinition",
+  "type": "object"
+}

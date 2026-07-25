@@ -3,8 +3,9 @@
 use std::collections::BTreeMap;
 
 use rfb_protocol::{
-    CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
-    Position, ProjectileTraceDto,
+    AbilityCastResolutionDto, CheckResolutionDto, GameEventDto, GameEventOutcomeDto,
+    HealingResolutionDto, ItemQualityDto, Position, ProjectileTraceDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -30,6 +31,55 @@ impl From<ProjectileTrace> for ProjectileTraceDto {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    AbilityStudied {
+        ability_id: String,
+    },
+    AbilityStudyUnavailable {
+        ability_id: String,
+        reason: String,
+    },
+    AbilityCastUnavailable {
+        ability_id: String,
+        reason: String,
+    },
+    AbilityCastFailed {
+        resolution: AbilityCastResolutionDto,
+    },
+    AbilityCastSucceeded {
+        resolution: AbilityCastResolutionDto,
+    },
+    AbilityTargetUnavailable {
+        ability_id: String,
+    },
+    AbilityLanded {
+        ability_id: String,
+        trace: ProjectileTrace,
+    },
+    AbilityHit {
+        ability_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    AbilitySlew {
+        ability_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    AbilityHealed {
+        ability_id: String,
+        resolution: HealingResolutionDto,
+    },
+    ResourceRecovered {
+        resolution: ResourceRecoveryResolutionDto,
+    },
+    RestCompleted {
+        resolution: RestResolutionDto,
+    },
+    RestInterrupted {
+        resolution: RestResolutionDto,
+    },
     ItemAppraised {
         target_kind_id: String,
         quality: ItemQualityDto,
@@ -323,6 +373,117 @@ pub(crate) enum DomainEvent {
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
         match self {
+            Self::AbilityStudied { ability_id } => dto(
+                "ability.studied",
+                "ability-studied",
+                [("target", ability_id)],
+            ),
+            Self::AbilityStudyUnavailable { ability_id, reason } => dto(
+                "ability.study-unavailable",
+                "ability-study-unavailable",
+                [("target", ability_id), ("reason", reason)],
+            ),
+            Self::AbilityCastUnavailable { ability_id, reason } => dto(
+                "ability.cast-unavailable",
+                "ability-cast-unavailable",
+                [("target", ability_id), ("reason", reason)],
+            ),
+            Self::AbilityCastFailed { resolution } => dto_with_outcome(
+                "ability.cast-failure",
+                "ability-cast-failure",
+                [("target", resolution.ability_id.clone())],
+                GameEventOutcomeDto::AbilityCast { resolution },
+            ),
+            Self::AbilityCastSucceeded { resolution } => dto_with_outcome(
+                "ability.cast-success",
+                "ability-cast-success",
+                [("target", resolution.ability_id.clone())],
+                GameEventOutcomeDto::AbilityCast { resolution },
+            ),
+            Self::AbilityTargetUnavailable { ability_id } => dto(
+                "ability.target-unavailable",
+                "ability-target-unavailable",
+                [("target", ability_id)],
+            ),
+            Self::AbilityLanded { ability_id, trace } => with_trace(
+                dto("ability.landed", "ability-landed", [("target", ability_id)]),
+                trace,
+            ),
+            Self::AbilityHit {
+                ability_id,
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "ability.hit",
+                    "ability-hit",
+                    [
+                        ("source", ability_id),
+                        ("target", target_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
+            Self::AbilitySlew {
+                ability_id,
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "ability.slay",
+                    "ability-slay",
+                    [("source", ability_id), ("target", target_kind_id)],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
+            Self::AbilityHealed {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.healed",
+                "ability-healed",
+                [
+                    ("source", ability_id),
+                    ("amount", resolution.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Heal { resolution },
+            ),
+            Self::ResourceRecovered { resolution } => dto_with_outcome(
+                "resource.recovered",
+                "resource-recovered",
+                [
+                    ("target", resolution.resource_id.clone()),
+                    ("amount", resolution.recovered.to_string()),
+                ],
+                GameEventOutcomeDto::ResourceRecovery { resolution },
+            ),
+            Self::RestCompleted { resolution } => dto_with_outcome(
+                "rest.completed",
+                "rest-completed",
+                [
+                    ("turns", resolution.completed_turns.to_string()),
+                    ("reason", rest_stop_reason(&resolution.stop_reason)),
+                ],
+                GameEventOutcomeDto::Rest { resolution },
+            ),
+            Self::RestInterrupted { resolution } => dto_with_outcome(
+                "rest.interrupted",
+                "rest-interrupted",
+                [
+                    ("turns", resolution.completed_turns.to_string()),
+                    ("reason", rest_stop_reason(&resolution.stop_reason)),
+                ],
+                GameEventOutcomeDto::Rest { resolution },
+            ),
             Self::ItemAppraised {
                 target_kind_id,
                 quality,
@@ -1059,6 +1220,18 @@ fn attribute_kind_id(attribute: crate::stats::AttributeKind) -> &'static str {
         crate::stats::AttributeKind::Constitution => "constitution",
         crate::stats::AttributeKind::Charisma => "charisma",
     }
+}
+
+fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
+    match reason {
+        RestStopReasonDto::Damaged => "damaged",
+        RestStopReasonDto::EnemyVisible => "enemy-visible",
+        RestStopReasonDto::FullResources => "full-resources",
+        RestStopReasonDto::InvalidTurns => "invalid-turns",
+        RestStopReasonDto::PlayerDied => "player-died",
+        RestStopReasonDto::TurnLimit => "turn-limit",
+    }
+    .to_owned()
 }
 
 pub(crate) fn project_events(events: Vec<DomainEvent>) -> Vec<GameEventDto> {

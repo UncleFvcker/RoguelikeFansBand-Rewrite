@@ -1,6 +1,6 @@
 # Contract v71：RFB 角色构筑、种族职业与技能集合
 
-状态：协议 1.71 / contract-v71 历史基准；内容包 1.63.0；state hash Schema v30；active baseline 已由 contract-v72 接替
+状态：协议 1.71 / contract-v71 历史基准；内容包 1.63.0；state hash Schema v30；active baseline 已由 contract-v74 接替
 
 ## 范围
 
@@ -68,4 +68,4 @@ demo 包为 1.63.0，包含 10 个技能、11 个技能集合、3 个 Race、5 �
 - 法力、能力书、法术失败率、书本阅读和完整法术系统；
 - 怪物种族/职业、经济、商店和更大规模内容包。
 
-可观察的 device、saving throw、stealth、perception 技能检定已由 [Contract v72](contract-v72-observable-skill-checks.md) 完成；后续转入法术/能力书基础。
+可观察的 device、saving throw、stealth、perception 技能检定已由 [Contract v72](contract-v72-observable-skill-checks.md) 完成；法术/能力书基础已由 [Contract v73](contract-v73-ability-books.md) 完成。

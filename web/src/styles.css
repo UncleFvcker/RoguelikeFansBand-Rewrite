@@ -289,6 +289,64 @@ h1 {
   font-family: "Cascadia Mono", Consolas, monospace;
 }
 
+.resource-list,
+.ability-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  list-style: none;
+}
+
+.resource-list {
+  border-bottom: 1px solid rgb(103 137 168 / 12%);
+  color: #8fd8c4;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+.ability-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgb(103 137 168 / 10%);
+}
+
+.ability-details {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.ability-name {
+  color: #dcecff;
+}
+
+.ability-summary,
+.ability-status,
+.ability-empty {
+  color: #7890a7;
+  font-size: 0.72rem;
+}
+
+.ability-actions {
+  display: flex;
+  flex: none;
+  gap: 0.35rem;
+}
+
+.ability-actions button {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.ability-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .attribute-row {
   display: grid;
   grid-template-columns: minmax(5.5rem, 0.8fr) minmax(0, 1.5fr) auto;
