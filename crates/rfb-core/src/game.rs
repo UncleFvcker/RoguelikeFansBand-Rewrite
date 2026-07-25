@@ -59,11 +59,11 @@ use rfb_content::{
     TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
-    AbilityCastResolutionDto, AbilityDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
-    ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
-    CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto,
-    CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto,
-    EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
+    AbilityCastResolutionDto, AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto,
+    AbilityProgressSaveDto, ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
+    CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
+    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
+    EntityDto, EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
     FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
     InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
     ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
@@ -80,7 +80,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 68] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 69] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -149,9 +149,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 68] = [
     "3188f4cf0937f44292980e8ca8fffc1db9c310e961af4502bd9380124e53d54a",
     "fa88458239f225a5033e5910c64ba30f8e1e4095fc82b1ebce6a5c914e05ad2d",
     "9f61f6161b77c553fc9dfed8d2e550abca8794d1dc997fb2af3f953feb711cb0",
+    "bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316";
+    "c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1977,6 +1978,15 @@ impl Game {
             GameAction::UseItem { item_id } => {
                 self.use_inventory_item(&item_id, &mut events);
             }
+            GameAction::ForgetAbility { ability_id } => {
+                match self.forget_player_ability(&ability_id) {
+                    Ok(()) => events.push(DomainEvent::AbilityForgotten { ability_id }),
+                    Err(reason) => events.push(DomainEvent::AbilityForgetUnavailable {
+                        ability_id,
+                        reason: reason.to_owned(),
+                    }),
+                }
+            }
             GameAction::StudyAbility {
                 book_item_id,
                 ability_id,
@@ -2353,6 +2363,7 @@ impl Game {
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
+            ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
         }
     }
@@ -2414,6 +2425,33 @@ impl Game {
                     .capacity_per_attribute_index
                     .saturating_mul(attribute_index),
             )
+    }
+
+    fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {
+        let attribute_index = u32::from(
+            self.effective_player_attributes()
+                .index(Self::casting_attribute_kind(profile.casting_attribute)),
+        );
+        let level_bonus = u32::from(profile.learning_capacity_per_level)
+            .saturating_mul(u32::from(self.progress.level.saturating_sub(1)));
+        let attribute_bonus = u32::from(profile.learning_capacity_per_attribute_index)
+            .saturating_mul(attribute_index);
+        let raw = u32::from(profile.base_learning_capacity)
+            .saturating_add(level_bonus)
+            .saturating_add(attribute_bonus);
+        raw.min(u32::from(profile.learning_capacity_cap)) as u16
+    }
+
+    fn player_ability_learning_dto(&self) -> Option<AbilityLearningDto> {
+        let profile = self.casting_profile()?;
+        let capacity = self.ability_learning_capacity(profile);
+        let learned_count = u16::try_from(self.learned_abilities.len())
+            .expect("validated learned ability count must fit u16");
+        Some(AbilityLearningDto {
+            learned_count,
+            capacity,
+            remaining_slots: capacity.saturating_sub(learned_count),
+        })
     }
 
     fn initialize_player_ability_state(&mut self) {
@@ -2482,6 +2520,12 @@ impl Game {
                 "non-caster cannot have learned abilities",
             ));
         };
+        let learning_capacity = usize::from(self.ability_learning_capacity(&profile));
+        if saved_learned_ability_ids.len() > learning_capacity {
+            return Err(CoreError::InvalidSave(
+                "learned ability set exceeds learning capacity",
+            ));
+        }
         for ability_id in saved_learned_ability_ids {
             let Some(ability) = self.content.ability(&ability_id) else {
                 return Err(CoreError::InvalidSave("learned ability ID is invalid"));
@@ -2940,7 +2984,13 @@ impl Game {
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
-                    can_study: !learned && level_available && book_item_id.is_some(),
+                    can_study: !learned
+                        && level_available
+                        && book_item_id.is_some()
+                        && self
+                            .player_ability_learning_dto()
+                            .is_some_and(|learning| learning.remaining_slots > 0),
+                    can_forget: learned,
                     can_cast: learned
                         && level_available
                         && resource_available
@@ -4581,6 +4631,9 @@ impl Game {
         if !self.profile_supports_ability(&profile, ability_id) {
             return Err("ability-not-supported");
         }
+        if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
+            return Err("learning-capacity-full");
+        }
         let Some(book_id) = self
             .items
             .iter()
@@ -4603,6 +4656,22 @@ impl Game {
             return Err("book-mismatch");
         }
         self.learned_abilities.insert(ability_id.to_owned());
+        Ok(())
+    }
+
+    fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            return Err("no-casting-profile");
+        };
+        if self.content.ability(ability_id).is_none() {
+            return Err("unknown-ability");
+        }
+        if !self.profile_supports_ability(&profile, ability_id) {
+            return Err("ability-not-supported");
+        }
+        if !self.learned_abilities.remove(ability_id) {
+            return Err("not-learned");
+        }
         Ok(())
     }
 
@@ -10333,6 +10402,8 @@ impl Game {
                 || self.resources.get(&profile.resource_id).is_none_or(|pool| {
                     pool.maximum != expected_maximum || pool.current > pool.maximum
                 })
+                || self.learned_abilities.len()
+                    > usize::from(self.ability_learning_capacity(profile))
                 || self.learned_abilities.iter().any(|ability_id| {
                     self.content.ability(ability_id).is_none_or(|ability| {
                         ability.minimum_level > self.progress.level
@@ -18438,6 +18509,158 @@ mod tests {
 
         let restored = Game::from_save(game.to_save()).expect("ability state should reload");
         assert_eq!(restored.snapshot(), snapshot);
+    }
+
+    #[test]
+    fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut game);
+        let echo_primer = ability_book_item_id_for(&game, "demo.item.echo-primer");
+        let stillwater_notes = ability_book_item_id_for(&game, "demo.item.stillwater-notes");
+        let initial = game.snapshot();
+        assert_eq!(
+            initial.player.ability_learning,
+            Some(AbilityLearningDto {
+                learned_count: 0,
+                capacity: 2,
+                remaining_slots: 2,
+            })
+        );
+        assert_eq!(initial.player.abilities.len(), 3);
+        assert!(
+            initial
+                .player
+                .abilities
+                .iter()
+                .all(|ability| ability.can_study && !ability.can_forget)
+        );
+
+        for (book_item_id, ability_id) in [
+            (echo_primer.clone(), "demo.ability.resonant-bolt"),
+            (stillwater_notes, "demo.ability.mending-echo"),
+        ] {
+            dispatch_next(
+                &mut game,
+                GameCommand::StudyAbility {
+                    book_item_id,
+                    ability_id: ability_id.to_owned(),
+                },
+            );
+        }
+        let full = game.snapshot();
+        assert_eq!(
+            full.player.ability_learning,
+            Some(AbilityLearningDto {
+                learned_count: 2,
+                capacity: 2,
+                remaining_slots: 0,
+            })
+        );
+        assert!(
+            full.player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.harmonic-spark")
+                .is_some_and(|ability| !ability.can_study)
+        );
+
+        let draws_before_rejection = game.rng_draw_counter();
+        let rejected = dispatch_next(
+            &mut game,
+            GameCommand::StudyAbility {
+                book_item_id: echo_primer.clone(),
+                ability_id: "demo.ability.harmonic-spark".to_owned(),
+            },
+        );
+        assert_eq!(game.rng_draw_counter(), draws_before_rejection);
+        assert!(rejected.events.iter().any(|event| {
+            event.kind == "ability.study-unavailable"
+                && event
+                    .args
+                    .get("reason")
+                    .is_some_and(|reason| reason == "learning-capacity-full")
+        }));
+
+        let retained_progress = AbilityProgress {
+            proficiency: SPELL_EXP_EXPERT,
+            proficiency_cap: SPELL_EXP_MASTER,
+            cast_count: 12,
+            fail_count: 3,
+            cooldown_remaining: 0,
+        };
+        game.ability_progress
+            .insert("demo.ability.resonant-bolt".to_owned(), retained_progress);
+        let forgotten = dispatch_next(
+            &mut game,
+            GameCommand::ForgetAbility {
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
+        );
+        assert!(
+            forgotten
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.forgotten")
+        );
+        assert_eq!(
+            game.ability_progress["demo.ability.resonant-bolt"],
+            retained_progress
+        );
+        let after_forget = game.snapshot();
+        assert_eq!(
+            after_forget
+                .player
+                .ability_learning
+                .unwrap()
+                .remaining_slots,
+            1
+        );
+        assert!(
+            after_forget
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.resonant-bolt")
+                .is_some_and(|ability| !ability.learned && !ability.can_forget)
+        );
+
+        dispatch_next(
+            &mut game,
+            GameCommand::StudyAbility {
+                book_item_id: echo_primer,
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
+        );
+        let relearned = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == "demo.ability.resonant-bolt")
+            .expect("relearned ability should remain projected");
+        assert!(relearned.learned);
+        assert_eq!(relearned.proficiency, SPELL_EXP_EXPERT);
+        assert_eq!(relearned.cast_count, 12);
+        assert_eq!(relearned.fail_count, 3);
+
+        let restored = Game::from_save(game.to_save()).expect("forgotten progress should reload");
+        assert_eq!(restored.state_hash(), game.state_hash());
+
+        let mut over_capacity = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar build should create")
+            .to_save();
+        over_capacity.player.learned_ability_ids = vec![
+            "demo.ability.harmonic-spark".to_owned(),
+            "demo.ability.mending-echo".to_owned(),
+            "demo.ability.resonant-bolt".to_owned(),
+        ];
+        assert!(matches!(
+            Game::from_save(over_capacity),
+            Err(CoreError::InvalidSave(
+                "learned ability set exceeds learning capacity"
+            ))
+        ));
     }
 
     #[test]

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.75";
+pub const PROTOCOL_VERSION: &str = "1.76";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -124,6 +124,9 @@ pub enum GameCommand {
         turns: u16,
     },
     Search,
+    ForgetAbility {
+        ability_id: String,
+    },
     StudyAbility {
         book_item_id: String,
         ability_id: String,
@@ -335,6 +338,15 @@ pub struct ResourcePoolDto {
     pub rest_recovery_amount: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityLearningDto {
+    pub learned_count: u16,
+    pub capacity: u16,
+    pub remaining_slots: u16,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -381,6 +393,8 @@ pub struct AbilityDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_item_id: Option<String>,
     pub can_study: bool,
+    #[serde(default)]
+    pub can_forget: bool,
     pub can_cast: bool,
 }
 
@@ -804,6 +818,8 @@ pub struct PlayerDto {
     pub build: Option<PlayerBuildDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resources: Vec<ResourcePoolDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<AbilityDto>,
 }
@@ -1106,6 +1122,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetModeDto);
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
+    push_declaration!(AbilityLearningDto);
     push_declaration!(AbilityProficiencyRankDto);
     push_declaration!(AbilityDto);
     push_declaration!(TargetSelection);
@@ -1698,6 +1715,13 @@ mod tests {
                 ability_id: "demo.ability.mending-echo".to_owned(),
                 target: TargetSelection::SelfTarget,
             },
+            GameCommand::StudyAbility {
+                book_item_id: "generated.item.2".to_owned(),
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
+            GameCommand::ForgetAbility {
+                ability_id: "demo.ability.resonant-bolt".to_owned(),
+            },
             GameCommand::Rest { turns: 100 },
             GameCommand::Wait,
         ]
@@ -1780,6 +1804,7 @@ mod tests {
                 progress: PlayerProgressDto::default(),
                 build: None,
                 resources: Vec::new(),
+                ability_learning: None,
                 abilities: Vec::new(),
             },
             entities: vec![EntityDto {

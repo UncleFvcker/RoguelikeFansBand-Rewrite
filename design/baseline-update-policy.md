@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v75/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v74` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v76/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v75` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v75/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v76/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v75/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v75`：能力熟练度、Mana 成本/失败率修正、统计、冷却、旧存档兼容和 182 个 exact fixtures 由 [Contract v75](contract-v75-ability-proficiency-and-cooldowns.md) 定义；[Contract v74](contract-v74-resource-recovery-and-healing.md) 及 `contract-v1` 至 `contract-v74` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v76`：学习容量、主动遗忘、进度保留、能力熟练度、Mana 成本/失败率修正、统计、冷却、旧存档兼容和 186 个 exact fixtures 由 [Contract v76](contract-v76-learning-capacity-and-forgetting.md) 定义；[Contract v75](contract-v75-ability-proficiency-and-cooldowns.md) 及 `contract-v1` 至 `contract-v75` 继续作为历史基准保留。

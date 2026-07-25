@@ -396,6 +396,10 @@ pub struct CastingProfileDefinition {
     pub base_capacity: u32,
     pub capacity_per_level: u32,
     pub capacity_per_attribute_index: u32,
+    pub base_learning_capacity: u16,
+    pub learning_capacity_per_level: u16,
+    pub learning_capacity_per_attribute_index: u16,
+    pub learning_capacity_cap: u16,
     pub minimum_failure_percent: u8,
     pub ability_book_ids: Vec<String>,
 }
@@ -2849,6 +2853,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 .saturating_add(
                     u64::from(profile.capacity_per_attribute_index).saturating_mul(100),
                 );
+            let maximum_learning_capacity = u64::from(profile.base_learning_capacity)
+                .saturating_add(u64::from(profile.learning_capacity_per_level).saturating_mul(100))
+                .saturating_add(
+                    u64::from(profile.learning_capacity_per_attribute_index).saturating_mul(100),
+                );
             if profile.minimum_failure_percent > 95
                 || profile.ability_book_ids.is_empty()
                 || profile.ability_book_ids.len() > 16
@@ -2858,6 +2867,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     .any(|book_id| !books.insert(book_id.clone()))
                 || maximum_capacity == 0
                 || maximum_capacity > 1_000_000_000
+                || profile.learning_capacity_cap == 0
+                || profile.base_learning_capacity > profile.learning_capacity_cap
+                || maximum_learning_capacity > u64::from(u16::MAX)
             {
                 return Err(ContentError::InvalidCastingProfile(class.id.clone()));
             }
@@ -6258,7 +6270,7 @@ mod tests {
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 2);
+        assert_eq!(first.content.abilities.len(), 3);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
@@ -6282,7 +6294,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.67.0");
+        assert_eq!(catalog.pack_version(), "1.68.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -6295,7 +6307,13 @@ mod tests {
             catalog
                 .ability_book("demo.ability-book.echo-primer")
                 .map(|book| book.ability_ids.as_slice()),
-            Some(["demo.ability.resonant-bolt".to_owned()].as_slice())
+            Some(
+                [
+                    "demo.ability.harmonic-spark".to_owned(),
+                    "demo.ability.resonant-bolt".to_owned(),
+                ]
+                .as_slice()
+            )
         );
         assert_eq!(
             catalog
@@ -6313,6 +6331,10 @@ mod tests {
                     profile.base_capacity,
                     profile.capacity_per_level,
                     profile.capacity_per_attribute_index,
+                    profile.base_learning_capacity,
+                    profile.learning_capacity_per_level,
+                    profile.learning_capacity_per_attribute_index,
+                    profile.learning_capacity_cap,
                     profile.minimum_failure_percent,
                     profile.ability_book_ids.as_slice(),
                 )),
@@ -6322,6 +6344,10 @@ mod tests {
                 4,
                 2,
                 1,
+                2,
+                1,
+                0,
+                16,
                 5,
                 [
                     "demo.ability-book.echo-primer".to_owned(),

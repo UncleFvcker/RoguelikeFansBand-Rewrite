@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.75 / contract-v75
+状态：长期规则实现路线；当前基线为协议 1.76 / contract-v76
 
 ## 1. 目的与边界
 
@@ -14,7 +14,7 @@
 - 当前内容包继续使用原创测试内容。若未来迁移旧内容，必须先单独完成许可证和内容审计，并通过显式内容转换流程；
 - 每个系统进入主线前都必须拥有固定种子、contract fixture、存档回环和回放检查点。
 
-当前阶段定位：截至 contract-v75，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑，阶段 F 已建立原版式经验、等级、HP 成长、六维属性、Race/Class/Personality、技能集合、出生构筑、四类可观察技能检定和胜利解锁上限的基础闭环；阶段 G 已完成 Mana、实体能力书、目标施法、等待/休息恢复、自身目标、治疗能力、RFB 五档熟练度、统计和可选冷却的首轮纵切。项目尚未达到旧 RFB 的完整职业矩阵、法术广度、怪物生态、世界经济或内容规模。
+当前阶段定位：截至 contract-v76，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑，阶段 F 已建立原版式经验、等级、HP 成长、六维属性、Race/Class/Personality、技能集合、出生构筑、四类可观察技能检定和胜利解锁上限的基础闭环；阶段 G 已完成 Mana、实体能力书、目标施法、等待/休息恢复、自身目标、治疗能力、RFB 五档熟练度、统计、冷却、学习容量和主动遗忘的首轮纵切。项目尚未达到旧 RFB 的完整职业矩阵、法术广度、怪物生态、世界经济或内容规模。
 
 ## 2. 旧 RFB 的系统规模
 
@@ -330,7 +330,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 复用 check 完成门与搜索，contract-v72 统一投影 device/saving-throw/stealth/perception 的完整检定结果，contract-v73 让首个法术复用目标、伤害、抗性、击杀、经验、任务和掉落管线，contract-v74 又让自身能力复用固定治疗 outcome，contract-v75 固定能力熟练度与冷却。当前 active baseline 已进入 contract-v75，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
+当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 复用 check 完成门与搜索，contract-v72 统一投影 device/saving-throw/stealth/perception 的完整检定结果，contract-v73 让首个法术复用目标、伤害、抗性、击杀、经验、任务和掉落管线，contract-v74 又让自身能力复用固定治疗 outcome，contract-v75 固定能力熟练度与冷却，contract-v76 固定学习容量与遗忘。当前 active baseline 已进入 contract-v76，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -372,7 +372,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树；contract-v67 完成入口守卫软门槛、可选硬进入条件和原子拒绝；contract-v68 完成 campaign 胜利、退休状态、确定性评分、存档迁移和结算 UI；contract-v69 完成 `reset-on-surface`/`persistent`/`turn-ttl` 生命周期、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理。普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。角色成长与技能见 contract-v70–v72，玩家施法循环见 contract-v73–v75。当前内容包为 1.67.0，content hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`，active baseline 共 182 个 exact fixtures，save v1 / state hash Schema v34。详细边界见 [Contract v75](contract-v75-ability-proficiency-and-cooldowns.md)。
+当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树；contract-v67 完成入口守卫软门槛、可选硬进入条件和原子拒绝；contract-v68 完成 campaign 胜利、退休状态、确定性评分、存档迁移和结算 UI；contract-v69 完成 `reset-on-surface`/`persistent`/`turn-ttl` 生命周期、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理。普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。角色成长与技能见 contract-v70–v72，玩家施法循环见 contract-v73–v76。当前内容包为 1.68.0，content hash 为 `c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04`，active baseline 共 186 个 exact fixtures，save v1 / state hash Schema v34。详细边界见 [Contract v76](contract-v76-learning-capacity-and-forgetting.md)。
 
 实现：
 
@@ -386,7 +386,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：完成一局从出生到升级的角色循环。
 
-当前进度：contract-v70–v72 已建立 1–100 级成长、胜利前后等级/属性上限、Race/Class/Personality、五个代表性构筑、出生装备、技能集合和四类可观察技能消费；contract-v73–v75 又让 Scholar/Mage 的 casting profile、两本出生能力书、资源恢复、自身治疗、RFB 熟练度、统计和冷却进入实际规则。完整角色创建 UI、更多来源选择、属性损伤/恢复和职业专属成长仍待实现。
+当前进度：contract-v70–v72 已建立 1–100 级成长、胜利前后等级/属性上限、Race/Class/Personality、五个代表性构筑、出生装备、技能集合和四类可观察技能消费；contract-v73–v76 又让 Scholar/Mage 的 casting profile、两本出生能力书、资源恢复、自身治疗、RFB 熟练度、统计、冷却、学习容量和主动遗忘进入实际规则。完整角色创建 UI、更多来源选择、属性损伤/恢复和职业专属成长仍待实现。
 
 实现：
 
@@ -401,7 +401,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：统一主动能力生态。
 
-当前进度：contract-v73 已完成独立 resource/ability/ability-book 内容根、实体书本、学习、Mana、等级/属性失败率、目标伤害施法、结构化事件、存档和 Web 面板；contract-v74 又完成等待/休息恢复、真实调度与危险中断、稳定自身目标、第二本能力书和固定治疗；contract-v75 完成 RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝和 `abilityProgress` 存档迁移。下一步优先建立学习容量与遗忘，再扩展更多效果；多资源和怪物施法继续后置。
+当前进度：contract-v73 已完成独立 resource/ability/ability-book 内容根、实体书本、学习、Mana、等级/属性失败率、目标伤害施法、结构化事件、存档和 Web 面板；contract-v74 又完成等待/休息恢复、真实调度与危险中断、稳定自身目标、第二本能力书和固定治疗；contract-v75 完成 RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝和 `abilityProgress` 存档迁移；contract-v76 完成独立学习容量、容量投影、主动遗忘、重新学习进度保留和旧存档兼容。下一步优先扩展一个新的能力效果纵切；多资源和怪物施法继续后置。
 
 实现：
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75 阶段性里程碑
+## 8. contract-v75–v76 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.75、内容包 1.67.0、contract-v75、save v1 和 state hash Schema v34；内容 hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`。active baseline 包含 182 个 exact fixtures，零 waiver。v73 在 v72 可观察技能层之上接入 resource/ability/ability-book 内容根、Class casting profile、实体书本学习、Mana、失败率、目标施法、结构化 ability-cast outcome 和旧存档资源迁移；v74 增加等待/休息恢复、确定性宏命令、危险中断、自身目标、第二本能力书、固定治疗与结构化 resource-recovery/rest outcome；v75 增加 RFB 五档熟练度、Mana 成本与 Expert/Master 失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝和能力进度存档迁移。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.76、内容包 1.68.0、contract-v76、save v1 和 state hash Schema v34；内容 hash 为 `c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04`。active baseline 包含 186 个 exact fixtures，零 waiver。v73 在 v72 可观察技能层之上接入 resource/ability/ability-book 内容根、Class casting profile、实体书本学习、Mana、失败率、目标施法、结构化 ability-cast outcome 和旧存档资源迁移；v74 增加等待/休息恢复、确定性宏命令、危险中断、自身目标、第二本能力书、固定治疗与结构化 resource-recovery/rest outcome；v75 增加 RFB 五档熟练度、Mana 成本与 Expert/Master 失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝和能力进度存档迁移；v76 增加学习容量/等级与属性修正、容量投影、主动遗忘、重新学习进度保留和旧存档兼容。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、首轮技能消费和可恢复的最小玩家施法循环已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 47 种 terrain、12 种 actor、8 种 item、1 种 resource、2 个 ability、2 本 ability book、10 个 skill、11 个 skill set、3 个 Race、5 个 Class、3 个 Personality、5 个 build、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版 1396 种怪物、545 种基础物品、392 件固定神器、44 座地牢、92 个任务和 19 个法术领域的内容规模。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、首轮技能消费和可恢复的最小玩家施法循环已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 47 种 terrain、12 种 actor、8 种 item、1 种 resource、3 个 ability、2 本 ability book、10 个 skill、11 个 skill set、3 个 Race、5 个 Class、3 个 Personality、5 个 build、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版 1396 种怪物、545 种基础物品、392 件固定神器、44 座地牢、92 个任务和 19 个法术领域的内容规模。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -476,7 +476,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 | 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围和守卫；仍缺远程决策、施法、召唤、逃跑、繁殖、unique 生态、智能学习和回忆 |
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和职业资源 |
-| 法术、能力与设备 | 可恢复的玩家施法纵切已建立 | 已有 Mana、实体能力书、学习、等级/属性失败率、目标伤害、自身治疗、等待/休息恢复、Web 面板和存档迁移；仍缺学习容量、熟练/遗忘、冷却、多资源、多效果组合、多领域和怪物施法 |
+| 法术、能力与设备 | 可恢复的玩家施法纵切已建立 | 已有 Mana、实体能力书、学习容量、主动遗忘、熟练度、冷却、等级/属性失败率、目标伤害、自身治疗、等待/休息恢复、Web 面板和存档迁移；仍缺随机学习、首次奖励、多资源、多效果组合、多领域和怪物施法 |
 | 荒野、城镇与经济 | 未建立 | 多城镇旅行、商店、家、建筑服务、交易、声望和长期经济循环尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
@@ -493,13 +493,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 ### 8.3 下一执行里程碑
 
-下一执行里程碑建议为 P15“能力熟练度与冷却”：
+下一执行里程碑建议为 P17“更多能力效果”：
 
-1. 先对照旧 RFB 的法术熟练等级与增长入口，提炼稳定、原创内容可配置的每能力熟练状态，而不复制旧数据；
-2. 明确成功、失败、无效目标和零效果施放是否获得练习，并保证练习结算不引入额外随机数；
-3. 建立独立能力冷却与可选共享冷却组，规定真实玩家行动、等待和休息对剩余回合的递减顺序；
-4. 冷却拒绝必须发生在资源扣除与施法 RNG 之前，熟练与冷却进入 save、state hash、回放、Web 和 exact fixtures；
-5. 暂不同时实现学习容量、多资源、怪物施法和旧版 19 个领域。
+1. 在现有伤害/治疗 effect 组合器上选择一个新的原创能力效果（优先范围或侦测），定义稳定目标验证与结构化 outcome；
+2. 明确无效目标、范围外、视线阻挡和零效果是否消费资源、抽施法 RNG 或获得熟练度；
+3. 让能力定义、能力书、失败率、熟练度、冷却和 Web 面板继续复用同一公共管线；
+4. 为成功、拒绝、存档回读和回放新增 exact fixtures，并证明失败前置不推进 RNG；
+5. 暂不同时实现多资源、怪物施法、随机学习和旧版 19 个领域。
 
 阶段 H 的怪物施法应在玩家熟练度、冷却和多能力可用性边界稳定后进入。地牢系统继续只修复阻塞角色/法术验证的缺陷。
 

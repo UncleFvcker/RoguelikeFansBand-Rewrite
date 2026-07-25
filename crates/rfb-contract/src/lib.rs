@@ -4,12 +4,12 @@ use std::collections::BTreeSet;
 
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
-    AbilityDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto, CharacterSummary,
-    GameCommand, GameCommandEnvelope, GameEventDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
-    PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
-    ResourcePoolSaveDto, SaveHeaderV1, StatusDto, StatusSaveDto, TaskStatusDto,
-    TerrainInteractionDto,
+    AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
+    CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, InventoryItemSaveDto,
+    ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto,
+    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto,
+    ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SaveHeaderV1, StatusDto,
+    StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -202,6 +202,8 @@ pub struct FinalStateAssertion {
     pub player_build: Option<PlayerBuildDto>,
     #[serde(default)]
     pub player_resources: Vec<ResourcePoolDto>,
+    #[serde(default)]
+    pub player_ability_learning: Option<AbilityLearningDto>,
     #[serde(default)]
     pub player_abilities: Vec<AbilityDto>,
     pub entity_count: usize,
@@ -476,6 +478,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_attributes: Some(snapshot.player.progress.clone()),
             player_build: snapshot.player.build.clone(),
             player_resources: snapshot.player.resources.clone(),
+            player_ability_learning: snapshot.player.ability_learning,
             player_abilities: snapshot.player.abilities.clone(),
             entity_count: snapshot.entities.len(),
             entities: snapshot

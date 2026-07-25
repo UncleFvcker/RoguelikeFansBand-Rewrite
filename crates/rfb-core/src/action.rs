@@ -45,6 +45,9 @@ pub(crate) enum GameAction {
         turns: u16,
     },
     Search,
+    ForgetAbility {
+        ability_id: String,
+    },
     StudyAbility {
         book_item_id: String,
         ability_id: String,
@@ -117,6 +120,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::Retire => Self::Retire,
             GameCommand::Rest { turns } => Self::Rest { turns },
             GameCommand::Search => Self::Search,
+            GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },
             GameCommand::StudyAbility {
                 book_item_id,
                 ability_id,

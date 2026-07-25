@@ -22,6 +22,7 @@ import {
 } from "./native-save-storage";
 import type {
   AbilityDto,
+  AbilityLearningDto,
   DamageResolutionDto,
   DamageTypeDto,
   Direction,
@@ -463,7 +464,11 @@ async function dispatch(command: GameCommand): Promise<void> {
     busy = false;
     updateInventoryActions();
     renderProgression(currentStatus?.player.progress, currentStatus?.player.build);
-    renderAbilities(currentStatus?.player.abilities ?? [], currentStatus?.player.resources ?? []);
+    renderAbilities(
+      currentStatus?.player.abilities ?? [],
+      currentStatus?.player.resources ?? [],
+      currentStatus?.player.abilityLearning,
+    );
     renderTargeting();
   }
 }
@@ -822,7 +827,11 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.equipmentModifiers.defense,
   );
   renderProgression(state.player.progress, state.player.build);
-  renderAbilities(state.player.abilities ?? [], state.player.resources ?? []);
+  renderAbilities(
+    state.player.abilities ?? [],
+    state.player.resources ?? [],
+    state.player.abilityLearning,
+  );
   effectsValue.textContent =
     state.player.statuses.length === 0
       ? localization.format("status-effects-none")
@@ -1004,7 +1013,11 @@ function renderProgression(
   );
 }
 
-function renderAbilities(abilities: AbilityDto[], resources: ResourcePoolDto[]): void {
+function renderAbilities(
+  abilities: AbilityDto[],
+  resources: ResourcePoolDto[],
+  learning: AbilityLearningDto | null | undefined,
+): void {
   resourceList.replaceChildren();
   abilityList.replaceChildren();
   resourceRest.disabled =
@@ -1027,6 +1040,16 @@ function renderAbilities(abilities: AbilityDto[], resources: ResourcePoolDto[]):
       maximum: resource.maximum,
       wait: resource.waitRecoveryAmount,
       rest: resource.restRecoveryAmount,
+    });
+    resourceList.append(row);
+  }
+  if (learning) {
+    const row = document.createElement("li");
+    row.className = "resource-row";
+    row.textContent = localization.format("ability-learning-value", {
+      learned: learning.learnedCount,
+      capacity: learning.capacity,
+      remaining: learning.remainingSlots,
     });
     resourceList.append(row);
   }
@@ -1086,6 +1109,13 @@ function renderAbilities(abilities: AbilityDto[], resources: ResourcePoolDto[]):
         abilityId: ability.id,
       });
     });
+    const forget = document.createElement("button");
+    forget.type = "button";
+    forget.textContent = localization.format("action-ability-forget");
+    forget.disabled = busy || playerDead || !ability.canForget;
+    forget.addEventListener("click", () => {
+      void dispatch({ type: "forget-ability", abilityId: ability.id });
+    });
     const cast = document.createElement("button");
     cast.type = "button";
     cast.textContent = localization.format("action-ability-cast");
@@ -1101,7 +1131,7 @@ function renderAbilities(abilities: AbilityDto[], resources: ResourcePoolDto[]):
       }
       startAbilityTargeting(ability);
     });
-    actions.append(study, cast);
+    actions.append(study, forget, cast);
     row.append(details, actions);
     abilityList.append(row);
   }
@@ -1407,6 +1437,15 @@ function formatEvent(event: GameEventDto): string {
     case "ability-studied":
       return localization.format("message-ability-studied", {
         ability: contentName(event.args.target),
+      });
+    case "ability-forgotten":
+      return localization.format("message-ability-forgotten", {
+        ability: contentName(event.args.target),
+      });
+    case "ability-forget-unavailable":
+      return localization.format("message-ability-forget-unavailable", {
+        ability: contentName(event.args.target),
+        reason: abilityUnavailableReason(event.args.reason),
       });
     case "ability-study-unavailable":
       return localization.format("message-ability-study-unavailable", {
@@ -1848,6 +1887,9 @@ function contentName(id: string | undefined): string {
   }
   if (id === "demo.ability.resonant-bolt") {
     return localization.format("ability-demo-resonant-bolt-name");
+  }
+  if (id === "demo.ability.harmonic-spark") {
+    return localization.format("ability-demo-harmonic-spark-name");
   }
   if (id === "demo.ability.mending-echo") {
     return localization.format("ability-demo-mending-echo-name");

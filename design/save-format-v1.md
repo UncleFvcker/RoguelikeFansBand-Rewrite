@@ -135,6 +135,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.75 为 `PlayerSaveDto` 增加可选 `abilityProgress`。每项保存稳定能力 ID、熟练度、内容上限、成功/失败次数和冷却剩余；能力定义中的初值、增量、冷却回合与组 ID不重复写入存档。载入 v73/v74 或其他缺少该字段的旧存档时，运行时按当前 Class casting profile 与内容能力建立默认进度，再恢复已有资源和已学能力；不自动学习、不补发物品、不推进 RNG。显式进度必须匹配当前能力上限，熟练度与冷却不能越界，重复/未知能力 ID 原子拒绝。能力进度、冷却和统计进入 state hash Schema v34；save 容器仍为 v1。完整边界见 [Contract v75](contract-v75-ability-proficiency-and-cooldowns.md)。
 
+协议 1.76 不新增 save 字段：学习容量是 Class 内容与角色 progress 的派生值，主动遗忘只修改已有 `learnedAbilityIds`，不清除 `abilityProgress`。重新学习同一能力恢复原熟练度、统计与冷却；载入时若已学数量超过当前内容容量则原子拒绝。缺少 `abilityProgress` 的 v75 及更早存档继续按内容初值迁移，save 容器仍为 v1。完整边界见 [Contract v76](contract-v76-learning-capacity-and-forgetting.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

@@ -22,6 +22,12 @@
           "minimum": 0,
           "type": "integer"
         },
+        "baseLearningCapacity": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "capacityPerAttributeIndex": {
           "format": "uint32",
           "minimum": 0,
@@ -34,6 +40,24 @@
         },
         "castingAttribute": {
           "$ref": "#/$defs/CastingAttribute"
+        },
+        "learningCapacityCap": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "learningCapacityPerAttributeIndex": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "learningCapacityPerLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
         },
         "minimumFailurePercent": {
           "format": "uint8",
@@ -51,6 +75,10 @@
         "baseCapacity",
         "capacityPerLevel",
         "capacityPerAttributeIndex",
+        "baseLearningCapacity",
+        "learningCapacityPerLevel",
+        "learningCapacityPerAttributeIndex",
+        "learningCapacityCap",
         "minimumFailurePercent",
         "abilityBookIds"
       ],

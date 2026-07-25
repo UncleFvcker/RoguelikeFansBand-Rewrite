@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v75、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v76、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -24,18 +24,19 @@
 | P13 | 法术与能力书基础 | 已由 contract-v73 完成 | resource/ability/ability-book 内容根、Class casting profile、可保存 Mana/已学能力、学习/失败率/目标施法、Web 面板和旧存档迁移 |
 | P14 | 法术恢复与多效果能力 | 已由 contract-v74 完成 | Mana 等待/休息恢复、真实调度与危险中断、稳定自身目标、Stillwater Notes 和固定治疗 |
 | P15 | 能力熟练度与冷却 | 已由 contract-v75 完成 | RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝、存档迁移和 Web 展示 |
-| P16 | 学习容量与遗忘 | 下一候选 | 参考 RFB 的可学习数量/等级容量、主动遗忘与重新学习；保持能力进度和书本状态确定性，先不引入多资源或怪物施法 |
+| P16 | 学习容量与遗忘 | 已由 contract-v76 完成 | 独立学习容量、等级/属性修正、容量投影、主动遗忘、零 RNG 拒绝、进度保留、重新学习与旧存档兼容 |
+| P17 | 更多能力效果 | 下一候选 | 在现有伤害/治疗组合器上增加范围、锥形、位移、侦测或地形改变中的一个完整纵切；保持目标验证、事件和 RNG 边界 |
 
-## contract-v75 明确遗留
+## contract-v76 明确遗留
 
-- 能力学习容量、随机学习、遗忘和首次成功奖励；
+- 随机学习、首次成功奖励，以及原版按 `spell_order` 自动暂时遗忘/记起；
 - 怒气、专注、鲜血等多种职业资源，资源互转与职业专属恢复条件；
 - 范围、锥形、位移、召唤、侦测、地形改变和多 effect 组合；
 - 装备负重、状态、环境与职业规则对失败率、恢复率和效果强度的完整修正；
 - 怪物施法、能力选择 AI、智能学习和完整领域/职业矩阵；
 - 饥饿、HP 自然恢复、旅行、自动探索和更高层的安全休息策略。
 
-v75 的 RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝、能力进度存档迁移和 182 个 exact fixtures 已进入协议 1.75、内容包 1.67.0、save v1 与 state hash Schema v34。详细边界见 [contract-v75](contract-v75-ability-proficiency-and-cooldowns.md)。
+v76 的独立学习容量、能力容量投影、主动遗忘、重新学习进度保留、容量满零 RNG 拒绝和旧存档兼容已进入协议 1.76、内容包 1.68.0、save v1 与 state hash Schema v34；active baseline 为 186 个 exact fixtures、零 waiver。详细边界见 [contract-v76](contract-v76-learning-capacity-and-forgetting.md)。
 
 ## contract-v73 明确遗留
 

@@ -20,6 +20,10 @@
     "baseCapacity": 4,
     "capacityPerLevel": 2,
     "capacityPerAttributeIndex": 1,
+    "baseLearningCapacity": 2,
+    "learningCapacityPerLevel": 1,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 16,
     "minimumFailurePercent": 5,
     "abilityBookIds": [
       "demo.ability-book.echo-primer",

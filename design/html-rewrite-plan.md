@@ -67,6 +67,7 @@
 - [Contract v73：法术资源与能力书基础](contract-v73-ability-books.md)
 - [Contract v74：法术资源恢复与自身治疗](contract-v74-resource-recovery-and-healing.md)
 - [Contract v75：能力熟练度与冷却](contract-v75-ability-proficiency-and-cooldowns.md)
+- [Contract v76：学习容量与遗忘](contract-v76-learning-capacity-and-forgetting.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -644,6 +645,7 @@ interface SaveGame {
 - 协议 1.74 和 contract-v74 已建立；内容包 1.66.0 为 Mana 增加等待/休息恢复，加入 Stillwater Notes、Mending Echo、稳定自身目标与治疗效果。Web 资源行显示恢复速率，休息按钮提交最多 100 回合的确定性宏命令，自身能力无需进入准星模式；结构化恢复/休息 outcome 与真实调度结果进入 state hash Schema v33。
 
 - 协议 1.75 和 contract-v75 已建立；内容包 1.67.0 增加能力熟练度、Mana 成本/失败率修正、统计和冷却。Web 能力行显示实际成本、熟练度、统计和剩余冷却；能力进度与旧存档迁移进入 state hash Schema v34。content hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`，active baseline 共 182 个 exact fixtures。
+- 协议 1.76 和 contract-v76 已建立；内容包 1.68.0 增加独立学习容量、容量投影、主动遗忘和进度保留。Web 能力行显示学习槽位与遗忘入口；容量满和遗忘前置拒绝不抽 RNG，旧存档继续按当前内容迁移。content hash 为 `c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04`，active baseline 共 186 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
