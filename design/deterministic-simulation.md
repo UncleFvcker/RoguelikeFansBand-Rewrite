@@ -112,7 +112,7 @@ interface ReplayV1 {
   contentHash: string;
   initialSaveHash: string;
   rngAlgorithm: string;
-  stateHashSchemaVersion: 29;
+  stateHashSchemaVersion: 34;
   commands: ReplayCommand[];
   checkpoints: ReplayCheckpoint[];
 }
@@ -176,3 +176,9 @@ Tauri 原生会话持有 `ReplayRecorder`，前端可以导出正式 `.rfbreplay
 v76 的学习容量由 Class 内容与角色 progress 纯函数派生；容量满学习、重复遗忘和其他能力前置拒绝均发生在任何能力 RNG 前。遗忘只移除已学能力集合并保留能力进度，重新学习不抽额外 RNG；旧存档缺少能力进度时仍按当前内容初值迁移。学习容量属于内容锁定的派生投影，因此沿用 state hash Schema v34。
 
 v77 的范围能力先验证目标路径，再扣资源、抽施法失败率和记录熟练度；无效目标不推进 RNG。有效爆发只抽一次基础伤害骰，随后按 RFB `distance()` 的稳定距离层和 `(baseDamage + distance) / (distance + 1)` 整数衰减复用每个 actor 的抗性/死亡/掉落顺序。定点目标不因中途 actor 停止，方向目标在首个 actor 停止；墙体截断传播，footprint 按距离、`y`、`x` 排序。零目标仍消耗资源并保留一次伤害骰，范围半径来自内容而非存档，因此 state hash 继续使用 Schema v34。
+
+v78 的方向射线先验证八向路径，再扣资源、抽施法失败率和记录熟练度；actor 不阻挡，墙体/边界截断，路径按近到远稳定结算，每次施法只抽一次基础伤害骰并复用到所有命中 actor。空射仍是成功施法并消费资源/伤害骰，方向以外模式在任何能力 RNG 前拒绝；射线 footprint 只存在于事件和回放，state hash 继续使用 Schema v34。
+
+v79 的固定八向锥形先验证方向目标，再按中心线逐层展开；actor 不阻挡，墙体/边界截断，候选格按近到远、横向距离和坐标稳定排序，侧向目标使用既有整数距离衰减并共享一次基础伤害骰。空锥仍消费资源并投一次伤害骰，非方向模式在任何能力 RNG 前拒绝；锥形 footprint 不写入存档，state hash 继续使用 Schema v34。
+
+v80 的定点/实体射线在目标存在、可见且不超距后才扣资源并抽施法失败率；核心用同一整数 Bresenham 误差从玩家推进到目标，并沿相同斜率继续到内容射程上限。actor 不阻挡，墙体/不可行走地形/边界截断，路径按近到远稳定结算并共享一次基础伤害骰。自身、缺失、不可见或超距目标在 Mana/RNG/熟练度前拒绝；延长 footprint、目标顺序与事件只存在于命令/回放，save 与 state hash 仍使用 Schema v34。

@@ -2550,10 +2550,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             .target
             .modes
             .contains(&AbilityTargetModeDefinition::SelfTarget);
-        let directional_effect = matches!(
-            ability.effect,
-            AbilityEffectDefinition::BeamDamage { .. } | AbilityEffectDefinition::ConeDamage { .. }
-        );
+        let directional_effect =
+            matches!(ability.effect, AbilityEffectDefinition::ConeDamage { .. });
         let valid_target = match ability.effect {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::AreaDamage { .. }
@@ -6349,7 +6347,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.71.0");
+        assert_eq!(catalog.pack_version(), "1.72.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8206,7 +8204,7 @@ mod tests {
             .find(|ability| ability.id == "demo.ability.echo-lance")
             .expect("fixture should contain the beam damage ability")
             .target
-            .modes = vec![AbilityTargetModeDefinition::Entity];
+            .modes = vec![AbilityTargetModeDefinition::SelfTarget];
         assert!(matches!(
             validate_and_normalize(&mut invalid_beam_target),
             Err(ContentError::InvalidAbility(_))

@@ -1,0 +1,1183 @@
+{
+  "schemaVersion": 1,
+  "id": "ability.cone-damage-widening",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "debugClearEntities": false,
+    "playerBuildId": "demo.build.scholar",
+    "playerHp": null,
+    "playerLevel": null,
+    "playerExperience": null,
+    "playerMaxLevel": null,
+    "playerPendingAttributeIncreases": null,
+    "playerAttributes": null,
+    "legacyPlayerProgress": false,
+    "playerResources": null,
+    "playerLearnedAbilityIds": [
+      "demo.ability.echo-fan"
+    ],
+    "playerAbilityProgress": null,
+    "legacyPlayerAbilityState": false,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": {
+          "x": 4,
+          "y": 3
+        },
+        "hp": null,
+        "maxHp": null,
+        "energyNeed": 100,
+        "alerted": null,
+        "statuses": [],
+        "resistances": []
+      },
+      {
+        "id": "demo.z-entrance-guardian.resonance-descent.1",
+        "position": {
+          "x": 7,
+          "y": 2
+        },
+        "hp": null,
+        "maxHp": null,
+        "energyNeed": 100,
+        "alerted": null,
+        "statuses": [],
+        "resistances": []
+      }
+    ],
+    "inventoryItems": [],
+    "terrainOverrides": [
+      {
+        "position": {
+          "x": 4,
+          "y": 1
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 5,
+          "y": 1
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 6,
+          "y": 1
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 7,
+          "y": 1
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 1
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 9,
+          "y": 1
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 2
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 5,
+          "y": 2
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 6,
+          "y": 2
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 7,
+          "y": 2
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 2
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 9,
+          "y": 2
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 3
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 5,
+          "y": 3
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 6,
+          "y": 3
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 7,
+          "y": 3
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 3
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 9,
+          "y": 3
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 4
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 5,
+          "y": 4
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 6,
+          "y": 4
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 7,
+          "y": 4
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 4
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 9,
+          "y": 4
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 5
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 6,
+          "y": 5
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 7,
+          "y": 5
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 5
+        },
+        "terrainId": "demo.terrain.floor"
+      },
+      {
+        "position": {
+          "x": 9,
+          "y": 5
+        },
+        "terrainId": "demo.terrain.floor"
+      }
+    ],
+    "revealedTerrain": [],
+    "campaignConqueredDungeons": [],
+    "campaignState": null
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "cast-ability",
+        "abilityId": "demo.ability.echo-fan",
+        "target": {
+          "type": "direction",
+          "direction": "east"
+        }
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "rngDrawCounter": 9,
+      "floorId": "demo.floor.surface",
+      "dungeonInstanceId": null,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 16,
+      "playerMaxHp": 16,
+      "playerAttack": 3,
+      "playerDefense": 2,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 50,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "playerLevel": 2,
+      "playerExperience": 16,
+      "playerMaxLevel": 2,
+      "playerPendingAttributeIncreases": 0,
+      "playerAttributes": {
+        "level": 2,
+        "maxLevel": 2,
+        "experience": 16,
+        "levelCap": 50,
+        "attributeCap": 238,
+        "attributeIndexCap": 37,
+        "experienceForNextLevel": 25,
+        "pendingAttributeIncreases": 0,
+        "victoryLevelCapUnlocked": false,
+        "attributes": {
+          "strength": {
+            "natural": 13,
+            "effective": 9,
+            "index": 6
+          },
+          "intelligence": {
+            "natural": 13,
+            "effective": 18,
+            "index": 15
+          },
+          "wisdom": {
+            "natural": 13,
+            "effective": 14,
+            "index": 11
+          },
+          "dexterity": {
+            "natural": 13,
+            "effective": 15,
+            "index": 12
+          },
+          "constitution": {
+            "natural": 13,
+            "effective": 10,
+            "index": 7
+          },
+          "charisma": {
+            "natural": 13,
+            "effective": 12,
+            "index": 9
+          }
+        },
+        "skills": [
+          {
+            "id": "demo.skill.device",
+            "nameKey": "skill-demo-device-name",
+            "current": 48,
+            "maximum": 1000,
+            "base": 45,
+            "growthPerTenLevels": 15
+          },
+          {
+            "id": "demo.skill.digging",
+            "nameKey": "skill-demo-digging-name",
+            "current": 10,
+            "maximum": 1000,
+            "base": 10,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.disarming",
+            "nameKey": "skill-demo-disarming-name",
+            "current": 31,
+            "maximum": 1000,
+            "base": 30,
+            "growthPerTenLevels": 7
+          },
+          {
+            "id": "demo.skill.melee",
+            "nameKey": "skill-demo-melee-name",
+            "current": 30,
+            "maximum": 1000,
+            "base": 29,
+            "growthPerTenLevels": 6
+          },
+          {
+            "id": "demo.skill.perception",
+            "nameKey": "skill-demo-perception-name",
+            "current": 23,
+            "maximum": 1000,
+            "base": 23,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.ranged",
+            "nameKey": "skill-demo-ranged-name",
+            "current": 21,
+            "maximum": 1000,
+            "base": 20,
+            "growthPerTenLevels": 7
+          },
+          {
+            "id": "demo.skill.saving-throw",
+            "nameKey": "skill-demo-saving-throw-name",
+            "current": 43,
+            "maximum": 1000,
+            "base": 41,
+            "growthPerTenLevels": 11
+          },
+          {
+            "id": "demo.skill.search",
+            "nameKey": "skill-demo-search-name",
+            "current": 19,
+            "maximum": 1000,
+            "base": 19,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.stealth",
+            "nameKey": "skill-demo-stealth-name",
+            "current": 4,
+            "maximum": 1000,
+            "base": 4,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.throwing",
+            "nameKey": "skill-demo-throwing-name",
+            "current": 26,
+            "maximum": 1000,
+            "base": 25,
+            "growthPerTenLevels": 5
+          }
+        ]
+      },
+      "playerBuild": {
+        "buildId": "demo.build.scholar",
+        "buildNameKey": "build-demo-scholar-name",
+        "raceId": "demo.race.elf",
+        "raceNameKey": "race-demo-elf-name",
+        "classId": "demo.class.mage",
+        "classNameKey": "class-demo-mage-name",
+        "personalityId": "demo.personality.ordinary",
+        "personalityNameKey": "personality-demo-ordinary-name",
+        "lifePercent": 93,
+        "experiencePercent": 156
+      },
+      "playerResources": [
+        {
+          "id": "demo.resource.mana",
+          "nameKey": "resource-demo-mana-name",
+          "current": 11,
+          "maximum": 23,
+          "waitRecoveryAmount": 1,
+          "restRecoveryAmount": 3
+        }
+      ],
+      "playerAbilityLearning": {
+        "learnedCount": 1,
+        "capacity": 3,
+        "remainingSlots": 2
+      },
+      "playerAbilities": [
+        {
+          "id": "demo.ability.echo-burst",
+          "nameKey": "ability-demo-echo-burst-name",
+          "descriptionKey": "ability-demo-echo-burst-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 5,
+          "resourceCost": 8,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 2,
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.2",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-fan",
+          "nameKey": "ability-demo-echo-fan-name",
+          "descriptionKey": "ability-demo-echo-fan-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 6,
+          "resourceCost": 10,
+          "failurePercent": 7,
+          "proficiency": 128,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 1,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "coneRadius": 2,
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": true,
+          "bookItemId": "generated.item.2",
+          "canStudy": false,
+          "canForget": true,
+          "canCast": true
+        },
+        {
+          "id": "demo.ability.echo-lance",
+          "nameKey": "ability-demo-echo-lance-name",
+          "descriptionKey": "ability-demo-echo-lance-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 7,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "beamDamage": true,
+          "targetSpec": {
+            "modes": [
+              "direction",
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.2",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.harmonic-spark",
+          "nameKey": "ability-demo-harmonic-spark-name",
+          "descriptionKey": "ability-demo-harmonic-spark-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 2,
+          "resourceCost": 4,
+          "failurePercent": 7,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 5,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.2",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.mending-echo",
+          "nameKey": "ability-demo-mending-echo-name",
+          "descriptionKey": "ability-demo-mending-echo-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 12,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 2,
+          "cooldownGroupId": "demo.cooldown.mending",
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.4",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.resonant-bolt",
+          "nameKey": "ability-demo-resonant-bolt-name",
+          "descriptionKey": "ability-demo-resonant-bolt-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 3,
+          "resourceCost": 5,
+          "failurePercent": 17,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.2",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        }
+      ],
+      "entityCount": 1,
+      "entities": [
+        {
+          "id": "demo.z-entrance-guardian.resonance-descent.1",
+          "position": {
+            "x": 7,
+            "y": 2
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "alerted": true,
+          "statuses": [],
+          "pack": {
+            "id": "demo.z-entrance-guardian.resonance-descent.1",
+            "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
+            "role": "leader",
+            "behavior": "guard-position"
+          }
+        }
+      ],
+      "groundItemCount": 7,
+      "inventoryStackCount": 3,
+      "equipmentCount": 1,
+      "itemKnowledge": [
+        {
+          "kindId": "demo.item.luminous-shard",
+          "tried": true,
+          "aware": true
+        }
+      ],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "generated.item.1",
+          "appraised": true,
+          "identified": true
+        }
+      ],
+      "nextItemInstanceSerial": 7,
+      "terrainInteractions": [
+        {
+          "kind": "dig-terrain",
+          "direction": "south-west",
+          "position": {
+            "x": 2,
+            "y": 4
+          },
+          "terrainId": "demo.terrain.echo-rubble",
+          "requiresCheck": true,
+          "available": true
+        }
+      ],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0,
+          "maxRetakes": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3,
+          "retakesUsed": 0,
+          "maxRetakes": 2
+        }
+      ],
+      "campaign": {
+        "status": "active",
+        "score": 0,
+        "conqueredDungeons": 0,
+        "completedTasks": 0
+      },
+      "revealedTerrain": [],
+      "stateHash": "eaf835023d62429413fa53a995e9c091bafd6c4847d857470868a52d2c4d16fe"
+    },
+    "events": [
+      {
+        "kind": "ability.cast-success",
+        "messageKey": "ability-cast-success",
+        "args": {
+          "target": "demo.ability.echo-fan"
+        },
+        "outcome": {
+          "type": "ability-cast",
+          "resolution": {
+            "abilityId": "demo.ability.echo-fan",
+            "resourceId": "demo.resource.mana",
+            "baseResourceCost": 6,
+            "resourceCost": 10,
+            "resourceBefore": 21,
+            "resourceAfter": 11,
+            "failurePercent": 10,
+            "percentileRoll": 32,
+            "succeeded": true,
+            "proficiencyBefore": 0,
+            "proficiencyAfter": 128,
+            "proficiencyRank": "unskilled",
+            "castCount": 1,
+            "failCount": 0,
+            "cooldownBefore": 0,
+            "cooldownAfter": 0
+          }
+        }
+      },
+      {
+        "kind": "ability.cone-damage",
+        "messageKey": "ability-cone-damage",
+        "args": {
+          "radius": "2",
+          "target": "demo.ability.echo-fan",
+          "targets": "2"
+        },
+        "outcome": {
+          "type": "ability-cone-damage",
+          "resolution": {
+            "radius": 2,
+            "baseRawDamage": 5,
+            "damageType": "electricity",
+            "affectedPositions": [
+              {
+                "x": 4,
+                "y": 3
+              },
+              {
+                "x": 5,
+                "y": 3
+              },
+              {
+                "x": 6,
+                "y": 3
+              },
+              {
+                "x": 7,
+                "y": 3
+              },
+              {
+                "x": 7,
+                "y": 2
+              },
+              {
+                "x": 7,
+                "y": 4
+              },
+              {
+                "x": 8,
+                "y": 3
+              },
+              {
+                "x": 8,
+                "y": 2
+              },
+              {
+                "x": 8,
+                "y": 4
+              },
+              {
+                "x": 9,
+                "y": 3
+              },
+              {
+                "x": 9,
+                "y": 2
+              },
+              {
+                "x": 9,
+                "y": 4
+              },
+              {
+                "x": 9,
+                "y": 1
+              },
+              {
+                "x": 9,
+                "y": 5
+              }
+            ],
+            "targetCount": 2
+          }
+        },
+        "trace": {
+          "origin": {
+            "x": 3,
+            "y": 3
+          },
+          "impact": {
+            "x": 9,
+            "y": 3
+          },
+          "landing": {
+            "x": 9,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 4,
+              "y": 3
+            },
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
+              "y": 3
+            }
+          ]
+        }
+      },
+      {
+        "kind": "ability.hit",
+        "messageKey": "ability-hit",
+        "args": {
+          "damage": "5",
+          "source": "demo.ability.echo-fan",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 5,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 5,
+            "damageType": "electricity",
+            "resistance": "normal"
+          }
+        },
+        "trace": {
+          "origin": {
+            "x": 3,
+            "y": 3
+          },
+          "impact": {
+            "x": 9,
+            "y": 3
+          },
+          "landing": {
+            "x": 9,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 4,
+              "y": 3
+            },
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
+              "y": 3
+            }
+          ]
+        }
+      },
+      {
+        "kind": "ability.slay",
+        "messageKey": "ability-slay",
+        "args": {
+          "source": "demo.ability.echo-fan",
+          "target": "demo.actor.ember-mote"
+        },
+        "outcome": {
+          "type": "death",
+          "resolution": {
+            "rawDamage": 5,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 5,
+            "damageType": "electricity",
+            "resistance": "normal"
+          }
+        },
+        "trace": {
+          "origin": {
+            "x": 3,
+            "y": 3
+          },
+          "impact": {
+            "x": 9,
+            "y": 3
+          },
+          "landing": {
+            "x": 9,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 4,
+              "y": 3
+            },
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
+              "y": 3
+            }
+          ]
+        }
+      },
+      {
+        "kind": "player.experience-gained",
+        "messageKey": "player-experience-gained",
+        "args": {
+          "amount": "16",
+          "total": "16"
+        }
+      },
+      {
+        "kind": "player.level-gained",
+        "messageKey": "player-level-gained",
+        "args": {
+          "level": "2",
+          "maxHp": "16",
+          "pendingAttributeIncreases": "0"
+        }
+      },
+      {
+        "kind": "loot.drop",
+        "messageKey": "loot-drop",
+        "args": {
+          "quantity": "1",
+          "source": "demo.actor.ember-mote",
+          "target": "demo.item.echo-charm"
+        }
+      },
+      {
+        "kind": "loot.drop",
+        "messageKey": "loot-drop",
+        "args": {
+          "quantity": "1",
+          "source": "demo.actor.ember-mote",
+          "target": "demo.item.echo-blade"
+        }
+      },
+      {
+        "kind": "ability.hit",
+        "messageKey": "ability-hit",
+        "args": {
+          "damage": "3",
+          "source": "demo.ability.echo-fan",
+          "target": "demo.actor.resonant-warden"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 3,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 3,
+            "damageType": "electricity",
+            "resistance": "normal"
+          }
+        },
+        "trace": {
+          "origin": {
+            "x": 3,
+            "y": 3
+          },
+          "impact": {
+            "x": 9,
+            "y": 3
+          },
+          "landing": {
+            "x": 9,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 4,
+              "y": 3
+            },
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
+              "y": 3
+            }
+          ]
+        }
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 2
+      },
+      {
+        "x": 7,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      },
+      {
+        "x": 8,
+        "y": 2
+      },
+      {
+        "x": 8,
+        "y": 3
+      },
+      {
+        "x": 8,
+        "y": 4
+      },
+      {
+        "x": 9,
+        "y": 1
+      },
+      {
+        "x": 9,
+        "y": 2
+      },
+      {
+        "x": 9,
+        "y": 3
+      },
+      {
+        "x": 9,
+        "y": 4
+      },
+      {
+        "x": 9,
+        "y": 5
+      }
+    ],
+    "removedEntities": [
+      "demo.monster.ember-mote.1"
+    ],
+    "errors": [],
+    "saveRoundTripStateHash": "eaf835023d62429413fa53a995e9c091bafd6c4847d857470868a52d2c4d16fe"
+  }
+}

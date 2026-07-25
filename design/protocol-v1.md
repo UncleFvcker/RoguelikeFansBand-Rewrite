@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.79、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.80、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.79";
+  protocolVersion: "1.80";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -201,6 +201,8 @@ interface GameCoreV1 {
 协议 1.78 新增 `AbilityEffectDefinition.beam-damage` 的 DTO 投影 `beamDamage`、`AbilityBeamDamageResolutionDto` 与 `GameEventOutcomeDto.ability-beam-damage`。首版只接受方向目标；射线穿过 actor，按固定八向逐格推进并在墙体/边界截断，所有路径目标按近到远顺序复用既有伤害管线且共享一次基础伤害骰。方向以外的目标模式在资源/RNG/熟练度之前拒绝，空射仍保留成功施法、资源消耗和单次伤害骰；save 容器与 state hash Schema v34 不变。完整边界见 [Contract v78](contract-v78-beam-damage.md)。
 
 协议 1.79 新增 `AbilityEffectDefinition.cone-damage` 的 DTO 投影 `coneRadius`、`AbilityConeDamageResolutionDto` 与 `GameEventOutcomeDto.ability-cone-damage`。首版只接受方向目标；锥形沿固定八向中心线逐层从宽度 0 展开到配置半径，actor 不阻挡，墙体/边界截断，候选格按近到远、横向距离和坐标稳定排序，侧向目标复用整数衰减并共享一次基础伤害骰。方向以外的目标模式在资源/RNG/熟练度之前拒绝，空锥仍保留成功施法、资源消耗和单次伤害骰；save 容器与 state hash Schema v34 不变。完整边界见 [Contract v79](contract-v79-cone-damage.md)。
+
+协议 1.80 扩展既有 `AbilityEffectDefinition.beam-damage` 的目标入口，不新增伤害字段；`AbilityDto.targetSpec` 继续投影 `direction`、`position` 与 `entity` 模式，`AbilityBeamDamageResolutionDto` 和 `GameEventOutcomeDto.ability-beam-damage` 继续复用。定点/实体目标必须存在、可见且不超距，核心沿稳定整数斜率经过目标继续到内容射程，actor 不阻挡，墙体/不可行走地形/边界截断，按近到远结算并共享一次基础伤害骰。自身、缺失、不可见和超距目标在 Mana/RNG/熟练度之前拒绝；save 容器与 state hash Schema v34 不变。完整边界见 [Contract v80](contract-v80-targeted-beam-extension.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v79/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v78` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v80/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v79` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v79/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v80/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v79/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v79`：RFB 式锥形能力的八向逐层展开、actor 穿透、墙体截断、横向整数衰减、空锥/无效目标 RNG 边界、能力事件和 198 个 exact fixtures 由 [Contract v79](contract-v79-cone-damage.md) 定义；[Contract v78](contract-v78-beam-damage.md)、[Contract v77](contract-v77-area-damage.md) 及 `contract-v1` 至 `contract-v77` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v80`：RFB 式定点/实体延长射线的目标验证、稳定整数斜率、actor 穿透、墙体截断、共享单次伤害骰、空射/无效目标 RNG 边界、能力事件和 202 个 exact fixtures 由 [Contract v80](contract-v80-targeted-beam-extension.md) 定义；[Contract v79](contract-v79-cone-damage.md)、[Contract v78](contract-v78-beam-damage.md)、[Contract v77](contract-v77-area-damage.md) 及 `contract-v1` 至 `contract-v77` 继续作为历史基准保留。

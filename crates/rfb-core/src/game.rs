@@ -81,7 +81,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 72] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 73] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -154,9 +154,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 72] = [
     "c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04",
     "acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62",
     "6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea",
+    "817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835";
+    "30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -5034,13 +5035,12 @@ impl Game {
                         stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
                     })
             }
-            AbilityEffectDefinition::BeamDamage { .. } => {
-                self.ability_path(ability, target)
-                    .map(|path| AbilityTargetPlan::Projectile {
-                        path,
-                        stop_at_actor: false,
-                    })
-            }
+            AbilityEffectDefinition::BeamDamage { .. } => self
+                .beam_ability_path(ability, target)
+                .map(|path| AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor: false,
+                }),
             AbilityEffectDefinition::ConeDamage { radius, .. } => {
                 let TargetSelection::Direction { direction } = target else {
                     return None;
@@ -5127,6 +5127,37 @@ impl Game {
         self.projectile_path(target, ability.target.range)
     }
 
+    fn beam_ability_path(
+        &self,
+        ability: &AbilityDefinition,
+        target: &TargetSelection,
+    ) -> Option<Vec<Position>> {
+        let mode = match target {
+            TargetSelection::Direction { .. } => AbilityTargetModeDefinition::Direction,
+            TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
+            TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
+            TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
+        };
+        if !ability.target.modes.contains(&mode) {
+            return None;
+        }
+        match target {
+            TargetSelection::Direction { .. } => self.projectile_path(target, ability.target.range),
+            TargetSelection::Position { position } => {
+                self.targeted_projectile_path_through_target(*position, ability.target.range)
+            }
+            TargetSelection::Entity { entity_id } => {
+                let position = self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == *entity_id)
+                    .map(|entity| entity.position)?;
+                self.targeted_projectile_path_through_target(position, ability.target.range)
+            }
+            TargetSelection::SelfTarget => None,
+        }
+    }
+
     fn projectile_path(&self, target: &TargetSelection, range: u16) -> Option<Vec<Position>> {
         let origin = self.player.position;
         match target {
@@ -5157,6 +5188,23 @@ impl Game {
     }
 
     fn targeted_projectile_path(&self, target: Position, range: u16) -> Option<Vec<Position>> {
+        self.targeted_projectile_path_with_policy(target, range, false)
+    }
+
+    fn targeted_projectile_path_through_target(
+        &self,
+        target: Position,
+        range: u16,
+    ) -> Option<Vec<Position>> {
+        self.targeted_projectile_path_with_policy(target, range, true)
+    }
+
+    fn targeted_projectile_path_with_policy(
+        &self,
+        target: Position,
+        range: u16,
+        continue_through_target: bool,
+    ) -> Option<Vec<Position>> {
         let origin = self.player.position;
         if target == origin
             || self.index(target).is_none()
@@ -5174,7 +5222,11 @@ impl Game {
         let sy = if y < target.y { 1 } else { -1 };
         let mut error = dx + dy;
         let mut path = Vec::new();
-        while x != target.x || y != target.y {
+        let max_steps = usize::from(range);
+        while path.len() < max_steps {
+            if !continue_through_target && x == target.x && y == target.y {
+                break;
+            }
             let doubled = error.saturating_mul(2);
             if doubled >= dy {
                 error += dy;
@@ -5185,6 +5237,12 @@ impl Game {
                 y += sy;
             }
             path.push(Position { x, y });
+            if !continue_through_target && (x == target.x && y == target.y) {
+                break;
+            }
+            if path.len() >= max_steps {
+                break;
+            }
         }
         Some(path)
     }
@@ -19242,7 +19300,80 @@ mod tests {
     }
 
     #[test]
-    fn beam_invalid_mode_is_zero_rng_and_empty_beam_still_rolls_once() {
+    fn targeted_beam_continues_through_position_and_entity_targets() {
+        let ability_id = "demo.ability.echo-lance";
+        let expected_path = vec![
+            Position { x: 4, y: 3 },
+            Position { x: 5, y: 4 },
+            Position { x: 6, y: 4 },
+            Position { x: 7, y: 4 },
+            Position { x: 8, y: 5 },
+            Position { x: 9, y: 5 },
+        ];
+
+        for target in [
+            TargetSelection::Position {
+                position: Position { x: 6, y: 4 },
+            },
+            TargetSelection::Entity {
+                entity_id: "demo.monster.ember-mote.1".to_owned(),
+            },
+        ] {
+            let mut game =
+                Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+            game.learned_abilities.insert(ability_id.to_owned());
+            for position in &expected_path {
+                replace_terrain(&mut game, *position, "demo.terrain.floor");
+            }
+            let ember = game
+                .entities
+                .iter_mut()
+                .find(|entity| entity.id == "demo.monster.ember-mote.1")
+                .expect("ember mote should exist");
+            ember.position = Position { x: 6, y: 4 };
+            ember.hp = 100;
+            ember.energy_need = 1_000;
+            let guardian = game
+                .entities
+                .iter_mut()
+                .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+                .expect("entrance guardian should exist");
+            guardian.position = Position { x: 8, y: 5 };
+            guardian.hp = 100;
+            guardian.energy_need = 1_000;
+
+            let update = dispatch_next(
+                &mut game,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target,
+                },
+            );
+            let beam = update
+                .events
+                .iter()
+                .find_map(|event| match event.outcome.as_ref() {
+                    Some(GameEventOutcomeDto::AbilityBeamDamage { resolution }) => Some(resolution),
+                    _ => None,
+                })
+                .expect("targeted beam should expose its extended line");
+            assert_eq!(beam.affected_positions, expected_path);
+            assert_eq!(beam.target_count, 2);
+            let hit_targets = update
+                .events
+                .iter()
+                .filter(|event| event.kind == "ability.hit")
+                .map(|event| event.args["target"].as_str())
+                .collect::<Vec<_>>();
+            assert_eq!(
+                hit_targets,
+                vec!["demo.actor.ember-mote", "demo.actor.resonant-warden"]
+            );
+        }
+    }
+
+    #[test]
+    fn beam_self_target_is_zero_rng_and_empty_beam_still_rolls_once() {
         let ability_id = "demo.ability.echo-lance";
         let mut invalid =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -19256,9 +19387,7 @@ mod tests {
             &mut invalid,
             GameCommand::CastAbility {
                 ability_id: ability_id.to_owned(),
-                target: TargetSelection::Position {
-                    position: Position { x: 8, y: 3 },
-                },
+                target: TargetSelection::SelfTarget,
             },
         );
         assert_eq!(invalid.resources["demo.resource.mana"].current, mana_before);

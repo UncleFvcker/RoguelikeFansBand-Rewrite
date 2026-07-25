@@ -71,6 +71,7 @@
 - [Contract v77：RFB 式范围爆发伤害](contract-v77-area-damage.md)
 - [Contract v78：RFB 式方向射线伤害](contract-v78-beam-damage.md)
 - [Contract v79：RFB 式锥形能力伤害](contract-v79-cone-damage.md)
+- [Contract v80：RFB 式定点延长射线](contract-v80-targeted-beam-extension.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -652,6 +653,7 @@ interface SaveGame {
 - 协议 1.77 和 contract-v77 已建立；内容包 1.69.0 增加 RFB 式范围爆发、半径投影、墙体遮挡、稳定距离衰减和 `ability.area-damage` 事件。Web 能力行显示爆发半径并格式化范围事件；无效目标在 Mana/RNG 前拒绝，空爆仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62`，active baseline 共 190 个 exact fixtures。
 - 协议 1.78 和 contract-v78 已建立；内容包 1.70.0 增加 RFB 式方向射线、actor 穿透、墙体/边界截断、近到远稳定顺序、共享一次基础伤害骰和 `ability.beam-damage` 事件。Web 能力行显示射线形状并格式化射线事件；方向以外目标在 Mana/RNG 前拒绝，空射仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea`，active baseline 共 194 个 exact fixtures。
 - 协议 1.79 和 contract-v79 已建立；内容包 1.71.0 增加 RFB 式固定八向锥形、逐层展开、墙体截断、横向整数衰减和 `ability.cone-damage` 事件。Web 能力行显示锥形半径并格式化锥形事件；方向以外目标在 Mana/RNG 前拒绝，空锥仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835`，active baseline 共 198 个 exact fixtures。
+- 协议 1.80 和 contract-v80 已建立；内容包 1.72.0 扩展 Echo Lance 为方向、格子和实体目标，定点/实体目标沿稳定整数斜率穿过目标继续到最大射程，actor 不阻挡、墙体/边界截断，并复用一次基础伤害骰。Web 能力行继续使用目标模式投影并格式化延长射线事件；自身、缺失、不可见和超距目标在 Mana/RNG 前拒绝。旧存档继续按当前内容迁移。content hash 为 `30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504`，active baseline 共 202 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 

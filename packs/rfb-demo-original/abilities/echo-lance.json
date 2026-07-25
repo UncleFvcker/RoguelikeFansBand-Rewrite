@@ -9,7 +9,7 @@
   "resourceCost": 4,
   "baseFailurePercent": 25,
   "target": {
-    "modes": ["direction"],
+    "modes": ["direction", "position", "entity"],
     "range": 6,
     "requiresLineOfEffect": true
   },

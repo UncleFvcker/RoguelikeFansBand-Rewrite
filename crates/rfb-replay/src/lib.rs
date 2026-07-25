@@ -714,8 +714,8 @@ mod tests {
         let update = recorder
             .dispatch(GameCommand::CastAbility {
                 ability_id: "demo.ability.echo-lance".to_owned(),
-                target: rfb_protocol::TargetSelection::Direction {
-                    direction: Direction::East,
+                target: rfb_protocol::TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
                 },
             })
             .expect("beam ability cast should execute");

@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.71.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.72.0
 
 ## 1. 目标
 
@@ -178,6 +178,8 @@ contract-v78 为 `AbilityEffectDefinition` 增加 `beam-damage`，声明伤害�
 
 contract-v79 为 `AbilityEffectDefinition` 增加 `cone-damage`，声明伤害骰、伤害类型和 1–9 半径；首版要求 `TargetSpec.modes` 仅为 `direction`，DTO 输出可选 `coneRadius`。核心固定八向中心线逐层展开、穿透 actor、墙体/边界截断、近到远与横向距离稳定顺序、整数侧向衰减和共享一次基础伤害骰。当前 demo 的 `Echo Fan` 使用 2d4 electricity、方向射程 6、半径 2。锥形效果不增加 save 字段，能力进度继续由 `abilityProgress` 承载。
 
+contract-v80 扩展既有 `beam-damage` 的目标模式：`direction` 保持 v78 的方向射线，`position` 与 `entity` 使用稳定整数斜率经过目标后继续到内容射程上限；DTO 继续复用 `targetSpec`，不增加新的伤害参数或存档字段。目标必须存在、可见且不超距；actor 不阻挡，墙体/不可行走地形/边界截断，路径按近到远稳定结算并共享一次基础伤害骰。当前 demo 的 `Echo Lance` 使用 2d4 electricity、射程 6，并接受方向、格子和实体目标。
+
 contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结算组，共享进度与结果；组内目标种类、required 和重接策略必须一致，并且整组恰好声明一个奖励。`kill-actor-kind` 可用 `spawnCount` 控制单个成员楼层生成的目标数量。
 
 当前已完成第 1、2、3、7、8 项的单包版本，包括：
@@ -192,13 +194,15 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 二十一份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，并可用 `doorSkill` / `bashPower` / `searchSkill` 声明开锁、破门和搜索基础能力。怪物可声明 `meleeRoutine.blows`、出生携带用 `carriedLootTableId`、死亡生成用 `lootTableId` 和可选 awareness。物品必须声明整数重量，并可声明近战、发射、投掷、使用 profile 或能力书引用；使用 profile 可声明 device difficulty，能力书物品必须保持单件且不能混用装备/使用入口。独立 `ResourceDefinition`、`AbilityDefinition` 和 `AbilityBookDefinition` 建立资源、能力和书本引用；Class casting profile 提供施法资源、属性、学习容量与失败率参数，资源定义提供等待/休息恢复速率，能力效果已覆盖普通伤害、RFB 式范围伤害、方向射线、固定八向锥形与固定治疗；AbilityDefinition 的 proficiency/cooldown 字段提供熟练度与可选冷却。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。独立 `LootTableDefinition` 声明加权物品、品质和词条。独立 `EncounterTableDefinition` 声明楼层怪物 roll 与深度加权候选；独立 `ThemeTableDefinition` 声明楼层主题 terrain 与加权 Vault 候选；独立 `RegionTableDefinition` 把稳定区域 ID 绑定到明确主题与局部 encounter/loot 表；独立 `VaultDefinition` 声明主题 terrain、空间变换、深度加权 encounter group 与主题掉落。地形可声明互斥的 `openToTerrainId` 或 `closeToTerrainId`；普通门互反转换要求关闭态不可行走/阻光、开启态可行走/透光。带 `openCheckDifficulty` 的锁门允许单向解锁到普通开启态；`bashToTerrainId` / `bashCheckDifficulty` 成对声明破门结果；`concealedAsTerrainId` 可配合主动搜索或被动 perception difficulty 声明隐藏投影，真实/伪装 terrain 必须保持相同碰撞与阻光语义。世界定义必须声明稳定 `initialFloorId` 和程序化楼层；含 dungeon lifecycle 楼层时还必须在 `dungeons` 中逐一声明地牢。程序化楼层固定楼层 ID、名称、深度、尺寸、地形引用、楼层表引用、连接以及可选 actor/loot/Vault/region 空间预算。怪物候选必须引用怪物定义且至少包含一个等级不高于该层深度的候选；运行时只从符合深度的候选中抽取。旧 `actorSpawns/lootSpawns/themeId/vaultId` 保留为兼容输入，但不能与对应新表引用混用。原创包 1.71.0 覆盖角色成长与构筑、可观察技能检定、Mana/能力书/目标施法、等待与休息恢复、自身治疗、能力熟练度/冷却、学习容量/主动遗忘、RFB 式范围爆发、方向射线与固定八向锥形、固定词条与鉴别、怪物携带物/掉落、楼层/任务/地牢生命周期、树状地牢、共享守护者镜像、预算化十层压力地牢、多 Vault、动态群体与 pack AI、同层多区域主题、分阶段地貌、原版式 pit、maze-only、多楼梯与 shaft。
+角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，并可用 `doorSkill` / `bashPower` / `searchSkill` 声明开锁、破门和搜索基础能力。怪物可声明 `meleeRoutine.blows`、出生携带用 `carriedLootTableId`、死亡生成用 `lootTableId` 和可选 awareness。物品必须声明整数重量，并可声明近战、发射、投掷、使用 profile 或能力书引用；使用 profile 可声明 device difficulty，能力书物品必须保持单件且不能混用装备/使用入口。独立 `ResourceDefinition`、`AbilityDefinition` 和 `AbilityBookDefinition` 建立资源、能力和书本引用；Class casting profile 提供施法资源、属性、学习容量与失败率参数，资源定义提供等待/休息恢复速率，能力效果已覆盖普通伤害、RFB 式范围伤害、方向/定点/实体延长射线、固定八向锥形与固定治疗；AbilityDefinition 的 proficiency/cooldown 字段提供熟练度与可选冷却。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。独立 `LootTableDefinition` 声明加权物品、品质和词条。独立 `EncounterTableDefinition` 声明楼层怪物 roll 与深度加权候选；独立 `ThemeTableDefinition` 声明楼层主题 terrain 与加权 Vault 候选；独立 `RegionTableDefinition` 把稳定区域 ID 绑定到明确主题与局部 encounter/loot 表；独立 `VaultDefinition` 声明主题 terrain、空间变换、深度加权 encounter group 与主题掉落。地形可声明互斥的 `openToTerrainId` 或 `closeToTerrainId`；普通门互反转换要求关闭态不可行走/阻光、开启态可行走/透光。带 `openCheckDifficulty` 的锁门允许单向解锁到普通开启态；`bashToTerrainId` / `bashCheckDifficulty` 成对声明破门结果；`concealedAsTerrainId` 可配合主动搜索或被动 perception difficulty 声明隐藏投影，真实/伪装 terrain 必须保持相同碰撞与阻光语义。世界定义必须声明稳定 `initialFloorId` 和程序化楼层；含 dungeon lifecycle 楼层时还必须在 `dungeons` 中逐一声明地牢。程序化楼层固定楼层 ID、名称、深度、尺寸、地形引用、楼层表引用、连接以及可选 actor/loot/Vault/region 空间预算。怪物候选必须引用怪物定义且至少包含一个等级不高于该层深度的候选；运行时只从符合深度的候选中抽取。旧 `actorSpawns/lootSpawns/themeId/vaultId` 保留为兼容输入，但不能与对应新表引用混用。原创包 1.72.0 覆盖角色成长与构筑、可观察技能检定、Mana/能力书/目标施法、等待与休息恢复、自身治疗、能力熟练度/冷却、学习容量/主动遗忘、RFB 式范围爆发、方向/定点/实体延长射线与固定八向锥形、固定词条与鉴别、怪物携带物/掉落、楼层/任务/地牢生命周期、树状地牢、共享守护者镜像、预算化十层压力地牢、多 Vault、动态群体与 pack AI、同层多区域主题、分阶段地貌、原版式 pit、maze-only、多楼梯与 shaft。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。
 
-当前原创包的 active 编译版本为 1.71.0，content hash 为 `817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835`；其能力效果集合包含普通伤害、范围爆发、方向射线、固定八向锥形和固定治疗。
+contract-v80 以 1.72.0 扩展 Echo Lance 的 `beam-damage` 目标模式为方向、格子和实体，并固定定点/实体目标穿过目标后的延长路径；路径、阻断、共享伤害骰和拒绝边界由核心定义，能力进度仍由 `abilityProgress` 保存，state hash 继续为 Schema v34。
+
+当前原创包的 active 编译版本为 1.72.0，content hash 为 `30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形和固定治疗。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
@@ -278,4 +282,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73 以 1.65.0 增加 resource、ability、ability-book 根、书本物品引用和 Class casting profile；contract-v74 以 1.66.0 增加资源恢复速率、自身目标、治疗效果、第二本能力书和第二个能力；contract-v75 以 1.67.0 增加能力熟练度、Mana 成本/失败率派生、统计、冷却和 `abilityProgress` 存档字段；contract-v76 以 1.68.0 增加独立学习容量、主动遗忘和进度保留；contract-v77 以 1.69.0 增加 RFB 式 `area-damage` 能力效果和 Echo Burst；contract-v78 以 1.70.0 增加方向型 `beam-damage` 能力效果和 Echo Lance；contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan。当前 state hash 为 Schema v34。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73 以 1.65.0 增加 resource、ability、ability-book 根、书本物品引用和 Class casting profile；contract-v74 以 1.66.0 增加资源恢复速率、自身目标、治疗效果、第二本能力书和第二个能力；contract-v75 以 1.67.0 增加能力熟练度、Mana 成本/失败率派生、统计、冷却和 `abilityProgress` 存档字段；contract-v76 以 1.68.0 增加独立学习容量、主动遗忘和进度保留；contract-v77 以 1.69.0 增加 RFB 式 `area-damage` 能力效果和 Echo Burst；contract-v78 以 1.70.0 增加方向型 `beam-damage` 能力效果和 Echo Lance；contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；contract-v80 以 1.72.0 增加 Echo Lance 的定点/实体延长射线目标模式。当前 state hash 为 Schema v34。
