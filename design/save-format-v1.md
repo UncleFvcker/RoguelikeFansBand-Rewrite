@@ -141,6 +141,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.78 不新增 save 字段：射线形状、方向目标模式、伤害骰和伤害类型来自当前内容；资源当前值、已学集合与 `abilityProgress` 继续使用既有字段。载入 v77 及更早存档时，不自动学习 Echo Lance、不补发书本、不重建地图、不推进 RNG。射线 footprint、阻断格、目标顺序和事件只存在于命令执行结果/回放中，权威终态仍由既有 actor HP、资源、物品、任务和 RNG 字段表达。save 容器仍为 v1，state hash 仍为 Schema v34。完整边界见 [Contract v78](contract-v78-beam-damage.md)。
 
+协议 1.79 不新增 save 字段：锥形半径、方向目标模式、伤害骰和伤害类型来自当前内容；资源当前值、已学集合与 `abilityProgress` 继续使用既有字段。载入 v78 及更早存档时，不自动学习 Echo Fan、不补发书本、不重建地图、不推进 RNG。锥形 footprint、阻断格、目标顺序和事件只存在于命令执行结果/回放中，权威终态仍由既有 actor HP、资源、物品、任务和 RNG 字段表达。save 容器仍为 v1，state hash 仍为 Schema v34。完整边界见 [Contract v79](contract-v79-cone-damage.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

@@ -1099,6 +1099,14 @@ function renderAbilities(
       beam.textContent = localization.format("ability-beam-summary");
       details.append(beam);
     }
+    if (ability.coneRadius != null) {
+      const cone = document.createElement("span");
+      cone.className = "ability-status";
+      cone.textContent = localization.format("ability-cone-summary", {
+        radius: ability.coneRadius,
+      });
+      details.append(cone);
+    }
     if (ability.cooldownTurns > 0) {
       const cooldown = document.createElement("span");
       cooldown.className = "ability-status";
@@ -1504,6 +1512,12 @@ function formatEvent(event: GameEventDto): string {
     case "ability-beam-damage":
       return localization.format("message-ability-beam-damage", {
         ability: contentName(event.args.target),
+        targets: event.args.targets ?? "0",
+      });
+    case "ability-cone-damage":
+      return localization.format("message-ability-cone-damage", {
+        ability: contentName(event.args.target),
+        radius: event.args.radius ?? "?",
         targets: event.args.targets ?? "0",
       });
     case "ability-hit":

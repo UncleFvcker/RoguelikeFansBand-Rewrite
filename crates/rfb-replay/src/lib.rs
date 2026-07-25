@@ -734,6 +734,47 @@ mod tests {
     }
 
     #[test]
+    fn cone_ability_round_trips_through_replay() {
+        let initial = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-primer")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the echo primer");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.echo-fan".to_owned(),
+            })
+            .expect("cone ability study should execute");
+        let update = recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.echo-fan".to_owned(),
+                target: rfb_protocol::TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            })
+            .expect("cone ability cast should execute");
+        assert!(update.events.iter().any(|event| {
+            event.kind == "ability.cone-damage"
+                && event.args.get("radius").is_some_and(|radius| radius == "2")
+                && event
+                    .args
+                    .get("targets")
+                    .is_some_and(|targets| targets.parse::<u16>().is_ok())
+        }));
+        let (final_game, replay) = recorder.finish();
+
+        let verification = verify(&replay, initial).expect("cone ability replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
     fn healing_and_multi_turn_rest_round_trip_through_replay() {
         let mut payload = Game::new_with_build(0, "demo.build.scholar")
             .expect("scholar replay fixture should create")

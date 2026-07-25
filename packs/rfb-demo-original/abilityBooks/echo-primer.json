@@ -6,6 +6,7 @@
   "descriptionKey": "ability-book-demo-echo-primer-description",
   "abilityIds": [
     "demo.ability.echo-burst",
+    "demo.ability.echo-fan",
     "demo.ability.echo-lance",
     "demo.ability.harmonic-spark",
     "demo.ability.resonant-bolt"

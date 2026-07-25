@@ -70,6 +70,7 @@
 - [Contract v76：学习容量与遗忘](contract-v76-learning-capacity-and-forgetting.md)
 - [Contract v77：RFB 式范围爆发伤害](contract-v77-area-damage.md)
 - [Contract v78：RFB 式方向射线伤害](contract-v78-beam-damage.md)
+- [Contract v79：RFB 式锥形能力伤害](contract-v79-cone-damage.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -649,13 +650,14 @@ interface SaveGame {
 - 协议 1.75 和 contract-v75 已建立；内容包 1.67.0 增加能力熟练度、Mana 成本/失败率修正、统计和冷却。Web 能力行显示实际成本、熟练度、统计和剩余冷却；能力进度与旧存档迁移进入 state hash Schema v34。content hash 为 `bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316`，active baseline 共 182 个 exact fixtures。
 - 协议 1.76 和 contract-v76 已建立；内容包 1.68.0 增加独立学习容量、容量投影、主动遗忘和进度保留。Web 能力行显示学习槽位与遗忘入口；容量满和遗忘前置拒绝不抽 RNG，旧存档继续按当前内容迁移。content hash 为 `c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04`，active baseline 共 186 个 exact fixtures。
 - 协议 1.77 和 contract-v77 已建立；内容包 1.69.0 增加 RFB 式范围爆发、半径投影、墙体遮挡、稳定距离衰减和 `ability.area-damage` 事件。Web 能力行显示爆发半径并格式化范围事件；无效目标在 Mana/RNG 前拒绝，空爆仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62`，active baseline 共 190 个 exact fixtures。
-- 协议 1.78 和 contract-v78 已建立；内容包 1.70.0 增加 RFB 式方向射线、actor 穿透、墙体截断、近到远顺序、共享单次伤害骰和 `ability.beam-damage` 事件。Web 能力行显示射线形状并格式化射线事件；方向以外目标在 Mana/RNG 前拒绝，空射仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea`，active baseline 共 194 个 exact fixtures。
+- 协议 1.78 和 contract-v78 已建立；内容包 1.70.0 增加 RFB 式方向射线、actor 穿透、墙体/边界截断、近到远稳定顺序、共享一次基础伤害骰和 `ability.beam-damage` 事件。Web 能力行显示射线形状并格式化射线事件；方向以外目标在 Mana/RNG 前拒绝，空射仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea`，active baseline 共 194 个 exact fixtures。
+- 协议 1.79 和 contract-v79 已建立；内容包 1.71.0 增加 RFB 式固定八向锥形、逐层展开、墙体截断、横向整数衰减和 `ability.cone-damage` 事件。Web 能力行显示锥形半径并格式化锥形事件；方向以外目标在 Mana/RNG 前拒绝，空锥仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835`，active baseline 共 198 个 exact fixtures。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage G：在 RFB 式范围爆发之后实现一个锥形或射线能力效果，先固定形状、墙体遮挡、顺序和 RNG；多资源和怪物施法继续后置；
+1. 继续 Stage G：在现有范围爆发、方向射线和锥形公共管线之上实现定点延长射线、位移或召唤能力；多资源和怪物施法继续后置；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

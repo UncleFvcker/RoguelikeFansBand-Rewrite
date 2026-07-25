@@ -60,11 +60,11 @@ use rfb_content::{
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
-    ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto,
-    CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto,
-    CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto,
-    EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
+    AbilityConeDamageResolutionDto, AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto,
+    AbilityProgressSaveDto, ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
+    CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
+    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
+    EntityDto, EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
     FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
     InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
     ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
@@ -81,7 +81,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 71] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 72] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -153,9 +153,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 71] = [
     "bcc23bf5834c37bf7fb0874bcb1dfc72c751efad36f76d94b07391100e976316",
     "c16f6cf31b726461910fb09bc775b5b6d79af889fe0de046043f085e9593ad04",
     "acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62",
+    "6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea";
+    "817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -214,6 +215,11 @@ enum AbilityTargetPlan {
     Projectile {
         path: Vec<Position>,
         stop_at_actor: bool,
+    },
+    Cone {
+        path: Vec<Position>,
+        direction: Direction,
+        radius: u8,
     },
 }
 
@@ -3001,6 +3007,10 @@ impl Game {
                         ability.effect,
                         AbilityEffectDefinition::BeamDamage { .. }
                     ),
+                    cone_radius: match ability.effect {
+                        AbilityEffectDefinition::ConeDamage { radius, .. } => Some(radius),
+                        _ => None,
+                    },
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -4922,6 +4932,57 @@ impl Game {
                     )?;
                 }
             }
+            (
+                AbilityEffectDefinition::ConeDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_type,
+                    radius,
+                },
+                AbilityTargetPlan::Cone {
+                    path,
+                    direction,
+                    radius: planned_radius,
+                },
+            ) => {
+                debug_assert_eq!(radius, planned_radius);
+                let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+                let (affected_positions, targets) =
+                    self.cone_damage_targets(&trace.traversed, direction, radius);
+                changed.extend(affected_positions.iter().copied());
+                let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                events.push(DomainEvent::AbilityConeDamage {
+                    ability_id: ability.id.clone(),
+                    resolution: AbilityConeDamageResolutionDto {
+                        radius,
+                        base_raw_damage,
+                        damage_type: DamageType::from(damage_type).into(),
+                        affected_positions,
+                        target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+                    },
+                    trace: trace.clone(),
+                });
+                for (entity_id, lateral_distance) in targets {
+                    let Some(index) = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.id == entity_id && entity.hp > 0)
+                    else {
+                        continue;
+                    };
+                    let falloff_damage = rfb_area_damage(base_raw_damage, lateral_distance);
+                    self.resolve_ability_damage_to_entity(
+                        index,
+                        &ability.id,
+                        DamageType::from(damage_type),
+                        falloff_damage,
+                        trace.clone(),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
             (AbilityEffectDefinition::Heal { amount }, AbilityTargetPlan::SelfTarget) => {
                 let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
                 let max_hp = self.effective_player_max_hp();
@@ -4978,6 +5039,17 @@ impl Game {
                     .map(|path| AbilityTargetPlan::Projectile {
                         path,
                         stop_at_actor: false,
+                    })
+            }
+            AbilityEffectDefinition::ConeDamage { radius, .. } => {
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Cone {
+                        path,
+                        direction: *direction,
+                        radius,
                     })
             }
         }
@@ -5205,6 +5277,77 @@ impl Game {
                     .map(|entity| entity.id.clone())
             })
             .collect()
+    }
+
+    fn cone_damage_targets(
+        &self,
+        centerline: &[Position],
+        direction: Direction,
+        radius: u8,
+    ) -> (Vec<Position>, Vec<(String, u32)>) {
+        let origin = self.player.position;
+        let depth = i32::try_from(centerline.len()).unwrap_or(i32::MAX);
+        if depth == 0 {
+            return (Vec::new(), Vec::new());
+        }
+        let (dx, dy) = direction.delta();
+        let width_denominator = (depth - 1).max(1);
+        let mut cells = Vec::new();
+        for (index, center) in centerline.iter().enumerate() {
+            let layer = i32::try_from(index + 1).unwrap_or(i32::MAX);
+            debug_assert_eq!(
+                *center,
+                Position {
+                    x: origin.x + dx * layer,
+                    y: origin.y + dy * layer,
+                }
+            );
+            let width = if depth == 1 {
+                0
+            } else {
+                i32::from(radius).saturating_mul(layer - 1) / width_denominator
+            };
+            for y in center.y - width..=center.y + width {
+                for x in center.x - width..=center.x + width {
+                    let position = Position { x, y };
+                    let position_layer = origin
+                        .x
+                        .abs_diff(position.x)
+                        .max(origin.y.abs_diff(position.y));
+                    let offset_x = position.x - origin.x;
+                    let offset_y = position.y - origin.y;
+                    let forward = offset_x * dx + offset_y * dy;
+                    let lateral = (offset_x * dy - offset_y * dx).abs();
+                    if position_layer != u32::try_from(layer).unwrap_or(u32::MAX)
+                        || forward <= 0
+                        || lateral > forward
+                        || self.index(position).is_none()
+                        || !has_line_of_effect(self, origin, position)
+                    {
+                        continue;
+                    }
+                    let lateral_distance = center
+                        .x
+                        .abs_diff(position.x)
+                        .max(center.y.abs_diff(position.y));
+                    cells.push((layer, lateral_distance, position));
+                }
+            }
+        }
+        cells.sort_by_key(|(layer, lateral_distance, position)| {
+            (*layer, *lateral_distance, position.y, position.x)
+        });
+        let affected_positions = cells.iter().map(|(_, _, position)| *position).collect();
+        let targets = cells
+            .iter()
+            .flat_map(|(_, lateral_distance, position)| {
+                self.entities
+                    .iter()
+                    .filter(move |entity| entity.hp > 0 && entity.position == *position)
+                    .map(move |entity| (entity.id.clone(), *lateral_distance))
+            })
+            .collect();
+        (affected_positions, targets)
     }
 
     fn take_inventory_item_kind(
@@ -19159,6 +19302,268 @@ mod tests {
     }
 
     #[test]
+    fn cone_damage_widens_with_lateral_falloff_and_stable_order() {
+        let ability_id = "demo.ability.echo-fan";
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        game.learned_abilities.insert(ability_id.to_owned());
+        for y in 1..=5 {
+            for x in 4..=9 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        for entity in &mut game.entities {
+            entity.energy_need = 1_000;
+        }
+        let ember = game
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist");
+        ember.position = Position { x: 4, y: 3 };
+        ember.hp = 100;
+        let guardian = game
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+            .expect("entrance guardian should exist");
+        guardian.position = Position { x: 7, y: 2 };
+        guardian.hp = 100;
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        let cone = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityConeDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("successful cone should expose its footprint");
+        assert_eq!(cone.radius, 2);
+        assert_eq!(cone.target_count, 2);
+        assert_eq!(cone.affected_positions.len(), 14);
+        assert_eq!(cone.affected_positions[0], Position { x: 4, y: 3 });
+        assert!(cone.affected_positions.contains(&Position { x: 9, y: 1 }));
+        assert!(cone.affected_positions.contains(&Position { x: 9, y: 5 }));
+        assert_eq!(game.rng_draw_counter(), draws_before + 3);
+        let hits = update
+            .events
+            .iter()
+            .filter(|event| event.kind == "ability.hit")
+            .collect::<Vec<_>>();
+        assert_eq!(hits.len(), 2);
+        assert_eq!(hits[0].args["target"], "demo.actor.ember-mote");
+        assert_eq!(hits[1].args["target"], "demo.actor.resonant-warden");
+        let center_damage = match hits[0].outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution }) => resolution.raw_damage,
+            _ => panic!("cone center hit should expose damage"),
+        };
+        let edge_damage = match hits[1].outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution }) => resolution.raw_damage,
+            _ => panic!("cone edge hit should expose damage"),
+        };
+        assert_eq!(center_damage, cone.base_raw_damage);
+        assert_eq!(edge_damage, rfb_area_damage(cone.base_raw_damage, 1));
+
+        let mut blocked =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        blocked.learned_abilities.insert(ability_id.to_owned());
+        for y in 1..=5 {
+            for x in 4..=9 {
+                replace_terrain(&mut blocked, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        replace_terrain(&mut blocked, Position { x: 6, y: 3 }, "demo.terrain.wall");
+        for entity in &mut blocked.entities {
+            entity.energy_need = 1_000;
+        }
+        blocked
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist")
+            .position = Position { x: 5, y: 3 };
+        let guardian = blocked
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+            .expect("entrance guardian should exist");
+        guardian.position = Position { x: 7, y: 2 };
+        let guardian_hp = guardian.hp;
+        let blocked_update = dispatch_next(
+            &mut blocked,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        let blocked_cone = blocked_update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityConeDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("blocked cone should expose its footprint");
+        assert_eq!(blocked_cone.target_count, 1);
+        assert_eq!(
+            blocked_cone.affected_positions,
+            vec![
+                Position { x: 4, y: 3 },
+                Position { x: 5, y: 3 },
+                Position { x: 5, y: 2 },
+                Position { x: 5, y: 4 },
+                Position { x: 5, y: 1 },
+                Position { x: 5, y: 5 },
+            ]
+        );
+        assert_eq!(
+            blocked
+                .entities
+                .iter()
+                .find(|entity| entity.id == "demo.z-entrance-guardian.resonance-descent.1")
+                .map(|entity| entity.hp),
+            Some(guardian_hp)
+        );
+    }
+
+    #[test]
+    fn cone_damage_is_symmetric_across_all_eight_directions() {
+        let directions = [
+            Direction::North,
+            Direction::NorthEast,
+            Direction::East,
+            Direction::SouthEast,
+            Direction::South,
+            Direction::SouthWest,
+            Direction::West,
+            Direction::NorthWest,
+        ];
+        let expected_layer_counts = [1_usize, 1, 1, 3, 3, 5];
+        for direction in directions {
+            let mut game =
+                Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+            game.learned_abilities
+                .insert("demo.ability.echo-fan".to_owned());
+            clear_monsters(&mut game);
+            game.player.position = Position { x: 10, y: 10 };
+            for y in 0..20 {
+                for x in 0..20 {
+                    replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+                }
+            }
+            let update = dispatch_next(
+                &mut game,
+                GameCommand::CastAbility {
+                    ability_id: "demo.ability.echo-fan".to_owned(),
+                    target: TargetSelection::Direction { direction },
+                },
+            );
+            let cone = update
+                .events
+                .iter()
+                .find_map(|event| match event.outcome.as_ref() {
+                    Some(GameEventOutcomeDto::AbilityConeDamage { resolution }) => Some(resolution),
+                    _ => None,
+                })
+                .expect("cone outcome should exist");
+            assert_eq!(
+                cone.affected_positions.len(),
+                expected_layer_counts.iter().sum::<usize>()
+            );
+            let (dx, dy) = direction.delta();
+            let mut layer_counts = [0_usize; 6];
+            let mut previous_key = None;
+            for position in &cone.affected_positions {
+                let offset_x = position.x - game.player.position.x;
+                let offset_y = position.y - game.player.position.y;
+                let layer = offset_x.abs().max(offset_y.abs());
+                let lateral = (offset_x * dy - offset_y * dx).abs();
+                assert!((1..=6).contains(&layer));
+                assert!(offset_x * dx + offset_y * dy > 0);
+                layer_counts[usize::try_from(layer - 1).expect("layer index should fit")] += 1;
+                let key = (layer, lateral, position.y, position.x);
+                assert!(previous_key.is_none_or(|previous| previous <= key));
+                previous_key = Some(key);
+            }
+            assert_eq!(layer_counts, expected_layer_counts);
+        }
+    }
+
+    #[test]
+    fn cone_invalid_mode_is_zero_rng_and_empty_cone_still_rolls_once() {
+        let ability_id = "demo.ability.echo-fan";
+        let mut invalid =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        invalid.learned_abilities.insert(ability_id.to_owned());
+        for entity in &mut invalid.entities {
+            entity.energy_need = 1_000;
+        }
+        let mana_before = invalid.resources["demo.resource.mana"].current;
+        let draws_before = invalid.rng_draw_counter();
+        let rejected = dispatch_next(
+            &mut invalid,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Position {
+                    position: Position { x: 8, y: 3 },
+                },
+            },
+        );
+        assert_eq!(invalid.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(invalid.rng_draw_counter(), draws_before);
+        assert!(
+            rejected
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+
+        let mut empty =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        empty.learned_abilities.insert(ability_id.to_owned());
+        clear_monsters(&mut empty);
+        for y in 1..=5 {
+            for x in 4..=9 {
+                replace_terrain(&mut empty, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        replace_terrain(&mut empty, Position { x: 4, y: 3 }, "demo.terrain.wall");
+        let draws_before = empty.rng_draw_counter();
+        let update = dispatch_next(
+            &mut empty,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        let cone = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityConeDamage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("empty cone should still resolve");
+        assert_eq!(cone.target_count, 0);
+        assert!(cone.affected_positions.is_empty());
+        assert_eq!(empty.rng_draw_counter(), draws_before + 3);
+    }
+
+    #[test]
     fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
         let mut game =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -19174,7 +19579,7 @@ mod tests {
                 remaining_slots: 2,
             })
         );
-        assert_eq!(initial.player.abilities.len(), 5);
+        assert_eq!(initial.player.abilities.len(), 6);
         assert!(
             initial
                 .player

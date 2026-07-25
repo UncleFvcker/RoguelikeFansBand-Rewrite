@@ -192,6 +192,43 @@
         "succeeded"
       ]
     },
+    "AbilityConeDamageResolutionDto": {
+      "type": "object",
+      "properties": {
+        "affectedPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "baseRawDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "radius",
+        "baseRawDamage",
+        "damageType",
+        "affectedPositions",
+        "targetCount"
+      ]
+    },
     "AbilityDto": {
       "type": "object",
       "properties": {
@@ -233,6 +270,15 @@
           "type": "integer",
           "format": "uint32",
           "default": 0,
+          "minimum": 0
+        },
+        "coneRadius": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
           "minimum": 0
         },
         "cooldownGroupId": {
@@ -1473,6 +1519,22 @@
             "type": {
               "type": "string",
               "const": "ability-beam-damage"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityConeDamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-cone-damage"
             }
           },
           "required": [

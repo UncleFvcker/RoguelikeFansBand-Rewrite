@@ -4,9 +4,9 @@ use std::collections::BTreeMap;
 
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
-    Position, ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto,
+    AbilityConeDamageResolutionDto, CheckResolutionDto, GameEventDto, GameEventOutcomeDto,
+    HealingResolutionDto, ItemQualityDto, Position, ProjectileTraceDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -67,6 +67,11 @@ pub(crate) enum DomainEvent {
     AbilityBeamDamage {
         ability_id: String,
         resolution: AbilityBeamDamageResolutionDto,
+        trace: ProjectileTrace,
+    },
+    AbilityConeDamage {
+        ability_id: String,
+        resolution: AbilityConeDamageResolutionDto,
         trace: ProjectileTrace,
     },
     AbilityLanded {
@@ -463,6 +468,23 @@ impl DomainEvent {
                         ("targets", resolution.target_count.to_string()),
                     ],
                     GameEventOutcomeDto::AbilityBeamDamage { resolution },
+                ),
+                trace,
+            ),
+            Self::AbilityConeDamage {
+                ability_id,
+                resolution,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "ability.cone-damage",
+                    "ability-cone-damage",
+                    [
+                        ("target", ability_id),
+                        ("radius", resolution.radius.to_string()),
+                        ("targets", resolution.target_count.to_string()),
+                    ],
+                    GameEventOutcomeDto::AbilityConeDamage { resolution },
                 ),
                 trace,
             ),

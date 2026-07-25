@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.echo-fan",
+  "nameKey": "ability-demo-echo-fan-name",
+  "descriptionKey": "ability-demo-echo-fan-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 6,
+  "baseFailurePercent": 25,
+  "target": {
+    "modes": ["direction"],
+    "range": 6,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "cone-damage",
+    "damageDice": 2,
+    "damageSides": 4,
+    "damageType": "electricity",
+    "radius": 2
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["cone", "electricity", "spell"]
+}
