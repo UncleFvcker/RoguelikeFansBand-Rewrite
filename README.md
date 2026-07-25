@@ -99,6 +99,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v78：RFB 式方向射线伤害](design/contract-v78-beam-damage.md)
 - [Contract v79：RFB 式锥形能力伤害](design/contract-v79-cone-damage.md)
 - [Contract v80：RFB 式定点延长射线](design/contract-v80-targeted-beam-extension.md)
+- [Contract v81：首个短距位移能力](design/contract-v81-teleport-ability.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -116,7 +117,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v80/scenarios`](tests/fixtures/contract-v80/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v79` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v81/scenarios`](tests/fixtures/contract-v81/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v80` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -199,7 +200,9 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.80 / contract-v80 在 v79 之上补齐 RFB `project_hook()` 的定点延长射线：Echo Lance 现在接受方向、格子和实体目标；定点/实体目标在可见且不超距时沿稳定整数斜率穿过目标继续推进到最大射程，actor 不阻挡，墙体/边界截断，所有命中共享一次基础伤害骰。自身、缺失、不可见和超距目标在 Mana/RNG 前拒绝，不新增存档字段；demo 内容包升至 1.72.0，content hash 为 `30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504`，active baseline 共 202 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v80 说明](design/contract-v80-targeted-beam-extension.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v80 固定：Mana、能力书、学习容量、主动遗忘、失败率、等待/休息恢复、自身治疗、熟练度、统计、冷却、RFB 式范围爆发、方向射线、锥形能力、定点延长射线和存档回读。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步适合继续实现位移或召唤能力，再进入多资源和怪物施法。
+协议 1.81 / contract-v81 在 v80 之上加入首个短距位移能力 Echo Step：teleport 效果只接受 position 目标，落点必须非当前格、在地图内、可见、满足 line of effect、可行走且无存活 actor 占据。所有落点拒绝在 Mana、施法 RNG 和熟练度前返回；成功后精确移动并复用普通移动的被动感知、陷阱触发和死亡处理，不增加误传送骰或存档字段；demo 内容包升至 1.73.0，content hash 为 `66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d`，active baseline 共 209 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v81 说明](design/contract-v81-teleport-ability.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v81 固定：Mana、能力书、学习容量、主动遗忘、失败率、等待/休息恢复、自身治疗、熟练度、统计、冷却、RFB 式范围爆发、方向射线、锥形能力、定点延长射线、精确短距位移和存档回读。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步适合继续实现召唤能力，再进入多资源和怪物施法。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -271,10 +274,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v80/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v81/baseline-policy.json
 ```
 
-当前 202 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 209 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

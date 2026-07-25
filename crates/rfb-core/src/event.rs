@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityConeDamageResolutionDto, CheckResolutionDto, GameEventDto, GameEventOutcomeDto,
-    HealingResolutionDto, ItemQualityDto, Position, ProjectileTraceDto,
+    AbilityConeDamageResolutionDto, AbilityTeleportResolutionDto, CheckResolutionDto, GameEventDto,
+    GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, Position, ProjectileTraceDto,
     ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
 };
 
@@ -73,6 +73,10 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         resolution: AbilityConeDamageResolutionDto,
         trace: ProjectileTrace,
+    },
+    AbilityTeleported {
+        ability_id: String,
+        resolution: AbilityTeleportResolutionDto,
     },
     AbilityLanded {
         ability_id: String,
@@ -487,6 +491,21 @@ impl DomainEvent {
                     GameEventOutcomeDto::AbilityConeDamage { resolution },
                 ),
                 trace,
+            ),
+            Self::AbilityTeleported {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.teleport",
+                "ability-teleport",
+                [
+                    ("target", ability_id),
+                    ("fromX", resolution.from.x.to_string()),
+                    ("fromY", resolution.from.y.to_string()),
+                    ("toX", resolution.to.x.to_string()),
+                    ("toY", resolution.to.y.to_string()),
+                ],
+                GameEventOutcomeDto::AbilityTeleport { resolution },
             ),
             Self::AbilityLanded { ability_id, trace } => with_trace(
                 dto("ability.landed", "ability-landed", [("target", ability_id)]),

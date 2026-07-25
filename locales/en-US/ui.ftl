@@ -77,6 +77,7 @@ ability-summary = Level { $level } · cost { $cost } (base { $baseCost }) · fai
 ability-area-summary = Burst radius { $radius }
 ability-beam-summary = Beam · passes through creatures
 ability-cone-summary = Cone · widens forward (radius { $radius })
+ability-teleport-summary = Teleport · exact visible destination
 ability-proficiency-summary = Proficiency { $rank } { $current }/{ $maximum } · casts { $casts } · fails { $fails }
 ability-cooldown-summary = Cooldown { $remaining }/{ $turns } turns
 ability-proficiency-unskilled = Unskilled

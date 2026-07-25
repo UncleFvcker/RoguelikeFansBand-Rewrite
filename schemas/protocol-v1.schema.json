@@ -359,6 +359,9 @@
         },
         "targetSpec": {
           "$ref": "#/$defs/TargetSpecDto"
+        },
+        "teleport": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -411,6 +414,21 @@
         "skilled",
         "expert",
         "master"
+      ]
+    },
+    "AbilityTeleportResolutionDto": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/Position"
+        },
+        "to": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "from",
+        "to"
       ]
     },
     "AttackProfileDto": {
@@ -1535,6 +1553,22 @@
             "type": {
               "type": "string",
               "const": "ability-cone-damage"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityTeleportResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-teleport"
             }
           },
           "required": [

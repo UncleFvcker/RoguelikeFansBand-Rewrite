@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v80、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v81、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -29,7 +29,19 @@
 | P18 | 方向射线能力效果 | 已由 contract-v78 完成 | RFB `fire_beam()` 式方向射线，穿透 actor、墙体/边界截断、近到远顺序、共享一次基础伤害骰、空射/无效模式 RNG 边界、Echo Lance 与 replay/save 基准 |
 | P19 | 锥形能力效果 | 已由 contract-v79 完成 | 复用目标验证与伤害管线，固定八向锥形 footprint、逐层展开、墙体遮挡、横向整数衰减、目标顺序和事件/RNG 语义；Echo Fan、replay/save 与八向几何基准已建立 |
 | P20 | 定点延长射线 | 已由 contract-v80 完成 | RFB `project_hook()`/`PROJECT_THRU` 语义，支持 direction/position/entity，定点或实体目标后沿稳定整数斜率延长到最大射程；actor 穿透、墙体截断、共享伤害骰、无效目标零资源零 RNG；Echo Lance、replay/save 与 202 个 exact fixtures 已建立 |
-| P21 | 首个位移能力 | 下一候选 | 先建立一个内容驱动的短距位移/瞬移效果，明确落点、视线、阻挡、资源/RNG 和失败边界；召唤、多资源与怪物施法继续后置 |
+| P21 | 首个位移能力 | 已由 contract-v81 完成 | Echo Step 内容驱动 teleport；仅 position 目标，落点需非当前格、在图内、可见、满足 line of effect、可行走且无存活 actor；无效落点零资源/零 RNG，成功精确移动并复用普通移动到达管线；协议 1.81、内容包 1.73.0、209 个 exact fixtures |
+| P22 | 首个召唤能力 | 下一候选 | 建立最小内容驱动 summon：稳定 actor 实例、阵营/所有者、数量/落位、生命周期、空间不足回退、资源/RNG 和存档/replay 边界；多资源与怪物施法继续后置 |
+
+## contract-v81 明确遗留
+
+- 召唤、侦测和地形改变能力；
+- 传送到不可见、不可行走或被 actor 占用格以外的复杂位移规则（随机传送、穿墙、跨层和群体传送）；
+- 射线范围内物品破坏、地形变更或玩家伤害；
+- 射线反射、穿透墙体例外和怪物施法；
+- 多资源职业和怪物能力选择/施法 AI；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+contract-v81 已将内容驱动的 Echo Step 接入协议 1.81、内容包 1.73.0、save v1 与 state hash Schema v34。position 落点的地图内、Chebyshev 射程、可见性、line of effect、可行走和 actor 占用验证在 Mana、施法 RNG 与熟练度前执行；成功传送复用普通移动的被动感知、陷阱触发和死亡处理。active baseline 为 209 个 exact fixtures、零 waiver。详细边界见 [contract-v81](contract-v81-teleport-ability.md)。
 
 ## contract-v80 明确遗留
 

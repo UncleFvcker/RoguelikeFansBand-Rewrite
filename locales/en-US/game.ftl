@@ -78,6 +78,7 @@ message-ability-landed = { $ability } dissipates without striking a target.
 message-ability-area-damage = { $ability } erupts across radius { $radius }, catching { $targets } targets.
 message-ability-beam-damage = { $ability } passes through the line, striking { $targets } targets.
 message-ability-cone-damage = { $ability } fans forward across radius { $radius }, catching { $targets } targets.
+message-ability-teleport = { $ability } carries you from ({ $fromX }, { $fromY }) to ({ $toX }, { $toY }).
 message-ability-hit = { $ability } hits { $target } for { $damage } damage.
 message-ability-slay = { $ability } destroys { $target }.
 message-ability-healed = { $ability } restores { $amount } HP.

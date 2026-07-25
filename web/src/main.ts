@@ -1107,6 +1107,12 @@ function renderAbilities(
       });
       details.append(cone);
     }
+    if (ability.teleport) {
+      const teleport = document.createElement("span");
+      teleport.className = "ability-status";
+      teleport.textContent = localization.format("ability-teleport-summary");
+      details.append(teleport);
+    }
     if (ability.cooldownTurns > 0) {
       const cooldown = document.createElement("span");
       cooldown.className = "ability-status";
@@ -1520,6 +1526,17 @@ function formatEvent(event: GameEventDto): string {
         radius: event.args.radius ?? "?",
         targets: event.args.targets ?? "0",
       });
+    case "ability-teleport": {
+      const resolution =
+        event.outcome?.type === "ability-teleport" ? event.outcome.resolution : undefined;
+      return localization.format("message-ability-teleport", {
+        ability: contentName(event.args.target),
+        fromX: resolution?.from.x ?? event.args.fromX ?? "?",
+        fromY: resolution?.from.y ?? event.args.fromY ?? "?",
+        toX: resolution?.to.x ?? event.args.toX ?? "?",
+        toY: resolution?.to.y ?? event.args.toY ?? "?",
+      });
+    }
     case "ability-hit":
       return localization.format("message-ability-hit", {
         ability: contentName(event.args.source),

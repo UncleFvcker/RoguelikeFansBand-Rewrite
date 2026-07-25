@@ -61,27 +61,27 @@ use rfb_content::{
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto,
-    AbilityProgressSaveDto, ActorSaveDto, AttackProfileDto, AttributeSetDto, AttributeValueDto,
-    CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
-    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
-    EntityDto, EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
-    FloorSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
-    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
-    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
-    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
-    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
-    PlayerSaveDto, Position, ProjectileProfileDto, ResourcePoolDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto, SavePayloadV1,
-    SkillProgressDto, StatModifiersDto, TargetModeDto, TargetSelection, TargetSpecDto,
-    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
-    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
-    ThrowProfileDto, VisibilityState,
+    AbilityProgressSaveDto, AbilityTeleportResolutionDto, ActorSaveDto, AttackProfileDto,
+    AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
+    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
+    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
+    GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto,
+    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
+    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
+    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
+    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
+    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 73] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 74] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -155,9 +155,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 73] = [
     "acecaf504ebc3affaf67fbd8400016d85a8f4fd6b70fb7de3f1626887e5c6d62",
     "6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea",
     "817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835",
+    "30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504";
+    "66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -213,6 +214,9 @@ impl AbilityProgress {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum AbilityTargetPlan {
     SelfTarget,
+    Teleport {
+        destination: Position,
+    },
     Projectile {
         path: Vec<Position>,
         stop_at_actor: bool,
@@ -2112,30 +2116,7 @@ impl Game {
                         )?;
                     }
                 } else {
-                    let old_position = self.player.position;
-                    self.player.position = target;
-                    changed.insert(old_position);
-                    changed.insert(target);
-                    for position in self.passive_perception(&mut events) {
-                        changed.insert(position);
-                    }
-                    if let Some(PlayerTrapOutcome::Triggered {
-                        source_kind_id,
-                        damage,
-                    }) = self.trigger_player_trap(target, &mut events)
-                    {
-                        events.push(DomainEvent::TrapTriggered {
-                            position: target,
-                            damage,
-                        });
-                        if self.player_is_dead() {
-                            events.push(DomainEvent::PlayerDied {
-                                source_kind_id,
-                                method_id: None,
-                                damage,
-                            });
-                        }
-                    }
+                    events.extend(self.relocate_player(target, &mut changed));
                 }
             }
             GameAction::OpenDoor { direction } => match self.open_door(direction) {
@@ -3012,6 +2993,7 @@ impl Game {
                         AbilityEffectDefinition::ConeDamage { radius, .. } => Some(radius),
                         _ => None,
                     },
+                    teleport: matches!(ability.effect, AbilityEffectDefinition::Teleport),
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -4812,6 +4794,17 @@ impl Game {
         });
 
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
+                let from = self.player.position;
+                events.push(DomainEvent::AbilityTeleported {
+                    ability_id: ability.id,
+                    resolution: AbilityTeleportResolutionDto {
+                        from,
+                        to: destination,
+                    },
+                });
+                events.extend(self.relocate_player(destination, changed));
+            }
             (
                 AbilityEffectDefinition::Damage {
                     damage_dice,
@@ -5015,6 +5008,13 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::Teleport => {
+                let TargetSelection::Position { position } = target else {
+                    return None;
+                };
+                self.teleport_destination(ability, *position)
+                    .map(|destination| AbilityTargetPlan::Teleport { destination })
+            }
             AbilityEffectDefinition::Heal { .. } => (matches!(target, TargetSelection::SelfTarget)
                 && ability
                     .target
@@ -5053,6 +5053,37 @@ impl Game {
                     })
             }
         }
+    }
+
+    fn teleport_destination(
+        &self,
+        ability: &AbilityDefinition,
+        destination: Position,
+    ) -> Option<Position> {
+        let origin = self.player.position;
+        if !ability
+            .target
+            .modes
+            .contains(&AbilityTargetModeDefinition::Position)
+            || destination == origin
+            || self.index(destination).is_none()
+            || origin
+                .x
+                .abs_diff(destination.x)
+                .max(origin.y.abs_diff(destination.y))
+                > u32::from(ability.target.range)
+            || !self.is_visible(destination)
+            || (ability.target.requires_line_of_effect
+                && !has_line_of_effect(self, origin, destination))
+            || !self.is_walkable(destination)
+            || self
+                .entities
+                .iter()
+                .any(|entity| entity.hp > 0 && entity.position == destination)
+        {
+            return None;
+        }
+        Some(destination)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -10123,6 +10154,40 @@ impl Game {
             }
         }
         discovered
+    }
+
+    fn relocate_player(
+        &mut self,
+        destination: Position,
+        changed: &mut BTreeSet<Position>,
+    ) -> Vec<DomainEvent> {
+        let old_position = self.player.position;
+        self.player.position = destination;
+        changed.insert(old_position);
+        changed.insert(destination);
+
+        let mut events = Vec::new();
+        for position in self.passive_perception(&mut events) {
+            changed.insert(position);
+        }
+        if let Some(PlayerTrapOutcome::Triggered {
+            source_kind_id,
+            damage,
+        }) = self.trigger_player_trap(destination, &mut events)
+        {
+            events.push(DomainEvent::TrapTriggered {
+                position: destination,
+                damage,
+            });
+            if self.player_is_dead() {
+                events.push(DomainEvent::PlayerDied {
+                    source_kind_id,
+                    method_id: None,
+                    damage,
+                });
+            }
+        }
+        events
     }
 
     fn passive_perception(&mut self, events: &mut Vec<DomainEvent>) -> Vec<Position> {
@@ -19693,6 +19758,171 @@ mod tests {
     }
 
     #[test]
+    fn teleport_moves_to_an_exact_destination_and_round_trips() {
+        let ability_id = "demo.ability.echo-step";
+        let destination = Position { x: 6, y: 3 };
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut game);
+        game.learned_abilities.insert(ability_id.to_owned());
+        let origin = game.player.position;
+        let mana_before = game.resources["demo.resource.mana"].current;
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Position {
+                    position: destination,
+                },
+            },
+        );
+
+        let cast = ability_cast_resolution(&update);
+        assert!(cast.succeeded);
+        let teleport = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityTeleport { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("successful teleport should expose its relocation");
+        assert_eq!(teleport.from, origin);
+        assert_eq!(teleport.to, destination);
+        assert_eq!(game.player.position, destination);
+        assert_eq!(
+            game.resources["demo.resource.mana"].current,
+            mana_before - cast.resource_cost
+        );
+        assert_eq!(game.rng_draw_counter(), draws_before + 1);
+        assert!(
+            update
+                .changed_cells
+                .iter()
+                .any(|cell| cell.position == origin)
+        );
+        assert!(
+            update
+                .changed_cells
+                .iter()
+                .any(|cell| cell.position == destination)
+        );
+        assert!(
+            game.snapshot()
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == ability_id)
+                .is_some_and(|ability| ability.teleport)
+        );
+
+        let restored = Game::from_save(game.to_save()).expect("teleport state should reload");
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn teleport_rejects_blocked_occupied_and_invalid_destinations_before_rng() {
+        let ability_id = "demo.ability.echo-step";
+
+        let mut blocked =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut blocked);
+        blocked.learned_abilities.insert(ability_id.to_owned());
+        replace_terrain(
+            &mut blocked,
+            Position { x: 5, y: 3 },
+            "demo.terrain.resonance-water-deep",
+        );
+        assert!(blocked.is_visible(Position { x: 6, y: 3 }));
+        assert_teleport_target_rejected(
+            &mut blocked,
+            ability_id,
+            TargetSelection::Position {
+                position: Position { x: 6, y: 3 },
+            },
+        );
+
+        let mut occupied =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        occupied.learned_abilities.insert(ability_id.to_owned());
+        for entity in &mut occupied.entities {
+            entity.energy_need = 1_000;
+        }
+        occupied
+            .entities
+            .iter_mut()
+            .find(|entity| entity.id == "demo.monster.ember-mote.1")
+            .expect("ember mote should exist")
+            .position = Position { x: 6, y: 3 };
+        assert_teleport_target_rejected(
+            &mut occupied,
+            ability_id,
+            TargetSelection::Position {
+                position: Position { x: 6, y: 3 },
+            },
+        );
+
+        let mut invalid =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut invalid);
+        invalid.learned_abilities.insert(ability_id.to_owned());
+        for target in [
+            TargetSelection::Position {
+                position: invalid.player.position,
+            },
+            TargetSelection::Position {
+                position: Position { x: 10, y: 3 },
+            },
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+        ] {
+            assert_teleport_target_rejected(&mut invalid, ability_id, target);
+        }
+    }
+
+    #[test]
+    fn teleport_uses_normal_arrival_trap_semantics() {
+        let ability_id = "demo.ability.echo-step";
+        let destination = Position { x: 4, y: 3 };
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut game);
+        game.learned_abilities.insert(ability_id.to_owned());
+        replace_terrain(&mut game, destination, "demo.terrain.trap-echo-snare");
+        let hp_before = game.player.hp;
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Position {
+                    position: destination,
+                },
+            },
+        );
+
+        assert_eq!(game.player.position, destination);
+        assert_eq!(game.player.hp, hp_before - 2);
+        let kinds = update
+            .events
+            .iter()
+            .map(|event| event.kind.as_str())
+            .collect::<Vec<_>>();
+        let teleport_index = kinds
+            .iter()
+            .position(|kind| *kind == "ability.teleport")
+            .expect("teleport event should exist");
+        let trap_index = kinds
+            .iter()
+            .position(|kind| *kind == "terrain.trap-triggered")
+            .expect("landing trap should trigger");
+        assert!(teleport_index < trap_index);
+    }
+
+    #[test]
     fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
         let mut game =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -19708,7 +19938,7 @@ mod tests {
                 remaining_slots: 2,
             })
         );
-        assert_eq!(initial.player.abilities.len(), 6);
+        assert_eq!(initial.player.abilities.len(), 7);
         assert!(
             initial
                 .player
@@ -20461,6 +20691,37 @@ mod tests {
                 _ => None,
             })
             .expect("ability cast resolution should exist")
+    }
+
+    fn assert_teleport_target_rejected(game: &mut Game, ability_id: &str, target: TargetSelection) {
+        let position_before = game.player.position;
+        let mana_before = game.resources["demo.resource.mana"].current;
+        let draws_before = game.rng_draw_counter();
+        let progress_before = game.ability_progress[ability_id];
+        let update = dispatch_next(
+            game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target,
+            },
+        );
+        assert_eq!(game.player.position, position_before);
+        assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert_eq!(game.ability_progress[ability_id], progress_before);
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+        assert!(!update.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(GameEventOutcomeDto::AbilityCast { .. })
+                    | Some(GameEventOutcomeDto::AbilityTeleport { .. })
+            )
+        }));
     }
 
     fn rest_resolution(update: &GameUpdate) -> &RestResolutionDto {

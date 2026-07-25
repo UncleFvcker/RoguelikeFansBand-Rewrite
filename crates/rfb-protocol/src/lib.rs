@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.80";
+pub const PROTOCOL_VERSION: &str = "1.81";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -394,6 +394,8 @@ pub struct AbilityDto {
     pub beam_damage: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cone_radius: Option<u8>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub teleport: bool,
     pub target_spec: TargetSpecDto,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -726,6 +728,14 @@ pub struct AbilityConeDamageResolutionDto {
     pub target_count: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityTeleportResolutionDto {
+    pub from: Position,
+    pub to: Position,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -774,6 +784,9 @@ pub enum GameEventOutcomeDto {
     },
     AbilityConeDamage {
         resolution: AbilityConeDamageResolutionDto,
+    },
+    AbilityTeleport {
+        resolution: AbilityTeleportResolutionDto,
     },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
@@ -1198,6 +1211,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityAreaDamageResolutionDto);
     push_declaration!(AbilityBeamDamageResolutionDto);
     push_declaration!(AbilityConeDamageResolutionDto);
+    push_declaration!(AbilityTeleportResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);

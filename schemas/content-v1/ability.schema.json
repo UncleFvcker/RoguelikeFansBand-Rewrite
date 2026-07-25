@@ -165,6 +165,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "teleport",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,

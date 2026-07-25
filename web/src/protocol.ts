@@ -39,7 +39,7 @@ export type AbilityLearningDto = { learnedCount: number, capacity: number, remai
 
 export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
 
-export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
+export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
 
 export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "self" };
 
@@ -91,6 +91,8 @@ export type AbilityBeamDamageResolutionDto = { baseRawDamage: number, damageType
 
 export type AbilityConeDamageResolutionDto = { radius: number, baseRawDamage: number, damageType: DamageTypeDto, affectedPositions: Array<Position>, targetCount: number, };
 
+export type AbilityTeleportResolutionDto = { from: Position, to: Position, };
+
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 
 export type RestStopReasonDto = "damaged" | "enemy-visible" | "full-resources" | "invalid-turns" | "player-died" | "turn-limit";
@@ -99,7 +101,7 @@ export type RestResolutionDto = { requestedTurns: number, completedTurns: number
 
 export type HealingResolutionDto = { requested: number, applied: number, };
 
-export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
+export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 

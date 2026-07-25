@@ -775,6 +775,62 @@ mod tests {
     }
 
     #[test]
+    fn teleport_ability_round_trips_through_replay() {
+        let mut payload = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create")
+            .to_save();
+        payload.entities.clear();
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        let initial = Game::from_save(payload).expect("teleport replay fixture should load");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-primer")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the echo primer");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.echo-step".to_owned(),
+            })
+            .expect("teleport ability study should execute");
+        let update = recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.echo-step".to_owned(),
+                target: rfb_protocol::TargetSelection::Position {
+                    position: rfb_protocol::Position { x: 6, y: 3 },
+                },
+            })
+            .expect("teleport ability cast should execute");
+        assert!(update.events.iter().any(|event| {
+            event.kind == "ability.teleport"
+                && matches!(
+                    event.outcome.as_ref(),
+                    Some(rfb_protocol::GameEventOutcomeDto::AbilityTeleport { resolution })
+                        if resolution.from == rfb_protocol::Position { x: 3, y: 3 }
+                            && resolution.to == rfb_protocol::Position { x: 6, y: 3 }
+                )
+        }));
+        let (final_game, replay) = recorder.finish();
+
+        assert_eq!(
+            final_game.snapshot().player.position,
+            rfb_protocol::Position { x: 6, y: 3 }
+        );
+        let verification = verify(&replay, initial).expect("teleport replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
     fn healing_and_multi_turn_rest_round_trip_through_replay() {
         let mut payload = Game::new_with_build(0, "demo.build.scholar")
             .expect("scholar replay fixture should create")

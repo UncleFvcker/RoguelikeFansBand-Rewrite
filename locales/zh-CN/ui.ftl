@@ -77,6 +77,7 @@ ability-summary = 等级 { $level } · 消耗 { $cost }（基础 { $baseCost }�
 ability-area-summary = 爆发半径 { $radius }
 ability-beam-summary = 射线 · 穿透生物
 ability-cone-summary = 锥形 · 向前展开（半径 { $radius }）
+ability-teleport-summary = 瞬移 · 精确抵达可见落点
 ability-proficiency-summary = 熟练度 { $rank } { $current }/{ $maximum } · 成功 { $casts } · 失败 { $fails }
 ability-cooldown-summary = 冷却 { $remaining }/{ $turns } 回合
 ability-proficiency-unskilled = 生疏
