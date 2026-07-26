@@ -47,7 +47,8 @@
 | P36 | 怪物直伤弹族（bolt/ball）与伤害平坦加值 | 已由 contract-v93 完成 | 四伤害效果加 damageBonus、1d1+(F-1) 平坦恒等式、cinder-adept 纵切、导入映射 BO_/BA_ 622 实例（casting 怪物 696、共享能力 502）、303 个 exact fixtures。原候选 DETECT 族经源码核实为 `MST_POSSESSOR` 附身专用组（怪物不施放，共 522 个 token 实例含 MAPPING/BERSERK/BLESS 等），按不适用归档 |
 | P37 | BR_ 吐息族 | 已由 contract-v94 完成 | breath-damage 效果（当前 HP×pct% 封顶 max、零伤害骰、锥形复用 v79）、ash-drake 纵切、fixtures 304-306（封顶/残血衰减/致死闭环）、306 个 exact fixtures。导入映射吐息 337 实例（casting 怪 696→765）+ FREQ_N 频率修复（297 实例消化）+ 附身组 522 实例重分类 notApplicable；施法表上限 32→64（旧版最大杂烩 34 技能悉数保留，导入器仍留 64 截断守卫） |
 | P38 | S_ 召唤族 | 已由 contract-v95 完成 | summon-category 效果（标签+等级上限候选、数量骰、逐只有界抽 kind、落位/生命周期复用既有召唤）、mote-binder 纵切、fixtures 307-308、308 个 exact fixtures。导入器类型旗标→标签（undead/demon/dragon/animal）+ S_ 映射 493 实例（casting 怪 765→783、S_KIN 76 用固定召唤映射召唤同类）；源包文件预算 2048→4096 |
-| P39 | 伤害类型扩展 | 下一候选 | 新伤害类型（不可抗魔法/灵魂/明暗/混沌等）+ 抗性档 + 存档扩展，解锁异种元素直伤/吐息约 755 实例（BR 453+BA 167+BO 135）与心灵组合 186 的伤害部分 |
+| P39 | 伤害类型扩展（RFB 原版元素表） | 已完成（纯枚举+导入器，无契约迁移） | 按 gf.h 原序新增 22 类（light/dark/confusion/nether/nexus/sound/shards/chaos/disenchant/time/mana/gravity/inertia/plasma/force/nuke/disintegrate/storm/holy-fire/hell-fire/ice/water），协议 1.96；导入器近似转正 + 异种元素/吐息全解锁 + blow 元素名直映——法术映射 3849（+778）、casting 怪 829、未映射 1379。见 [damage-type-roster-v1](damage-type-roster-v1.md) |
+| P40 | 候选：抗性档导入 或 心灵族 或 小型效果杂项 | 下一候选 | 抗性档：actor 内容层 resistances 字段 + RES_/IM_/HURT_ 旗标导入（让 28 类元素的攻防交互生效）；心灵族：MIND/BRAIN/PSY 248 实例（伤害+状态骑手+豁免）；杂项：TELE_OTHER 69/DARKNESS 85/DRAIN_MANA 83/AMNESIA 64 各一个小效果形态 |
 
 ## contract-v95 明确遗留
 

@@ -304,6 +304,16 @@ fn damage_type_for(blow: &LegacyBlow) -> (&'static str, Option<&str>) {
         Some("COLD") => ("cold", None),
         Some("ACID") => ("acid", None),
         Some("ELEC") => ("electricity", None),
+        Some("LITE") => ("light", None),
+        Some("NETHER") => ("nether", None),
+        Some("NEXUS") => ("nexus", None),
+        Some("SHARDS") => ("shards", None),
+        Some("DISENCHANT") => ("disenchant", None),
+        Some("TIME") => ("time", None),
+        Some("INERTIA") => ("inertia", None),
+        Some("PLASMA") => ("plasma", None),
+        Some("DISINTEGRATE") => ("disintegrate", None),
+        Some("HELL_FIRE") => ("hell-fire", None),
         Some("HURT" | "DAM") | None => ("physical", None),
         Some(other) => ("physical", Some(other)),
     }
@@ -565,13 +575,23 @@ fn map_spell_token(
 enum DamageSpellShape {
     Bolt,
     Ball,
+    /// Legacy MSF_BALL4 storms explode with radius four.
+    BigBall,
 }
 
 impl DamageSpellShape {
     const fn keyword(self) -> &'static str {
         match self {
             Self::Bolt => "bolt",
-            Self::Ball => "ball",
+            Self::Ball | Self::BigBall => "ball",
+        }
+    }
+
+    const fn ball_radius(self) -> u8 {
+        match self {
+            Self::Bolt => 0,
+            Self::Ball => 2,
+            Self::BigBall => 4,
         }
     }
 }
@@ -584,17 +604,18 @@ fn damage_spell_defaults(
     base: &str,
     level: u32,
 ) -> Option<(DamageSpellShape, &'static str, (u32, u32, u32))> {
-    use DamageSpellShape::{Ball, Bolt};
+    use DamageSpellShape::{Ball, BigBall, Bolt};
     let entry = match base {
         "BO_ACID" => (Bolt, "acid", (7, 8, level / 3)),
         "BO_ELEC" => (Bolt, "electricity", (4, 8, level / 3)),
         "BO_FIRE" => (Bolt, "fire", (9, 8, level / 3)),
         "BO_COLD" => (Bolt, "cold", (6, 8, level / 3)),
-        // Approximations: ice folds into cold, plasma into fire, and the
-        // battering forms into physical dice.
-        "BO_ICE" => (Bolt, "cold", (6, 8, level)),
-        "BO_PLASMA" => (Bolt, "fire", (8, 7, 10 + level)),
-        "BO_WATER" => (Bolt, "physical", (10, 10, level)),
+        "BO_ICE" => (Bolt, "ice", (6, 8, level)),
+        "BO_PLASMA" => (Bolt, "plasma", (8, 7, 10 + level)),
+        "BO_WATER" => (Bolt, "water", (10, 10, level)),
+        "BO_MANA" => (Bolt, "mana", (1, 7 * level / 2, 50)),
+        "BO_NETHER" => (Bolt, "nether", (5, 5, 30 + level)),
+        "BO_TIME" => (Bolt, "time", (2, level, level / 3)),
         "MISSILE" => (Bolt, "physical", (2, 6, level / 3)),
         "SHOOT" => (
             Bolt,
@@ -609,10 +630,16 @@ fn damage_spell_defaults(
         "BA_FIRE" => (Ball, "fire", (1, 7 * level / 2, 10)),
         "BA_COLD" => (Ball, "cold", (1, 3 * level / 2, 10)),
         "BA_POISON" => (Ball, "poison", (12, 2, 0)),
-        "BA_NUKE" => (Ball, "poison", (10, 6, level)),
-        "BA_WATER" => (Ball, "physical", (1, level, 50)),
-        "ROCKET" => (Ball, "physical", (1, 1, (6 * level).saturating_sub(1))),
+        "BA_NUKE" => (Ball, "nuke", (10, 6, level)),
+        "BA_WATER" => (Ball, "water", (1, level, 50)),
+        // Rockets are shard bursts in the legacy resistance table.
+        "ROCKET" => (Ball, "shards", (1, 1, (6 * level).saturating_sub(1))),
         "PULVERISE" => (Ball, "physical", (8, 8, 0)),
+        "BA_NETHER" => (Ball, "nether", (10, 10, 50 + level)),
+        "BA_CHAOS" => (BigBall, "chaos", (10, 10, level)),
+        "BA_DARK" => (BigBall, "dark", (10, 10, 50 + 4 * level)),
+        "BA_LITE" => (BigBall, "light", (10, 10, 50 + 4 * level)),
+        "MANA_STORM" => (BigBall, "mana", (10, 10, 50 + 4 * level)),
         _ => return None,
     };
     Some(entry)
@@ -770,9 +797,25 @@ fn breath_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32))> {
         "BR_FIRE" => ("fire", (20, 900)),
         "BR_COLD" => ("cold", (20, 900)),
         "BR_POISON" | "BR_POIS" => ("poison", (17, 600)),
-        // Approximations: radiation folds into poison, plasma into fire.
-        "BR_NUKE" => ("poison", (17, 600)),
-        "BR_PLASMA" => ("fire", (17, 250)),
+        "BR_NUKE" => ("nuke", (17, 600)),
+        "BR_NETHER" => ("nether", (14, 550)),
+        "BR_LITE" => ("light", (17, 400)),
+        "BR_DARK" => ("dark", (17, 400)),
+        "BR_CONFUSION" | "BR_CONF" => ("confusion", (17, 400)),
+        "BR_SOUND" => ("sound", (17, 450)),
+        "BR_CHAOS" => ("chaos", (17, 600)),
+        "BR_DISENCHANT" => ("disenchant", (17, 500)),
+        "BR_SHARDS" => ("shards", (17, 500)),
+        "BR_NEXUS" => ("nexus", (33, 250)),
+        "BR_STORM" => ("storm", (13, 250)),
+        "BR_INERTIA" => ("inertia", (17, 250)),
+        "BR_PLASMA" => ("plasma", (17, 250)),
+        "BR_HELL_FIRE" => ("hell-fire", (17, 250)),
+        "BR_GRAVITY" => ("gravity", (33, 200)),
+        "BR_FORCE" => ("force", (33, 200)),
+        "BR_MANA" => ("mana", (33, 250)),
+        "BR_DISINTEGRATE" => ("disintegrate", (17, 150)),
+        "BR_TIME" => ("time", (33, 150)),
         _ => return None,
     };
     Some(entry)
@@ -862,7 +905,7 @@ fn damage_spell_ability(
     let mut effect = serde_json::json!({
         "type": match shape {
             DamageSpellShape::Bolt => "damage",
-            DamageSpellShape::Ball => "area-damage",
+            DamageSpellShape::Ball | DamageSpellShape::BigBall => "area-damage",
         },
         "damageDice": dice,
         "damageSides": sides,
@@ -871,8 +914,8 @@ fn damage_spell_ability(
     if bonus > 0 {
         effect["damageBonus"] = serde_json::json!(bonus);
     }
-    if shape == DamageSpellShape::Ball {
-        effect["radius"] = serde_json::json!(2);
+    if shape.ball_radius() > 0 {
+        effect["radius"] = serde_json::json!(shape.ball_radius());
     }
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
@@ -1351,7 +1394,10 @@ S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
         assert_eq!(outcome.report.monsters_with_casting, 1);
         assert_eq!(outcome.report.spells_mapped["BO_FIRE"], 1);
         assert_eq!(outcome.report.spells_mapped["BO_FIRE(18d8+26)"], 1);
-        assert_eq!(outcome.report.unmapped_spells["BO_MANA"], 1);
+        // Mana bolts map to the real legacy element since the damage-type
+        // roster expansion: 1d(7*30/2)+50 at level 30.
+        assert_eq!(outcome.report.spells_mapped["BO_MANA"], 1);
+        assert_eq!(outcome.report.unmapped_spells.len(), 0);
 
         let (_, mage) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = mage["monsterCasting"]["abilities"]
@@ -1367,8 +1413,16 @@ S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
                 "rfb-legacy.ability.ball-acid-1d90-15",
                 "rfb-legacy.ability.bolt-fire-18d8-26",
                 "rfb-legacy.ability.bolt-physical-1d1-89",
+                "rfb-legacy.ability.bolt-mana-1d105-50",
             ]
         );
+        let mana_bolt = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "bolt-mana-1d105-50.json")
+            .map(|(_, value)| value)
+            .expect("mana bolt ability should be generated");
+        assert_eq!(mana_bolt["effect"]["damageType"], "mana");
 
         let bolt = outcome
             .ability_files
