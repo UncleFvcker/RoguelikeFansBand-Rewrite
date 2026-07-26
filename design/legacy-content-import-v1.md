@@ -1,6 +1,6 @@
 # 旧版内容导入管线 v1
 
-状态：f_info/r_info 首刀、多 blow → meleeRoutine 与首批 S: 法术映射已实现；导入产物只存在于本地 `.local/`，仓库与发行包继续只含原创内容。
+状态：f_info/r_info 首刀、多 blow → meleeRoutine、状态/治疗/位移/直伤 bolt+ball 的 S: 法术映射已实现；导入产物只存在于本地 `.local/`，仓库与发行包继续只含原创内容。
 
 ## 1. 边界
 
@@ -18,8 +18,8 @@
 
 ## 3. 首次全量导入结果（本地实测）
 
-地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；586 条已生成 `monsterCasting`（SCARE 283、CONFUSE 223、BLIND 215、TELE_TO 173、HEAL 173、BLINK 142、TELE_SELF 140、PARALYZE 110、HASTE 100、SLOW 60，共享能力 84 个），仍含未映射法术的条目以 DETECT 族为主。缺口报告当前优先级（按覆盖数）：DETECT_MONSTERS(149)/DETECT_OBJECTS(99) 侦测族、BRAIN_SMASH/DRAIN_MANA 特殊攻击；blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
+地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P36（bolt/ball 直伤映射）已有 696 条生成 `monsterCasting`、共享能力 502 个（早期为骰面去重的直伤能力变体为主），法术映射累计 2241 实例。缺口报告当前优先级（按覆盖数）：BR_ 吐息族 790（HP 百分比伤害，下一候选）、S_ 召唤族 670（需按类别选怪的新召唤形态）、FREQ_N 频率语法 297（并列于 1_IN_N 的百分比直写，未解析导致错用默认 10%）、CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、异种元素直伤约 400+（等伤害类型扩展）；DETECT/MAPPING/BERSERK 等 `MST_POSSESSOR` 附身组共 522 实例属不适用，待重分类出缺口报告。blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
 
 ## 4. v2 方向
 
-k_info 物品导入；已支持形态的 S: 法术（自愈、直伤 bolt/breath 子集）映射到 monsterCasting；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。
+k_info 物品导入；BR_ 吐息子集随 breath-damage 效果形态落地后映射；`FREQ_N` 频率语法解析与附身组 token 重分类；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。
