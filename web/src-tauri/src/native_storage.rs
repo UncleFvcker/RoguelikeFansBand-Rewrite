@@ -9,7 +9,7 @@ use std::{
 };
 
 use rfb_core::Game;
-use rfb_protocol::{GameSnapshot, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1};
+use rfb_protocol::{GameSnapshot, SaveHeaderV1};
 use serde::Serialize;
 
 const SAVE_EXTENSION: &str = ".rfbsave";
@@ -402,7 +402,7 @@ fn corrupt_summary(slot_id: &str) -> NativeSaveSummary {
 mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use rfb_protocol::{CharacterSummary, PROTOCOL_VERSION};
+    use rfb_protocol::{CharacterSummary, PROTOCOL_VERSION, SAVE_HEADER_SCHEMA_VERSION};
 
     use super::*;
 
