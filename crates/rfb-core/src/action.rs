@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::{AttributeKindDto, Direction, GameCommand, TargetSelection};
+use rfb_protocol::{
+    AttributeKindDto, Direction, GameCommand, SummonCommandModeDto, TargetSelection,
+};
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
@@ -45,6 +47,9 @@ pub(crate) enum GameAction {
         turns: u16,
     },
     Search,
+    SetSummonCommand {
+        mode: SummonCommandModeDto,
+    },
     ForgetAbility {
         ability_id: String,
     },
@@ -84,7 +89,7 @@ pub(crate) enum GameAction {
 impl GameAction {
     pub(crate) const fn energy_cost(&self) -> i32 {
         match self {
-            Self::IncreaseAttribute { .. } | Self::Retire => 0,
+            Self::IncreaseAttribute { .. } | Self::Retire | Self::SetSummonCommand { .. } => 0,
             _ => STANDARD_ACTION_COST,
         }
     }
@@ -120,6 +125,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::Retire => Self::Retire,
             GameCommand::Rest { turns } => Self::Rest { turns },
             GameCommand::Search => Self::Search,
+            GameCommand::SetSummonCommand { mode } => Self::SetSummonCommand { mode },
             GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },
             GameCommand::StudyAbility {
                 book_item_id,

@@ -81,10 +81,11 @@ use rfb_protocol::{
     PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
     PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto, ResourcePoolDto,
     ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
-    RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto, SummonDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
-    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
-    TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto, SummonCommandDto,
+    SummonCommandModeDto, SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection,
+    TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -363,7 +364,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV38 {
+struct StateHashPayloadV39 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -722,6 +723,7 @@ fn task_succeeded(world: &rfb_content::WorldDefinition, task_id: &str, state: &T
 fn task_death_target_kind(event: &DomainEvent) -> Option<&str> {
     match event {
         DomainEvent::PlayerSlew { target_kind_id, .. }
+        | DomainEvent::SummonSlew { target_kind_id, .. }
         | DomainEvent::ProjectileSlew { target_kind_id, .. }
         | DomainEvent::ItemThrowSlew { target_kind_id, .. }
         | DomainEvent::EntityDiedFromStatus { target_kind_id, .. } => Some(target_kind_id.as_str()),
@@ -1187,6 +1189,7 @@ pub struct Game {
     task_states: BTreeMap<String, TaskState>,
     dungeon_states: BTreeMap<String, DungeonState>,
     campaign_state: CampaignState,
+    summon_command: SummonCommandDto,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
@@ -1381,6 +1384,7 @@ impl Game {
             task_states,
             dungeon_states,
             campaign_state: CampaignState::default(),
+            summon_command: SummonCommandDto::default(),
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
@@ -1537,6 +1541,7 @@ impl Game {
         let saved_resources = payload.player.resources.clone();
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
+        let summon_command = payload.player.summon_command.clone();
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1731,6 +1736,7 @@ impl Game {
             task_states,
             dungeon_states,
             campaign_state,
+            summon_command,
             next_item_instance_serial,
             explored,
             revealed_terrain,
@@ -1925,7 +1931,10 @@ impl Game {
         let mut turn_advance = 1_u32;
         let advances_world = !matches!(
             &action,
-            GameAction::Retire | GameAction::IncreaseAttribute { .. } | GameAction::Rest { .. }
+            GameAction::Retire
+                | GameAction::IncreaseAttribute { .. }
+                | GameAction::Rest { .. }
+                | GameAction::SetSummonCommand { .. }
         );
         if advances_world {
             self.decrement_ability_cooldowns(1);
@@ -2077,6 +2086,18 @@ impl Game {
                         from_floor_id: transition.from_floor_id,
                         to_floor_id: transition.to_floor_id,
                     });
+                    for (entity_id, target_kind_id) in transition.summons_followed {
+                        events.push(DomainEvent::SummonFollowedFloor {
+                            entity_id,
+                            target_kind_id,
+                        });
+                    }
+                    for (entity_id, target_kind_id) in transition.summons_could_not_follow {
+                        events.push(DomainEvent::SummonCouldNotFollow {
+                            entity_id,
+                            target_kind_id,
+                        });
+                    }
                     if transition.expedition_ended {
                         events.push(DomainEvent::DungeonExpeditionEnded);
                     }
@@ -2278,6 +2299,32 @@ impl Game {
                     }
                 }
             }
+            GameAction::SetSummonCommand { mode } => {
+                self.summon_command = SummonCommandDto {
+                    mode,
+                    guard_position: (mode == SummonCommandModeDto::Guard)
+                        .then_some(self.player.position),
+                };
+                let affected_summons = self
+                    .entities
+                    .iter()
+                    .filter(|entity| {
+                        entity.hp > 0
+                            && entity
+                                .summon
+                                .as_ref()
+                                .is_some_and(|summon| summon.owner_id == self.player.id)
+                    })
+                    .count()
+                    .try_into()
+                    .unwrap_or(u16::MAX);
+                events.push(DomainEvent::SummonCommandChanged {
+                    resolution: SummonCommandResolutionDto {
+                        command: self.summon_command.clone(),
+                        affected_summons,
+                    },
+                });
+            }
             GameAction::DisarmTrap { direction } => match self.disarm_trap(direction) {
                 Some(TrapDisarmOutcome::Succeeded { position }) => {
                     changed.insert(position);
@@ -2350,8 +2397,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV38 {
-            schema_version: 38,
+        let payload = StateHashPayloadV39 {
+            schema_version: 39,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2498,6 +2545,7 @@ impl Game {
             resources: self.player_resource_dtos(),
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
+            summon_command: self.summon_command.clone(),
         }
     }
 
@@ -2525,6 +2573,7 @@ impl Game {
                 cooldown_remaining: progress.cooldown_remaining,
             })
             .collect();
+        player.summon_command = self.summon_command.clone();
         player
     }
 
@@ -5665,6 +5714,12 @@ impl Game {
         count: u8,
         radius: u8,
     ) -> Option<Vec<Position>> {
+        let candidates = self.open_positions_around(origin, radius);
+        let count = usize::from(count);
+        (candidates.len() >= count).then(|| candidates.into_iter().take(count).collect())
+    }
+
+    fn open_positions_around(&self, origin: Position, radius: u8) -> Vec<Position> {
         let occupied = self
             .entities
             .iter()
@@ -5699,14 +5754,7 @@ impl Game {
             }
         }
         candidates.sort_unstable_by_key(|(distance, y, x, _)| (*distance, *y, *x));
-        let count = usize::from(count);
-        (candidates.len() >= count).then(|| {
-            candidates
-                .into_iter()
-                .take(count)
-                .map(|entry| entry.3)
-                .collect()
-        })
+        candidates.into_iter().map(|entry| entry.3).collect()
     }
 
     fn detect_terrain_positions(
@@ -6642,7 +6690,7 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            self.process_monster_energy_pulse(events, changed, removed_entities);
+            self.process_monster_energy_pulse(events, changed, removed_entities)?;
             if self.player_is_dead() {
                 break;
             }
@@ -6773,7 +6821,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) {
+    ) -> Result<(), CoreError> {
         let mut entity_ids = self
             .entities
             .iter()
@@ -6813,8 +6861,9 @@ impl Game {
                 changed,
                 removed_entities,
                 &mut surround_reservations,
-            );
+            )?;
         }
+        Ok(())
     }
 
     fn resolve_monster_action(
@@ -6824,24 +6873,23 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
-    ) {
+    ) -> Result<(), CoreError> {
         if self.entities[index]
             .summon
             .as_ref()
             .is_some_and(|summon| summon.owner_id == self.player.id)
         {
-            // The first summon contract establishes ownership and lifecycle;
-            // friendly combat AI is intentionally deferred to a later slice.
-            return;
+            self.resolve_player_summon_action(index, events, changed, removed_entities)?;
+            return Ok(());
         }
         if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
-            return;
+            return Ok(());
         }
         if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities) {
-            return;
+            return Ok(());
         }
         let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {
-            return;
+            return Ok(());
         };
         let casting = self
             .content
@@ -6889,7 +6937,7 @@ impl Game {
                     target_kind_id: primary_target.kind_id().to_owned(),
                 },
             });
-            return;
+            return Ok(());
         }
         let behavior = self.entities[index]
             .pack
@@ -6906,7 +6954,7 @@ impl Game {
                 changed,
                 removed_entities,
             );
-            return;
+            return Ok(());
         }
         let next_position = match behavior {
             MonsterPackBehaviorDto::Seek => {
@@ -6931,12 +6979,309 @@ impl Game {
             MonsterPackBehaviorDto::GuardPosition => None,
         };
         let Some(next_position) = next_position else {
-            return;
+            return Ok(());
         };
         let old_position = self.entities[index].position;
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
+        Ok(())
+    }
+
+    fn resolve_player_summon_action(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let targets = self.player_summon_hostile_targets(index);
+        let adjacent_target = targets.iter().find(|entity_id| {
+            self.entities
+                .iter()
+                .find(|entity| entity.id == **entity_id)
+                .is_some_and(|target| adjacent(self.entities[index].position, target.position))
+        });
+        let owner_position = self.player.position;
+        let next_position = match self.summon_command.mode {
+            SummonCommandModeDto::Follow => {
+                if let Some(target_id) = adjacent_target {
+                    self.resolve_player_summon_melee(
+                        index,
+                        target_id,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    return Ok(());
+                }
+                if adjacent(self.entities[index].position, owner_position) {
+                    None
+                } else {
+                    self.next_monster_step_toward(index, owner_position, true)
+                }
+            }
+            SummonCommandModeDto::Attack => {
+                let Some(target_id) = targets.first() else {
+                    if adjacent(self.entities[index].position, owner_position) {
+                        return Ok(());
+                    }
+                    if let Some(next_position) =
+                        self.next_monster_step_toward(index, owner_position, true)
+                    {
+                        self.move_entity(index, next_position, changed);
+                    }
+                    return Ok(());
+                };
+                let target_position = self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == *target_id)
+                    .expect("collected summon target must remain available")
+                    .position;
+                if adjacent(self.entities[index].position, target_position) {
+                    self.resolve_player_summon_melee(
+                        index,
+                        target_id,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    return Ok(());
+                }
+                self.next_monster_step_toward(index, target_position, true)
+            }
+            SummonCommandModeDto::KeepDistance => {
+                let distance = chebyshev_distance(self.entities[index].position, owner_position);
+                if distance < 3 {
+                    self.next_player_summon_step_away_from_owner(index)
+                } else if distance > 3 {
+                    self.next_monster_step_toward(index, owner_position, true)
+                } else if let Some(target_id) = adjacent_target {
+                    self.resolve_player_summon_melee(
+                        index,
+                        target_id,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    return Ok(());
+                } else {
+                    None
+                }
+            }
+            SummonCommandModeDto::Guard => {
+                if let Some(target_id) = adjacent_target {
+                    self.resolve_player_summon_melee(
+                        index,
+                        target_id,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    return Ok(());
+                }
+                let guard_position = self.summon_command.guard_position.unwrap_or(owner_position);
+                if self.entities[index].position == guard_position
+                    || adjacent(self.entities[index].position, guard_position)
+                {
+                    None
+                } else {
+                    self.next_monster_step_toward(index, guard_position, true)
+                }
+            }
+        };
+        if let Some(next_position) = next_position {
+            self.move_entity(index, next_position, changed);
+        }
+        Ok(())
+    }
+
+    fn player_summon_hostile_targets(&self, index: usize) -> Vec<String> {
+        let origin = self.entities[index].position;
+        let mut targets = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && entity.id != self.entities[index].id
+                    && entity
+                        .summon
+                        .as_ref()
+                        .is_none_or(|summon| summon.owner_id != self.player.id)
+            })
+            .map(|entity| {
+                (
+                    chebyshev_distance(origin, entity.position),
+                    entity.id.clone(),
+                )
+            })
+            .collect::<Vec<_>>();
+        targets.sort();
+        targets
+            .into_iter()
+            .map(|(_, entity_id)| entity_id)
+            .collect()
+    }
+
+    fn next_player_summon_step_away_from_owner(&self, index: usize) -> Option<Position> {
+        const DELTAS: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+
+        let start = self.entities[index].position;
+        let current_distance = chebyshev_distance(start, self.player.position);
+        let occupied = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter(|(entity_index, entity)| *entity_index != index && entity.hp > 0)
+            .map(|(_, entity)| entity.position)
+            .collect::<BTreeSet<_>>();
+        let mut candidates = DELTAS
+            .iter()
+            .enumerate()
+            .filter_map(|(order, (dx, dy))| {
+                let position = Position {
+                    x: start.x + dx,
+                    y: start.y + dy,
+                };
+                if position == self.player.position
+                    || occupied.contains(&position)
+                    || !self.is_walkable(position)
+                {
+                    return None;
+                }
+                let distance = chebyshev_distance(position, self.player.position);
+                (distance > current_distance).then_some((
+                    std::cmp::Reverse(distance),
+                    order,
+                    position,
+                ))
+            })
+            .collect::<Vec<_>>();
+        candidates.sort();
+        candidates.first().map(|(_, _, position)| *position)
+    }
+
+    fn move_entity(
+        &mut self,
+        index: usize,
+        next_position: Position,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let old_position = self.entities[index].position;
+        self.entities[index].position = next_position;
+        changed.insert(old_position);
+        changed.insert(next_position);
+    }
+
+    fn resolve_player_summon_melee(
+        &mut self,
+        source_index: usize,
+        target_entity_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let source_entity_id = self.entities[source_index].id.clone();
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&source_kind_id)
+            .expect("summon actor definition must remain available")
+            .clone();
+        let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
+        for blow in resolved_melee_blows(&definition) {
+            let Some(target_index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+            else {
+                break;
+            };
+            let target_kind_id = self.entities[target_index].kind_id.clone();
+            let target_position = self.entities[target_index].position;
+            let target_definition = self
+                .content
+                .actor(&target_kind_id)
+                .expect("summon melee target definition must remain available");
+            let target_stats =
+                self.actor_derived_stats(&self.entities[target_index], target_definition, false);
+            let ability = attacker.melee_skill.with_modifier(
+                StatLayer::Base,
+                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
+                blow.to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::MeleeHit,
+                    actor_id: source_entity_id.clone(),
+                    target_id: Some(target_entity_id.to_owned()),
+                    ability,
+                    difficulty: target_stats.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::SummonMeleeMissed {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id,
+                    method_id: blow.method_id,
+                });
+                continue;
+            }
+
+            self.entities[target_index].alerted = true;
+            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
+            let prepared_damage = if blow.damage_type == DamageType::Physical {
+                apply_melee_armor_reduction(raw_damage, target_stats.armor_class.value)
+            } else {
+                raw_damage
+            };
+            let resistance = self.entities[target_index]
+                .resistances
+                .level(blow.damage_type);
+            let damage = resolve_damage(
+                DamagePacket::after_armor(raw_damage, prepared_damage, blow.damage_type),
+                resistance,
+            );
+            self.entities[target_index].hp = self.entities[target_index]
+                .hp
+                .saturating_sub(damage.applied);
+            changed.insert(target_position);
+            if self.entities[target_index].hp <= 0 {
+                self.resolve_actor_death(
+                    target_index,
+                    DomainEvent::SummonSlew {
+                        source_kind_id: source_kind_id.clone(),
+                        target_kind_id,
+                        method_id: blow.method_id,
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                break;
+            }
+            events.push(DomainEvent::SummonMeleeHit {
+                source_kind_id: source_kind_id.clone(),
+                target_kind_id,
+                method_id: blow.method_id,
+                damage,
+            });
+        }
+        Ok(())
     }
 
     #[cfg(test)]
@@ -9837,6 +10182,23 @@ impl Game {
         } else {
             Some(TaskResolution::Failed)
         };
+        let mut following_summons = Vec::new();
+        let mut remaining_entities = Vec::with_capacity(self.entities.len());
+        for entity in std::mem::take(&mut self.entities) {
+            let follows = entity.hp > 0
+                && entity
+                    .summon
+                    .as_ref()
+                    .is_some_and(|summon| summon.owner_id == self.player.id)
+                && chebyshev_distance(entity.position, self.player.position) <= 2;
+            if follows {
+                following_summons.push(entity);
+            } else {
+                remaining_entities.push(entity);
+            }
+        }
+        following_summons.sort_by(|left, right| left.id.cmp(&right.id));
+        self.entities = remaining_entities;
         let all_items = std::mem::take(&mut self.items);
         let (floor_items, global_items): (Vec<_>, Vec<_>) =
             all_items.into_iter().partition(|item| {
@@ -9859,10 +10221,9 @@ impl Game {
             connections: std::mem::take(&mut self.floor_connections),
             regions: std::mem::take(&mut self.floor_regions),
         };
-        self.stored_floors.insert(
-            dungeon_instance_storage_key(from_dungeon_instance_id.as_deref(), &from_floor_id),
-            current,
-        );
+        let from_storage_key =
+            dungeon_instance_storage_key(from_dungeon_instance_id.as_deref(), &from_floor_id);
+        self.stored_floors.insert(from_storage_key.clone(), current);
 
         let task_resumed = procedural_floors
             .iter()
@@ -10048,6 +10409,11 @@ impl Game {
             state.active_floor_id = Some(target.id.clone());
         }
         self.activate_floor(destination, global_items);
+        let (summons_followed, summons_could_not_follow) =
+            self.place_following_summons(following_summons, &from_storage_key);
+        if self.summon_command.mode == SummonCommandModeDto::Guard {
+            self.summon_command.guard_position = Some(self.player.position);
+        }
         Ok(Some(FloorTransitionOutcome {
             from_floor_id,
             to_floor_id: target_floor_id.clone(),
@@ -10066,7 +10432,42 @@ impl Game {
                     .unwrap_or(&target_floor_id)
                     .to_owned()
             }),
+            summons_followed,
+            summons_could_not_follow,
         }))
+    }
+
+    fn place_following_summons(
+        &mut self,
+        following_summons: Vec<Actor>,
+        from_storage_key: &str,
+    ) -> (Vec<ActorIdentity>, Vec<ActorIdentity>) {
+        if following_summons.is_empty() {
+            return (Vec::new(), Vec::new());
+        }
+        let positions = self.open_positions_around(self.player.position, 5);
+        if positions.len() < following_summons.len() {
+            let summaries = following_summons
+                .iter()
+                .map(|entity| (entity.id.clone(), entity.kind_id.clone()))
+                .collect::<Vec<_>>();
+            if let Some(source) = self.stored_floors.get_mut(from_storage_key) {
+                source.entities.extend(following_summons);
+                source
+                    .entities
+                    .sort_by(|left, right| left.id.cmp(&right.id));
+                return (Vec::new(), summaries);
+            }
+            return (Vec::new(), summaries);
+        }
+        let mut followed = Vec::with_capacity(following_summons.len());
+        for (mut entity, position) in following_summons.into_iter().zip(positions) {
+            entity.position = position;
+            followed.push((entity.id.clone(), entity.kind_id.clone()));
+            self.entities.push(entity);
+        }
+        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
+        (followed, Vec::new())
     }
 
     fn activate_floor(&mut self, floor: FloorState, mut global_items: Vec<ItemInstance>) {
@@ -13032,6 +13433,21 @@ impl Game {
                 "revealed terrain knowledge is invalid",
             ));
         }
+        match (self.summon_command.mode, self.summon_command.guard_position) {
+            (SummonCommandModeDto::Guard, Some(position))
+                if self.index(position).is_some() && self.is_walkable(position) => {}
+            (SummonCommandModeDto::Guard, _) => {
+                return Err(CoreError::InvalidSave(
+                    "summon guard command position is invalid",
+                ));
+            }
+            (_, None) => {}
+            (_, Some(_)) => {
+                return Err(CoreError::InvalidSave(
+                    "non-guard summon command retains a guard position",
+                ));
+            }
+        }
         for terrain_id in &self.terrain {
             if self.content.terrain(terrain_id).is_none() {
                 return Err(CoreError::UnknownTerrain(terrain_id.clone()));
@@ -13723,6 +14139,8 @@ enum TerrainDigOutcome {
     Failed { position: Position },
 }
 
+type ActorIdentity = (String, String);
+
 struct FloorTransitionOutcome {
     from_floor_id: String,
     to_floor_id: String,
@@ -13730,6 +14148,8 @@ struct FloorTransitionOutcome {
     one_shot_closed: Option<(String, TaskResolution)>,
     task_paused: Option<String>,
     task_resumed: Option<String>,
+    summons_followed: Vec<ActorIdentity>,
+    summons_could_not_follow: Vec<ActorIdentity>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -14321,6 +14741,10 @@ fn squared_distance(left: Position, right: Position) -> i32 {
     let dx = left.x - right.x;
     let dy = left.y - right.y;
     dx * dx + dy * dy
+}
+
+fn chebyshev_distance(left: Position, right: Position) -> u32 {
+    left.x.abs_diff(right.x).max(left.y.abs_diff(right.y))
 }
 
 const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPackBehaviorDto {
@@ -16482,7 +16906,8 @@ mod tests {
             &mut BTreeSet::new(),
             &mut Vec::new(),
             &mut BTreeSet::new(),
-        );
+        )
+        .expect("validated guardian action should resolve");
         assert_eq!(game.entities[guardian_index].position, guardian_position);
 
         game.player.position = Position { x: 3, y: 2 };
@@ -19606,7 +20031,8 @@ mod tests {
             &mut BTreeSet::new(),
             &mut Vec::new(),
             &mut BTreeSet::new(),
-        );
+        )
+        .expect("validated pack action should resolve");
         assert!(squared_distance(game.entities[3].position, leader_position) < before);
 
         let restored = Game::from_save(game.to_save()).expect("pack state should round-trip");
@@ -25023,7 +25449,8 @@ mod tests {
             &mut changed,
             &mut Vec::new(),
             &mut BTreeSet::new(),
-        );
+        )
+        .expect("validated hostile summon action should resolve");
         assert!(game.player.hp < hp_before);
 
         let restored =
@@ -25200,7 +25627,8 @@ mod tests {
             &mut BTreeSet::new(),
             &mut Vec::new(),
             &mut BTreeSet::new(),
-        );
+        )
+        .expect("validated tactical action should resolve");
         assert_eq!(game.entities[0].position, Position { x: 6, y: 2 });
         assert_eq!(game.rng.draw_counter, draws_before);
         assert!(
@@ -25219,7 +25647,8 @@ mod tests {
             &mut BTreeSet::new(),
             &mut Vec::new(),
             &mut BTreeSet::new(),
-        );
+        )
+        .expect("validated tactical action should resolve");
         assert_eq!(game.entities[0].position, Position { x: 6, y: 2 });
         assert!(
             events
@@ -25361,6 +25790,245 @@ mod tests {
         .expect("movement to charm should execute");
         game.dispatch(command(4, 3, GameCommand::PickUp))
             .expect("charm pickup should execute");
+    }
+
+    fn add_player_summon(
+        game: &mut Game,
+        entity_id: &str,
+        position: Position,
+        remaining_turns: u16,
+    ) {
+        let mut companion =
+            game.generated_actor(entity_id.to_owned(), "demo.actor.echo-companion", position);
+        companion.summon = Some(SummonIdentity {
+            owner_id: game.player.id.clone(),
+            source_ability_id: "demo.ability.echo-companion".to_owned(),
+            remaining_turns,
+        });
+        game.entities.push(companion);
+    }
+
+    #[test]
+    fn summon_commands_are_zero_world_time_persistent_and_guard_the_issue_position() {
+        let mut game = Game::new(89);
+        clear_monsters(&mut game);
+        add_player_summon(
+            &mut game,
+            "test.summon.echo-companion.1",
+            Position { x: 4, y: 3 },
+            5,
+        );
+        let before = game.to_save();
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::SetSummonCommand {
+                mode: SummonCommandModeDto::Guard,
+            },
+        );
+
+        assert_eq!(update.world_tick, before.world_tick);
+        assert_eq!(update.player.energy_need, before.player.energy_need);
+        assert_eq!(game.rng.draw_counter, before.rng.draw_counter);
+        assert_eq!(
+            update.player.summon_command,
+            SummonCommandDto {
+                mode: SummonCommandModeDto::Guard,
+                guard_position: Some(Position { x: 3, y: 3 }),
+            }
+        );
+        let resolution = update
+            .events
+            .iter()
+            .find_map(|event| match &event.outcome {
+                Some(GameEventOutcomeDto::SummonCommand { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("summon command should have a structured outcome");
+        assert_eq!(resolution.affected_summons, 1);
+        let restored = Game::from_save(game.to_save()).expect("summon command should round-trip");
+        assert_eq!(restored.summon_command, game.summon_command);
+
+        let mut malformed = game.to_save();
+        malformed.player.summon_command.mode = SummonCommandModeDto::Follow;
+        assert!(matches!(
+            Game::from_save(malformed),
+            Err(CoreError::InvalidSave(
+                "non-guard summon command retains a guard position"
+            ))
+        ));
+    }
+
+    #[test]
+    fn player_summons_follow_attack_keep_distance_and_guard_deterministically() {
+        let resolve = |mode: SummonCommandModeDto,
+                       summon_position: Position,
+                       guard_position: Option<Position>| {
+            let mut game = Game::new(89);
+            clear_monsters(&mut game);
+            add_player_summon(
+                &mut game,
+                "test.summon.echo-companion.1",
+                summon_position,
+                5,
+            );
+            game.entities.push(game.generated_actor(
+                "test.monster.ember-mote.1".to_owned(),
+                "demo.actor.ember-mote",
+                Position { x: 10, y: 3 },
+            ));
+            game.summon_command = SummonCommandDto {
+                mode,
+                guard_position,
+            };
+            let rng_before = game.rng.draw_counter;
+            let mut changed = BTreeSet::new();
+            game.resolve_player_summon_action(0, &mut Vec::new(), &mut changed, &mut Vec::new())
+                .expect("summon action should resolve");
+            (
+                game.entities[0].position,
+                changed,
+                game.rng.draw_counter - rng_before,
+            )
+        };
+
+        let (follow, _, follow_rng) =
+            resolve(SummonCommandModeDto::Follow, Position { x: 7, y: 3 }, None);
+        assert_eq!(follow, Position { x: 6, y: 3 });
+        assert_eq!(follow_rng, 0);
+
+        let (attack, _, attack_rng) =
+            resolve(SummonCommandModeDto::Attack, Position { x: 7, y: 3 }, None);
+        assert_eq!(attack, Position { x: 8, y: 3 });
+        assert_eq!(attack_rng, 0);
+
+        let (keep_distance, _, keep_distance_rng) = resolve(
+            SummonCommandModeDto::KeepDistance,
+            Position { x: 4, y: 3 },
+            None,
+        );
+        assert_eq!(keep_distance, Position { x: 5, y: 2 });
+        assert_eq!(keep_distance_rng, 0);
+
+        let (guard, _, guard_rng) = resolve(
+            SummonCommandModeDto::Guard,
+            Position { x: 7, y: 3 },
+            Some(Position { x: 3, y: 3 }),
+        );
+        assert_eq!(guard, Position { x: 6, y: 3 });
+        assert_eq!(guard_rng, 0);
+    }
+
+    #[test]
+    fn attacking_summon_uses_actor_melee_and_player_owned_death_credit() {
+        let seed = (1..=256)
+            .find(|seed| {
+                let mut game = Game::new(*seed);
+                clear_monsters(&mut game);
+                add_player_summon(
+                    &mut game,
+                    "test.summon.echo-companion.1",
+                    Position { x: 4, y: 3 },
+                    5,
+                );
+                let mut target = game.generated_actor(
+                    "test.monster.ember-mote.1".to_owned(),
+                    "demo.actor.ember-mote",
+                    Position { x: 5, y: 3 },
+                );
+                target.hp = 1;
+                game.entities.push(target);
+                game.summon_command.mode = SummonCommandModeDto::Attack;
+                let mut events = Vec::new();
+                game.resolve_player_summon_action(
+                    0,
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .expect("summon melee should resolve");
+                events
+                    .iter()
+                    .any(|event| matches!(event, DomainEvent::SummonSlew { .. }))
+            })
+            .expect("a bounded deterministic seed should let the summon hit");
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        add_player_summon(
+            &mut game,
+            "test.summon.echo-companion.1",
+            Position { x: 4, y: 3 },
+            5,
+        );
+        let mut target = game.generated_actor(
+            "test.monster.ember-mote.1".to_owned(),
+            "demo.actor.ember-mote",
+            Position { x: 5, y: 3 },
+        );
+        target.hp = 1;
+        game.entities.push(target);
+        game.summon_command.mode = SummonCommandModeDto::Attack;
+        let experience_before = game.progress.experience;
+        let mut events = Vec::new();
+        let mut removed = Vec::new();
+        game.resolve_player_summon_action(0, &mut events, &mut BTreeSet::new(), &mut removed)
+            .expect("summon melee should resolve");
+
+        assert_eq!(removed, ["test.monster.ember-mote.1"]);
+        assert!(game.progress.experience > experience_before);
+        assert!(events.iter().any(|event| {
+            matches!(
+                event,
+                DomainEvent::SummonSlew {
+                    source_kind_id,
+                    target_kind_id,
+                    ..
+                } if source_kind_id == "demo.actor.echo-companion"
+                    && target_kind_id == "demo.actor.ember-mote"
+            )
+        }));
+    }
+
+    #[test]
+    fn nearby_player_summons_follow_across_floors_while_distant_summons_stay() {
+        let mut game = Game::new(89);
+        clear_monsters(&mut game);
+        game.player.position = Position { x: 3, y: 4 };
+        add_player_summon(&mut game, "test.summon.near", Position { x: 4, y: 4 }, 5);
+        add_player_summon(
+            &mut game,
+            "test.summon.distant",
+            Position { x: 10, y: 10 },
+            5,
+        );
+
+        let transition = game
+            .traverse_stairs(false)
+            .expect("floor traversal should resolve")
+            .expect("entrance should transition");
+        assert_eq!(
+            transition.summons_followed,
+            [(
+                "test.summon.near".to_owned(),
+                "demo.actor.echo-companion".to_owned()
+            )]
+        );
+        assert!(transition.summons_could_not_follow.is_empty());
+        assert!(game.entities.iter().any(|entity| {
+            entity.id == "test.summon.near"
+                && chebyshev_distance(entity.position, game.player.position) <= 5
+        }));
+        assert!(
+            stored_floor(&game, "demo.floor.surface")
+                .entities
+                .iter()
+                .any(|entity| entity.id == "test.summon.distant")
+        );
+        assert!(
+            stored_floor(&game, "demo.floor.surface")
+                .entities
+                .iter()
+                .all(|entity| entity.id != "test.summon.near")
+        );
     }
 
     fn clear_monsters(game: &mut Game) {

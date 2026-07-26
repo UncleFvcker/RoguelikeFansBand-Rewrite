@@ -1,6 +1,6 @@
 # Contract v86：首个怪物施法与能力选择 AI
 
-状态：历史 baseline。协议版本为 1.86，demo 内容包版本为 1.78.0，content hash 为 `be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd`。save 容器继续使用 v1；怪物施法冷却新增权威 actor 状态，因此 state hash 升至 Schema v37。当前 active baseline 见 [Contract v88](contract-v88-monster-targets-tactics-memory.md)。
+状态：历史 baseline。协议版本为 1.86，demo 内容包版本为 1.78.0，content hash 为 `be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd`。save 容器继续使用 v1；怪物施法冷却新增权威 actor 状态，因此 state hash 升至 Schema v37。当前 active baseline 见 [Contract v89](contract-v89-friendly-summon-commands.md)。
 
 ## 1. 原版参照
 

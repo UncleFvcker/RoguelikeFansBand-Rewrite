@@ -1,6 +1,6 @@
 # Contract v88：怪物目标、战术移动与施法记忆
 
-状态：当前 active baseline。协议版本为 1.88，demo 内容包版本为 1.80.0，content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`。save 容器继续使用 v1；怪物已观察抗性是新增权威状态，state hash 升至 Schema v38。
+状态：历史 baseline；当前 active baseline 见 [contract-v89](contract-v89-friendly-summon-commands.md)。协议版本为 1.88，demo 内容包版本为 1.80.0，content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`。save 容器继续使用 v1；怪物已观察抗性是新增权威状态，state hash 升至 Schema v38。
 
 ## 1. 原版参考
 

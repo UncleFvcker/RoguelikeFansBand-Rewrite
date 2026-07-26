@@ -347,6 +347,23 @@ h1 {
   opacity: 0.48;
 }
 
+.summon-command-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.summon-command-actions button[aria-pressed="true"] {
+  border-color: #3c8f73;
+  color: #79d4b1;
+}
+
+.summon-command-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
 .attribute-row {
   display: grid;
   grid-template-columns: minmax(5.5rem, 0.8fr) minmax(0, 1.5fr) auto;

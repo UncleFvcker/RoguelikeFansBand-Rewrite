@@ -161,6 +161,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.88 为 `ActorSaveDto` 增加默认空的 `observedPlayerResistances`，只保存 smart caster 已实际观察到的伤害类型与抗性级别。当前层与离层 actor 使用相同字段；目标排序、敌我计数、战术移动候选和每次施法目标结果只属于当前状态纯计算或命令事件。载入 v87 及更早存档时缺失字段迁移为空，不读取玩家抗性、不补观察、不触发移动或施法且不推进 RNG。非 smart actor、玩家拥有的召唤物或重复伤害类型携带非空记忆会被拒绝。save 容器保持 v1，新增权威记忆使 state hash 升至 Schema v38。完整边界见 [Contract v88](contract-v88-monster-targets-tactics-memory.md)。
 
+协议 1.89 为 `PlayerSaveDto` 增加默认的 `summonCommand`。旧存档缺失时恢复为 `follow` 且无锚点；`guard` 必须携带地图内可行走锚点，其他模式必须没有锚点，否则拒绝载入。当前层和离层召唤物仍使用既有 `SummonSaveDto`；跨层跟随只移动实体及其携带物，不改变 owner/source/lifetime。save 容器保持 v1，新增权威命令状态使 state hash 升至 Schema v39。完整边界见 [Contract v89](contract-v89-friendly-summon-commands.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

@@ -9,7 +9,8 @@ use rfb_protocol::{
     InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
     MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position,
     ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SaveHeaderV1,
-    StatusDto, StatusSaveDto, SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
+    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
+    TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -50,6 +51,8 @@ pub struct Preconditions {
     pub world: String,
     #[serde(default)]
     pub debug_clear_entities: bool,
+    #[serde(default)]
+    pub debug_clear_carried_items: bool,
     #[serde(default)]
     pub player_build_id: Option<String>,
     #[serde(default)]
@@ -216,6 +219,8 @@ pub struct FinalStateAssertion {
     pub player_ability_learning: Option<AbilityLearningDto>,
     #[serde(default)]
     pub player_abilities: Vec<AbilityDto>,
+    #[serde(default)]
+    pub player_summon_command: SummonCommandDto,
     pub entity_count: usize,
     #[serde(default)]
     pub entities: Vec<ActorStateAssertion>,
@@ -435,6 +440,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         entity.resistances = effects.resistances.clone();
         entity.summon = effects.summon.clone();
     }
+    if fixture.preconditions.debug_clear_carried_items {
+        payload.carried_items.clear();
+    }
     if fixture.preconditions.debug_clear_entities {
         payload.entities.clear();
         payload.carried_items.clear();
@@ -513,6 +521,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_resources: snapshot.player.resources.clone(),
             player_ability_learning: snapshot.player.ability_learning,
             player_abilities: snapshot.player.abilities.clone(),
+            player_summon_command: snapshot.player.summon_command,
             entity_count: snapshot.entities.len(),
             entities: snapshot
                 .entities

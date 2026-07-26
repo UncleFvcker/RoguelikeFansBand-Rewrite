@@ -9,6 +9,7 @@ use rfb_protocol::{
     CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
     MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto, Position,
     ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -105,6 +106,17 @@ pub(crate) enum DomainEvent {
         trace: Option<ProjectileTrace>,
     },
     SummonExpired {
+        entity_id: String,
+        target_kind_id: String,
+    },
+    SummonCommandChanged {
+        resolution: SummonCommandResolutionDto,
+    },
+    SummonFollowedFloor {
+        entity_id: String,
+        target_kind_id: String,
+    },
+    SummonCouldNotFollow {
         entity_id: String,
         target_kind_id: String,
     },
@@ -386,6 +398,23 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         damage: DamageOutcome,
     },
+    SummonMeleeMissed {
+        source_kind_id: String,
+        target_kind_id: String,
+        method_id: Option<String>,
+    },
+    SummonMeleeHit {
+        source_kind_id: String,
+        target_kind_id: String,
+        method_id: Option<String>,
+        damage: DamageOutcome,
+    },
+    SummonSlew {
+        source_kind_id: String,
+        target_kind_id: String,
+        method_id: Option<String>,
+        damage: DamageOutcome,
+    },
     MonsterMeleeMissed {
         source_kind_id: String,
         method_id: Option<String>,
@@ -659,6 +688,34 @@ impl DomainEvent {
             } => dto(
                 "summon.expired",
                 "summon-expired",
+                [("target", entity_id), ("actor", target_kind_id)],
+            ),
+            Self::SummonCommandChanged { resolution } => dto_with_outcome(
+                "summon.command-changed",
+                "summon-command-changed",
+                [
+                    (
+                        "mode",
+                        summon_command_mode_id(resolution.command.mode).to_owned(),
+                    ),
+                    ("count", resolution.affected_summons.to_string()),
+                ],
+                GameEventOutcomeDto::SummonCommand { resolution },
+            ),
+            Self::SummonFollowedFloor {
+                entity_id,
+                target_kind_id,
+            } => dto(
+                "summon.followed-floor",
+                "summon-followed-floor",
+                [("target", entity_id), ("actor", target_kind_id)],
+            ),
+            Self::SummonCouldNotFollow {
+                entity_id,
+                target_kind_id,
+            } => dto(
+                "summon.could-not-follow",
+                "summon-could-not-follow",
                 [("target", entity_id), ("actor", target_kind_id)],
             ),
             Self::AbilityLanded { ability_id, trace } => with_trace(
@@ -1345,6 +1402,54 @@ impl DomainEvent {
                     resolution: damage.into(),
                 },
             ),
+            Self::SummonMeleeMissed {
+                source_kind_id,
+                target_kind_id,
+                method_id,
+            } => with_method(
+                dto(
+                    "combat.summon-miss",
+                    "combat-summon-miss",
+                    [("source", source_kind_id), ("target", target_kind_id)],
+                ),
+                method_id,
+            ),
+            Self::SummonMeleeHit {
+                source_kind_id,
+                target_kind_id,
+                method_id,
+                damage,
+            } => with_method(
+                dto_with_outcome(
+                    "combat.summon-hit",
+                    "combat-summon-hit",
+                    [
+                        ("source", source_kind_id),
+                        ("target", target_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                method_id,
+            ),
+            Self::SummonSlew {
+                source_kind_id,
+                target_kind_id,
+                method_id,
+                damage,
+            } => with_method(
+                dto_with_outcome(
+                    "combat.summon-slay",
+                    "combat-summon-slay",
+                    [("source", source_kind_id), ("target", target_kind_id)],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
+                method_id,
+            ),
             Self::MonsterMeleeMissed {
                 source_kind_id,
                 method_id,
@@ -1556,6 +1661,15 @@ fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
         RestStopReasonDto::TurnLimit => "turn-limit",
     }
     .to_owned()
+}
+
+fn summon_command_mode_id(mode: SummonCommandModeDto) -> &'static str {
+    match mode {
+        SummonCommandModeDto::Follow => "follow",
+        SummonCommandModeDto::Attack => "attack",
+        SummonCommandModeDto::KeepDistance => "keep-distance",
+        SummonCommandModeDto::Guard => "guard",
+    }
 }
 
 pub(crate) fn project_events(events: Vec<DomainEvent>) -> Vec<GameEventDto> {

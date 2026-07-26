@@ -38,6 +38,8 @@ import type {
   PlayerProgressDto,
   ResourcePoolDto,
   StatModifiersDto,
+  SummonCommandDto,
+  SummonCommandModeDto,
   TargetSpecDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
@@ -102,6 +104,13 @@ const skillList = element<HTMLUListElement>("skill-list");
 const resourceList = element<HTMLUListElement>("resource-list");
 const abilityList = element<HTMLUListElement>("ability-list");
 const resourceRest = element<HTMLButtonElement>("resource-rest");
+const summonCommandStatus = element<HTMLElement>("summon-command-status");
+const summonCommandButtons: Record<SummonCommandModeDto, HTMLButtonElement> = {
+  follow: element<HTMLButtonElement>("summon-command-follow"),
+  attack: element<HTMLButtonElement>("summon-command-attack"),
+  "keep-distance": element<HTMLButtonElement>("summon-command-keep-distance"),
+  guard: element<HTMLButtonElement>("summon-command-guard"),
+};
 const taskLogList = element<HTMLUListElement>("task-log-list");
 const campaignStatusValue = element<HTMLElement>("campaign-status-value");
 const campaignScoreValue = element<HTMLElement>("campaign-score-value");
@@ -469,12 +478,24 @@ async function dispatch(command: GameCommand): Promise<void> {
       currentStatus?.player.resources ?? [],
       currentStatus?.player.abilityLearning,
     );
+    renderSummonCommand(
+      currentStatus?.player.summonCommand,
+      currentStatus?.entities ?? [],
+    );
     renderTargeting();
   }
 }
 
 campaignRetire.addEventListener("click", () => void dispatch({ type: "retire" }));
 resourceRest.addEventListener("click", () => void dispatch({ type: "rest", turns: 100 }));
+for (const [mode, button] of Object.entries(summonCommandButtons) as [
+  SummonCommandModeDto,
+  HTMLButtonElement,
+][]) {
+  button.addEventListener("click", () =>
+    void dispatch({ type: "set-summon-command", mode }),
+  );
+}
 
 async function exportSave(): Promise<void> {
   try {
@@ -832,6 +853,7 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.resources ?? [],
     state.player.abilityLearning,
   );
+  renderSummonCommand(state.player.summonCommand, state.entities);
   effectsValue.textContent =
     state.player.statuses.length === 0
       ? localization.format("status-effects-none")
@@ -1011,6 +1033,28 @@ function renderProgression(
       return row;
     }),
   );
+}
+
+function renderSummonCommand(
+  command: SummonCommandDto | undefined,
+  entities: GameSnapshot["entities"],
+): void {
+  const mode = command?.mode ?? "follow";
+  const count = entities.filter(
+    (entity) => entity.faction === "player" && entity.summon != null,
+  ).length;
+  summonCommandStatus.textContent = localization.format("summon-command-status", {
+    mode: localization.format(`summon-command-mode-${mode}` as MessageKey),
+    count,
+  });
+  for (const [buttonMode, button] of Object.entries(summonCommandButtons) as [
+    SummonCommandModeDto,
+    HTMLButtonElement,
+  ][]) {
+    const selected = buttonMode === mode;
+    button.disabled = busy || playerDead || campaignEnded || selected;
+    button.setAttribute("aria-pressed", String(selected));
+  }
 }
 
 function renderAbilities(
@@ -1647,6 +1691,21 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-summon-expired", {
         actor: contentName(event.args.actor),
       });
+    case "summon-command-changed":
+      return localization.format("message-summon-command-changed", {
+        mode: localization.format(
+          `summon-command-mode-${event.args.mode ?? "follow"}` as MessageKey,
+        ),
+        count: event.args.count ?? "0",
+      });
+    case "summon-followed-floor":
+      return localization.format("message-summon-followed-floor", {
+        actor: contentName(event.args.actor),
+      });
+    case "summon-could-not-follow":
+      return localization.format("message-summon-could-not-follow", {
+        actor: contentName(event.args.actor),
+      });
     case "ability-hit":
       return localization.format("message-ability-hit", {
         ability: contentName(event.args.source),
@@ -1819,6 +1878,22 @@ function formatEvent(event: GameEventDto): string {
       });
     case "combat-monster-kept-distance":
       return localization.format("message-combat-monster-kept-distance", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "combat-summon-miss":
+      return localization.format("message-combat-summon-miss", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "combat-summon-hit":
+      return localization.format("message-combat-summon-hit", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+        damage: damageResolution(event)?.finalDamage ?? event.args.damage ?? "?",
+      });
+    case "combat-summon-slay":
+      return localization.format("message-combat-summon-slay", {
         source: contentName(event.args.source),
         target: contentName(event.args.target),
       });

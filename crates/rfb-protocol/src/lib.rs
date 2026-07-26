@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.88";
+pub const PROTOCOL_VERSION: &str = "1.89";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -124,6 +124,9 @@ pub enum GameCommand {
         turns: u16,
     },
     Search,
+    SetSummonCommand {
+        mode: SummonCommandModeDto,
+    },
     ForgetAbility {
         ability_id: String,
     },
@@ -143,6 +146,30 @@ pub enum GameCommand {
         slot_id: String,
     },
     Wait,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum SummonCommandModeDto {
+    #[default]
+    Follow,
+    Attack,
+    KeepDistance,
+    Guard,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SummonCommandDto {
+    pub mode: SummonCommandModeDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guard_position: Option<Position>,
+}
+
+fn is_default_summon_command(value: &SummonCommandDto) -> bool {
+    value == &SummonCommandDto::default()
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1035,6 +1062,14 @@ pub struct MonsterAbilityTargetResolutionDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct SummonCommandResolutionDto {
+    pub command: SummonCommandDto,
+    pub affected_summons: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceRecoveryResolutionDto {
     pub resource_id: String,
     pub before: u32,
@@ -1101,6 +1136,9 @@ pub enum GameEventOutcomeDto {
     },
     MonsterAbilityCast {
         resolution: MonsterAbilityCastResolutionDto,
+    },
+    SummonCommand {
+        resolution: SummonCommandResolutionDto,
     },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
@@ -1197,6 +1235,8 @@ pub struct PlayerDto {
     pub ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<AbilityDto>,
+    #[serde(default, skip_serializing_if = "is_default_summon_command")]
+    pub summon_command: SummonCommandDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1569,6 +1609,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(MonsterAbilityDecisionResolutionDto);
     push_declaration!(MonsterAbilityTargetResolutionDto);
     push_declaration!(MonsterAbilityCastResolutionDto);
+    push_declaration!(SummonCommandModeDto);
+    push_declaration!(SummonCommandDto);
+    push_declaration!(SummonCommandResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);
@@ -1645,6 +1688,8 @@ pub struct PlayerSaveDto {
     pub learned_ability_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ability_progress: Vec<AbilityProgressSaveDto>,
+    #[serde(default, skip_serializing_if = "is_default_summon_command")]
+    pub summon_command: SummonCommandDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2244,6 +2289,7 @@ mod tests {
                 resources: Vec::new(),
                 ability_learning: None,
                 abilities: Vec::new(),
+                summon_command: SummonCommandDto::default(),
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -2381,6 +2427,7 @@ mod tests {
             resources: Vec::new(),
             learned_ability_ids: Vec::new(),
             ability_progress: Vec::new(),
+            summon_command: SummonCommandDto::default(),
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

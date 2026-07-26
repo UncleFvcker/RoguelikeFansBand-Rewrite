@@ -2128,6 +2128,22 @@
         {
           "type": "object",
           "properties": {
+            "mode": {
+              "$ref": "#/$defs/SummonCommandModeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "set-summon-command"
+            }
+          },
+          "required": [
+            "type",
+            "mode"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "abilityId": {
               "type": "string"
             },
@@ -2459,6 +2475,22 @@
             "type": {
               "type": "string",
               "const": "monster-ability-cast"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/SummonCommandResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "summon-command"
             }
           },
           "required": [
@@ -3562,6 +3594,9 @@
           "items": {
             "$ref": "#/$defs/StatusDto"
           }
+        },
+        "summonCommand": {
+          "$ref": "#/$defs/SummonCommandDto"
         }
       },
       "required": [
@@ -3983,6 +4018,54 @@
         "kindId",
         "intensity",
         "remainingTicks"
+      ]
+    },
+    "SummonCommandDto": {
+      "type": "object",
+      "properties": {
+        "guardPosition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "$ref": "#/$defs/SummonCommandModeDto"
+        }
+      },
+      "required": [
+        "mode"
+      ]
+    },
+    "SummonCommandModeDto": {
+      "type": "string",
+      "enum": [
+        "follow",
+        "attack",
+        "keep-distance",
+        "guard"
+      ]
+    },
+    "SummonCommandResolutionDto": {
+      "type": "object",
+      "properties": {
+        "affectedSummons": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "command": {
+          "$ref": "#/$defs/SummonCommandDto"
+        }
+      },
+      "required": [
+        "command",
+        "affectedSummons"
       ]
     },
     "SummonDto": {

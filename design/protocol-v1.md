@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.88、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.89、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.88";
+  protocolVersion: "1.89";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -219,6 +219,8 @@ interface GameCoreV1 {
 协议 1.87 新增 `MonsterAbilityRejectionReasonDto`、`MonsterAbilityCandidateResolutionDto` 和 `MonsterAbilityDecisionResolutionDto.candidates`，逐候选返回基础/有效权重、主目标、稳定 footprint 与拒绝原因。`MonsterAbilityCastResolutionDto` 增加 `affectedPositions` 和可选 summon resolution；怪物自身法术/召唤不再伪造 projectile trace。敌对召唤继续使用既有 `SummonDto/SummonSaveDto`，由非玩家 owner 投影 hostile 阵营。没有新增存档字段，save v1/state hash Schema v37 不变。完整边界见 [Contract v87](contract-v87-monster-casting-utility.md)。
 
 协议 1.88 为候选增加 `enemyTargetCount/friendlyRiskCount`，新增 `MonsterAbilityTargetResolutionDto` 并通过 `MonsterAbilityCastResolutionDto.targets` 返回每个实际命中玩家阵营目标的逐效果结果。`EntityDto/ActorSaveDto.observedPlayerResistances` 保存 smart caster 只从实际结算学习到的有限玩家抗性；缺失字段兼容为空。玩家召唤物成为法术、追踪和近战目标，保持距离与受伤撤退通过普通移动事件投影。save 容器仍为 v1，新增抗性记忆使 state hash 升至 Schema v38。完整边界见 [Contract v88](contract-v88-monster-targets-tactics-memory.md)。
+
+协议 1.89 增加 `SetSummonCommand`、`SummonCommandModeDto`、`SummonCommandDto` 和结构化 `SummonCommandResolutionDto`。`PlayerDto/PlayerSaveDto.summonCommand` 暴露 Follow、Attack、Keep Distance、Guard 与可选 Guard 锚点；命令不推进世界时间。友方召唤物行动投影为 `combat.summon-*`，跨层结果投影为 `summon.followed-floor/could-not-follow`。旧存档默认 Follow；命令状态进入 state hash Schema v39。完整边界见 [Contract v89](contract-v89-friendly-summon-commands.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

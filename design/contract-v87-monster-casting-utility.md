@@ -1,6 +1,6 @@
 # Contract v87：怪物施法效用与目标扩展
 
-状态：历史 baseline；当前 active baseline 见 [Contract v88](contract-v88-monster-targets-tactics-memory.md)。协议版本为 1.87，demo 内容包版本为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`。save 容器继续使用 v1；本纵切没有新增权威字段，state hash 保持 Schema v37。
+状态：历史 baseline；当前 active baseline 见 [Contract v89](contract-v89-friendly-summon-commands.md)。协议版本为 1.87，demo 内容包版本为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`。save 容器继续使用 v1；本纵切没有新增权威字段，state hash 保持 Schema v37。
 
 ## 1. 原版参考与选择顺序
 

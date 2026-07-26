@@ -97,6 +97,16 @@ action-ability-study = Study
 action-ability-forget = Forget
 action-ability-cast = Cast
 action-resource-rest = Rest
+panel-summon-command-title = Summon Command
+summon-command-status = { $mode } · { $count } active
+summon-command-mode-follow = Follow
+summon-command-mode-attack = Seek and destroy
+summon-command-mode-keep-distance = Keep distance
+summon-command-mode-guard = Guard here
+action-summon-command-follow = Follow
+action-summon-command-attack = Attack
+action-summon-command-keep-distance = Keep distance
+action-summon-command-guard = Guard here
 panel-inventory-title = HTML INVENTORY LAYER
 inventory-stack-count =
     { $count ->

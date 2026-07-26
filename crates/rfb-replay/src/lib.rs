@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 38;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 39;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -422,7 +422,7 @@ pub enum ReplayError {
 
 #[cfg(test)]
 mod tests {
-    use rfb_protocol::Direction;
+    use rfb_protocol::{Direction, SummonCommandModeDto};
 
     use super::*;
 
@@ -1207,6 +1207,30 @@ mod tests {
         assert_eq!(snapshot.turn, 8);
         let verification = verify(&replay, initial).expect("healing rest replay should verify");
         assert_eq!(verification.commands_verified, 3);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn summon_command_round_trips_through_replay() {
+        let initial = quiet_game(42);
+        let initial_world_tick = initial.snapshot().world_tick;
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::SetSummonCommand {
+                mode: SummonCommandModeDto::Guard,
+            })
+            .expect("summon command should execute");
+        let (final_game, replay) = recorder.finish();
+
+        let snapshot = final_game.snapshot();
+        assert_eq!(snapshot.world_tick, initial_world_tick);
+        let command = snapshot.player.summon_command;
+        assert_eq!(command.mode, SummonCommandModeDto::Guard);
+        assert_eq!(command.guard_position, Some(snapshot.player.position));
+
+        let verification =
+            verify(&replay, initial).expect("summon command replay should verify exactly");
+        assert_eq!(verification.commands_verified, 1);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 

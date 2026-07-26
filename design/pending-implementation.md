@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v88、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v89、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -37,26 +37,27 @@
 | P26 | 首个怪物施法与能力选择 AI | 已由 contract-v86 完成 | Monster 百分比频率与加权能力集合、射程/墙体/友军 clean-shot、频率失败普通行动回退、伤害/状态/有序效果复用、逆频率自身行动冷却、save/replay 与 Schema v37 |
 | P27 | 怪物施法效用与目标扩展 | 已由 contract-v87 完成 | HP/状态/距离有效权重、自身治疗/增益、范围/射线/锥形、保守 footprint 风险、敌对召唤、逐候选协议观察与 257 个 exact fixtures |
 | P28 | 怪物目标选择与施法记忆 | 已由 contract-v88 完成 | 玩家阵营召唤物目标、敌我多目标评分与实际结算、保持距离/25% HP 撤退、smart caster 已观察抗性记忆、save/replay、Schema v38 与 265 个 exact fixtures |
-| P29 | 友方召唤物行动与首版命令 | 下一候选 | 跟随/攻击/保持距离/守卫模式、玩家命令、敌对目标复用、主人/跨楼层/生命周期边界 |
+| P29 | 友方召唤物行动与首版命令 | 已由 contract-v89 完成 | Follow/Attack/Keep Distance/Guard、零时间全局命令、能量调度、近战归属、2 格跨层跟随、save/replay 与 Schema v39 |
+| P30 | 首个非 Mana 职业资源 | 下一候选 | 参考原版职业资源，先证明按行动获得、按能力消费、独立上限/恢复条件、UI、save/replay 与旧存档迁移 |
 
-## contract-v88 明确遗留
+## contract-v89 明确遗留
 
-- 玩家召唤物已经可以成为敌对怪物的法术、追踪和近战目标，但自身仍不执行跟随、攻击、保持距离、守卫或玩家命令；
+- 玩家召唤物已执行 Follow/Attack/Keep Distance/Guard 全局命令，但尚无单体点名、召回、永久宠物、物品交互、法术施放或更复杂阵形；
 - 选择层已按 HP、状态、距离、敌我目标数量和已观察抗性调整有效权重，但尚未按精确伤害期望、逃跑路径长度、协同法术或群体角色建立更完整评分；
 - 怪物召唤物已是 hostile 并可执行普通 AI，但没有召唤命令、主人死亡联动、种群上限、unique 过滤或繁殖规则；
 - 怪物位移、地形、侦测、反制和特殊投射效果仍未开放；
 - 怪物首版不消费 Mana、学习、熟练度、失败率或玩家能力冷却；只使用百分比频率与按自身行动计数的逆频率冷却；
 - smart caster 只学习当前六类伤害抗性；原版更广的反射、自由行动、传送抗性、遗忘/误导，以及反制、沉默、施法打断、领域协同和完整怪物法术表仍未建立；
-- 多资源职业、装备激活与设备共享能力继续后置。
+- 多资源职业恢复为下一候选；装备激活与设备共享能力继续后置。
 
-contract-v88 已将阵营目标、战术移动和有限施法记忆接入协议 1.88、内容包 1.80.0、save v1 与 state hash Schema v38。怪物按距离、玩家优先级和稳定 ID 尝试玩家或玩家召唤物；多格法术显式统计敌我、拒绝友军风险并按敌方数量加权，实际命中目标共享基础伤害骰。Echo Cantor 以内容阈值保持距离或受伤撤退；smart 抗性知识只在效果实际作用于玩家后更新，不额外抽 RNG。active baseline 为 265 个 exact fixtures、零 waiver。详细边界见 [contract-v88](contract-v88-monster-targets-tactics-memory.md)。
+contract-v89 已将玩家召唤物行动与全局命令接入协议 1.89、内容包 1.80.0、save v1 与 state hash Schema v39。命令零世界时间；移动和目标选择零 RNG；近战复用 actor routine 与玩家击杀归属。切层时仅 2 格内召唤物跟随，远处实体留层，Guard 锚点重置为到达位置。active baseline 为 272 个 exact fixtures、零 waiver。详细边界见 [contract-v89](contract-v89-friendly-summon-commands.md)。
 
 ## contract-v85 明确遗留
 
 - sequence 首版只组合同一 actor 目标上的伤害、治疗和状态；多目标、terrain、召唤、侦测、位移等专用效果尚未进入组合器；
 - 状态持续时间当前为固定整数并通过既有元素抗性确定性缩放；随机持续时间、独立 saving throw 和更复杂驱散优先级尚未建立；
 - 仍缺 confusion、paralysis、blindness、sleep 等完整状态族及其对应行动规则；
-- 怪物施法、HP/状态/距离/敌我/抗性能力选择与战术移动已由 contract-v86–v88 建立；装备激活、设备共享能力与多资源职业仍未实现；
+- 怪物施法、HP/状态/距离/敌我/抗性能力选择、战术移动与友方召唤命令已由 contract-v86–v89 建立；装备激活、设备共享能力与多资源职业仍未实现；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型尚未建立。
 
 contract-v85 已将 Echo Quickening/Echo Binding 接入协议 1.85、内容包 1.77.0、save v1 与 state hash Schema v36。整次施法只支付一次资源并先抽一次失败率，子效果按声明顺序结算；前序击杀会把后续效果标为 `target-dead`，无 actor 命中标为 `no-target`，且不抽取被跳过的伤害骰。状态沿用既有 actor status 存档与 tick 管线，cold 抗性确定性缩短 slow，免疫返回零持续时间。该历史 baseline 为 242 个 exact fixtures、零 waiver。详细边界见 [contract-v85](contract-v85-ordered-status-effects.md)。
@@ -83,7 +84,7 @@ contract-v83 已将 Echo Pulse/Echo Sight 接入协议 1.83、内容包 1.75.0�
 
 ## contract-v82 明确遗留
 
-- 召唤物的跟随、攻击、保持距离、守卫与玩家命令；
+- 跟随、攻击、保持距离、守卫、玩家命令与附近跨层跟随已由 contract-v89 完成；仍缺单体命令、召回和永久宠物；
 - 敌对/中立召唤、怪物召唤能力和能力选择 AI；
 - 召唤物跨楼层、召回、永久宠物、繁殖、唯一性与复杂 pack/formation 组合；
 - 侦测已由 contract-v83 完成，地形改变已由 contract-v84 完成，状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
