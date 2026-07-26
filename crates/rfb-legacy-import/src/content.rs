@@ -69,6 +69,38 @@ pub struct LegacyItemEntry {
     pub flags: Vec<String>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyEgoEntry {
+    pub index: u32,
+    pub name: String,
+    pub slots: Vec<String>,
+    pub level: u16,
+    pub max_to_hit: i32,
+    pub max_to_damage: i32,
+    pub max_to_armor: i32,
+    pub max_pval: i32,
+    pub flags: Vec<String>,
+    pub has_activation: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyArtifactEntry {
+    pub index: u32,
+    pub name: String,
+    pub tval: u16,
+    pub sval: u16,
+    pub pval: i32,
+    pub level: u16,
+    pub weight_tenths_pound: u16,
+    pub armor_class: i32,
+    pub damage_dice: Option<(u16, u16)>,
+    pub to_hit: i32,
+    pub to_damage: i32,
+    pub to_armor: i32,
+    pub flags: Vec<String>,
+    pub has_activation: bool,
+}
+
 #[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContentImportReport {
@@ -94,7 +126,13 @@ pub struct ContentImportReport {
     pub items_total: usize,
     pub items_imported: usize,
     pub items_skipped: usize,
+    pub egos_total: usize,
+    pub egos_imported: usize,
+    pub artifacts_total: usize,
+    pub artifacts_imported: usize,
     pub unmapped_item_flags: BTreeMap<String, usize>,
+    pub unmapped_ego_flags: BTreeMap<String, usize>,
+    pub unmapped_artifact_flags: BTreeMap<String, usize>,
     pub item_behavior_gaps: BTreeMap<String, usize>,
     pub skip_reasons: BTreeMap<String, usize>,
 }
@@ -622,27 +660,17 @@ fn item_json(
                 .or_default() += 1;
         }
     }
-    // Armour class and to-armor bonuses fold into the defense modifier;
-    // attribute flags carry their pval bonus.
+    // Armour class and to-armor bonuses fold into the defense modifier; base
+    // items stay attribute-free — pval powers arrive via egos and artifacts.
     let mut modifiers = serde_json::Map::new();
     let defense = entry.armor_class.saturating_add(entry.to_armor);
     if shape.slot.is_some() && defense != 0 {
         modifiers.insert("defense".to_owned(), serde_json::json!(defense));
     }
-    if shape.slot.is_some() {
-        for (flag, attribute) in ITEM_ATTRIBUTE_FLAGS {
-            if entry.flags.iter().any(|value| value == flag) && entry.pval != 0 {
-                modifiers.insert((*attribute).to_owned(), serde_json::json!(entry.pval));
-            }
-        }
-    }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
     for flag in &entry.flags {
-        if ITEM_ATTRIBUTE_FLAGS.iter().any(|(known, _)| known == flag) {
-            continue;
-        }
         *report.unmapped_item_flags.entry(flag.clone()).or_default() += 1;
     }
     value
@@ -652,6 +680,321 @@ impl ItemShape {
     fn tags_contain(&self, tag: &str) -> bool {
         self.tags.contains(&tag)
     }
+}
+
+/// Parses e_info ego templates: `C:` carries generation-time maximum
+/// bonuses, `T:` accumulates the applicable slot classes.
+pub fn parse_e_info(text: &str) -> Vec<LegacyEgoEntry> {
+    let mut entries = Vec::new();
+    let mut current: Option<LegacyEgoEntry> = None;
+    for line in text.lines() {
+        let line = line.trim_end();
+        if let Some(rest) = line.strip_prefix("N:") {
+            if let Some(entry) = current.take() {
+                entries.push(entry);
+            }
+            let mut parts = rest.splitn(2, ':');
+            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            let name = parts.next().unwrap_or_default().trim().to_owned();
+            current = Some(LegacyEgoEntry {
+                index,
+                name,
+                ..LegacyEgoEntry::default()
+            });
+            continue;
+        }
+        let Some(entry) = current.as_mut() else {
+            continue;
+        };
+        if let Some(rest) = line.strip_prefix("T:") {
+            entry.slots.extend(
+                rest.split('|')
+                    .map(str::trim)
+                    .filter(|slot| !slot.is_empty())
+                    .map(str::to_owned),
+            );
+        } else if let Some(rest) = line.strip_prefix("W:") {
+            entry.level = rest
+                .split(':')
+                .next()
+                .and_then(|raw| raw.parse().ok())
+                .unwrap_or(0);
+        } else if let Some(rest) = line.strip_prefix("C:") {
+            let values: Vec<i32> = rest
+                .split(':')
+                .map(|raw| raw.parse().unwrap_or(0))
+                .collect();
+            entry.max_to_hit = values.first().copied().unwrap_or(0);
+            entry.max_to_damage = values.get(1).copied().unwrap_or(0);
+            entry.max_to_armor = values.get(2).copied().unwrap_or(0);
+            entry.max_pval = values.get(3).copied().unwrap_or(0);
+        } else if let Some(rest) = line.strip_prefix("F:") {
+            entry.flags.extend(
+                rest.split('|')
+                    .map(str::trim)
+                    .filter(|flag| !flag.is_empty())
+                    .map(str::to_owned),
+            );
+        } else if line.starts_with("E:") {
+            entry.has_activation = true;
+        }
+    }
+    if let Some(entry) = current.take() {
+        entries.push(entry);
+    }
+    entries
+}
+
+/// Parses a_info fixed artifacts; unlike egos their pval and combat bonuses
+/// are fixed values. `E:` activation lines (ASCII token form) mark the
+/// activation gap; localized text lines are skipped outright.
+pub fn parse_a_info(text: &str) -> Vec<LegacyArtifactEntry> {
+    let mut entries = Vec::new();
+    let mut current: Option<LegacyArtifactEntry> = None;
+    for line in text.lines() {
+        let line = line.trim_end();
+        if let Some(rest) = line.strip_prefix("N:") {
+            if let Some(entry) = current.take() {
+                entries.push(entry);
+            }
+            let mut parts = rest.splitn(2, ':');
+            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            let name = parts.next().unwrap_or_default().trim().to_owned();
+            current = Some(LegacyArtifactEntry {
+                index,
+                name,
+                ..LegacyArtifactEntry::default()
+            });
+            continue;
+        }
+        let Some(entry) = current.as_mut() else {
+            continue;
+        };
+        if let Some(rest) = line.strip_prefix("I:") {
+            let mut parts = rest.split(':');
+            entry.tval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            entry.sval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            entry.pval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+        } else if let Some(rest) = line.strip_prefix("W:") {
+            // level:rarity:weight:cost for artifacts.
+            let values: Vec<i64> = rest
+                .split(':')
+                .map(|raw| raw.parse().unwrap_or(0))
+                .collect();
+            entry.level = u16::try_from(values.first().copied().unwrap_or(0).max(0)).unwrap_or(0);
+            entry.weight_tenths_pound =
+                u16::try_from(values.get(2).copied().unwrap_or(0).clamp(0, 10_000)).unwrap_or(0);
+        } else if let Some(rest) = line.strip_prefix("P:") {
+            let mut parts = rest.split(':');
+            entry.armor_class = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            if let Some(dice) = parts.next()
+                && let Some((count, sides)) = dice.split_once('d')
+                && let (Ok(count), Ok(sides)) = (count.parse(), sides.parse())
+            {
+                entry.damage_dice = Some((count, sides));
+            }
+            entry.to_hit = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            entry.to_damage = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            entry.to_armor = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+        } else if let Some(rest) = line.strip_prefix("F:") {
+            entry.flags.extend(
+                rest.split('|')
+                    .map(str::trim)
+                    .filter(|flag| !flag.is_empty())
+                    .map(str::to_owned),
+            );
+        } else if let Some(rest) = line.strip_prefix("E:")
+            && rest
+                .split(':')
+                .next()
+                .is_some_and(|token| token.bytes().all(|b| b.is_ascii()) && !token.is_empty())
+        {
+            entry.has_activation = true;
+        }
+    }
+    if let Some(entry) = current.take() {
+        entries.push(entry);
+    }
+    entries
+}
+
+/// Folds attribute flags (STR..CHR and their DEC_ inverses) around a pval
+/// into a modifier map; shared by egos (maximum roll) and artifacts (fixed).
+fn attribute_modifiers_from_flags(
+    flags: &[String],
+    pval: i32,
+    modifiers: &mut serde_json::Map<String, serde_json::Value>,
+) {
+    // Sentinel pvals (e.g. the legacy chaos shield's 125) exceed the contract
+    // range; clamp into the ±100 attribute window as a documented ceiling.
+    let pval = pval.clamp(-100, 100);
+    for (flag, attribute) in ITEM_ATTRIBUTE_FLAGS {
+        if pval != 0 && flags.iter().any(|value| value == flag) {
+            modifiers.insert((*attribute).to_owned(), serde_json::json!(pval));
+        }
+        let dec_flag = format!("DEC_{flag}");
+        if pval != 0 && flags.contains(&dec_flag) {
+            modifiers.insert((*attribute).to_owned(), serde_json::json!(-pval));
+        }
+    }
+}
+
+fn attribute_flag_is_mapped(flag: &str) -> bool {
+    ITEM_ATTRIBUTE_FLAGS
+        .iter()
+        .any(|(known, _)| *known == flag || flag.strip_prefix("DEC_") == Some(*known))
+}
+
+fn ego_json(
+    entry: &LegacyEgoEntry,
+    id: &str,
+    report: &mut ContentImportReport,
+) -> serde_json::Value {
+    // The C: maxima become fixed modifiers: a deterministic ceiling standing
+    // in for the legacy generation-time random rolls (documented difference).
+    let mut modifiers = serde_json::Map::new();
+    let attack = entry.max_to_hit.max(entry.max_to_damage);
+    if attack != 0 {
+        modifiers.insert("attack".to_owned(), serde_json::json!(attack));
+    }
+    if entry.max_to_armor != 0 {
+        modifiers.insert("defense".to_owned(), serde_json::json!(entry.max_to_armor));
+    }
+    attribute_modifiers_from_flags(&entry.flags, entry.max_pval, &mut modifiers);
+    if entry.has_activation {
+        *report
+            .item_behavior_gaps
+            .entry("ego-activation".to_owned())
+            .or_default() += 1;
+    }
+    for flag in &entry.flags {
+        if attribute_flag_is_mapped(flag) {
+            continue;
+        }
+        *report.unmapped_ego_flags.entry(flag.clone()).or_default() += 1;
+    }
+    let mut tags: Vec<String> = entry
+        .slots
+        .iter()
+        .map(|slot| slot.to_ascii_lowercase().replace('_', "-"))
+        .collect();
+    tags.push("legacy-import".to_owned());
+    tags.sort();
+    tags.dedup();
+    let mut value = serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/affix.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.affix.{id}"),
+        "nameKey": format!("affix-legacy-{id}-name"),
+        "descriptionKey": format!("affix-legacy-{id}-description"),
+        "tags": tags,
+    });
+    if !modifiers.is_empty() {
+        value["modifiers"] = serde_json::Value::Object(modifiers);
+    }
+    value
+}
+
+fn artifact_json(
+    entry: &LegacyArtifactEntry,
+    id: &str,
+    ammo: &LauncherAmmoIndex,
+    report: &mut ContentImportReport,
+) -> serde_json::Value {
+    let shape = item_shape(entry.tval).expect("every tval resolves a shape");
+    let mut value = serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/item.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.item.artifact-{id}"),
+        "nameKey": format!("item-legacy-artifact-{id}-name"),
+        "descriptionKey": format!("item-legacy-artifact-{id}-description"),
+        "glyph": "*",
+        "weightTenthsPound": entry.weight_tenths_pound.max(1),
+        "maxStack": 1,
+        "tags": ["artifact", "legacy-import"],
+    });
+    if let Some(slot) = shape.slot {
+        value["equipmentSlot"] = serde_json::json!(slot);
+    }
+    if shape.melee && shape.slot == Some("weapon") {
+        let (dice, sides) = entry.damage_dice.unwrap_or((1, 1));
+        value["meleeProfile"] = serde_json::json!({
+            "attacks": 1,
+            "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
+            "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
+            "damageDice": dice.clamp(1, 100),
+            "damageSides": sides.clamp(1, 10_000),
+        });
+    }
+    let mut slot_dropped = false;
+    if shape.launcher {
+        let paired = launcher_ammo_for(
+            &LegacyItemEntry {
+                sval: entry.sval,
+                ..LegacyItemEntry::default()
+            },
+            ammo,
+        );
+        if let Some(ammo_kind_id) = paired {
+            value["projectileProfile"] = serde_json::json!({
+                "range": 12,
+                "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
+                "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
+                "damageDice": 2,
+                "damageSides": 5,
+                "ammoKindId": ammo_kind_id,
+            });
+        } else {
+            value
+                .as_object_mut()
+                .expect("artifact json is an object")
+                .remove("equipmentSlot");
+            slot_dropped = true;
+            *report
+                .item_behavior_gaps
+                .entry("launcher-unpaired".to_owned())
+                .or_default() += 1;
+        }
+    }
+    // Artifacts carry fixed bonuses: armour folds into defense, the fixed
+    // pval feeds the attribute flags. Modifiers require the slot to survive,
+    // so unpaired launchers fall back to a bare collectible shell.
+    let has_slot = shape.slot.is_some() && !slot_dropped;
+    let mut modifiers = serde_json::Map::new();
+    if has_slot {
+        let defense = entry.armor_class.saturating_add(entry.to_armor);
+        if defense != 0 {
+            modifiers.insert("defense".to_owned(), serde_json::json!(defense));
+        }
+        if !shape.melee && !shape.launcher {
+            let attack = entry.to_hit.max(entry.to_damage);
+            if attack != 0 {
+                modifiers.insert("attack".to_owned(), serde_json::json!(attack));
+            }
+        }
+        attribute_modifiers_from_flags(&entry.flags, entry.pval, &mut modifiers);
+    }
+    if !modifiers.is_empty() {
+        value["modifiers"] = serde_json::Value::Object(modifiers);
+    }
+    if entry.has_activation {
+        *report
+            .item_behavior_gaps
+            .entry("artifact-activation".to_owned())
+            .or_default() += 1;
+    }
+    for flag in &entry.flags {
+        // Slotless shapes never applied the attribute fold, so their
+        // attribute flags stay visible in the gap report.
+        if (has_slot && attribute_flag_is_mapped(flag)) || flag == "INSTA_ART" {
+            continue;
+        }
+        *report
+            .unmapped_artifact_flags
+            .entry(flag.clone())
+            .or_default() += 1;
+    }
+    value
 }
 
 fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
@@ -1116,6 +1459,7 @@ pub struct ContentImportOutcome {
     pub ability_files: Vec<(String, serde_json::Value)>,
     pub resource_files: Vec<(String, serde_json::Value)>,
     pub item_files: Vec<(String, serde_json::Value)>,
+    pub affix_files: Vec<(String, serde_json::Value)>,
 }
 
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
@@ -1684,6 +2028,8 @@ pub fn convert_content(
     terrain: &[LegacyTerrainEntry],
     monsters: &[LegacyMonsterEntry],
     items: &[LegacyItemEntry],
+    egos: &[LegacyEgoEntry],
+    artifacts: &[LegacyArtifactEntry],
 ) -> ContentImportOutcome {
     let mut report = ContentImportReport {
         schema_version: CONTENT_IMPORT_SCHEMA_VERSION,
@@ -1954,6 +2300,59 @@ pub fn convert_content(
         report.items_imported += 1;
     }
 
+    let mut affix_files = Vec::new();
+    let mut seen_affix_ids = BTreeMap::new();
+    report.egos_total = egos.len();
+    for entry in egos {
+        if entry.name.is_empty() {
+            continue;
+        }
+        let mut id = kebab(entry.name.trim_start_matches("of "));
+        if id.is_empty() {
+            id = format!("ego-{}", entry.index);
+        }
+        let duplicates = seen_affix_ids.entry(id.clone()).or_insert(0_u32);
+        if *duplicates > 0 {
+            id = format!("{id}-{}", entry.index);
+        }
+        *duplicates += 1;
+        let value = ego_json(entry, &id, &mut report);
+        // Egos whose entire power set lives in unmappable flags produce an
+        // empty modifier map, which the affix contract rejects; skip them but
+        // keep their flags visible in the gap report above.
+        if value.get("modifiers").is_none() {
+            *report
+                .skip_reasons
+                .entry("ego-inexpressible".to_owned())
+                .or_default() += 1;
+            continue;
+        }
+        affix_files.push((format!("{id}.json"), value));
+        report.egos_imported += 1;
+    }
+    report.artifacts_total = artifacts.len();
+    for entry in artifacts {
+        if entry.name.is_empty() || entry.tval == 0 {
+            continue;
+        }
+        let mut id = kebab(entry.name.trim_start_matches("of "));
+        if id.is_empty() {
+            id = format!("artifact-{}", entry.index);
+        }
+        let duplicates = seen_item_ids
+            .entry(format!("artifact-{id}"))
+            .or_insert(0_u32);
+        if *duplicates > 0 {
+            id = format!("{id}-{}", entry.index);
+        }
+        *duplicates += 1;
+        item_files.push((
+            format!("artifact-{id}.json"),
+            artifact_json(entry, &id, &ammo_index, &mut report),
+        ));
+        report.artifacts_imported += 1;
+    }
+
     let ability_files = shared_abilities
         .into_iter()
         .map(|(id, value)| {
@@ -1990,6 +2389,7 @@ pub fn convert_content(
         ability_files,
         resource_files,
         item_files,
+        affix_files,
     }
 }
 
@@ -2005,10 +2405,14 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let f_info = read_legacy_object(source, "lib/edit/f_info.txt")?;
     let r_info = read_legacy_object(source, "lib/edit/r_info.txt")?;
     let k_info = read_legacy_object(source, "lib/edit/k_info.txt")?;
+    let e_info = read_legacy_object(source, "lib/edit/e_info.txt")?;
+    let a_info = read_legacy_object(source, "lib/edit/a_info.txt")?;
     let outcome = convert_content(
         &parse_f_info(&f_info),
         &parse_r_info(&r_info),
         &parse_k_info(&k_info),
+        &parse_e_info(&e_info),
+        &parse_a_info(&a_info),
     );
 
     let terrain_dir = output.join("terrain");
@@ -2019,6 +2423,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         ("abilities", &outcome.ability_files),
         ("resources", &outcome.resource_files),
         ("items", &outcome.item_files),
+        ("affixes", &outcome.affix_files),
     ] {
         if files.is_empty() {
             continue;
@@ -2051,6 +2456,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         content_roots.push("abilities");
     }
     content_roots.push("actors");
+    if !outcome.affix_files.is_empty() {
+        content_roots.push("affixes");
+    }
     if !outcome.item_files.is_empty() {
         content_roots.push("items");
     }
@@ -2130,7 +2538,7 @@ B:GAZE:TERRIFY\n";
         assert_eq!(monsters[0].blows.len(), 2);
         assert_eq!(monsters[0].spells.len(), 3);
 
-        let outcome = convert_content(&terrain, &monsters, &[]);
+        let outcome = convert_content(&terrain, &monsters, &[], &[], &[]);
         assert_eq!(outcome.report.terrain_imported, 2);
         assert_eq!(outcome.report.terrain_skipped, 1);
         assert_eq!(outcome.report.monsters_imported, 1);
@@ -2203,7 +2611,7 @@ S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
         assert_eq!(monsters.len(), 1);
         assert_eq!(monsters[0].level, Some(30));
 
-        let outcome = convert_content(&[], &monsters, &[]);
+        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
         assert_eq!(outcome.report.monsters_with_casting, 1);
         assert_eq!(outcome.report.spells_mapped["BO_FIRE"], 1);
         assert_eq!(outcome.report.spells_mapped["BO_FIRE(18d8+26)"], 1);
@@ -2285,7 +2693,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         let monsters = parse_r_info(DRAGON_R_INFO);
         assert_eq!(monsters.len(), 1);
 
-        let outcome = convert_content(&[], &monsters, &[]);
+        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
         let (_, dragon) = &outcome.actor_files[0];
         // FREQ_50 is the direct-percentage frequency syntax.
         assert_eq!(dragon["monsterCasting"]["frequencyPercent"], 50);
@@ -2335,7 +2743,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO);
         assert_eq!(monsters.len(), 1);
 
-        let outcome = convert_content(&[], &monsters, &[]);
+        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
         let (_, caller) = &outcome.actor_files[0];
         // Type flags become category tags alongside the shared import tag.
         assert_eq!(
@@ -2424,11 +2832,11 @@ G:[:s
 I:37:4:0
 W:20:0:0:220:750
 P:14:1d4:-2:0:0
-N:*:& Test Ring~ of Might
+N:*:& Test Ring~
 G:=:y
-I:45:20:3
+I:45:20:0
 W:30:0:0:2:500
-F:STR | HIDE_TYPE
+F:HIDE_TYPE
 N:*:& Test Potion~ of Mending
 G:!:b
 I:75:30:0
@@ -2441,7 +2849,7 @@ W:1:0:0:30:2
         let items = parse_k_info(SYNTHETIC_K_INFO);
         assert_eq!(items.len(), 8);
 
-        let outcome = convert_content(&[], &[], &items);
+        let outcome = convert_content(&[], &[], &items, &[], &[]);
         assert_eq!(outcome.report.items_total, 8);
         assert_eq!(outcome.report.items_imported, 7);
         assert_eq!(outcome.report.items_skipped, 1);
@@ -2477,9 +2885,12 @@ W:1:0:0:30:2
         assert_eq!(mail["equipmentSlot"], "body");
         assert_eq!(mail["modifiers"]["defense"], 14);
 
-        let ring = get("test-ring-of-might.json");
+        // Base jewelry is a generic shell: attributes and pval only arrive
+        // via egos or fixed artifacts, mirroring the legacy generation model.
+        let ring = get("test-ring.json");
         assert_eq!(ring["equipmentSlot"], "ring");
-        assert_eq!(ring["modifiers"]["strength"], 3);
+        assert!(ring.get("modifiers").is_none());
+        assert_eq!(outcome.report.unmapped_item_flags["HIDE_TYPE"], 1);
         assert_eq!(outcome.report.item_behavior_gaps["effect-jewelry"], 1);
 
         let potion = get("test-potion-of-mending.json");
@@ -2497,6 +2908,140 @@ W:1:0:0:30:2
     }
 
     #[test]
+    fn e_info_egos_become_affixes_with_maxima_modifiers() {
+        const SYNTHETIC_E_INFO: &str = "V:1.1.0
+N:1:of Testing
+T:WEAPON
+W:0:*:2
+C:8:6:0:0
+F:SHOW_MODS
+
+N:2:of the Test Bear
+T:AMULET | RING
+W:10:*:4
+C:0:0:0:3
+F:STR | DEC_INT | HIDE_TYPE
+E:BERSERK:50:100
+
+N:3:(Test Aura)
+T:WEAPON
+W:50:*:6
+F:SPELL_POWER
+";
+        let egos = parse_e_info(SYNTHETIC_E_INFO);
+        assert_eq!(egos.len(), 3);
+        let outcome = convert_content(&[], &[], &[], &egos, &[]);
+        assert_eq!(outcome.report.egos_total, 3);
+        // The aura ego has no expressible modifier surface: skipped with a
+        // reason while its flag still lands in the gap report.
+        assert_eq!(outcome.report.egos_imported, 2);
+        assert_eq!(outcome.affix_files.len(), 2);
+        assert_eq!(outcome.report.skip_reasons["ego-inexpressible"], 1);
+        assert_eq!(outcome.report.unmapped_ego_flags["SPELL_POWER"], 1);
+
+        let (name, testing) = &outcome.affix_files[0];
+        assert_eq!(name, "testing.json");
+        assert_eq!(testing["id"], "rfb-legacy.affix.testing");
+        // C: maxima fold into a deterministic ceiling; attack takes the
+        // larger of to-hit/to-damage.
+        assert_eq!(testing["modifiers"]["attack"], 8);
+        assert!(
+            testing["tags"]
+                .as_array()
+                .expect("ego tags")
+                .iter()
+                .any(|tag| tag == "weapon")
+        );
+
+        let (name, bear) = &outcome.affix_files[1];
+        assert_eq!(name, "the-test-bear.json");
+        assert_eq!(bear["modifiers"]["strength"], 3);
+        assert_eq!(bear["modifiers"]["intelligence"], -3);
+        assert!(bear["modifiers"].get("attack").is_none());
+        assert!(
+            bear["tags"]
+                .as_array()
+                .expect("bear tags")
+                .iter()
+                .any(|tag| tag == "amulet")
+        );
+        assert_eq!(outcome.report.item_behavior_gaps["ego-activation"], 1);
+        assert_eq!(outcome.report.unmapped_ego_flags["HIDE_TYPE"], 1);
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("STR"));
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("DEC_INT"));
+    }
+
+    #[test]
+    fn a_info_artifacts_import_with_fixed_bonuses() {
+        const SYNTHETIC_A_INFO: &str = "V:1.1.0
+N:1:of Test Radiance
+I:39:4:3
+W:30:1:10:10000
+P:0:1d1:0:0:0
+F:WIS | INSTA_ART | RES_DARK
+E:LITE_AREA:10:15
+E:某个中文名
+
+N:2:'Test Fang'
+I:23:17:2
+W:20:5:130:50000
+P:0:2d6:10:15:0
+F:DEX | SLAY_EVIL
+
+N:3:of Test Warding
+I:45:20:4
+W:40:8:2:80000
+F:CON
+";
+        let artifacts = parse_a_info(SYNTHETIC_A_INFO);
+        assert_eq!(artifacts.len(), 3);
+        let outcome = convert_content(&[], &[], &[], &[], &artifacts);
+        assert_eq!(outcome.report.artifacts_total, 3);
+        assert_eq!(outcome.report.artifacts_imported, 3);
+
+        let get = |name: &str| {
+            outcome
+                .item_files
+                .iter()
+                .find(|(file, _)| file == name)
+                .map(|(_, value)| value)
+                .unwrap_or_else(|| panic!("{name} should be generated"))
+        };
+
+        // Slotless light source: the fixed pval cannot land anywhere, so the
+        // attribute flag surfaces in the gap report instead of vanishing.
+        let radiance = get("artifact-test-radiance.json");
+        assert_eq!(radiance["id"], "rfb-legacy.item.artifact-test-radiance");
+        assert_eq!(radiance["glyph"], "*");
+        assert!(radiance.get("equipmentSlot").is_none());
+        assert!(radiance.get("modifiers").is_none());
+        assert_eq!(outcome.report.unmapped_artifact_flags["WIS"], 1);
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("INSTA_ART")
+        );
+        assert_eq!(outcome.report.item_behavior_gaps["artifact-activation"], 1);
+
+        let fang = get("artifact-test-fang.json");
+        assert_eq!(fang["equipmentSlot"], "weapon");
+        assert_eq!(fang["meleeProfile"]["damageDice"], 2);
+        assert_eq!(fang["meleeProfile"]["damageSides"], 6);
+        assert_eq!(fang["meleeProfile"]["toHit"], 10);
+        assert_eq!(fang["meleeProfile"]["toDamage"], 15);
+        assert_eq!(fang["modifiers"]["dexterity"], 2);
+        assert_eq!(outcome.report.unmapped_artifact_flags["SLAY_EVIL"], 1);
+
+        // Fixed-pval jewelry proves the split: the base ring stays bare while
+        // the artifact carries the attribute bonus.
+        let warding = get("artifact-test-warding.json");
+        assert_eq!(warding["equipmentSlot"], "ring");
+        assert_eq!(warding["modifiers"]["constitution"], 4);
+        assert_eq!(warding["maxStack"], 1);
+    }
+
+    #[test]
     fn misc_tokens_map_to_small_effect_forms() {
         const WARDEN_R_INFO: &str = "N:8:test veil keeper
 G:u:v
@@ -2506,7 +3051,7 @@ B:HIT:HURT(1d4)
 S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
 ";
         let monsters = parse_r_info(WARDEN_R_INFO);
-        let outcome = convert_content(&[], &monsters, &[]);
+        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
         let (_, keeper) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = keeper["monsterCasting"]["abilities"]
             .as_array()
@@ -2553,7 +3098,7 @@ B:HIT:HURT(1d4)
 S:1_IN_3 | CAUSE_1 | CAUSE_4 | HAND_DOOM
 ";
         let monsters = parse_r_info(CURSER_R_INFO);
-        let outcome = convert_content(&[], &monsters, &[]);
+        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
         let (_, whisperer) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = whisperer["monsterCasting"]["abilities"]
             .as_array()
@@ -2593,7 +3138,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         let monsters = parse_r_info(PSION_R_INFO);
         assert_eq!(monsters.len(), 1);
 
-        let outcome = convert_content(&[], &monsters, &[]);
+        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
         let (_, flenser) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = flenser["monsterCasting"]["abilities"]
             .as_array()

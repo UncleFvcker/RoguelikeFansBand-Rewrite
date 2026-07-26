@@ -53,7 +53,8 @@
 | P42 | 诅咒族与豁免门 | 已由 contract-v98 完成 | curse-damage 效果（豁免成功全免零后续 RNG、失败全额无护甲无抗性；难度=施法者等级；复用 v72 saving-throw 检定与 SavingThrowChecked 事件）+ curse 伤害类型（协议 1.98）、hex-chanter 纵切、fixtures 313-314（同设置双种子：成功 skip saved / 对抗失败 raw=final 全额）、314 个 exact fixtures。导入 CAUSE_1-4 240 实例全数（casting 怪 832、映射累计 4337、未映射 891） |
 | P43 | 小型效果杂项包 | 已由 contract-v99 完成 | teleport-away（BanishTarget 专用计划、候选规划期收集+减半回退、复用 relocate 管线与 v91 位移事件族）、drain-resource（吸施法档资源池+施法者回血封顶）、amnesia（豁免门+清当前层 explored/revealedTerrain）、DISPEL→既有 remove-status haste；veil-warden 四式纵切、fixtures 315-318、318 个 exact fixtures。导入 264 实例全数（casting 怪 844、映射累计 4601、未映射 627） |
 | P44 | k_info 物品导入 | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | 545 条中 544 条落地：武器 meleeProfile、发射器按 sval 配对典型弹药（乐器类 5 件降级为壳）、护甲/首饰槽位+防御/六维修正、光源标签、消耗品/设备/魔典壳+行为缺口按类计数（consumable-effect 95/book 72/device 64 等）；产物过全量校验 |
-| P45 | 候选：ego/神器导入 或 设备效果系统 或 法术清尾 | 下一候选 | e_info 160 词条模板 + a_info 392 固定神器（affix 系统对接）；设备/消耗品效果系统（解锁药水/卷轴/魔杖行为缺口 231）；法术清尾：S_ 字形召唤 177/SHRIEK 42/TRAPS 44 |
+| P45 | ego 词条 + 固定神器导入 | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | e_info 160 条中 88 条成 affix（C: 上限取确定性顶格、六维含 DEC_ 负向按 pval 折算；72 条力量全在不可表达旗标按 ego-inexpressible 跳过入报告）；a_info 392 条神器全数落地（固定 pval/骰/修正，哨兵 pval 钳制 ±100，INSTA_ART 不计缺口，激活计 artifact-activation 180）；**同轮修正：普通戒指/护符为无属性通用壳**（属性只来自词条/神器，与原版生成模型一致）；产物 936 items + 88 affixes 过全量校验 |
+| P46 | 候选：装备旗标系统 或 设备效果系统 或 法术清尾 | 下一候选 | 装备旗标系统（RES_/IGNORE_/SPEED/FREE_ACT/SLAY_，解锁 72 条 ego-inexpressible 与神器旗标主体）；设备/消耗品效果系统（药水/卷轴/魔杖行为缺口 231+激活 193）；法术清尾：S_ 字形召唤 177/SHRIEK 42/TRAPS 44 |
 
 ## contract-v99 明确遗留
 

@@ -22,4 +22,4 @@
 
 ## 4. v2 方向
 
-k_info 物品导入已由 [v2](legacy-item-import-v2.md) 完成；字形子类召唤（S_HOUND/S_SPIDER 等）可按 glyph 派生标签；E:/D: 中文名与描述导出为本地 Fluent 片段；e_info/a_info 词条与神器导入；按报告落地新规则族后重跑导入提升表达率。
+k_info/e_info/a_info 物品、词条与神器导入已由 [v2](legacy-item-import-v2.md) 完成；字形子类召唤（S_HOUND/S_SPIDER 等）可按 glyph 派生标签；E:/D: 中文名与描述导出为本地 Fluent 片段；装备旗标系统落地后重跑导入提升表达率。
