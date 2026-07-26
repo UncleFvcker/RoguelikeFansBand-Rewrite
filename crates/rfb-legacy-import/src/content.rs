@@ -7,7 +7,7 @@
 //! the repository: unit tests use synthetic samples only.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs,
     path::{Path, PathBuf},
     process::Command,
@@ -101,6 +101,59 @@ pub struct LegacyArtifactEntry {
     pub has_activation: bool,
 }
 
+/// One b_info body template: slot type tokens in file order.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyBodyTemplate {
+    pub index: u32,
+    pub name: String,
+    pub slots: Vec<String>,
+}
+
+/// A race or personality extracted from the legacy C sources. `dynamic`
+/// marks blocks whose scalar fields are computed (rank-scaled monster
+/// races); those cannot be represented as static content.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LegacyCharacterEntry {
+    pub id: String,
+    pub stats: [i32; 6],
+    pub skills: [i32; 8],
+    pub extra_skills: [i32; 8],
+    pub life: i32,
+    pub base_hp: i32,
+    pub exp: i32,
+    pub infra: i32,
+    pub flags: Vec<String>,
+    pub hooks: Vec<String>,
+    pub dynamic: bool,
+}
+
+impl Default for LegacyCharacterEntry {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            stats: [0; 6],
+            skills: [0; 8],
+            extra_skills: [0; 8],
+            life: 100,
+            base_hp: 0,
+            exp: 100,
+            infra: 0,
+            flags: Vec::new(),
+            hooks: Vec::new(),
+            dynamic: false,
+        }
+    }
+}
+
+/// Character-line sources for [`convert_content`], grouped so the importer
+/// signature stays within clippy's argument budget.
+#[derive(Debug, Default)]
+pub struct LegacyCharacterSources {
+    pub bodies: Vec<LegacyBodyTemplate>,
+    pub races: Vec<LegacyCharacterEntry>,
+    pub personalities: Vec<LegacyCharacterEntry>,
+}
+
 #[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContentImportReport {
@@ -133,6 +186,14 @@ pub struct ContentImportReport {
     pub unmapped_item_flags: BTreeMap<String, usize>,
     pub unmapped_ego_flags: BTreeMap<String, usize>,
     pub unmapped_artifact_flags: BTreeMap<String, usize>,
+    pub bodies_total: usize,
+    pub races_total: usize,
+    pub races_imported: usize,
+    pub personalities_total: usize,
+    pub personalities_imported: usize,
+    pub unmapped_race_flags: BTreeMap<String, usize>,
+    pub race_hook_gaps: BTreeMap<String, usize>,
+    pub body_slot_gaps: BTreeMap<String, usize>,
     pub item_behavior_gaps: BTreeMap<String, usize>,
     pub skip_reasons: BTreeMap<String, usize>,
 }
@@ -993,6 +1054,421 @@ fn artifact_json(
     value
 }
 
+/// Parses b_info body templates: `N:index:Name` then `S:TYPE:Label`
+/// slot lines in template order.
+pub fn parse_b_info(text: &str) -> Vec<LegacyBodyTemplate> {
+    let mut entries = Vec::new();
+    let mut current: Option<LegacyBodyTemplate> = None;
+    for line in text.lines() {
+        let line = line.trim_end();
+        if let Some(rest) = line.strip_prefix("N:") {
+            if let Some(entry) = current.take() {
+                entries.push(entry);
+            }
+            let mut parts = rest.splitn(2, ':');
+            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            let name = parts.next().unwrap_or_default().trim().to_owned();
+            current = Some(LegacyBodyTemplate {
+                index,
+                name,
+                ..LegacyBodyTemplate::default()
+            });
+        } else if let Some(rest) = line.strip_prefix("S:")
+            && let Some(entry) = current.as_mut()
+            && let Some(token) = rest.split(':').next()
+        {
+            let token = token.trim();
+            if !token.is_empty() {
+                entry.slots.push(token.to_owned());
+            }
+        }
+    }
+    if let Some(entry) = current.take() {
+        entries.push(entry);
+    }
+    entries
+}
+
+/// Extracts the body of the function that starts at `header_pos` by brace
+/// balancing from the first `{{` after the header.
+fn function_block(text: &str, header_pos: usize) -> Option<&str> {
+    let open = text[header_pos..].find('{')? + header_pos;
+    let mut depth = 0_usize;
+    for (offset, ch) in text[open..].char_indices() {
+        match ch {
+            '{' => depth += 1,
+            '}' => {
+                depth = depth.checked_sub(1)?;
+                if depth == 0 {
+                    return Some(&text[open..=open + offset]);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Finds `race_t *X_get_race(...)` definitions (not prototypes or call
+/// sites) and returns `(snake_case_name, body)` pairs.
+pub fn extract_race_blocks(text: &str) -> Vec<(String, String)> {
+    let mut blocks = Vec::new();
+    for (position, _) in text.match_indices("_get_race(") {
+        let line_start = text[..position].rfind('\n').map_or(0, |index| index + 1);
+        let line_end = text[position..]
+            .find('\n')
+            .map_or(text.len(), |index| position + index);
+        let line = &text[line_start..line_end];
+        if !line.contains("race_t *") || line.contains(';') {
+            continue;
+        }
+        let name_end = position;
+        let name_start = text[line_start..name_end]
+            .rfind(|ch: char| !(ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '_'))
+            .map_or(line_start, |index| line_start + index + 1);
+        let name = &text[name_start..name_end];
+        if name.is_empty() {
+            continue;
+        }
+        if let Some(body) = function_block(text, position) {
+            blocks.push((name.to_owned(), body.to_owned()));
+        }
+    }
+    blocks
+}
+
+/// Finds `personality_ptr _get_X_personality(...)` definitions.
+pub fn extract_personality_blocks(text: &str) -> Vec<(String, String)> {
+    let mut blocks = Vec::new();
+    for (position, _) in text.match_indices("_personality(") {
+        let line_start = text[..position].rfind('\n').map_or(0, |index| index + 1);
+        let line_end = text[position..]
+            .find('\n')
+            .map_or(text.len(), |index| position + index);
+        let line = &text[line_start..line_end];
+        if !line.contains("personality_ptr") || line.contains(';') {
+            continue;
+        }
+        let Some(get_index) = line.find("_get_") else {
+            continue;
+        };
+        let name_start = line_start + get_index + "_get_".len();
+        if name_start >= position {
+            continue;
+        }
+        let name = &text[name_start..position];
+        if name.is_empty()
+            || !name
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+        {
+            continue;
+        }
+        if let Some(body) = function_block(text, position) {
+            blocks.push((name.to_owned(), body.to_owned()));
+        }
+    }
+    blocks
+}
+
+const CHARACTER_STAT_KEYS: [&str; 6] = [
+    "stats[A_STR]",
+    "stats[A_INT]",
+    "stats[A_WIS]",
+    "stats[A_DEX]",
+    "stats[A_CON]",
+    "stats[A_CHR]",
+];
+
+const CHARACTER_SKILL_KEYS: [&str; 8] = ["dis", "dev", "sav", "stl", "srh", "fos", "thn", "thb"];
+
+/// Parses the regular `me.<field> = <value>;` assignment block shared by
+/// player races and personalities. Computed scalars (e.g. `100 + 5*rank`)
+/// mark the entry as dynamic, which excludes it from static import.
+pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
+    let mut entry = LegacyCharacterEntry {
+        id: name.replace('_', "-"),
+        ..LegacyCharacterEntry::default()
+    };
+    for raw_line in body.lines() {
+        let line = raw_line.trim();
+        let Some(rest) = line.strip_prefix("me.") else {
+            continue;
+        };
+        let Some(eq_index) = rest.find('=') else {
+            continue;
+        };
+        let lhs = rest[..eq_index].trim_end();
+        if lhs.ends_with('+') || lhs.ends_with('-') || lhs.ends_with('*') || lhs.ends_with('/') {
+            entry.hooks.push("dynamic-adjustment".to_owned());
+            continue;
+        }
+        let rhs = rest[eq_index + 1..].trim().trim_end_matches(';').trim_end();
+        let literal: Option<i32> = rhs.parse().ok();
+        if let Some(position) = CHARACTER_STAT_KEYS.iter().position(|key| *key == lhs) {
+            match literal {
+                Some(value) => entry.stats[position] = value,
+                None => entry.dynamic = true,
+            }
+        } else if let Some(suffix) = lhs.strip_prefix("skills.") {
+            match (
+                CHARACTER_SKILL_KEYS.iter().position(|key| *key == suffix),
+                literal,
+            ) {
+                (Some(position), Some(value)) => entry.skills[position] = value,
+                _ => entry.dynamic = true,
+            }
+        } else if let Some(suffix) = lhs.strip_prefix("extra_skills.") {
+            match (
+                CHARACTER_SKILL_KEYS.iter().position(|key| *key == suffix),
+                literal,
+            ) {
+                (Some(position), Some(value)) => entry.extra_skills[position] = value,
+                _ => entry.dynamic = true,
+            }
+        } else {
+            match lhs {
+                "name" | "desc" | "subname" | "subdesc" | "shop_adjust" => {}
+                "life" => match literal {
+                    Some(value) => entry.life = value,
+                    None => entry.dynamic = true,
+                },
+                "base_hp" => match literal {
+                    Some(value) => entry.base_hp = value,
+                    None => entry.dynamic = true,
+                },
+                "exp" => match literal {
+                    Some(value) => entry.exp = value,
+                    None => entry.dynamic = true,
+                },
+                "infra" => match literal {
+                    Some(value) => entry.infra = value,
+                    None => entry.dynamic = true,
+                },
+                "flags" => {
+                    entry.flags = rhs
+                        .split('|')
+                        .map(str::trim)
+                        .filter(|token| !token.is_empty())
+                        .map(str::to_owned)
+                        .collect()
+                }
+                "skills" | "stats" | "extra_skills" => entry.dynamic = true,
+                other => entry.hooks.push(other.to_owned()),
+            }
+        }
+    }
+    entry
+}
+
+/// Legacy skill roster: (id suffix, kind, index into the skills array,
+/// following the dis/dev/sav/stl/srh/fos/thn/thb legacy order).
+const LEGACY_SKILL_ROSTER: [(&str, &str); 8] = [
+    ("disarming", "disarming"),
+    ("device", "device"),
+    ("saving-throw", "saving-throw"),
+    ("stealth", "stealth"),
+    ("search", "search"),
+    ("perception", "perception"),
+    ("melee", "melee"),
+    ("ranged", "ranged"),
+];
+
+/// Maps legacy body slot tokens to the RFB slot vocabulary: alternating
+/// weapon/shield hands, launcher for BOW, and numbered instances when a
+/// type repeats. Unrepresentable tokens land in the gap report.
+fn map_body_slots(
+    template: &LegacyBodyTemplate,
+    gaps: &mut BTreeMap<String, usize>,
+) -> Vec<(String, String)> {
+    let mut mapped_types: Vec<String> = Vec::new();
+    let mut weapon_shield_seen = 0_usize;
+    for token in &template.slots {
+        let slot_type = match token.as_str() {
+            "WEAPON_SHIELD" => {
+                weapon_shield_seen += 1;
+                if weapon_shield_seen % 2 == 1 {
+                    "weapon"
+                } else {
+                    "shield"
+                }
+            }
+            "WEAPON" => "weapon",
+            "BOW" => "launcher",
+            "RING" => "ring",
+            "AMULET" => "amulet",
+            "LITE" => "light",
+            "BODY_ARMOR" => "body",
+            "CLOAK" => "cloak",
+            "HELMET" => "head",
+            "GLOVES" => "gloves",
+            "BOOTS" => "boots",
+            other => {
+                *gaps
+                    .entry(format!(
+                        "body-slot-{}",
+                        other.to_ascii_lowercase().replace('_', "-")
+                    ))
+                    .or_default() += 1;
+                continue;
+            }
+        };
+        mapped_types.push(slot_type.to_owned());
+    }
+    let mut totals: BTreeMap<&str, usize> = BTreeMap::new();
+    for slot_type in &mapped_types {
+        *totals.entry(slot_type.as_str()).or_default() += 1;
+    }
+    let mut ordinals: BTreeMap<&str, usize> = BTreeMap::new();
+    mapped_types
+        .iter()
+        .map(|slot_type| {
+            let ordinal = ordinals.entry(slot_type.as_str()).or_default();
+            *ordinal += 1;
+            let id = if totals[slot_type.as_str()] > 1 {
+                format!("{slot_type}-{ordinal}")
+            } else {
+                slot_type.clone()
+            };
+            (id, slot_type.clone())
+        })
+        .collect()
+}
+
+fn character_modifiers(entry: &LegacyCharacterEntry) -> serde_json::Map<String, serde_json::Value> {
+    let mut modifiers = serde_json::Map::new();
+    for (value, attribute) in entry.stats.iter().zip([
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma",
+    ]) {
+        if *value != 0 {
+            modifiers.insert(
+                attribute.to_owned(),
+                serde_json::json!(value.clamp(&-100, &100)),
+            );
+        }
+    }
+    modifiers
+}
+
+fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_json::Value {
+    let entries: Vec<serde_json::Value> = LEGACY_SKILL_ROSTER
+        .iter()
+        .enumerate()
+        .filter_map(|(index, (suffix, _))| {
+            let base = entry.skills[index];
+            let growth = entry.extra_skills[index];
+            if base == 0 && growth == 0 {
+                return None;
+            }
+            let mut value = serde_json::json!({
+                "skillId": format!("rfb-legacy.skill.{suffix}"),
+                "base": base,
+            });
+            if growth != 0 {
+                value["growthPerTenLevels"] = serde_json::json!(growth);
+            }
+            Some(value)
+        })
+        .collect();
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/skill-set.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.skill-set.{id}"),
+        "entries": entries,
+    })
+}
+
+fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentImportReport) {
+    for flag in &entry.flags {
+        *report.unmapped_race_flags.entry(flag.clone()).or_default() += 1;
+    }
+    for hook in &entry.hooks {
+        *report.race_hook_gaps.entry(hook.clone()).or_default() += 1;
+    }
+    if entry.infra != 0 {
+        *report.race_hook_gaps.entry("infra".to_owned()).or_default() += 1;
+    }
+}
+
+fn race_json(
+    entry: &LegacyCharacterEntry,
+    body_slots: &[(String, String)],
+    report: &mut ContentImportReport,
+) -> serde_json::Value {
+    let mut value = serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/race.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.race.{}", entry.id),
+        "nameKey": format!("race-legacy-{}-name", entry.id),
+        "descriptionKey": format!("race-legacy-{}-description", entry.id),
+        "lifePercent": entry.life.clamp(25, 400),
+        "experiencePercent": entry.exp.clamp(25, 500),
+        "baseHp": entry.base_hp.clamp(-1_000, 1_000),
+        "skillSetId": format!("rfb-legacy.skill-set.race-{}", entry.id),
+        "bodySlots": body_slots
+            .iter()
+            .map(|(id, slot_type)| serde_json::json!({"id": id, "slotType": slot_type}))
+            .collect::<Vec<_>>(),
+        "tags": ["legacy-import"],
+    });
+    let modifiers = character_modifiers(entry);
+    if !modifiers.is_empty() {
+        value["modifiers"] = serde_json::Value::Object(modifiers);
+    }
+    character_gap_accounting(entry, report);
+    value
+}
+
+fn personality_json(
+    entry: &LegacyCharacterEntry,
+    report: &mut ContentImportReport,
+) -> serde_json::Value {
+    let mut value = serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/personality.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.personality.{}", entry.id),
+        "nameKey": format!("personality-legacy-{}-name", entry.id),
+        "descriptionKey": format!("personality-legacy-{}-description", entry.id),
+        "lifePercent": entry.life.clamp(25, 400),
+        "experiencePercent": entry.exp.clamp(25, 500),
+        "baseHp": entry.base_hp.clamp(-1_000, 1_000),
+        "skillSetId": format!("rfb-legacy.skill-set.personality-{}", entry.id),
+        "tags": ["legacy-import"],
+    });
+    let modifiers = character_modifiers(entry);
+    if !modifiers.is_empty() {
+        value["modifiers"] = serde_json::Value::Object(modifiers);
+    }
+    character_gap_accounting(entry, report);
+    value
+}
+
+fn legacy_skill_files() -> Vec<(String, serde_json::Value)> {
+    LEGACY_SKILL_ROSTER
+        .iter()
+        .map(|(suffix, kind)| {
+            (
+                format!("{suffix}.json"),
+                serde_json::json!({
+                    "$schema": format!("{SCHEMA_BASE}/skill.schema.json"),
+                    "formatVersion": 1,
+                    "id": format!("rfb-legacy.skill.{suffix}"),
+                    "nameKey": format!("skill-legacy-{suffix}-name"),
+                    "descriptionKey": format!("skill-legacy-{suffix}-description"),
+                    "kind": kind,
+                    "maximum": 1000,
+                    "tags": ["legacy-import"],
+                }),
+            )
+        })
+        .collect()
+}
+
 fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
     let walkable = entry.flags.iter().any(|flag| flag == "MOVE");
     let blocks_sight = !entry.flags.iter().any(|flag| flag == "LOS");
@@ -1456,6 +1932,10 @@ pub struct ContentImportOutcome {
     pub resource_files: Vec<(String, serde_json::Value)>,
     pub item_files: Vec<(String, serde_json::Value)>,
     pub affix_files: Vec<(String, serde_json::Value)>,
+    pub race_files: Vec<(String, serde_json::Value)>,
+    pub personality_files: Vec<(String, serde_json::Value)>,
+    pub skill_files: Vec<(String, serde_json::Value)>,
+    pub skill_set_files: Vec<(String, serde_json::Value)>,
 }
 
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
@@ -2026,6 +2506,7 @@ pub fn convert_content(
     items: &[LegacyItemEntry],
     egos: &[LegacyEgoEntry],
     artifacts: &[LegacyArtifactEntry],
+    characters: &LegacyCharacterSources,
 ) -> ContentImportOutcome {
     let mut report = ContentImportReport {
         schema_version: CONTENT_IMPORT_SCHEMA_VERSION,
@@ -2349,6 +2830,64 @@ pub fn convert_content(
         report.artifacts_imported += 1;
     }
 
+    let mut race_files = Vec::new();
+    let mut personality_files = Vec::new();
+    let mut skill_set_files = Vec::new();
+    report.bodies_total = characters.bodies.len();
+    // Slot-gap census runs over every template; only the Standard body has
+    // a binding surface today (player races), the rest await possessor and
+    // monster-race play.
+    let mut standard_slots: Vec<(String, String)> = Vec::new();
+    for body in &characters.bodies {
+        let mapped = map_body_slots(body, &mut report.body_slot_gaps);
+        if body.name == "Standard" {
+            standard_slots = mapped;
+        }
+    }
+    report.races_total = characters.races.len();
+    for entry in &characters.races {
+        if entry.dynamic {
+            *report
+                .skip_reasons
+                .entry("race-code-dynamic".to_owned())
+                .or_default() += 1;
+            continue;
+        }
+        race_files.push((
+            format!("{}.json", entry.id),
+            race_json(entry, &standard_slots, &mut report),
+        ));
+        skill_set_files.push((
+            format!("race-{}.json", entry.id),
+            character_skill_set_json(entry, &format!("race-{}", entry.id)),
+        ));
+        report.races_imported += 1;
+    }
+    report.personalities_total = characters.personalities.len();
+    for entry in &characters.personalities {
+        if entry.dynamic {
+            *report
+                .skip_reasons
+                .entry("personality-code-dynamic".to_owned())
+                .or_default() += 1;
+            continue;
+        }
+        personality_files.push((
+            format!("{}.json", entry.id),
+            personality_json(entry, &mut report),
+        ));
+        skill_set_files.push((
+            format!("personality-{}.json", entry.id),
+            character_skill_set_json(entry, &format!("personality-{}", entry.id)),
+        ));
+        report.personalities_imported += 1;
+    }
+    let skill_files = if race_files.is_empty() && personality_files.is_empty() {
+        Vec::new()
+    } else {
+        legacy_skill_files()
+    };
+
     let ability_files = shared_abilities
         .into_iter()
         .map(|(id, value)| {
@@ -2386,6 +2925,10 @@ pub fn convert_content(
         resource_files,
         item_files,
         affix_files,
+        race_files,
+        personality_files,
+        skill_files,
+        skill_set_files,
     }
 }
 
@@ -2403,12 +2946,43 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let k_info = read_legacy_object(source, "lib/edit/k_info.txt")?;
     let e_info = read_legacy_object(source, "lib/edit/e_info.txt")?;
     let a_info = read_legacy_object(source, "lib/edit/a_info.txt")?;
+    let b_info = read_legacy_object(source, "lib/edit/b_info.txt")?;
+    let mut characters = LegacyCharacterSources {
+        bodies: parse_b_info(&b_info),
+        ..LegacyCharacterSources::default()
+    };
+    let mut source_paths: Vec<PathBuf> = fs::read_dir(source.join("src"))?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().is_some_and(|extension| extension == "c"))
+        .collect();
+    source_paths.sort();
+    let mut seen_character_ids = BTreeSet::new();
+    for path in source_paths {
+        let bytes = fs::read(&path)?;
+        let text = String::from_utf8_lossy(&bytes);
+        for (name, body) in extract_race_blocks(&text) {
+            let entry = parse_character_block(&name, &body);
+            if seen_character_ids.insert(format!("race:{}", entry.id)) {
+                characters.races.push(entry);
+            }
+        }
+        if path.file_name().is_some_and(|name| name == "personality.c") {
+            for (name, body) in extract_personality_blocks(&text) {
+                let entry = parse_character_block(&name, &body);
+                if seen_character_ids.insert(format!("personality:{}", entry.id)) {
+                    characters.personalities.push(entry);
+                }
+            }
+        }
+    }
     let outcome = convert_content(
         &parse_f_info(&f_info),
         &parse_r_info(&r_info),
         &parse_k_info(&k_info),
         &parse_e_info(&e_info),
         &parse_a_info(&a_info),
+        &characters,
     );
 
     let terrain_dir = output.join("terrain");
@@ -2420,6 +2994,10 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         ("resources", &outcome.resource_files),
         ("items", &outcome.item_files),
         ("affixes", &outcome.affix_files),
+        ("races", &outcome.race_files),
+        ("personalities", &outcome.personality_files),
+        ("skills", &outcome.skill_files),
+        ("skillSets", &outcome.skill_set_files),
     ] {
         if files.is_empty() {
             continue;
@@ -2458,8 +3036,20 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     if !outcome.item_files.is_empty() {
         content_roots.push("items");
     }
+    if !outcome.personality_files.is_empty() {
+        content_roots.push("personalities");
+    }
+    if !outcome.race_files.is_empty() {
+        content_roots.push("races");
+    }
     if !outcome.ability_files.is_empty() {
         content_roots.push("resources");
+    }
+    if !outcome.skill_files.is_empty() {
+        content_roots.push("skills");
+    }
+    if !outcome.skill_set_files.is_empty() {
+        content_roots.push("skillSets");
     }
     content_roots.push("terrain");
     let pack_manifest = serde_json::json!({
@@ -2534,7 +3124,14 @@ B:GAZE:TERRIFY\n";
         assert_eq!(monsters[0].blows.len(), 2);
         assert_eq!(monsters[0].spells.len(), 3);
 
-        let outcome = convert_content(&terrain, &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &terrain,
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         assert_eq!(outcome.report.terrain_imported, 2);
         assert_eq!(outcome.report.terrain_skipped, 1);
         assert_eq!(outcome.report.monsters_imported, 1);
@@ -2607,7 +3204,14 @@ S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
         assert_eq!(monsters.len(), 1);
         assert_eq!(monsters[0].level, Some(30));
 
-        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         assert_eq!(outcome.report.monsters_with_casting, 1);
         assert_eq!(outcome.report.spells_mapped["BO_FIRE"], 1);
         assert_eq!(outcome.report.spells_mapped["BO_FIRE(18d8+26)"], 1);
@@ -2689,7 +3293,14 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         let monsters = parse_r_info(DRAGON_R_INFO);
         assert_eq!(monsters.len(), 1);
 
-        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         let (_, dragon) = &outcome.actor_files[0];
         // FREQ_50 is the direct-percentage frequency syntax.
         assert_eq!(dragon["monsterCasting"]["frequencyPercent"], 50);
@@ -2739,7 +3350,14 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO);
         assert_eq!(monsters.len(), 1);
 
-        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         let (_, caller) = &outcome.actor_files[0];
         // Type flags become category tags alongside the shared import tag.
         assert_eq!(
@@ -2849,7 +3467,14 @@ W:5:0:0:150:80
         let items = parse_k_info(SYNTHETIC_K_INFO);
         assert_eq!(items.len(), 9);
 
-        let outcome = convert_content(&[], &[], &items, &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &[],
+            &items,
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         assert_eq!(outcome.report.items_total, 9);
         assert_eq!(outcome.report.items_imported, 8);
         assert_eq!(outcome.report.items_skipped, 1);
@@ -2917,6 +3542,210 @@ W:5:0:0:150:80
     }
 
     #[test]
+    fn b_info_bodies_map_slots_with_gap_census() {
+        const SYNTHETIC_B_INFO: &str = "V:1.1.0
+N:0:Standard
+S:WEAPON_SHIELD:Right Hand:0
+S:WEAPON_SHIELD:Left Hand:1
+S:BOW:Shooting
+S:QUIVER:Back
+S:RING:Right Ring:0
+S:RING:Left Ring:1
+S:AMULET:Neck
+S:LITE:Light
+S:BODY_ARMOR:Body
+S:CLOAK:Cloak
+S:HELMET:Head
+S:GLOVES:Hands
+S:BOOTS:Feet
+
+N:4:Snake
+S:RING:Ring
+S:RING:Ring
+S:RING:Ring
+S:RING:Ring
+S:AMULET:Amulet
+S:ANY:Slot
+";
+        let bodies = parse_b_info(SYNTHETIC_B_INFO);
+        assert_eq!(bodies.len(), 2);
+        assert_eq!(bodies[0].slots.len(), 13);
+
+        let characters = LegacyCharacterSources {
+            bodies,
+            races: vec![LegacyCharacterEntry {
+                id: "test-folk".to_owned(),
+                skills: [1, 0, 2, 0, 0, 10, 0, 0],
+                stats: [1, 0, 0, -1, 0, 0],
+                life: 98,
+                base_hp: 22,
+                exp: 120,
+                ..LegacyCharacterEntry::default()
+            }],
+            personalities: Vec::new(),
+        };
+        let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
+        assert_eq!(outcome.report.bodies_total, 2);
+        assert_eq!(outcome.report.races_imported, 1);
+        // Census over every template: quiver from Standard, any from Snake.
+        assert_eq!(outcome.report.body_slot_gaps["body-slot-quiver"], 1);
+        assert_eq!(outcome.report.body_slot_gaps["body-slot-any"], 1);
+
+        let (name, race) = &outcome.race_files[0];
+        assert_eq!(name, "test-folk.json");
+        assert_eq!(race["id"], "rfb-legacy.race.test-folk");
+        assert_eq!(race["lifePercent"], 98);
+        assert_eq!(race["experiencePercent"], 120);
+        assert_eq!(race["baseHp"], 22);
+        assert_eq!(race["modifiers"]["strength"], 1);
+        assert_eq!(race["modifiers"]["dexterity"], -1);
+        let slots = race["bodySlots"].as_array().expect("race body slots");
+        assert_eq!(slots.len(), 12);
+        assert_eq!(slots[0]["id"], "weapon");
+        assert_eq!(slots[1]["id"], "shield");
+        assert_eq!(slots[2]["slotType"], "launcher");
+        assert!(slots.iter().any(|slot| slot["id"] == "ring-1"));
+        assert!(slots.iter().any(|slot| slot["id"] == "ring-2"));
+        assert!(slots.iter().any(|slot| slot["slotType"] == "light"));
+        // The RFB-original charm slot is deliberately absent from legacy
+        // bodies.
+        assert!(!slots.iter().any(|slot| slot["slotType"] == "charm"));
+
+        let (set_name, skill_set) = &outcome.skill_set_files[0];
+        assert_eq!(set_name, "race-test-folk.json");
+        let entries = skill_set["entries"].as_array().expect("skill entries");
+        assert_eq!(entries.len(), 3);
+        assert!(entries.iter().any(|entry| {
+            entry["skillId"] == "rfb-legacy.skill.perception" && entry["base"] == 10
+        }));
+        assert_eq!(outcome.skill_files.len(), 8);
+    }
+
+    #[test]
+    fn character_blocks_extract_regular_races_and_skip_dynamic_ones() {
+        const SYNTHETIC_SOURCE: &str = r#"
+race_t *test_folk_get_race(void)
+{
+    static race_t me = {0};
+    static bool init = FALSE;
+
+    if (!init)
+    {
+        me.name = "试验族";
+        me.desc = "一段描述。";
+
+        me.stats[A_STR] =  1;
+        me.stats[A_INT] = -2;
+
+        me.skills.dis = 3;
+        me.skills.fos = 10;
+
+        me.life = 102;
+        me.base_hp = 24;
+        me.exp = 135;
+        me.infra = 3;
+        me.shop_adjust = 100;
+
+        me.flags = RACE_IS_NONLIVING | RACE_NO_POLY;
+        me.calc_bonuses = _test_calc_bonuses;
+        init = TRUE;
+    }
+
+    return &me;
+}
+
+race_t *test_beast_get_race(void)
+{
+    static race_t me = {0};
+
+    me.life = 100 + 5*rank;
+    me.skills.dis = 2;
+    return &me;
+}
+"#;
+        let blocks = extract_race_blocks(SYNTHETIC_SOURCE);
+        assert_eq!(blocks.len(), 2);
+        let folk = parse_character_block(&blocks[0].0, &blocks[0].1);
+        assert_eq!(folk.id, "test-folk");
+        assert!(!folk.dynamic);
+        assert_eq!(folk.stats[0], 1);
+        assert_eq!(folk.stats[1], -2);
+        assert_eq!(folk.skills[0], 3);
+        assert_eq!(folk.skills[5], 10);
+        assert_eq!(folk.life, 102);
+        assert_eq!(folk.base_hp, 24);
+        assert_eq!(folk.exp, 135);
+        assert_eq!(folk.infra, 3);
+        assert_eq!(folk.flags, ["RACE_IS_NONLIVING", "RACE_NO_POLY"]);
+        assert_eq!(folk.hooks, ["calc_bonuses"]);
+
+        let beast = parse_character_block(&blocks[1].0, &blocks[1].1);
+        assert!(beast.dynamic);
+
+        let characters = LegacyCharacterSources {
+            bodies: Vec::new(),
+            races: vec![folk, beast],
+            personalities: Vec::new(),
+        };
+        let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
+        assert_eq!(outcome.report.races_total, 2);
+        assert_eq!(outcome.report.races_imported, 1);
+        assert_eq!(outcome.report.skip_reasons["race-code-dynamic"], 1);
+        assert_eq!(outcome.report.unmapped_race_flags["RACE_IS_NONLIVING"], 1);
+        assert_eq!(outcome.report.race_hook_gaps["calc_bonuses"], 1);
+        assert_eq!(outcome.report.race_hook_gaps["infra"], 1);
+    }
+
+    #[test]
+    fn personality_blocks_extract_with_default_scalars() {
+        const SYNTHETIC_SOURCE: &str = r#"
+static personality_ptr _get_test_calm_personality(void)
+{
+    static personality_t me = {0};
+    static bool init = FALSE;
+
+    if (!init)
+    {
+        me.name = "沉静";
+        me.desc = "一段描述。";
+
+        me.stats[A_WIS] = 2;
+
+        me.skills.sav = 3;
+
+        me.life = 99;
+        me.exp = 100;
+
+        me.birth = _test_birth;
+        init = TRUE;
+    }
+    return &me;
+}
+"#;
+        let blocks = extract_personality_blocks(SYNTHETIC_SOURCE);
+        assert_eq!(blocks.len(), 1);
+        let calm = parse_character_block(&blocks[0].0, &blocks[0].1);
+        assert_eq!(calm.id, "test-calm");
+        assert_eq!(calm.stats[2], 2);
+        assert_eq!(calm.skills[2], 3);
+        assert_eq!(calm.life, 99);
+        assert_eq!(calm.hooks, ["birth"]);
+
+        let characters = LegacyCharacterSources {
+            bodies: Vec::new(),
+            races: Vec::new(),
+            personalities: vec![calm],
+        };
+        let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
+        assert_eq!(outcome.report.personalities_imported, 1);
+        let (name, personality) = &outcome.personality_files[0];
+        assert_eq!(name, "test-calm.json");
+        assert_eq!(personality["id"], "rfb-legacy.personality.test-calm");
+        assert_eq!(personality["modifiers"]["wisdom"], 2);
+        assert!(personality.get("bodySlots").is_none());
+    }
+
+    #[test]
     fn e_info_egos_become_affixes_with_maxima_modifiers() {
         const SYNTHETIC_E_INFO: &str = "V:1.1.0
 N:1:of Testing
@@ -2939,7 +3768,14 @@ F:SPELL_POWER
 ";
         let egos = parse_e_info(SYNTHETIC_E_INFO);
         assert_eq!(egos.len(), 3);
-        let outcome = convert_content(&[], &[], &[], &egos, &[]);
+        let outcome = convert_content(
+            &[],
+            &[],
+            &[],
+            &egos,
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         assert_eq!(outcome.report.egos_total, 3);
         // The aura ego has no expressible modifier surface: skipped with a
         // reason while its flag still lands in the gap report.
@@ -3010,7 +3846,14 @@ F:CHR
 ";
         let artifacts = parse_a_info(SYNTHETIC_A_INFO);
         assert_eq!(artifacts.len(), 4);
-        let outcome = convert_content(&[], &[], &[], &[], &artifacts);
+        let outcome = convert_content(
+            &[],
+            &[],
+            &[],
+            &[],
+            &artifacts,
+            &LegacyCharacterSources::default(),
+        );
         assert_eq!(outcome.report.artifacts_total, 4);
         assert_eq!(outcome.report.artifacts_imported, 4);
 
@@ -3076,7 +3919,14 @@ B:HIT:HURT(1d4)
 S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
 ";
         let monsters = parse_r_info(WARDEN_R_INFO);
-        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         let (_, keeper) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = keeper["monsterCasting"]["abilities"]
             .as_array()
@@ -3123,7 +3973,14 @@ B:HIT:HURT(1d4)
 S:1_IN_3 | CAUSE_1 | CAUSE_4 | HAND_DOOM
 ";
         let monsters = parse_r_info(CURSER_R_INFO);
-        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         let (_, whisperer) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = whisperer["monsterCasting"]["abilities"]
             .as_array()
@@ -3163,7 +4020,14 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         let monsters = parse_r_info(PSION_R_INFO);
         assert_eq!(monsters.len(), 1);
 
-        let outcome = convert_content(&[], &monsters, &[], &[], &[]);
+        let outcome = convert_content(
+            &[],
+            &monsters,
+            &[],
+            &[],
+            &[],
+            &LegacyCharacterSources::default(),
+        );
         let (_, flenser) = &outcome.actor_files[0];
         let ability_ids: Vec<&str> = flenser["monsterCasting"]["abilities"]
             .as_array()

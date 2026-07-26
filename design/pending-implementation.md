@@ -56,7 +56,8 @@
 | P45 | ego 词条 + 固定神器导入 | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | e_info 160 条中 88 条成 affix（C: 上限取确定性顶格、六维含 DEC_ 负向按 pval 折算；72 条力量全在不可表达旗标按 ego-inexpressible 跳过入报告）；a_info 392 条神器全数落地（固定 pval/骰/修正，哨兵 pval 钳制 ±100，INSTA_ART 不计缺口，激活计 artifact-activation 180）；**同轮修正：普通戒指/护符为无属性通用壳**（属性只来自词条/神器，与原版生成模型一致）；产物 936 items + 88 affixes 过全量校验 |
 | P46 | fake bow 修正（未配对发射器保槽） | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | 未配对发射器（基础 5 + 神器 7）从"去槽壳"改为原版 `obj_is_fake_bow` 语义：保 launcher 槽、不带射击档、神器固定修正全保留（阿波罗竖琴取回六维 +5×3）；P: 射击加成随射击档舍弃；依据：契约物品规则均为单向、launcher 槽无射击档合法，运行时查无射击档仅拒绝开火 |
 | P47 | 身体/槽位模板 | 已由 contract-v100 完成 | RaceDefinition.bodySlots 槽实例表（空=标准身体）+ 核心标准身体 13 槽（**ring-1/ring-2 双戒指、light 光源槽**，单实例 id=类型名故旧档零迁移）+ 装备按类型找空实例/满则顶替首实例（item.equip.swap）+ 存档权威（Schema v41）/旧档零 RNG 派生 + 快照 bodySlots（协议 1.100）+ 前端全槽位面板（空槽"空缺"、同类型序号）+ 导入器光源接 light 槽（帕蓝提尔等 8 件神器六维回收）。demo 新增共鸣指环（包 1.91.0），fixtures 319-320（双戒指/顶替），320 个 exact。记录差异：双持手与箭袋未纳入（待各自系统） |
-| P48 | 候选：b_info+种族+性格导入（T1） | 下一候选（见 [导入优先级规划](legacy-import-priority-v1.md)） | 优先级重排（P47 后种族成为内容图枢纽——身体模板/内在旗标/怪物种族都挂种族）：T1 b_info 113 模板+75 种族+~20 性格纯导入器导壳（旗标/powers 入缺口报告）→ T2 旗标系统一次解锁词条 72+神器旗标+种族旗标三处 → T3 职业壳+m_info 施法档案 → T4 玩家领域法术映射 ∥ 设备效果系统 → T5 d_info/v_info/任务/城镇荒野 |
+| P48 | b_info+种族+性格导入（T1） | 已完成（纯工具，见 [legacy-character-import-v1](legacy-character-import-v1.md)） | 代码侧结构化提取（函数头识别+花括号配平+赋值行解析，rank 动态右值标记跳过）：**67/88 种族**（21 怪物种族 race-code-dynamic）、**20/21 性格**、113 身体模板全解析（缺口普查 any 76/quiver 13/capture-ball 4）；玩家种族绑 Standard 12 槽（刻意无 charm）；八技能花名册 1:1 映射+87 skillSets；钩子缺口 calc_bonuses 76/birth 27 为 T2/种族能力线提供覆盖数；霍比特抽查逐项一致 |
+| P49 | 候选：装备/内在旗标系统（T2） | 下一候选 | 一次解锁三处：词条 ego-inexpressible 72、神器旗标主体（unmappedArtifactFlags 157 种）、种族内在旗标（unmappedRaceFlags 9 种+calc_bonuses 76）；落地后回灌重跑导入收割；备选插队：设备效果系统（缺口 231+激活 193）、法术清尾（S_ 字形 177/SHRIEK/TRAPS） |
 
 ## contract-v99 明确遗留
 
