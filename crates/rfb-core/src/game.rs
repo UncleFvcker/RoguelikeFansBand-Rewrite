@@ -72,11 +72,11 @@ use rfb_protocol::{
     AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto,
     CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
     DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EntityFactionDto, EquipmentItemDto,
-    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
-    GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto,
-    InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
-    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
-    MeleeRoutineDto, MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
+    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope,
+    GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto,
+    ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
     PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
@@ -368,13 +368,13 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV40 {
+struct StateHashPayloadV40<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
     world_tick: u32,
     last_command_seq: u32,
-    terrain: TerrainSaveDto,
+    terrain: TerrainSaveRef<'a>,
     player: PlayerSaveDto,
     entities: Vec<ActorSaveDto>,
     items: Vec<ItemSaveDto>,
@@ -396,12 +396,65 @@ struct StateHashPayloadV40 {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     floor_regions: Vec<FloorRegionSaveDto>,
     rng: RngSaveDto,
-    content_id: String,
-    content_hash: String,
-    world_id: String,
-    current_floor_id: String,
-    current_dungeon_instance_id: Option<String>,
-    stored_floors: Vec<FloorSaveDto>,
+    content_id: &'a str,
+    content_hash: &'a str,
+    world_id: &'a str,
+    current_floor_id: &'a str,
+    current_dungeon_instance_id: Option<&'a str>,
+    stored_floors: Vec<FloorSaveForHash<'a>>,
+}
+
+/// Borrowed twin of [`TerrainSaveDto`]: identical serde field names and order,
+/// so the msgpack bytes (and therefore the state hash) stay unchanged while
+/// the terrain id vector is no longer cloned per hash.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TerrainSaveRef<'a> {
+    width: u16,
+    height: u16,
+    terrain_ids: &'a [String],
+}
+
+/// Borrowed twin of [`FloorSaveDto`] for hashing: the `explored` field is
+/// omitted entirely, which serializes identically to the cleared-and-skipped
+/// vector the owned path used to build and throw away.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FloorSaveForHash<'a> {
+    id: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dungeon_instance_id: Option<&'a str>,
+    player_position: Position,
+    terrain: TerrainSaveRef<'a>,
+    entities: Vec<ActorSaveDto>,
+    items: Vec<ItemSaveDto>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    carried_items: Vec<CarriedItemSaveDto>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    revealed_terrain: Vec<Position>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    connections: Vec<FloorConnectionSaveDto>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    regions: Vec<FloorRegionSaveDto>,
+}
+
+fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
+    FloorSaveForHash {
+        id: &floor.id,
+        dungeon_instance_id: floor.dungeon_instance_id.as_deref(),
+        player_position: floor.player_position,
+        terrain: TerrainSaveRef {
+            width: floor.width,
+            height: floor.height,
+            terrain_ids: &floor.terrain,
+        },
+        entities: actors_to_save(&floor.entities),
+        items: items_to_save(&floor.items),
+        carried_items: carried_items_to_save(&floor.items),
+        revealed_terrain: floor.revealed_terrain.iter().copied().collect(),
+        connections: floor_connections_to_save(&floor.connections),
+        regions: floor_regions_to_save(&floor.regions),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1185,6 +1238,7 @@ pub struct Game {
     progress: CharacterProgress,
     resources: BTreeMap<String, ResourcePool>,
     resources_touched: BTreeSet<String>,
+    last_visual_cells: Option<Vec<CellVisualDto>>,
     learned_abilities: BTreeSet<String>,
     ability_progress: BTreeMap<String, AbilityProgress>,
     entities: Vec<Actor>,
@@ -1381,6 +1435,7 @@ impl Game {
             progress,
             resources: BTreeMap::new(),
             resources_touched: BTreeSet::new(),
+            last_visual_cells: None,
             learned_abilities: BTreeSet::new(),
             ability_progress: BTreeMap::new(),
             entities,
@@ -1734,6 +1789,7 @@ impl Game {
             progress,
             resources: BTreeMap::new(),
             resources_touched: BTreeSet::new(),
+            last_visual_cells: None,
             learned_abilities: BTreeSet::new(),
             ability_progress: BTreeMap::new(),
             entities,
@@ -1928,7 +1984,13 @@ impl Game {
         }
 
         let base_revision = self.revision;
-        let previous_visuals = self.visual_cells();
+        // The world only mutates inside dispatch, so the visuals recorded at
+        // the end of the previous command are exactly this command's "before"
+        // frame; recomputing them here would be a second full-map pass.
+        let previous_visuals = self
+            .last_visual_cells
+            .take()
+            .unwrap_or_else(|| self.visual_cells());
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
@@ -2376,7 +2438,9 @@ impl Game {
         self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
         self.reveal_current_visibility();
-        let changed_visual_cells = self.changed_visual_cells(&previous_visuals);
+        let current_visuals = self.visual_cells();
+        let changed_visual_cells = Self::changed_visual_cells(&current_visuals, &previous_visuals);
+        self.last_visual_cells = Some(current_visuals);
         let events = project_events(events);
 
         Ok(GameUpdate {
@@ -2414,10 +2478,10 @@ impl Game {
             turn: self.turn,
             world_tick: self.world_tick,
             last_command_seq: self.last_command_seq,
-            terrain: TerrainSaveDto {
+            terrain: TerrainSaveRef {
                 width: self.width,
                 height: self.height,
-                terrain_ids: self.terrain.clone(),
+                terrain_ids: &self.terrain,
             },
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
@@ -2436,19 +2500,15 @@ impl Game {
             floor_connections: floor_connections_to_save(&self.floor_connections),
             floor_regions: floor_regions_to_save(&self.floor_regions),
             rng: self.rng.to_save(),
-            content_id: self.content.pack_id().to_owned(),
-            content_hash: self.content.content_hash().to_owned(),
-            world_id: self.world_id.clone(),
-            current_floor_id: self.current_floor_id.clone(),
-            current_dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+            content_id: self.content.pack_id(),
+            content_hash: self.content.content_hash(),
+            world_id: &self.world_id,
+            current_floor_id: &self.current_floor_id,
+            current_dungeon_instance_id: self.current_dungeon_instance_id.as_deref(),
             stored_floors: self
                 .stored_floors
                 .values()
-                .map(|floor| {
-                    let mut floor = floor_to_save(floor);
-                    floor.explored.clear();
-                    floor
-                })
+                .map(floor_save_for_hash)
                 .collect(),
         };
         let bytes = rmp_serde::to_vec_named(&payload)
@@ -9937,27 +9997,37 @@ impl Game {
     }
 
     fn visual_cells(&self) -> Vec<CellVisualDto> {
+        // Light sources are collected once per pass; scanning every entity
+        // and ground item again for each of the W*H cells is the dominant
+        // fixed cost of a visual rebuild on larger maps.
+        let light_sources = self.collect_light_sources();
         let mut visuals = Vec::with_capacity(self.terrain.len());
         for y in 0..self.height {
             for x in 0..self.width {
-                visuals.push(self.cell_visual(Position {
-                    x: i32::from(x),
-                    y: i32::from(y),
-                }));
+                visuals.push(self.cell_visual(
+                    &light_sources,
+                    Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    },
+                ));
             }
         }
         visuals
     }
 
-    fn changed_visual_cells(&self, previous: &[CellVisualDto]) -> Vec<CellVisualDto> {
-        self.visual_cells()
-            .into_iter()
+    fn changed_visual_cells(
+        current: &[CellVisualDto],
+        previous: &[CellVisualDto],
+    ) -> Vec<CellVisualDto> {
+        current
+            .iter()
             .zip(previous.iter())
-            .filter_map(|(current, before)| (current != *before).then_some(current))
+            .filter_map(|(current, before)| (current != before).then_some(*current))
             .collect()
     }
 
-    fn cell_visual(&self, position: Position) -> CellVisualDto {
+    fn cell_visual(&self, light_sources: &[LightSource], position: Position) -> CellVisualDto {
         let index = self.index(position).expect("validated visual position");
         CellVisualDto {
             position,
@@ -9968,7 +10038,7 @@ impl Game {
             } else {
                 VisibilityState::Hidden
             },
-            light: self.light_at(position),
+            light: light_from_sources(light_sources, position),
         }
     }
 
@@ -9995,14 +10065,16 @@ impl Game {
         has_line_of_sight(self, self.player.position, position)
     }
 
-    fn light_at(&self, position: Position) -> CellLightDto {
-        let mut strongest = (0_u8, PLAYER_LIGHT_COLOR);
-        let player_boost =
-            source_intensity(self.player.position, position, PLAYER_LIGHT_RADIUS, 72);
-        if player_boost > strongest.0 {
-            strongest = (player_boost, PLAYER_LIGHT_COLOR);
-        }
-
+    fn collect_light_sources(&self) -> Vec<LightSource> {
+        // The source order mirrors the original per-cell scan (player, then
+        // entities, then ground items) so strict-greater comparisons keep
+        // resolving ties identically.
+        let mut sources = vec![LightSource {
+            position: self.player.position,
+            radius: PLAYER_LIGHT_RADIUS,
+            maximum: 72,
+            color: PLAYER_LIGHT_COLOR,
+        }];
         for entity in &self.entities {
             let Some(definition) = self.content.actor(&entity.kind_id) else {
                 continue;
@@ -10010,12 +10082,13 @@ impl Game {
             if !definition.tags.iter().any(|tag| tag == "light-source") {
                 continue;
             }
-            let boost = source_intensity(entity.position, position, ACTOR_LIGHT_RADIUS, 64);
-            if boost > strongest.0 {
-                strongest = (boost, ACTOR_LIGHT_COLOR);
-            }
+            sources.push(LightSource {
+                position: entity.position,
+                radius: ACTOR_LIGHT_RADIUS,
+                maximum: 64,
+                color: ACTOR_LIGHT_COLOR,
+            });
         }
-
         for item in &self.items {
             let ItemLocation::Ground(item_position) = &item.location else {
                 continue;
@@ -10026,16 +10099,14 @@ impl Game {
             if !definition.tags.iter().any(|tag| tag == "light-source") {
                 continue;
             }
-            let boost = source_intensity(*item_position, position, ITEM_LIGHT_RADIUS, 52);
-            if boost > strongest.0 {
-                strongest = (boost, ITEM_LIGHT_COLOR);
-            }
+            sources.push(LightSource {
+                position: *item_position,
+                radius: ITEM_LIGHT_RADIUS,
+                maximum: 52,
+                color: ITEM_LIGHT_COLOR,
+            });
         }
-
-        CellLightDto {
-            color: strongest.1,
-            intensity: AMBIENT_LIGHT.saturating_add(strongest.0),
-        }
+        sources
     }
 
     fn discard_stored_task_floors(&mut self, members: &[ProceduralFloorDefinition]) {
@@ -16479,6 +16550,28 @@ fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8
             / u32::try_from(radius_squared).unwrap_or(1),
     )
     .unwrap_or(maximum)
+}
+
+#[derive(Debug, Clone, Copy)]
+struct LightSource {
+    position: Position,
+    radius: i32,
+    maximum: u8,
+    color: u32,
+}
+
+fn light_from_sources(sources: &[LightSource], position: Position) -> CellLightDto {
+    let mut strongest = (0_u8, PLAYER_LIGHT_COLOR);
+    for source in sources {
+        let boost = source_intensity(source.position, position, source.radius, source.maximum);
+        if boost > strongest.0 {
+            strongest = (boost, source.color);
+        }
+    }
+    CellLightDto {
+        color: strongest.1,
+        intensity: AMBIENT_LIGHT.saturating_add(strongest.0),
+    }
 }
 
 /// Angband/RFB's integer distance approximation: a rounded Euclidean
