@@ -934,6 +934,56 @@
         {
           "type": "object",
           "properties": {
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "blink-self"
+            }
+          },
+          "required": [
+            "type",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "minimumDistance": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "teleport-self"
+            }
+          },
+          "required": [
+            "type",
+            "minimumDistance"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "teleport-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "statusKindId": {
               "type": "string"
             },
@@ -2617,6 +2667,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/MonsterDisplacementResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "monster-displacement"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/RestResolutionDto"
             },
             "type": {
@@ -3382,6 +3448,25 @@
         "targetKindId",
         "targetPosition",
         "effects"
+      ]
+    },
+    "MonsterDisplacementResolutionDto": {
+      "type": "object",
+      "properties": {
+        "actorId": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/Position"
+        },
+        "to": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "actorId",
+        "from",
+        "to"
       ]
     },
     "PlayerBuildDto": {

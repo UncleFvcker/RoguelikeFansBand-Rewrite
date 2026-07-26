@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.90";
+pub const PROTOCOL_VERSION: &str = "1.91";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -458,6 +458,13 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance_type: Option<DamageTypeDto>,
     },
+    BlinkSelf {
+        radius: u8,
+    },
+    TeleportSelf {
+        minimum_distance: u8,
+    },
+    TeleportTarget,
     RemoveStatus {
         status_kind_id: String,
     },
@@ -1098,6 +1105,15 @@ pub enum ResourceGainSourceDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct MonsterDisplacementResolutionDto {
+    pub actor_id: String,
+    pub from: Position,
+    pub to: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceGainResolutionDto {
     pub resource_id: String,
     pub source: ResourceGainSourceDto,
@@ -1189,6 +1205,9 @@ pub enum GameEventOutcomeDto {
     },
     ResourceGain {
         resolution: ResourceGainResolutionDto,
+    },
+    MonsterDisplacement {
+        resolution: MonsterDisplacementResolutionDto,
     },
     Rest {
         resolution: RestResolutionDto,
@@ -1646,6 +1665,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(ResourceGainSourceDto);
+    push_declaration!(MonsterDisplacementResolutionDto);
     push_declaration!(ResourceGainResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);

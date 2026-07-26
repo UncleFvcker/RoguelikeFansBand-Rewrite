@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.rift-stalker",
+  "role": "monster",
+  "nameKey": "actor-demo-rift-stalker-name",
+  "descriptionKey": "actor-demo-rift-stalker-description",
+  "glyph": "x",
+  "level": 3,
+  "experienceValue": 24,
+  "maxHp": 7,
+  "speed": 110,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "monsterCasting": {
+    "frequencyPercent": 50,
+    "abilities": [
+      {
+        "abilityId": "demo.ability.rift-drag",
+        "weight": 2
+      },
+      {
+        "abilityId": "demo.ability.rift-escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "demo.ability.echo-slip",
+        "weight": 1
+      }
+    ]
+  },
+  "tags": [
+    "aberration"
+  ]
+}

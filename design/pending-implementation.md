@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v90、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v91、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -42,7 +42,8 @@
 | P31 | 旧版内容导入管线 v1 | 已完成（纯工具，不动契约基线） | f_info/r_info 只读导入 .local 本地包（地形 180/188、怪物 1332/1396），缺口报告按缺失法术/效果/flag 计数，后续规则族按报告排期 |
 | P32 | 多 blow → meleeRoutine 映射 | 已完成（纯工具） | 1124/1332 导入怪物获得完整多段近战 routine，逐 blow 伤害类型，107 条无骰副攻计入缺口 |
 | P33 | 导入器法术映射 v1 | 已完成（纯工具） | SCARE/SLOW/HASTE/HEAL + 1_IN_N 频率 → monsterCasting，454 只导入怪物成为施法者，78 个共享生成能力 |
-| P34 | 按导入缺口报告选定的首个规则族 | 下一候选 | 候选按覆盖数：怪物位移族 TELE_TO/BLINK/TELE_SELF（合计约 455）、CONFUSE/BLIND/PARALYZE 新状态族（约 110–223）、DETECT_MONSTERS（149） |
+| P34 | 怪物位移法术族 | 已由 contract-v91 完成 | blink-self/teleport-self/teleport-target 三效果、rift-stalker 纵切、导入映射 455 实例（casting 怪物 553）、288 个 exact fixtures |
+| P35 | CONFUSE/BLIND/PARALYZE 新状态族 | 下一候选 | 新状态种类 + 玩家侧效果（混乱走位/致盲视野/麻痹跳回合）+ 怪物施加入口 + 导入映射，约 110-223 怪物/项 |
 
 ## contract-v90 明确遗留
 

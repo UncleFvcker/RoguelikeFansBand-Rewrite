@@ -9832,6 +9832,106 @@ fn nearby_player_summons_follow_across_floors_while_distant_summons_stay() {
     );
 }
 
+#[test]
+fn escape_teleport_falls_back_to_half_distance_and_blink_rejects_without_space() {
+    fn open_cell(game: &mut Game, position: Position) {
+        let index = game.index(position).expect("cell");
+        game.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+
+    // Escape fallback: the only open landing sits five tiles from the player,
+    // so the minimum-eight filter is empty and the halved minimum applies.
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    open_cell(&mut game, player);
+    let stalker_position = Position {
+        x: player.x + 1,
+        y: player.y,
+    };
+    open_cell(&mut game, stalker_position);
+    let landing = Position {
+        x: player.x + 5,
+        y: player.y,
+    };
+    open_cell(&mut game, landing);
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.rift-test",
+        "demo.actor.rift-stalker",
+        stalker_position,
+        7,
+        110,
+        100,
+        true,
+    ));
+    let mut escaped = false;
+    for _ in 0..30 {
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        if update.events.iter().any(|event| {
+            event.kind == "monster.teleported"
+                && matches!(
+                    event.outcome.as_ref(),
+                    Some(GameEventOutcomeDto::MonsterDisplacement { resolution })
+                        if resolution.to == landing
+                )
+        }) {
+            escaped = true;
+            break;
+        }
+        if game.player_is_dead() {
+            break;
+        }
+    }
+    assert!(escaped, "escape should use the halved minimum distance");
+
+    // Blink rejection: every cell within radius five is walled, so the
+    // planner reports no-space without drawing any destination RNG.
+    let mut boxed = Game::new(0);
+    clear_monsters(&mut boxed);
+    for cell in boxed.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let boxed_player = boxed.player.position;
+    open_cell(&mut boxed, boxed_player);
+    let boxed_stalker = Position {
+        x: boxed_player.x + 1,
+        y: boxed_player.y,
+    };
+    open_cell(&mut boxed, boxed_stalker);
+    boxed.entities.push(actor_from_runtime_spawn(
+        "generated.actor.rift-boxed",
+        "demo.actor.rift-stalker",
+        boxed_stalker,
+        7,
+        110,
+        100,
+        true,
+    ));
+    let mut saw_rejection = false;
+    for _ in 0..30 {
+        let update = dispatch_next(&mut boxed, GameCommand::Wait);
+        for event in &update.events {
+            if let Some(GameEventOutcomeDto::MonsterAbilityDecision { resolution }) =
+                event.outcome.as_ref()
+                && resolution.candidates.iter().any(|candidate| {
+                    candidate.ability_id == "demo.ability.echo-slip"
+                        && candidate.rejection_reason
+                            == Some(MonsterAbilityRejectionReasonDto::NoSpace)
+                })
+            {
+                saw_rejection = true;
+            }
+        }
+        if saw_rejection || boxed.player_is_dead() {
+            break;
+        }
+    }
+    assert!(saw_rejection, "boxed blink should report no-space");
+}
+
 fn clear_monsters(game: &mut Game) {
     game.entities.clear();
     game.dungeon_states

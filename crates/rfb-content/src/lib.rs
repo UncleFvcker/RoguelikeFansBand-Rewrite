@@ -646,6 +646,13 @@ pub enum AbilityEffectDefinition {
         radius: u8,
     },
     Teleport,
+    BlinkSelf {
+        radius: u8,
+    },
+    TeleportSelf {
+        minimum_distance: u8,
+    },
+    TeleportTarget,
     Summon {
         actor_kind_id: String,
         count: u8,
@@ -2698,6 +2705,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=9).contains(radius)
             }
             AbilityEffectDefinition::Teleport => true,
+            AbilityEffectDefinition::BlinkSelf { radius } => (1..=10).contains(radius),
+            AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
+                (1..=64).contains(minimum_distance)
+            }
+            AbilityEffectDefinition::TeleportTarget => true,
             AbilityEffectDefinition::Summon {
                 actor_kind_id,
                 count,
@@ -2802,6 +2814,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             | AbilityEffectDefinition::RemoveStatus { .. } => {
                 self_target_rule || projectile_target_rule
             }
+            AbilityEffectDefinition::BlinkSelf { .. }
+            | AbilityEffectDefinition::TeleportSelf { .. } => self_target_rule,
+            AbilityEffectDefinition::TeleportTarget => projectile_target_rule,
             AbilityEffectDefinition::Sequence { effects } => {
                 (self_target_rule
                     && effects.iter().all(|effect| {
@@ -2911,6 +2926,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 }
                 AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
+                AbilityEffectDefinition::BlinkSelf { .. }
+                | AbilityEffectDefinition::TeleportSelf { .. } => self_target,
+                AbilityEffectDefinition::TeleportTarget => projectile_target,
                 AbilityEffectDefinition::Sequence { effects } => {
                     (self_target
                         && effects.iter().all(|effect| {
@@ -6696,11 +6714,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 15);
+        assert_eq!(first.content.actors.len(), 16);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 17);
+        assert_eq!(first.content.abilities.len(), 20);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
@@ -6724,7 +6742,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.81.0");
+        assert_eq!(catalog.pack_version(), "1.82.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

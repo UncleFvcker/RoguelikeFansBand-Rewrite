@@ -386,6 +386,32 @@ fn status_ability(id: &str, status: &str, self_target: bool) -> serde_json::Valu
     })
 }
 
+fn displacement_ability(
+    id: &str,
+    effect: serde_json::Value,
+    self_target: bool,
+) -> serde_json::Value {
+    let target = if self_target {
+        serde_json::json!({ "modes": ["self"], "range": 0, "requiresLineOfEffect": false })
+    } else {
+        serde_json::json!({ "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true })
+    };
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{id}"),
+        "nameKey": format!("ability-legacy-{id}-name"),
+        "descriptionKey": format!("ability-legacy-{id}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": target,
+        "effect": effect,
+        "tags": ["legacy-import", "mobility"],
+    })
+}
+
 fn heal_ability(amount: u32) -> serde_json::Value {
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
@@ -430,6 +456,39 @@ fn map_spell_token(
             abilities
                 .entry(id.clone())
                 .or_insert_with(|| status_ability("haste-self", "haste", true));
+            Some(id)
+        }
+        "BLINK" => {
+            let id = "rfb-legacy.ability.blink".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "blink",
+                    serde_json::json!({"type": "blink-self", "radius": 10}),
+                    true,
+                )
+            });
+            Some(id)
+        }
+        "TELE_SELF" | "TELEPORT" => {
+            let id = "rfb-legacy.ability.escape".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "escape",
+                    serde_json::json!({"type": "teleport-self", "minimumDistance": 10}),
+                    true,
+                )
+            });
+            Some(id)
+        }
+        "TELE_TO" => {
+            let id = "rfb-legacy.ability.drag".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                displacement_ability(
+                    "drag",
+                    serde_json::json!({"type": "teleport-target"}),
+                    false,
+                )
+            });
             Some(id)
         }
         "HEAL" => {

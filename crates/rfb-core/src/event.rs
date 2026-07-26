@@ -7,10 +7,10 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto, Position,
-    ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SummonCommandModeDto,
-    SummonCommandResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceGainResolutionDto,
+    ResourceGainSourceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -146,6 +146,19 @@ pub(crate) enum DomainEvent {
     },
     ResourceGained {
         resolution: ResourceGainResolutionDto,
+    },
+    MonsterBlinked {
+        source_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
+    MonsterTeleported {
+        source_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
+    MonsterDraggedTarget {
+        source_kind_id: String,
+        target_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
     },
     RestCompleted {
         resolution: RestResolutionDto,
@@ -782,6 +795,34 @@ impl DomainEvent {
                     ("amount", resolution.recovered.to_string()),
                 ],
                 GameEventOutcomeDto::ResourceRecovery { resolution },
+            ),
+            Self::MonsterBlinked {
+                source_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.blinked",
+                "monster-blinked",
+                [("source", source_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::MonsterTeleported {
+                source_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.teleported",
+                "monster-teleported",
+                [("source", source_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::MonsterDraggedTarget {
+                source_kind_id,
+                target_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.dragged-target",
+                "monster-dragged-target",
+                [("source", source_kind_id), ("target", target_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
             ),
             Self::ResourceGained { resolution } => dto_with_outcome(
                 "resource.gained",

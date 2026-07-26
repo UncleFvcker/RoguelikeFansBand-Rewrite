@@ -78,22 +78,22 @@ use rfb_protocol::{
     ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
-    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
-    PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto,
-    ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto,
-    RestResolutionDto, RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1,
-    SkillProgressDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
-    SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
-    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
-    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
-    ThrowProfileDto, VisibilityState,
+    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
+    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto,
+    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto,
+    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto, StatModifiersDto,
+    SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, SummonDto, TargetModeDto,
+    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
+    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
+    TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 82] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 83] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -176,9 +176,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 82] = [
     "be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd",
     "f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac",
     "29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e",
+    "43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252";
+    "81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -354,6 +355,17 @@ enum MonsterAbilityTargetPlan {
     Summon {
         positions: Vec<Position>,
     },
+    BlinkSelf {
+        destinations: Vec<Position>,
+    },
+    EscapeSelf {
+        destinations: Vec<Position>,
+    },
+    DragTarget {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        destination: Position,
+    },
 }
 
 fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHostileTarget> {
@@ -361,8 +373,12 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         MonsterAbilityTargetPlan::Projectile { target, .. }
         | MonsterAbilityTargetPlan::Area { target, .. }
         | MonsterAbilityTargetPlan::Beam { target, .. }
-        | MonsterAbilityTargetPlan::Cone { target, .. } => Some(target),
-        MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. } => None,
+        | MonsterAbilityTargetPlan::Cone { target, .. }
+        | MonsterAbilityTargetPlan::DragTarget { target, .. } => Some(target),
+        MonsterAbilityTargetPlan::SelfTarget
+        | MonsterAbilityTargetPlan::Summon { .. }
+        | MonsterAbilityTargetPlan::BlinkSelf { .. }
+        | MonsterAbilityTargetPlan::EscapeSelf { .. } => None,
     }
 }
 
@@ -5859,6 +5875,11 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            // Displacement forms are monster-casting-only in v91; the player
+            // cast path never produces a plan for them.
+            AbilityEffectDefinition::BlinkSelf { .. }
+            | AbilityEffectDefinition::TeleportSelf { .. }
+            | AbilityEffectDefinition::TeleportTarget => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -7706,6 +7727,39 @@ impl Game {
         true
     }
 
+    /// Row-major enumeration of open destinations for monster displacement:
+    /// inside the map, walkable, free of the player and living actors, and
+    /// different from the caster's current cell.
+    fn displacement_destinations(
+        &self,
+        source_index: usize,
+        accepts: impl Fn(Position) -> bool,
+    ) -> Vec<Position> {
+        let origin = self.entities[source_index].position;
+        let mut destinations = Vec::new();
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                if position == origin
+                    || position == self.player.position
+                    || !self.is_walkable(position)
+                    || !accepts(position)
+                    || self
+                        .entities
+                        .iter()
+                        .any(|entity| entity.hp > 0 && entity.position == position)
+                {
+                    continue;
+                }
+                destinations.push(position);
+            }
+        }
+        destinations
+    }
+
     fn monster_ability_plan(
         &self,
         index: usize,
@@ -7735,13 +7789,58 @@ impl Game {
             {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
+            AbilityEffectDefinition::BlinkSelf { radius } => {
+                let radius = u32::from(*radius);
+                let destinations = self.displacement_destinations(index, |position| {
+                    origin
+                        .x
+                        .abs_diff(position.x)
+                        .max(origin.y.abs_diff(position.y))
+                        <= radius
+                });
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (MonsterAbilityTargetPlan::BlinkSelf { destinations }, 0, 0)
+            }
+            AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
+                let player = self.player.position;
+                let escape_candidates = |minimum: u32| {
+                    self.displacement_destinations(index, |position| {
+                        player
+                            .x
+                            .abs_diff(position.x)
+                            .max(player.y.abs_diff(position.y))
+                            >= minimum
+                    })
+                };
+                let minimum = u32::from(*minimum_distance);
+                let mut destinations = escape_candidates(minimum);
+                if destinations.is_empty() {
+                    // The half-distance fallback keeps cramped floors escapable.
+                    destinations = escape_candidates(minimum.div_ceil(2));
+                }
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (MonsterAbilityTargetPlan::EscapeSelf { destinations }, 0, 0)
+            }
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::AreaDamage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
-            | AbilityEffectDefinition::Sequence { .. } => {
+            | AbilityEffectDefinition::Sequence { .. }
+            | AbilityEffectDefinition::TeleportTarget => {
                 let mut first_rejection = None;
                 let mut selected = None;
                 for hostile_target in self.monster_hostile_targets(index) {
@@ -7905,6 +8004,50 @@ impl Game {
                     self.monster_projectile_trace(source_index, ability, &target, true, false)?;
                 (
                     MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
+                )
+            }
+            AbilityEffectDefinition::TeleportTarget => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                // The dragged target lands on the first open cell adjacent to
+                // the caster, in the canonical eight-direction order.
+                const DELTAS: [(i32, i32); 8] = [
+                    (0, -1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                    (0, 1),
+                    (-1, 1),
+                    (-1, 0),
+                    (-1, -1),
+                ];
+                let destination = DELTAS
+                    .iter()
+                    .map(|(dx, dy)| Position {
+                        x: origin.x + dx,
+                        y: origin.y + dy,
+                    })
+                    .find(|position| {
+                        self.index(*position).is_some()
+                            && self.is_walkable(*position)
+                            && *position != self.player.position
+                            && !self
+                                .entities
+                                .iter()
+                                .any(|entity| entity.hp > 0 && entity.position == *position)
+                    })
+                    .ok_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })?;
+                (
+                    MonsterAbilityTargetPlan::DragTarget {
+                        target,
+                        trace,
+                        destination,
+                    },
                     vec![target_position],
                 )
             }
@@ -8177,6 +8320,11 @@ impl Game {
         for effect in effects {
             match effect {
                 AbilityEffectDefinition::Damage { .. } if hostile_target.is_some() => useful = true,
+                AbilityEffectDefinition::BlinkSelf { .. }
+                | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
+                AbilityEffectDefinition::TeleportTarget if hostile_target.is_some() => {
+                    useful = true;
+                }
                 AbilityEffectDefinition::Heal { .. } => {
                     let actor = target_actor?;
                     let missing = actor.max_hp.saturating_sub(actor.hp).max(0);
@@ -8291,6 +8439,23 @@ impl Game {
                     Some(target.kind_id().to_owned()),
                     Some(target.position()),
                     affected_positions.clone(),
+                ),
+                MonsterAbilityTargetPlan::BlinkSelf { .. }
+                | MonsterAbilityTargetPlan::EscapeSelf { .. } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    Vec::new(),
+                ),
+                MonsterAbilityTargetPlan::DragTarget {
+                    target,
+                    destination,
+                    ..
+                } => (
+                    Some(target.entity_id().to_owned()),
+                    Some(target.kind_id().to_owned()),
+                    Some(target.position()),
+                    vec![*destination],
                 ),
             };
         MonsterAbilityCandidateResolutionDto {
@@ -8625,6 +8790,106 @@ impl Game {
                     effects: Vec::new(),
                     targets: Vec::new(),
                     trace: None,
+                }
+            }
+            MonsterAbilityTargetPlan::BlinkSelf { destinations }
+            | MonsterAbilityTargetPlan::EscapeSelf { destinations } => {
+                // The candidate list was collected without RNG at planning
+                // time; the actual landing cell consumes one bounded draw.
+                let choice = usize::try_from(
+                    self.rng
+                        .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
+                )
+                .expect("bounded draw fits usize");
+                let destination = destinations[choice];
+                let from = self.entities[source_index].position;
+                self.entities[source_index].position = destination;
+                changed.insert(from);
+                changed.insert(destination);
+                let resolution = MonsterDisplacementResolutionDto {
+                    actor_id: source_entity_id.clone(),
+                    from,
+                    to: destination,
+                };
+                events.push(
+                    if matches!(plan.target, MonsterAbilityTargetPlan::BlinkSelf { .. }) {
+                        DomainEvent::MonsterBlinked {
+                            source_kind_id: source_kind_id.to_owned(),
+                            resolution,
+                        }
+                    } else {
+                        DomainEvent::MonsterTeleported {
+                            source_kind_id: source_kind_id.to_owned(),
+                            resolution,
+                        }
+                    },
+                );
+                MonsterAbilityPlanResolution {
+                    target_entity_id: source_entity_id.clone(),
+                    target_kind_id: self.entities[source_index].kind_id.clone(),
+                    affected_positions: vec![from, destination],
+                    summon: None,
+                    effects: Vec::new(),
+                    targets: Vec::new(),
+                    trace: None,
+                }
+            }
+            MonsterAbilityTargetPlan::DragTarget {
+                target,
+                trace,
+                destination,
+            } => {
+                let destination = *destination;
+                match target {
+                    MonsterHostileTarget::Player { .. } => {
+                        let from = self.player.position;
+                        events.push(DomainEvent::MonsterDraggedTarget {
+                            source_kind_id: source_kind_id.to_owned(),
+                            target_kind_id: target.kind_id().to_owned(),
+                            resolution: MonsterDisplacementResolutionDto {
+                                actor_id: target.entity_id().to_owned(),
+                                from,
+                                to: destination,
+                            },
+                        });
+                        let relocation = self.relocate_player(destination, changed);
+                        events.extend(relocation);
+                    }
+                    MonsterHostileTarget::Summon { entity_id, .. } => {
+                        if let Some(dragged_index) = self
+                            .entities
+                            .iter()
+                            .position(|entity| entity.id == *entity_id && entity.hp > 0)
+                        {
+                            let from = self.entities[dragged_index].position;
+                            self.entities[dragged_index].position = destination;
+                            changed.insert(from);
+                            changed.insert(destination);
+                            events.push(DomainEvent::MonsterDraggedTarget {
+                                source_kind_id: source_kind_id.to_owned(),
+                                target_kind_id: target.kind_id().to_owned(),
+                                resolution: MonsterDisplacementResolutionDto {
+                                    actor_id: entity_id.clone(),
+                                    from,
+                                    to: destination,
+                                },
+                            });
+                        }
+                    }
+                }
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: vec![destination],
+                    summon: None,
+                    effects: Vec::new(),
+                    targets: vec![MonsterAbilityTargetResolutionDto {
+                        target_entity_id: target.entity_id().to_owned(),
+                        target_kind_id: target.kind_id().to_owned(),
+                        target_position: destination,
+                        effects: Vec::new(),
+                    }],
+                    trace: Some(trace.clone()),
                 }
             }
         }
@@ -14751,6 +15016,15 @@ fn remove_ability_status_effect(
 
 fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
+        AbilityEffectDefinition::BlinkSelf { radius } => {
+            AbilityEffectSpecDto::BlinkSelf { radius: *radius }
+        }
+        AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
+            AbilityEffectSpecDto::TeleportSelf {
+                minimum_distance: *minimum_distance,
+            }
+        }
+        AbilityEffectDefinition::TeleportTarget => AbilityEffectSpecDto::TeleportTarget,
         AbilityEffectDefinition::Damage {
             damage_dice,
             damage_sides,

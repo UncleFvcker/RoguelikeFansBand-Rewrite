@@ -165,6 +165,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.90 不新增存档字段：技法资源池写入既有 `PlayerSaveDto.resources`，先天能力熟练度写入 `abilityProgress`，`learnedAbilityIds` 仍只含研读所得。存档中的资源池放宽为子集匹配：缺失的池按内容 `initialFillPercent` 初始化且不抽 RNG；未知 ID、上限不符或超上限仍拒绝。无 `castingProfile` 的类不得携带 `learnedAbilityIds`。save 容器保持 v1，技法资源池与先天熟练度使 state hash 升至 Schema v40。完整边界见 [Contract v90](contract-v90-technique-resources.md)。
 
+协议 1.91 不新增存档字段：怪物位移只改变实体/玩家位置，全部由既有字段承载，state hash 沿用 Schema v40。完整边界见 [Contract v91](contract-v91-monster-displacement.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

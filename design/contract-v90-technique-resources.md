@@ -1,6 +1,6 @@
 # Contract v90：多职业资源底子与首个技法资源
 
-状态：当前 active baseline。协议版本为 1.90，demo 内容包升至 1.81.0（content hash 以 `content.lock.json` 为准）。save 容器继续使用 v1；技法资源池与先天能力熟练度进入既有权威结构，state hash 升至 Schema v40。
+状态：历史 baseline；当前 active baseline 见 [contract-v91](contract-v91-monster-displacement.md)。协议版本为 1.90，demo 内容包升至 1.81.0（content hash 以 `content.lock.json` 为准）。save 容器继续使用 v1；技法资源池与先天能力熟练度进入既有权威结构，state hash 升至 Schema v40。
 
 ## 1. 原版参考与本轮边界
 

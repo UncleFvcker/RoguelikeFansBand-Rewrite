@@ -55,5 +55,8 @@
       }
     ]
   },
-  "tags": ["caster", "echo"]
+  "tags": [
+    "caster",
+    "echo"
+  ]
 }

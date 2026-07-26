@@ -1750,6 +1750,19 @@ function formatEvent(event: GameEventDto): string {
         resource: contentName(event.args.target),
         amount: event.args.amount ?? "?",
       });
+    case "monster-blinked":
+      return localization.format("message-monster-blinked", {
+        source: contentName(event.args.source),
+      });
+    case "monster-teleported":
+      return localization.format("message-monster-teleported", {
+        source: contentName(event.args.source),
+      });
+    case "monster-dragged-target":
+      return localization.format("message-monster-dragged-target", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
     case "rest-completed":
     case "rest-interrupted":
       return localization.format(
