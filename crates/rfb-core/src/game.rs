@@ -3,7 +3,7 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet, VecDeque},
-    sync::Arc,
+    sync::{Arc, OnceLock},
 };
 
 use crate::resistance::{DamageType, ResistanceLevel};
@@ -82,11 +82,12 @@ use rfb_protocol::{
     PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
     PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto,
     ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto,
-    RestResolutionDto, RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto,
-    StatModifiersDto, SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto,
-    SummonDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
-    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    RestResolutionDto, RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1,
+    SkillProgressDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -180,6 +181,7 @@ const BUILT_IN_CONTENT_HASH: &str =
     "43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1420,7 +1422,7 @@ impl Game {
         payload: SavePayloadV1,
         content: Arc<ContentCatalog>,
     ) -> Result<Self, CoreError> {
-        if payload.schema_version != 1 {
+        if payload.schema_version != SAVE_PAYLOAD_SCHEMA_VERSION {
             return Err(CoreError::UnsupportedSaveVersion(payload.schema_version));
         }
         if payload.content_id != content.pack_id()
@@ -1827,7 +1829,7 @@ impl Game {
     #[must_use]
     pub fn to_save(&self) -> SavePayloadV1 {
         SavePayloadV1 {
-            schema_version: 1,
+            schema_version: SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2407,7 +2409,7 @@ impl Game {
     #[must_use]
     pub fn state_hash(&self) -> String {
         let payload = StateHashPayloadV40 {
-            schema_version: 40,
+            schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2453,6 +2455,21 @@ impl Game {
             .expect("serializing the internal save state should not fail");
         let digest = Sha256::digest(bytes);
         format!("{digest:x}")
+    }
+
+    #[must_use]
+    pub const fn revision(&self) -> u32 {
+        self.revision
+    }
+
+    #[must_use]
+    pub const fn turn(&self) -> u32 {
+        self.turn
+    }
+
+    #[must_use]
+    pub const fn last_command_seq(&self) -> u32 {
+        self.last_command_seq
     }
 
     #[must_use]
@@ -16649,9 +16666,14 @@ fn has_line_of_sight(game: &Game, from: Position, to: Position) -> bool {
 }
 
 pub fn load_built_in_content() -> Result<Arc<ContentCatalog>, CoreError> {
-    Ok(Arc::new(ContentCatalog::from_bytes(
-        BUILT_IN_CONTENT_BYTES,
-    )?))
+    // The built-in pack is immutable for the lifetime of the process, so the
+    // decode + validation pass only needs to run once; failures stay uncached.
+    static BUILT_IN_CATALOG: OnceLock<Arc<ContentCatalog>> = OnceLock::new();
+    if let Some(catalog) = BUILT_IN_CATALOG.get() {
+        return Ok(Arc::clone(catalog));
+    }
+    let catalog = Arc::new(ContentCatalog::from_bytes(BUILT_IN_CONTENT_BYTES)?);
+    Ok(Arc::clone(BUILT_IN_CATALOG.get_or_init(|| catalog)))
 }
 
 #[cfg(test)]

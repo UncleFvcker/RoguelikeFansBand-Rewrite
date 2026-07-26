@@ -16,6 +16,9 @@ fn main() {
 
 fn emit_rerun_if_changed(path: &std::path::Path) {
     if path.is_dir() {
+        // Watching the directory itself catches files being added or removed,
+        // which per-file entries alone would miss.
+        println!("cargo:rerun-if-changed={}", path.display());
         let mut entries = fs::read_dir(path)
             .expect("content directory should be readable")
             .map(|entry| entry.expect("content entry should be readable").path())

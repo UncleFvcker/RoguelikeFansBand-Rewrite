@@ -8,9 +8,9 @@ use rfb_protocol::{
     CharacterSummary, EntityFactionDto, GameCommand, GameCommandEnvelope, GameEventDto,
     InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
     MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position,
-    ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SaveHeaderV1,
-    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
-    TerrainInteractionDto,
+    ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
+    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto, SummonCommandDto,
+    SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -19,6 +19,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
+pub const ACTIVE_BASELINE: &str = "contract-v90";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -459,14 +460,13 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     let mut errors = Vec::new();
 
     for (index, contract_command) in fixture.commands.iter().enumerate() {
-        let snapshot = game.snapshot();
         let envelope = GameCommandEnvelope {
             command_seq: contract_command
                 .command_seq
-                .unwrap_or_else(|| snapshot.last_command_seq.saturating_add(1)),
+                .unwrap_or_else(|| game.last_command_seq().saturating_add(1)),
             expected_revision: contract_command
                 .expected_revision
-                .unwrap_or(snapshot.revision),
+                .unwrap_or(game.revision()),
             command: contract_command.command.clone(),
         };
         match game.dispatch(envelope) {
@@ -526,27 +526,22 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             entities: snapshot
                 .entities
                 .iter()
-                .map(|entity| ActorStateAssertion {
-                    id: entity.id.clone(),
-                    position: entity.position,
-                    hp: entity.hp,
-                    speed: entity.speed,
-                    energy_need: entity.energy_need,
-                    alerted: entity.alerted,
-                    casting_cooldown_remaining: entity.casting_cooldown_remaining,
-                    observed_player_resistances: entity.observed_player_resistances.clone(),
-                    statuses: entity.statuses.clone(),
-                    pack: save
-                        .entities
-                        .iter()
-                        .find(|saved| saved.id == entity.id)
-                        .and_then(|saved| saved.pack.clone()),
-                    faction: entity.faction,
-                    summon: save
-                        .entities
-                        .iter()
-                        .find(|saved| saved.id == entity.id)
-                        .and_then(|saved| saved.summon.clone()),
+                .map(|entity| {
+                    let saved_entity = save.entities.iter().find(|saved| saved.id == entity.id);
+                    ActorStateAssertion {
+                        id: entity.id.clone(),
+                        position: entity.position,
+                        hp: entity.hp,
+                        speed: entity.speed,
+                        energy_need: entity.energy_need,
+                        alerted: entity.alerted,
+                        casting_cooldown_remaining: entity.casting_cooldown_remaining,
+                        observed_player_resistances: entity.observed_player_resistances.clone(),
+                        statuses: entity.statuses.clone(),
+                        pack: saved_entity.and_then(|saved| saved.pack.clone()),
+                        faction: entity.faction,
+                        summon: saved_entity.and_then(|saved| saved.summon.clone()),
+                    }
                 })
                 .collect(),
             ground_item_count: snapshot.items.len(),
@@ -639,7 +634,7 @@ fn save_round_trip(game: &Game) -> Result<String, ContractError> {
     let snapshot = game.snapshot();
     let header = SaveHeaderV1 {
         format: "rfb-save".to_owned(),
-        save_schema_version: 1,
+        save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
         game_version: env!("CARGO_PKG_VERSION").to_owned(),
         protocol_version: PROTOCOL_VERSION.to_owned(),
         slot_name: "契约回环".to_owned(),

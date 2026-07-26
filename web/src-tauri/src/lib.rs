@@ -11,7 +11,7 @@ use tauri::Manager;
 use rfb_core::Game;
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, PROTOCOL_VERSION,
-    SaveHeaderV1,
+    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1,
 };
 use rfb_replay::ReplayRecorder;
 
@@ -82,7 +82,7 @@ impl AppState {
         let snapshot = session.recorder.game().snapshot();
         let header = SaveHeaderV1 {
             format: "rfb-save".to_owned(),
-            save_schema_version: 1,
+            save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
             game_version: env!("CARGO_PKG_VERSION").to_owned(),
             protocol_version: PROTOCOL_VERSION.to_owned(),
             slot_name,

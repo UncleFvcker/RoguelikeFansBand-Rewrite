@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = rfb_core::STATE_HASH_SCHEMA_VERSION;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -66,14 +66,13 @@ pub struct ReplayRecorder {
 impl ReplayRecorder {
     #[must_use]
     pub fn new(game: Game) -> Self {
-        let snapshot = game.snapshot();
         let replay = ReplayV1 {
             format: REPLAY_FORMAT.to_owned(),
             format_version: REPLAY_FORMAT_VERSION,
             core_version: env!("CARGO_PKG_VERSION").to_owned(),
             protocol_version: PROTOCOL_VERSION.to_owned(),
-            content_hash: snapshot.content_hash,
-            initial_save_hash: snapshot.state_hash,
+            content_hash: game.content_hash().to_owned(),
+            initial_save_hash: game.state_hash(),
             rng_algorithm: game.rng_algorithm().to_owned(),
             state_hash_schema_version: STATE_HASH_SCHEMA_VERSION,
             commands: Vec::new(),
@@ -83,10 +82,9 @@ impl ReplayRecorder {
     }
 
     pub fn dispatch(&mut self, command: GameCommand) -> Result<GameUpdate, ReplayError> {
-        let before = self.game.snapshot();
         self.dispatch_envelope(GameCommandEnvelope {
-            command_seq: before.last_command_seq.saturating_add(1),
-            expected_revision: before.revision,
+            command_seq: self.game.last_command_seq().saturating_add(1),
+            expected_revision: self.game.revision(),
             command,
         })
     }
@@ -95,11 +93,10 @@ impl ReplayRecorder {
         &mut self,
         envelope: GameCommandEnvelope,
     ) -> Result<GameUpdate, ReplayError> {
-        let before = self.game.snapshot();
         let recorded = ReplayCommand {
             command_seq: envelope.command_seq,
             expected_revision: envelope.expected_revision,
-            turn_before: before.turn,
+            turn_before: self.game.turn(),
             command: envelope.command.clone(),
         };
         let update = self.game.dispatch(envelope)?;
@@ -130,13 +127,12 @@ impl ReplayRecorder {
                 .map(|checkpoint| checkpoint.after_command_seq)
                 != Some(command.command_seq)
         {
-            let snapshot = self.game.snapshot();
             replay.checkpoints.push(ReplayCheckpoint {
                 after_command_seq: command.command_seq,
-                revision: snapshot.revision,
-                turn: snapshot.turn,
+                revision: self.game.revision(),
+                turn: self.game.turn(),
                 rng_draw_counter: self.game.rng_draw_counter(),
-                state_hash: snapshot.state_hash,
+                state_hash: self.game.state_hash(),
             });
         }
         replay
@@ -149,13 +145,12 @@ impl ReplayRecorder {
     }
 
     fn push_checkpoint(&mut self, after_command_seq: u32) {
-        let snapshot = self.game.snapshot();
         self.replay.checkpoints.push(ReplayCheckpoint {
             after_command_seq,
-            revision: snapshot.revision,
-            turn: snapshot.turn,
+            revision: self.game.revision(),
+            turn: self.game.turn(),
             rng_draw_counter: self.game.rng_draw_counter(),
-            state_hash: snapshot.state_hash,
+            state_hash: self.game.state_hash(),
         });
     }
 }
@@ -166,18 +161,17 @@ pub fn verify(replay: &ReplayV1, mut game: Game) -> Result<ReplayVerification, R
     let mut checkpoint_index = 0;
 
     for (index, recorded) in replay.commands.iter().enumerate() {
-        let before = game.snapshot();
-        if recorded.command_seq != before.last_command_seq.saturating_add(1)
-            || recorded.expected_revision != before.revision
-            || recorded.turn_before != before.turn
+        if recorded.command_seq != game.last_command_seq().saturating_add(1)
+            || recorded.expected_revision != game.revision()
+            || recorded.turn_before != game.turn()
         {
             return Err(ReplayError::CommandContextMismatch {
                 index: index + 1,
-                expected_seq: before.last_command_seq.saturating_add(1),
+                expected_seq: game.last_command_seq().saturating_add(1),
                 received_seq: recorded.command_seq,
-                expected_revision: before.revision,
+                expected_revision: game.revision(),
                 received_revision: recorded.expected_revision,
-                expected_turn: before.turn,
+                expected_turn: game.turn(),
                 received_turn: recorded.turn_before,
             });
         }
@@ -339,13 +333,12 @@ fn validate_checkpoint_schedule(replay: &ReplayV1) -> Result<(), ReplayError> {
 }
 
 fn verify_checkpoint(checkpoint: &ReplayCheckpoint, game: &Game) -> Result<(), ReplayError> {
-    let snapshot = game.snapshot();
     let actual = ReplayCheckpoint {
-        after_command_seq: snapshot.last_command_seq,
-        revision: snapshot.revision,
-        turn: snapshot.turn,
+        after_command_seq: game.last_command_seq(),
+        revision: game.revision(),
+        turn: game.turn(),
         rng_draw_counter: game.rng_draw_counter(),
-        state_hash: snapshot.state_hash,
+        state_hash: game.state_hash(),
     };
     if &actual != checkpoint {
         return Err(ReplayError::CheckpointMismatch {

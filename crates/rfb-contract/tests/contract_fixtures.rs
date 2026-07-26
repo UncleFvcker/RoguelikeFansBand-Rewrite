@@ -1,14 +1,31 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::PathBuf,
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+};
 
-use rfb_contract::{ContractFixture, validate_fixture_set, verify};
+use rfb_contract::{ACTIVE_BASELINE, ContractFixture, validate_fixture_set, verify};
 
 #[test]
 fn committed_contract_fixtures_pass() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/fixtures/contract-v90/scenarios");
-    let mut paths = fs::read_dir(&root)
+    let baseline_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join(format!("../../tests/fixtures/{ACTIVE_BASELINE}"));
+    let policy: serde_json::Value = serde_json::from_slice(
+        &fs::read(baseline_root.join("baseline-policy.json"))
+            .expect("active baseline policy should be readable"),
+    )
+    .expect("active baseline policy should parse");
+    let minimum_fixture_count = usize::try_from(
+        policy["minimumFixtureCount"]
+            .as_u64()
+            .expect("active baseline policy should declare minimumFixtureCount"),
+    )
+    .expect("minimum fixture count should fit usize");
+
+    let mut paths = fs::read_dir(baseline_root.join("scenarios"))
         .expect("contract fixture directory should exist")
         .map(|entry| entry.expect("fixture entry should be readable").path())
         .filter(|path| {
@@ -18,8 +35,8 @@ fn committed_contract_fixtures_pass() {
         .collect::<Vec<_>>();
     paths.sort();
     assert!(
-        paths.len() >= 282,
-        "the active contract baseline requires at least 282 committed fixtures"
+        paths.len() >= minimum_fixture_count,
+        "the active contract baseline requires at least {minimum_fixture_count} committed fixtures"
     );
 
     let fixtures = paths
@@ -33,7 +50,39 @@ fn committed_contract_fixtures_pass() {
         .collect::<Vec<_>>();
     validate_fixture_set(&fixtures).expect("fixture set should be valid");
 
-    for fixture in &fixtures {
-        verify(fixture).unwrap_or_else(|error| panic!("{error}"));
-    }
+    // Each verify run is independent and deterministic, so the fixtures can be
+    // checked concurrently; failures are re-sorted to keep the report stable.
+    let worker_count = thread::available_parallelism()
+        .map_or(1, std::num::NonZeroUsize::get)
+        .min(fixtures.len().max(1));
+    let next_fixture = AtomicUsize::new(0);
+    let mut failures = thread::scope(|scope| {
+        let workers = (0..worker_count)
+            .map(|_| {
+                scope.spawn(|| {
+                    let mut worker_failures = Vec::new();
+                    loop {
+                        let index = next_fixture.fetch_add(1, Ordering::Relaxed);
+                        let Some(fixture) = fixtures.get(index) else {
+                            break;
+                        };
+                        if let Err(error) = verify(fixture) {
+                            worker_failures.push(format!("{}: {error}", fixture.id));
+                        }
+                    }
+                    worker_failures
+                })
+            })
+            .collect::<Vec<_>>();
+        workers
+            .into_iter()
+            .flat_map(|worker| worker.join().expect("fixture worker should not panic"))
+            .collect::<Vec<_>>()
+    });
+    failures.sort();
+    assert!(
+        failures.is_empty(),
+        "contract fixtures failed:\n{}",
+        failures.join("\n")
+    );
 }

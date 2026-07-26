@@ -2683,6 +2683,7 @@ name = "rfb-contract"
 version = "0.1.0"
 dependencies = [
  "rfb-core",
+ "rfb-legacy-import",
  "rfb-protocol",
  "rfb-save",
  "serde",

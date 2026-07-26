@@ -15,5 +15,5 @@ mod state;
 pub mod stats;
 
 pub use error::CoreError;
-pub use game::{BUILT_IN_WORLD_ID, Game, load_built_in_content};
+pub use game::{BUILT_IN_WORLD_ID, Game, STATE_HASH_SCHEMA_VERSION, load_built_in_content};
 pub use rng::{RNG_ALGORITHM, RfbRng};

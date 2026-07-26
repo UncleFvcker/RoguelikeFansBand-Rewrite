@@ -9,7 +9,7 @@ use std::{
 };
 
 use rfb_core::Game;
-use rfb_protocol::{GameSnapshot, SaveHeaderV1};
+use rfb_protocol::{GameSnapshot, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1};
 use serde::Serialize;
 
 const SAVE_EXTENSION: &str = ".rfbsave";
@@ -418,7 +418,7 @@ mod tests {
         let snapshot = game.snapshot();
         let header = SaveHeaderV1 {
             format: "rfb-save".to_owned(),
-            save_schema_version: 1,
+            save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
             game_version: env!("CARGO_PKG_VERSION").to_owned(),
             protocol_version: PROTOCOL_VERSION.to_owned(),
             slot_name: slot_name.to_owned(),

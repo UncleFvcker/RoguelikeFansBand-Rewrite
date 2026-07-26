@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::{SaveHeaderV1, SavePayloadV1, from_msgpack, to_msgpack};
+use rfb_protocol::{
+    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, SavePayloadV1, from_msgpack, to_msgpack,
+};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
@@ -102,7 +104,7 @@ fn validate_header(header: &SaveHeaderV1) -> Result<(), SaveError> {
     if header.format != "rfb-save" {
         return Err(SaveError::InvalidHeader("format"));
     }
-    if header.save_schema_version != 1 {
+    if header.save_schema_version != SAVE_HEADER_SCHEMA_VERSION {
         return Err(SaveError::InvalidHeader("saveSchemaVersion"));
     }
     if header.payload_encoding != "messagepack" {

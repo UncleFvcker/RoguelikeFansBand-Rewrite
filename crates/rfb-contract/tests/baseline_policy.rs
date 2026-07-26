@@ -5,6 +5,16 @@ use std::path::PathBuf;
 use rfb_contract::approval::validate_policy_file;
 
 #[test]
+fn shared_constants_stay_in_sync_across_crates() {
+    // These constants are duplicated in intentionally isolated crates; this
+    // assertion is the guard that keeps the copies from drifting apart.
+    assert_eq!(
+        rfb_contract::LEGACY_BASELINE_COMMIT,
+        rfb_legacy_import::LEGACY_BASELINE_COMMIT
+    );
+}
+
+#[test]
 fn committed_baseline_policy_and_waivers_are_valid() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures");
     for version in [

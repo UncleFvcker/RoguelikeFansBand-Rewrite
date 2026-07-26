@@ -10,6 +10,8 @@ use thiserror::Error;
 use ts_rs::{Config, TS};
 
 pub const PROTOCOL_VERSION: &str = "1.90";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
 const fn default_actor_speed() -> u16 {
     110
