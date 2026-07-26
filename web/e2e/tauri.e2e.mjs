@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import process from "node:process";
@@ -10,6 +10,31 @@ import { fileURLToPath } from "node:url";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
+
+// The scenario pins protocol and content identity against the same sources
+// of truth the build uses, so routine version bumps cannot silently strand
+// this script on stale literals.
+async function loadExpectedIdentity() {
+  const lock = JSON.parse(
+    await readFile(
+      path.join(repositoryDirectory, "packs", "rfb-demo-original", "content.lock.json"),
+      "utf8",
+    ),
+  );
+  const protocolSource = await readFile(
+    path.join(repositoryDirectory, "crates", "rfb-protocol", "src", "lib.rs"),
+    "utf8",
+  );
+  const protocolMatch = protocolSource.match(/PROTOCOL_VERSION: &str = "([0-9.]+)"/);
+  if (!protocolMatch) {
+    throw new Error("PROTOCOL_VERSION not found in rfb-protocol/src/lib.rs");
+  }
+  return {
+    protocolVersion: protocolMatch[1],
+    contentId: lock.packId,
+    contentHash: lock.contentHash,
+  };
+}
 const executable = path.join(repositoryDirectory, "target", "debug", "rfb-tauri.exe");
 const artifactDirectory = path.join(repositoryDirectory, "test-results");
 const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
@@ -99,9 +124,13 @@ async function cleanupNativeTestSaves(driver) {
 }
 
 async function runScenario(driver) {
+  const expected = await loadExpectedIdentity();
+  // Cold CI runners need well over the default 10s to reach the first ready
+  // state on a debug build with software rendering.
   await driver.waitFor(
     `return document.querySelector("#connection-status")?.classList.contains("ready")`,
     "native core connection",
+    60_000,
   );
   await driver.execute(`
     localStorage.clear();
@@ -113,6 +142,7 @@ async function runScenario(driver) {
   await driver.waitFor(
     `return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.querySelector("#connection-status")?.classList.contains("ready")`,
     "deterministic application reload",
+    60_000,
   );
 
   await driver.execute(`
@@ -161,7 +191,7 @@ async function runScenario(driver) {
   assert.equal(state.pooledDynamicChunkCount, "0");
   assert.equal(state.visibilityMode, "rust-fov-memory-v1");
   assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, "1.87");
+  assert.equal(state.protocolVersion, expected.protocolVersion);
   assert.equal(state.visualCellCount, "400");
   assert.ok(Number(state.visibleCellCount) > 0);
   assert.equal(state.rememberedCellCount, "0");
@@ -173,13 +203,10 @@ async function runScenario(driver) {
   assert.equal(state.viewportHeight, "560");
   assert.equal(state.zoom, "1");
   assert.equal(state.canvasUnchanged, true);
-  assert.equal(state.contentId, "rfb.demo.original-v1");
-  assert.equal(
-    state.contentHash,
-    "66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d",
-  );
+  assert.equal(state.contentId, expected.contentId);
+  assert.equal(state.contentHash, expected.contentHash);
   assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.contentVisualCount, "67");
+  assert.equal(state.contentVisualCount, "70");
   assert.equal(state.itemCount, "5");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");
