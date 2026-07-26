@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.92";
+pub const PROTOCOL_VERSION: &str = "1.93";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -414,22 +414,30 @@ pub enum AbilityEffectSpecDto {
     Damage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         damage_type: DamageTypeDto,
     },
     AreaDamage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         damage_type: DamageTypeDto,
         radius: u8,
     },
     BeamDamage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         damage_type: DamageTypeDto,
     },
     ConeDamage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         damage_type: DamageTypeDto,
         radius: u8,
     },

@@ -6289,6 +6289,79 @@ fn beam_damage_passes_through_actors_with_one_roll_and_stops_at_walls() {
 }
 
 #[test]
+fn damage_bonus_adds_flat_amount_to_monster_cast_damage() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    for step in 0..=3 {
+        let index = game
+            .index(Position {
+                x: player.x + step,
+                y: player.y,
+            })
+            .expect("corridor cell");
+        game.terrain[index] = "demo.terrain.floor".to_owned();
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.cinder-test",
+        "demo.actor.cinder-adept",
+        Position {
+            x: player.x + 3,
+            y: player.y,
+        },
+        8,
+        100,
+        100,
+        true,
+    ));
+
+    let mut observed = None;
+    for _ in 0..40 {
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        for event in &update.events {
+            if let Some(GameEventOutcomeDto::MonsterAbilityCast { resolution }) =
+                event.outcome.as_ref()
+            {
+                let damage = resolution
+                    .effects
+                    .iter()
+                    .chain(
+                        resolution
+                            .targets
+                            .iter()
+                            .flat_map(|target| target.effects.iter()),
+                    )
+                    .find_map(|effect| match effect {
+                        AbilityEffectResolutionDto::Damage { resolution, .. } => Some(resolution),
+                        _ => None,
+                    })
+                    .expect("cinder cast should resolve damage");
+                observed = Some((resolution.ability_id.clone(), damage.raw_damage));
+            }
+        }
+        if observed.is_some() || game.player_is_dead() {
+            break;
+        }
+    }
+    let (ability_id, raw_damage) = observed.expect("cinder adept should cast within 40 turns");
+    // Every cinder ability carries a flat bonus, so the raw roll always
+    // lands inside dice-plus-bonus bounds without extra RNG cost.
+    let bounds = match ability_id.as_str() {
+        "demo.ability.cinder-bolt" => 5..=9,
+        "demo.ability.cinder-burst" => 3..=6,
+        "demo.ability.cinder-fan" => 3..=5,
+        other => panic!("unexpected cinder ability {other}"),
+    };
+    assert!(
+        bounds.contains(&raw_damage),
+        "raw damage {raw_damage} must include the flat bonus for {ability_id}"
+    );
+}
+
+#[test]
 fn targeted_beam_continues_through_position_and_entity_targets() {
     let ability_id = "demo.ability.echo-lance";
     let expected_path = vec![

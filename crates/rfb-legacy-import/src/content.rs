@@ -520,8 +520,152 @@ fn map_spell_token(
                 .or_insert_with(|| heal_ability(amount));
             Some(id)
         }
-        _ => None,
+        other => map_damage_spell_token(other, level, abilities),
     }
+}
+
+/// The two dice-based direct-damage shapes harvested from legacy S: lines.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DamageSpellShape {
+    Bolt,
+    Ball,
+}
+
+impl DamageSpellShape {
+    const fn keyword(self) -> &'static str {
+        match self {
+            Self::Bolt => "bolt",
+            Self::Ball => "ball",
+        }
+    }
+}
+
+/// Looks up a bolt/ball token base: shape, damage type and the legacy default
+/// dice `(dice, sides, bonus)` derived from the monster level. Elements with
+/// no faithful damage-type mapping stay unmapped for a future damage-type
+/// expansion instead of being folded into physical.
+fn damage_spell_defaults(
+    base: &str,
+    level: u32,
+) -> Option<(DamageSpellShape, &'static str, (u32, u32, u32))> {
+    use DamageSpellShape::{Ball, Bolt};
+    let entry = match base {
+        "BO_ACID" => (Bolt, "acid", (7, 8, level / 3)),
+        "BO_ELEC" => (Bolt, "electricity", (4, 8, level / 3)),
+        "BO_FIRE" => (Bolt, "fire", (9, 8, level / 3)),
+        "BO_COLD" => (Bolt, "cold", (6, 8, level / 3)),
+        // Approximations: ice folds into cold, plasma into fire, and the
+        // battering forms into physical dice.
+        "BO_ICE" => (Bolt, "cold", (6, 8, level)),
+        "BO_PLASMA" => (Bolt, "fire", (8, 7, 10 + level)),
+        "BO_WATER" => (Bolt, "physical", (10, 10, level)),
+        "MISSILE" => (Bolt, "physical", (2, 6, level / 3)),
+        "SHOOT" => (
+            Bolt,
+            "physical",
+            ((4 + level / 24).min(6), (level / 4).max(2), 0),
+        ),
+        // Legacy THROW is a radius-zero ball; a single-target bolt is the
+        // faithful neutral shape. Its flat damage uses the 1d1+(F-1) identity.
+        "THROW" => (Bolt, "physical", (1, 1, (3 * level).saturating_sub(1))),
+        "BA_ACID" => (Ball, "acid", (1, 3 * level, 15)),
+        "BA_ELEC" => (Ball, "electricity", (1, 3 * level / 2, 8)),
+        "BA_FIRE" => (Ball, "fire", (1, 7 * level / 2, 10)),
+        "BA_COLD" => (Ball, "cold", (1, 3 * level / 2, 10)),
+        "BA_POISON" => (Ball, "poison", (12, 2, 0)),
+        "BA_NUKE" => (Ball, "poison", (10, 6, level)),
+        "BA_WATER" => (Ball, "physical", (1, level, 50)),
+        "ROCKET" => (Ball, "physical", (1, 1, (6 * level).saturating_sub(1))),
+        "PULVERISE" => (Ball, "physical", (8, 8, 0)),
+        _ => return None,
+    };
+    Some(entry)
+}
+
+/// Parses an explicit r_info dice override: `XdY+Z`, `XdY` or a flat `N`
+/// (encoded through the exact 1d1+(N-1) identity).
+fn parse_explicit_damage_dice(spec: &str) -> Option<(u32, u32, u32)> {
+    if let Some((dice_part, sides_part)) = spec.split_once('d') {
+        let dice = dice_part.parse::<u32>().ok()?;
+        let (sides, bonus) = match sides_part.split_once('+') {
+            Some((sides_part, bonus_part)) => (
+                sides_part.parse::<u32>().ok()?,
+                bonus_part.parse::<u32>().ok()?,
+            ),
+            None => (sides_part.parse::<u32>().ok()?, 0),
+        };
+        return Some((dice, sides, bonus));
+    }
+    let flat = spec.parse::<u32>().ok()?;
+    Some((1, 1, flat.saturating_sub(1)))
+}
+
+fn map_damage_spell_token(
+    token: &str,
+    level: u16,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    let (base, explicit) = match token.split_once('(') {
+        Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
+        None => (token, None),
+    };
+    let (shape, damage_type, default_dice) = damage_spell_defaults(base, u32::from(level))?;
+    let (dice, sides, bonus) = match explicit {
+        Some(spec) => parse_explicit_damage_dice(spec)?,
+        None => default_dice,
+    };
+    let dice = dice.clamp(1, 100);
+    let sides = sides.clamp(1, 10_000);
+    let bonus = bonus.min(10_000);
+    let element = damage_type;
+    let mut suffix = format!("{}-{element}-{dice}d{sides}", shape.keyword());
+    if bonus > 0 {
+        suffix.push_str(&format!("-{bonus}"));
+    }
+    let id = format!("rfb-legacy.ability.{suffix}");
+    abilities
+        .entry(id.clone())
+        .or_insert_with(|| damage_spell_ability(shape, &suffix, damage_type, dice, sides, bonus));
+    Some(id)
+}
+
+fn damage_spell_ability(
+    shape: DamageSpellShape,
+    suffix: &str,
+    damage_type: &str,
+    dice: u32,
+    sides: u32,
+    bonus: u32,
+) -> serde_json::Value {
+    let mut effect = serde_json::json!({
+        "type": match shape {
+            DamageSpellShape::Bolt => "damage",
+            DamageSpellShape::Ball => "area-damage",
+        },
+        "damageDice": dice,
+        "damageSides": sides,
+        "damageType": damage_type,
+    });
+    if bonus > 0 {
+        effect["damageBonus"] = serde_json::json!(bonus);
+    }
+    if shape == DamageSpellShape::Ball {
+        effect["radius"] = serde_json::json!(2);
+    }
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{suffix}"),
+        "nameKey": format!("ability-legacy-{suffix}-name"),
+        "descriptionKey": format!("ability-legacy-{suffix}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+        "effect": effect,
+        "tags": ["legacy-import", "damage"],
+    })
 }
 
 pub fn convert_content(
@@ -919,5 +1063,87 @@ B:GAZE:TERRIFY\n";
         assert_eq!(arch["walkable"], true);
         assert_eq!(arch["blocksSight"], false);
         assert_eq!(arch["id"], "rfb-legacy.terrain.test-arch");
+    }
+
+    #[test]
+    fn explicit_damage_dice_specs_parse_including_the_flat_identity() {
+        assert_eq!(parse_explicit_damage_dice("18d8+26"), Some((18, 8, 26)));
+        assert_eq!(parse_explicit_damage_dice("9d8"), Some((9, 8, 0)));
+        assert_eq!(parse_explicit_damage_dice("140"), Some((1, 1, 139)));
+        assert_eq!(parse_explicit_damage_dice("d8"), None);
+        assert_eq!(parse_explicit_damage_dice("9d"), None);
+        assert_eq!(parse_explicit_damage_dice("fire"), None);
+    }
+
+    #[test]
+    fn bolt_and_ball_tokens_map_with_level_scaled_defaults() {
+        const CASTER_R_INFO: &str = "\
+N:3:test cinder mage\n\
+G:p:r\n\
+I:110:4d6:10:10:10:10\n\
+W:30:3:20:9:10:40\n\
+B:HIT:HURT(1d4)\n\
+S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
+        let monsters = parse_r_info(CASTER_R_INFO);
+        assert_eq!(monsters.len(), 1);
+        assert_eq!(monsters[0].level, Some(30));
+
+        let outcome = convert_content(&[], &monsters);
+        assert_eq!(outcome.report.monsters_with_casting, 1);
+        assert_eq!(outcome.report.spells_mapped["BO_FIRE"], 1);
+        assert_eq!(outcome.report.spells_mapped["BO_FIRE(18d8+26)"], 1);
+        assert_eq!(outcome.report.unmapped_spells["BO_MANA"], 1);
+
+        let (_, mage) = &outcome.actor_files[0];
+        let ability_ids: Vec<&str> = mage["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("casting should list abilities")
+            .iter()
+            .map(|entry| entry["abilityId"].as_str().expect("ability id"))
+            .collect();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.bolt-fire-9d8-10",
+                "rfb-legacy.ability.ball-acid-1d90-15",
+                "rfb-legacy.ability.bolt-fire-18d8-26",
+                "rfb-legacy.ability.bolt-physical-1d1-89",
+            ]
+        );
+
+        let bolt = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "bolt-fire-9d8-10.json")
+            .map(|(_, value)| value)
+            .expect("default fire bolt ability should be generated");
+        assert_eq!(bolt["effect"]["type"], "damage");
+        assert_eq!(bolt["effect"]["damageDice"], 9);
+        assert_eq!(bolt["effect"]["damageSides"], 8);
+        assert_eq!(bolt["effect"]["damageBonus"], 10);
+        assert_eq!(bolt["effect"]["damageType"], "fire");
+        assert_eq!(bolt["target"]["range"], 8);
+
+        let ball = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "ball-acid-1d90-15.json")
+            .map(|(_, value)| value)
+            .expect("acid ball ability should be generated");
+        assert_eq!(ball["effect"]["type"], "area-damage");
+        assert_eq!(ball["effect"]["radius"], 2);
+        assert_eq!(ball["effect"]["damageSides"], 90);
+        assert_eq!(ball["effect"]["damageBonus"], 15);
+
+        let throw = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "bolt-physical-1d1-89.json")
+            .map(|(_, value)| value)
+            .expect("flat throw ability should be generated");
+        assert_eq!(throw["effect"]["type"], "damage");
+        assert_eq!(throw["effect"]["damageDice"], 1);
+        assert_eq!(throw["effect"]["damageSides"], 1);
+        assert_eq!(throw["effect"]["damageBonus"], 89);
     }
 }

@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 84] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 85] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -178,9 +178,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 84] = [
     "29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e",
     "43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252",
     "81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916",
+    "3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc";
+    "134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -5500,6 +5501,7 @@ impl Game {
                 AbilityEffectDefinition::Damage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                 },
                 AbilityTargetPlan::Projectile { path, .. },
@@ -5512,7 +5514,10 @@ impl Game {
                     });
                     return Ok(());
                 };
-                let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                let raw_damage = self
+                    .roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0);
                 self.resolve_ability_damage_to_entity(
                     index,
                     &ability.id,
@@ -5528,6 +5533,7 @@ impl Game {
                 AbilityEffectDefinition::AreaDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                     radius,
                 },
@@ -5540,7 +5546,10 @@ impl Game {
                 let center = trace.landing;
                 let (affected_positions, targets) = self.area_damage_targets(center, radius);
                 changed.extend(affected_positions.iter().copied());
-                let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                let base_raw_damage = self
+                    .roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0);
                 events.push(DomainEvent::AbilityAreaDamage {
                     ability_id: ability.id.clone(),
                     resolution: AbilityAreaDamageResolutionDto {
@@ -5578,6 +5587,7 @@ impl Game {
                 AbilityEffectDefinition::BeamDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                 },
                 AbilityTargetPlan::Projectile { path, .. },
@@ -5586,7 +5596,10 @@ impl Game {
                 let affected_positions = trace.traversed.clone();
                 let targets = self.beam_damage_targets(&affected_positions);
                 changed.extend(affected_positions.iter().copied());
-                let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                let base_raw_damage = self
+                    .roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0);
                 events.push(DomainEvent::AbilityBeamDamage {
                     ability_id: ability.id.clone(),
                     resolution: AbilityBeamDamageResolutionDto {
@@ -5621,6 +5634,7 @@ impl Game {
                 AbilityEffectDefinition::ConeDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                     radius,
                 },
@@ -5635,7 +5649,10 @@ impl Game {
                 let (affected_positions, targets) =
                     self.cone_damage_targets(&trace.traversed, direction, radius);
                 changed.extend(affected_positions.iter().copied());
-                let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+                let base_raw_damage = self
+                    .roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0);
                 events.push(DomainEvent::AbilityConeDamage {
                     ability_id: ability.id.clone(),
                     resolution: AbilityConeDamageResolutionDto {
@@ -5822,9 +5839,13 @@ impl Game {
                         AbilityEffectDefinition::Damage {
                             damage_dice,
                             damage_sides,
+                            damage_bonus,
                             damage_type,
                         } => {
-                            let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                            let raw_damage = self
+                                .roll_damage(*damage_dice, *damage_sides)
+                                .saturating_add(i32::from(*damage_bonus))
+                                .max(0);
                             let damage = self.resolve_ability_damage_to_entity(
                                 current_index,
                                 ability_id,
@@ -8604,13 +8625,17 @@ impl Game {
                 let AbilityEffectDefinition::AreaDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                     ..
                 } = &plan.ability.effect
                 else {
                     unreachable!("monster area plan must retain an area effect");
                 };
-                let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                let raw_damage = self
+                    .roll_damage(*damage_dice, *damage_sides)
+                    .saturating_add(i32::from(*damage_bonus))
+                    .max(0);
                 let target_actors =
                     self.monster_targets_in_footprint(source_index, target, affected_positions);
                 let mut targets = Vec::with_capacity(target_actors.len());
@@ -8671,12 +8696,16 @@ impl Game {
                 let AbilityEffectDefinition::BeamDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                 } = &plan.ability.effect
                 else {
                     unreachable!("monster beam plan must retain a beam effect");
                 };
-                let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                let raw_damage = self
+                    .roll_damage(*damage_dice, *damage_sides)
+                    .saturating_add(i32::from(*damage_bonus))
+                    .max(0);
                 let target_actors =
                     self.monster_targets_in_footprint(source_index, target, affected_positions);
                 let mut targets = Vec::with_capacity(target_actors.len());
@@ -8730,13 +8759,17 @@ impl Game {
                 let AbilityEffectDefinition::ConeDamage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                     radius,
                 } = &plan.ability.effect
                 else {
                     unreachable!("monster cone plan must retain a cone effect");
                 };
-                let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                let raw_damage = self
+                    .roll_damage(*damage_dice, *damage_sides)
+                    .saturating_add(i32::from(*damage_bonus))
+                    .max(0);
                 let origin = self
                     .entities
                     .iter()
@@ -9116,9 +9149,13 @@ impl Game {
                 AbilityEffectDefinition::Damage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                 } => {
-                    let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                    let raw_damage = self
+                        .roll_damage(*damage_dice, *damage_sides)
+                        .saturating_add(i32::from(*damage_bonus))
+                        .max(0);
                     let damage_type = DamageType::from(*damage_type);
                     let definition = self
                         .content
@@ -9200,9 +9237,13 @@ impl Game {
                 AbilityEffectDefinition::Damage {
                     damage_dice,
                     damage_sides,
+                    damage_bonus,
                     damage_type,
                 } => {
-                    let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                    let raw_damage = self
+                        .roll_damage(*damage_dice, *damage_sides)
+                        .saturating_add(i32::from(*damage_bonus))
+                        .max(0);
                     let damage_type = DamageType::from(*damage_type);
                     let target = self.player_derived_stats();
                     let prepared = if damage_type == DamageType::Physical {
@@ -15095,40 +15136,48 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::Damage {
             damage_dice,
             damage_sides,
+            damage_bonus,
             damage_type,
         } => AbilityEffectSpecDto::Damage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
         },
         AbilityEffectDefinition::AreaDamage {
             damage_dice,
             damage_sides,
+            damage_bonus,
             damage_type,
             radius,
         } => AbilityEffectSpecDto::AreaDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
         },
         AbilityEffectDefinition::BeamDamage {
             damage_dice,
             damage_sides,
+            damage_bonus,
             damage_type,
         } => AbilityEffectSpecDto::BeamDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
         },
         AbilityEffectDefinition::ConeDamage {
             damage_dice,
             damage_sides,
+            damage_bonus,
             damage_type,
             radius,
         } => AbilityEffectSpecDto::ConeDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
         },

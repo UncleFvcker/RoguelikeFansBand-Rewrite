@@ -27,6 +27,13 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "damageDice": {
               "format": "uint16",
               "maximum": 65535,
@@ -58,6 +65,13 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "damageDice": {
               "format": "uint16",
               "maximum": 65535,
@@ -96,6 +110,13 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "damageDice": {
               "format": "uint16",
               "maximum": 65535,
@@ -127,6 +148,13 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "damageDice": {
               "format": "uint16",
               "maximum": 65535,

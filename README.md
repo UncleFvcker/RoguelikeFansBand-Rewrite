@@ -111,6 +111,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v90：多职业资源底子与首个技法资源](design/contract-v90-technique-resources.md)
 - [Contract v91：怪物位移法术族](design/contract-v91-monster-displacement.md)
 - [Contract v92：新状态族（混乱/致盲/麻痹）](design/contract-v92-status-family.md)
+- [Contract v93：怪物直伤弹族（bolt/ball）与伤害平坦加值](design/contract-v93-monster-bolt-ball.md)
 - [旧版内容导入管线 v1](design/legacy-content-import-v1.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
@@ -129,7 +130,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v92/scenarios`](tests/fixtures/contract-v92/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v91` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v93/scenarios`](tests/fixtures/contract-v93/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v92` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -232,7 +233,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.90 / contract-v90 建立多职业资源底子：资源定义新增初始填充、近战命中/击杀获得与闲置衰减字段，职业可声明多条 techniqueProfiles（独立上限公式、主宰属性、最低失败率与先天能力）。首个技法资源“节奏”由决斗家纵切承载：近战命中 +2、击杀 +3、闲置回合 -1，等待/休息不恢复；弦月斩与涌动节奏为先天技法，复用既有 cast/熟练度/冷却管线，资源不足拒绝不抽 RNG。旧存档资源池放宽为子集匹配，缺失的池按初始填充恢复且零 RNG。内容包升至 1.81.0，content hash 为 `43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252`；active baseline 共 282 个 exact fixtures、零 waiver，save v1 / state hash 升至 Schema v40。完整边界见 [Contract v90 说明](design/contract-v90-technique-resources.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v85 固定；阶段 H 已由 v86–v89 建立怪物施法、效用权重、阵营目标、多格结算、敌对召唤、战术移动、有限抗性记忆和玩家召唤物命令/行动；v90 建立多职业资源底子与首个技法资源。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。v92 建立混乱/致盲/麻痹新状态族与玩家侧效果。下一步按导入缺口报告推进 DETECT 侦测族。
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v85 固定；阶段 H 已由 v86–v89 建立怪物施法、效用权重、阵营目标、多格结算、敌对召唤、战术移动、有限抗性记忆和玩家召唤物命令/行动；v90 建立多职业资源底子与首个技法资源。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。v92 建立混乱/致盲/麻痹新状态族与玩家侧效果。v93 为四种伤害效果补充平坦加值并映射旧版弹/球直伤两族（DETECT 系经源码核实为附身专用组、怪物不施放，已按不适用归档）。下一步按导入缺口报告推进 BR_ 吐息族（按当前 HP 折算伤害，需要新效果形态）。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -305,10 +306,10 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v92/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v93/baseline-policy.json
 ```
 
-当前 299 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 303 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

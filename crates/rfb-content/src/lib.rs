@@ -623,11 +623,15 @@ pub enum AbilityEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
         #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
         damage_type: ActorDamageType,
     },
     AreaDamage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         #[serde(default)]
         damage_type: ActorDamageType,
         radius: u8,
@@ -636,11 +640,15 @@ pub enum AbilityEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
         #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
         damage_type: ActorDamageType,
     },
     ConeDamage {
         damage_dice: u16,
         damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
         #[serde(default)]
         damage_type: ActorDamageType,
         radius: u8,
@@ -2677,31 +2685,45 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             AbilityEffectDefinition::Damage {
                 damage_dice,
                 damage_sides,
+                damage_bonus,
                 ..
-            } => (1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides),
+            } => {
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
+            }
             AbilityEffectDefinition::AreaDamage {
                 damage_dice,
                 damage_sides,
+                damage_bonus,
                 radius,
                 ..
             } => {
                 (1..=100).contains(damage_dice)
                     && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
                     && (1..=9).contains(radius)
             }
             AbilityEffectDefinition::BeamDamage {
                 damage_dice,
                 damage_sides,
+                damage_bonus,
                 ..
-            } => (1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides),
+            } => {
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
+            }
             AbilityEffectDefinition::ConeDamage {
                 damage_dice,
                 damage_sides,
+                damage_bonus,
                 radius,
                 ..
             } => {
                 (1..=100).contains(damage_dice)
                     && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
                     && (1..=9).contains(radius)
             }
             AbilityEffectDefinition::Teleport => true,
@@ -6714,11 +6736,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 17);
+        assert_eq!(first.content.actors.len(), 18);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 23);
+        assert_eq!(first.content.abilities.len(), 26);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
@@ -6742,7 +6764,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.83.0");
+        assert_eq!(catalog.pack_version(), "1.84.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8832,6 +8854,7 @@ mod tests {
         effects.push(AbilityEffectDefinition::Damage {
             damage_dice: 1,
             damage_sides: 1,
+            damage_bonus: 0,
             damage_type: ActorDamageType::Physical,
         });
         assert!(matches!(

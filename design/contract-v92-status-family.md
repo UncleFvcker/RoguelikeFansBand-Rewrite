@@ -1,6 +1,6 @@
 # Contract v92：新状态族（混乱 / 致盲 / 麻痹）
 
-状态：当前 active baseline。协议 1.92，内容包 1.83.0（content hash `3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc`）；save 容器继续 v1；三个新状态写入既有 `statuses` 权威结构，state hash 沿用 Schema v40。active baseline 共 299 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v93](contract-v93-monster-bolt-ball.md)。协议 1.92，内容包 1.83.0（content hash `3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc`）；save 容器继续 v1；三个新状态写入既有 `statuses` 权威结构，state hash 沿用 Schema v40。该 baseline 共 299 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 
