@@ -35,6 +35,7 @@ pub enum DamageType {
     HellFire,
     Ice,
     Water,
+    Psi,
 }
 
 /// A compact first-pass resistance scale.
@@ -124,6 +125,7 @@ impl From<DamageType> for DamageTypeDto {
             DamageType::HellFire => Self::HellFire,
             DamageType::Ice => Self::Ice,
             DamageType::Water => Self::Water,
+            DamageType::Psi => Self::Psi,
         }
     }
 }
@@ -159,6 +161,7 @@ impl From<DamageTypeDto> for DamageType {
             DamageTypeDto::HellFire => Self::HellFire,
             DamageTypeDto::Ice => Self::Ice,
             DamageTypeDto::Water => Self::Water,
+            DamageTypeDto::Psi => Self::Psi,
         }
     }
 }
@@ -194,6 +197,7 @@ impl From<rfb_content::ActorDamageType> for DamageType {
             rfb_content::ActorDamageType::HellFire => Self::HellFire,
             rfb_content::ActorDamageType::Ice => Self::Ice,
             rfb_content::ActorDamageType::Water => Self::Water,
+            rfb_content::ActorDamageType::Psi => Self::Psi,
         }
     }
 }

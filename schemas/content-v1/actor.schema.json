@@ -53,7 +53,8 @@
         "holy-fire",
         "hell-fire",
         "ice",
-        "water"
+        "water",
+        "psi"
       ],
       "type": "string"
     },
@@ -392,6 +393,9 @@
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "poison": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psi": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "shards": {

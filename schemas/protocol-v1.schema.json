@@ -1755,7 +1755,8 @@
         "holy-fire",
         "hell-fire",
         "ice",
-        "water"
+        "water",
+        "psi"
       ]
     },
     "Direction": {

@@ -1,6 +1,6 @@
 # Contract v96：内容层抗性档与旧版抗性旗标导入
 
-状态：当前 active baseline。协议 1.96 沿用（无 DTO 变更：怪物抗性只进存档，不进快照——知识边界保持）；内容包 1.87.0（content hash `f1fba31216da594e34b36b23bdf4570b46a934c7360ad0d66e01f1284529a9f2`）；save 容器 v1；实体 `resistances` 早已是权威存档字段，state hash 沿用 Schema v40。active baseline 共 310 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v97](contract-v97-psionic-family.md)。协议 1.96 沿用（无 DTO 变更：怪物抗性只进存档，不进快照——知识边界保持）；内容包 1.87.0（content hash `f1fba31216da594e34b36b23bdf4570b46a934c7360ad0d66e01f1284529a9f2`）；save 容器 v1；实体 `resistances` 早已是权威存档字段，state hash 沿用 Schema v40。该 baseline 共 310 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

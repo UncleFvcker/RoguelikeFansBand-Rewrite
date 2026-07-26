@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.mind-lasher",
+  "role": "monster",
+  "nameKey": "actor-demo-mind-lasher-name",
+  "descriptionKey": "actor-demo-mind-lasher-description",
+  "glyph": "h",
+  "level": 4,
+  "experienceValue": 28,
+  "maxHp": 9,
+  "speed": 100,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "resistances": {
+    "psi": "resistant"
+  },
+  "monsterCasting": {
+    "frequencyPercent": 50,
+    "abilities": [
+      {
+        "abilityId": "demo.ability.psi-lash",
+        "weight": 1
+      }
+    ]
+  },
+  "tags": ["aberration"]
+}

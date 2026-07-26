@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.psi-lash",
+  "nameKey": "ability-demo-psi-lash-name",
+  "descriptionKey": "ability-demo-psi-lash-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 4,
+  "baseFailurePercent": 25,
+  "target": {
+    "modes": ["position", "entity"],
+    "range": 6,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "sequence",
+    "effects": [
+      {
+        "type": "damage",
+        "damageDice": 2,
+        "damageSides": 3,
+        "damageBonus": 1,
+        "damageType": "psi"
+      },
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.confusion",
+        "intensity": 1,
+        "durationTicks": 80,
+        "stacking": "extend",
+        "resistanceType": "psi"
+      }
+    ]
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["psi", "spell"]
+}

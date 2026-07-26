@@ -319,6 +319,145 @@ fn damage_type_for(blow: &LegacyBlow) -> (&'static str, Option<&str>) {
     }
 }
 
+/// Mental attacks package psi damage with status riders; the legacy saving
+/// throw and mana-drain side effects stay out of scope for now (documented
+/// neutralisation, consistent with the earlier status families).
+fn map_mental_spell_token(
+    token: &str,
+    level: u16,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    let (base, explicit) = match token.split_once('(') {
+        Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
+        None => (token, None),
+    };
+    let (default_dice, riders): (_, &[(&str, u32)]) = match base {
+        "MIND_BLAST" => ((7, 7, 0), &[("confusion", 80)]),
+        "BRAIN_SMASH" => (
+            (12, 12, 0),
+            &[
+                ("blindness", 80),
+                ("confusion", 80),
+                ("paralysis", 20),
+                ("slow", 80),
+            ],
+        ),
+        "PSY_SPEAR" => {
+            let (dice, sides, bonus) = match explicit {
+                Some(spec) => parse_explicit_damage_dice(spec)?,
+                None => (1, 3 * u32::from(level) / 2, 100),
+            };
+            let dice = dice.clamp(1, 100);
+            let sides = sides.clamp(1, 10_000);
+            let bonus = bonus.min(10_000);
+            let mut suffix = format!("psy-spear-{dice}d{sides}");
+            if bonus > 0 {
+                suffix.push_str(&format!("-{bonus}"));
+            }
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| psi_beam_ability(&suffix, dice, sides, bonus));
+            return Some(id);
+        }
+        _ => return None,
+    };
+    let (dice, sides, bonus) = match explicit {
+        Some(spec) => parse_explicit_damage_dice(spec)?,
+        None => default_dice,
+    };
+    let dice = dice.clamp(1, 100);
+    let sides = sides.clamp(1, 10_000);
+    let bonus = bonus.min(10_000);
+    let base_slug = if base == "MIND_BLAST" {
+        "mind-blast"
+    } else {
+        "brain-smash"
+    };
+    let mut suffix = format!("{base_slug}-{dice}d{sides}");
+    if bonus > 0 {
+        suffix.push_str(&format!("-{bonus}"));
+    }
+    let id = format!("rfb-legacy.ability.{suffix}");
+    abilities
+        .entry(id.clone())
+        .or_insert_with(|| psi_sequence_ability(&suffix, dice, sides, bonus, riders));
+    Some(id)
+}
+
+fn psi_damage_effect(dice: u32, sides: u32, bonus: u32) -> serde_json::Value {
+    let mut effect = serde_json::json!({
+        "type": "damage",
+        "damageDice": dice,
+        "damageSides": sides,
+        "damageType": "psi",
+    });
+    if bonus > 0 {
+        effect["damageBonus"] = serde_json::json!(bonus);
+    }
+    effect
+}
+
+fn psi_sequence_ability(
+    suffix: &str,
+    dice: u32,
+    sides: u32,
+    bonus: u32,
+    riders: &[(&str, u32)],
+) -> serde_json::Value {
+    let mut effects = vec![psi_damage_effect(dice, sides, bonus)];
+    for (status, duration_ticks) in riders {
+        effects.push(serde_json::json!({
+            "type": "apply-status",
+            "statusKindId": format!("rfb.status.{status}"),
+            "intensity": 1,
+            "durationTicks": duration_ticks,
+            "stacking": "extend",
+            "resistanceType": "psi",
+        }));
+    }
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{suffix}"),
+        "nameKey": format!("ability-legacy-{suffix}-name"),
+        "descriptionKey": format!("ability-legacy-{suffix}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+        "effect": { "type": "sequence", "effects": effects },
+        "tags": ["legacy-import", "psi"],
+    })
+}
+
+fn psi_beam_ability(suffix: &str, dice: u32, sides: u32, bonus: u32) -> serde_json::Value {
+    let mut effect = serde_json::json!({
+        "type": "beam-damage",
+        "damageDice": dice,
+        "damageSides": sides,
+        "damageType": "psi",
+    });
+    if bonus > 0 {
+        effect["damageBonus"] = serde_json::json!(bonus);
+    }
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{suffix}"),
+        "nameKey": format!("ability-legacy-{suffix}-name"),
+        "descriptionKey": format!("ability-legacy-{suffix}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+        "effect": effect,
+        "tags": ["beam", "legacy-import", "psi"],
+    })
+}
+
 /// Legacy resistance-flag suffixes and their damage-type names; applied in
 /// RES -> IM -> HURT order so immunities and vulnerabilities win.
 const RESISTANCE_FLAG_TYPES: [(&str, &str); 19] = [
@@ -579,6 +718,9 @@ fn map_spell_token(
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
     if let Some(id) = map_summon_spell_token(token, level, caster_kind_id, abilities) {
+        return Some(id);
+    }
+    if let Some(id) = map_mental_spell_token(token, level, abilities) {
         return Some(id);
     }
     match token {
@@ -1687,5 +1829,88 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+    }
+
+    #[test]
+    fn mental_tokens_map_to_psi_sequences_and_beam() {
+        const PSION_R_INFO: &str = "N:6:test mind flenser
+G:h:v
+I:110:6d6:20:15:10:10
+W:30:2:20:9:10:40
+B:HIT:HURT(1d5)
+S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
+";
+        let monsters = parse_r_info(PSION_R_INFO);
+        assert_eq!(monsters.len(), 1);
+
+        let outcome = convert_content(&[], &monsters);
+        let (_, flenser) = &outcome.actor_files[0];
+        let ability_ids: Vec<&str> = flenser["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("casting should list abilities")
+            .iter()
+            .map(|entry| entry["abilityId"].as_str().expect("ability id"))
+            .collect();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.mind-blast-7d7",
+                "rfb-legacy.ability.brain-smash-1d1-199",
+                "rfb-legacy.ability.psy-spear-1d45-100",
+            ]
+        );
+
+        let blast = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "mind-blast-7d7.json")
+            .map(|(_, value)| value)
+            .expect("mind blast should be generated");
+        let effects = blast["effect"]["effects"]
+            .as_array()
+            .expect("mind blast should be a sequence");
+        assert_eq!(effects.len(), 2);
+        assert_eq!(effects[0]["damageType"], "psi");
+        assert_eq!(effects[1]["statusKindId"], "rfb.status.confusion");
+        assert_eq!(effects[1]["resistanceType"], "psi");
+
+        let smash = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "brain-smash-1d1-199.json")
+            .map(|(_, value)| value)
+            .expect("brain smash should be generated");
+        let effects = smash["effect"]["effects"]
+            .as_array()
+            .expect("brain smash should be a sequence");
+        // Flat 200 encodes through the 1d1+(N-1) identity, followed by the
+        // four legacy riders in declaration order.
+        assert_eq!(effects.len(), 5);
+        assert_eq!(effects[0]["damageDice"], 1);
+        assert_eq!(effects[0]["damageBonus"], 199);
+        let riders: Vec<&str> = effects[1..]
+            .iter()
+            .map(|effect| effect["statusKindId"].as_str().expect("status id"))
+            .collect();
+        assert_eq!(
+            riders,
+            [
+                "rfb.status.blindness",
+                "rfb.status.confusion",
+                "rfb.status.paralysis",
+                "rfb.status.slow",
+            ]
+        );
+
+        let spear = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "psy-spear-1d45-100.json")
+            .map(|(_, value)| value)
+            .expect("psy spear should be generated");
+        assert_eq!(spear["effect"]["type"], "beam-damage");
+        assert_eq!(spear["effect"]["damageType"], "psi");
+        assert_eq!(spear["effect"]["damageSides"], 45);
+        assert_eq!(spear["effect"]["damageBonus"], 100);
     }
 }

@@ -659,7 +659,8 @@
         "holy-fire",
         "hell-fire",
         "ice",
-        "water"
+        "water",
+        "psi"
       ],
       "type": "string"
     }
