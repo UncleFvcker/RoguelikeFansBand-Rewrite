@@ -6,8 +6,8 @@ use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    CheckResolutionDto, Direction, GameEventDto, GameEventOutcomeDto, HealingResolutionDto,
+    ItemQualityDto, MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
     MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceGainResolutionDto,
     ResourceGainSourceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
     SummonCommandModeDto, SummonCommandResolutionDto,
@@ -405,6 +405,13 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
     },
     PlayerFearBlocked {
+        status_kind_id: String,
+    },
+    PlayerConfusedMove {
+        intended: Direction,
+        actual: Direction,
+    },
+    PlayerParalyzed {
         status_kind_id: String,
     },
     PlayerMeleeHit {
@@ -1438,6 +1445,19 @@ impl DomainEvent {
                 "status-fear-blocked",
                 [("status", status_kind_id)],
             ),
+            Self::PlayerConfusedMove { intended, actual } => dto(
+                "status.confused-move",
+                "status-confused-move",
+                [
+                    ("intended", direction_name(intended).to_owned()),
+                    ("actual", direction_name(actual).to_owned()),
+                ],
+            ),
+            Self::PlayerParalyzed { status_kind_id } => dto(
+                "status.paralyzed",
+                "status-paralyzed",
+                [("status", status_kind_id)],
+            ),
             Self::PlayerMeleeHit {
                 target_kind_id,
                 damage,
@@ -1735,6 +1755,19 @@ fn summon_command_mode_id(mode: SummonCommandModeDto) -> &'static str {
 
 pub(crate) fn project_events(events: Vec<DomainEvent>) -> Vec<GameEventDto> {
     events.into_iter().map(DomainEvent::into_dto).collect()
+}
+
+fn direction_name(direction: Direction) -> &'static str {
+    match direction {
+        Direction::North => "north",
+        Direction::NorthEast => "north-east",
+        Direction::East => "east",
+        Direction::SouthEast => "south-east",
+        Direction::South => "south",
+        Direction::SouthWest => "south-west",
+        Direction::West => "west",
+        Direction::NorthWest => "north-west",
+    }
 }
 
 fn dto_without_args(kind: &str, message_key: &str) -> GameEventDto {

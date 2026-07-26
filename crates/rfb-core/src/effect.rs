@@ -9,6 +9,9 @@ pub const STATUS_POISON: &str = "rfb.status.poison";
 pub const STATUS_BLEEDING: &str = "rfb.status.bleeding";
 pub const STATUS_STUN: &str = "rfb.status.stun";
 pub const STATUS_FEAR: &str = "rfb.status.fear";
+pub const STATUS_CONFUSION: &str = "rfb.status.confusion";
+pub const STATUS_BLINDNESS: &str = "rfb.status.blindness";
+pub const STATUS_PARALYSIS: &str = "rfb.status.paralysis";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

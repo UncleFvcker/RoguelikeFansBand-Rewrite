@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.gloom-weaver",
+  "role": "monster",
+  "nameKey": "actor-demo-gloom-weaver-name",
+  "descriptionKey": "actor-demo-gloom-weaver-description",
+  "glyph": "y",
+  "level": 3,
+  "experienceValue": 22,
+  "maxHp": 7,
+  "speed": 100,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "monsterCasting": {
+    "frequencyPercent": 50,
+    "abilities": [
+      {
+        "abilityId": "demo.ability.mind-fog",
+        "weight": 2
+      },
+      {
+        "abilityId": "demo.ability.gloom-veil",
+        "weight": 1
+      },
+      {
+        "abilityId": "demo.ability.numbing-grasp",
+        "weight": 1
+      }
+    ]
+  },
+  "tags": ["aberration"]
+}

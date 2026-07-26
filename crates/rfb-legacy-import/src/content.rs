@@ -444,6 +444,27 @@ fn map_spell_token(
                 .or_insert_with(|| status_ability("scare", "fear", false));
             Some(id)
         }
+        "CONFUSE" => {
+            let id = "rfb-legacy.ability.confuse".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| status_ability("confuse", "confusion", false));
+            Some(id)
+        }
+        "BLIND" => {
+            let id = "rfb-legacy.ability.blind".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| status_ability("blind", "blindness", false));
+            Some(id)
+        }
+        "PARALYZE" => {
+            let id = "rfb-legacy.ability.paralyze".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| status_ability("paralyze", "paralysis", false));
+            Some(id)
+        }
         "SLOW" => {
             let id = "rfb-legacy.ability.slow".to_owned();
             abilities

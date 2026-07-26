@@ -40,6 +40,9 @@ pub(crate) enum GameAction {
     OpenDoor {
         direction: Direction,
     },
+    /// Internal action substituted when paralysis wastes the player's turn.
+    /// No command maps to it; it advances world time at standard cost.
+    ParalyzedIdle,
     Wait,
     PickUp,
     Retire,

@@ -1,6 +1,6 @@
 # Contract v91：怪物位移法术族
 
-状态：当前 active baseline。协议 1.91，内容包 1.82.0（content hash `81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916`）；save 容器继续 v1；位移不新增权威状态字段，state hash 沿用 Schema v40。active baseline 共 288 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v92](contract-v92-status-family.md)。协议 1.91，内容包 1.82.0（content hash `81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916`）；save 容器继续 v1；位移不新增权威状态字段，state hash 沿用 Schema v40。该 baseline 共 288 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

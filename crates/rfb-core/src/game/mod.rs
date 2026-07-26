@@ -16,9 +16,9 @@ use crate::{
     },
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
-        STATUS_FEAR, STATUS_HASTE, STATUS_POISON, STATUS_SLOW, STATUS_STUN, StatusApplication,
-        StatusChange, StatusInstance, StatusStacking, advance_status_ticks, apply_effect,
-        resolve_damage,
+        STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR, STATUS_HASTE, STATUS_PARALYSIS,
+        STATUS_POISON, STATUS_SLOW, STATUS_STUN, StatusApplication, StatusChange, StatusInstance,
+        StatusStacking, advance_status_ticks, apply_effect, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ProjectileTrace, project_events},
@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 83] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 84] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -177,9 +177,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 83] = [
     "f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac",
     "29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e",
     "43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252",
+    "81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916";
+    "3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -2011,10 +2012,7 @@ impl Game {
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
         self.resources_touched.clear();
-        let action = GameAction::from(envelope.command);
-        let action_cost = action.energy_cost();
-        let recover_after_wait = matches!(&action, GameAction::Wait);
-        let mut turn_advance = 1_u32;
+        let mut action = GameAction::from(envelope.command);
         let advances_world = !matches!(
             &action,
             GameAction::Retire
@@ -2022,6 +2020,16 @@ impl Game {
                 | GameAction::Rest { .. }
                 | GameAction::SetSummonCommand { .. }
         );
+        // Paralysis wastes any world-advancing action: the substituted idle
+        // still spends the turn (energy, monster actions, status ticks) but
+        // never grants deliberate wait recovery. Zero-time commands and Rest
+        // stay available; rest turns tick paralysis down like any status.
+        if advances_world && self.player_has_status_kind(STATUS_PARALYSIS) {
+            action = GameAction::ParalyzedIdle;
+        }
+        let action_cost = action.energy_cost();
+        let recover_after_wait = matches!(&action, GameAction::Wait);
+        let mut turn_advance = 1_u32;
         if advances_world {
             self.decrement_ability_cooldowns(1);
         }
@@ -2329,7 +2337,13 @@ impl Game {
                     events.push(DomainEvent::ItemUnequipUnavailable { slot_id });
                 }
             }
+            GameAction::ParalyzedIdle => {
+                events.push(DomainEvent::PlayerParalyzed {
+                    status_kind_id: STATUS_PARALYSIS.to_owned(),
+                });
+            }
             GameAction::Move { direction } => {
+                let direction = self.confused_direction(direction, &mut events);
                 let (dx, dy) = direction.delta();
                 let target = Position {
                     x: self.player.position.x + dx,
@@ -5221,6 +5235,13 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        if self.player_has_status_kind(STATUS_CONFUSION) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "confused".to_owned(),
+            });
+            return Ok(());
+        }
         let ability = self.content.ability(ability_id).cloned();
         let technique_profile = ability
             .as_ref()
@@ -6877,6 +6898,45 @@ impl Game {
 
     fn player_is_dead(&self) -> bool {
         self.player.hp < 0
+    }
+
+    fn player_has_status_kind(&self, kind_id: &str) -> bool {
+        self.player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == kind_id)
+    }
+
+    /// Confusion scrambles one in-flight move: a bounded(4) draw of 0 keeps
+    /// the intended direction (no event), anything else redirects to a
+    /// bounded(8) draw over the canonical direction order. Both draws only
+    /// happen while the status is active, so unconfused replays are
+    /// byte-identical.
+    fn confused_direction(
+        &mut self,
+        intended: Direction,
+        events: &mut Vec<DomainEvent>,
+    ) -> Direction {
+        const CANONICAL_DIRECTIONS: [Direction; 8] = [
+            Direction::North,
+            Direction::NorthEast,
+            Direction::East,
+            Direction::SouthEast,
+            Direction::South,
+            Direction::SouthWest,
+            Direction::West,
+            Direction::NorthWest,
+        ];
+        if !self.player_has_status_kind(STATUS_CONFUSION) {
+            return intended;
+        }
+        if self.rng.bounded(4) == 0 {
+            return intended;
+        }
+        let actual =
+            CANONICAL_DIRECTIONS[usize::try_from(self.rng.bounded(8)).expect("index fits")];
+        events.push(DomainEvent::PlayerConfusedMove { intended, actual });
+        actual
     }
 
     fn player_fear_blocks_melee(&mut self, target_index: usize) -> bool {
@@ -10285,6 +10345,13 @@ impl Game {
     }
 
     fn is_visible(&self, position: Position) -> bool {
+        // Blindness suppresses the whole player FOV except the occupied cell:
+        // visuals fall back to remembered knowledge, visibility-gated targeting
+        // rejects, and rest no longer interrupts on enemies the player cannot
+        // see. Monster senses do not route through this helper.
+        if self.player_has_status_kind(STATUS_BLINDNESS) {
+            return position == self.player.position;
+        }
         if squared_distance(self.player.position, position) > VISIBILITY_RADIUS * VISIBILITY_RADIUS
         {
             return false;

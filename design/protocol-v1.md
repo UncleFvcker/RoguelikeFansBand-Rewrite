@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.91、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.92、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.91";
+  protocolVersion: "1.92";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -225,6 +225,8 @@ interface GameCoreV1 {
 协议 1.90 增加 `ResourceGainSourceDto`、`ResourceGainResolutionDto` 与事件 `resource.gained`；`ResourcePoolDto` 暴露可选的 `meleeHitGainAmount/meleeKillGainAmount/turnDecayAmount`，`AbilityDto.innate` 标记先天技法能力。技法能力沿用 `CastAbility` 与既有拒绝事件；获得与衰减不新增命令或事件之外的入口。内容包升至 1.81.0；技法资源池与先天熟练度进入 state hash Schema v40。完整边界见 [Contract v90](contract-v90-technique-resources.md)。
 
 协议 1.91 增加 `MonsterDisplacementResolutionDto` 与事件 `monster.blinked`、`monster.teleported`、`monster.dragged-target`；`AbilityEffectSpecDto` 增加 `blink-self`/`teleport-self`/`teleport-target` 三个规格。位移是怪物施法专用形态，不新增命令；内容包升至 1.82.0，state hash 沿用 Schema v40。完整边界见 [Contract v91](contract-v91-monster-displacement.md)。
+
+协议 1.92 增加事件 `status.confused-move`（args: intended/actual 方向 token）与 `status.paralyzed`（args: status）；`ability.cast-unavailable` 的开放 reason 集合新增 `confused`。无新增 DTO；三个新状态种类（`rfb.status.confusion`/`rfb.status.blindness`/`rfb.status.paralysis`）沿用既有 `StatusDto`。内容包升至 1.83.0，state hash 沿用 Schema v40。完整边界见 [Contract v92](contract-v92-status-family.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

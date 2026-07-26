@@ -43,7 +43,8 @@
 | P32 | 多 blow → meleeRoutine 映射 | 已完成（纯工具） | 1124/1332 导入怪物获得完整多段近战 routine，逐 blow 伤害类型，107 条无骰副攻计入缺口 |
 | P33 | 导入器法术映射 v1 | 已完成（纯工具） | SCARE/SLOW/HASTE/HEAL + 1_IN_N 频率 → monsterCasting，454 只导入怪物成为施法者，78 个共享生成能力 |
 | P34 | 怪物位移法术族 | 已由 contract-v91 完成 | blink-self/teleport-self/teleport-target 三效果、rift-stalker 纵切、导入映射 455 实例（casting 怪物 553）、288 个 exact fixtures |
-| P35 | CONFUSE/BLIND/PARALYZE 新状态族 | 下一候选 | 新状态种类 + 玩家侧效果（混乱走位/致盲视野/麻痹跳回合）+ 怪物施加入口 + 导入映射，约 110-223 怪物/项 |
+| P35 | 新状态族（混乱/致盲/麻痹） | 已由 contract-v92 完成 | 三个新状态种类 + 玩家侧效果（移动重定向/禁施法、FOV 压制、行动浪费）、gloom-weaver 纵切、导入映射 548 实例（casting 怪物 586）、299 个 exact fixtures |
+| P36 | DETECT 侦测族 | 下一候选 | DETECT_MONSTERS(149)/DETECT_OBJECTS(99) 怪物侦测形态（原版为怪物感知玩家/物品的情报类法术，需定义中性怪物侧效果）+ 导入映射 |
 
 ## contract-v90 明确遗留
 
