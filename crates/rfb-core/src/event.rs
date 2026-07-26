@@ -8,8 +8,9 @@ use rfb_protocol::{
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
     MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto, Position,
-    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
-    SummonCommandModeDto, SummonCommandResolutionDto,
+    ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SummonCommandModeDto,
+    SummonCommandResolutionDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -142,6 +143,9 @@ pub(crate) enum DomainEvent {
     },
     ResourceRecovered {
         resolution: ResourceRecoveryResolutionDto,
+    },
+    ResourceGained {
+        resolution: ResourceGainResolutionDto,
     },
     RestCompleted {
         resolution: RestResolutionDto,
@@ -778,6 +782,22 @@ impl DomainEvent {
                     ("amount", resolution.recovered.to_string()),
                 ],
                 GameEventOutcomeDto::ResourceRecovery { resolution },
+            ),
+            Self::ResourceGained { resolution } => dto_with_outcome(
+                "resource.gained",
+                "resource-gained",
+                [
+                    ("target", resolution.resource_id.clone()),
+                    ("amount", resolution.gained.to_string()),
+                    (
+                        "source",
+                        match resolution.source {
+                            ResourceGainSourceDto::MeleeHit => "melee-hit".to_owned(),
+                            ResourceGainSourceDto::MeleeKill => "melee-kill".to_owned(),
+                        },
+                    ),
+                ],
+                GameEventOutcomeDto::ResourceGain { resolution },
             ),
             Self::RestCompleted { resolution } => dto_with_outcome(
                 "rest.completed",

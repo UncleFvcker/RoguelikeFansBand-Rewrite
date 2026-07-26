@@ -18,6 +18,25 @@
     "id": {
       "type": "string"
     },
+    "initialFillPercent": {
+      "default": 100,
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "meleeHitGainAmount": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "meleeKillGainAmount": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
     "nameKey": {
       "type": "string"
     },
@@ -32,6 +51,12 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "turnDecayAmount": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
     },
     "waitRecoveryAmount": {
       "default": 0,

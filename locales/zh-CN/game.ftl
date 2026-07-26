@@ -103,6 +103,7 @@ message-ability-hit = { $ability }击中了{ $target }，造成 { $damage } 点�
 message-ability-slay = { $ability }消灭了{ $target }。
 message-ability-healed = { $ability }令你恢复了 { $amount } 点生命。
 message-resource-recovered = 你恢复了 { $amount } 点{ $resource }。
+message-resource-gained = 你的{ $resource }增长了 { $amount } 点。
 message-rest-completed = 你休息了 { $turns } 回合（{ $reason }）。
 message-rest-interrupted = 休息在 { $turns } 回合后中止（{ $reason }）。
 rest-stop-damaged = 你受到了伤害

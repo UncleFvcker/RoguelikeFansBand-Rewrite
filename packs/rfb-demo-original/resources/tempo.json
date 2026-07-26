@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/resource.schema.json",
+  "formatVersion": 1,
+  "id": "demo.resource.tempo",
+  "nameKey": "resource-demo-tempo-name",
+  "descriptionKey": "resource-demo-tempo-description",
+  "waitRecoveryAmount": 0,
+  "restRecoveryAmount": 0,
+  "initialFillPercent": 0,
+  "meleeHitGainAmount": 2,
+  "meleeKillGainAmount": 3,
+  "turnDecayAmount": 1,
+  "tags": ["technique", "tempo"]
+}

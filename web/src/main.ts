@@ -1065,7 +1065,11 @@ function renderAbilities(
   resourceList.replaceChildren();
   abilityList.replaceChildren();
   resourceRest.disabled =
-    busy || playerDead || !resources.some((resource) => resource.current < resource.maximum);
+    busy ||
+    playerDead ||
+    !resources.some(
+      (resource) => resource.restRecoveryAmount > 0 && resource.current < resource.maximum,
+    );
   if (resources.length === 0 && abilities.length === 0) {
     const unavailable = document.createElement("li");
     unavailable.className = "ability-empty";
@@ -1078,13 +1082,26 @@ function renderAbilities(
     const row = document.createElement("li");
     row.className = "resource-row";
     const name = localization.format(resource.nameKey as MessageKey);
-    row.textContent = localization.format("ability-resource-value", {
-      resource: name,
-      current: resource.current,
-      maximum: resource.maximum,
-      wait: resource.waitRecoveryAmount,
-      rest: resource.restRecoveryAmount,
-    });
+    const momentumDriven =
+      (resource.meleeHitGainAmount ?? 0) > 0 ||
+      (resource.meleeKillGainAmount ?? 0) > 0 ||
+      (resource.turnDecayAmount ?? 0) > 0;
+    row.textContent = momentumDriven
+      ? localization.format("ability-resource-momentum-value", {
+          resource: name,
+          current: resource.current,
+          maximum: resource.maximum,
+          hit: resource.meleeHitGainAmount ?? 0,
+          kill: resource.meleeKillGainAmount ?? 0,
+          decay: resource.turnDecayAmount ?? 0,
+        })
+      : localization.format("ability-resource-value", {
+          resource: name,
+          current: resource.current,
+          maximum: resource.maximum,
+          wait: resource.waitRecoveryAmount,
+          rest: resource.restRecoveryAmount,
+        });
     resourceList.append(row);
   }
   if (learning) {
@@ -1126,7 +1143,11 @@ function renderAbilities(
     const status = document.createElement("span");
     status.className = "ability-status";
     status.textContent = localization.format(
-      ability.learned ? "ability-status-learned" : "ability-status-unlearned",
+      ability.innate
+        ? "ability-status-innate"
+        : ability.learned
+          ? "ability-status-learned"
+          : "ability-status-unlearned",
     );
     details.append(name, summary, proficiency, status);
     if (ability.areaRadius != null) {
@@ -1724,6 +1745,11 @@ function formatEvent(event: GameEventDto): string {
       });
     case "resource-recovered":
       return localization.format("message-resource-recovered", {
+        resource: contentName(event.args.target),
+        amount: event.args.amount ?? "?",
+      });
+    case "resource-gained":
+      return localization.format("message-resource-gained", {
         resource: contentName(event.args.target),
         amount: event.args.amount ?? "?",
       });

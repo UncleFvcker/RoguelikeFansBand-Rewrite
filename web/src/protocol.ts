@@ -33,7 +33,7 @@ export type TargetModeDto = "direction" | "position" | "entity" | "self";
 
 export type TargetSpecDto = { modes: Array<TargetModeDto>, range: number, requiresLineOfEffect: boolean, };
 
-export type ResourcePoolDto = { id: string, nameKey: string, current: number, maximum: number, waitRecoveryAmount: number, restRecoveryAmount: number, };
+export type ResourcePoolDto = { id: string, nameKey: string, current: number, maximum: number, waitRecoveryAmount: number, restRecoveryAmount: number, meleeHitGainAmount?: number, meleeKillGainAmount?: number, turnDecayAmount?: number, };
 
 export type AbilityLearningDto = { learnedCount: number, capacity: number, remainingSlots: number, };
 
@@ -49,7 +49,7 @@ export type AbilityDetectSpecDto = { category: string, radius: number, persisten
 
 export type AbilityTerrainTransformSpecDto = { sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, };
 
-export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, effects: Array<AbilityEffectSpecDto>, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
+export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, innate?: boolean, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, effects: Array<AbilityEffectSpecDto>, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
 
 export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "self" };
 
@@ -135,13 +135,17 @@ export type SummonCommandResolutionDto = { command: SummonCommandDto, affectedSu
 
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 
+export type ResourceGainSourceDto = "melee-hit" | "melee-kill";
+
+export type ResourceGainResolutionDto = { resourceId: string, source: ResourceGainSourceDto, before: number, after: number, gained: number, };
+
 export type RestStopReasonDto = "damaged" | "enemy-visible" | "full-resources" | "invalid-turns" | "player-died" | "turn-limit";
 
 export type RestResolutionDto = { requestedTurns: number, completedTurns: number, stopReason: RestStopReasonDto, resourceRecoveries: Array<ResourceRecoveryResolutionDto>, };
 
 export type HealingResolutionDto = { requested: number, applied: number, };
 
-export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-effects", resolution: AbilityEffectsResolutionDto, } | { "type": "monster-ability-decision", resolution: MonsterAbilityDecisionResolutionDto, } | { "type": "monster-ability-cast", resolution: MonsterAbilityCastResolutionDto, } | { "type": "summon-command", resolution: SummonCommandResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
+export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-effects", resolution: AbilityEffectsResolutionDto, } | { "type": "monster-ability-decision", resolution: MonsterAbilityDecisionResolutionDto, } | { "type": "monster-ability-cast", resolution: MonsterAbilityCastResolutionDto, } | { "type": "summon-command", resolution: SummonCommandResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "resource-gain", resolution: ResourceGainResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 

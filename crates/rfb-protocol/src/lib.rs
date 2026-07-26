@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.89";
+pub const PROTOCOL_VERSION: &str = "1.90";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -363,6 +363,12 @@ pub struct ResourcePoolDto {
     pub wait_recovery_amount: u32,
     #[serde(default)]
     pub rest_recovery_amount: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub melee_hit_gain_amount: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub melee_kill_gain_amount: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub turn_decay_amount: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -466,6 +472,8 @@ pub struct AbilityDto {
     pub name_key: String,
     pub description_key: String,
     pub minimum_level: u16,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub innate: bool,
     pub resource_id: String,
     #[serde(default)]
     pub base_resource_cost: u32,
@@ -1080,6 +1088,25 @@ pub struct ResourceRecoveryResolutionDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
+pub enum ResourceGainSourceDto {
+    MeleeHit,
+    MeleeKill,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResourceGainResolutionDto {
+    pub resource_id: String,
+    pub source: ResourceGainSourceDto,
+    pub before: u32,
+    pub after: u32,
+    pub gained: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
 pub enum RestStopReasonDto {
     Damaged,
     EnemyVisible,
@@ -1157,6 +1184,9 @@ pub enum GameEventOutcomeDto {
     },
     ResourceRecovery {
         resolution: ResourceRecoveryResolutionDto,
+    },
+    ResourceGain {
+        resolution: ResourceGainResolutionDto,
     },
     Rest {
         resolution: RestResolutionDto,
@@ -1613,6 +1643,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandDto);
     push_declaration!(SummonCommandResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
+    push_declaration!(ResourceGainSourceDto);
+    push_declaration!(ResourceGainResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);
     push_declaration!(HealingResolutionDto);

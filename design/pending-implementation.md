@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v89、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v90、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -38,9 +38,10 @@
 | P27 | 怪物施法效用与目标扩展 | 已由 contract-v87 完成 | HP/状态/距离有效权重、自身治疗/增益、范围/射线/锥形、保守 footprint 风险、敌对召唤、逐候选协议观察与 257 个 exact fixtures |
 | P28 | 怪物目标选择与施法记忆 | 已由 contract-v88 完成 | 玩家阵营召唤物目标、敌我多目标评分与实际结算、保持距离/25% HP 撤退、smart caster 已观察抗性记忆、save/replay、Schema v38 与 265 个 exact fixtures |
 | P29 | 友方召唤物行动与首版命令 | 已由 contract-v89 完成 | Follow/Attack/Keep Distance/Guard、零时间全局命令、能量调度、近战归属、2 格跨层跟随、save/replay 与 Schema v39 |
-| P30 | 首个非 Mana 职业资源 | 下一候选 | 参考原版职业资源，先证明按行动获得、按能力消费、独立上限/恢复条件、UI、save/replay 与旧存档迁移 |
+| P30 | 首个非 Mana 职业资源 | 已由 contract-v90 完成 | 多资源底子（ResourceDefinition 行为字段 + techniqueProfiles）、节奏/决斗家纵切、命中/击杀获得、闲置衰减、先天技法、save/replay、旧存档子集迁移、Schema v40 与 282 个 exact fixtures |
+| P31 | 更多职业资源形态 | 下一候选 | 在技法底子上补受击获得、持续吟唱型逐回合扣费或姿态切换中的一种，继续证明内容声明而非职业硬编码 |
 
-## contract-v89 明确遗留
+## contract-v90 明确遗留
 
 - 玩家召唤物已执行 Follow/Attack/Keep Distance/Guard 全局命令，但尚无单体点名、召回、永久宠物、物品交互、法术施放或更复杂阵形；
 - 选择层已按 HP、状态、距离、敌我目标数量和已观察抗性调整有效权重，但尚未按精确伤害期望、逃跑路径长度、协同法术或群体角色建立更完整评分；
@@ -48,7 +49,8 @@
 - 怪物位移、地形、侦测、反制和特殊投射效果仍未开放；
 - 怪物首版不消费 Mana、学习、熟练度、失败率或玩家能力冷却；只使用百分比频率与按自身行动计数的逆频率冷却；
 - smart caster 只学习当前六类伤害抗性；原版更广的反射、自由行动、传送抗性、遗忘/误导，以及反制、沉默、施法打断、领域协同和完整怪物法术表仍未建立；
-- 多资源职业恢复为下一候选；装备激活与设备共享能力继续后置。
+- 多职业资源底子已建立并接入首个技法资源，但受击获得、持续吟唱逐回合扣费、姿态切换与资源联动（例如满值增益）尚未实现；
+- 装备激活与设备共享能力继续后置。
 
 contract-v89 已将玩家召唤物行动与全局命令接入协议 1.89、内容包 1.80.0、save v1 与 state hash Schema v39。命令零世界时间；移动和目标选择零 RNG；近战复用 actor routine 与玩家击杀归属。切层时仅 2 格内召唤物跟随，远处实体留层，Guard 锚点重置为到达位置。active baseline 为 272 个 exact fixtures、零 waiver。详细边界见 [contract-v89](contract-v89-friendly-summon-commands.md)。
 

@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v89/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v88` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v90/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v89` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v89/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v90/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v89/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v89`：友方召唤物四种全局命令、稳定移动/近战、玩家击杀归属、附近跨层跟随、save/replay、state hash Schema v39 和 272 个 exact fixtures 由 [Contract v89](contract-v89-friendly-summon-commands.md) 定义；[Contract v88](contract-v88-monster-targets-tactics-memory.md)、[Contract v87](contract-v87-monster-casting-utility.md)、[Contract v86](contract-v86-monster-casting-ai.md)、[Contract v85](contract-v85-ordered-status-effects.md)、[Contract v84](contract-v84-terrain-transform-ability.md)、[Contract v83](contract-v83-detection-ability.md)、[Contract v82](contract-v82-summon-ability.md)、[Contract v81](contract-v81-teleport-ability.md)、[Contract v80](contract-v80-targeted-beam-extension.md)、[Contract v79](contract-v79-cone-damage.md)、[Contract v78](contract-v78-beam-damage.md)、[Contract v77](contract-v77-area-damage.md) 及 `contract-v1` 至 `contract-v76` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v90`：多职业资源底子、节奏技法资源、先天能力、获得/衰减边界、save/replay、state hash Schema v40 和 282 个 exact fixtures 由 [Contract v90](contract-v90-technique-resources.md) 定义；[Contract v89](contract-v89-friendly-summon-commands.md)、[Contract v88](contract-v88-monster-targets-tactics-memory.md)、[Contract v87](contract-v87-monster-casting-utility.md)、[Contract v86](contract-v86-monster-casting-ai.md)、[Contract v85](contract-v85-ordered-status-effects.md)、[Contract v84](contract-v84-terrain-transform-ability.md)、[Contract v83](contract-v83-detection-ability.md)、[Contract v82](contract-v82-summon-ability.md)、[Contract v81](contract-v81-teleport-ability.md)、[Contract v80](contract-v80-targeted-beam-extension.md)、[Contract v79](contract-v79-cone-damage.md)、[Contract v78](contract-v78-beam-damage.md)、[Contract v77](contract-v77-area-damage.md) 及 `contract-v1` 至 `contract-v76` 继续作为历史基准保留。

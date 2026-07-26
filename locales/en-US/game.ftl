@@ -103,6 +103,7 @@ message-ability-hit = { $ability } hits { $target } for { $damage } damage.
 message-ability-slay = { $ability } destroys { $target }.
 message-ability-healed = { $ability } restores { $amount } HP.
 message-resource-recovered = You recover { $amount } { $resource }.
+message-resource-gained = Your { $resource } rises by { $amount }.
 message-rest-completed = You rest for { $turns } turns ({ $reason }).
 message-rest-interrupted = Your rest stops after { $turns } turns ({ $reason }).
 rest-stop-damaged = you were hurt

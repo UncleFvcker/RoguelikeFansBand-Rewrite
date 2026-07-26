@@ -387,6 +387,9 @@
         "id": {
           "type": "string"
         },
+        "innate": {
+          "type": "boolean"
+        },
         "learned": {
           "type": "boolean"
         },
@@ -2598,6 +2601,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/ResourceGainResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "resource-gain"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/RestResolutionDto"
             },
             "type": {
@@ -3800,6 +3819,46 @@
         "immune"
       ]
     },
+    "ResourceGainResolutionDto": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "before": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "gained": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ResourceGainSourceDto"
+        }
+      },
+      "required": [
+        "resourceId",
+        "source",
+        "before",
+        "after",
+        "gained"
+      ]
+    },
+    "ResourceGainSourceDto": {
+      "type": "string",
+      "enum": [
+        "melee-hit",
+        "melee-kill"
+      ]
+    },
     "ResourcePoolDto": {
       "type": "object",
       "properties": {
@@ -3816,6 +3875,16 @@
           "format": "uint32",
           "minimum": 0
         },
+        "meleeHitGainAmount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "meleeKillGainAmount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
         "nameKey": {
           "type": "string"
         },
@@ -3823,6 +3892,11 @@
           "type": "integer",
           "format": "uint32",
           "default": 0,
+          "minimum": 0
+        },
+        "turnDecayAmount": {
+          "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "waitRecoveryAmount": {

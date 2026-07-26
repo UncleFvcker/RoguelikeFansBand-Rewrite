@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.surging-tempo",
+  "nameKey": "ability-demo-surging-tempo-name",
+  "descriptionKey": "ability-demo-surging-tempo-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.tempo",
+  "resourceCost": 6,
+  "baseFailurePercent": 15,
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "effect": {
+    "type": "apply-status",
+    "statusKindId": "rfb.status.haste",
+    "intensity": 1,
+    "durationTicks": 25,
+    "stacking": "extend"
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["haste", "status", "technique"]
+}

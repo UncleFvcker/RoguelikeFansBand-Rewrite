@@ -1,6 +1,6 @@
 # Contract v89：友方召唤物行动与首版命令
 
-状态：当前 active baseline。协议版本为 1.89，demo 内容包继续使用 1.80.0，content hash 继续为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`。save 容器继续使用 v1；玩家的持久召唤指令是新增权威状态，state hash 升至 Schema v39。
+状态：历史 baseline；当前 active baseline 见 [contract-v90](contract-v90-technique-resources.md)。协议版本为 1.89，demo 内容包继续使用 1.80.0，content hash 继续为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`。save 容器继续使用 v1；玩家的持久召唤指令是新增权威状态，state hash 升至 Schema v39。
 
 ## 1. 原版参考与本轮边界
 

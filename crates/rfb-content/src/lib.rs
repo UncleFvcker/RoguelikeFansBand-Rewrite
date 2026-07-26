@@ -398,6 +398,8 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub casting_profile: Option<CastingProfileDefinition>,
     #[serde(default)]
+    pub technique_profiles: Vec<TechniqueProfileDefinition>,
+    #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     pub tags: Vec<String>,
 }
@@ -426,6 +428,31 @@ pub struct CastingProfileDefinition {
     pub learning_capacity_cap: u16,
     pub minimum_failure_percent: u8,
     pub ability_book_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TechniqueAttribute {
+    Strength,
+    Intelligence,
+    Wisdom,
+    Dexterity,
+    Constitution,
+    Charisma,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TechniqueProfileDefinition {
+    pub resource_id: String,
+    pub governing_attribute: TechniqueAttribute,
+    pub base_capacity: u32,
+    pub capacity_per_level: u32,
+    pub capacity_per_attribute_index: u32,
+    pub minimum_failure_percent: u8,
+    pub innate_ability_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -497,7 +524,19 @@ pub struct ResourceDefinition {
     pub wait_recovery_amount: u32,
     #[serde(default)]
     pub rest_recovery_amount: u32,
+    #[serde(default = "default_initial_fill_percent")]
+    pub initial_fill_percent: u8,
+    #[serde(default)]
+    pub melee_hit_gain_amount: u32,
+    #[serde(default)]
+    pub melee_kill_gain_amount: u32,
+    #[serde(default)]
+    pub turn_decay_amount: u32,
     pub tags: Vec<String>,
+}
+
+const fn default_initial_fill_percent() -> u8 {
+    100
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -2592,7 +2631,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         require_format_version(resource.format_version, &resource.id)?;
         validate_definition_id(&resource.id, "resource")?;
         validate_definition_text(&resource.id, &resource.name_key, &resource.description_key)?;
-        if resource.wait_recovery_amount > 1_000_000 || resource.rest_recovery_amount > 1_000_000 {
+        if resource.wait_recovery_amount > 1_000_000
+            || resource.rest_recovery_amount > 1_000_000
+            || resource.initial_fill_percent > 100
+            || resource.melee_hit_gain_amount > 1_000_000
+            || resource.melee_kill_gain_amount > 1_000_000
+            || resource.turn_decay_amount > 1_000_000
+        {
             return Err(ContentError::InvalidResource(resource.id.clone()));
         }
         normalize_tags(&resource.id, &mut resource.tags)?;
@@ -3226,6 +3271,44 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     ability_resources.get(ability_id) != Some(&profile.resource_id)
                 }) {
                     return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+                }
+            }
+        }
+        let mut technique_resource_ids = class
+            .casting_profile
+            .as_ref()
+            .map(|profile| profile.resource_id.clone())
+            .into_iter()
+            .collect::<BTreeSet<_>>();
+        if class.technique_profiles.len() > 8 {
+            return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
+        }
+        for profile in &mut class.technique_profiles {
+            profile.innate_ability_ids.sort();
+            let mut innate = BTreeSet::new();
+            let maximum_capacity = u64::from(profile.base_capacity)
+                .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
+                .saturating_add(
+                    u64::from(profile.capacity_per_attribute_index).saturating_mul(100),
+                );
+            if profile.minimum_failure_percent > 95
+                || profile.innate_ability_ids.is_empty()
+                || profile.innate_ability_ids.len() > 16
+                || profile
+                    .innate_ability_ids
+                    .iter()
+                    .any(|ability_id| !innate.insert(ability_id.clone()))
+                || maximum_capacity == 0
+                || maximum_capacity > 1_000_000_000
+                || !technique_resource_ids.insert(profile.resource_id.clone())
+            {
+                return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
+            }
+            require_reference(&resource_ids, &profile.resource_id, &class.id)?;
+            for ability_id in &profile.innate_ability_ids {
+                require_reference(&ability_ids, ability_id, &class.id)?;
+                if ability_resources.get(ability_id) != Some(&profile.resource_id) {
+                    return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
                 }
             }
         }
@@ -6514,6 +6597,8 @@ pub enum ContentError {
     InvalidAbilityBookItem(String),
     #[error("class casting profile is invalid: {0}")]
     InvalidCastingProfile(String),
+    #[error("class technique profile is invalid: {0}")]
+    InvalidTechniqueProfile(String),
     #[error("affix stat modifiers are invalid: {0}")]
     InvalidAffixModifiers(String),
     #[error("skill definition is invalid: {0}")]
@@ -6614,15 +6699,15 @@ mod tests {
         assert_eq!(first.content.actors.len(), 15);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
-        assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 15);
+        assert_eq!(first.content.resources.len(), 2);
+        assert_eq!(first.content.abilities.len(), 17);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
-        assert_eq!(first.content.skill_sets.len(), 11);
+        assert_eq!(first.content.skill_sets.len(), 12);
         assert_eq!(first.content.races.len(), 3);
-        assert_eq!(first.content.classes.len(), 5);
+        assert_eq!(first.content.classes.len(), 6);
         assert_eq!(first.content.personalities.len(), 3);
-        assert_eq!(first.content.builds.len(), 5);
+        assert_eq!(first.content.builds.len(), 6);
         assert_eq!(first.content.encounter_tables.len(), 6);
         assert_eq!(first.content.loot_tables.len(), 7);
         assert_eq!(first.content.theme_tables.len(), 3);
@@ -6639,7 +6724,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.80.0");
+        assert_eq!(catalog.pack_version(), "1.81.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
