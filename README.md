@@ -121,6 +121,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v99：小型效果杂项包（推离/吸取资源/失忆/驱散）](design/contract-v99-misc-effects.md)
 - [Contract v100：身体/槽位模板（双戒指/光源槽/槽实例化）](design/contract-v100-body-slots.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
+- [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版内容导入管线 v1](design/legacy-content-import-v1.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
