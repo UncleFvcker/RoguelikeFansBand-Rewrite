@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
+pub mod content;
+
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const LEGACY_BASELINE_REFERENCE: &str = "v1.3.0.7";
 pub const LEGACY_RNG_DEGREE: usize = 63;
@@ -409,6 +411,8 @@ pub enum LegacyImportError {
     MissingParsedBaseline(PathBuf),
     #[error("parsed legacy save baseline changed\nexpected:\n{expected}\nactual:\n{actual}")]
     BaselineMismatch { expected: String, actual: String },
+    #[error("legacy git access failed: {0}")]
+    LegacyGit(String),
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("JSON error: {0}")]

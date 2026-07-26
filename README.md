@@ -109,6 +109,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v88：怪物目标、战术移动与施法记忆](design/contract-v88-monster-targets-tactics-memory.md)
 - [Contract v89：友方召唤物行动与首版命令](design/contract-v89-friendly-summon-commands.md)
 - [Contract v90：多职业资源底子与首个技法资源](design/contract-v90-technique-resources.md)
+- [旧版内容导入管线 v1](design/legacy-content-import-v1.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -292,6 +293,7 @@ cargo run -p rfb-legacy-probe -- catalog-saves <旧存档1> <旧存档2> <旧存
 cargo run -p rfb-legacy-import -- inspect-prefix .local/legacy-baseline/saves/legacy-save-01.bin
 cargo run -p rfb-legacy-import -- record-catalog .local/legacy-baseline/save-samples.json
 cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-samples.json
+$env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-legacy-import -- import-content .local/packs/rfb-legacy
 ```
 
 `rfb-legacy-import` 当前只读取不依赖旧 C 结构体内存布局的 409 字节稳定前缀，包括版本、保存元数据、63 项 RNG 状态和选项位。生成的 `parsed-save-samples.json` 仍位于 `.local/`，不会进入 Git；`record-catalog` 拒绝覆盖已有基线。
