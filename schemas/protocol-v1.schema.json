@@ -365,6 +365,13 @@
             }
           ]
         },
+        "effects": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AbilityEffectSpecDto"
+          }
+        },
         "failCount": {
           "type": "integer",
           "format": "uint32",
@@ -459,6 +466,530 @@
         "canCast"
       ]
     },
+    "AbilityEffectResolutionDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "resolution": {
+              "$ref": "#/$defs/DamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "damage"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "resolution": {
+              "$ref": "#/$defs/HealingResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "heal"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "appliedDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "change": {
+              "$ref": "#/$defs/AbilityStatusChangeDto"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "intensity": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "requestedDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "resistance": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ResistanceLevelDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "stacking": {
+              "$ref": "#/$defs/AbilityStatusStackingDto"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "apply-status"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "statusKindId",
+            "intensity",
+            "requestedDurationTicks",
+            "appliedDurationTicks",
+            "stacking",
+            "change"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "removed": {
+              "type": "boolean"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "remove-status"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "statusKindId",
+            "removed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "reason": {
+              "$ref": "#/$defs/AbilityEffectSkipReasonDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "skipped"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "reason"
+          ]
+        }
+      ]
+    },
+    "AbilityEffectSkipReasonDto": {
+      "type": "string",
+      "enum": [
+        "no-target",
+        "target-dead"
+      ]
+    },
+    "AbilityEffectSpecDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "area-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "beam-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "cone-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "teleport"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "actorKindId": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "durationTurns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "summon"
+            }
+          },
+          "required": [
+            "type",
+            "actorKindId",
+            "count",
+            "radius",
+            "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "persistent": {
+              "type": "boolean"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "detect"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "radius",
+            "persistent"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "sourceTerrainIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "transform-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "intensity": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageTypeDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "stacking": {
+              "$ref": "#/$defs/AbilityStatusStackingDto"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "apply-status"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "intensity",
+            "durationTicks",
+            "stacking"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "remove-status"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "heal"
+            }
+          },
+          "required": [
+            "type",
+            "amount"
+          ]
+        }
+      ]
+    },
+    "AbilityEffectsResolutionDto": {
+      "type": "object",
+      "properties": {
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AbilityEffectResolutionDto"
+          }
+        },
+        "targetEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetKindId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "effects"
+      ]
+    },
     "AbilityLearningDto": {
       "type": "object",
       "properties": {
@@ -495,6 +1026,25 @@
         "skilled",
         "expert",
         "master"
+      ]
+    },
+    "AbilityStatusChangeDto": {
+      "type": "string",
+      "enum": [
+        "added",
+        "replaced",
+        "extended",
+        "strengthened",
+        "unchanged",
+        "immune"
+      ]
+    },
+    "AbilityStatusStackingDto": {
+      "type": "string",
+      "enum": [
+        "replace",
+        "extend",
+        "keep-strongest"
       ]
     },
     "AbilitySummonResolutionDto": {
@@ -1848,6 +2398,22 @@
             "type": {
               "type": "string",
               "const": "ability-terrain-transform"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityEffectsResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-effects"
             }
           },
           "required": [

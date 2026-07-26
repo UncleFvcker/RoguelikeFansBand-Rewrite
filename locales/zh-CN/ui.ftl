@@ -83,6 +83,7 @@ ability-detect-summary = 侦测 { $category } · 半径 { $radius } · { $persis
 ability-detect-persistent = 持久知识
 ability-detect-transient = 瞬时结果
 ability-terrain-transform-summary = 地形转换 · { $sources } 种来源 → { $terrain } · 半径 { $radius }
+ability-effects-summary = 有序效果组合 · { $count } 项效果
 ability-proficiency-summary = 熟练度 { $rank } { $current }/{ $maximum } · 成功 { $casts } · 失败 { $fails }
 ability-cooldown-summary = 冷却 { $remaining }/{ $turns } 回合
 ability-proficiency-unskilled = 生疏

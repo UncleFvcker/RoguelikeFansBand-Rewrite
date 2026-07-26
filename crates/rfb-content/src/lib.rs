@@ -538,6 +538,15 @@ pub struct AbilityCooldownDefinition {
     pub group_id: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityStatusStackingDefinition {
+    Replace,
+    Extend,
+    KeepStrongest,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(
@@ -591,9 +600,33 @@ pub enum AbilityEffectDefinition {
         target_terrain_id: String,
         radius: u8,
     },
+    ApplyStatus {
+        status_kind_id: String,
+        intensity: u16,
+        duration_ticks: u32,
+        stacking: AbilityStatusStackingDefinition,
+        #[serde(default)]
+        resistance_type: Option<ActorDamageType>,
+    },
+    RemoveStatus {
+        status_kind_id: String,
+    },
     Heal {
         amount: u32,
     },
+    Sequence {
+        effects: Vec<AbilityEffectDefinition>,
+    },
+}
+
+impl AbilityEffectDefinition {
+    #[must_use]
+    pub fn ordered_effects(&self) -> &[Self] {
+        match self {
+            Self::Sequence { effects } => effects,
+            effect => std::slice::from_ref(effect),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2530,14 +2563,20 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&ability.id, "ability")?;
         validate_definition_text(&ability.id, &ability.name_key, &ability.description_key)?;
         ability.target.modes.sort();
-        if let AbilityEffectDefinition::TransformTerrain {
-            source_terrain_ids, ..
-        } = &mut ability.effect
-        {
-            source_terrain_ids.sort();
+        let ordered_effects = match &mut ability.effect {
+            AbilityEffectDefinition::Sequence { effects } => effects.as_mut_slice(),
+            effect => std::slice::from_mut(effect),
+        };
+        for effect in ordered_effects {
+            if let AbilityEffectDefinition::TransformTerrain {
+                source_terrain_ids, ..
+            } = effect
+            {
+                source_terrain_ids.sort();
+            }
         }
         let mut modes = BTreeSet::new();
-        let valid_effect = match &ability.effect {
+        let valid_single_effect = |effect: &AbilityEffectDefinition| match effect {
             AbilityEffectDefinition::Damage {
                 damage_dice,
                 damage_sides,
@@ -2607,7 +2646,27 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         .iter()
                         .all(|source_id| source_id != target_terrain_id)
             }
+            AbilityEffectDefinition::ApplyStatus {
+                status_kind_id,
+                intensity,
+                duration_ticks,
+                ..
+            } => {
+                validate_id(status_kind_id).is_ok()
+                    && (1..=1_000).contains(intensity)
+                    && (1..=1_000_000).contains(duration_ticks)
+            }
+            AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+                validate_id(status_kind_id).is_ok()
+            }
             AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
+            AbilityEffectDefinition::Sequence { .. } => false,
+        };
+        let valid_effect = match &ability.effect {
+            AbilityEffectDefinition::Sequence { effects } => {
+                (2..=8).contains(&effects.len()) && effects.iter().all(valid_single_effect)
+            }
+            effect => valid_single_effect(effect),
         };
         let self_targeted = ability
             .target
@@ -2615,15 +2674,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             .contains(&AbilityTargetModeDefinition::SelfTarget);
         let directional_effect =
             matches!(&ability.effect, AbilityEffectDefinition::ConeDamage { .. });
+        let self_target_rule = ability.target.modes.as_slice()
+            == [AbilityTargetModeDefinition::SelfTarget]
+            && ability.target.range == 0
+            && !ability.target.requires_line_of_effect;
+        let projectile_target_rule = !self_targeted
+            && (1..=64).contains(&ability.target.range)
+            && ability.target.requires_line_of_effect;
         let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::AreaDamage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
-            | AbilityEffectDefinition::ConeDamage { .. } => {
-                !self_targeted
-                    && (1..=64).contains(&ability.target.range)
-                    && ability.target.requires_line_of_effect
-            }
+            | AbilityEffectDefinition::ConeDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted
                     && ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
@@ -2635,11 +2697,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && ability.target.range == 0
                     && !ability.target.requires_line_of_effect
             }
-            AbilityEffectDefinition::Heal { .. } => {
-                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
-                    && ability.target.range == 0
-                    && !ability.target.requires_line_of_effect
-            }
+            AbilityEffectDefinition::Heal { .. } => self_target_rule,
             AbilityEffectDefinition::Detect { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
@@ -2649,6 +2707,30 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::ApplyStatus { .. }
+            | AbilityEffectDefinition::RemoveStatus { .. } => {
+                self_target_rule || projectile_target_rule
+            }
+            AbilityEffectDefinition::Sequence { effects } => {
+                (self_target_rule
+                    && effects.iter().all(|effect| {
+                        matches!(
+                            effect,
+                            AbilityEffectDefinition::Heal { .. }
+                                | AbilityEffectDefinition::ApplyStatus { .. }
+                                | AbilityEffectDefinition::RemoveStatus { .. }
+                        )
+                    }))
+                    || (projectile_target_rule
+                        && effects.iter().all(|effect| {
+                            matches!(
+                                effect,
+                                AbilityEffectDefinition::Damage { .. }
+                                    | AbilityEffectDefinition::ApplyStatus { .. }
+                                    | AbilityEffectDefinition::RemoveStatus { .. }
+                            )
+                        }))
             }
         };
         let directional_target = !directional_effect
@@ -6421,7 +6503,7 @@ mod tests {
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 12);
+        assert_eq!(first.content.abilities.len(), 14);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
@@ -6445,7 +6527,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.76.0");
+        assert_eq!(catalog.pack_version(), "1.77.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -6460,12 +6542,14 @@ mod tests {
                 .map(|book| book.ability_ids.as_slice()),
             Some(
                 [
+                    "demo.ability.echo-binding".to_owned(),
                     "demo.ability.echo-burst".to_owned(),
                     "demo.ability.echo-companion".to_owned(),
                     "demo.ability.echo-delving".to_owned(),
                     "demo.ability.echo-fan".to_owned(),
                     "demo.ability.echo-lance".to_owned(),
                     "demo.ability.echo-pulse".to_owned(),
+                    "demo.ability.echo-quickening".to_owned(),
                     "demo.ability.echo-rampart".to_owned(),
                     "demo.ability.echo-sight".to_owned(),
                     "demo.ability.echo-step".to_owned(),
@@ -8464,6 +8548,79 @@ mod tests {
             .modes = vec![AbilityTargetModeDefinition::Direction];
         assert!(matches!(
             validate_and_normalize(&mut invalid_transform_target_mode),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_empty_sequence = artifact.content.clone();
+        let AbilityEffectDefinition::Sequence { effects } = &mut invalid_empty_sequence
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-quickening")
+            .expect("fixture should contain the self status sequence")
+            .effect
+        else {
+            panic!("echo quickening should use an effect sequence");
+        };
+        effects.clear();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_empty_sequence),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_nested_sequence = artifact.content.clone();
+        let AbilityEffectDefinition::Sequence { effects } = &mut invalid_nested_sequence
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-binding")
+            .expect("fixture should contain the target status sequence")
+            .effect
+        else {
+            panic!("echo binding should use an effect sequence");
+        };
+        effects[0] = AbilityEffectDefinition::Sequence {
+            effects: effects.clone(),
+        };
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_nested_sequence),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_status_duration = artifact.content.clone();
+        let AbilityEffectDefinition::Sequence { effects } = &mut invalid_status_duration
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-binding")
+            .expect("fixture should contain the target status sequence")
+            .effect
+        else {
+            panic!("echo binding should use an effect sequence");
+        };
+        let AbilityEffectDefinition::ApplyStatus { duration_ticks, .. } = &mut effects[1] else {
+            panic!("echo binding should apply slow second");
+        };
+        *duration_ticks = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_status_duration),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_self_sequence_member = artifact.content.clone();
+        let AbilityEffectDefinition::Sequence { effects } = &mut invalid_self_sequence_member
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-quickening")
+            .expect("fixture should contain the self status sequence")
+            .effect
+        else {
+            panic!("echo quickening should use an effect sequence");
+        };
+        effects.push(AbilityEffectDefinition::Damage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_type: ActorDamageType::Physical,
+        });
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_self_sequence_member),
             Err(ContentError::InvalidAbility(_))
         ));
 

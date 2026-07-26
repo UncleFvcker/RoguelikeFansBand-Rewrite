@@ -83,6 +83,7 @@ ability-detect-summary = Detect { $category } · radius { $radius } · { $persis
 ability-detect-persistent = persistent knowledge
 ability-detect-transient = transient result
 ability-terrain-transform-summary = Terrain transform · { $sources } source types → { $terrain } · radius { $radius }
+ability-effects-summary = Ordered effect sequence · { $count } effects
 ability-proficiency-summary = Proficiency { $rank } { $current }/{ $maximum } · casts { $casts } · fails { $fails }
 ability-cooldown-summary = Cooldown { $remaining }/{ $turns } turns
 ability-proficiency-unskilled = Unskilled

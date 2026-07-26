@@ -4,10 +4,11 @@ use std::collections::BTreeMap;
 
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilitySummonResolutionDto,
-    AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto, CheckResolutionDto,
-    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, Position,
-    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
+    AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
+    CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
+    Position, ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -90,6 +91,11 @@ pub(crate) enum DomainEvent {
     AbilityTerrainTransformed {
         ability_id: String,
         resolution: AbilityTerrainTransformResolutionDto,
+    },
+    AbilityEffectsResolved {
+        ability_id: String,
+        resolution: AbilityEffectsResolutionDto,
+        trace: Option<ProjectileTrace>,
     },
     SummonExpired {
         entity_id: String,
@@ -563,6 +569,25 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::AbilityTerrainTransform { resolution },
             ),
+            Self::AbilityEffectsResolved {
+                ability_id,
+                resolution,
+                trace,
+            } => {
+                let event = dto_with_outcome(
+                    "ability.effects",
+                    "ability-effects",
+                    [
+                        ("target", ability_id),
+                        ("count", resolution.effects.len().to_string()),
+                    ],
+                    GameEventOutcomeDto::AbilityEffects { resolution },
+                );
+                match trace {
+                    Some(trace) => with_trace(event, trace),
+                    None => event,
+                }
+            }
             Self::SummonExpired {
                 entity_id,
                 target_kind_id,

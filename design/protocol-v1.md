@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.84、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.85、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.84";
+  protocolVersion: "1.85";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -211,6 +211,8 @@ interface GameCoreV1 {
 协议 1.83 新增 `AbilityDetectSpecDto` 与 `AbilityDto.detect`，以及 `AbilityDetectResolutionDto` 和 `GameEventOutcomeDto.ability-detect`。首版侦测只接受 `self` 目标，并按内容 category/radius 筛选当前 FOV 内具有隐藏投影的 terrain；结果按距离、`y`、`x` 稳定输出。`persistent` 结果写入 `revealedTerrain` 并通过 `changedCells` 返回，瞬时结果只存在于 `ability.detect` outcome。空结果仍是合法施法，非法目标和资源不足在 RNG 前拒绝；save 容器仍为 v1，state hash 升至 Schema v36。完整边界见 [Contract v83](contract-v83-detection-ability.md)。
 
 协议 1.84 新增 `AbilityTerrainTransformSpecDto` 与 `AbilityDto.terrainTransform`，以及 `AbilityTerrainTransformResolutionDto` 和 `GameEventOutcomeDto.ability-terrain-transform`。首版地形改变只接受 `position` 目标，返回中心、半径、规范化来源 terrain 集、目标 terrain 和稳定排序的 `transformedPositions`。实际修改格同步进入 `changedCells`；非法/超距目标和资源不足在 RNG 前拒绝，失败不产生地形 outcome，空结果成功仍返回结构化 outcome。save 容器继续为 v1，terrain 原本已进入 save/hash，因此 state hash 保持 Schema v36。完整边界见 [Contract v84](contract-v84-terrain-transform-ability.md)。
+
+协议 1.85 新增 `AbilityEffectSpecDto`、`AbilityStatusStackingDto` 与 `AbilityDto.effects`，把所有能力投影为有序效果列表；旧的 area/beam/cone/teleport/summon/detect/terrainTransform 专用字段继续兼容。`AbilityEffectResolutionDto`、`AbilityEffectsResolutionDto`、`AbilityStatusChangeDto` 和 `AbilityEffectSkipReasonDto` 为 `GameEventOutcomeDto.ability-effects` 返回逐效果索引、伤害/治疗/状态结果、抗性缩时、免疫、`no-target` 与 `target-dead`。整次施法仍只支付一次资源并先抽一次失败率；子效果按顺序执行，前序击杀会跳过后续效果及其 RNG。save v1/state hash Schema v36 保持不变。完整边界见 [Contract v85](contract-v85-ordered-status-effects.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

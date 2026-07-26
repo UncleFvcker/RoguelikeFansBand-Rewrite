@@ -153,6 +153,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.84 仍不新增 save 字段：地形改变能力直接修改当前 `TerrainSaveDto.terrainIds`，离层时继续由既有 `FloorSaveDto.terrain` 保存；修改格会从 `revealedTerrain` 移除。载入 v83 及更早存档时，不自动学习 Echo Delving/Echo Rampart、不补发能力书、不改写 terrain、不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。terrain 原本已进入 state hash，故 save 容器保持 v1、state hash 保持 Schema v36。完整边界见 [Contract v84](contract-v84-terrain-transform-ability.md)。
 
+协议 1.85 仍不新增 save 字段：Echo Quickening/Echo Binding 产生的状态继续写入既有 `ActorSaveDto.statuses` / `StatusSaveDto`，包括稳定 kind ID、强度、剩余 tick 和能力来源 ID。逐效果索引、抗性缩放结果、`no-target` 与 `target-dead` 只属于命令事件，不重复保存。载入 v84 及更早存档时不自动学习新能力、不添加或移除状态、不补发书本且不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。actor statuses 原本已进入 state hash，故 save 容器保持 v1、state hash 保持 Schema v36。完整边界见 [Contract v85](contract-v85-ordered-status-effects.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

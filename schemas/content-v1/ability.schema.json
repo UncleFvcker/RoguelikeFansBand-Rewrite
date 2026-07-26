@@ -275,6 +275,68 @@
         {
           "additionalProperties": false,
           "properties": {
+            "durationTicks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "intensity": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActorDamageType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "stacking": {
+              "$ref": "#/$defs/AbilityStatusStackingDefinition"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "apply-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "intensity",
+            "durationTicks",
+            "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "remove-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,
@@ -288,6 +350,26 @@
           "required": [
             "type",
             "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "effects": {
+              "items": {
+                "$ref": "#/$defs/AbilityEffectDefinition"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "sequence",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "effects"
           ],
           "type": "object"
         }
@@ -326,6 +408,14 @@
         }
       },
       "type": "object"
+    },
+    "AbilityStatusStackingDefinition": {
+      "enum": [
+        "replace",
+        "extend",
+        "keep-strongest"
+      ],
+      "type": "string"
     },
     "AbilityTargetDefinition": {
       "additionalProperties": false,

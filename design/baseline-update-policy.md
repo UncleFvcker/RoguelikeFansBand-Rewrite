@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v84/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v83` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v85/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v84` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v84/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v85/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v84/baselin
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v84`：内容驱动 terrain 来源/目标集合、position/FOV/line-of-effect、占用格与连接/边界保护、稳定原子提交、空结果和零资源/零 RNG 前置边界、save/state hash Schema v36 和 231 个 exact fixtures 由 [Contract v84](contract-v84-terrain-transform-ability.md) 定义；[Contract v83](contract-v83-detection-ability.md)、[Contract v82](contract-v82-summon-ability.md)、[Contract v81](contract-v81-teleport-ability.md)、[Contract v80](contract-v80-targeted-beam-extension.md)、[Contract v79](contract-v79-cone-damage.md)、[Contract v78](contract-v78-beam-damage.md)、[Contract v77](contract-v77-area-damage.md) 及 `contract-v1` 至 `contract-v76` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v85`：状态添加/移除、有序多效果、确定性抗性缩时与免疫、部分无效、目标死亡/无目标跳过、整次施法资源与 RNG 边界、save/state hash Schema v36 和 242 个 exact fixtures 由 [Contract v85](contract-v85-ordered-status-effects.md) 定义；[Contract v84](contract-v84-terrain-transform-ability.md)、[Contract v83](contract-v83-detection-ability.md)、[Contract v82](contract-v82-summon-ability.md)、[Contract v81](contract-v81-teleport-ability.md)、[Contract v80](contract-v80-targeted-beam-extension.md)、[Contract v79](contract-v79-cone-damage.md)、[Contract v78](contract-v78-beam-damage.md)、[Contract v77](contract-v77-area-damage.md) 及 `contract-v1` 至 `contract-v76` 继续作为历史基准保留。

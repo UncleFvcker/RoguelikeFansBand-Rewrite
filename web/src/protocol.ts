@@ -39,13 +39,17 @@ export type AbilityLearningDto = { learnedCount: number, capacity: number, remai
 
 export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
 
+export type AbilityStatusStackingDto = "replace" | "extend" | "keep-strongest";
+
+export type AbilityEffectSpecDto = { "type": "damage", damageDice: number, damageSides: number, damageType: DamageTypeDto, } | { "type": "area-damage", damageDice: number, damageSides: number, damageType: DamageTypeDto, radius: number, } | { "type": "beam-damage", damageDice: number, damageSides: number, damageType: DamageTypeDto, } | { "type": "cone-damage", damageDice: number, damageSides: number, damageType: DamageTypeDto, radius: number, } | { "type": "teleport" } | { "type": "summon", actorKindId: string, count: number, radius: number, durationTurns: number, } | { "type": "detect", category: string, radius: number, persistent: boolean, } | { "type": "transform-terrain", sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, } | { "type": "apply-status", statusKindId: string, intensity: number, durationTicks: number, stacking: AbilityStatusStackingDto, resistanceType?: DamageTypeDto | null, } | { "type": "remove-status", statusKindId: string, } | { "type": "heal", amount: number, };
+
 export type AbilitySummonSpecDto = { actorKindId: string, count: number, radius: number, durationTurns: number, };
 
 export type AbilityDetectSpecDto = { category: string, radius: number, persistent: boolean, };
 
 export type AbilityTerrainTransformSpecDto = { sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, };
 
-export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
+export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, effects: Array<AbilityEffectSpecDto>, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
 
 export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "self" };
 
@@ -105,6 +109,14 @@ export type AbilityDetectResolutionDto = { category: string, radius: number, per
 
 export type AbilityTerrainTransformResolutionDto = { center: Position, radius: number, sourceTerrainIds: Array<string>, targetTerrainId: string, transformedPositions: Array<Position>, };
 
+export type AbilityStatusChangeDto = "added" | "replaced" | "extended" | "strengthened" | "unchanged" | "immune";
+
+export type AbilityEffectSkipReasonDto = "no-target" | "target-dead";
+
+export type AbilityEffectResolutionDto = { "type": "damage", effectIndex: number, resolution: DamageResolutionDto, } | { "type": "heal", effectIndex: number, resolution: HealingResolutionDto, } | { "type": "apply-status", effectIndex: number, statusKindId: string, intensity: number, requestedDurationTicks: number, appliedDurationTicks: number, stacking: AbilityStatusStackingDto, resistanceType?: DamageTypeDto | null, resistance?: ResistanceLevelDto | null, change: AbilityStatusChangeDto, } | { "type": "remove-status", effectIndex: number, statusKindId: string, removed: boolean, } | { "type": "skipped", effectIndex: number, reason: AbilityEffectSkipReasonDto, };
+
+export type AbilityEffectsResolutionDto = { targetEntityId?: string | null, targetKindId?: string | null, effects: Array<AbilityEffectResolutionDto>, };
+
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 
 export type RestStopReasonDto = "damaged" | "enemy-visible" | "full-resources" | "invalid-turns" | "player-died" | "turn-limit";
@@ -113,7 +125,7 @@ export type RestResolutionDto = { requestedTurns: number, completedTurns: number
 
 export type HealingResolutionDto = { requested: number, applied: number, };
 
-export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
+export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-effects", resolution: AbilityEffectsResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 

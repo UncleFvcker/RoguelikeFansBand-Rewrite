@@ -1147,6 +1147,14 @@ function renderAbilities(
       });
       details.append(transform);
     }
+    if (ability.effects.length > 1) {
+      const effects = document.createElement("span");
+      effects.className = "ability-status";
+      effects.textContent = localization.format("ability-effects-summary", {
+        count: ability.effects.length,
+      });
+      details.append(effects);
+    }
     if (ability.cooldownTurns > 0) {
       const cooldown = document.createElement("span");
       cooldown.className = "ability-status";
@@ -1589,6 +1597,11 @@ function formatEvent(event: GameEventDto): string {
         terrain: contentName(event.args.terrain),
         count: event.args.count ?? "0",
       });
+    case "ability-effects":
+      return localization.format("message-ability-effects", {
+        ability: contentName(event.args.target),
+        count: event.args.count ?? "0",
+      });
     case "summon-expired":
       return localization.format("message-summon-expired", {
         actor: contentName(event.args.actor),
@@ -2020,6 +2033,12 @@ function contentName(id: string | undefined): string {
   }
   if (id === "demo.ability.echo-rampart") {
     return localization.format("ability-demo-echo-rampart-name");
+  }
+  if (id === "demo.ability.echo-binding") {
+    return localization.format("ability-demo-echo-binding-name");
+  }
+  if (id === "demo.ability.echo-quickening") {
+    return localization.format("ability-demo-echo-quickening-name");
   }
   if (id === "demo.ability.mending-echo") {
     return localization.format("ability-demo-mending-echo-name");

@@ -82,6 +82,7 @@ message-ability-teleport = { $ability }令你从（{ $fromX }，{ $fromY }）瞬
 message-ability-summon = { $ability } 在附近空地召唤了 { $count } 个{ $actor }。
 message-ability-detect = { $ability }侦测到附近 { $count } 处“{ $category }”地形线索。
 message-ability-terrain-transform = { $ability }把 { $count } 个地形格重塑为{ $terrain }。
+message-ability-effects = { $ability }依次结算了 { $count } 项效果。
 message-summon-expired = { $actor } 在召唤结束时逐渐消散。
 message-ability-hit = { $ability }击中了{ $target }，造成 { $damage } 点伤害。
 message-ability-slay = { $ability }消灭了{ $target }。

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.echo-binding",
+  "nameKey": "ability-demo-echo-binding-name",
+  "descriptionKey": "ability-demo-echo-binding-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 4,
+  "baseFailurePercent": 30,
+  "target": {
+    "modes": ["position", "entity"],
+    "range": 6,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "sequence",
+    "effects": [
+      {
+        "type": "damage",
+        "damageDice": 1,
+        "damageSides": 2,
+        "damageType": "cold"
+      },
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.slow",
+        "intensity": 1,
+        "durationTicks": 30,
+        "stacking": "keep-strongest",
+        "resistanceType": "cold"
+      }
+    ]
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["cold", "spell", "status"]
+}

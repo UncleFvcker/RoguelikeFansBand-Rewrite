@@ -966,6 +966,83 @@ mod tests {
     }
 
     #[test]
+    fn ordered_status_effects_round_trip_through_replay() {
+        let mut payload = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create")
+            .to_save();
+        payload.entities.clear();
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        payload
+            .player
+            .ability_progress
+            .iter_mut()
+            .find(|progress| progress.id == "demo.ability.echo-quickening")
+            .expect("status ability progress should exist")
+            .proficiency = 1600;
+        payload.player.statuses.push(rfb_protocol::StatusSaveDto {
+            kind_id: "rfb.status.slow".to_owned(),
+            intensity: 1,
+            remaining_ticks: 20,
+            source_id: Some("test.slow".to_owned()),
+        });
+        let initial = Game::from_save(payload).expect("status replay fixture should load");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-primer")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the echo primer");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.echo-quickening".to_owned(),
+            })
+            .expect("status ability study should execute");
+        let update = recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.echo-quickening".to_owned(),
+                target: rfb_protocol::TargetSelection::SelfTarget,
+            })
+            .expect("status ability cast should execute");
+        assert!(update.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(rfb_protocol::GameEventOutcomeDto::AbilityEffects { resolution })
+                    if resolution.effects.len() == 2
+            )
+        }));
+        let (final_game, replay) = recorder.finish();
+
+        assert!(
+            final_game
+                .snapshot()
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == "rfb.status.haste")
+        );
+        assert!(
+            final_game
+                .snapshot()
+                .player
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != "rfb.status.slow")
+        );
+        let verification = verify(&replay, initial).expect("status ability replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
     fn healing_and_multi_turn_rest_round_trip_through_replay() {
         let mut payload = Game::new_with_build(0, "demo.build.scholar")
             .expect("scholar replay fixture should create")

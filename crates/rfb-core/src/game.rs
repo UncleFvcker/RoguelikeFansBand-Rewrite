@@ -6,7 +6,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::resistance::DamageType;
+use crate::resistance::{DamageType, ResistanceLevel};
 use crate::{
     action::GameAction,
     check::{CheckContext, CheckKind, resolve_check},
@@ -16,8 +16,9 @@ use crate::{
     },
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
-        STATUS_FEAR, STATUS_HASTE, STATUS_POISON, STATUS_SLOW, STATUS_STUN, advance_status_ticks,
-        apply_effect, resolve_damage,
+        STATUS_FEAR, STATUS_HASTE, STATUS_POISON, STATUS_SLOW, STATUS_STUN, StatusApplication,
+        StatusChange, StatusInstance, StatusStacking, advance_status_ticks, apply_effect,
+        resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ProjectileTrace, project_events},
@@ -46,22 +47,25 @@ use crate::{
     },
 };
 use rfb_content::{
-    AbilityDefinition, AbilityEffectDefinition, AbilityTargetModeDefinition, ActorRole,
-    CampaignDefinition, CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition,
-    ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
-    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
-    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, FloorLifecycle,
-    ItemUseEffectDefinition, MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
-    RaceDefinition, RetakeFloorPolicy, SkillKind, SkillSetDefinition, StartingItemDefinition,
-    StatModifiers, TaskObjectiveDefinition, TaskObjectiveKind, TerrainFeatureEntryDefinition,
-    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    AbilityDefinition, AbilityEffectDefinition, AbilityStatusStackingDefinition,
+    AbilityTargetModeDefinition, ActorRole, CampaignDefinition, CastingAttribute,
+    CastingProfileDefinition, CharacterBuildDefinition, ClassDefinition, ContentCatalog,
+    ContentPosition, DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
+    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterFormation,
+    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
+    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
+    SkillKind, SkillSetDefinition, StartingItemDefinition, StatModifiers, TaskObjectiveDefinition,
+    TaskObjectiveKind, TerrainFeatureEntryDefinition, TerrainFeaturePlacement,
+    ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityDetectSpecDto, AbilityDto,
-    AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
+    AbilityEffectResolutionDto, AbilityEffectSkipReasonDto, AbilityEffectSpecDto,
+    AbilityEffectsResolutionDto, AbilityLearningDto, AbilityProficiencyRankDto,
+    AbilityProgressSaveDto, AbilityStatusChangeDto, AbilityStatusStackingDto,
     AbilitySummonResolutionDto, AbilitySummonSpecDto, AbilityTeleportResolutionDto,
     AbilityTerrainTransformResolutionDto, AbilityTerrainTransformSpecDto, ActorSaveDto,
     AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto,
@@ -83,7 +87,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 77] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 78] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -161,9 +165,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 77] = [
     "66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d",
     "aab3548090030a1d2d46496581fb41a9f2892213186aeb2236a7a79065fc069f",
     "8ac0aee6fe54abb2c97bbed3eedaaa510d32393126bd08f89d046d515a66213b",
+    "6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4";
+    "d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -3045,6 +3050,12 @@ impl Game {
                         }),
                         _ => None,
                     },
+                    effects: ability
+                        .effect
+                        .ordered_effects()
+                        .iter()
+                        .map(ability_effect_spec_dto)
+                        .collect(),
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -4964,6 +4975,23 @@ impl Game {
                     },
                 });
             }
+            (effect, target_plan)
+                if matches!(
+                    effect,
+                    AbilityEffectDefinition::ApplyStatus { .. }
+                        | AbilityEffectDefinition::RemoveStatus { .. }
+                        | AbilityEffectDefinition::Sequence { .. }
+                ) =>
+            {
+                self.resolve_ability_actor_effects(
+                    &ability.id,
+                    &effect,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 AbilityEffectDefinition::Damage {
                     damage_dice,
@@ -5161,6 +5189,203 @@ impl Game {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_actor_effects(
+        &mut self,
+        ability_id: &str,
+        effect: &AbilityEffectDefinition,
+        target_plan: AbilityTargetPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let effects = effect.ordered_effects();
+        match target_plan {
+            AbilityTargetPlan::SelfTarget => {
+                let target_entity_id = self.player.id.clone();
+                let target_kind_id = self.player.kind_id.clone();
+                let max_hp = self.effective_player_max_hp();
+                let mut resolutions = Vec::with_capacity(effects.len());
+                for (index, effect) in effects.iter().enumerate() {
+                    let effect_index =
+                        u8::try_from(index).expect("validated ability effect index must fit u8");
+                    let resolution = match effect {
+                        AbilityEffectDefinition::Heal { amount } => {
+                            let amount = i32::try_from(*amount)
+                                .expect("validated healing amount must fit i32");
+                            let outcome = apply_effect(
+                                &mut EffectTarget {
+                                    hp: &mut self.player.hp,
+                                    max_hp,
+                                    resistances: &self.player.resistances,
+                                    statuses: &mut self.player.statuses,
+                                },
+                                EffectSpec::Heal { amount },
+                            );
+                            let EffectOutcome::Healed { requested, applied } = outcome else {
+                                unreachable!("healing effects must produce healing outcomes");
+                            };
+                            AbilityEffectResolutionDto::Heal {
+                                effect_index,
+                                resolution: HealingResolutionDto { requested, applied },
+                            }
+                        }
+                        AbilityEffectDefinition::ApplyStatus {
+                            status_kind_id,
+                            intensity,
+                            duration_ticks,
+                            stacking,
+                            resistance_type,
+                        } => apply_ability_status_effect(
+                            &mut self.player,
+                            ability_id,
+                            effect_index,
+                            status_kind_id,
+                            *intensity,
+                            *duration_ticks,
+                            *stacking,
+                            *resistance_type,
+                        ),
+                        AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+                            remove_ability_status_effect(
+                                &mut self.player,
+                                effect_index,
+                                status_kind_id,
+                            )
+                        }
+                        _ => unreachable!(
+                            "validated self-target effect sequences contain only actor effects"
+                        ),
+                    };
+                    resolutions.push(resolution);
+                }
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id: ability_id.to_owned(),
+                    resolution: AbilityEffectsResolutionDto {
+                        target_entity_id: Some(target_entity_id),
+                        target_kind_id: Some(target_kind_id),
+                        effects: resolutions,
+                    },
+                    trace: None,
+                });
+            }
+            AbilityTargetPlan::Projectile { path, .. } => {
+                let (trace, target_index) = self.trace_projectile_path(path);
+                let Some(target_index) = target_index else {
+                    let resolutions = effects
+                        .iter()
+                        .enumerate()
+                        .map(|(index, _)| AbilityEffectResolutionDto::Skipped {
+                            effect_index: u8::try_from(index)
+                                .expect("validated ability effect index must fit u8"),
+                            reason: AbilityEffectSkipReasonDto::NoTarget,
+                        })
+                        .collect();
+                    events.push(DomainEvent::AbilityLanded {
+                        ability_id: ability_id.to_owned(),
+                        trace: trace.clone(),
+                    });
+                    events.push(DomainEvent::AbilityEffectsResolved {
+                        ability_id: ability_id.to_owned(),
+                        resolution: AbilityEffectsResolutionDto {
+                            target_entity_id: None,
+                            target_kind_id: None,
+                            effects: resolutions,
+                        },
+                        trace: Some(trace),
+                    });
+                    return Ok(());
+                };
+
+                let target_entity_id = self.entities[target_index].id.clone();
+                let target_kind_id = self.entities[target_index].kind_id.clone();
+                let mut resolutions = Vec::with_capacity(effects.len());
+                for (index, effect) in effects.iter().enumerate() {
+                    let effect_index =
+                        u8::try_from(index).expect("validated ability effect index must fit u8");
+                    let Some(current_index) = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+                    else {
+                        resolutions.push(AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::TargetDead,
+                        });
+                        continue;
+                    };
+                    let resolution = match effect {
+                        AbilityEffectDefinition::Damage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type,
+                        } => {
+                            let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                            let damage = self.resolve_ability_damage_to_entity(
+                                current_index,
+                                ability_id,
+                                DamageType::from(*damage_type),
+                                raw_damage,
+                                trace.clone(),
+                                events,
+                                changed,
+                                removed_entities,
+                            )?;
+                            AbilityEffectResolutionDto::Damage {
+                                effect_index,
+                                resolution: damage.into(),
+                            }
+                        }
+                        AbilityEffectDefinition::ApplyStatus {
+                            status_kind_id,
+                            intensity,
+                            duration_ticks,
+                            stacking,
+                            resistance_type,
+                        } => {
+                            self.entities[current_index].alerted = true;
+                            changed.insert(self.entities[current_index].position);
+                            apply_ability_status_effect(
+                                &mut self.entities[current_index],
+                                ability_id,
+                                effect_index,
+                                status_kind_id,
+                                *intensity,
+                                *duration_ticks,
+                                *stacking,
+                                *resistance_type,
+                            )
+                        }
+                        AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+                            self.entities[current_index].alerted = true;
+                            changed.insert(self.entities[current_index].position);
+                            remove_ability_status_effect(
+                                &mut self.entities[current_index],
+                                effect_index,
+                                status_kind_id,
+                            )
+                        }
+                        _ => unreachable!(
+                            "validated projectile effect sequences contain only actor effects"
+                        ),
+                    };
+                    resolutions.push(resolution);
+                }
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id: ability_id.to_owned(),
+                    resolution: AbilityEffectsResolutionDto {
+                        target_entity_id: Some(target_entity_id),
+                        target_kind_id: Some(target_kind_id),
+                        effects: resolutions,
+                    },
+                    trace: Some(trace),
+                });
+            }
+            _ => unreachable!("actor effects require a self or projectile target plan"),
+        }
+        Ok(())
+    }
+
     fn ability_target_plan(
         &self,
         ability: &AbilityDefinition,
@@ -5211,6 +5436,24 @@ impl Game {
                     center: *position,
                     positions,
                 })
+            }
+            AbilityEffectDefinition::ApplyStatus { .. }
+            | AbilityEffectDefinition::RemoveStatus { .. }
+            | AbilityEffectDefinition::Sequence { .. } => {
+                if ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget)
+                {
+                    (matches!(target, TargetSelection::SelfTarget))
+                        .then_some(AbilityTargetPlan::SelfTarget)
+                } else {
+                    self.ability_path(ability, target)
+                        .map(|path| AbilityTargetPlan::Projectile {
+                            path,
+                            stop_at_actor: true,
+                        })
+                }
             }
             AbilityEffectDefinition::Heal { .. } => (matches!(target, TargetSelection::SelfTarget)
                 && ability
@@ -5495,7 +5738,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<DamageOutcome, CoreError> {
         let definition = self
             .content
             .actor(&self.entities[index].kind_id)
@@ -5536,7 +5779,7 @@ impl Game {
                 removed_entities,
             )?;
         }
-        Ok(())
+        Ok(damage)
     }
 
     fn ability_path(
@@ -11783,6 +12026,234 @@ fn projectile_target_spec(range: u16) -> TargetSpecDto {
         ],
         range,
         requires_line_of_effect: true,
+    }
+}
+
+fn ability_status_stacking_dto(
+    stacking: AbilityStatusStackingDefinition,
+) -> AbilityStatusStackingDto {
+    match stacking {
+        AbilityStatusStackingDefinition::Replace => AbilityStatusStackingDto::Replace,
+        AbilityStatusStackingDefinition::Extend => AbilityStatusStackingDto::Extend,
+        AbilityStatusStackingDefinition::KeepStrongest => AbilityStatusStackingDto::KeepStrongest,
+    }
+}
+
+fn ability_status_stacking(stacking: AbilityStatusStackingDefinition) -> StatusStacking {
+    match stacking {
+        AbilityStatusStackingDefinition::Replace => StatusStacking::Replace,
+        AbilityStatusStackingDefinition::Extend => StatusStacking::Extend,
+        AbilityStatusStackingDefinition::KeepStrongest => StatusStacking::KeepStrongest,
+    }
+}
+
+fn ability_status_change_dto(change: StatusChange) -> AbilityStatusChangeDto {
+    match change {
+        StatusChange::Added => AbilityStatusChangeDto::Added,
+        StatusChange::Replaced => AbilityStatusChangeDto::Replaced,
+        StatusChange::Extended => AbilityStatusChangeDto::Extended,
+        StatusChange::Strengthened => AbilityStatusChangeDto::Strengthened,
+        StatusChange::Unchanged => AbilityStatusChangeDto::Unchanged,
+    }
+}
+
+fn resisted_status_duration(requested: u32, resistance: ResistanceLevel) -> u32 {
+    if resistance == ResistanceLevel::Immune {
+        return 0;
+    }
+    let multiplier = 100_i64.saturating_sub(i64::from(resistance.reduction_percent()));
+    u32::try_from(
+        i64::from(requested)
+            .saturating_mul(multiplier)
+            .saturating_div(100)
+            .clamp(1, i64::from(u32::MAX)),
+    )
+    .expect("clamped status duration must fit u32")
+}
+
+#[allow(clippy::too_many_arguments)]
+fn apply_ability_status_effect(
+    actor: &mut Actor,
+    ability_id: &str,
+    effect_index: u8,
+    status_kind_id: &str,
+    intensity: u16,
+    duration_ticks: u32,
+    stacking: AbilityStatusStackingDefinition,
+    resistance_type: Option<rfb_content::ActorDamageType>,
+) -> AbilityEffectResolutionDto {
+    let resistance = resistance_type
+        .map(DamageType::from)
+        .map(|damage_type| actor.resistances.level(damage_type));
+    let applied_duration_ticks = resistance.map_or(duration_ticks, |level| {
+        resisted_status_duration(duration_ticks, level)
+    });
+    if applied_duration_ticks == 0 {
+        return AbilityEffectResolutionDto::ApplyStatus {
+            effect_index,
+            status_kind_id: status_kind_id.to_owned(),
+            intensity,
+            requested_duration_ticks: duration_ticks,
+            applied_duration_ticks,
+            stacking: ability_status_stacking_dto(stacking),
+            resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+            resistance: resistance.map(Into::into),
+            change: AbilityStatusChangeDto::Immune,
+        };
+    }
+    let outcome = apply_effect(
+        &mut EffectTarget {
+            hp: &mut actor.hp,
+            max_hp: actor.max_hp,
+            resistances: &actor.resistances,
+            statuses: &mut actor.statuses,
+        },
+        EffectSpec::ApplyStatus(StatusApplication {
+            status: StatusInstance {
+                kind_id: status_kind_id.to_owned(),
+                intensity,
+                remaining_ticks: applied_duration_ticks,
+                source_id: Some(ability_id.to_owned()),
+            },
+            stacking: ability_status_stacking(stacking),
+        }),
+    );
+    let EffectOutcome::StatusApplied { change, .. } = outcome else {
+        unreachable!("status application effects must produce status outcomes");
+    };
+    AbilityEffectResolutionDto::ApplyStatus {
+        effect_index,
+        status_kind_id: status_kind_id.to_owned(),
+        intensity,
+        requested_duration_ticks: duration_ticks,
+        applied_duration_ticks,
+        stacking: ability_status_stacking_dto(stacking),
+        resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+        resistance: resistance.map(Into::into),
+        change: ability_status_change_dto(change),
+    }
+}
+
+fn remove_ability_status_effect(
+    actor: &mut Actor,
+    effect_index: u8,
+    status_kind_id: &str,
+) -> AbilityEffectResolutionDto {
+    let outcome = apply_effect(
+        &mut EffectTarget {
+            hp: &mut actor.hp,
+            max_hp: actor.max_hp,
+            resistances: &actor.resistances,
+            statuses: &mut actor.statuses,
+        },
+        EffectSpec::RemoveStatus {
+            kind_id: status_kind_id.to_owned(),
+        },
+    );
+    let EffectOutcome::StatusRemoved { removed, .. } = outcome else {
+        unreachable!("status removal effects must produce status outcomes");
+    };
+    AbilityEffectResolutionDto::RemoveStatus {
+        effect_index,
+        status_kind_id: status_kind_id.to_owned(),
+        removed,
+    }
+}
+
+fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
+    match effect {
+        AbilityEffectDefinition::Damage {
+            damage_dice,
+            damage_sides,
+            damage_type,
+        } => AbilityEffectSpecDto::Damage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_type: DamageType::from(*damage_type).into(),
+        },
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice,
+            damage_sides,
+            damage_type,
+            radius,
+        } => AbilityEffectSpecDto::AreaDamage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_type: DamageType::from(*damage_type).into(),
+            radius: *radius,
+        },
+        AbilityEffectDefinition::BeamDamage {
+            damage_dice,
+            damage_sides,
+            damage_type,
+        } => AbilityEffectSpecDto::BeamDamage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_type: DamageType::from(*damage_type).into(),
+        },
+        AbilityEffectDefinition::ConeDamage {
+            damage_dice,
+            damage_sides,
+            damage_type,
+            radius,
+        } => AbilityEffectSpecDto::ConeDamage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_type: DamageType::from(*damage_type).into(),
+            radius: *radius,
+        },
+        AbilityEffectDefinition::Teleport => AbilityEffectSpecDto::Teleport,
+        AbilityEffectDefinition::Summon {
+            actor_kind_id,
+            count,
+            radius,
+            duration_turns,
+        } => AbilityEffectSpecDto::Summon {
+            actor_kind_id: actor_kind_id.clone(),
+            count: *count,
+            radius: *radius,
+            duration_turns: *duration_turns,
+        },
+        AbilityEffectDefinition::Detect {
+            category,
+            radius,
+            persistent,
+        } => AbilityEffectSpecDto::Detect {
+            category: category.clone(),
+            radius: *radius,
+            persistent: *persistent,
+        },
+        AbilityEffectDefinition::TransformTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+            radius,
+        } => AbilityEffectSpecDto::TransformTerrain {
+            source_terrain_ids: source_terrain_ids.clone(),
+            target_terrain_id: target_terrain_id.clone(),
+            radius: *radius,
+        },
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            intensity,
+            duration_ticks,
+            stacking,
+            resistance_type,
+        } => AbilityEffectSpecDto::ApplyStatus {
+            status_kind_id: status_kind_id.clone(),
+            intensity: *intensity,
+            duration_ticks: *duration_ticks,
+            stacking: ability_status_stacking_dto(*stacking),
+            resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+        },
+        AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+            AbilityEffectSpecDto::RemoveStatus {
+                status_kind_id: status_kind_id.clone(),
+            }
+        }
+        AbilityEffectDefinition::Heal { amount } => AbilityEffectSpecDto::Heal { amount: *amount },
+        AbilityEffectDefinition::Sequence { .. } => {
+            unreachable!("nested ability effect sequences are rejected by content validation")
+        }
     }
 }
 
@@ -21046,6 +21517,364 @@ mod tests {
     }
 
     #[test]
+    fn self_status_sequence_applies_in_order_and_round_trips() {
+        let ability_id = "demo.ability.echo-quickening";
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("status ability progress should exist")
+                .proficiency = SPELL_EXP_MASTER;
+            candidate.player.statuses.push(StatusInstance {
+                kind_id: STATUS_SLOW.to_owned(),
+                intensity: 1,
+                remaining_ticks: 20,
+                source_id: Some("test.slow".to_owned()),
+            });
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::SelfTarget,
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update));
+                break;
+            }
+        }
+        let (game, update) = selected.expect("a deterministic self status cast should succeed");
+        let resolution = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityEffects { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("status sequence should expose its ordered effects");
+        assert_eq!(
+            resolution.target_entity_id.as_deref(),
+            Some("demo.actor.player.1")
+        );
+        assert_eq!(resolution.effects.len(), 2);
+        assert!(matches!(
+            resolution.effects[0],
+            AbilityEffectResolutionDto::ApplyStatus {
+                effect_index: 0,
+                change: AbilityStatusChangeDto::Added,
+                applied_duration_ticks: 30,
+                ..
+            }
+        ));
+        assert!(matches!(
+            resolution.effects[1],
+            AbilityEffectResolutionDto::RemoveStatus {
+                effect_index: 1,
+                removed: true,
+                ..
+            }
+        ));
+        assert!(
+            game.player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_HASTE)
+        );
+        assert!(
+            game.player
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != STATUS_SLOW)
+        );
+        let ability = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == ability_id)
+            .expect("status sequence should be projected");
+        assert!(matches!(
+            ability.effects.as_slice(),
+            [
+                AbilityEffectSpecDto::ApplyStatus { .. },
+                AbilityEffectSpecDto::RemoveStatus { .. }
+            ]
+        ));
+
+        let restored = Game::from_save(game.to_save()).expect("status ability state should reload");
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn target_status_sequence_resists_immunizes_and_skips_after_death() {
+        let ability_id = "demo.ability.echo-binding";
+        let prepare = |seed: u64, hp: i32, resistance: ResistanceLevel| {
+            let mut game = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            let entity = game.entities[0].clone();
+            clear_monsters(&mut game);
+            game.entities.push(entity);
+            game.entities[0].position = Position { x: 4, y: 3 };
+            game.entities[0].hp = hp;
+            game.entities[0].energy_need = STANDARD_ACTION_COST;
+            game.entities[0]
+                .resistances
+                .set(DamageType::Cold, resistance);
+            game.learned_abilities.insert(ability_id.to_owned());
+            game.ability_progress
+                .get_mut(ability_id)
+                .expect("status ability progress should exist")
+                .proficiency = SPELL_EXP_MASTER;
+            game
+        };
+        let seed = (0..128)
+            .find(|seed| {
+                let mut game = prepare(*seed, 3, ResistanceLevel::Normal);
+                let target_id = game.entities[0].id.clone();
+                let update = dispatch_next(
+                    &mut game,
+                    GameCommand::CastAbility {
+                        ability_id: ability_id.to_owned(),
+                        target: TargetSelection::Entity {
+                            entity_id: target_id,
+                        },
+                    },
+                );
+                ability_cast_resolution(&update).succeeded
+            })
+            .expect("a deterministic target status cast should succeed");
+
+        let mut resistant = prepare(seed, 3, ResistanceLevel::Resistant);
+        let target_id = resistant.entities[0].id.clone();
+        let resistant_update = dispatch_next(
+            &mut resistant,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: target_id.clone(),
+                },
+            },
+        );
+        let resistant_resolution = resistant_update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityEffects { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("resisted status sequence should resolve");
+        assert!(matches!(
+            resistant_resolution.effects[1],
+            AbilityEffectResolutionDto::ApplyStatus {
+                effect_index: 1,
+                requested_duration_ticks: 30,
+                applied_duration_ticks: 15,
+                resistance: Some(ResistanceLevelDto::Resistant),
+                change: AbilityStatusChangeDto::Added,
+                ..
+            }
+        ));
+        assert!(
+            resistant
+                .entities
+                .iter()
+                .find(|entity| entity.id == target_id)
+                .is_some_and(|entity| entity
+                    .statuses
+                    .iter()
+                    .any(|status| status.kind_id == STATUS_SLOW))
+        );
+        let restored =
+            Game::from_save(resistant.to_save()).expect("resisted status should round-trip");
+        assert_eq!(restored.snapshot(), resistant.snapshot());
+
+        let mut immune = prepare(seed, 3, ResistanceLevel::Immune);
+        let target_id = immune.entities[0].id.clone();
+        let immune_update = dispatch_next(
+            &mut immune,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: target_id.clone(),
+                },
+            },
+        );
+        let immune_resolution = immune_update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityEffects { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("immune status sequence should resolve");
+        assert!(matches!(
+            immune_resolution.effects[1],
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks: 0,
+                resistance: Some(ResistanceLevelDto::Immune),
+                change: AbilityStatusChangeDto::Immune,
+                ..
+            }
+        ));
+        assert!(
+            immune
+                .entities
+                .iter()
+                .find(|entity| entity.id == target_id)
+                .is_some_and(|entity| entity.statuses.is_empty())
+        );
+
+        let mut lethal = prepare(seed, 1, ResistanceLevel::Normal);
+        let target_id = lethal.entities[0].id.clone();
+        let lethal_update = dispatch_next(
+            &mut lethal,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Entity {
+                    entity_id: target_id.clone(),
+                },
+            },
+        );
+        let lethal_resolution = lethal_update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityEffects { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("lethal sequence should resolve");
+        assert!(matches!(
+            lethal_resolution.effects[0],
+            AbilityEffectResolutionDto::Damage {
+                effect_index: 0,
+                ..
+            }
+        ));
+        assert!(matches!(
+            lethal_resolution.effects[1],
+            AbilityEffectResolutionDto::Skipped {
+                effect_index: 1,
+                reason: AbilityEffectSkipReasonDto::TargetDead,
+            }
+        ));
+        assert!(lethal.entities.iter().all(|entity| entity.id != target_id));
+    }
+
+    #[test]
+    fn actor_effect_sequences_preserve_empty_invalid_and_failure_rng_boundaries() {
+        let ability_id = "demo.ability.echo-binding";
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("status ability progress should exist")
+                .proficiency = SPELL_EXP_MASTER;
+            let mana_before = candidate.resources["demo.resource.mana"].current;
+            let draws_before = candidate.rng_draw_counter();
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::Position {
+                        position: Position { x: 6, y: 3 },
+                    },
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update, mana_before, draws_before));
+                break;
+            }
+        }
+        let (mut game, empty, mana_before, draws_before) =
+            selected.expect("a deterministic empty effect sequence should succeed");
+        let resolution = empty
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityEffects { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("empty effect sequence should expose skipped effects");
+        assert!(resolution.target_entity_id.is_none());
+        assert!(resolution.effects.iter().all(|effect| matches!(
+            effect,
+            AbilityEffectResolutionDto::Skipped {
+                reason: AbilityEffectSkipReasonDto::NoTarget,
+                ..
+            }
+        )));
+        assert!(game.resources["demo.resource.mana"].current < mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before + 1);
+
+        let mana_before_rejection = game.resources["demo.resource.mana"].current;
+        let draws_before_rejection = game.rng_draw_counter();
+        let progress_before_rejection = game.ability_progress[ability_id];
+        let rejected = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        assert!(
+            rejected
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+        assert_eq!(
+            game.resources["demo.resource.mana"].current,
+            mana_before_rejection
+        );
+        assert_eq!(game.rng_draw_counter(), draws_before_rejection);
+        assert_eq!(game.ability_progress[ability_id], progress_before_rejection);
+
+        for seed in 0..128 {
+            let mut failure = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            failure.entities.truncate(1);
+            failure.entities[0].position = Position { x: 4, y: 3 };
+            failure.entities[0].energy_need = i32::MAX / 2;
+            failure.learned_abilities.insert(ability_id.to_owned());
+            let target_id = failure.entities[0].id.clone();
+            let mana_before = failure.resources["demo.resource.mana"].current;
+            let draws_before = failure.rng_draw_counter();
+            let update = dispatch_next(
+                &mut failure,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::Entity {
+                        entity_id: target_id,
+                    },
+                },
+            );
+            if !ability_cast_resolution(&update).succeeded {
+                assert!(failure.resources["demo.resource.mana"].current < mana_before);
+                assert_eq!(failure.rng_draw_counter(), draws_before + 1);
+                assert!(failure.entities[0].statuses.is_empty());
+                assert!(
+                    !update
+                        .events
+                        .iter()
+                        .any(|event| event.kind == "ability.effects")
+                );
+                return;
+            }
+        }
+        panic!("an effect sequence failure seed should exist");
+    }
+
+    #[test]
     fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
         let mut game =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -21061,7 +21890,7 @@ mod tests {
                 remaining_slots: 2,
             })
         );
-        assert_eq!(initial.player.abilities.len(), 12);
+        assert_eq!(initial.player.abilities.len(), 14);
         assert!(
             initial
                 .player

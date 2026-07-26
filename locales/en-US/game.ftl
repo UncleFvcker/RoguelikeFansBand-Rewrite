@@ -82,6 +82,7 @@ message-ability-teleport = { $ability } carries you from ({ $fromX }, { $fromY }
 message-ability-summon = { $ability } calls { $count } { $actor } into nearby open spaces.
 message-ability-detect = { $ability } detects { $count } nearby { $category } terrain cues.
 message-ability-terrain-transform = { $ability } reshapes { $count } terrain cells into { $terrain }.
+message-ability-effects = { $ability } resolves an ordered sequence of { $count } effects.
 message-summon-expired = { $actor } fades as the summon ends.
 message-ability-hit = { $ability } hits { $target } for { $damage } damage.
 message-ability-slay = { $ability } destroys { $target }.

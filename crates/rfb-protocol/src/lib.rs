@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.84";
+pub const PROTOCOL_VERSION: &str = "1.85";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -359,6 +359,78 @@ pub enum AbilityProficiencyRankDto {
     Master,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityStatusStackingDto {
+    Replace,
+    Extend,
+    KeepStrongest,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum AbilityEffectSpecDto {
+    Damage {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_type: DamageTypeDto,
+    },
+    AreaDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_type: DamageTypeDto,
+        radius: u8,
+    },
+    BeamDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_type: DamageTypeDto,
+    },
+    ConeDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_type: DamageTypeDto,
+        radius: u8,
+    },
+    Teleport,
+    Summon {
+        actor_kind_id: String,
+        count: u8,
+        radius: u8,
+        duration_turns: u16,
+    },
+    Detect {
+        category: String,
+        radius: u8,
+        persistent: bool,
+    },
+    TransformTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+        radius: u8,
+    },
+    ApplyStatus {
+        status_kind_id: String,
+        intensity: u16,
+        duration_ticks: u32,
+        stacking: AbilityStatusStackingDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance_type: Option<DamageTypeDto>,
+    },
+    RemoveStatus {
+        status_kind_id: String,
+    },
+    Heal {
+        amount: u32,
+    },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -402,6 +474,8 @@ pub struct AbilityDto {
     pub detect: Option<AbilityDetectSpecDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub terrain_transform: Option<AbilityTerrainTransformSpecDto>,
+    #[serde(default)]
+    pub effects: Vec<AbilityEffectSpecDto>,
     pub target_spec: TargetSpecDto,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -806,6 +880,77 @@ pub struct AbilityTerrainTransformResolutionDto {
     pub transformed_positions: Vec<Position>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityStatusChangeDto {
+    Added,
+    Replaced,
+    Extended,
+    Strengthened,
+    Unchanged,
+    Immune,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityEffectSkipReasonDto {
+    NoTarget,
+    TargetDead,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum AbilityEffectResolutionDto {
+    Damage {
+        effect_index: u8,
+        resolution: DamageResolutionDto,
+    },
+    Heal {
+        effect_index: u8,
+        resolution: HealingResolutionDto,
+    },
+    ApplyStatus {
+        effect_index: u8,
+        status_kind_id: String,
+        intensity: u16,
+        requested_duration_ticks: u32,
+        applied_duration_ticks: u32,
+        stacking: AbilityStatusStackingDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance_type: Option<DamageTypeDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance: Option<ResistanceLevelDto>,
+        change: AbilityStatusChangeDto,
+    },
+    RemoveStatus {
+        effect_index: u8,
+        status_kind_id: String,
+        removed: bool,
+    },
+    Skipped {
+        effect_index: u8,
+        reason: AbilityEffectSkipReasonDto,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityEffectsResolutionDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_entity_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_kind_id: Option<String>,
+    pub effects: Vec<AbilityEffectResolutionDto>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -866,6 +1011,9 @@ pub enum GameEventOutcomeDto {
     },
     AbilityTerrainTransform {
         resolution: AbilityTerrainTransformResolutionDto,
+    },
+    AbilityEffects {
+        resolution: AbilityEffectsResolutionDto,
     },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
@@ -1286,6 +1434,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(ResourcePoolDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(AbilityProficiencyRankDto);
+    push_declaration!(AbilityStatusStackingDto);
+    push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);
     push_declaration!(AbilityTerrainTransformSpecDto);
@@ -1319,6 +1469,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilitySummonResolutionDto);
     push_declaration!(AbilityDetectResolutionDto);
     push_declaration!(AbilityTerrainTransformResolutionDto);
+    push_declaration!(AbilityStatusChangeDto);
+    push_declaration!(AbilityEffectSkipReasonDto);
+    push_declaration!(AbilityEffectResolutionDto);
+    push_declaration!(AbilityEffectsResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);

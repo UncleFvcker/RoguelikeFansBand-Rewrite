@@ -48,7 +48,7 @@ contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、
 
 contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。
 
-state hash 与正式存档 DTO 已解耦。Schema v36 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰、装备派生 modifier、能力失败率、恢复速率和可用性标志不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识（包括持久侦测）、任务状态机、当前阶段与重接次数、最终守护者与入口守卫击败状态、campaign 胜利/退休状态和最终分数、dungeon instance 身份/序号/retained 回合、楼层连接映射及其解析目标、区域边界/局部表引用、pack identity/behavior/alerted、召唤 owner/source/lifetime、Race/Class/Personality/build 身份、技能聚合、出生装备知识、角色成长 progress、资源池、已学能力和能力进度属于权威规则状态并参与 hash。恢复速率、熟练度内容上限、冷却、召唤、侦测和 terrain 转换规格由已哈希的内容包决定；瞬时侦测和地形修改事件只存在于命令结果，修改后的权威 terrain 则通过既有 terrain 数组进入 save/hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v36 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰、装备派生 modifier、能力失败率、恢复速率和可用性标志不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识（包括持久侦测）、任务状态机、当前阶段与重接次数、最终守护者与入口守卫击败状态、campaign 胜利/退休状态和最终分数、dungeon instance 身份/序号/retained 回合、楼层连接映射及其解析目标、区域边界/局部表引用、pack identity/behavior/alerted、召唤 owner/source/lifetime、Race/Class/Personality/build 身份、技能聚合、出生装备知识、角色成长 progress、资源池、已学能力、能力进度和 actor statuses 属于权威规则状态并参与 hash。恢复速率、熟练度内容上限、冷却、召唤、侦测、terrain 转换和有序效果规格由已哈希的内容包决定；瞬时侦测、地形修改与逐效果事件只存在于命令结果，修改后的权威 terrain 和状态则通过既有 terrain/status 数组进入 save/hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 
@@ -190,3 +190,5 @@ v82 的 `summon` 在扣 Mana和抽施法失败率之前收集全部落位。候�
 v83 的 `detect` 只接受 `self` 目标；非法目标和资源不足在任何能力 RNG 前拒绝。合法施法按既有规则支付 Mana并抽一次失败率骰；失败不产生侦测结果，成功后按当前地图、Chebyshev 半径、FOV/line of sight、尚未发现、存在隐藏投影和 terrain tag 类别依次过滤，再按距离、`y`、`x` 稳定排序。空结果仍是成功施法且不额外抽 RNG。持久结果写入 `revealedTerrain` 并进入 save/state hash Schema v36，瞬时结果只进入 `ability.detect` 事件且不改变普通地图知识。
 
 v84 的 `transform-terrain` 只接受 position 中心；中心必须在地图、内容射程、FOV 和 line of effect 内，非法目标和资源不足在任何能力 RNG 前拒绝。有效中心在支付 Mana 前按 RFB 距离、FOV、中心 line of effect、规范化来源 terrain 集、占用格、地图边界、floor connection 和连接 terrain tag 收集候选，并按距离、`y`、`x` 稳定排序。失败施法支付 Mana但不写 terrain；成功后不抽额外 RNG，一次提交预收集集合并移除对应 `revealedTerrain`，空集合仍返回 `ability.terrain-transform`。实际格通过 `changedCells` 更新并由既有当前/离层 terrain 数组进入 save/hash；state hash 保持 Schema v36，运行时不做自动连通修复。
+
+v85 的 `sequence` 在旧单效果读取路径之上声明 2–8 个有序 actor 效果。目标前置、资源、整次失败率、熟练度和冷却只结算一次；成功后子效果严格按数组索引执行。伤害骰只在轮到该效果且目标仍存在时抽取；无目标时全部记录 `no-target`，前序击杀后续记录 `target-dead`，均不抽被跳过效果的 RNG。状态抗性以固定整数比例把 vulnerable/normal/resistant/strong 缩放为 150/100/50/35%，immune 为 0；非免疫最低 1 tick。部分无效不回滚前序效果，重复状态复用既有稳定堆叠规则。状态原本已进入 save/hash，因此 state hash 保持 Schema v36。

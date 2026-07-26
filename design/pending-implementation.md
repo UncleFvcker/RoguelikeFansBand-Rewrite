@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v84、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v85、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -33,23 +33,34 @@
 | P22 | 首个召唤能力 | 已由 contract-v82 完成 | Echo Companion 内容驱动 summon；稳定 actor ID、玩家阵营/所有者、数量/半径、确定性落位、玩家回合生命周期、空间不足原子回退、失败率资源语义、save/replay 与 Schema v35 |
 | P23 | 首个侦测能力 | 已由 contract-v83 完成 | Echo Pulse/Echo Sight 内容驱动 detect；category/radius、FOV 与隐藏投影过滤、稳定顺序、持久/瞬时知识、空结果、非法目标/资源不足 RNG 边界、save/replay 与 Schema v36 |
 | P24 | 首个地形改变能力 | 已由 contract-v84 完成 | Echo Delving/Echo Rampart 内容驱动 transform-terrain；来源/目标 terrain 集、position/FOV/line of effect、稳定原子提交、占用格与连接/边界保护、空结果、changed cells、save/replay 与 Schema v36 |
-| P25 | 状态能力与多 effect 组合 | 下一候选 | 复用既有状态添加/移除原语，固定效果顺序、重复/免疫/部分无效、资源与 RNG 原子边界、存档/回放和 Web outcome |
+| P25 | 状态能力与多 effect 组合 | 已由 contract-v85 完成 | Echo Quickening/Echo Binding；状态添加/移除、2–8 个有序同目标 actor 效果、堆叠、抗性缩时、免疫、部分无效、目标死亡/无目标跳过、save/replay 与结构化 Web outcome |
+| P26 | 首个怪物施法与能力选择 AI | 下一候选 | 为怪物声明能力集合与施法参数，复用玩家能力效果管线，固定可用性筛选、目标选择、效用评分、平局顺序、资源/RNG、视野/射程和 save/replay 边界 |
+
+## contract-v85 明确遗留
+
+- sequence 首版只组合同一 actor 目标上的伤害、治疗和状态；多目标、terrain、召唤、侦测、位移等专用效果尚未进入组合器；
+- 状态持续时间当前为固定整数并通过既有元素抗性确定性缩放；随机持续时间、独立 saving throw 和更复杂驱散优先级尚未建立；
+- 仍缺 confusion、paralysis、blindness、sleep 等完整状态族及其对应行动规则；
+- 怪物施法、能力选择 AI、装备激活、设备共享能力与多资源职业仍未实现；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型尚未建立。
+
+contract-v85 已将 Echo Quickening/Echo Binding 接入协议 1.85、内容包 1.77.0、save v1 与 state hash Schema v36。整次施法只支付一次资源并先抽一次失败率，子效果按声明顺序结算；前序击杀会把后续效果标为 `target-dead`，无 actor 命中标为 `no-target`，且不抽取被跳过的伤害骰。状态沿用既有 actor status 存档与 tick 管线，cold 抗性确定性缩短 slow，免疫返回零持续时间。active baseline 为 242 个 exact fixtures、零 waiver。详细边界见 [contract-v85](contract-v85-ordered-status-effects.md)。
 
 ## contract-v84 明确遗留
 
 - terrain 变换沿射线、锥形或任意图案传播，以及随机地震、塌方、液体流动和持续环境效果；
 - 对 actor/物品造成伴随伤害、掩埋、推动或销毁的复合 terrain 效果；
 - 玩家施法以外的挖掘设备、装备激活、怪物破墙/造墙和 AI 决策；
-- 多资源职业、状态能力和多 effect 组合；
+- 状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
 
-contract-v84 已将 Echo Delving/Echo Rampart 接入协议 1.84、内容包 1.76.0、save v1 与 state hash Schema v36。候选按 RFB 距离与坐标稳定排序，只处理当前 FOV 和合法来源 terrain，并跳过占用格、连接、入口标签和地图边界；候选在资源/RNG 前收集，成功后一次提交，失败不改 terrain，空结果仍正常施法。active baseline 为 231 个 exact fixtures、零 waiver。详细边界见 [contract-v84](contract-v84-terrain-transform-ability.md)。
+contract-v84 已将 Echo Delving/Echo Rampart 接入协议 1.84、内容包 1.76.0、save v1 与 state hash Schema v36。候选按 RFB 距离与坐标稳定排序，只处理当前 FOV 和合法来源 terrain，并跳过占用格、连接、入口标签和地图边界；候选在资源/RNG 前收集，成功后一次提交，失败不改 terrain，空结果仍正常施法。该历史 baseline 为 231 个 exact fixtures、零 waiver。详细边界见 [contract-v84](contract-v84-terrain-transform-ability.md)。
 
 ## contract-v83 明确遗留
 
 - 完整地图、怪物、物品、楼梯和陷阱等更多侦测类别及对应知识菜单；
 - 侦测范围的特殊穿墙、全层感知、持续 buff、黑暗/失明/反侦测修正；
-- 地形改变已由 contract-v84 完成；多资源职业和多 effect 组合仍未实现；
+- 地形改变已由 contract-v84 完成，状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
 - 怪物施法、能力选择 AI、装备激活与设备共享能力；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
 
@@ -60,7 +71,7 @@ contract-v83 已将 Echo Pulse/Echo Sight 接入协议 1.83、内容包 1.75.0�
 - 召唤物的跟随、攻击、保持距离、守卫与玩家命令；
 - 敌对/中立召唤、怪物召唤能力和能力选择 AI；
 - 召唤物跨楼层、召回、永久宠物、繁殖、唯一性与复杂 pack/formation 组合；
-- 侦测已由 contract-v83 完成，地形改变已由 contract-v84 完成；多资源职业和多 effect 组合仍未实现；
+- 侦测已由 contract-v83 完成，地形改变已由 contract-v84 完成，状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
 
 contract-v82 已将 Echo Companion 接入协议 1.82、内容包 1.74.0、save v1 与 state hash Schema v35。空间候选按距离/坐标稳定排序，玩家、actor 与地面物品都占用格；空间不足在 Mana、施法 RNG 与熟练度前原子拒绝。成功召唤保存 owner/source/lifetime，召唤物不参加敌对 AI或可见敌人判断，并按玩家回合到期移除。active baseline 为 213 个 exact fixtures、零 waiver。详细边界见 [contract-v82](contract-v82-summon-ability.md)。
@@ -99,7 +110,7 @@ RFB 式范围爆发、目标停止策略、墙体遮挡、距离衰减、空爆/
 
 - 随机学习、首次成功奖励，以及原版按 `spell_order` 自动暂时遗忘/记起；
 - 怒气、专注、鲜血等多种职业资源，资源互转与职业专属恢复条件；
-- 范围、锥形、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；多 effect 组合仍未实现；
+- 范围、锥形、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和首版多 effect 组合已由 contract-v85 完成；
 - 装备负重、状态、环境与职业规则对失败率、恢复率和效果强度的完整修正；
 - 怪物施法、能力选择 AI、智能学习和完整领域/职业矩阵；
 - 饥饿、HP 自然恢复、旅行、自动探索和更高层的安全休息策略。
@@ -110,7 +121,7 @@ v76 的独立学习容量、能力容量投影、主动遗忘、重新学习进�
 
 - Mana 等待/休息恢复、恢复中断、自身目标和固定治疗已由 contract-v74 完成；多种职业资源仍未实现；
 - 学习容量、随机学习、遗忘、首次施放奖励、熟练度和冷却；
-- 自身目标与治疗已由 contract-v74 完成；范围爆发、方向射线、锥形、定点/实体延长射线、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和多 effect 组合仍未实现；
+- 自身目标与治疗已由 contract-v74 完成；范围爆发、方向射线、锥形、定点/实体延长射线、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和首版多 effect 组合已由 contract-v85 完成；
 - 装备负重、状态、环境和职业规则对失败率的完整修正；
 - 怪物施法、能力选择 AI、智能学习和完整领域/职业矩阵。
 
