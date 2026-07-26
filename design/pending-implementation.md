@@ -52,7 +52,8 @@
 | P41 | 心灵族 | 已由 contract-v97 完成 | psi 伤害类型（协议 1.97）、MIND_BLAST/BRAIN_SMASH→Sequence[psi 伤害+骑手]（既有白名单零新机制）、PSY_SPEAR→首个导入 beam、mind-lasher 纵切、fixtures 311-312（同种子孪生：Normal 全额 vs psi 抗性减伤+缩时）、312 个 exact fixtures。导入 248 实例全数（casting 怪 831、映射累计 4097、未映射 1131） |
 | P42 | 诅咒族与豁免门 | 已由 contract-v98 完成 | curse-damage 效果（豁免成功全免零后续 RNG、失败全额无护甲无抗性；难度=施法者等级；复用 v72 saving-throw 检定与 SavingThrowChecked 事件）+ curse 伤害类型（协议 1.98）、hex-chanter 纵切、fixtures 313-314（同设置双种子：成功 skip saved / 对抗失败 raw=final 全额）、314 个 exact fixtures。导入 CAUSE_1-4 240 实例全数（casting 怪 832、映射累计 4337、未映射 891） |
 | P43 | 小型效果杂项包 | 已由 contract-v99 完成 | teleport-away（BanishTarget 专用计划、候选规划期收集+减半回退、复用 relocate 管线与 v91 位移事件族）、drain-resource（吸施法档资源池+施法者回血封顶）、amnesia（豁免门+清当前层 explored/revealedTerrain）、DISPEL→既有 remove-status haste；veil-warden 四式纵切、fixtures 315-318、318 个 exact fixtures。导入 264 实例全数（casting 怪 844、映射累计 4601、未映射 627） |
-| P44 | 候选：k_info 物品导入 或 法术缺口清尾 | 下一候选 | k_info 545 条基础物品（导入管线 v2 最大空白，开启装备/消耗品内容线）；法术清尾：S_ 特殊/字形 177（glyph 派生标签）、DARKNESS 85（需房间光照状态）、ANIM_DEAD 58（需尸体）、ANTI_MAGIC 47、TRAPS 44、SHRIEK 42（骚动警觉） |
+| P44 | k_info 物品导入 | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | 545 条中 544 条落地：武器 meleeProfile、发射器按 sval 配对典型弹药（乐器类 5 件降级为壳）、护甲/首饰槽位+防御/六维修正、光源标签、消耗品/设备/魔典壳+行为缺口按类计数（consumable-effect 95/book 72/device 64 等）；产物过全量校验 |
+| P45 | 候选：ego/神器导入 或 设备效果系统 或 法术清尾 | 下一候选 | e_info 160 词条模板 + a_info 392 固定神器（affix 系统对接）；设备/消耗品效果系统（解锁药水/卷轴/魔杖行为缺口 231）；法术清尾：S_ 字形召唤 177/SHRIEK 42/TRAPS 44 |
 
 ## contract-v99 明确遗留
 
