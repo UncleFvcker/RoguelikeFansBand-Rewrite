@@ -321,6 +321,19 @@ fn monster_json(
     let max_hp = ((hp_dice * (hp_sides + 1)) / 2).max(1);
     let level = entry.level.unwrap_or(1).max(1);
     let (damage_dice, damage_sides) = blow.damage_dice.unwrap_or((1, 1));
+    // Legacy type flags become category tags so summon filters can select
+    // by monster class; the shared legacy-import tag doubles as "any".
+    let mut tags = vec!["legacy-import".to_owned()];
+    for (flag, tag) in [
+        ("ANIMAL", "animal"),
+        ("DEMON", "demon"),
+        ("DRAGON", "dragon"),
+        ("UNDEAD", "undead"),
+    ] {
+        if entry.flags.iter().any(|value| value == flag) {
+            tags.push(tag.to_owned());
+        }
+    }
     let mut value = serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/actor.schema.json"),
         "formatVersion": 1,
@@ -338,7 +351,7 @@ fn monster_json(
         "damageDice": damage_dice,
         "damageSides": damage_sides.max(1),
         "damageType": damage_type,
-        "tags": ["legacy-import"],
+        "tags": tags,
     });
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
@@ -453,8 +466,12 @@ fn map_spell_token(
     token: &str,
     level: u16,
     breath_radius: u8,
+    caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if let Some(id) = map_summon_spell_token(token, level, caster_kind_id, abilities) {
+        return Some(id);
+    }
     match token {
         "SCARE" => {
             let id = "rfb-legacy.ability.scare".to_owned();
@@ -617,6 +634,130 @@ fn parse_explicit_damage_dice(spec: &str) -> Option<(u32, u32, u32)> {
     }
     let flat = spec.parse::<u32>().ok()?;
     Some((1, 1, flat.saturating_sub(1)))
+}
+
+/// Looks up a summon token base: candidate category tag plus the legacy
+/// default count dice `(dice, sides, bonus)`. Categories map through the
+/// type-flag tags stamped on imported actors; glyph-class and unique summon
+/// types stay unmapped.
+fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> {
+    let entry = match base {
+        "S_MONSTER" => ("legacy-import", (1, 3, 1)),
+        "S_UNDEAD" => ("undead", (1, 3, 1)),
+        "S_HI_UNDEAD" => ("undead", (1, 3, 0)),
+        "S_DEMON" => ("demon", (1, 3, 1)),
+        "S_HI_DEMON" => ("demon", (1, 3, 0)),
+        "S_DRAGON" => ("dragon", (1, 3, 1)),
+        "S_HI_DRAGON" => ("dragon", (1, 3, 0)),
+        "S_ANIMAL" => ("animal", (1, 3, 1)),
+        _ => return None,
+    };
+    Some(entry)
+}
+
+/// Imported summons approximate the legacy permanent lifetime with the
+/// maximum expressible duration.
+const LEGACY_SUMMON_DURATION_TURNS: u32 = 10_000;
+
+fn map_summon_spell_token(
+    token: &str,
+    level: u16,
+    caster_kind_id: &str,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    let (base, explicit) = match token.split_once('(') {
+        Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
+        None => (token, None),
+    };
+    if base == "S_KIN" {
+        let caster_tail = caster_kind_id.rsplit('.').next()?;
+        let suffix = format!("kin-{caster_tail}");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities
+            .entry(id.clone())
+            .or_insert_with(|| summon_kin_ability(&suffix, caster_kind_id));
+        return Some(id);
+    }
+    let (category, default_dice) = summon_spell_defaults(base)?;
+    let (dice, sides, bonus) = match explicit {
+        Some(spec) => parse_explicit_damage_dice(spec)?,
+        None => default_dice,
+    };
+    let dice = dice.clamp(1, 8);
+    let sides = sides.clamp(1, 8);
+    let bonus = bonus.min(8);
+    if dice * sides + bonus > 8 {
+        return None;
+    }
+    let maximum_level = u32::from(level.max(1));
+    let mut suffix = format!("summon-{category}-l{maximum_level}-{dice}d{sides}");
+    if bonus > 0 {
+        suffix.push_str(&format!("-{bonus}"));
+    }
+    let id = format!("rfb-legacy.ability.{suffix}");
+    abilities.entry(id.clone()).or_insert_with(|| {
+        summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus)
+    });
+    Some(id)
+}
+
+fn summon_kin_ability(suffix: &str, caster_kind_id: &str) -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{suffix}"),
+        "nameKey": format!("ability-legacy-{suffix}-name"),
+        "descriptionKey": format!("ability-legacy-{suffix}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effect": {
+            "type": "summon",
+            "actorKindId": caster_kind_id,
+            "count": 2,
+            "radius": 2,
+            "durationTurns": LEGACY_SUMMON_DURATION_TURNS,
+        },
+        "tags": ["legacy-import", "summon"],
+    })
+}
+
+fn summon_category_ability(
+    suffix: &str,
+    category: &str,
+    maximum_level: u32,
+    dice: u32,
+    sides: u32,
+    bonus: u32,
+) -> serde_json::Value {
+    let mut effect = serde_json::json!({
+        "type": "summon-category",
+        "category": category,
+        "maximumLevel": maximum_level,
+        "countDice": dice,
+        "countSides": sides,
+        "radius": 2,
+        "durationTurns": LEGACY_SUMMON_DURATION_TURNS,
+    });
+    if bonus > 0 {
+        effect["countBonus"] = serde_json::json!(bonus);
+    }
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{suffix}"),
+        "nameKey": format!("ability-legacy-{suffix}-name"),
+        "descriptionKey": format!("ability-legacy-{suffix}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effect": effect,
+        "tags": ["legacy-import", "summon"],
+    })
 }
 
 /// Looks up a breath token base: damage type plus the legacy default
@@ -863,6 +1004,18 @@ pub fn convert_content(
                 .collect();
             serde_json::json!({ "blows": blows })
         });
+        // The stable actor id is settled before spell mapping so kin summons
+        // can reference their own caster kind.
+        let mut id = kebab(&entry.name);
+        if id.is_empty() {
+            id = format!("monster-{}", entry.index);
+        }
+        let duplicates = seen_actor_ids.entry(id.clone()).or_insert(0_u32);
+        if *duplicates > 0 {
+            id = format!("{id}-{}", entry.index);
+        }
+        *duplicates += 1;
+        let caster_kind_id = format!("rfb-legacy.actor.{id}");
         let mut frequency_percent: Option<u32> = None;
         let mut mapped_ability_ids: Vec<String> = Vec::new();
         let mut has_unmapped_spell = false;
@@ -898,6 +1051,7 @@ pub fn convert_content(
                 spell,
                 entry.level.unwrap_or(1).max(1),
                 breath_radius,
+                &caster_kind_id,
                 &mut shared_abilities,
             ) {
                 if !mapped_ability_ids.contains(&ability_id) {
@@ -938,15 +1092,6 @@ pub fn convert_content(
                 .entry(flag.clone())
                 .or_default() += 1;
         }
-        let mut id = kebab(&entry.name);
-        if id.is_empty() {
-            id = format!("monster-{}", entry.index);
-        }
-        let duplicates = seen_actor_ids.entry(id.clone()).or_insert(0_u32);
-        if *duplicates > 0 {
-            id = format!("{id}-{}", entry.index);
-        }
-        *duplicates += 1;
         let (damage_type, unmapped_effect) = damage_type_for(blow);
         if melee_routine.is_none()
             && let Some(effect) = unmapped_effect
@@ -1308,5 +1453,81 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(outcome.report.not_applicable_spells["MAPPING"], 1);
         assert_eq!(outcome.report.unmapped_spells.len(), 0);
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
+    }
+
+    #[test]
+    fn summon_tokens_map_to_category_and_kin_abilities() {
+        const SUMMONER_R_INFO: &str = "\
+N:5:test bone caller\n\
+G:L:w\n\
+I:110:8d8:20:20:10:10\n\
+W:20:2:20:9:10:40\n\
+B:HIT:HURT(1d6)\n\
+F:UNDEAD | DRAGON\n\
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
+        let monsters = parse_r_info(SUMMONER_R_INFO);
+        assert_eq!(monsters.len(), 1);
+
+        let outcome = convert_content(&[], &monsters);
+        let (_, caller) = &outcome.actor_files[0];
+        // Type flags become category tags alongside the shared import tag.
+        assert_eq!(
+            caller["tags"],
+            serde_json::json!(["legacy-import", "dragon", "undead"])
+        );
+        let ability_ids: Vec<&str> = caller["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("casting should list abilities")
+            .iter()
+            .map(|entry| entry["abilityId"].as_str().expect("ability id"))
+            .collect();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.kin-test-bone-caller",
+                "rfb-legacy.ability.summon-undead-l20-1d3-1",
+                "rfb-legacy.ability.summon-legacy-import-l20-1d1",
+            ]
+        );
+        // Uniques and cyber summons stay honest gaps.
+        assert_eq!(outcome.report.unmapped_spells["S_CYBER"], 1);
+
+        let kin = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "kin-test-bone-caller.json")
+            .map(|(_, value)| value)
+            .expect("kin summon ability should be generated");
+        assert_eq!(kin["effect"]["type"], "summon");
+        assert_eq!(
+            kin["effect"]["actorKindId"],
+            "rfb-legacy.actor.test-bone-caller"
+        );
+        assert_eq!(kin["effect"]["count"], 2);
+        assert_eq!(kin["effect"]["durationTurns"], 10_000);
+
+        let undead = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-undead-l20-1d3-1.json")
+            .map(|(_, value)| value)
+            .expect("undead summon ability should be generated");
+        assert_eq!(undead["effect"]["type"], "summon-category");
+        assert_eq!(undead["effect"]["category"], "undead");
+        assert_eq!(undead["effect"]["maximumLevel"], 20);
+        assert_eq!(undead["effect"]["countDice"], 1);
+        assert_eq!(undead["effect"]["countSides"], 3);
+        assert_eq!(undead["effect"]["countBonus"], 1);
+
+        let any = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "summon-legacy-import-l20-1d1.json")
+            .map(|(_, value)| value)
+            .expect("any-monster summon ability should be generated");
+        assert_eq!(any["effect"]["category"], "legacy-import");
+        assert_eq!(any["effect"]["countDice"], 1);
+        assert_eq!(any["effect"]["countSides"], 1);
+        assert!(any["effect"].get("countBonus").is_none());
     }
 }

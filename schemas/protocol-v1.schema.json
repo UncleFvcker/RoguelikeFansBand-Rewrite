@@ -902,6 +902,64 @@
             "category": {
               "type": "string"
             },
+            "countBonus": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "countDice": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "countSides": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "durationTurns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "maximumLevel": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "summon-category"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "maximumLevel",
+            "countDice",
+            "countSides",
+            "countBonus",
+            "radius",
+            "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string"
+            },
             "persistent": {
               "type": "boolean"
             },
@@ -1190,6 +1248,13 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Position"
+          }
+        },
+        "summonedKindIds": {
+          "description": "Per-entity kinds for category summons; empty for fixed-kind summons,\nwhere `actor_kind_id` already names the summoned definition.",
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       },
@@ -3486,6 +3551,7 @@
         "blocked",
         "friendly-risk",
         "no-space",
+        "no-candidates",
         "no-utility"
       ]
     },

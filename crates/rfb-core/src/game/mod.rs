@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 86] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 87] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -180,9 +180,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 86] = [
     "81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916",
     "3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc",
     "134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30",
+    "2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae";
+    "01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -358,6 +359,10 @@ enum MonsterAbilityTargetPlan {
     Summon {
         positions: Vec<Position>,
     },
+    SummonCategory {
+        candidate_kind_ids: Vec<String>,
+        positions: Vec<Position>,
+    },
     BlinkSelf {
         destinations: Vec<Position>,
     },
@@ -380,6 +385,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::DragTarget { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
         | MonsterAbilityTargetPlan::Summon { .. }
+        | MonsterAbilityTargetPlan::SummonCategory { .. }
         | MonsterAbilityTargetPlan::BlinkSelf { .. }
         | MonsterAbilityTargetPlan::EscapeSelf { .. } => None,
     }
@@ -5427,6 +5433,7 @@ impl Game {
                         entity_ids,
                         positions,
                         duration_turns,
+                        summoned_kind_ids: Vec::new(),
                     },
                 });
             }
@@ -5918,13 +5925,14 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
-            // Displacement forms are monster-casting-only in v91, and breath
-            // joins them in v94; the player cast path never produces a plan
-            // for them.
+            // Displacement forms are monster-casting-only in v91; breath
+            // joins them in v94 and category summons in v95. The player cast
+            // path never produces a plan for them.
             AbilityEffectDefinition::BlinkSelf { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
-            | AbilityEffectDefinition::BreathDamage { .. } => None,
+            | AbilityEffectDefinition::BreathDamage { .. }
+            | AbilityEffectDefinition::SummonCategory { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -7795,7 +7803,7 @@ impl Game {
             removed_entities,
         );
         events.push(DomainEvent::MonsterAbilityCast {
-            resolution: MonsterAbilityCastResolutionDto {
+            resolution: Box::new(MonsterAbilityCastResolutionDto {
                 source_entity_id,
                 source_kind_id,
                 ability_id: plan.ability.id,
@@ -7805,7 +7813,7 @@ impl Game {
                 summon,
                 effects,
                 targets,
-            },
+            }),
             trace,
         });
         true
@@ -7862,6 +7870,58 @@ impl Game {
                         friendly_risk_count: 0,
                     })?;
                 (MonsterAbilityTargetPlan::Summon { positions }, 0, 0)
+            }
+            AbilityEffectDefinition::SummonCategory {
+                category,
+                maximum_level,
+                count_dice,
+                count_sides,
+                count_bonus,
+                radius,
+                ..
+            } => {
+                // Candidate kinds enumerate in stable id order and are
+                // filtered without RNG; the per-summon kind draws happen at
+                // execution time.
+                let candidate_kind_ids = self
+                    .content
+                    .actor_definitions()
+                    .filter(|definition| {
+                        definition.role == ActorRole::Monster
+                            && definition.level <= u32::from(*maximum_level)
+                            && definition.tags.iter().any(|tag| tag == category)
+                    })
+                    .map(|definition| definition.id.clone())
+                    .collect::<Vec<_>>();
+                if candidate_kind_ids.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let maximum_count = usize::from(*count_dice) * usize::from(*count_sides)
+                    + usize::from(*count_bonus);
+                let positions = self
+                    .open_positions_around(origin, *radius)
+                    .into_iter()
+                    .take(maximum_count)
+                    .collect::<Vec<_>>();
+                if positions.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::SummonCategory {
+                        candidate_kind_ids,
+                        positions,
+                    },
+                    0,
+                    0,
+                )
             }
             AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
@@ -8386,6 +8446,7 @@ impl Game {
                 | MonsterAbilityTargetPlan::Beam { .. }
                 | MonsterAbilityTargetPlan::Cone { .. }
                 | MonsterAbilityTargetPlan::Summon { .. }
+                | MonsterAbilityTargetPlan::SummonCategory { .. }
         ) {
             return Some(1);
         }
@@ -8495,7 +8556,8 @@ impl Game {
                     Some(source.position),
                     Vec::new(),
                 ),
-                MonsterAbilityTargetPlan::Summon { positions } => (
+                MonsterAbilityTargetPlan::Summon { positions }
+                | MonsterAbilityTargetPlan::SummonCategory { positions, .. } => (
                     Some(source.id.clone()),
                     Some(source.kind_id.clone()),
                     Some(source.position),
@@ -8902,11 +8964,90 @@ impl Game {
                     entity_ids,
                     positions: positions.clone(),
                     duration_turns,
+                    summoned_kind_ids: Vec::new(),
                 };
                 MonsterAbilityPlanResolution {
                     target_entity_id: owner_id,
                     target_kind_id: self.entities[source_index].kind_id.clone(),
                     affected_positions: positions.clone(),
+                    summon: Some(summon),
+                    effects: Vec::new(),
+                    targets: Vec::new(),
+                    trace: None,
+                }
+            }
+            MonsterAbilityTargetPlan::SummonCategory {
+                candidate_kind_ids,
+                positions,
+            } => {
+                let AbilityEffectDefinition::SummonCategory {
+                    ref category,
+                    count_dice,
+                    count_sides,
+                    count_bonus,
+                    duration_turns,
+                    ..
+                } = plan.ability.effect
+                else {
+                    unreachable!("monster category summon plan must retain its effect");
+                };
+                // The count dice roll first, then one bounded draw picks each
+                // summon's kind; space shortfalls truncate to the secured
+                // cells (planning guaranteed at least one).
+                let rolled = self
+                    .roll_damage(u16::from(count_dice), u16::from(count_sides))
+                    .saturating_add(i32::from(count_bonus))
+                    .max(1);
+                let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
+                let owner_id = self.entities[source_index].id.clone();
+                let mut entity_ids = Vec::with_capacity(count);
+                let mut summoned_kind_ids = Vec::with_capacity(count);
+                let mut used_positions = Vec::with_capacity(count);
+                let planned_positions = positions.iter().copied().take(count).collect::<Vec<_>>();
+                for (ordinal, position) in planned_positions.into_iter().enumerate() {
+                    let choice = usize::try_from(self.rng.bounded(
+                        u64::try_from(candidate_kind_ids.len()).expect("candidate count fits"),
+                    ))
+                    .expect("bounded draw fits usize");
+                    let kind_id = candidate_kind_ids[choice].clone();
+                    let definition = self
+                        .content
+                        .actor(&kind_id)
+                        .expect("validated summon candidate must remain available")
+                        .clone();
+                    let id = self.summon_entity_id(&plan.ability.id, ordinal);
+                    let mut entity = actor_from_runtime_spawn(
+                        &id,
+                        &kind_id,
+                        position,
+                        definition.max_hp,
+                        definition.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        true,
+                    );
+                    entity.summon = Some(SummonIdentity {
+                        owner_id: owner_id.clone(),
+                        source_ability_id: plan.ability.id.clone(),
+                        remaining_turns: duration_turns,
+                    });
+                    changed.insert(position);
+                    entity_ids.push(id);
+                    summoned_kind_ids.push(kind_id);
+                    used_positions.push(position);
+                    self.entities.push(entity);
+                }
+                let summon = AbilitySummonResolutionDto {
+                    owner_id: owner_id.clone(),
+                    actor_kind_id: category.clone(),
+                    entity_ids,
+                    positions: used_positions.clone(),
+                    duration_turns,
+                    summoned_kind_ids,
+                };
+                MonsterAbilityPlanResolution {
+                    target_entity_id: owner_id,
+                    target_kind_id: self.entities[source_index].kind_id.clone(),
+                    affected_positions: used_positions,
                     summon: Some(summon),
                     effects: Vec::new(),
                     targets: Vec::new(),
@@ -14720,12 +14861,19 @@ impl Game {
             && self
                 .content
                 .ability(&summon.source_ability_id)
-                .is_some_and(|ability| {
-                    matches!(
-                        &ability.effect,
-                        AbilityEffectDefinition::Summon { actor_kind_id, .. }
-                            if actor_kind_id == &actor.kind_id
-                    )
+                .is_some_and(|ability| match &ability.effect {
+                    AbilityEffectDefinition::Summon { actor_kind_id, .. } => {
+                        actor_kind_id == &actor.kind_id
+                    }
+                    AbilityEffectDefinition::SummonCategory {
+                        category,
+                        maximum_level,
+                        ..
+                    } => self.content.actor(&actor.kind_id).is_some_and(|kind| {
+                        kind.tags.iter().any(|tag| tag == category)
+                            && kind.level <= u32::from(*maximum_level)
+                    }),
+                    _ => false,
                 })
     }
 }
@@ -15229,6 +15377,23 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         } => AbilityEffectSpecDto::Summon {
             actor_kind_id: actor_kind_id.clone(),
             count: *count,
+            radius: *radius,
+            duration_turns: *duration_turns,
+        },
+        AbilityEffectDefinition::SummonCategory {
+            category,
+            maximum_level,
+            count_dice,
+            count_sides,
+            count_bonus,
+            radius,
+            duration_turns,
+        } => AbilityEffectSpecDto::SummonCategory {
+            category: category.clone(),
+            maximum_level: *maximum_level,
+            count_dice: *count_dice,
+            count_sides: *count_sides,
+            count_bonus: *count_bonus,
             radius: *radius,
             duration_turns: *duration_turns,
         },

@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v94、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v95、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -46,7 +46,15 @@
 | P35 | 新状态族（混乱/致盲/麻痹） | 已由 contract-v92 完成 | 三个新状态种类 + 玩家侧效果（移动重定向/禁施法、FOV 压制、行动浪费）、gloom-weaver 纵切、导入映射 548 实例（casting 怪物 586）、299 个 exact fixtures |
 | P36 | 怪物直伤弹族（bolt/ball）与伤害平坦加值 | 已由 contract-v93 完成 | 四伤害效果加 damageBonus、1d1+(F-1) 平坦恒等式、cinder-adept 纵切、导入映射 BO_/BA_ 622 实例（casting 怪物 696、共享能力 502）、303 个 exact fixtures。原候选 DETECT 族经源码核实为 `MST_POSSESSOR` 附身专用组（怪物不施放，共 522 个 token 实例含 MAPPING/BERSERK/BLESS 等），按不适用归档 |
 | P37 | BR_ 吐息族 | 已由 contract-v94 完成 | breath-damage 效果（当前 HP×pct% 封顶 max、零伤害骰、锥形复用 v79）、ash-drake 纵切、fixtures 304-306（封顶/残血衰减/致死闭环）、306 个 exact fixtures。导入映射吐息 337 实例（casting 怪 696→765）+ FREQ_N 频率修复（297 实例消化）+ 附身组 522 实例重分类 notApplicable；施法表上限 32→64（旧版最大杂烩 34 技能悉数保留，导入器仍留 64 截断守卫） |
-| P38 | S_ 召唤族 或 伤害类型扩展 | 下一候选 | 召唤族 670 实例需按类别/深度选怪的新召唤形态（S_KIN 76 可先映射为召唤同类）；伤害类型扩展解锁异种元素直伤/吐息约 850 实例（BO 135+BA 167+BR 453+心灵 186 部分） |
+| P38 | S_ 召唤族 | 已由 contract-v95 完成 | summon-category 效果（标签+等级上限候选、数量骰、逐只有界抽 kind、落位/生命周期复用既有召唤）、mote-binder 纵切、fixtures 307-308、308 个 exact fixtures。导入器类型旗标→标签（undead/demon/dragon/animal）+ S_ 映射 493 实例（casting 怪 765→783、S_KIN 76 用固定召唤映射召唤同类）；源包文件预算 2048→4096 |
+| P39 | 伤害类型扩展 | 下一候选 | 新伤害类型（不可抗魔法/灵魂/明暗/混沌等）+ 抗性档 + 存档扩展，解锁异种元素直伤/吐息约 755 实例（BR 453+BA 167+BO 135）与心灵组合 186 的伤害部分 |
+
+## contract-v95 明确遗留
+
+- 类别召唤首版仅限 monsterCasting；玩家侧类别召唤等实际内容需要时开放；
+- 落点沿用 v82 的自身半径规范序（原版优先玩家附近），召唤物时长以 10 000 玩家回合近似原版永久，均记为已知中性化差异；
+- HI_ 系折算为同类别同等级上限（原版为更深怪物类选择）；S_ANGEL（无类型旗标）、S_HOUND/S_SPIDER 等字形子类与 S_SPECIAL/UNIQUE/CYBER/PANTHEON/AMBERITE 等特殊类共 177 实例留缺口——字形子类可考虑按 glyph 派生标签的后续小步；
+- 尚无召唤物种群上限、繁殖与 unique 过滤；原版 S_UNIQUE/S_GUARDIAN 依赖 unique 生态。
 
 ## contract-v94 明确遗留
 

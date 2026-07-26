@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.94";
+pub const PROTOCOL_VERSION: &str = "1.95";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -451,6 +451,15 @@ pub enum AbilityEffectSpecDto {
     Summon {
         actor_kind_id: String,
         count: u8,
+        radius: u8,
+        duration_turns: u16,
+    },
+    SummonCategory {
+        category: String,
+        maximum_level: u16,
+        count_dice: u8,
+        count_sides: u8,
+        count_bonus: u8,
         radius: u8,
         duration_turns: u16,
     },
@@ -912,6 +921,10 @@ pub struct AbilitySummonResolutionDto {
     pub entity_ids: Vec<String>,
     pub positions: Vec<Position>,
     pub duration_turns: u16,
+    /// Per-entity kinds for category summons; empty for fixed-kind summons,
+    /// where `actor_kind_id` already names the summoned definition.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub summoned_kind_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1018,6 +1031,7 @@ pub enum MonsterAbilityRejectionReasonDto {
     Blocked,
     FriendlyRisk,
     NoSpace,
+    NoCandidates,
     NoUtility,
 }
 

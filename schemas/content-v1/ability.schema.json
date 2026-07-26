@@ -338,6 +338,65 @@
             "category": {
               "type": "string"
             },
+            "countBonus": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "countDice": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "countSides": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationTurns": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maximumLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "summon-category",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "maximumLevel",
+            "countDice",
+            "countSides",
+            "radius",
+            "durationTurns"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "type": "string"
+            },
             "persistent": {
               "default": false,
               "type": "boolean"

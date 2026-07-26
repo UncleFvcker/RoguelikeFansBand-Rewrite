@@ -1,6 +1,6 @@
 # Contract v94：怪物吐息族（breath）与 HP 比例伤害
 
-状态：当前 active baseline。协议 1.94，内容包 1.85.0（content hash `2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae`）；save 容器继续 v1；吐息不新增权威状态字段，state hash 沿用 Schema v40。active baseline 共 306 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v95](contract-v95-summon-category.md)。协议 1.94，内容包 1.85.0（content hash `2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae`）；save 容器继续 v1；吐息不新增权威状态字段，state hash 沿用 Schema v40。该 baseline 共 306 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

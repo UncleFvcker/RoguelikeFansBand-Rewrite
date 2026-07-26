@@ -41,7 +41,7 @@ export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "
 
 export type AbilityStatusStackingDto = "replace" | "extend" | "keep-strongest";
 
-export type AbilityEffectSpecDto = { "type": "damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, } | { "type": "area-damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, radius: number, } | { "type": "beam-damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, } | { "type": "cone-damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, radius: number, } | { "type": "breath-damage", hpPercent: number, maxDamage: number, damageType: DamageTypeDto, radius: number, } | { "type": "teleport" } | { "type": "summon", actorKindId: string, count: number, radius: number, durationTurns: number, } | { "type": "detect", category: string, radius: number, persistent: boolean, } | { "type": "transform-terrain", sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, } | { "type": "apply-status", statusKindId: string, intensity: number, durationTicks: number, stacking: AbilityStatusStackingDto, resistanceType?: DamageTypeDto | null, } | { "type": "blink-self", radius: number, } | { "type": "teleport-self", minimumDistance: number, } | { "type": "teleport-target" } | { "type": "remove-status", statusKindId: string, } | { "type": "heal", amount: number, };
+export type AbilityEffectSpecDto = { "type": "damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, } | { "type": "area-damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, radius: number, } | { "type": "beam-damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, } | { "type": "cone-damage", damageDice: number, damageSides: number, damageBonus: number, damageType: DamageTypeDto, radius: number, } | { "type": "breath-damage", hpPercent: number, maxDamage: number, damageType: DamageTypeDto, radius: number, } | { "type": "teleport" } | { "type": "summon", actorKindId: string, count: number, radius: number, durationTurns: number, } | { "type": "summon-category", category: string, maximumLevel: number, countDice: number, countSides: number, countBonus: number, radius: number, durationTurns: number, } | { "type": "detect", category: string, radius: number, persistent: boolean, } | { "type": "transform-terrain", sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, } | { "type": "apply-status", statusKindId: string, intensity: number, durationTicks: number, stacking: AbilityStatusStackingDto, resistanceType?: DamageTypeDto | null, } | { "type": "blink-self", radius: number, } | { "type": "teleport-self", minimumDistance: number, } | { "type": "teleport-target" } | { "type": "remove-status", statusKindId: string, } | { "type": "heal", amount: number, };
 
 export type AbilitySummonSpecDto = { actorKindId: string, count: number, radius: number, durationTurns: number, };
 
@@ -103,7 +103,12 @@ export type AbilityConeDamageResolutionDto = { radius: number, baseRawDamage: nu
 
 export type AbilityTeleportResolutionDto = { from: Position, to: Position, };
 
-export type AbilitySummonResolutionDto = { ownerId: string, actorKindId: string, entityIds: Array<string>, positions: Array<Position>, durationTurns: number, };
+export type AbilitySummonResolutionDto = { ownerId: string, actorKindId: string, entityIds: Array<string>, positions: Array<Position>, durationTurns: number, 
+/**
+ * Per-entity kinds for category summons; empty for fixed-kind summons,
+ * where `actor_kind_id` already names the summoned definition.
+ */
+summonedKindIds?: Array<string>, };
 
 export type AbilityDetectResolutionDto = { category: string, radius: number, persistent: boolean, detectedPositions: Array<Position>, };
 
@@ -117,7 +122,7 @@ export type AbilityEffectResolutionDto = { "type": "damage", effectIndex: number
 
 export type AbilityEffectsResolutionDto = { targetEntityId?: string | null, targetKindId?: string | null, effects: Array<AbilityEffectResolutionDto>, };
 
-export type MonsterAbilityRejectionReasonDto = "invalid-target" | "out-of-range" | "blocked" | "friendly-risk" | "no-space" | "no-utility";
+export type MonsterAbilityRejectionReasonDto = "invalid-target" | "out-of-range" | "blocked" | "friendly-risk" | "no-space" | "no-candidates" | "no-utility";
 
 export type MonsterAbilityCandidateResolutionDto = { abilityId: string, baseWeight: number, effectiveWeight: number, targetEntityId?: string | null, targetKindId?: string | null, targetPosition?: Position | null, affectedPositions?: Array<Position>, enemyTargetCount: number, friendlyRiskCount: number, rejectionReason?: MonsterAbilityRejectionReasonDto | null, };
 

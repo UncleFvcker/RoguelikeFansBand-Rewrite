@@ -103,7 +103,7 @@ pub(crate) enum DomainEvent {
         resolution: MonsterAbilityDecisionResolutionDto,
     },
     MonsterAbilityCast {
-        resolution: MonsterAbilityCastResolutionDto,
+        resolution: Box<MonsterAbilityCastResolutionDto>,
         trace: Option<ProjectileTrace>,
     },
     SummonExpired {
@@ -699,7 +699,9 @@ impl DomainEvent {
                         ("target", resolution.ability_id.clone()),
                         ("count", resolution.effects.len().to_string()),
                     ],
-                    GameEventOutcomeDto::MonsterAbilityCast { resolution },
+                    GameEventOutcomeDto::MonsterAbilityCast {
+                        resolution: *resolution,
+                    },
                 );
                 match trace {
                     Some(trace) => with_trace(event, trace),

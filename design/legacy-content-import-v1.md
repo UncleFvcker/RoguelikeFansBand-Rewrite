@@ -18,8 +18,8 @@
 
 ## 3. 首次全量导入结果（本地实测）
 
-地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P37（吐息映射 + FREQ_N + 附身组重分类）已有 765 条生成 `monsterCasting`，法术映射累计 2578 实例（含吐息 337），`FREQ_N` 频率语法已解析（297 实例消化），附身组 522 实例入 notApplicableSpells 桶，施法表上限提至 64 后零截断（守卫保留）。缺口报告当前优先级（按覆盖数）：S_ 召唤族 670（需按类别选怪的新召唤形态）、异种元素直伤/吐息约 755（BR 453+BA 167+BO 135，等伤害类型扩展）、CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、BRAIN/MIND 心灵组合 186；blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
+地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P38（召唤族映射）已有 783 条生成 `monsterCasting`，法术映射累计 3071 实例（吐息 337、召唤 493），`FREQ_N` 频率语法已解析，附身组 522 实例入 notApplicableSpells 桶，类型旗标（UNDEAD/DEMON/DRAGON/ANIMAL）折算为 actor 标签，施法表上限 64 零截断（守卫保留）、源包文件预算 4096。缺口报告当前优先级（按覆盖数）：异种元素直伤/吐息约 755（BR 453+BA 167+BO 135，等伤害类型扩展）、CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、BRAIN/MIND 心灵组合 186、S_ 特殊/字形子类 177；blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
 
 ## 4. v2 方向
 
-k_info 物品导入；S_ 召唤子集随按类别选怪的召唤形态落地后映射；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。
+k_info 物品导入；异种元素随伤害类型扩展落地后映射；字形子类召唤（S_HOUND/S_SPIDER 等）可按 glyph 派生标签；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。

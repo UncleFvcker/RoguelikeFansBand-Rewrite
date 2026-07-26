@@ -1686,10 +1686,15 @@ function formatEvent(event: GameEventDto): string {
       const resolution =
         event.outcome?.type === "monster-ability-cast" ? event.outcome.resolution : undefined;
       if (resolution?.summon) {
+        const summonedKinds = resolution.summon.summonedKindIds ?? [];
+        const actor =
+          summonedKinds.length > 0
+            ? [...new Set(summonedKinds)].map(contentName).join("、")
+            : contentName(resolution.summon.actorKindId);
         return localization.format("message-monster-ability-summon", {
           source: contentName(event.args.source),
           ability: contentName(event.args.target),
-          actor: contentName(resolution.summon.actorKindId),
+          actor,
           count: resolution.summon.entityIds.length,
         });
       }

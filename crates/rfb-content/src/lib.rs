@@ -46,7 +46,7 @@ const CONTAINER_VERSION: u16 = 1;
 const FIXED_HEADER_LENGTH: usize = 8 + 2 + 2 + 8 + 32;
 const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
-const MAX_SOURCE_FILES: usize = 2048;
+const MAX_SOURCE_FILES: usize = 4096;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
 const SUPPORTED_ROOTS: [&str; 20] = [
     "abilities",
@@ -671,6 +671,16 @@ pub enum AbilityEffectDefinition {
     Summon {
         actor_kind_id: String,
         count: u8,
+        radius: u8,
+        duration_turns: u16,
+    },
+    SummonCategory {
+        category: String,
+        maximum_level: u16,
+        count_dice: u8,
+        count_sides: u8,
+        #[serde(default)]
+        count_bonus: u8,
         radius: u8,
         duration_turns: u16,
     },
@@ -2007,6 +2017,12 @@ impl ContentCatalog {
         self.actors.get(id)
     }
 
+    /// All actor definitions in stable id order (BTree iteration), so
+    /// category filters enumerate candidates deterministically.
+    pub fn actor_definitions(&self) -> impl Iterator<Item = &ActorDefinition> {
+        self.actors.values()
+    }
+
     #[must_use]
     pub fn item(&self, id: &str) -> Option<&ItemDefinition> {
         self.items.get(id)
@@ -2523,6 +2539,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
     }
 
     let mut actor_roles = BTreeMap::new();
+    let mut actor_tag_values = BTreeSet::new();
     let mut actor_levels = BTreeMap::new();
     let mut actor_loot_table_ids = Vec::new();
     let mut actor_monster_casting = Vec::new();
@@ -2619,6 +2636,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             actor_loot_table_ids.push((format!("{}#carried", actor.id), loot_table_id.clone()));
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
+        for tag in &actor.tags {
+            actor_tag_values.insert(tag.clone());
+        }
         insert_definition_id(&mut all_ids, &actor.id)?;
         actor_roles.insert(actor.id.clone(), actor.role);
         actor_levels.insert(actor.id.clone(), actor.level);
@@ -2760,6 +2780,31 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=8).contains(radius)
                     && (1..=10_000).contains(duration_turns)
             }
+            AbilityEffectDefinition::SummonCategory {
+                category,
+                maximum_level,
+                count_dice,
+                count_sides,
+                count_bonus,
+                radius,
+                duration_turns,
+            } => {
+                !category.is_empty()
+                    && category.len() <= 64
+                    && category.bytes().all(|byte| {
+                        byte.is_ascii_lowercase()
+                            || byte.is_ascii_digit()
+                            || matches!(byte, b'-' | b'_')
+                    })
+                    && actor_tag_values.contains(category)
+                    && (1..=1_000).contains(maximum_level)
+                    && (1..=8).contains(count_dice)
+                    && (1..=8).contains(count_sides)
+                    && u16::from(*count_dice) * u16::from(*count_sides) + u16::from(*count_bonus)
+                        <= 8
+                    && (1..=8).contains(radius)
+                    && (1..=10_000).contains(duration_turns)
+            }
             AbilityEffectDefinition::Detect {
                 category, radius, ..
             } => {
@@ -2837,7 +2882,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
             }
-            AbilityEffectDefinition::Summon { .. } => {
+            AbilityEffectDefinition::Summon { .. }
+            | AbilityEffectDefinition::SummonCategory { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
                     && !ability.target.requires_line_of_effect
@@ -2965,9 +3011,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
                         && ability.target.requires_line_of_effect
                 }
-                AbilityEffectDefinition::Heal { .. } | AbilityEffectDefinition::Summon { .. } => {
-                    self_target
-                }
+                AbilityEffectDefinition::Heal { .. }
+                | AbilityEffectDefinition::Summon { .. }
+                | AbilityEffectDefinition::SummonCategory { .. } => self_target,
                 AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
                 AbilityEffectDefinition::BlinkSelf { .. }
@@ -6758,11 +6804,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 19);
+        assert_eq!(first.content.actors.len(), 20);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 27);
+        assert_eq!(first.content.abilities.len(), 29);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
@@ -6786,7 +6832,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.85.0");
+        assert_eq!(catalog.pack_version(), "1.86.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

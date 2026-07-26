@@ -6433,6 +6433,96 @@ fn breath_damage_scales_with_caster_hp_and_caps_at_max() {
 }
 
 #[test]
+fn category_summon_picks_tagged_kinds_and_rejects_empty_categories() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    for step in 0..=3 {
+        for dy in -2..=2 {
+            if let Some(index) = game.index(Position {
+                x: player.x + step,
+                y: player.y + dy,
+            }) {
+                game.terrain[index] = "demo.terrain.floor".to_owned();
+            }
+        }
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.binder-test",
+        "demo.actor.mote-binder",
+        Position {
+            x: player.x + 3,
+            y: player.y,
+        },
+        9,
+        100,
+        100,
+        true,
+    ));
+
+    let elemental_kinds = [
+        "demo.actor.acid-seep",
+        "demo.actor.ember-mote",
+        "demo.actor.frost-wisp",
+        "demo.actor.storm-spark",
+        "demo.actor.venom-spore",
+    ];
+    let mut saw_empty_rejection = false;
+    for _ in 0..60 {
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        for event in &update.events {
+            if let Some(GameEventOutcomeDto::MonsterAbilityDecision { resolution }) =
+                event.outcome.as_ref()
+            {
+                for candidate in &resolution.candidates {
+                    if candidate.ability_id == "demo.ability.cantor-call"
+                        && candidate.rejection_reason
+                            == Some(MonsterAbilityRejectionReasonDto::NoCandidates)
+                    {
+                        saw_empty_rejection = true;
+                    }
+                }
+            }
+            if let Some(GameEventOutcomeDto::MonsterAbilityCast { resolution }) =
+                event.outcome.as_ref()
+            {
+                assert_eq!(resolution.ability_id, "demo.ability.mote-call");
+                let summon = resolution
+                    .summon
+                    .as_ref()
+                    .expect("category summon should expose its resolution");
+                assert_eq!(summon.actor_kind_id, "elemental");
+                assert!((1..=2).contains(&summon.entity_ids.len()));
+                assert_eq!(summon.summoned_kind_ids.len(), summon.entity_ids.len());
+                for kind_id in &summon.summoned_kind_ids {
+                    assert!(elemental_kinds.contains(&kind_id.as_str()));
+                }
+                for entity_id in &summon.entity_ids {
+                    let entity = game
+                        .entities
+                        .iter()
+                        .find(|entity| &entity.id == entity_id)
+                        .expect("summoned entity should exist");
+                    assert!(entity.summon.is_some());
+                }
+                assert!(
+                    saw_empty_rejection,
+                    "cantor-call must have been rejected with no-candidates in the same decision"
+                );
+                return;
+            }
+        }
+        if game.player_is_dead() {
+            break;
+        }
+    }
+    panic!("mote binder should summon within 60 turns");
+}
+
+#[test]
 fn targeted_beam_continues_through_position_and_entity_targets() {
     let ability_id = "demo.ability.echo-lance";
     let expected_path = vec![
