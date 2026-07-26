@@ -63,7 +63,8 @@ pub struct ContentImportReport {
     pub monsters_imported: usize,
     pub monsters_skipped: usize,
     pub monsters_with_unmapped_spells: usize,
-    pub monsters_with_extra_blows: usize,
+    pub monsters_with_melee_routine: usize,
+    pub monsters_with_inexpressible_blows: usize,
     pub unmapped_terrain_flags: BTreeMap<String, usize>,
     pub unmapped_monster_flags: BTreeMap<String, usize>,
     pub unmapped_spells: BTreeMap<String, usize>,
@@ -310,12 +311,13 @@ fn monster_json(
     id: &str,
     blow: &LegacyBlow,
     damage_type: &str,
+    melee_routine: Option<serde_json::Value>,
 ) -> serde_json::Value {
     let (hp_dice, hp_sides) = entry.hp_dice.unwrap_or((1, 1));
     let max_hp = ((hp_dice * (hp_sides + 1)) / 2).max(1);
     let level = entry.level.unwrap_or(1).max(1);
     let (damage_dice, damage_sides) = blow.damage_dice.unwrap_or((1, 1));
-    serde_json::json!({
+    let mut value = serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/actor.schema.json"),
         "formatVersion": 1,
         "id": format!("rfb-legacy.actor.{id}"),
@@ -333,7 +335,11 @@ fn monster_json(
         "damageSides": damage_sides.max(1),
         "damageType": damage_type,
         "tags": ["legacy-import"],
-    })
+    });
+    if let Some(routine) = melee_routine {
+        value["meleeRoutine"] = routine;
+    }
+    value
 }
 
 pub struct ContentImportOutcome {
@@ -394,8 +400,12 @@ pub fn convert_content(
                 .or_default() += 1;
             continue;
         }
-        let expressible_blow = entry.blows.iter().find(|blow| blow.damage_dice.is_some());
-        let Some(blow) = expressible_blow else {
+        let expressible: Vec<&LegacyBlow> = entry
+            .blows
+            .iter()
+            .filter(|blow| blow.damage_dice.is_some())
+            .collect();
+        let Some(blow) = expressible.first().copied() else {
             report.monsters_skipped += 1;
             *report
                 .skip_reasons
@@ -409,9 +419,48 @@ pub fn convert_content(
             }
             continue;
         };
-        if entry.blows.len() > 1 {
-            report.monsters_with_extra_blows += 1;
+        if expressible.len() < entry.blows.len() {
+            report.monsters_with_inexpressible_blows += 1;
+            for blow in &entry.blows {
+                if blow.damage_dice.is_none() {
+                    *report
+                        .unmapped_blow_methods
+                        .entry(blow.method.clone())
+                        .or_default() += 1;
+                }
+            }
         }
+        // Legacy routines cap at four blows; the schema allows eight, so no
+        // real entry ever truncates.
+        let melee_routine = (expressible.len() > 1).then(|| {
+            report.monsters_with_melee_routine += 1;
+            let blows: Vec<serde_json::Value> = expressible
+                .iter()
+                .take(8)
+                .map(|blow| {
+                    let (blow_type, unmapped) = damage_type_for(blow);
+                    if let Some(effect) = unmapped {
+                        *report
+                            .unmapped_blow_effects
+                            .entry(effect.to_owned())
+                            .or_default() += 1;
+                    }
+                    let (dice, sides) = blow.damage_dice.expect("expressible blow carries dice");
+                    let mut method = kebab(&blow.method);
+                    if method.is_empty() {
+                        method = "strike".to_owned();
+                    }
+                    serde_json::json!({
+                        "methodId": format!("rfb-legacy.blow.{method}"),
+                        "toHit": 20,
+                        "damageDice": dice.max(1).min(100),
+                        "damageSides": sides.max(1).min(10_000),
+                        "damageType": blow_type,
+                    })
+                })
+                .collect();
+            serde_json::json!({ "blows": blows })
+        });
         if !entry.spells.is_empty() {
             report.monsters_with_unmapped_spells += 1;
             for spell in &entry.spells {
@@ -434,7 +483,9 @@ pub fn convert_content(
         }
         *duplicates += 1;
         let (damage_type, unmapped_effect) = damage_type_for(blow);
-        if let Some(effect) = unmapped_effect {
+        if melee_routine.is_none()
+            && let Some(effect) = unmapped_effect
+        {
             *report
                 .unmapped_blow_effects
                 .entry(effect.to_owned())
@@ -442,7 +493,7 @@ pub fn convert_content(
         }
         actor_files.push((
             format!("{id}.json"),
-            monster_json(entry, &id, blow, damage_type),
+            monster_json(entry, &id, blow, damage_type, melee_routine),
         ));
         report.monsters_imported += 1;
     }
@@ -561,7 +612,8 @@ B:GAZE:TERRIFY\n";
         assert_eq!(outcome.report.monsters_imported, 1);
         assert_eq!(outcome.report.monsters_skipped, 1);
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 1);
-        assert_eq!(outcome.report.monsters_with_extra_blows, 1);
+        assert_eq!(outcome.report.monsters_with_melee_routine, 1);
+        assert_eq!(outcome.report.monsters_with_inexpressible_blows, 0);
         assert_eq!(outcome.report.unmapped_spells.len(), 2);
         assert_eq!(
             outcome.report.skip_reasons["monster-without-expressible-melee"],
@@ -575,6 +627,16 @@ B:GAZE:TERRIFY\n";
         assert_eq!(lantern["defense"], 1);
         assert_eq!(lantern["damageType"], "fire");
         assert_eq!(lantern["damageDice"], 2);
+        let blows = lantern["meleeRoutine"]["blows"]
+            .as_array()
+            .expect("routine should list blows");
+        assert_eq!(blows.len(), 2);
+        assert_eq!(blows[0]["methodId"], "rfb-legacy.blow.touch");
+        assert_eq!(blows[0]["damageType"], "fire");
+        assert_eq!(blows[1]["methodId"], "rfb-legacy.blow.crush");
+        assert_eq!(blows[1]["damageType"], "physical");
+        assert_eq!(blows[1]["damageDice"], 1);
+        assert_eq!(blows[1]["damageSides"], 6);
 
         let (_, arch) = &outcome.terrain_files[0];
         assert_eq!(arch["walkable"], true);

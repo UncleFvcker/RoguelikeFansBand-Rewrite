@@ -1,6 +1,6 @@
 # 旧版内容导入管线 v1
 
-状态：f_info/r_info 首刀已实现；导入产物只存在于本地 `.local/`，仓库与发行包继续只含原创内容。
+状态：f_info/r_info 首刀与多 blow → meleeRoutine 映射已实现；导入产物只存在于本地 `.local/`，仓库与发行包继续只含原创内容。
 
 ## 1. 边界
 
@@ -12,14 +12,14 @@
 ## 2. v1 映射规则
 
 - 行格式按固定 commit 的 `init1.c` 解析器钉死：`I:速度:骰d面:警觉:AC:沉睡:体重`、`W:深度:稀有度:…`、`B:方式:效果(骰)…`（`HURT(2d6)` 型为主，`DAM(…)` 是少数）、`F:`/`S:` 竖线分隔多行累积、`N:`/`G:`/`E:` 身份与字形。
-- 怪物：速度原值（同为 110 基准）；`maxHp = 骰数×(面+1)/2` 向下取整、至少 1；`defense = AC/10`（对应核心 rating×10 的反向）；`attack = max(1, 深度/4)`（v1 显式近似）；取首个带骰效果为伤害骰，效果 token 映射伤害类型（HURT/DAM→物理，POISON/FIRE/COLD/ACID/ELEC→对应元素，其余物理并计入缺口）；多 blow、全部法术、全部 flag 进缺口报告；经验值 = 深度×10（近似）。
+- 怪物：速度原值（同为 110 基准）；`maxHp = 骰数×(面+1)/2` 向下取整、至少 1；`defense = AC/10`（对应核心 rating×10 的反向）；`attack = max(1, 深度/4)`（v1 显式近似）；取首个带骰效果为伤害骰，效果 token 逐 blow 映射伤害类型（HURT/DAM→物理，POISON/FIRE/COLD/ACID/ELEC→对应元素，其余物理并计入缺口）；**全部带骰 blow 映射为 `meleeRoutine`**（≥2 段时发射，`methodId = rfb-legacy.blow.<方式>`，`toHit` 沿用 demo 惯例 20，schema 上限 8 段而原版至多 4 段故无截断）；无骰 blow、全部法术、全部 flag 进缺口报告；经验值 = 深度×10（近似）。
 - 地形：`MOVE→walkable`、`LOS 缺失→blocksSight`；tag 转 kebab ID；占位条目与无字形条目跳过。
 - ID 命名空间 `rfb-legacy.*`，nameKey/descriptionKey 生成规范键；重名追加原始序号去重。
 
 ## 3. 首次全量导入结果（本地实测）
 
-地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。958 条怪物携带尚不可表达的法术，1140 条有多段 blow。缺口报告给出的规则族优先级（按覆盖数）：SCARE/CONFUSE/BLIND 状态法术、HEAL/自愈、TELE_TO/BLINK 位移、DETECT 类、BRAIN_SMASH/DRAIN_MANA 特殊攻击；blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
+地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类），958 条携带尚不可表达的法术。缺口报告给出的规则族优先级（按覆盖数）：SCARE/CONFUSE/BLIND 状态法术、HEAL/自愈、TELE_TO/BLINK 位移、DETECT 类、BRAIN_SMASH/DRAIN_MANA 特殊攻击；blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
 
 ## 4. v2 方向
 
-k_info 物品导入；多 blow → meleeRoutine；已支持形态的 S: 法术（自愈、直伤 bolt/breath 子集）映射到 monsterCasting；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。
+k_info 物品导入；已支持形态的 S: 法术（自愈、直伤 bolt/breath 子集）映射到 monsterCasting；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。

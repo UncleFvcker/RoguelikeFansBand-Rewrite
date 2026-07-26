@@ -40,7 +40,8 @@
 | P29 | 友方召唤物行动与首版命令 | 已由 contract-v89 完成 | Follow/Attack/Keep Distance/Guard、零时间全局命令、能量调度、近战归属、2 格跨层跟随、save/replay 与 Schema v39 |
 | P30 | 首个非 Mana 职业资源 | 已由 contract-v90 完成 | 多资源底子（ResourceDefinition 行为字段 + techniqueProfiles）、节奏/决斗家纵切、命中/击杀获得、闲置衰减、先天技法、save/replay、旧存档子集迁移、Schema v40 与 282 个 exact fixtures |
 | P31 | 旧版内容导入管线 v1 | 已完成（纯工具，不动契约基线） | f_info/r_info 只读导入 .local 本地包（地形 180/188、怪物 1332/1396），缺口报告按缺失法术/效果/flag 计数，后续规则族按报告排期 |
-| P32 | 按导入缺口报告选定的首个规则族 | 下一候选 | 候选按覆盖数：SCARE/CONFUSE/BLIND 状态法术族、怪物自愈/HEAL、TELE_TO/BLINK 位移族、多 blow meleeRoutine 映射 |
+| P32 | 多 blow → meleeRoutine 映射 | 已完成（纯工具） | 1124/1332 导入怪物获得完整多段近战 routine，逐 blow 伤害类型，107 条无骰副攻计入缺口 |
+| P33 | 按导入缺口报告选定的首个规则族 | 下一候选 | 候选按覆盖数：SCARE/CONFUSE/BLIND 状态法术族（约 200–283）、怪物 HEAL 自愈（173）、TELE_TO/BLINK 位移族（142–173） |
 
 ## contract-v90 明确遗留
 
