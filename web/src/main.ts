@@ -176,6 +176,7 @@ let currentInventory: InventoryItemDto[] = [];
 let currentEquipment: EquipmentItemDto[] = [];
 const selectedInventoryIds = new Set<string>();
 let nativeSaves: NativeSaveSummary[] = [];
+const MESSAGE_HISTORY_LIMIT = 500;
 const messageRecords: MessageRecord[] = [];
 const ATTRIBUTE_KINDS: AttributeKindDto[] = [
   "strength",
@@ -463,6 +464,10 @@ async function dispatch(command: GameCommand): Promise<void> {
   renderTargeting();
   try {
     const update = await core.dispatch(command);
+    // Clearing busy before rendering lets renderStatus/renderInventory emit
+    // the final control states directly instead of re-rendering every panel
+    // a second time afterwards.
+    busy = false;
     renderer.applyUpdate(update);
     renderStatus(update);
     renderInventory(update.inventory, update.equipment);
@@ -470,19 +475,11 @@ async function dispatch(command: GameCommand): Promise<void> {
   } catch (error) {
     showError(error);
   } finally {
-    busy = false;
-    updateInventoryActions();
-    renderProgression(currentStatus?.player.progress, currentStatus?.player.build);
-    renderAbilities(
-      currentStatus?.player.abilities ?? [],
-      currentStatus?.player.resources ?? [],
-      currentStatus?.player.abilityLearning,
-    );
-    renderSummonCommand(
-      currentStatus?.player.summonCommand,
-      currentStatus?.entities ?? [],
-    );
-    renderTargeting();
+    if (busy) {
+      busy = false;
+      updateInventoryActions();
+      renderTargeting();
+    }
   }
 }
 
@@ -2357,24 +2354,34 @@ function addLocalizedMessage(
   args: Record<string, string | number> | undefined,
   kind: string,
 ): void {
-  messageRecords.push({
+  appendMessageRecord({
     source: "key",
     turn: turnValue.textContent ?? "0",
     kind,
     key,
     args,
   });
-  renderMessages();
 }
 
 function addGameEvent(event: GameEventDto): void {
-  messageRecords.push({
+  appendMessageRecord({
     source: "event",
     turn: turnValue.textContent ?? "0",
     kind: event.kind,
     event,
   });
-  renderMessages();
+}
+
+// New messages append a single row; the full rebuild in renderMessages is
+// reserved for the clear button and language switches.
+function appendMessageRecord(record: MessageRecord): void {
+  messageRecords.push(record);
+  while (messageRecords.length > MESSAGE_HISTORY_LIMIT) {
+    messageRecords.shift();
+    messageList.firstElementChild?.remove();
+  }
+  renderMessage(record);
+  messageList.scrollTop = messageList.scrollHeight;
 }
 
 function renderMessages(): void {

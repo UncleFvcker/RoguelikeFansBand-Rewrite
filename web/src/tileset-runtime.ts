@@ -26,6 +26,7 @@ export class TilesetRuntime {
   readonly #glyphAtlas: GlyphAtlas;
   readonly #imageAtlas: Texture | undefined;
   readonly #imageFrames = new Map<string, Texture>();
+  readonly #visualCache = new Map<string, RuntimeTileVisual>();
 
   private constructor(
     manifest: TilesetManifestV1,
@@ -88,6 +89,16 @@ export class TilesetRuntime {
   }
 
   resolve(semanticId: string): RuntimeTileVisual {
+    // Resolution is pure for the lifetime of a runtime instance, so each
+    // semantic id only needs the manifest walk and colour parsing once.
+    const cached = this.#visualCache.get(semanticId);
+    if (cached) return cached;
+    const resolved = this.#resolveUncached(semanticId);
+    this.#visualCache.set(semanticId, resolved);
+    return resolved;
+  }
+
+  #resolveUncached(semanticId: string): RuntimeTileVisual {
     const visual = resolveTilesetVisual(
       this.manifest,
       semanticId,
