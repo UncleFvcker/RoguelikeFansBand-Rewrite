@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.ash-drake",
+  "role": "monster",
+  "nameKey": "actor-demo-ash-drake-name",
+  "descriptionKey": "actor-demo-ash-drake-description",
+  "glyph": "d",
+  "level": 4,
+  "experienceValue": 30,
+  "maxHp": 12,
+  "speed": 100,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "monsterCasting": {
+    "frequencyPercent": 50,
+    "abilities": [
+      {
+        "abilityId": "demo.ability.ash-breath",
+        "weight": 1
+      }
+    ]
+  },
+  "tags": ["dragon"]
+}

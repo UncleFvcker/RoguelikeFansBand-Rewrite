@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 85] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 86] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -179,9 +179,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 85] = [
     "43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252",
     "81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916",
     "3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc",
+    "134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30";
+    "2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -5917,11 +5918,13 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
-            // Displacement forms are monster-casting-only in v91; the player
-            // cast path never produces a plan for them.
+            // Displacement forms are monster-casting-only in v91, and breath
+            // joins them in v94; the player cast path never produces a plan
+            // for them.
             AbilityEffectDefinition::BlinkSelf { .. }
             | AbilityEffectDefinition::TeleportSelf { .. }
-            | AbilityEffectDefinition::TeleportTarget => None,
+            | AbilityEffectDefinition::TeleportTarget
+            | AbilityEffectDefinition::BreathDamage { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -7918,6 +7921,7 @@ impl Game {
             | AbilityEffectDefinition::AreaDamage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
+            | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. }
@@ -8037,7 +8041,8 @@ impl Game {
                     affected_positions,
                 )
             }
-            AbilityEffectDefinition::ConeDamage { radius, .. } => {
+            AbilityEffectDefinition::ConeDamage { radius, .. }
+            | AbilityEffectDefinition::BreathDamage { radius, .. } => {
                 let direction = direction_toward(origin, target_position).ok_or(
                     MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
@@ -8319,7 +8324,8 @@ impl Game {
                 AbilityEffectDefinition::Damage { damage_type, .. }
                 | AbilityEffectDefinition::AreaDamage { damage_type, .. }
                 | AbilityEffectDefinition::BeamDamage { damage_type, .. }
-                | AbilityEffectDefinition::ConeDamage { damage_type, .. } => {
+                | AbilityEffectDefinition::ConeDamage { damage_type, .. }
+                | AbilityEffectDefinition::BreathDamage { damage_type, .. } => {
                     Some(DamageType::from(*damage_type))
                 }
                 AbilityEffectDefinition::ApplyStatus {
@@ -8756,20 +8762,42 @@ impl Game {
                 trace,
                 affected_positions,
             } => {
-                let AbilityEffectDefinition::ConeDamage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                    radius,
-                } = &plan.ability.effect
-                else {
-                    unreachable!("monster cone plan must retain a cone effect");
+                let (raw_damage, damage_type, radius) = match &plan.ability.effect {
+                    AbilityEffectDefinition::ConeDamage {
+                        damage_dice,
+                        damage_sides,
+                        damage_bonus,
+                        damage_type,
+                        radius,
+                    } => (
+                        self.roll_damage(*damage_dice, *damage_sides)
+                            .saturating_add(i32::from(*damage_bonus))
+                            .max(0),
+                        damage_type,
+                        radius,
+                    ),
+                    AbilityEffectDefinition::BreathDamage {
+                        hp_percent,
+                        max_damage,
+                        damage_type,
+                        radius,
+                    } => {
+                        // Breath scales with the caster's current vigor: no
+                        // damage dice are rolled, and the elemental cap
+                        // bounds a healthy caster.
+                        let caster_hp = self
+                            .entities
+                            .iter()
+                            .find(|entity| entity.id == source_entity_id)
+                            .map_or(0, |entity| entity.hp)
+                            .max(0);
+                        let scaled = caster_hp
+                            .saturating_mul(i32::from(*hp_percent))
+                            .div_euclid(100);
+                        (scaled.min(i32::from(*max_damage)), damage_type, radius)
+                    }
+                    _ => unreachable!("monster cone plan must retain a cone or breath effect"),
                 };
-                let raw_damage = self
-                    .roll_damage(*damage_dice, *damage_sides)
-                    .saturating_add(i32::from(*damage_bonus))
-                    .max(0);
                 let origin = self
                     .entities
                     .iter()
@@ -15178,6 +15206,17 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
+            damage_type: DamageType::from(*damage_type).into(),
+            radius: *radius,
+        },
+        AbilityEffectDefinition::BreathDamage {
+            hp_percent,
+            max_damage,
+            damage_type,
+            radius,
+        } => AbilityEffectSpecDto::BreathDamage {
+            hp_percent: *hp_percent,
+            max_damage: *max_damage,
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
         },

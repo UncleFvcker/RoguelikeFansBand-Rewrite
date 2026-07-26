@@ -6362,6 +6362,77 @@ fn damage_bonus_adds_flat_amount_to_monster_cast_damage() {
 }
 
 #[test]
+fn breath_damage_scales_with_caster_hp_and_caps_at_max() {
+    fn breath_raw_damage(drake_hp: i32) -> i32 {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        for cell in game.terrain.iter_mut() {
+            *cell = "demo.terrain.wall".to_owned();
+        }
+        let player = game.player.position;
+        for step in 0..=3 {
+            let index = game
+                .index(Position {
+                    x: player.x + step,
+                    y: player.y,
+                })
+                .expect("corridor cell");
+            game.terrain[index] = "demo.terrain.floor".to_owned();
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.breath-test",
+            "demo.actor.ash-drake",
+            Position {
+                x: player.x + 3,
+                y: player.y,
+            },
+            12,
+            100,
+            100,
+            true,
+        ));
+        game.entities.last_mut().expect("drake was just pushed").hp = drake_hp;
+
+        for _ in 0..40 {
+            let update = dispatch_next(&mut game, GameCommand::Wait);
+            for event in &update.events {
+                if let Some(GameEventOutcomeDto::MonsterAbilityCast { resolution }) =
+                    event.outcome.as_ref()
+                {
+                    assert_eq!(resolution.ability_id, "demo.ability.ash-breath");
+                    let damage = resolution
+                        .effects
+                        .iter()
+                        .chain(
+                            resolution
+                                .targets
+                                .iter()
+                                .flat_map(|target| target.effects.iter()),
+                        )
+                        .find_map(|effect| match effect {
+                            AbilityEffectResolutionDto::Damage { resolution, .. } => {
+                                Some(resolution)
+                            }
+                            _ => None,
+                        })
+                        .expect("breath cast should resolve damage");
+                    return damage.raw_damage;
+                }
+            }
+            if game.player_is_dead() {
+                break;
+            }
+        }
+        panic!("ash drake should breathe within 40 turns");
+    }
+
+    // Full vigor: 12 * 60% = 7 exceeds the elemental cap of 6.
+    assert_eq!(breath_raw_damage(12), 6);
+    // Wounded: 5 * 60% = 3 stays below the cap, so the breath weakens.
+    assert_eq!(breath_raw_damage(5), 3);
+}
+
+#[test]
 fn targeted_beam_continues_through_position_and_entity_targets() {
     let ability_id = "demo.ability.echo-lance";
     let expected_path = vec![

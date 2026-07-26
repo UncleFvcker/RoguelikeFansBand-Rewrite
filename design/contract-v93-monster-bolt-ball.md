@@ -1,6 +1,6 @@
 # Contract v93：怪物直伤弹族（bolt / ball）与伤害平坦加值
 
-状态：当前 active baseline。协议 1.93，内容包 1.84.0（content hash `134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30`）；save 容器继续 v1；伤害加值不新增权威状态字段，state hash 沿用 Schema v40。active baseline 共 303 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v94](contract-v94-breath-family.md)。协议 1.93，内容包 1.84.0（content hash `134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30`）；save 容器继续 v1；伤害加值不新增权威状态字段，state hash 沿用 Schema v40。该 baseline 共 303 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

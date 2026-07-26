@@ -813,6 +813,43 @@
         {
           "type": "object",
           "properties": {
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "hpPercent": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maxDamage": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "breath-damage"
+            }
+          },
+          "required": [
+            "type",
+            "hpPercent",
+            "maxDamage",
+            "damageType",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "teleport"

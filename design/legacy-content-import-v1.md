@@ -18,8 +18,8 @@
 
 ## 3. 首次全量导入结果（本地实测）
 
-地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P36（bolt/ball 直伤映射）已有 696 条生成 `monsterCasting`、共享能力 502 个（早期为骰面去重的直伤能力变体为主），法术映射累计 2241 实例。缺口报告当前优先级（按覆盖数）：BR_ 吐息族 790（HP 百分比伤害，下一候选）、S_ 召唤族 670（需按类别选怪的新召唤形态）、FREQ_N 频率语法 297（并列于 1_IN_N 的百分比直写，未解析导致错用默认 10%）、CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、异种元素直伤约 400+（等伤害类型扩展）；DETECT/MAPPING/BERSERK 等 `MST_POSSESSOR` 附身组共 522 实例属不适用，待重分类出缺口报告。blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
+地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P37（吐息映射 + FREQ_N + 附身组重分类）已有 765 条生成 `monsterCasting`，法术映射累计 2578 实例（含吐息 337），`FREQ_N` 频率语法已解析（297 实例消化），附身组 522 实例入 notApplicableSpells 桶，施法表上限提至 64 后零截断（守卫保留）。缺口报告当前优先级（按覆盖数）：S_ 召唤族 670（需按类别选怪的新召唤形态）、异种元素直伤/吐息约 755（BR 453+BA 167+BO 135，等伤害类型扩展）、CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、BRAIN/MIND 心灵组合 186；blow 效果缺口以 DRAIN_EXP、SHATTER、DISENCHANT、VAMP 为首；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP 为首。
 
 ## 4. v2 方向
 
-k_info 物品导入；BR_ 吐息子集随 breath-damage 效果形态落地后映射；`FREQ_N` 频率语法解析与附身组 token 重分类；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。
+k_info 物品导入；S_ 召唤子集随按类别选怪的召唤形态落地后映射；E: 中文名导出为本地 Fluent 片段；按报告落地新规则族后重跑导入提升表达率。

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.ash-breath",
+  "nameKey": "ability-demo-ash-breath-name",
+  "descriptionKey": "ability-demo-ash-breath-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 4,
+  "baseFailurePercent": 25,
+  "target": {
+    "modes": ["direction"],
+    "range": 6,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "breath-damage",
+    "hpPercent": 60,
+    "maxDamage": 6,
+    "damageType": "fire",
+    "radius": 2
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["breath", "fire", "spell"]
+}

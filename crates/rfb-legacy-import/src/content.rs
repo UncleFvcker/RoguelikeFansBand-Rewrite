@@ -70,6 +70,7 @@ pub struct ContentImportReport {
     pub unmapped_terrain_flags: BTreeMap<String, usize>,
     pub unmapped_monster_flags: BTreeMap<String, usize>,
     pub unmapped_spells: BTreeMap<String, usize>,
+    pub not_applicable_spells: BTreeMap<String, usize>,
     pub unmapped_blow_methods: BTreeMap<String, usize>,
     pub unmapped_blow_effects: BTreeMap<String, usize>,
     pub skip_reasons: BTreeMap<String, usize>,
@@ -429,11 +430,29 @@ fn heal_ability(amount: u32) -> serde_json::Value {
     })
 }
 
+/// Spells parsed from r_info that the legacy engine restricts to the
+/// possessor/mimic player: monsters never cast them, so they are recorded as
+/// not-applicable instead of unmapped gaps.
+const POSSESSOR_ONLY_SPELLS: [&str; 11] = [
+    "DETECT_TRAPS",
+    "DETECT_EVIL",
+    "DETECT_MONSTERS",
+    "DETECT_OBJECTS",
+    "IDENTIFY",
+    "MAPPING",
+    "CLAIRVOYANCE",
+    "MULTIPLY",
+    "BLESS",
+    "HEROISM",
+    "BERSERK",
+];
+
 /// Maps one legacy spell token to a generated ability id, registering the
 /// shared ability definition on first use.
 fn map_spell_token(
     token: &str,
     level: u16,
+    breath_radius: u8,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
     match token {
@@ -520,7 +539,7 @@ fn map_spell_token(
                 .or_insert_with(|| heal_ability(amount));
             Some(id)
         }
-        other => map_damage_spell_token(other, level, abilities),
+        other => map_damage_spell_token(other, level, breath_radius, abilities),
     }
 }
 
@@ -600,15 +619,48 @@ fn parse_explicit_damage_dice(spec: &str) -> Option<(u32, u32, u32)> {
     Some((1, 1, flat.saturating_sub(1)))
 }
 
+/// Looks up a breath token base: damage type plus the legacy default
+/// `(hp_percent, max_damage)` pair. Exotic elements stay unmapped until the
+/// damage-type expansion lands.
+fn breath_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32))> {
+    let entry = match base {
+        "BR_ACID" => ("acid", (20, 900)),
+        "BR_ELEC" => ("electricity", (20, 900)),
+        "BR_FIRE" => ("fire", (20, 900)),
+        "BR_COLD" => ("cold", (20, 900)),
+        "BR_POISON" | "BR_POIS" => ("poison", (17, 600)),
+        // Approximations: radiation folds into poison, plasma into fire.
+        "BR_NUKE" => ("poison", (17, 600)),
+        "BR_PLASMA" => ("fire", (17, 250)),
+        _ => return None,
+    };
+    Some(entry)
+}
+
 fn map_damage_spell_token(
     token: &str,
     level: u16,
+    breath_radius: u8,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
     let (base, explicit) = match token.split_once('(') {
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if let Some((damage_type, (default_percent, max_damage))) = breath_spell_defaults(base) {
+        // Explicit overrides use the legacy `BR_X(N%)` form and only replace
+        // the percentage; the elemental cap stays.
+        let hp_percent = match explicit {
+            Some(spec) => spec.strip_suffix('%')?.parse::<u32>().ok()?.clamp(1, 100),
+            None => default_percent,
+        };
+        let suffix = format!("breath-{damage_type}-{hp_percent}-{max_damage}-r{breath_radius}");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            breath_spell_ability(&suffix, damage_type, hp_percent, max_damage, breath_radius)
+        });
+        return Some(id);
+    }
     let (shape, damage_type, default_dice) = damage_spell_defaults(base, u32::from(level))?;
     let (dice, sides, bonus) = match explicit {
         Some(spec) => parse_explicit_damage_dice(spec)?,
@@ -627,6 +679,35 @@ fn map_damage_spell_token(
         .entry(id.clone())
         .or_insert_with(|| damage_spell_ability(shape, &suffix, damage_type, dice, sides, bonus));
     Some(id)
+}
+
+fn breath_spell_ability(
+    suffix: &str,
+    damage_type: &str,
+    hp_percent: u32,
+    max_damage: u32,
+    radius: u8,
+) -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{suffix}"),
+        "nameKey": format!("ability-legacy-{suffix}-name"),
+        "descriptionKey": format!("ability-legacy-{suffix}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+        "effect": {
+            "type": "breath-damage",
+            "hpPercent": hp_percent,
+            "maxDamage": max_damage,
+            "damageType": damage_type,
+            "radius": radius,
+        },
+        "tags": ["breath", "damage", "legacy-import"],
+    })
 }
 
 fn damage_spell_ability(
@@ -785,6 +866,13 @@ pub fn convert_content(
         let mut frequency_percent: Option<u32> = None;
         let mut mapped_ability_ids: Vec<String> = Vec::new();
         let mut has_unmapped_spell = false;
+        // Legacy breaths widen with stature: level 50+ casters and dragon
+        // glyphs use the larger cone.
+        let breath_radius = if entry.level.unwrap_or(1) >= 50 || entry.glyph == Some('D') {
+            3
+        } else {
+            2
+        };
         for spell in &entry.spells {
             if let Some(divisor) = spell.strip_prefix("1_IN_") {
                 if let Ok(divisor) = divisor.parse::<u32>() {
@@ -792,9 +880,24 @@ pub fn convert_content(
                 }
                 continue;
             }
+            if let Some(percent) = spell.strip_prefix("FREQ_") {
+                if let Ok(percent) = percent.parse::<u32>() {
+                    frequency_percent = Some(percent.clamp(1, 100));
+                }
+                continue;
+            }
+            let base_token = spell.split('(').next().unwrap_or(spell);
+            if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
+                *report
+                    .not_applicable_spells
+                    .entry(spell.clone())
+                    .or_default() += 1;
+                continue;
+            }
             if let Some(ability_id) = map_spell_token(
                 spell,
                 entry.level.unwrap_or(1).max(1),
+                breath_radius,
                 &mut shared_abilities,
             ) {
                 if !mapped_ability_ids.contains(&ability_id) {
@@ -808,6 +911,16 @@ pub fn convert_content(
         }
         if has_unmapped_spell {
             report.monsters_with_unmapped_spells += 1;
+        }
+        // The content schema caps a casting profile at 64 abilities; keep
+        // declaration order and record any legacy kitchen-sink caster that
+        // still overflows.
+        if mapped_ability_ids.len() > 64 {
+            mapped_ability_ids.truncate(64);
+            *report
+                .skip_reasons
+                .entry("monster-casting-overflow".to_owned())
+                .or_default() += 1;
         }
         let monster_casting = (!mapped_ability_ids.is_empty()).then(|| {
             report.monsters_with_casting += 1;
@@ -1023,13 +1136,14 @@ B:GAZE:TERRIFY\n";
         assert_eq!(outcome.report.terrain_skipped, 1);
         assert_eq!(outcome.report.monsters_imported, 1);
         assert_eq!(outcome.report.monsters_skipped, 1);
-        assert_eq!(outcome.report.monsters_with_unmapped_spells, 1);
+        assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
         assert_eq!(outcome.report.monsters_with_melee_routine, 1);
         assert_eq!(outcome.report.monsters_with_inexpressible_blows, 0);
-        assert_eq!(outcome.report.unmapped_spells.len(), 1);
+        assert_eq!(outcome.report.unmapped_spells.len(), 0);
         assert_eq!(outcome.report.spells_mapped["SCARE"], 1);
+        assert_eq!(outcome.report.spells_mapped["BR_FIRE"], 1);
         assert_eq!(outcome.report.monsters_with_casting, 1);
-        assert_eq!(outcome.ability_files.len(), 1);
+        assert_eq!(outcome.ability_files.len(), 2);
         assert_eq!(outcome.resource_files.len(), 1);
         assert_eq!(
             outcome.report.skip_reasons["monster-without-expressible-melee"],
@@ -1145,5 +1259,54 @@ S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
         assert_eq!(throw["effect"]["damageDice"], 1);
         assert_eq!(throw["effect"]["damageSides"], 1);
         assert_eq!(throw["effect"]["damageBonus"], 89);
+    }
+
+    #[test]
+    fn breath_freq_and_possessor_tokens_follow_legacy_semantics() {
+        const DRAGON_R_INFO: &str = "\
+N:4:test ashen dragon\n\
+G:D:r\n\
+I:110:10d10:20:30:10:10\n\
+W:20:2:20:9:10:40\n\
+B:BITE:HURT(2d6)\n\
+S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
+        let monsters = parse_r_info(DRAGON_R_INFO);
+        assert_eq!(monsters.len(), 1);
+
+        let outcome = convert_content(&[], &monsters);
+        let (_, dragon) = &outcome.actor_files[0];
+        // FREQ_50 is the direct-percentage frequency syntax.
+        assert_eq!(dragon["monsterCasting"]["frequencyPercent"], 50);
+        // The dragon glyph widens the breath cone even below level 50, and
+        // the (40%) override replaces only the percentage.
+        let ability_ids: Vec<&str> = dragon["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("casting should list abilities")
+            .iter()
+            .map(|entry| entry["abilityId"].as_str().expect("ability id"))
+            .collect();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.breath-fire-40-900-r3",
+                "rfb-legacy.ability.breath-poison-17-600-r3",
+            ]
+        );
+        let breath = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "breath-fire-40-900-r3.json")
+            .map(|(_, value)| value)
+            .expect("fire breath ability should be generated");
+        assert_eq!(breath["effect"]["type"], "breath-damage");
+        assert_eq!(breath["effect"]["hpPercent"], 40);
+        assert_eq!(breath["effect"]["maxDamage"], 900);
+        assert_eq!(breath["effect"]["radius"], 3);
+        assert_eq!(breath["target"]["modes"], serde_json::json!(["direction"]));
+        // Possessor-only spells count as not-applicable, never as gaps.
+        assert_eq!(outcome.report.not_applicable_spells["DETECT_MONSTERS"], 1);
+        assert_eq!(outcome.report.not_applicable_spells["MAPPING"], 1);
+        assert_eq!(outcome.report.unmapped_spells.len(), 0);
+        assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
     }
 }

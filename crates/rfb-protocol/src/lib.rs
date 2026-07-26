@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.93";
+pub const PROTOCOL_VERSION: &str = "1.94";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -438,6 +438,12 @@ pub enum AbilityEffectSpecDto {
         damage_sides: u16,
         #[serde(default)]
         damage_bonus: u16,
+        damage_type: DamageTypeDto,
+        radius: u8,
+    },
+    BreathDamage {
+        hp_percent: u8,
+        max_damage: u16,
         damage_type: DamageTypeDto,
         radius: u8,
     },

@@ -653,6 +653,13 @@ pub enum AbilityEffectDefinition {
         damage_type: ActorDamageType,
         radius: u8,
     },
+    BreathDamage {
+        hp_percent: u8,
+        max_damage: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        radius: u8,
+    },
     Teleport,
     BlinkSelf {
         radius: u8,
@@ -2572,7 +2579,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     .is_some_and(|distance| !(2..=16).contains(&distance))
                 || casting.flee_hp_percent > 99
                 || casting.abilities.is_empty()
-                || casting.abilities.len() > 32
+                || casting.abilities.len() > 64
                 || casting.abilities.iter().any(|candidate| {
                     validate_id(&candidate.ability_id).is_err()
                         || !(1..=1_000_000).contains(&candidate.weight)
@@ -2726,6 +2733,16 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && *damage_bonus <= 10_000
                     && (1..=9).contains(radius)
             }
+            AbilityEffectDefinition::BreathDamage {
+                hp_percent,
+                max_damage,
+                radius,
+                ..
+            } => {
+                (1..=100).contains(hp_percent)
+                    && (1..=10_000).contains(max_damage)
+                    && (1..=9).contains(radius)
+            }
             AbilityEffectDefinition::Teleport => true,
             AbilityEffectDefinition::BlinkSelf { radius } => (1..=10).contains(radius),
             AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
@@ -2796,8 +2813,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             .target
             .modes
             .contains(&AbilityTargetModeDefinition::SelfTarget);
-        let directional_effect =
-            matches!(&ability.effect, AbilityEffectDefinition::ConeDamage { .. });
+        let directional_effect = matches!(
+            &ability.effect,
+            AbilityEffectDefinition::ConeDamage { .. }
+                | AbilityEffectDefinition::BreathDamage { .. }
+        );
         let self_target_rule = ability.target.modes.as_slice()
             == [AbilityTargetModeDefinition::SelfTarget]
             && ability.target.range == 0
@@ -2809,7 +2829,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::AreaDamage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
-            | AbilityEffectDefinition::ConeDamage { .. } => projectile_target_rule,
+            | AbilityEffectDefinition::ConeDamage { .. }
+            | AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted
                     && ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
@@ -2939,7 +2960,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 AbilityEffectDefinition::Damage { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
                 | AbilityEffectDefinition::BeamDamage { .. } => projectile_target,
-                AbilityEffectDefinition::ConeDamage { .. } => {
+                AbilityEffectDefinition::ConeDamage { .. }
+                | AbilityEffectDefinition::BreathDamage { .. } => {
                     ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
                         && ability.target.requires_line_of_effect
                 }
@@ -6736,11 +6758,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 18);
+        assert_eq!(first.content.actors.len(), 19);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 26);
+        assert_eq!(first.content.abilities.len(), 27);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
@@ -6764,7 +6786,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.84.0");
+        assert_eq!(catalog.pack_version(), "1.85.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

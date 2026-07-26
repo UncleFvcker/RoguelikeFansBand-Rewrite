@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v93、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v94、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -45,17 +45,19 @@
 | P34 | 怪物位移法术族 | 已由 contract-v91 完成 | blink-self/teleport-self/teleport-target 三效果、rift-stalker 纵切、导入映射 455 实例（casting 怪物 553）、288 个 exact fixtures |
 | P35 | 新状态族（混乱/致盲/麻痹） | 已由 contract-v92 完成 | 三个新状态种类 + 玩家侧效果（移动重定向/禁施法、FOV 压制、行动浪费）、gloom-weaver 纵切、导入映射 548 实例（casting 怪物 586）、299 个 exact fixtures |
 | P36 | 怪物直伤弹族（bolt/ball）与伤害平坦加值 | 已由 contract-v93 完成 | 四伤害效果加 damageBonus、1d1+(F-1) 平坦恒等式、cinder-adept 纵切、导入映射 BO_/BA_ 622 实例（casting 怪物 696、共享能力 502）、303 个 exact fixtures。原候选 DETECT 族经源码核实为 `MST_POSSESSOR` 附身专用组（怪物不施放，共 522 个 token 实例含 MAPPING/BERSERK/BLESS 等），按不适用归档 |
-| P37 | BR_ 吐息族 | 下一候选 | 790 实例、未映射最大单族；原版伤害 = 当前 HP×pct% 封顶 max（`_breath_parm`，如火/冷 20%/900、毒 17%/600），锥形 footprint；需新 breath-damage 效果形态 + 核心执行 + 导入映射（可顺带修 FREQ_N 频率语法缺陷与附身组 token 重分类） |
+| P37 | BR_ 吐息族 | 已由 contract-v94 完成 | breath-damage 效果（当前 HP×pct% 封顶 max、零伤害骰、锥形复用 v79）、ash-drake 纵切、fixtures 304-306（封顶/残血衰减/致死闭环）、306 个 exact fixtures。导入映射吐息 337 实例（casting 怪 696→765）+ FREQ_N 频率修复（297 实例消化）+ 附身组 522 实例重分类 notApplicable；施法表上限 32→64（旧版最大杂烩 34 技能悉数保留，导入器仍留 64 截断守卫） |
+| P38 | S_ 召唤族 或 伤害类型扩展 | 下一候选 | 召唤族 670 实例需按类别/深度选怪的新召唤形态（S_KIN 76 可先映射为召唤同类）；伤害类型扩展解锁异种元素直伤/吐息约 850 实例（BO 135+BA 167+BR 453+心灵 186 部分） |
 
-## contract-v93 明确遗留
+## contract-v94 明确遗留
 
-- 导入器 `S:` 行频率只解析 `1_IN_N`，**尚未解析并列语法 `FREQ_N`（频率百分比直写，init1.c `race->spells->freq = n`）**：297 个 token 实例未映射，对应怪物错用默认频率 10%；
-- 附身专用组（DETECT_TRAPS/EVIL/MONSTERS/OBJECTS、IDENTIFY、MAPPING、CLAIRVOYANCE、MULTIPLY、BLESS、HEROISM、BERSERK，共 522 实例）仍混在 unmappedSpells 里计数，应重分类为「不适用」独立桶，让缺口报告反映真实欠账（重分类后真实未映射约 3284 - 297 ≈ 3000）；
-- 异种元素直伤（BO_MANA 88、BO/BA/BR_NETHER、BA/BR_DARK、BA_LITE、BA/BR_CHAOS 等约 400+ 实例）等待「伤害类型扩展」迭代：物理/五元素之外的伤害类型（不可抗魔法、灵魂、明暗、混沌等）需要核心 DamageType、抗性档与存档扩展，硬折 physical 会让护甲错误参与减免；
+- 吐息首版仅限 monsterCasting（玩家目标规划层拒绝）；玩家侧吐息（龙形态等）等身体/变身系统再开放；
+- 吐息锥形沿用 v79 横向整数衰减；原版吐息在锥内不衰减的差异记为已知近似；
+- 异种元素吐息（BR_NETHER 51/DARK 50/CHAOS 36/NEXUS 35/SOUND 29/DISEN 27/DISI 27/LITE 26/SHARDS 24/CONF 26/TIME 22/FORCE 21/MANA 21/INERTIA 18/GRAVITY 17/STORM 16 等约 453 实例）与异种直伤（BO 135+BA 167）等待「伤害类型扩展」迭代：物理/五元素之外的伤害类型需要核心 DamageType、抗性档与存档扩展，硬折 physical 会让护甲错误参与减免；
 - CAUSE_1–4 诅咒直伤（240 实例，固定骰 3d8/8d8/10d15/15d15）原版走豁免检定而非护甲/抗性，需先决定中性豁免机制归属；
 - MIND_BLAST（63）/BRAIN_SMASH（123）为心灵伤害 + 状态骑手组合，伤害类型与豁免同上，组合形态可复用既有 Sequence 白名单；
 - S_ 召唤族（670 实例）需要按类别/深度选择怪物的新召唤形态（现有 Summon 只支持固定 actor kind）；S_KIN（76）可率先映射为召唤施法者同类；
-- TELE_OTHER（69，把玩家推远）、TELE_LEVEL（25，跨层）、DRAIN_MANA（83，吸资源）、DARKNESS（85，压制光照）、AMNESIA（64，清除知识）各需小型新效果形态，按覆盖数排期。
+- TELE_OTHER（69，把玩家推远）、TELE_LEVEL（25，跨层）、DRAIN_MANA（83，吸资源）、DARKNESS（85，压制光照）、AMNESIA（64，清除知识）各需小型新效果形态，按覆盖数排期；
+- 施法表上限已提至 64（当前旧版最大者 34 技能，零截断）；导入器保留 64 截断守卫，若未来映射族继续扩张再评估上限或按权重挑选保留集。
 
 ## contract-v90 明确遗留
 
