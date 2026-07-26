@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现（P44 基础物品 + P45 词条与固定神器，均为纯工具迭代——协议/契约/演示包零变更）；产物只进 `.local/packs/rfb-legacy/{items,affixes}/`，仓库继续只含原创内容。
+状态：已实现（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正，均为纯工具迭代——协议/契约/演示包零变更）；产物只进 `.local/packs/rfb-legacy/{items,affixes}/`，仓库继续只含原创内容。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 
@@ -11,7 +11,7 @@
 | tval 类 | 形态 |
 | --- | --- |
 | 20/21/22/23（挖掘/钝器/长柄/剑） | `equipmentSlot: weapon` + meleeProfile（attacks 1、P: 骰与命中/伤害修正；原版攻击次数源于玩家技能，记为差异） |
-| 19（弓） | `equipmentSlot: launcher` + projectileProfile（沿用 demo 惯例射程/骰；倍率语义记缺口） |
+| 19（弓） | `equipmentSlot: launcher` + projectileProfile（沿用 demo 惯例射程/骰；倍率语义记缺口）；**无弹药配对的竖琴/长笛/枪械保槽不带射击档**——原版 `obj_is_fake_bow` 语义（占射击槽、不可射击），计 launcher-unpaired（P46 修正，此前误降级为无槽壳） |
 | 16/17/18（弹/箭/弩矢） | 弹药：无槽、堆叠 99、`ammunition` 标签、破损率 25%；**弹药自带骰折入发射器**记为已知差异 |
 | 36/37/38（软甲/硬甲/龙鳞） | `equipmentSlot: body` + `modifiers.defense = AC + to_ac` |
 | 34/35（盔/冠） | `head`；33（盾）`shield`；32（披风）`cloak`；31（手套）`gloves`；30（靴）`boots`（同上 defense 映射） |
@@ -35,11 +35,11 @@
 
 ## 5. a_info 固定神器 → item（P45）
 
-行格式：`N:序号:名称`、`I:tval:sval:pval`（pval 固定）、`W:等级:稀有度:重量:价格`、`P:AC:骰:命中:伤害:护甲`、`F:` 旗标（`INSTA_ART` 为生成语义、不计缺口）、`E:` ASCII token 视为激活（中文文案行跳过）。映射：复用 k_info 的 tval 形态表，id 为 `rfb-legacy.item.artifact-*`、字形 `*`、maxStack 1、tags 含 `artifact`；武器带固定 meleeProfile（P: 骰与修正），发射器按 sval 配对弹药（竖琴/枪械类 7 件同基础件降级为壳并计 launcher-unpaired）；AC+护甲修正入 defense，非武器槽位取 max(命中,伤害) 入 attack，六维旗标按固定 pval 折算——**哨兵 pval（混沌盾 125）钳制进契约 ±100 属性窗口**（已记差异）。无槽形态（光源等）不折属性，其六维旗标保留在 `unmappedArtifactFlags` 里不被吞掉。激活计 `artifact-activation` 缺口。
+行格式：`N:序号:名称`、`I:tval:sval:pval`（pval 固定）、`W:等级:稀有度:重量:价格`、`P:AC:骰:命中:伤害:护甲`、`F:` 旗标（`INSTA_ART` 为生成语义、不计缺口）、`E:` ASCII token 视为激活（中文文案行跳过）。映射：复用 k_info 的 tval 形态表，id 为 `rfb-legacy.item.artifact-*`、字形 `*`、maxStack 1、tags 含 `artifact`；武器带固定 meleeProfile（P: 骰与修正），发射器按 sval 配对弹药（竖琴/枪械类 7 件为 **fake bow**：保 launcher 槽与固定修正、不带射击档，P: 命中/伤害为纯射击加成随射击档一并舍弃，计 launcher-unpaired——P46 修正）；AC+护甲修正入 defense，非武器槽位取 max(命中,伤害) 入 attack，六维旗标按固定 pval 折算——**哨兵 pval（混沌盾 125）钳制进契约 ±100 属性窗口**（已记差异）。无槽形态（光源等）不折属性，其六维旗标保留在 `unmappedArtifactFlags` 里不被吞掉。激活计 `artifact-activation` 缺口。
 
 ## 6. 实测
 
-k_info 545 条中 544 条导入（跳过占位）；e_info 160 条词条 88 条成为 affix（72 条 ego-inexpressible——力量全在抗性/免疫/速度类旗标）；a_info 392 条神器全数导入。产物（936 items + 88 affixes）过 `rfb-contentc inspect-source` 全部校验（items/affixes root 动态加入 pack.json）。主要旗标缺口：IGNORE_*/RES_*/SEE_INVIS/FREE_ACT/SPEED/SLAY_* 等待装备旗标系统。
+k_info 545 条中 544 条导入（跳过占位）；e_info 160 条词条 88 条成为 affix（72 条 ego-inexpressible——力量全在抗性/免疫/速度类旗标）；a_info 392 条神器全数导入。产物（936 items + 88 affixes）过 `rfb-contentc inspect-source` 全部校验（items/affixes root 动态加入 pack.json）。fake bow 修正后 12 件未配对发射器（基础 5 + 神器 7）全部可装备，阿波罗竖琴等取回固定六维（力量/智力/魅力 +5）；契约验证依据：`launcher` 槽不带射击档合法（物品规则均为单向），运行时射击路径查无射击档仅拒绝开火。主要旗标缺口：IGNORE_*/RES_*/SEE_INVIS/FREE_ACT/SPEED/SLAY_* 等待装备旗标系统。
 
 ## 7. 遗留
 

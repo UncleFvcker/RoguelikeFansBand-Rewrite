@@ -640,6 +640,8 @@ fn item_json(
     if shape.launcher {
         // Instruments and other exotic entries share the legacy bow tval;
         // only launchers with a canonical ammo partner keep the profile.
+        // The rest stay equippable fake bows (legacy obj_is_fake_bow):
+        // they occupy the launcher slot but cannot fire.
         if let Some(ammo_kind_id) = launcher_ammo_for(entry, ammo) {
             value["projectileProfile"] = serde_json::json!({
                 "range": 12,
@@ -650,10 +652,6 @@ fn item_json(
                 "ammoKindId": ammo_kind_id,
             });
         } else {
-            value
-                .as_object_mut()
-                .expect("item json is an object")
-                .remove("equipmentSlot");
             *report
                 .item_behavior_gaps
                 .entry("launcher-unpaired".to_owned())
@@ -926,7 +924,6 @@ fn artifact_json(
             "damageSides": sides.clamp(1, 10_000),
         });
     }
-    let mut slot_dropped = false;
     if shape.launcher {
         let paired = launcher_ammo_for(
             &LegacyItemEntry {
@@ -945,11 +942,9 @@ fn artifact_json(
                 "ammoKindId": ammo_kind_id,
             });
         } else {
-            value
-                .as_object_mut()
-                .expect("artifact json is an object")
-                .remove("equipmentSlot");
-            slot_dropped = true;
+            // Fake bows (guns, harps): the slot and fixed bonuses stay, only
+            // the ability to fire is lost; P: to-hit/to-damage would have
+            // applied to shooting alone, so dropping them stays faithful.
             *report
                 .item_behavior_gaps
                 .entry("launcher-unpaired".to_owned())
@@ -957,9 +952,8 @@ fn artifact_json(
         }
     }
     // Artifacts carry fixed bonuses: armour folds into defense, the fixed
-    // pval feeds the attribute flags. Modifiers require the slot to survive,
-    // so unpaired launchers fall back to a bare collectible shell.
-    let has_slot = shape.slot.is_some() && !slot_dropped;
+    // pval feeds the attribute flags.
+    let has_slot = shape.slot.is_some();
     let mut modifiers = serde_json::Map::new();
     if has_slot {
         let defense = entry.armor_class.saturating_add(entry.to_armor);
@@ -2845,13 +2839,17 @@ N:*:& Test Torch~
 G:~:u
 I:39:0:5000
 W:1:0:0:30:2
+N:*:& Test Harp~
+G:}:y
+I:19:70:0
+W:5:0:0:150:80
 ";
         let items = parse_k_info(SYNTHETIC_K_INFO);
-        assert_eq!(items.len(), 8);
+        assert_eq!(items.len(), 9);
 
         let outcome = convert_content(&[], &[], &items, &[], &[]);
-        assert_eq!(outcome.report.items_total, 8);
-        assert_eq!(outcome.report.items_imported, 7);
+        assert_eq!(outcome.report.items_total, 9);
+        assert_eq!(outcome.report.items_imported, 8);
         assert_eq!(outcome.report.items_skipped, 1);
 
         let get = |name: &str| {
@@ -2905,6 +2903,13 @@ W:1:0:0:30:2
                 .iter()
                 .any(|tag| tag == "light-source")
         );
+
+        // Unpaired launchers stay equippable fake bows: slot without a
+        // projectile profile, so they occupy the slot but cannot fire.
+        let harp = get("test-harp.json");
+        assert_eq!(harp["equipmentSlot"], "launcher");
+        assert!(harp.get("projectileProfile").is_none());
+        assert_eq!(outcome.report.item_behavior_gaps["launcher-unpaired"], 1);
     }
 
     #[test]
@@ -2992,12 +2997,18 @@ N:3:of Test Warding
 I:45:20:4
 W:40:8:2:80000
 F:CON
+
+N:4:of Test Melody
+I:19:70:2
+W:30:5:60:50000
+P:0:0d0:5:5:0
+F:CHR
 ";
         let artifacts = parse_a_info(SYNTHETIC_A_INFO);
-        assert_eq!(artifacts.len(), 3);
+        assert_eq!(artifacts.len(), 4);
         let outcome = convert_content(&[], &[], &[], &[], &artifacts);
-        assert_eq!(outcome.report.artifacts_total, 3);
-        assert_eq!(outcome.report.artifacts_imported, 3);
+        assert_eq!(outcome.report.artifacts_total, 4);
+        assert_eq!(outcome.report.artifacts_imported, 4);
 
         let get = |name: &str| {
             outcome
@@ -3039,6 +3050,16 @@ F:CON
         assert_eq!(warding["equipmentSlot"], "ring");
         assert_eq!(warding["modifiers"]["constitution"], 4);
         assert_eq!(warding["maxStack"], 1);
+
+        // Fake-bow artifacts keep the launcher slot and their fixed
+        // attributes even without a projectile profile; the shooting-only
+        // P: bonuses are dropped alongside the profile.
+        let melody = get("artifact-test-melody.json");
+        assert_eq!(melody["equipmentSlot"], "launcher");
+        assert!(melody.get("projectileProfile").is_none());
+        assert_eq!(melody["modifiers"]["charisma"], 2);
+        assert!(melody["modifiers"].get("attack").is_none());
+        assert_eq!(outcome.report.item_behavior_gaps["launcher-unpaired"], 1);
     }
 
     #[test]
