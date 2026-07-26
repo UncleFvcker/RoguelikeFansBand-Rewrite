@@ -531,9 +531,11 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             behavior_gap: Some("effect-jewelry"),
         },
         39 => ItemShape {
-            slot: None,
-            max_stack: 10,
-            tags: vec!["legacy-import", "light-source"],
+            // The body template's light slot exists as of contract-v100;
+            // radius/fuel semantics remain a gap.
+            slot: Some("light"),
+            max_stack: 1,
+            tags: vec!["equipment", "legacy-import", "light-source"],
             melee: false,
             launcher: false,
             behavior_gap: None,
@@ -2896,6 +2898,8 @@ W:5:0:0:150:80
         assert_eq!(outcome.report.item_behavior_gaps["consumable-effect"], 1);
 
         let torch = get("test-torch.json");
+        assert_eq!(torch["equipmentSlot"], "light");
+        assert_eq!(torch["maxStack"], 1);
         assert!(
             torch["tags"]
                 .as_array()
@@ -3019,14 +3023,14 @@ F:CHR
                 .unwrap_or_else(|| panic!("{name} should be generated"))
         };
 
-        // Slotless light source: the fixed pval cannot land anywhere, so the
-        // attribute flag surfaces in the gap report instead of vanishing.
+        // Light artifacts occupy the body template's light slot, so their
+        // fixed pval folds into attributes (contract-v100).
         let radiance = get("artifact-test-radiance.json");
         assert_eq!(radiance["id"], "rfb-legacy.item.artifact-test-radiance");
         assert_eq!(radiance["glyph"], "*");
-        assert!(radiance.get("equipmentSlot").is_none());
-        assert!(radiance.get("modifiers").is_none());
-        assert_eq!(outcome.report.unmapped_artifact_flags["WIS"], 1);
+        assert_eq!(radiance["equipmentSlot"], "light");
+        assert_eq!(radiance["modifiers"]["wisdom"], 3);
+        assert!(!outcome.report.unmapped_artifact_flags.contains_key("WIS"));
         assert!(
             !outcome
                 .report

@@ -1,5 +1,22 @@
 {
   "$defs": {
+    "BodySlotDefinition": {
+      "additionalProperties": false,
+      "description": "One equipment slot instance on a body: `slot_type` is the item-facing\nclass (matches `ItemDefinition.equipment_slot`), `id` names the instance\nso a body can carry several slots of the same type (e.g. two rings).",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "slotType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "slotType"
+      ],
+      "type": "object"
+    },
     "StartingItemDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -85,6 +102,14 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "bodySlots": {
+      "default": [],
+      "description": "Equipment slot instances this race's body offers. Empty means the\nengine's standard body template applies.",
+      "items": {
+        "$ref": "#/$defs/BodySlotDefinition"
+      },
+      "type": "array"
     },
     "descriptionKey": {
       "type": "string"

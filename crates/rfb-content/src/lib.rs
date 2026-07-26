@@ -409,7 +409,22 @@ pub struct RaceDefinition {
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
+    /// Equipment slot instances this race's body offers. Empty means the
+    /// engine's standard body template applies.
+    #[serde(default)]
+    pub body_slots: Vec<BodySlotDefinition>,
     pub tags: Vec<String>,
+}
+
+/// One equipment slot instance on a body: `slot_type` is the item-facing
+/// class (matches `ItemDefinition.equipment_slot`), `id` names the instance
+/// so a body can carry several slots of the same type (e.g. two rings).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BodySlotDefinition {
+    pub id: String,
+    pub slot_type: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3388,6 +3403,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             &skill_sets_by_id,
             &item_starting_metadata,
         )?;
+        if race.body_slots.len() > 64 {
+            return Err(ContentError::InvalidBodySlots(race.id.clone()));
+        }
+        let mut body_slot_ids = BTreeSet::new();
+        for slot in &race.body_slots {
+            if validate_equipment_slot(&slot.id).is_err()
+                || validate_equipment_slot(&slot.slot_type).is_err()
+                || !body_slot_ids.insert(slot.id.as_str())
+            {
+                return Err(ContentError::InvalidBodySlots(race.id.clone()));
+            }
+        }
         normalize_tags(&race.id, &mut race.tags)?;
         insert_definition_id(&mut all_ids, &race.id)?;
         race_ids.insert(race.id.clone());
@@ -6756,6 +6783,8 @@ pub enum ContentError {
     InvalidItemBreakChance(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
     InvalidEquipmentSlot(String),
+    #[error("race body slots are invalid: {0}")]
+    InvalidBodySlots(String),
     #[error("item stat modifiers are invalid or require an equipment slot: {0}")]
     InvalidItemModifiers(String),
     #[error("item attack profile is invalid or requires the weapon slot: {0}")]
@@ -6877,7 +6906,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 24);
         assert_eq!(first.content.affixes.len(), 1);
-        assert_eq!(first.content.items.len(), 8);
+        assert_eq!(first.content.items.len(), 9);
         assert_eq!(first.content.resources.len(), 2);
         assert_eq!(first.content.abilities.len(), 36);
         assert_eq!(first.content.ability_books.len(), 2);
@@ -6903,7 +6932,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.90.0");
+        assert_eq!(catalog.pack_version(), "1.91.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

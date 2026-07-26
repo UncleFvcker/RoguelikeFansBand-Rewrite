@@ -218,7 +218,9 @@ pub(crate) fn equipment_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    if definition.equipment_slot.as_deref() != Some(item.slot_id.as_str()) {
+    // Slot ids are body-slot instances; the instance-to-type match is
+    // enforced by state validation, which owns the body template.
+    if definition.equipment_slot.is_none() {
         return Err(CoreError::InvalidSave("equipment metadata is invalid"));
     }
     Ok(ItemInstance {
@@ -307,6 +309,8 @@ pub(crate) fn player_to_save(
         learned_ability_ids: Vec::new(),
         ability_progress: Vec::new(),
         summon_command: Default::default(),
+        // Filled by the game's save path, which owns the body template.
+        body_slots: Vec::new(),
     }
 }
 

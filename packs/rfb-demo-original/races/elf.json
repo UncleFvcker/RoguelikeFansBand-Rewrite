@@ -16,5 +16,20 @@
   "experiencePercent": 120,
   "baseHp": -1,
   "skillSetId": "demo.skill-set.elf",
+  "bodySlots": [
+    { "id": "weapon", "slotType": "weapon" },
+    { "id": "launcher", "slotType": "launcher" },
+    { "id": "body", "slotType": "body" },
+    { "id": "head", "slotType": "head" },
+    { "id": "shield", "slotType": "shield" },
+    { "id": "cloak", "slotType": "cloak" },
+    { "id": "gloves", "slotType": "gloves" },
+    { "id": "boots", "slotType": "boots" },
+    { "id": "ring-1", "slotType": "ring" },
+    { "id": "ring-2", "slotType": "ring" },
+    { "id": "amulet", "slotType": "amulet" },
+    { "id": "light", "slotType": "light" },
+    { "id": "charm", "slotType": "charm" }
+  ],
   "tags": ["humanoid", "mystic"]
 }

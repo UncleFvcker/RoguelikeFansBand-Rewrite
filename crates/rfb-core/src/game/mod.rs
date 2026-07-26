@@ -69,31 +69,31 @@ use rfb_protocol::{
     AbilityProgressSaveDto, AbilityStatusChangeDto, AbilityStatusStackingDto,
     AbilitySummonResolutionDto, AbilitySummonSpecDto, AbilityTeleportResolutionDto,
     AbilityTerrainTransformResolutionDto, AbilityTerrainTransformSpecDto, ActorSaveDto,
-    AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto,
-    CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
-    DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EntityFactionDto, EquipmentItemDto,
-    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope,
-    GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto,
-    ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
-    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto,
-    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto,
-    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto, StatModifiersDto,
-    SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, SummonDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
-    TerrainInteractionDto, TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto,
-    TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    AttackProfileDto, AttributeSetDto, AttributeValueDto, BodySlotDto, BodySlotSaveDto,
+    CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
+    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
+    EntityDto, EntityFactionDto, EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
+    FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
+    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
+    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION,
+    PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto,
+    StatModifiersDto, SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto,
+    SummonDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
+    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 91] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 92] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -185,12 +185,13 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 91] = [
     "f1fba31216da594e34b36b23bdf4570b46a934c7360ad0d66e01f1284529a9f2",
     "bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b",
     "086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34",
+    "b425bafec4d4108b9eab4fd323b7b592f1e65ffb4197d45bcb1bc59567b61eff",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "b425bafec4d4108b9eab4fd323b7b592f1e65ffb4197d45bcb1bc59567b61eff";
+    "1380958f4743b474abe00c2dbbcf6719aa791945405f0276badc0d8d35a106e1";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 41;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -403,7 +404,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV40<'a> {
+struct StateHashPayloadV41<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -1071,6 +1072,85 @@ fn restore_character_progress(
     })
 }
 
+/// The engine's standard humanoid body: the slot roster every player uses
+/// unless their race declares its own `bodySlots`. Single-instance slot ids
+/// equal their type so pre-template saves (e.g. `charm`) stay valid.
+const STANDARD_BODY_SLOTS: [(&str, &str); 13] = [
+    ("weapon", "weapon"),
+    ("launcher", "launcher"),
+    ("body", "body"),
+    ("head", "head"),
+    ("shield", "shield"),
+    ("cloak", "cloak"),
+    ("gloves", "gloves"),
+    ("boots", "boots"),
+    ("ring-1", "ring"),
+    ("ring-2", "ring"),
+    ("amulet", "amulet"),
+    ("light", "light"),
+    ("charm", "charm"),
+];
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct BodySlot {
+    id: String,
+    slot_type: String,
+}
+
+fn standard_body_slots() -> Vec<BodySlot> {
+    STANDARD_BODY_SLOTS
+        .iter()
+        .map(|(id, slot_type)| BodySlot {
+            id: (*id).to_owned(),
+            slot_type: (*slot_type).to_owned(),
+        })
+        .collect()
+}
+
+/// Body slots come from the build's race when it declares any, otherwise
+/// the standard template applies. Games without a build use the standard
+/// template as well.
+fn resolve_body_slots(
+    content: &ContentCatalog,
+    identity: Option<&CharacterBuildIdentity>,
+) -> Result<Vec<BodySlot>, CoreError> {
+    let Some(identity) = identity else {
+        return Ok(standard_body_slots());
+    };
+    let (_, race, _, _) = build_definitions(content, identity)?;
+    if race.body_slots.is_empty() {
+        return Ok(standard_body_slots());
+    }
+    Ok(race
+        .body_slots
+        .iter()
+        .map(|slot| BodySlot {
+            id: slot.id.clone(),
+            slot_type: slot.slot_type.clone(),
+        })
+        .collect())
+}
+
+fn body_slot_instance_for_type<'a>(
+    body_slots: &'a [BodySlot],
+    slot_type: &str,
+    occupied: impl Fn(&str) -> bool,
+) -> Option<&'a BodySlot> {
+    let mut first_match = None;
+    for slot in body_slots {
+        if slot.slot_type != slot_type {
+            continue;
+        }
+        if first_match.is_none() {
+            first_match = Some(slot);
+        }
+        if !occupied(&slot.id) {
+            return Some(slot);
+        }
+    }
+    first_match
+}
+
 fn resolve_character_build(
     content: &ContentCatalog,
     build_id: Option<&str>,
@@ -1168,6 +1248,7 @@ fn accumulate_skill_set(
 fn append_starting_items(
     content: &ContentCatalog,
     identity: Option<&CharacterBuildIdentity>,
+    body_slots: &[BodySlot],
     items: &mut Vec<ItemInstance>,
     next_serial: &mut u64,
 ) -> Result<(), CoreError> {
@@ -1182,7 +1263,7 @@ fn append_starting_items(
         .chain(personality.starting_items.iter())
         .chain(build.starting_items.iter())
     {
-        append_starting_item(content, starting_item, items, next_serial)?;
+        append_starting_item(content, starting_item, body_slots, items, next_serial)?;
     }
     Ok(())
 }
@@ -1190,6 +1271,7 @@ fn append_starting_items(
 fn append_starting_item(
     content: &ContentCatalog,
     starting_item: &StartingItemDefinition,
+    body_slots: &[BodySlot],
     items: &mut Vec<ItemInstance>,
     next_serial: &mut u64,
 ) -> Result<(), CoreError> {
@@ -1197,11 +1279,22 @@ fn append_starting_item(
         .item(&starting_item.item_kind_id)
         .ok_or_else(|| CoreError::UnknownItem(starting_item.item_kind_id.clone()))?;
     let location = if starting_item.equipped {
+        let slot_type = definition
+            .equipment_slot
+            .as_deref()
+            .ok_or(CoreError::InvalidSave("starting equipment is invalid"))?;
+        let occupied = |slot_id: &str| {
+            items.iter().any(|item| {
+                matches!(
+                    &item.location,
+                    ItemLocation::Equipped { slot_id: equipped } if equipped == slot_id
+                )
+            })
+        };
+        let slot = body_slot_instance_for_type(body_slots, slot_type, occupied)
+            .ok_or(CoreError::InvalidSave("starting equipment is invalid"))?;
         ItemLocation::Equipped {
-            slot_id: definition
-                .equipment_slot
-                .clone()
-                .ok_or(CoreError::InvalidSave("starting equipment is invalid"))?,
+            slot_id: slot.id.clone(),
         }
     } else {
         ItemLocation::Inventory
@@ -1270,6 +1363,7 @@ pub struct Game {
     terrain: Vec<String>,
     player: Actor,
     build: Option<CharacterBuildIdentity>,
+    body_slots: Vec<BodySlot>,
     progress: CharacterProgress,
     resources: BTreeMap<String, ResourcePool>,
     resources_touched: BTreeSet<String>,
@@ -1451,11 +1545,13 @@ impl Game {
                 location: ItemLocation::Ground(position_from_content(spawn.position)),
             })
             .collect::<Vec<_>>();
+        let body_slots = resolve_body_slots(&content, build.as_ref())?;
         let mut next_item_instance_serial =
             derive_next_item_instance_serial(&player, &entities, &items)?;
         append_starting_items(
             &content,
             build.as_ref(),
+            &body_slots,
             &mut items,
             &mut next_item_instance_serial,
         )?;
@@ -1473,6 +1569,7 @@ impl Game {
             terrain,
             player,
             build,
+            body_slots,
             progress,
             resources: BTreeMap::new(),
             resources_touched: BTreeSet::new(),
@@ -1644,6 +1741,33 @@ impl Game {
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
+        // Body slots are save-authoritative once present; pre-template saves
+        // derive them from the build's race (or the standard body) with no
+        // RNG involvement.
+        let body_slots = if payload.player.body_slots.is_empty() {
+            resolve_body_slots(&content, build.as_ref())?
+        } else {
+            let mut seen_slot_ids = BTreeSet::new();
+            let slots = payload
+                .player
+                .body_slots
+                .iter()
+                .map(|slot| BodySlot {
+                    id: slot.id.clone(),
+                    slot_type: slot.slot_type.clone(),
+                })
+                .collect::<Vec<_>>();
+            if slots.len() > 64
+                || slots.iter().any(|slot| {
+                    slot.id.is_empty()
+                        || slot.slot_type.is_empty()
+                        || !seen_slot_ids.insert(slot.id.clone())
+                })
+            {
+                return Err(CoreError::InvalidSave("player body slots are invalid"));
+            }
+            slots
+        };
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -1827,6 +1951,7 @@ impl Game {
             terrain,
             player,
             build,
+            body_slots,
             progress,
             resources: BTreeMap::new(),
             resources_touched: BTreeSet::new(),
@@ -1990,6 +2115,14 @@ impl Game {
             items: self.items_dto(),
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
+            body_slots: self
+                .body_slots
+                .iter()
+                .map(|slot| BodySlotDto {
+                    id: slot.id.clone(),
+                    slot_type: slot.slot_type.clone(),
+                })
+                .collect(),
             content_id: self.content.pack_id().to_owned(),
             content_hash: self.content.content_hash().to_owned(),
             content_visuals: self.content_visuals(),
@@ -2526,7 +2659,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV40 {
+        let payload = StateHashPayloadV41 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -2714,6 +2847,14 @@ impl Game {
             })
             .collect();
         player.summon_command = self.summon_command.clone();
+        player.body_slots = self
+            .body_slots
+            .iter()
+            .map(|slot| BodySlotSaveDto {
+                id: slot.id.clone(),
+                slot_type: slot.slot_type.clone(),
+            })
+            .collect();
         player
     }
 
@@ -3799,11 +3940,24 @@ impl Game {
             .iter()
             .position(|item| item.id == item_id && item.location == ItemLocation::Inventory)?;
         let carried = &self.items[inventory_index];
-        let slot_id = self
+        let slot_type = self
             .content
             .item(&carried.kind_id)?
             .equipment_slot
             .clone()?;
+        // Deterministic instance choice: first free slot of the item's type
+        // in body order, else the first slot of that type (replacing its
+        // occupant). Bodies without the type reject the equip.
+        let slot_id = body_slot_instance_for_type(&self.body_slots, &slot_type, |slot_id| {
+            self.items.iter().any(|item| {
+                matches!(
+                    &item.location,
+                    ItemLocation::Equipped { slot_id: equipped } if equipped == slot_id
+                )
+            })
+        })?
+        .id
+        .clone();
         if carried.quantity != 1 {
             return None;
         }
@@ -4627,12 +4781,19 @@ impl Game {
             })
     }
 
+    fn body_slot_type(&self, slot_id: &str) -> Option<&str> {
+        self.body_slots
+            .iter()
+            .find(|slot| slot.id == slot_id)
+            .map(|slot| slot.slot_type.as_str())
+    }
+
     fn player_projectile_profile(&self) -> Option<ResolvedProjectileProfile> {
         self.items.iter().find_map(|item| {
             let ItemLocation::Equipped { slot_id } = &item.location else {
                 return None;
             };
-            if slot_id != "launcher" {
+            if self.body_slot_type(slot_id) != Some("launcher") {
                 return None;
             }
             self.content
@@ -4668,7 +4829,7 @@ impl Game {
             let ItemLocation::Equipped { slot_id } = &item.location else {
                 return None;
             };
-            if slot_id != "weapon" {
+            if self.body_slot_type(slot_id) != Some("weapon") {
                 return None;
             }
             self.content
@@ -14771,9 +14932,14 @@ impl Game {
                                         knowledge.known_affix_ids.contains(affix_id)
                                     })
                             });
+                    // The occupied instance must exist on the body and its
+                    // type must match the item's declared slot class.
+                    let slot_type_matches = self.body_slot_type(slot_id).is_some_and(|slot_type| {
+                        definition.equipment_slot.as_deref() == Some(slot_type)
+                    });
                     if !common_valid
                         || item.quantity != 1
-                        || definition.equipment_slot.as_deref() != Some(slot_id.as_str())
+                        || !slot_type_matches
                         || !equipment_slots.insert(slot_id.clone())
                         || !fully_identified
                     {

@@ -1627,6 +1627,22 @@
         "index"
       ]
     },
+    "BodySlotDto": {
+      "description": "One equipment slot instance on the player's body: `slot_type` matches\nitem `equipmentSlot` declarations, `id` names the concrete instance so\nseveral slots of one type (two rings) stay addressable.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "slotType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "slotType"
+      ]
+    },
     "CampaignStateDto": {
       "type": "object",
       "properties": {
@@ -3003,6 +3019,13 @@
     "GameSnapshot": {
       "type": "object",
       "properties": {
+        "bodySlots": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/BodySlotDto"
+          }
+        },
         "campaign": {
           "$ref": "#/$defs/CampaignStateDto"
         },

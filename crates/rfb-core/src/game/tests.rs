@@ -2139,6 +2139,77 @@ fn previous_equipment_content_migrates_to_derived_modifiers() {
 }
 
 #[test]
+fn ring_slots_fill_in_body_order_and_replace_deterministically() {
+    let mut game = Game::new(42);
+    for ordinal in 1..=3 {
+        game.items.push(ItemInstance {
+            id: format!("test.item.band.{ordinal}"),
+            kind_id: "demo.item.resonant-band".to_owned(),
+            quantity: 1,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            location: ItemLocation::Inventory,
+        });
+    }
+    let slot_of = |game: &Game, id: &str| {
+        game.items
+            .iter()
+            .find(|item| item.id == id)
+            .map(|item| match &item.location {
+                ItemLocation::Equipped { slot_id } => slot_id.clone(),
+                _ => "unequipped".to_owned(),
+            })
+            .expect("test band should exist")
+    };
+
+    game.dispatch(command(
+        1,
+        0,
+        GameCommand::Equip {
+            item_id: "test.item.band.1".to_owned(),
+        },
+    ))
+    .expect("first ring should equip");
+    game.dispatch(command(
+        2,
+        1,
+        GameCommand::Equip {
+            item_id: "test.item.band.2".to_owned(),
+        },
+    ))
+    .expect("second ring should equip");
+    assert_eq!(slot_of(&game, "test.item.band.1"), "ring-1");
+    assert_eq!(slot_of(&game, "test.item.band.2"), "ring-2");
+    let snapshot = game.snapshot();
+    assert_eq!(snapshot.player.equipment_modifiers.defense, 2);
+    assert_eq!(snapshot.body_slots.len(), 13);
+    assert!(
+        snapshot
+            .body_slots
+            .iter()
+            .any(|slot| slot.id == "light" && slot.slot_type == "light")
+    );
+
+    // All ring instances occupied: the next equip replaces the first
+    // instance in body order, returning its occupant to the inventory.
+    game.dispatch(command(
+        3,
+        2,
+        GameCommand::Equip {
+            item_id: "test.item.band.3".to_owned(),
+        },
+    ))
+    .expect("third ring should replace the first instance");
+    assert_eq!(slot_of(&game, "test.item.band.3"), "ring-1");
+    assert_eq!(slot_of(&game, "test.item.band.1"), "unequipped");
+    assert_eq!(slot_of(&game, "test.item.band.2"), "ring-2");
+
+    let restored = Game::from_save(game.to_save()).expect("body slots should round trip");
+    assert_eq!(restored.body_slots.len(), 13);
+    assert_eq!(slot_of(&restored, "test.item.band.3"), "ring-1");
+}
+
+#[test]
 fn previous_combat_content_migrates_to_current_actor_stats() {
     let mut game = Game::new(42);
     collect_both_demo_items(&mut game);

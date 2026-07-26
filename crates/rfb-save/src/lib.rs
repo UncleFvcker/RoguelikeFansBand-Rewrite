@@ -194,6 +194,7 @@ mod tests {
                 learned_ability_ids: Vec::new(),
                 ability_progress: Vec::new(),
                 summon_command: Default::default(),
+                body_slots: Vec::new(),
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

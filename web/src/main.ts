@@ -26,6 +26,7 @@ import type {
   DamageResolutionDto,
   DamageTypeDto,
   Direction,
+  BodySlotDto,
   EquipmentItemDto,
   AttributeKindDto,
   GameCommand,
@@ -174,6 +175,7 @@ let connectionState: ConnectionState = "starting";
 let currentStatus: GameSnapshot | GameUpdate | undefined;
 let currentInventory: InventoryItemDto[] = [];
 let currentEquipment: EquipmentItemDto[] = [];
+let currentBodySlots: BodySlotDto[] = [];
 const selectedInventoryIds = new Set<string>();
 let nativeSaves: NativeSaveSummary[] = [];
 const MESSAGE_HISTORY_LIMIT = 500;
@@ -225,6 +227,7 @@ async function start(): Promise<void> {
     renderer.applySnapshot(snapshot);
     await synchronizeCrashDiagnosticContext(snapshot);
     renderStatus(snapshot);
+    currentBodySlots = snapshot.bodySlots ?? [];
     renderInventory(snapshot.inventory, snapshot.equipment);
     addLocalizedMessage("message-core-started", undefined, "system");
     announceTileset(tileset.id, tileset.warnings);
@@ -635,6 +638,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   renderContentMetadata(snapshot);
   renderer.applySnapshot(snapshot);
   renderStatus(snapshot);
+  currentBodySlots = snapshot.bodySlots ?? [];
   renderInventory(snapshot.inventory, snapshot.equipment);
 }
 
@@ -1351,34 +1355,70 @@ function renderInventory(
 
 function renderEquipment(equipment: EquipmentItemDto[]): void {
   equipmentList.replaceChildren();
-  if (equipment.length === 0) {
+  // Pre-template snapshots carry no body slots; fall back to listing only
+  // the occupied instances so old cores keep rendering.
+  const slots: BodySlotDto[] =
+    currentBodySlots.length > 0
+      ? currentBodySlots
+      : equipment.map((item) => ({ id: item.slotId, slotType: item.slotId }));
+  if (slots.length === 0) {
     const empty = document.createElement("li");
     empty.className = "equipment-empty";
     empty.textContent = localization.format("equipment-empty");
     equipmentList.append(empty);
     return;
   }
-  for (const item of equipment) {
+  const byInstance = new Map(equipment.map((item) => [item.slotId, item]));
+  const typeCounts = new Map<string, number>();
+  for (const slot of slots) {
+    typeCounts.set(slot.slotType, (typeCounts.get(slot.slotType) ?? 0) + 1);
+  }
+  const typeOrdinals = new Map<string, number>();
+  for (const slot of slots) {
+    const ordinal = (typeOrdinals.get(slot.slotType) ?? 0) + 1;
+    typeOrdinals.set(slot.slotType, ordinal);
+    const slotLabel =
+      (typeCounts.get(slot.slotType) ?? 1) > 1
+        ? localization.format("equipment-slot-ordinal", {
+            slot: equipmentSlotName(slot.slotType),
+            ordinal,
+          })
+        : equipmentSlotName(slot.slotType);
     const row = document.createElement("li");
-    row.className = "equipment-item";
-    row.dataset.slotId = item.slotId;
-    const details = document.createElement("span");
-    details.className = "equipment-item-details";
-    const name = document.createElement("span");
-    name.textContent = visibleItemName(item.displayNameKey, item.kindId);
-    const slot = document.createElement("span");
-    slot.className = "equipment-slot";
-    slot.textContent = equipmentSlotName(item.slotId);
-    details.append(name, slot);
-    appendItemModifiers(details, item.modifiers);
-    appendItemQuality(details, item.quality);
-    appendKnownItemProperties(details, item.knownProperties);
-    const unequip = document.createElement("button");
-    unequip.type = "button";
-    unequip.textContent = localization.format("action-equipment-unequip");
-    unequip.disabled = busy;
-    unequip.addEventListener("click", () => void unequipItem(item.slotId));
-    row.append(details, unequip);
+    row.dataset.slotId = slot.id;
+    const item = byInstance.get(slot.id);
+    if (item) {
+      row.className = "equipment-item";
+      const details = document.createElement("span");
+      details.className = "equipment-item-details";
+      const name = document.createElement("span");
+      name.textContent = visibleItemName(item.displayNameKey, item.kindId);
+      const slotTag = document.createElement("span");
+      slotTag.className = "equipment-slot";
+      slotTag.textContent = slotLabel;
+      details.append(name, slotTag);
+      appendItemModifiers(details, item.modifiers);
+      appendItemQuality(details, item.quality);
+      appendKnownItemProperties(details, item.knownProperties);
+      const unequip = document.createElement("button");
+      unequip.type = "button";
+      unequip.textContent = localization.format("action-equipment-unequip");
+      unequip.disabled = busy;
+      unequip.addEventListener("click", () => void unequipItem(item.slotId));
+      row.append(details, unequip);
+    } else {
+      row.className = "equipment-item equipment-slot-vacant";
+      const details = document.createElement("span");
+      details.className = "equipment-item-details";
+      const slotTag = document.createElement("span");
+      slotTag.className = "equipment-slot";
+      slotTag.textContent = slotLabel;
+      const vacant = document.createElement("span");
+      vacant.className = "equipment-vacant-label";
+      vacant.textContent = localization.format("equipment-slot-vacant");
+      details.append(slotTag, vacant);
+      row.append(details);
+    }
     equipmentList.append(row);
   }
 }
@@ -2373,9 +2413,25 @@ function itemQualityName(quality: string | undefined): string {
   }
 }
 
-function equipmentSlotName(slotId: string | undefined): string {
-  if (slotId === "charm") return localization.format("equipment-slot-charm");
-  return localization.format("equipment-slot-unknown", { slot: slotId ?? "?" });
+const EQUIPMENT_SLOT_TYPE_KEYS: Record<string, MessageKey> = {
+  charm: "equipment-slot-charm",
+  weapon: "equipment-slot-weapon",
+  launcher: "equipment-slot-launcher",
+  body: "equipment-slot-body",
+  head: "equipment-slot-head",
+  shield: "equipment-slot-shield",
+  cloak: "equipment-slot-cloak",
+  gloves: "equipment-slot-gloves",
+  boots: "equipment-slot-boots",
+  ring: "equipment-slot-ring",
+  amulet: "equipment-slot-amulet",
+  light: "equipment-slot-light",
+};
+
+function equipmentSlotName(slotType: string | undefined): string {
+  const key = slotType ? EQUIPMENT_SLOT_TYPE_KEYS[slotType] : undefined;
+  if (key) return localization.format(key);
+  return localization.format("equipment-slot-unknown", { slot: slotType ?? "?" });
 }
 
 function statusName(statusId: string | undefined): string {

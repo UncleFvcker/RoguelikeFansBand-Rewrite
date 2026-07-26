@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.99";
+pub const PROTOCOL_VERSION: &str = "1.100";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1512,6 +1512,17 @@ pub struct InventoryItemDto {
     pub throw_profile: Option<ThrowProfileDto>,
 }
 
+/// One equipment slot instance on the player's body: `slot_type` matches
+/// item `equipmentSlot` declarations, `id` names the concrete instance so
+/// several slots of one type (two rings) stay addressable.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BodySlotDto {
+    pub id: String,
+    pub slot_type: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -1599,6 +1610,8 @@ pub struct GameSnapshot {
     pub inventory: Vec<InventoryItemDto>,
     #[serde(default)]
     pub equipment: Vec<EquipmentItemDto>,
+    #[serde(default)]
+    pub body_slots: Vec<BodySlotDto>,
     pub content_id: String,
     pub content_hash: String,
     pub content_visuals: Vec<ContentVisualDto>,
@@ -1758,6 +1771,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemIdentificationDto);
     push_declaration!(ItemPropertyDto);
     push_declaration!(InventoryItemDto);
+    push_declaration!(BodySlotDto);
     push_declaration!(EquipmentItemDto);
     push_declaration!(GameEventDto);
     push_declaration!(CampaignStatusDto);
@@ -1820,6 +1834,15 @@ pub struct PlayerSaveDto {
     pub ability_progress: Vec<AbilityProgressSaveDto>,
     #[serde(default, skip_serializing_if = "is_default_summon_command")]
     pub summon_command: SummonCommandDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub body_slots: Vec<BodySlotSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BodySlotSaveDto {
+    pub id: String,
+    pub slot_type: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2558,6 +2581,7 @@ mod tests {
             learned_ability_ids: Vec::new(),
             ability_progress: Vec::new(),
             summon_command: SummonCommandDto::default(),
+            body_slots: Vec::new(),
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

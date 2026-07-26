@@ -176,6 +176,8 @@ export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: Sta
 
 export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
+export type BodySlotDto = { id: string, slotType: string, };
+
 export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
@@ -184,7 +186,7 @@ export type CampaignStatusDto = "active" | "victorious" | "retired";
 
 export type CampaignStateDto = { status: CampaignStatusDto, score: bigint, conqueredDungeons: number, completedTasks: number, victoryTurn?: number | null, retiredTurn?: number | null, };
 
-export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, worldTick: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, floorId: string, dungeonInstanceId?: string | null, terrainInteractions: Array<TerrainInteractionDto>, tasks: Array<TaskStatusDto>, campaign: CampaignStateDto, stateHash: string, };
+export type GameSnapshot = { protocolVersion: string, revision: number, turn: number, worldTick: number, lastCommandSeq: number, width: number, height: number, cells: Array<CellDto>, visualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, bodySlots: Array<BodySlotDto>, contentId: string, contentHash: string, contentVisuals: Array<ContentVisualDto>, worldId: string, floorId: string, dungeonInstanceId?: string | null, terrainInteractions: Array<TerrainInteractionDto>, tasks: Array<TaskStatusDto>, campaign: CampaignStateDto, stateHash: string, };
 
 export type GameUpdate = { baseRevision: number, revision: number, turn: number, worldTick: number, commandSeq: number, floorId: string, dungeonInstanceId?: string | null, events: Array<GameEventDto>, changedCells: Array<CellDto>, changedVisualCells: Array<CellVisualDto>, player: PlayerDto, entities: Array<EntityDto>, items: Array<ItemDto>, inventory: Array<InventoryItemDto>, equipment: Array<EquipmentItemDto>, removedEntities: Array<string>, terrainInteractions: Array<TerrainInteractionDto>, tasks: Array<TaskStatusDto>, campaign: CampaignStateDto, stateHash: string, };
 
