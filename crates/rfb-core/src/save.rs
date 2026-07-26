@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
     effect::StatusInstance,
@@ -41,6 +41,7 @@ pub(crate) fn actor_from_spawn(
         energy_need,
         alerted,
         casting_cooldown_remaining: 0,
+        observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
@@ -67,6 +68,7 @@ pub(crate) fn actor_from_runtime_spawn(
         energy_need,
         alerted,
         casting_cooldown_remaining: 0,
+        observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
@@ -106,6 +108,7 @@ pub(crate) fn actor_from_player(
         energy_need: player.energy_need,
         alerted: true,
         casting_cooldown_remaining: 0,
+        observed_player_resistances: BTreeMap::new(),
         statuses,
         resistances,
         pack: None,
@@ -146,6 +149,8 @@ pub(crate) fn actor_from_entity(
     }
     let statuses = statuses_from_save(entity.statuses)?;
     let resistances = resistances_from_save(entity.resistances)?;
+    let observed_player_resistances =
+        observed_resistances_from_save(entity.observed_player_resistances)?;
     Ok(Actor {
         id: entity.id,
         kind_id: entity.kind_id,
@@ -161,6 +166,7 @@ pub(crate) fn actor_from_entity(
                 .is_none_or(|awareness| awareness.starts_alerted)
         }),
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
+        observed_player_resistances,
         statuses,
         resistances,
         pack: entity.pack.map(|pack| MonsterPackIdentity {
@@ -316,6 +322,14 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             energy_need: entity.energy_need,
             alerted: Some(entity.alerted),
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
+            observed_player_resistances: entity
+                .observed_player_resistances
+                .iter()
+                .map(|(damage_type, level)| ResistanceSaveDto {
+                    damage_type: (*damage_type).into(),
+                    level: (*level).into(),
+                })
+                .collect(),
             statuses: entity
                 .statuses
                 .iter()
@@ -380,6 +394,22 @@ fn resistances_from_save(
         profile.set(damage_type, level);
     }
     Ok(profile)
+}
+
+fn observed_resistances_from_save(
+    resistances: Vec<ResistanceSaveDto>,
+) -> Result<BTreeMap<DamageType, ResistanceLevel>, CoreError> {
+    let mut observed = BTreeMap::new();
+    for resistance in resistances {
+        let damage_type = DamageType::from(resistance.damage_type);
+        let level = ResistanceLevel::from(resistance.level);
+        if observed.insert(damage_type, level).is_some() {
+            return Err(CoreError::InvalidSave(
+                "monster resistance memory is invalid",
+            ));
+        }
+    }
+    Ok(observed)
 }
 
 fn valid_rule_id(id: &str) -> bool {

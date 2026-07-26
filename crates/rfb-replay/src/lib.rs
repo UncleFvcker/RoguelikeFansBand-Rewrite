@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 37;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 38;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -1087,6 +1087,15 @@ mod tests {
         assert_eq!(
             recorder.game().snapshot().entities[0].casting_cooldown_remaining,
             2
+        );
+        assert!(
+            recorder.game().snapshot().entities[0]
+                .observed_player_resistances
+                .iter()
+                .any(|resistance| {
+                    resistance.damage_type == rfb_protocol::DamageTypeDto::Cold
+                        && resistance.level == rfb_protocol::ResistanceLevelDto::Normal
+                })
         );
         let (final_game, replay) = recorder.finish();
 

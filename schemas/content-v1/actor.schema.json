@@ -119,11 +119,31 @@
           },
           "type": "array"
         },
+        "fleeHpPercent": {
+          "default": 0,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
         "frequencyPercent": {
           "format": "uint8",
           "maximum": 255,
           "minimum": 0,
           "type": "integer"
+        },
+        "preferredDistance": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "smart": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": [

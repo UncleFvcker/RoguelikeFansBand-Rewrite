@@ -17,6 +17,9 @@
   "damageType": "physical",
   "monsterCasting": {
     "frequencyPercent": 50,
+    "smart": true,
+    "preferredDistance": 3,
+    "fleeHpPercent": 25,
     "abilities": [
       {
         "abilityId": "demo.ability.resonant-bolt",

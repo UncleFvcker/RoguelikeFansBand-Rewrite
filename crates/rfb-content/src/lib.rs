@@ -249,6 +249,12 @@ pub struct ActorAwarenessDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MonsterCastingDefinition {
     pub frequency_percent: u8,
+    #[serde(default)]
+    pub smart: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preferred_distance: Option<u8>,
+    #[serde(default)]
+    pub flee_hp_percent: u8,
     pub abilities: Vec<MonsterAbilityCandidateDefinition>,
 }
 
@@ -2507,6 +2513,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             let mut ability_ids = BTreeSet::new();
             if actor.role != ActorRole::Monster
                 || !(1..=100).contains(&casting.frequency_percent)
+                || casting
+                    .preferred_distance
+                    .is_some_and(|distance| !(2..=16).contains(&distance))
+                || casting.flee_hp_percent > 99
                 || casting.abilities.is_empty()
                 || casting.abilities.len() > 32
                 || casting.abilities.iter().any(|candidate| {
@@ -6629,7 +6639,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.79.0");
+        assert_eq!(catalog.pack_version(), "1.80.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8868,6 +8878,22 @@ mod tests {
             .frequency_percent = 0;
         assert!(matches!(
             validate_and_normalize(&mut invalid_frequency),
+            Err(ContentError::InvalidMonsterCasting(_))
+        ));
+
+        let mut invalid_tactics = artifact.content.clone();
+        let casting = invalid_tactics
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-cantor")
+            .expect("fixture should contain the echo cantor")
+            .monster_casting
+            .as_mut()
+            .expect("echo cantor should cast");
+        casting.preferred_distance = Some(1);
+        casting.flee_hp_percent = 100;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_tactics),
             Err(ContentError::InvalidMonsterCasting(_))
         ));
 

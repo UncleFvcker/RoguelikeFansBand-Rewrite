@@ -119,11 +119,13 @@ export type AbilityEffectsResolutionDto = { targetEntityId?: string | null, targ
 
 export type MonsterAbilityRejectionReasonDto = "invalid-target" | "out-of-range" | "blocked" | "friendly-risk" | "no-space" | "no-utility";
 
-export type MonsterAbilityCandidateResolutionDto = { abilityId: string, baseWeight: number, effectiveWeight: number, targetEntityId?: string | null, targetKindId?: string | null, targetPosition?: Position | null, affectedPositions?: Array<Position>, rejectionReason?: MonsterAbilityRejectionReasonDto | null, };
+export type MonsterAbilityCandidateResolutionDto = { abilityId: string, baseWeight: number, effectiveWeight: number, targetEntityId?: string | null, targetKindId?: string | null, targetPosition?: Position | null, affectedPositions?: Array<Position>, enemyTargetCount: number, friendlyRiskCount: number, rejectionReason?: MonsterAbilityRejectionReasonDto | null, };
 
 export type MonsterAbilityDecisionResolutionDto = { sourceEntityId: string, sourceKindId: string, frequencyPercent: number, frequencyRoll: number, candidates?: Array<MonsterAbilityCandidateResolutionDto>, viableAbilityIds: Array<string>, totalWeight: number, selectionRoll?: number | null, selectedAbilityId?: string | null, };
 
-export type MonsterAbilityCastResolutionDto = { sourceEntityId: string, sourceKindId: string, abilityId: string, targetEntityId: string, targetKindId: string, affectedPositions?: Array<Position>, summon?: AbilitySummonResolutionDto | null, effects: Array<AbilityEffectResolutionDto>, };
+export type MonsterAbilityTargetResolutionDto = { targetEntityId: string, targetKindId: string, targetPosition: Position, effects: Array<AbilityEffectResolutionDto>, };
+
+export type MonsterAbilityCastResolutionDto = { sourceEntityId: string, sourceKindId: string, abilityId: string, targetEntityId: string, targetKindId: string, affectedPositions?: Array<Position>, summon?: AbilitySummonResolutionDto | null, effects: Array<AbilityEffectResolutionDto>, targets?: Array<MonsterAbilityTargetResolutionDto>, };
 
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 
@@ -143,7 +145,7 @@ export type EntityFactionDto = "hostile" | "player";
 
 export type SummonDto = { ownerId: string, sourceAbilityId: string, remainingTurns: number, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, castingCooldownRemaining: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, summon?: SummonDto | null, };
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, castingCooldownRemaining: number, observedPlayerResistances?: Array<ResistanceDto>, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, summon?: SummonDto | null, };
 
 export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, position: Position, quantity: number, };
 

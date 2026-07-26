@@ -1,6 +1,6 @@
 # Contract v85：状态能力与有序多效果
 
-状态：历史 baseline；当前 active baseline 已迁移到 [contract-v87](contract-v87-monster-casting-utility.md)。协议版本为 1.85，demo 内容包版本为 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`。save 容器继续使用 v1；actor statuses 原本已经进入 save 与 state hash，因此 state hash 继续使用 Schema v36。
+状态：历史 baseline；当前 active baseline 已迁移到 [contract-v88](contract-v88-monster-targets-tactics-memory.md)。协议版本为 1.85，demo 内容包版本为 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`。save 容器继续使用 v1；actor statuses 原本已经进入 save 与 state hash，因此 state hash 继续使用 Schema v36。
 
 ## 1. 原版参照
 

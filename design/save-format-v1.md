@@ -159,6 +159,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.87 不新增 save 字段。候选有效权重、主目标、footprint、拒绝原因和选择骰只属于命令事件；自疗/状态效用由已保存 actor HP/status 与当前内容纯计算。敌对召唤继续写入既有 `SummonSaveDto`，其中 owner 是怪物施法者实例 ID；owner 后续死亡不会使存档无效或提前删除召唤物。载入 v86 及更早存档时不补生成 Discordant Echo、不触发施法、不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。save 容器保持 v1，state hash 保持 Schema v37。完整边界见 [Contract v87](contract-v87-monster-casting-utility.md)。
 
+协议 1.88 为 `ActorSaveDto` 增加默认空的 `observedPlayerResistances`，只保存 smart caster 已实际观察到的伤害类型与抗性级别。当前层与离层 actor 使用相同字段；目标排序、敌我计数、战术移动候选和每次施法目标结果只属于当前状态纯计算或命令事件。载入 v87 及更早存档时缺失字段迁移为空，不读取玩家抗性、不补观察、不触发移动或施法且不推进 RNG。非 smart actor、玩家拥有的召唤物或重复伤害类型携带非空记忆会被拒绝。save 容器保持 v1，新增权威记忆使 state hash 升至 Schema v38。完整边界见 [Contract v88](contract-v88-monster-targets-tactics-memory.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

@@ -105,11 +105,17 @@ pub struct EntityEffectsPrecondition {
     #[serde(default)]
     pub max_hp: Option<i32>,
     #[serde(default)]
+    pub base_speed: Option<u16>,
+    #[serde(default)]
     pub energy_need: Option<i32>,
     #[serde(default)]
     pub alerted: Option<bool>,
     #[serde(default)]
     pub casting_cooldown_remaining: Option<u16>,
+    #[serde(default)]
+    pub observed_player_resistances: Vec<ResistanceSaveDto>,
+    #[serde(default)]
+    pub clear_pack: bool,
     #[serde(default)]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default)]
@@ -248,6 +254,8 @@ pub struct ActorStateAssertion {
     pub alerted: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub observed_player_resistances: Vec<ResistanceDto>,
     #[serde(default)]
     pub statuses: Vec<StatusDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -407,6 +415,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         if let Some(max_hp) = effects.max_hp {
             entity.max_hp = max_hp;
         }
+        if let Some(base_speed) = effects.base_speed {
+            entity.base_speed = base_speed;
+        }
         if let Some(energy_need) = effects.energy_need {
             entity.energy_need = energy_need;
         }
@@ -415,6 +426,10 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
         if let Some(cooldown) = effects.casting_cooldown_remaining {
             entity.casting_cooldown_remaining = cooldown;
+        }
+        entity.observed_player_resistances = effects.observed_player_resistances.clone();
+        if effects.clear_pack {
+            entity.pack = None;
         }
         entity.statuses = effects.statuses.clone();
         entity.resistances = effects.resistances.clone();
@@ -510,6 +525,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                     energy_need: entity.energy_need,
                     alerted: entity.alerted,
                     casting_cooldown_remaining: entity.casting_cooldown_remaining,
+                    observed_player_resistances: entity.observed_player_resistances.clone(),
                     statuses: entity.statuses.clone(),
                     pack: save
                         .entities

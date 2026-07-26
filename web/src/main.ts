@@ -1631,10 +1631,16 @@ function formatEvent(event: GameEventDto): string {
           count: resolution.summon.entityIds.length,
         });
       }
+      const targets = resolution?.targets ?? [];
+      const effectCount =
+        targets.length > 0
+          ? targets.reduce((count, target) => count + target.effects.length, 0)
+          : (resolution?.effects.length ?? Number(event.args.count ?? 0));
       return localization.format("message-monster-ability-cast", {
         source: contentName(event.args.source),
         ability: contentName(event.args.target),
-        count: event.args.count ?? "0",
+        count: effectCount,
+        targetCount: targets.length || 1,
       });
     }
     case "summon-expired":
@@ -1790,6 +1796,32 @@ function formatEvent(event: GameEventDto): string {
       });
     case "combat-monster-hit":
       return formatMonsterDamageEvent(event);
+    case "combat-monster-entity-miss":
+      return localization.format("message-combat-monster-entity-miss", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "combat-monster-entity-hit":
+      return localization.format("message-combat-monster-entity-hit", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
+    case "combat-monster-entity-slew":
+      return localization.format("message-combat-monster-entity-slew", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "combat-monster-fled":
+      return localization.format("message-combat-monster-fled", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "combat-monster-kept-distance":
+      return localization.format("message-combat-monster-kept-distance", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
     case "combat-player-death":
       return localization.format("message-combat-player-death", {
         source: contentName(event.args.source),

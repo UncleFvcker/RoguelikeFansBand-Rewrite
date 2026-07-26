@@ -1650,6 +1650,12 @@
           "format": "int32",
           "default": 0
         },
+        "observedPlayerResistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
         "position": {
           "$ref": "#/$defs/Position"
         },
@@ -3119,6 +3125,20 @@
           "format": "uint32",
           "minimum": 0
         },
+        "enemyTargetCount": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "friendlyRiskCount": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "rejectionReason": {
           "anyOf": [
             {
@@ -3197,6 +3217,12 @@
         },
         "targetKindId": {
           "type": "string"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MonsterAbilityTargetResolutionDto"
+          }
         }
       },
       "required": [
@@ -3279,6 +3305,32 @@
         "friendly-risk",
         "no-space",
         "no-utility"
+      ]
+    },
+    "MonsterAbilityTargetResolutionDto": {
+      "type": "object",
+      "properties": {
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AbilityEffectResolutionDto"
+          }
+        },
+        "targetEntityId": {
+          "type": "string"
+        },
+        "targetKindId": {
+          "type": "string"
+        },
+        "targetPosition": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "targetEntityId",
+        "targetKindId",
+        "targetPosition",
+        "effects"
       ]
     },
     "PlayerBuildDto": {

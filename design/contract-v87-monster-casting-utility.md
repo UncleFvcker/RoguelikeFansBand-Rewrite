@@ -1,6 +1,6 @@
 # Contract v87：怪物施法效用与目标扩展
 
-状态：当前 active baseline。协议版本为 1.87，demo 内容包版本为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`。save 容器继续使用 v1；本纵切没有新增权威字段，state hash 保持 Schema v37。
+状态：历史 baseline；当前 active baseline 见 [Contract v88](contract-v88-monster-targets-tactics-memory.md)。协议版本为 1.87，demo 内容包版本为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`。save 容器继续使用 v1；本纵切没有新增权威字段，state hash 保持 Schema v37。
 
 ## 1. 原版参考与选择顺序
 
@@ -67,4 +67,4 @@ contract-v87 从 v86 迁移全部历史场景，并新增 8 个 exact fixtures�
 
 ## 6. 明确后置
 
-P28 候选为怪物目标选择与施法记忆：让怪物把玩家阵营召唤物作为合法目标，按敌我数量决定多目标风险，加入低 HP 逃跑/保持距离，并为 smart caster 建立基于已观察抗性的有限知识。多资源职业继续等待这一 AI 目标边界稳定。
+原定 P28 的怪物目标选择、敌我多目标评分、低 HP 撤退/保持距离与 smart caster 已观察抗性知识已由 [Contract v88](contract-v88-monster-targets-tactics-memory.md) 完成。多资源职业继续等待友方召唤物行动边界稳定。

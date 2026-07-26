@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.79.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.80.0
 
 ## 1. 目标
 
@@ -208,7 +208,7 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 二十一份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段；玩家可声明携带容量与门/搜索技能，怪物可声明 melee routine、出生携带与死亡掉落、awareness，以及 `monsterCasting` 的百分比频率和加权能力集合。物品、资源、能力、能力书、affix、encounter/loot/theme/region/terrain-feature 表、Vault 和 world 使用独立稳定 ID 与交叉引用；编译器验证目标存在、角色类别、范围、数量、权重和互斥旧字段。原创包 1.79.0 覆盖角色成长与构筑、玩家能力循环、怪物 caster 效用/多格目标/敌对召唤、固定词条与鉴别，以及楼层/任务/树状地牢/Vault/区域主题/群体/分阶段地貌等现有纵切。
+角色定义使用必需的基础战斗字段；玩家可声明携带容量与门/搜索技能，怪物可声明 melee routine、出生携带与死亡掉落、awareness，以及 `monsterCasting` 的百分比频率、加权能力集合、smart、偏好距离和撤退阈值。物品、资源、能力、能力书、affix、encounter/loot/theme/region/terrain-feature 表、Vault 和 world 使用独立稳定 ID 与交叉引用；编译器验证目标存在、角色类别、范围、数量、权重和互斥旧字段。原创包 1.80.0 覆盖角色成长与构筑、玩家能力循环、怪物 caster 效用/阵营目标/多格结算/战术移动/有限记忆、固定词条与鉴别，以及楼层/任务/树状地牢/Vault/区域主题/群体/分阶段地貌等现有纵切。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -224,13 +224,17 @@ contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight
 
 contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；来源/目标 terrain 集、范围、FOV/line of effect、占用格、连接/边界保护和原子写入由核心定义，地形继续复用既有 save/state hash 字段。
 
+contract-v88 以 1.80.0 扩展 `MonsterCastingDefinition`：`smart` 控制确定性观察学习，`preferredDistance` 声明 2–16 格的首版保持距离，`fleeHpPercent` 声明 0–99% 受伤撤退阈值。频率与能力权重仍由内容声明；阵营目标、敌我 footprint、实际结算后抗性观察、移动格选择和 RNG 边界由核心定义。Echo Cantor 启用 smart、3 格偏好距离和 25% 撤退阈值；content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`。
+
 contract-v85 以 1.77.0 增加状态添加/移除、有序 `sequence`、Echo Quickening 与 Echo Binding；逐效果顺序、堆叠、抗性缩时、免疫、部分无效和目标死亡跳过由核心定义。
 
 contract-v86 以 1.78.0 增加 Echo Cantor 和 Monster actor `monsterCasting`；百分比频率、稳定加权候选、直接投影可用性、clean-shot 友军阻挡与按自身行动计数的逆频率冷却由核心定义。
 
 contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord 与 Discordant Echo；怪物可复用自身治疗/增益、范围/射线/锥形和召唤效果，HP/状态/距离有效权重、次级实体风险与敌对 owner 由核心定义。
 
-当前原创包的 active 编译版本为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果和固定治疗，并由怪物 caster 复用 actor 与多格目标子集。
+contract-v88 以 1.80.0 增加 `smart`、`preferredDistance` 和 `fleeHpPercent`，并让 Echo Cantor 使用 3 格偏好距离、25% 受伤撤退和已观察抗性记忆；阵营目标、敌我计数和实际多目标结算由核心定义。
+
+当前原创包的 active 编译版本为 1.80.0，content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果和固定治疗，并由怪物 caster 复用 actor 与多格目标子集。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
@@ -310,4 +314,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73–v85 依次建立玩家资源、能力书、恢复、熟练度/冷却、学习容量、范围/射线/锥形/位移/召唤/侦测/地形/状态及有序效果；contract-v86 以 1.78.0 增加首个怪物施法 actor、频率/权重选择、clean-shot 与自身行动冷却。当前 state hash 为 Schema v37。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73–v85 依次建立玩家资源、能力书、恢复、熟练度/冷却、学习容量、范围/射线/锥形/位移/召唤/侦测/地形/状态及有序效果；contract-v86–v88 建立怪物施法、效用、阵营目标、战术移动与有限抗性记忆。当前 state hash 为 Schema v38。

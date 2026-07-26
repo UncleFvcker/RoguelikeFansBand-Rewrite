@@ -76,9 +76,10 @@ use rfb_protocol::{
     InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
     ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
     MeleeRoutineDto, MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
-    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResourcePoolDto,
+    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
+    MonsterAbilityTargetResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
+    PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto,
+    PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto, ResourcePoolDto,
     ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
     RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto, SummonDto, TargetModeDto,
     TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto,
@@ -89,7 +90,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 80] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 81] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -170,9 +171,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 80] = [
     "6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4",
     "d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea",
     "be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd",
+    "f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac";
+    "29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -255,37 +257,113 @@ struct MonsterAbilityPlan {
     ability: AbilityDefinition,
     base_weight: u32,
     effective_weight: u32,
+    enemy_target_count: u16,
+    friendly_risk_count: u16,
     target: MonsterAbilityTargetPlan,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct MonsterAbilityPlanResolution {
+    target_entity_id: String,
+    target_kind_id: String,
+    affected_positions: Vec<Position>,
+    summon: Option<AbilitySummonResolutionDto>,
+    effects: Vec<AbilityEffectResolutionDto>,
+    targets: Vec<MonsterAbilityTargetResolutionDto>,
+    trace: Option<ProjectileTrace>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct MonsterAbilityPlanRejection {
+    reason: MonsterAbilityRejectionReasonDto,
+    enemy_target_count: u16,
+    friendly_risk_count: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MonsterTacticalReason {
+    Wounded,
+    KeepDistance,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum MonsterHostileTarget {
+    Player {
+        entity_id: String,
+        kind_id: String,
+        position: Position,
+    },
+    Summon {
+        entity_id: String,
+        kind_id: String,
+        position: Position,
+    },
+}
+
+impl MonsterHostileTarget {
+    fn entity_id(&self) -> &str {
+        match self {
+            Self::Player { entity_id, .. } | Self::Summon { entity_id, .. } => entity_id,
+        }
+    }
+
+    fn kind_id(&self) -> &str {
+        match self {
+            Self::Player { kind_id, .. } | Self::Summon { kind_id, .. } => kind_id,
+        }
+    }
+
+    const fn position(&self) -> Position {
+        match self {
+            Self::Player { position, .. } | Self::Summon { position, .. } => *position,
+        }
+    }
+
+    const fn is_player(&self) -> bool {
+        matches!(self, Self::Player { .. })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum MonsterAbilityTargetPlan {
     SelfTarget,
     Projectile {
+        target: MonsterHostileTarget,
         trace: ProjectileTrace,
     },
     Area {
+        target: MonsterHostileTarget,
         trace: ProjectileTrace,
         affected_positions: Vec<Position>,
-        player_distance: u32,
     },
     Beam {
+        target: MonsterHostileTarget,
         trace: ProjectileTrace,
         affected_positions: Vec<Position>,
     },
     Cone {
+        target: MonsterHostileTarget,
         trace: ProjectileTrace,
         affected_positions: Vec<Position>,
-        player_lateral_distance: u32,
     },
     Summon {
         positions: Vec<Position>,
     },
 }
 
+fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHostileTarget> {
+    match target {
+        MonsterAbilityTargetPlan::Projectile { target, .. }
+        | MonsterAbilityTargetPlan::Area { target, .. }
+        | MonsterAbilityTargetPlan::Beam { target, .. }
+        | MonsterAbilityTargetPlan::Cone { target, .. } => Some(target),
+        MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. } => None,
+    }
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV37 {
+struct StateHashPayloadV38 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -2272,8 +2350,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV37 {
-            schema_version: 37,
+        let payload = StateHashPayloadV38 {
+            schema_version: 38,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -3138,6 +3216,14 @@ impl Game {
                     energy_need: entity.energy_need,
                     alerted: entity.alerted,
                     casting_cooldown_remaining: entity.casting_cooldown_remaining,
+                    observed_player_resistances: entity
+                        .observed_player_resistances
+                        .iter()
+                        .map(|(damage_type, level)| ResistanceDto {
+                            damage_type: (*damage_type).into(),
+                            level: (*level).into(),
+                        })
+                        .collect(),
                     attack: stats.attack.value,
                     defense: stats.defense.value,
                     melee_skill: stats.melee_skill.value,
@@ -6556,7 +6642,7 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            self.process_monster_energy_pulse(events, changed);
+            self.process_monster_energy_pulse(events, changed, removed_entities);
             if self.player_is_dead() {
                 break;
             }
@@ -6686,6 +6772,7 @@ impl Game {
         &mut self,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
     ) {
         let mut entity_ids = self
             .entities
@@ -6720,7 +6807,13 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
-            self.resolve_monster_action(index, events, changed, &mut surround_reservations);
+            self.resolve_monster_action(
+                index,
+                events,
+                changed,
+                removed_entities,
+                &mut surround_reservations,
+            );
         }
     }
 
@@ -6729,6 +6822,7 @@ impl Game {
         index: usize,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) {
         if self.entities[index]
@@ -6743,22 +6837,81 @@ impl Game {
         if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
             return;
         }
-        if self.resolve_monster_ability_with_changes(index, events, changed) {
+        if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities) {
+            return;
+        }
+        let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {
+            return;
+        };
+        let casting = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .and_then(|definition| definition.monster_casting.clone());
+        let current_distance = self.entities[index]
+            .position
+            .x
+            .abs_diff(primary_target.position().x)
+            .max(
+                self.entities[index]
+                    .position
+                    .y
+                    .abs_diff(primary_target.position().y),
+            );
+        let hp_percent = i64::from(self.entities[index].hp.max(0))
+            .saturating_mul(100)
+            .saturating_div(i64::from(self.entities[index].max_hp.max(1)));
+        let tactical_reason = casting.as_ref().and_then(|casting| {
+            if casting.flee_hp_percent > 0 && hp_percent <= i64::from(casting.flee_hp_percent) {
+                Some(MonsterTacticalReason::Wounded)
+            } else if casting
+                .preferred_distance
+                .is_some_and(|distance| current_distance < u32::from(distance))
+            {
+                Some(MonsterTacticalReason::KeepDistance)
+            } else {
+                None
+            }
+        });
+        if let Some(reason) = tactical_reason
+            && let Some(next_position) = self.next_monster_step_away(index)
+        {
+            let old_position = self.entities[index].position;
+            self.entities[index].position = next_position;
+            changed.insert(old_position);
+            changed.insert(next_position);
+            events.push(match reason {
+                MonsterTacticalReason::Wounded => DomainEvent::MonsterFled {
+                    source_kind_id: self.entities[index].kind_id.clone(),
+                    target_kind_id: primary_target.kind_id().to_owned(),
+                },
+                MonsterTacticalReason::KeepDistance => DomainEvent::MonsterKeptDistance {
+                    source_kind_id: self.entities[index].kind_id.clone(),
+                    target_kind_id: primary_target.kind_id().to_owned(),
+                },
+            });
             return;
         }
         let behavior = self.entities[index]
             .pack
             .as_ref()
             .map_or(MonsterPackBehaviorDto::Seek, |pack| pack.behavior);
-        if adjacent(self.entities[index].position, self.player.position) {
+        if adjacent(self.entities[index].position, primary_target.position()) {
             if behavior == MonsterPackBehaviorDto::Surround {
                 surround_reservations.insert(self.entities[index].position);
             }
-            self.resolve_monster_melee(index, events);
+            self.resolve_monster_melee_target(
+                index,
+                &primary_target,
+                events,
+                changed,
+                removed_entities,
+            );
             return;
         }
         let next_position = match behavior {
-            MonsterPackBehaviorDto::Seek => self.next_monster_step(index),
+            MonsterPackBehaviorDto::Seek => {
+                self.next_monster_step_toward(index, primary_target.position(), true)
+            }
             MonsterPackBehaviorDto::Surround => self
                 .next_surround_step(index, surround_reservations)
                 .or_else(|| self.next_monster_step(index)),
@@ -6788,7 +6941,12 @@ impl Game {
 
     #[cfg(test)]
     fn resolve_monster_ability(&mut self, index: usize, events: &mut Vec<DomainEvent>) -> bool {
-        self.resolve_monster_ability_with_changes(index, events, &mut BTreeSet::new())
+        self.resolve_monster_ability_with_changes(
+            index,
+            events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
     }
 
     fn resolve_monster_ability_with_changes(
@@ -6796,6 +6954,7 @@ impl Game {
         index: usize,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
     ) -> bool {
         let source_entity_id = self.entities[index].id.clone();
         let source_kind_id = self.entities[index].kind_id.clone();
@@ -6831,7 +6990,7 @@ impl Game {
                     candidates.push(self.monster_ability_candidate_dto(index, &plan, None));
                     viable.push(plan);
                 }
-                Err(reason) => {
+                Err(rejection) => {
                     candidates.push(MonsterAbilityCandidateResolutionDto {
                         ability_id: candidate.ability_id.clone(),
                         base_weight: candidate.weight,
@@ -6840,7 +6999,9 @@ impl Game {
                         target_kind_id: None,
                         target_position: None,
                         affected_positions: Vec::new(),
-                        rejection_reason: Some(reason),
+                        enemy_target_count: rejection.enemy_target_count,
+                        friendly_risk_count: rejection.friendly_risk_count,
+                        rejection_reason: Some(rejection.reason),
                     });
                 }
             }
@@ -6887,10 +7048,24 @@ impl Game {
             return false;
         };
         let plan = viable[selected_index].clone();
-        let (target_entity_id, target_kind_id, affected_positions, summon, effects, trace) =
-            self.resolve_monster_ability_plan(index, &source_kind_id, &plan, events, changed);
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);
+        let MonsterAbilityPlanResolution {
+            target_entity_id,
+            target_kind_id,
+            affected_positions,
+            summon,
+            effects,
+            targets,
+            trace,
+        } = self.resolve_monster_ability_plan(
+            index,
+            &source_kind_id,
+            &plan,
+            events,
+            changed,
+            removed_entities,
+        );
         events.push(DomainEvent::MonsterAbilityCast {
             resolution: MonsterAbilityCastResolutionDto {
                 source_entity_id,
@@ -6901,6 +7076,7 @@ impl Game {
                 affected_positions,
                 summon,
                 effects,
+                targets,
             },
             trace,
         });
@@ -6912,75 +7088,19 @@ impl Game {
         index: usize,
         ability: AbilityDefinition,
         base_weight: u32,
-    ) -> Result<MonsterAbilityPlan, MonsterAbilityRejectionReasonDto> {
+    ) -> Result<MonsterAbilityPlan, MonsterAbilityPlanRejection> {
         let origin = self.entities[index].position;
-        let player_position = self.player.position;
-        let target = match &ability.effect {
-            AbilityEffectDefinition::Heal { .. } => MonsterAbilityTargetPlan::SelfTarget,
+        let (target, enemy_target_count, friendly_risk_count) = match &ability.effect {
+            AbilityEffectDefinition::Heal { .. } => (MonsterAbilityTargetPlan::SelfTarget, 0, 0),
             AbilityEffectDefinition::Summon { count, radius, .. } => {
                 let positions = self
                     .summon_positions_around(origin, *count, *radius)
-                    .ok_or(MonsterAbilityRejectionReasonDto::NoSpace)?;
-                MonsterAbilityTargetPlan::Summon { positions }
-            }
-            AbilityEffectDefinition::AreaDamage { radius, .. } => {
-                let trace = self.monster_projectile_trace(index, &ability, false, false)?;
-                let cells = self.area_damage_cells(player_position, *radius);
-                let affected_positions = cells
-                    .iter()
-                    .map(|(_, position)| *position)
-                    .collect::<Vec<_>>();
-                if self.monster_footprint_has_secondary_entity(index, &affected_positions) {
-                    return Err(MonsterAbilityRejectionReasonDto::FriendlyRisk);
-                }
-                MonsterAbilityTargetPlan::Area {
-                    trace,
-                    affected_positions,
-                    player_distance: 0,
-                }
-            }
-            AbilityEffectDefinition::BeamDamage { .. } => {
-                let trace = self.monster_projectile_trace(index, &ability, false, true)?;
-                let affected_positions = trace.traversed.clone();
-                if self.monster_footprint_has_secondary_entity(index, &affected_positions) {
-                    return Err(MonsterAbilityRejectionReasonDto::FriendlyRisk);
-                }
-                MonsterAbilityTargetPlan::Beam {
-                    trace,
-                    affected_positions,
-                }
-            }
-            AbilityEffectDefinition::ConeDamage { radius, .. } => {
-                let direction = direction_toward(origin, player_position)
-                    .ok_or(MonsterAbilityRejectionReasonDto::InvalidTarget)?;
-                let (dx, dy) = direction.delta();
-                let path = (1..=ability.target.range)
-                    .map(|step| Position {
-                        x: origin.x + dx * i32::from(step),
-                        y: origin.y + dy * i32::from(step),
-                    })
-                    .collect::<Vec<_>>();
-                let trace = self.trace_monster_path(origin, path);
-                let cells = self.cone_damage_cells(origin, &trace.traversed, direction, *radius);
-                let Some(player_lateral_distance) =
-                    cells.iter().find_map(|(_, lateral, position)| {
-                        (*position == player_position).then_some(*lateral)
-                    })
-                else {
-                    return Err(MonsterAbilityRejectionReasonDto::OutOfRange);
-                };
-                let affected_positions = cells
-                    .iter()
-                    .map(|(_, _, position)| *position)
-                    .collect::<Vec<_>>();
-                if self.monster_footprint_has_secondary_entity(index, &affected_positions) {
-                    return Err(MonsterAbilityRejectionReasonDto::FriendlyRisk);
-                }
-                MonsterAbilityTargetPlan::Cone {
-                    trace,
-                    affected_positions,
-                    player_lateral_distance,
-                }
+                    .ok_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })?;
+                (MonsterAbilityTargetPlan::Summon { positions }, 0, 0)
             }
             AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
@@ -6990,83 +7110,268 @@ impl Game {
                     .modes
                     .contains(&AbilityTargetModeDefinition::SelfTarget) =>
             {
-                MonsterAbilityTargetPlan::SelfTarget
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
             AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::AreaDamage { .. }
+            | AbilityEffectDefinition::BeamDamage { .. }
+            | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
-            | AbilityEffectDefinition::Sequence { .. } => MonsterAbilityTargetPlan::Projectile {
-                trace: self.monster_projectile_trace(index, &ability, true, false)?,
-            },
-            _ => return Err(MonsterAbilityRejectionReasonDto::InvalidTarget),
+            | AbilityEffectDefinition::Sequence { .. } => {
+                let mut first_rejection = None;
+                let mut selected = None;
+                for hostile_target in self.monster_hostile_targets(index) {
+                    match self.monster_targeted_ability_plan(index, &ability, hostile_target) {
+                        Ok(plan) => {
+                            selected = Some(plan);
+                            break;
+                        }
+                        Err(rejection) => {
+                            first_rejection.get_or_insert(rejection);
+                        }
+                    }
+                }
+                selected.ok_or_else(|| {
+                    first_rejection.unwrap_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })
+                })?
+            }
+            _ => {
+                return Err(MonsterAbilityPlanRejection {
+                    reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                });
+            }
         };
         let utility_multiplier = self
             .monster_ability_utility_multiplier(index, &ability, &target)
-            .ok_or(MonsterAbilityRejectionReasonDto::NoUtility)?;
+            .ok_or(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoUtility,
+                enemy_target_count,
+                friendly_risk_count,
+            })?;
+        let target_position = monster_plan_target(&target).map(MonsterHostileTarget::position);
         let distance_multiplier = if !matches!(
             target,
             MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. }
-        ) && origin
-            .x
-            .abs_diff(player_position.x)
-            .max(origin.y.abs_diff(player_position.y))
-            >= 3
-        {
+        ) && target_position.is_some_and(|position| {
+            origin
+                .x
+                .abs_diff(position.x)
+                .max(origin.y.abs_diff(position.y))
+                >= 3
+        }) {
             2
         } else {
             1
         };
+        let target_multiplier = u32::from(enemy_target_count.max(1));
+        let resistance_percent = self.monster_ability_resistance_percent(index, &ability, &target);
+        if resistance_percent == 0 {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoUtility,
+                enemy_target_count,
+                friendly_risk_count,
+            });
+        }
+        let weighted = base_weight
+            .saturating_mul(utility_multiplier)
+            .saturating_mul(distance_multiplier)
+            .saturating_mul(target_multiplier)
+            .saturating_mul(resistance_percent)
+            / 100;
         Ok(MonsterAbilityPlan {
             ability,
             base_weight,
-            effective_weight: base_weight
-                .saturating_mul(utility_multiplier)
-                .saturating_mul(distance_multiplier),
+            effective_weight: weighted.max(1),
+            enemy_target_count,
+            friendly_risk_count,
             target,
         })
+    }
+
+    fn monster_targeted_ability_plan(
+        &self,
+        source_index: usize,
+        ability: &AbilityDefinition,
+        target: MonsterHostileTarget,
+    ) -> Result<(MonsterAbilityTargetPlan, u16, u16), MonsterAbilityPlanRejection> {
+        let origin = self.entities[source_index].position;
+        let target_position = target.position();
+        let (plan, affected_positions) = match &ability.effect {
+            AbilityEffectDefinition::AreaDamage { radius, .. } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, false, false)?;
+                let affected_positions = self
+                    .area_damage_cells(target_position, *radius)
+                    .into_iter()
+                    .map(|(_, position)| position)
+                    .collect::<Vec<_>>();
+                (
+                    MonsterAbilityTargetPlan::Area {
+                        target,
+                        trace,
+                        affected_positions: affected_positions.clone(),
+                    },
+                    affected_positions,
+                )
+            }
+            AbilityEffectDefinition::BeamDamage { .. } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, false, true)?;
+                let affected_positions = trace.traversed.clone();
+                (
+                    MonsterAbilityTargetPlan::Beam {
+                        target,
+                        trace,
+                        affected_positions: affected_positions.clone(),
+                    },
+                    affected_positions,
+                )
+            }
+            AbilityEffectDefinition::ConeDamage { radius, .. } => {
+                let direction = direction_toward(origin, target_position).ok_or(
+                    MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    },
+                )?;
+                let (dx, dy) = direction.delta();
+                let path = (1..=ability.target.range)
+                    .map(|step| Position {
+                        x: origin.x + dx * i32::from(step),
+                        y: origin.y + dy * i32::from(step),
+                    })
+                    .collect::<Vec<_>>();
+                let trace = self.trace_monster_path(origin, path);
+                let cells = self.cone_damage_cells(origin, &trace.traversed, direction, *radius);
+                if !cells
+                    .iter()
+                    .any(|(_, _, position)| *position == target_position)
+                {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::OutOfRange,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let affected_positions = cells
+                    .into_iter()
+                    .map(|(_, _, position)| position)
+                    .collect::<Vec<_>>();
+                (
+                    MonsterAbilityTargetPlan::Cone {
+                        target,
+                        trace,
+                        affected_positions: affected_positions.clone(),
+                    },
+                    affected_positions,
+                )
+            }
+            AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::ApplyStatus { .. }
+            | AbilityEffectDefinition::RemoveStatus { .. }
+            | AbilityEffectDefinition::Sequence { .. } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                (
+                    MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
+                )
+            }
+            _ => {
+                return Err(MonsterAbilityPlanRejection {
+                    reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                });
+            }
+        };
+        let (enemy_target_count, friendly_risk_count) =
+            self.monster_footprint_faction_counts(source_index, &affected_positions);
+        if friendly_risk_count > 0 {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::FriendlyRisk,
+                enemy_target_count,
+                friendly_risk_count,
+            });
+        }
+        Ok((plan, enemy_target_count, friendly_risk_count))
     }
 
     fn monster_projectile_trace(
         &self,
         index: usize,
         ability: &AbilityDefinition,
+        hostile_target: &MonsterHostileTarget,
         clean_shot: bool,
         continue_through_target: bool,
-    ) -> Result<ProjectileTrace, MonsterAbilityRejectionReasonDto> {
+    ) -> Result<ProjectileTrace, MonsterAbilityPlanRejection> {
         let origin = self.entities[index].position;
-        let target = self.player.position;
+        let target = hostile_target.position();
         if target == origin
             || self.index(target).is_none()
             || origin.x.abs_diff(target.x).max(origin.y.abs_diff(target.y))
                 > u32::from(ability.target.range)
         {
-            return Err(MonsterAbilityRejectionReasonDto::OutOfRange);
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::OutOfRange,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
         }
         let path = if continue_through_target {
             projectile_path_through_target(origin, target, ability.target.range)
         } else {
             projectile_path_between(origin, target, ability.target.range)
         }
-        .ok_or(MonsterAbilityRejectionReasonDto::InvalidTarget)?;
+        .ok_or(MonsterAbilityPlanRejection {
+            reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+            enemy_target_count: 0,
+            friendly_risk_count: 0,
+        })?;
         let trace = self.trace_monster_path(origin, path);
         if !trace.traversed.contains(&target) {
-            return Err(MonsterAbilityRejectionReasonDto::Blocked);
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::Blocked,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
         }
-        if clean_shot
-            && trace.traversed.iter().any(|position| {
-                *position != target
-                    && self
-                        .entities
+        if clean_shot {
+            for position in trace
+                .traversed
+                .iter()
+                .filter(|position| **position != target)
+            {
+                if let Some((candidate_index, _)) =
+                    self.entities
                         .iter()
                         .enumerate()
-                        .any(|(candidate_index, entity)| {
-                            candidate_index != index
+                        .find(|(candidate_index, entity)| {
+                            *candidate_index != index
                                 && entity.hp > 0
                                 && entity.position == *position
                         })
-            })
-        {
-            return Err(MonsterAbilityRejectionReasonDto::FriendlyRisk);
+                {
+                    let enemy = self.entity_is_player_aligned(candidate_index);
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: if enemy {
+                            MonsterAbilityRejectionReasonDto::Blocked
+                        } else {
+                            MonsterAbilityRejectionReasonDto::FriendlyRisk
+                        },
+                        enemy_target_count: u16::from(enemy),
+                        friendly_risk_count: u16::from(!enemy),
+                    });
+                }
+            }
         }
         Ok(trace)
     }
@@ -7092,14 +7397,128 @@ impl Game {
         }
     }
 
-    fn monster_footprint_has_secondary_entity(
+    fn entity_is_player_aligned(&self, index: usize) -> bool {
+        self.entities[index]
+            .summon
+            .as_ref()
+            .is_some_and(|summon| summon.owner_id == self.player.id)
+    }
+
+    fn monster_hostile_targets(&self, source_index: usize) -> Vec<MonsterHostileTarget> {
+        let origin = self.entities[source_index].position;
+        let mut targets = Vec::new();
+        if !self.player_is_dead() {
+            targets.push(MonsterHostileTarget::Player {
+                entity_id: self.player.id.clone(),
+                kind_id: self.player.kind_id.clone(),
+                position: self.player.position,
+            });
+        }
+        targets.extend(
+            self.entities
+                .iter()
+                .enumerate()
+                .filter(|(index, entity)| {
+                    *index != source_index && entity.hp > 0 && self.entity_is_player_aligned(*index)
+                })
+                .map(|(_, entity)| MonsterHostileTarget::Summon {
+                    entity_id: entity.id.clone(),
+                    kind_id: entity.kind_id.clone(),
+                    position: entity.position,
+                }),
+        );
+        targets.sort_by(|left, right| {
+            let left_position = left.position();
+            let right_position = right.position();
+            let left_distance = origin
+                .x
+                .abs_diff(left_position.x)
+                .max(origin.y.abs_diff(left_position.y));
+            let right_distance = origin
+                .x
+                .abs_diff(right_position.x)
+                .max(origin.y.abs_diff(right_position.y));
+            left_distance
+                .cmp(&right_distance)
+                .then_with(|| right.is_player().cmp(&left.is_player()))
+                .then_with(|| left.entity_id().cmp(right.entity_id()))
+        });
+        targets
+    }
+
+    fn monster_ability_resistance_percent(
+        &self,
+        source_index: usize,
+        ability: &AbilityDefinition,
+        target: &MonsterAbilityTargetPlan,
+    ) -> u32 {
+        let Some(hostile_target) = monster_plan_target(target) else {
+            return 100;
+        };
+        if !hostile_target.is_player()
+            || !self
+                .content
+                .actor(&self.entities[source_index].kind_id)
+                .and_then(|actor| actor.monster_casting.as_ref())
+                .is_some_and(|casting| casting.smart)
+        {
+            return 100;
+        }
+        ability
+            .effect
+            .ordered_effects()
+            .iter()
+            .filter_map(|effect| match effect {
+                AbilityEffectDefinition::Damage { damage_type, .. }
+                | AbilityEffectDefinition::AreaDamage { damage_type, .. }
+                | AbilityEffectDefinition::BeamDamage { damage_type, .. }
+                | AbilityEffectDefinition::ConeDamage { damage_type, .. } => {
+                    Some(DamageType::from(*damage_type))
+                }
+                AbilityEffectDefinition::ApplyStatus {
+                    resistance_type, ..
+                } => resistance_type.map(DamageType::from),
+                _ => None,
+            })
+            .filter_map(|damage_type| {
+                self.entities[source_index]
+                    .observed_player_resistances
+                    .get(&damage_type)
+                    .copied()
+            })
+            .map(|level| match level {
+                ResistanceLevel::Vulnerable => 150,
+                ResistanceLevel::Normal => 100,
+                ResistanceLevel::Resistant => 50,
+                ResistanceLevel::Strong => 35,
+                ResistanceLevel::Immune => 0,
+            })
+            .min()
+            .unwrap_or(100)
+    }
+
+    fn monster_footprint_faction_counts(
         &self,
         source_index: usize,
         affected_positions: &[Position],
-    ) -> bool {
-        self.entities.iter().enumerate().any(|(index, entity)| {
-            index != source_index && entity.hp > 0 && affected_positions.contains(&entity.position)
-        })
+    ) -> (u16, u16) {
+        let mut enemies =
+            u16::from(affected_positions.contains(&self.player.position) && !self.player_is_dead());
+        let mut friendlies = 0_u16;
+        for (index, entity) in self.entities.iter().enumerate() {
+            if index == source_index
+                || entity.hp <= 0
+                || !affected_positions.contains(&entity.position)
+            {
+                continue;
+            }
+            if self.entity_is_player_aligned(index) {
+                enemies = enemies.saturating_add(1);
+            } else {
+                friendlies = friendlies.saturating_add(1);
+            }
+        }
+        (enemies, friendlies)
     }
 
     fn monster_ability_utility_multiplier(
@@ -7117,14 +7536,24 @@ impl Game {
         ) {
             return Some(1);
         }
-        let target_actor = matches!(target, MonsterAbilityTargetPlan::SelfTarget)
-            .then_some(&self.entities[source_index]);
+        let hostile_target = monster_plan_target(target);
+        let target_actor = if matches!(target, MonsterAbilityTargetPlan::SelfTarget) {
+            Some(&self.entities[source_index])
+        } else {
+            hostile_target.and_then(|target| match target {
+                MonsterHostileTarget::Player { .. } => None,
+                MonsterHostileTarget::Summon { entity_id, .. } => {
+                    self.entities.iter().find(|entity| entity.id == *entity_id)
+                }
+            })
+        };
+        let player_target = hostile_target.is_some_and(MonsterHostileTarget::is_player);
         let effects = ability.effect.ordered_effects();
         let mut useful = false;
         let mut multiplier = 1_u32;
         for effect in effects {
             match effect {
-                AbilityEffectDefinition::Damage { .. } if target_actor.is_none() => useful = true,
+                AbilityEffectDefinition::Damage { .. } if hostile_target.is_some() => useful = true,
                 AbilityEffectDefinition::Heal { .. } => {
                     let actor = target_actor?;
                     let missing = actor.max_hp.saturating_sub(actor.hp).max(0);
@@ -7147,12 +7576,23 @@ impl Game {
                     resistance_type,
                     ..
                 } => {
-                    let statuses =
-                        target_actor.map_or(&self.player.statuses, |actor| &actor.statuses);
-                    let resistances =
-                        target_actor.map_or(&self.player.resistances, |actor| &actor.resistances);
+                    let statuses = if player_target {
+                        &self.player.statuses
+                    } else {
+                        &target_actor?.statuses
+                    };
                     let immune = resistance_type.is_some_and(|damage_type| {
-                        resistances.level(DamageType::from(damage_type)) == ResistanceLevel::Immune
+                        let damage_type = DamageType::from(damage_type);
+                        if player_target {
+                            self.entities[source_index]
+                                .observed_player_resistances
+                                .get(&damage_type)
+                                .is_some_and(|level| *level == ResistanceLevel::Immune)
+                        } else {
+                            target_actor.is_some_and(|actor| {
+                                actor.resistances.level(damage_type) == ResistanceLevel::Immune
+                            })
+                        }
                     });
                     if !immune
                         && statuses
@@ -7164,8 +7604,11 @@ impl Game {
                     }
                 }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
-                    let statuses =
-                        target_actor.map_or(&self.player.statuses, |actor| &actor.statuses);
+                    let statuses = if player_target {
+                        &self.player.statuses
+                    } else {
+                        &target_actor?.statuses
+                    };
                     if statuses
                         .iter()
                         .any(|status| status.kind_id == *status_kind_id)
@@ -7200,24 +7643,30 @@ impl Game {
                     Some(source.position),
                     positions.clone(),
                 ),
-                MonsterAbilityTargetPlan::Projectile { .. } => (
-                    Some(self.player.id.clone()),
-                    Some(self.player.kind_id.clone()),
-                    Some(self.player.position),
-                    vec![self.player.position],
+                MonsterAbilityTargetPlan::Projectile { target, .. } => (
+                    Some(target.entity_id().to_owned()),
+                    Some(target.kind_id().to_owned()),
+                    Some(target.position()),
+                    vec![target.position()],
                 ),
                 MonsterAbilityTargetPlan::Area {
-                    affected_positions, ..
+                    target,
+                    affected_positions,
+                    ..
                 }
                 | MonsterAbilityTargetPlan::Beam {
-                    affected_positions, ..
+                    target,
+                    affected_positions,
+                    ..
                 }
                 | MonsterAbilityTargetPlan::Cone {
-                    affected_positions, ..
+                    target,
+                    affected_positions,
+                    ..
                 } => (
-                    Some(self.player.id.clone()),
-                    Some(self.player.kind_id.clone()),
-                    Some(self.player.position),
+                    Some(target.entity_id().to_owned()),
+                    Some(target.kind_id().to_owned()),
+                    Some(target.position()),
                     affected_positions.clone(),
                 ),
             };
@@ -7229,6 +7678,8 @@ impl Game {
             target_kind_id,
             target_position,
             affected_positions,
+            enemy_target_count: plan.enemy_target_count,
+            friendly_risk_count: plan.friendly_risk_count,
             rejection_reason,
         }
     }
@@ -7240,72 +7691,132 @@ impl Game {
         plan: &MonsterAbilityPlan,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) -> (
-        String,
-        String,
-        Vec<Position>,
-        Option<AbilitySummonResolutionDto>,
-        Vec<AbilityEffectResolutionDto>,
-        Option<ProjectileTrace>,
-    ) {
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let source_entity_id = self.entities[source_index].id.clone();
         match &plan.target {
             MonsterAbilityTargetPlan::SelfTarget => {
                 let target_entity_id = self.entities[source_index].id.clone();
                 let target_kind_id = self.entities[source_index].kind_id.clone();
+                let target_position = self.entities[source_index].position;
                 let effects = self.resolve_monster_self_effects(source_index, &plan.ability);
-                changed.insert(self.entities[source_index].position);
-                (
-                    target_entity_id,
-                    target_kind_id,
-                    Vec::new(),
-                    None,
-                    effects,
-                    None,
-                )
+                changed.insert(target_position);
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target_entity_id.clone(),
+                    target_kind_id: target_kind_id.clone(),
+                    affected_positions: Vec::new(),
+                    summon: None,
+                    effects: effects.clone(),
+                    targets: vec![MonsterAbilityTargetResolutionDto {
+                        target_entity_id,
+                        target_kind_id,
+                        target_position,
+                        effects,
+                    }],
+                    trace: None,
+                }
             }
-            MonsterAbilityTargetPlan::Projectile { trace } => (
-                self.player.id.clone(),
-                self.player.kind_id.clone(),
-                vec![self.player.position],
-                None,
-                self.resolve_monster_player_effects(source_kind_id, &plan.ability, events),
-                Some(trace.clone()),
-            ),
+            MonsterAbilityTargetPlan::Projectile { target, trace } => {
+                let effects = self.resolve_monster_hostile_effects(
+                    &source_entity_id,
+                    source_kind_id,
+                    &plan.ability,
+                    target,
+                    events,
+                );
+                changed.insert(target.position());
+                let targets = vec![MonsterAbilityTargetResolutionDto {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    target_position: target.position(),
+                    effects: effects.clone(),
+                }];
+                self.remove_defeated_player_summons(
+                    targets
+                        .iter()
+                        .map(|target| target.target_entity_id.as_str()),
+                    changed,
+                    removed_entities,
+                );
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: vec![target.position()],
+                    summon: None,
+                    effects,
+                    targets,
+                    trace: Some(trace.clone()),
+                }
+            }
             MonsterAbilityTargetPlan::Area {
+                target,
                 trace,
                 affected_positions,
-                player_distance,
             } => {
                 let AbilityEffectDefinition::AreaDamage {
                     damage_dice,
                     damage_sides,
                     damage_type,
                     ..
-                } = plan.ability.effect
+                } = &plan.ability.effect
                 else {
                     unreachable!("monster area plan must retain an area effect");
                 };
-                let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
-                let prepared = rfb_area_damage(raw_damage, *player_distance);
-                let effect = self.resolve_monster_damage_to_player(
-                    source_kind_id,
-                    &plan.ability.id,
-                    0,
-                    raw_damage,
-                    prepared,
-                    DamageType::from(damage_type),
-                    events,
+                let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                let target_actors =
+                    self.monster_targets_in_footprint(source_index, target, affected_positions);
+                let mut targets = Vec::with_capacity(target_actors.len());
+                for affected_target in target_actors {
+                    let position = affected_target.position();
+                    let distance = target
+                        .position()
+                        .x
+                        .abs_diff(position.x)
+                        .max(target.position().y.abs_diff(position.y));
+                    let prepared = rfb_area_damage(raw_damage, distance);
+                    let effect = self.resolve_monster_damage_to_hostile(
+                        &source_entity_id,
+                        source_kind_id,
+                        &plan.ability.id,
+                        0,
+                        raw_damage,
+                        prepared,
+                        DamageType::from(*damage_type),
+                        &affected_target,
+                        events,
+                    );
+                    changed.insert(position);
+                    targets.push(MonsterAbilityTargetResolutionDto {
+                        target_entity_id: affected_target.entity_id().to_owned(),
+                        target_kind_id: affected_target.kind_id().to_owned(),
+                        target_position: position,
+                        effects: vec![effect],
+                    });
+                }
+                let effects = targets
+                    .iter()
+                    .find(|resolution| resolution.target_entity_id == target.entity_id())
+                    .map(|resolution| resolution.effects.clone())
+                    .unwrap_or_default();
+                self.remove_defeated_player_summons(
+                    targets
+                        .iter()
+                        .map(|target| target.target_entity_id.as_str()),
+                    changed,
+                    removed_entities,
                 );
-                (
-                    self.player.id.clone(),
-                    self.player.kind_id.clone(),
-                    affected_positions.clone(),
-                    None,
-                    vec![effect],
-                    Some(trace.clone()),
-                )
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: affected_positions.clone(),
+                    summon: None,
+                    effects,
+                    targets,
+                    trace: Some(trace.clone()),
+                }
             }
             MonsterAbilityTargetPlan::Beam {
+                target,
                 trace,
                 affected_positions,
             } => {
@@ -7313,62 +7824,132 @@ impl Game {
                     damage_dice,
                     damage_sides,
                     damage_type,
-                } = plan.ability.effect
+                } = &plan.ability.effect
                 else {
                     unreachable!("monster beam plan must retain a beam effect");
                 };
-                let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
-                let effect = self.resolve_monster_damage_to_player(
-                    source_kind_id,
-                    &plan.ability.id,
-                    0,
-                    raw_damage,
-                    raw_damage,
-                    DamageType::from(damage_type),
-                    events,
+                let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                let target_actors =
+                    self.monster_targets_in_footprint(source_index, target, affected_positions);
+                let mut targets = Vec::with_capacity(target_actors.len());
+                for affected_target in target_actors {
+                    let effect = self.resolve_monster_damage_to_hostile(
+                        &source_entity_id,
+                        source_kind_id,
+                        &plan.ability.id,
+                        0,
+                        raw_damage,
+                        raw_damage,
+                        DamageType::from(*damage_type),
+                        &affected_target,
+                        events,
+                    );
+                    changed.insert(affected_target.position());
+                    targets.push(MonsterAbilityTargetResolutionDto {
+                        target_entity_id: affected_target.entity_id().to_owned(),
+                        target_kind_id: affected_target.kind_id().to_owned(),
+                        target_position: affected_target.position(),
+                        effects: vec![effect],
+                    });
+                }
+                let effects = targets
+                    .iter()
+                    .find(|resolution| resolution.target_entity_id == target.entity_id())
+                    .map(|resolution| resolution.effects.clone())
+                    .unwrap_or_default();
+                self.remove_defeated_player_summons(
+                    targets
+                        .iter()
+                        .map(|target| target.target_entity_id.as_str()),
+                    changed,
+                    removed_entities,
                 );
-                (
-                    self.player.id.clone(),
-                    self.player.kind_id.clone(),
-                    affected_positions.clone(),
-                    None,
-                    vec![effect],
-                    Some(trace.clone()),
-                )
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: affected_positions.clone(),
+                    summon: None,
+                    effects,
+                    targets,
+                    trace: Some(trace.clone()),
+                }
             }
             MonsterAbilityTargetPlan::Cone {
+                target,
                 trace,
                 affected_positions,
-                player_lateral_distance,
             } => {
                 let AbilityEffectDefinition::ConeDamage {
                     damage_dice,
                     damage_sides,
                     damage_type,
-                    ..
-                } = plan.ability.effect
+                    radius,
+                } = &plan.ability.effect
                 else {
                     unreachable!("monster cone plan must retain a cone effect");
                 };
-                let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
-                let prepared = rfb_area_damage(raw_damage, *player_lateral_distance);
-                let effect = self.resolve_monster_damage_to_player(
-                    source_kind_id,
-                    &plan.ability.id,
-                    0,
-                    raw_damage,
-                    prepared,
-                    DamageType::from(damage_type),
-                    events,
+                let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                let origin = self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == source_entity_id)
+                    .map_or(trace.origin, |entity| entity.position);
+                let direction = direction_toward(origin, target.position())
+                    .expect("validated monster cone retains a direction");
+                let lateral_distances = self
+                    .cone_damage_cells(origin, &trace.traversed, direction, *radius)
+                    .into_iter()
+                    .map(|(_, lateral, position)| (position, lateral))
+                    .collect::<BTreeMap<_, _>>();
+                let target_actors =
+                    self.monster_targets_in_footprint(source_index, target, affected_positions);
+                let mut targets = Vec::with_capacity(target_actors.len());
+                for affected_target in target_actors {
+                    let lateral_distance = lateral_distances
+                        .get(&affected_target.position())
+                        .copied()
+                        .unwrap_or(0);
+                    let prepared = rfb_area_damage(raw_damage, lateral_distance);
+                    let effect = self.resolve_monster_damage_to_hostile(
+                        &source_entity_id,
+                        source_kind_id,
+                        &plan.ability.id,
+                        0,
+                        raw_damage,
+                        prepared,
+                        DamageType::from(*damage_type),
+                        &affected_target,
+                        events,
+                    );
+                    changed.insert(affected_target.position());
+                    targets.push(MonsterAbilityTargetResolutionDto {
+                        target_entity_id: affected_target.entity_id().to_owned(),
+                        target_kind_id: affected_target.kind_id().to_owned(),
+                        target_position: affected_target.position(),
+                        effects: vec![effect],
+                    });
+                }
+                let effects = targets
+                    .iter()
+                    .find(|resolution| resolution.target_entity_id == target.entity_id())
+                    .map(|resolution| resolution.effects.clone())
+                    .unwrap_or_default();
+                self.remove_defeated_player_summons(
+                    targets
+                        .iter()
+                        .map(|target| target.target_entity_id.as_str()),
+                    changed,
+                    removed_entities,
                 );
-                (
-                    self.player.id.clone(),
-                    self.player.kind_id.clone(),
-                    affected_positions.clone(),
-                    None,
-                    vec![effect],
-                    Some(trace.clone()),
-                )
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: affected_positions.clone(),
+                    summon: None,
+                    effects,
+                    targets,
+                    trace: Some(trace.clone()),
+                }
             }
             MonsterAbilityTargetPlan::Summon { positions } => {
                 let AbilityEffectDefinition::Summon {
@@ -7413,15 +7994,72 @@ impl Game {
                     positions: positions.clone(),
                     duration_turns,
                 };
-                (
-                    owner_id,
-                    self.entities[source_index].kind_id.clone(),
-                    positions.clone(),
-                    Some(summon),
-                    Vec::new(),
-                    None,
-                )
+                MonsterAbilityPlanResolution {
+                    target_entity_id: owner_id,
+                    target_kind_id: self.entities[source_index].kind_id.clone(),
+                    affected_positions: positions.clone(),
+                    summon: Some(summon),
+                    effects: Vec::new(),
+                    targets: Vec::new(),
+                    trace: None,
+                }
             }
+        }
+    }
+
+    fn monster_targets_in_footprint(
+        &self,
+        source_index: usize,
+        primary: &MonsterHostileTarget,
+        affected_positions: &[Position],
+    ) -> Vec<MonsterHostileTarget> {
+        let mut targets = self
+            .monster_hostile_targets(source_index)
+            .into_iter()
+            .filter(|target| affected_positions.contains(&target.position()))
+            .collect::<Vec<_>>();
+        targets.sort_by(|left, right| {
+            (left.entity_id() != primary.entity_id())
+                .cmp(&(right.entity_id() != primary.entity_id()))
+                .then_with(|| left.entity_id().cmp(right.entity_id()))
+        });
+        targets
+    }
+
+    fn remove_defeated_player_summons<'a>(
+        &mut self,
+        target_entity_ids: impl Iterator<Item = &'a str>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let mut defeated = target_entity_ids
+            .filter_map(|entity_id| {
+                self.entities
+                    .iter()
+                    .position(|entity| {
+                        entity.id == entity_id
+                            && entity.hp <= 0
+                            && entity
+                                .summon
+                                .as_ref()
+                                .is_some_and(|summon| summon.owner_id == self.player.id)
+                    })
+                    .map(|index| self.entities[index].id.clone())
+            })
+            .collect::<Vec<_>>();
+        defeated.sort();
+        defeated.dedup();
+        for entity_id in defeated {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let removed = self.entities.remove(index);
+            changed.insert(removed.position);
+            removed_entities.push(removed.id);
         }
     }
 
@@ -7487,8 +8125,113 @@ impl Game {
         resolutions
     }
 
+    fn resolve_monster_hostile_effects(
+        &mut self,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        ability: &AbilityDefinition,
+        target: &MonsterHostileTarget,
+        events: &mut Vec<DomainEvent>,
+    ) -> Vec<AbilityEffectResolutionDto> {
+        if target.is_player() {
+            return self.resolve_monster_player_effects(
+                source_entity_id,
+                source_kind_id,
+                ability,
+                events,
+            );
+        }
+        let effects = ability.effect.ordered_effects();
+        let mut resolutions = Vec::with_capacity(effects.len());
+        for (index, effect) in effects.iter().enumerate() {
+            let effect_index =
+                u8::try_from(index).expect("validated monster ability effect index must fit u8");
+            let Some(target_index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target.entity_id())
+            else {
+                resolutions.push(AbilityEffectResolutionDto::Skipped {
+                    effect_index,
+                    reason: AbilityEffectSkipReasonDto::TargetDead,
+                });
+                continue;
+            };
+            if self.entities[target_index].hp <= 0 {
+                resolutions.push(AbilityEffectResolutionDto::Skipped {
+                    effect_index,
+                    reason: AbilityEffectSkipReasonDto::TargetDead,
+                });
+                continue;
+            }
+            let resolution = match effect {
+                AbilityEffectDefinition::Damage {
+                    damage_dice,
+                    damage_sides,
+                    damage_type,
+                } => {
+                    let raw_damage = self.roll_damage(*damage_dice, *damage_sides).max(0);
+                    let damage_type = DamageType::from(*damage_type);
+                    let definition = self
+                        .content
+                        .actor(&self.entities[target_index].kind_id)
+                        .expect("monster target definition must remain available");
+                    let armor_class = self
+                        .actor_derived_stats(&self.entities[target_index], definition, false)
+                        .armor_class
+                        .value;
+                    let prepared = if damage_type == DamageType::Physical {
+                        apply_melee_armor_reduction(raw_damage, armor_class)
+                    } else {
+                        raw_damage
+                    };
+                    self.resolve_monster_damage_to_hostile(
+                        source_entity_id,
+                        source_kind_id,
+                        &ability.id,
+                        effect_index,
+                        raw_damage,
+                        prepared,
+                        damage_type,
+                        target,
+                        events,
+                    )
+                }
+                AbilityEffectDefinition::ApplyStatus {
+                    status_kind_id,
+                    intensity,
+                    duration_ticks,
+                    stacking,
+                    resistance_type,
+                } => apply_ability_status_effect(
+                    &mut self.entities[target_index],
+                    &ability.id,
+                    effect_index,
+                    status_kind_id,
+                    *intensity,
+                    *duration_ticks,
+                    *stacking,
+                    *resistance_type,
+                ),
+                AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+                    remove_ability_status_effect(
+                        &mut self.entities[target_index],
+                        effect_index,
+                        status_kind_id,
+                    )
+                }
+                _ => unreachable!(
+                    "validated monster abilities contain only direct actor-target effects"
+                ),
+            };
+            resolutions.push(resolution);
+        }
+        resolutions
+    }
+
     fn resolve_monster_player_effects(
         &mut self,
+        source_entity_id: &str,
         source_kind_id: &str,
         ability: &AbilityDefinition,
         events: &mut Vec<DomainEvent>,
@@ -7520,6 +8263,7 @@ impl Game {
                         raw_damage
                     };
                     self.resolve_monster_damage_to_player(
+                        source_entity_id,
                         source_kind_id,
                         &ability.id,
                         effect_index,
@@ -7535,16 +8279,23 @@ impl Game {
                     duration_ticks,
                     stacking,
                     resistance_type,
-                } => apply_ability_status_effect(
-                    &mut self.player,
-                    &ability.id,
-                    effect_index,
-                    status_kind_id,
-                    *intensity,
-                    *duration_ticks,
-                    *stacking,
-                    *resistance_type,
-                ),
+                } => {
+                    let resolution = apply_ability_status_effect(
+                        &mut self.player,
+                        &ability.id,
+                        effect_index,
+                        status_kind_id,
+                        *intensity,
+                        *duration_ticks,
+                        *stacking,
+                        *resistance_type,
+                    );
+                    if let Some(damage_type) = resistance_type.map(DamageType::from) {
+                        let level = self.player.resistances.level(damage_type);
+                        self.record_monster_player_resistance(source_entity_id, damage_type, level);
+                    }
+                    resolution
+                }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     remove_ability_status_effect(&mut self.player, effect_index, status_kind_id)
                 }
@@ -7558,8 +8309,58 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
+    fn resolve_monster_damage_to_hostile(
+        &mut self,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        ability_id: &str,
+        effect_index: u8,
+        raw_damage: i32,
+        prepared_damage: i32,
+        damage_type: DamageType,
+        target: &MonsterHostileTarget,
+        events: &mut Vec<DomainEvent>,
+    ) -> AbilityEffectResolutionDto {
+        if target.is_player() {
+            return self.resolve_monster_damage_to_player(
+                source_entity_id,
+                source_kind_id,
+                ability_id,
+                effect_index,
+                raw_damage,
+                prepared_damage,
+                damage_type,
+                events,
+            );
+        }
+        let Some(target_index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == target.entity_id() && entity.hp > 0)
+        else {
+            return AbilityEffectResolutionDto::Skipped {
+                effect_index,
+                reason: AbilityEffectSkipReasonDto::TargetDead,
+            };
+        };
+        let resistance = self.entities[target_index].resistances.level(damage_type);
+        let damage = resolve_damage(
+            DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
+            resistance,
+        );
+        self.entities[target_index].hp = self.entities[target_index]
+            .hp
+            .saturating_sub(damage.applied);
+        AbilityEffectResolutionDto::Damage {
+            effect_index,
+            resolution: damage.into(),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn resolve_monster_damage_to_player(
         &mut self,
+        source_entity_id: &str,
         source_kind_id: &str,
         ability_id: &str,
         effect_index: u8,
@@ -7569,6 +8370,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> AbilityEffectResolutionDto {
         let resistance = self.player.resistances.level(damage_type);
+        self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
         let damage = resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
@@ -7584,6 +8386,31 @@ impl Game {
         AbilityEffectResolutionDto::Damage {
             effect_index,
             resolution: damage.into(),
+        }
+    }
+
+    fn record_monster_player_resistance(
+        &mut self,
+        source_entity_id: &str,
+        damage_type: DamageType,
+        resistance: ResistanceLevel,
+    ) {
+        let Some(source_index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == source_entity_id)
+        else {
+            return;
+        };
+        let smart = self
+            .content
+            .actor(&self.entities[source_index].kind_id)
+            .and_then(|actor| actor.monster_casting.as_ref())
+            .is_some_and(|casting| casting.smart);
+        if smart {
+            self.entities[source_index]
+                .observed_player_resistances
+                .insert(damage_type, resistance);
         }
     }
 
@@ -7643,6 +8470,102 @@ impl Game {
         } else {
             self.entities[index].alerted = true;
             true
+        }
+    }
+
+    fn resolve_monster_melee_target(
+        &mut self,
+        source_index: usize,
+        target: &MonsterHostileTarget,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        if target.is_player() {
+            self.resolve_monster_melee(source_index, events);
+            return;
+        }
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&source_kind_id)
+            .expect("monster actor definition must remain available")
+            .clone();
+        let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
+        for blow in resolved_melee_blows(&definition) {
+            let Some(target_index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target.entity_id() && entity.hp > 0)
+            else {
+                break;
+            };
+            let target_definition = self
+                .content
+                .actor(&self.entities[target_index].kind_id)
+                .expect("monster melee target definition must remain available");
+            let target_stats =
+                self.actor_derived_stats(&self.entities[target_index], target_definition, false);
+            let ability = attacker.melee_skill.with_modifier(
+                StatLayer::Base,
+                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
+                blow.to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::MeleeHit,
+                    actor_id: self.entities[source_index].id.clone(),
+                    target_id: Some(target.entity_id().to_owned()),
+                    ability,
+                    difficulty: target_stats.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::MonsterMeleeEntityMissed {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    method_id: blow.method_id,
+                });
+                continue;
+            }
+
+            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
+            let prepared_damage = if blow.damage_type == DamageType::Physical {
+                apply_melee_armor_reduction(raw_damage, target_stats.armor_class.value)
+            } else {
+                raw_damage
+            };
+            let resistance = self.entities[target_index]
+                .resistances
+                .level(blow.damage_type);
+            let damage = resolve_damage(
+                DamagePacket::after_armor(raw_damage, prepared_damage, blow.damage_type),
+                resistance,
+            );
+            self.entities[target_index].hp = self.entities[target_index]
+                .hp
+                .saturating_sub(damage.applied);
+            if self.entities[target_index].hp <= 0 {
+                events.push(DomainEvent::MonsterMeleeEntitySlew {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    method_id: blow.method_id,
+                    damage,
+                });
+                let removed = self.entities.remove(target_index);
+                changed.insert(removed.position);
+                removed_entities.push(removed.id);
+                break;
+            }
+            events.push(DomainEvent::MonsterMeleeEntityHit {
+                source_kind_id: source_kind_id.clone(),
+                target_kind_id: target.kind_id().to_owned(),
+                method_id: blow.method_id,
+                damage,
+            });
         }
     }
 
@@ -7711,7 +8634,74 @@ impl Game {
     }
 
     fn next_monster_step(&self, index: usize) -> Option<Position> {
-        self.next_monster_step_toward(index, self.player.position, true)
+        self.monster_hostile_targets(index)
+            .first()
+            .and_then(|target| self.next_monster_step_toward(index, target.position(), true))
+    }
+
+    fn next_monster_step_away(&self, index: usize) -> Option<Position> {
+        const DELTAS: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+
+        let start = self.entities[index].position;
+        let targets = self.monster_hostile_targets(index);
+        let minimum_distance = |position: Position| {
+            targets
+                .iter()
+                .map(|target| {
+                    position
+                        .x
+                        .abs_diff(target.position().x)
+                        .max(position.y.abs_diff(target.position().y))
+                })
+                .min()
+                .unwrap_or(0)
+        };
+        let current_distance = minimum_distance(start);
+        let movement_region = self
+            .floor_regions
+            .iter()
+            .find(|region| region.cells.contains(&start));
+        let occupied = self
+            .entities
+            .iter()
+            .enumerate()
+            .filter(|(entity_index, entity)| *entity_index != index && entity.hp > 0)
+            .map(|(_, entity)| entity.position)
+            .collect::<BTreeSet<_>>();
+        let mut candidates = DELTAS
+            .iter()
+            .enumerate()
+            .filter_map(|(order, (dx, dy))| {
+                let position = Position {
+                    x: start.x + dx,
+                    y: start.y + dy,
+                };
+                if position == self.player.position
+                    || occupied.contains(&position)
+                    || !self.is_walkable(position)
+                    || movement_region.is_some_and(|region| !region.cells.contains(&position))
+                {
+                    return None;
+                }
+                let distance = minimum_distance(position);
+                (distance > current_distance).then_some((
+                    std::cmp::Reverse(distance),
+                    order,
+                    position,
+                ))
+            })
+            .collect::<Vec<_>>();
+        candidates.sort();
+        candidates.first().map(|(_, _, position)| *position)
     }
 
     fn next_surround_step(
@@ -12573,11 +13563,26 @@ impl Game {
             .statuses
             .windows(2)
             .all(|window| window[0].kind_id < window[1].kind_id);
+        let resistance_memory_is_valid = if actor.observed_player_resistances.is_empty() {
+            true
+        } else {
+            expected_role == ActorRole::Monster
+                && actor.observed_player_resistances.len() <= 6
+                && definition
+                    .monster_casting
+                    .as_ref()
+                    .is_some_and(|casting| casting.smart)
+                && actor
+                    .summon
+                    .as_ref()
+                    .is_none_or(|summon| summon.owner_id != self.player.id)
+        };
         if definition.role != expected_role
             || actor.max_hp != definition.max_hp
             || actor.speed != definition.speed
             || actor.speed > 199
             || !statuses_are_valid
+            || !resistance_memory_is_valid
             || (expected_role == ActorRole::Monster && actor.hp <= 0)
             || (expected_role == ActorRole::Player && actor.hp < -1_000_000)
             || (expected_role == ActorRole::Monster
@@ -15475,6 +16480,7 @@ mod tests {
             guardian_index,
             &mut Vec::new(),
             &mut BTreeSet::new(),
+            &mut Vec::new(),
             &mut BTreeSet::new(),
         );
         assert_eq!(game.entities[guardian_index].position, guardian_position);
@@ -18598,6 +19604,7 @@ mod tests {
             3,
             &mut Vec::new(),
             &mut BTreeSet::new(),
+            &mut Vec::new(),
             &mut BTreeSet::new(),
         );
         assert!(squared_distance(game.entities[3].position, leader_position) < before);
@@ -23847,8 +24854,10 @@ mod tests {
             .expect("mending echo should exist")
             .clone();
         assert_eq!(
-            game.monster_ability_plan(0, healing.clone(), 4),
-            Err(MonsterAbilityRejectionReasonDto::NoUtility)
+            game.monster_ability_plan(0, healing.clone(), 4)
+                .expect_err("healthy healing should have no utility")
+                .reason,
+            MonsterAbilityRejectionReasonDto::NoUtility
         );
 
         game.entities[0].hp = 5;
@@ -23878,8 +24887,10 @@ mod tests {
             source_id: Some(quickening.id.clone()),
         });
         assert_eq!(
-            game.monster_ability_plan(0, quickening, 2),
-            Err(MonsterAbilityRejectionReasonDto::NoUtility)
+            game.monster_ability_plan(0, quickening, 2)
+                .expect_err("duplicate haste should have no utility")
+                .reason,
+            MonsterAbilityRejectionReasonDto::NoUtility
         );
 
         let bolt = game
@@ -23932,8 +24943,10 @@ mod tests {
                 Position { x: 4, y: 3 },
             ));
             assert_eq!(
-                game.monster_ability_plan(0, ability, 2),
-                Err(MonsterAbilityRejectionReasonDto::FriendlyRisk),
+                game.monster_ability_plan(0, ability, 2)
+                    .expect_err("friendly footprint should be rejected")
+                    .reason,
+                MonsterAbilityRejectionReasonDto::FriendlyRisk,
                 "{ability_id} should reject a secondary entity in its footprint"
             );
         }
@@ -23958,20 +24971,29 @@ mod tests {
             .expect("open cells should permit hostile summoning");
         let mut events = Vec::new();
         let mut changed = BTreeSet::new();
-        let (_, _, positions, summon, effects, trace) = game.resolve_monster_ability_plan(
+        let resolution = game.resolve_monster_ability_plan(
             0,
             "demo.actor.echo-cantor",
             &plan,
             &mut events,
             &mut changed,
+            &mut Vec::new(),
         );
-        let summon = summon.expect("summon resolution should be explicit");
-        assert!(effects.is_empty());
-        assert!(trace.is_none());
+        let summon = resolution
+            .summon
+            .expect("summon resolution should be explicit");
+        assert!(resolution.effects.is_empty());
+        assert!(resolution.targets.is_empty());
+        assert!(resolution.trace.is_none());
         assert_eq!(summon.owner_id, "test.monster.echo-cantor.1");
         assert_eq!(summon.entity_ids.len(), 2);
-        assert_eq!(positions, summon.positions);
-        assert!(positions.iter().all(|position| changed.contains(position)));
+        assert_eq!(resolution.affected_positions, summon.positions);
+        assert!(
+            resolution
+                .affected_positions
+                .iter()
+                .all(|position| changed.contains(position))
+        );
         let entities = game.entities_dto();
         for entity_id in &summon.entity_ids {
             let entity = entities
@@ -23999,6 +25021,7 @@ mod tests {
             summon_index,
             &mut events,
             &mut changed,
+            &mut Vec::new(),
             &mut BTreeSet::new(),
         );
         assert!(game.player.hp < hp_before);
@@ -24006,6 +25029,203 @@ mod tests {
         let restored =
             Game::from_save(game.to_save()).expect("hostile summon should round-trip through save");
         assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    #[test]
+    fn monster_spells_target_nearby_player_summons_and_score_enemy_footprints() {
+        let mut game = Game::new(1);
+        clear_monsters(&mut game);
+        game.entities.push(game.generated_actor(
+            "test.monster.echo-cantor.1".to_owned(),
+            "demo.actor.echo-cantor",
+            Position { x: 8, y: 3 },
+        ));
+        let mut companion = game.generated_actor(
+            "test.summon.echo-companion.1".to_owned(),
+            "demo.actor.echo-companion",
+            Position { x: 7, y: 3 },
+        );
+        companion.summon = Some(SummonIdentity {
+            owner_id: game.player.id.clone(),
+            source_ability_id: "demo.ability.echo-companion".to_owned(),
+            remaining_turns: 5,
+        });
+        game.entities.push(companion);
+
+        let bolt = game
+            .content
+            .ability("demo.ability.resonant-bolt")
+            .expect("bolt should exist")
+            .clone();
+        let bolt_plan = game
+            .monster_ability_plan(0, bolt, 3)
+            .expect("nearby companion should be a legal target");
+        assert_eq!(
+            monster_plan_target(&bolt_plan.target).map(MonsterHostileTarget::entity_id),
+            Some("test.summon.echo-companion.1")
+        );
+        assert_eq!(bolt_plan.enemy_target_count, 1);
+
+        game.entities[1].position = Position { x: 3, y: 4 };
+        let burst = game
+            .content
+            .ability("demo.ability.echo-burst")
+            .expect("burst should exist")
+            .clone();
+        let burst_plan = game
+            .monster_ability_plan(0, burst, 2)
+            .expect("a player and nearby companion should both be legal enemies");
+        assert_eq!(burst_plan.enemy_target_count, 2);
+        assert_eq!(burst_plan.friendly_risk_count, 0);
+        assert_eq!(burst_plan.effective_weight, 8);
+    }
+
+    #[test]
+    fn monster_area_damage_hits_every_player_aligned_target_and_removes_slain_summons() {
+        let mut game = Game::new(2);
+        clear_monsters(&mut game);
+        game.entities.push(game.generated_actor(
+            "test.monster.echo-cantor.1".to_owned(),
+            "demo.actor.echo-cantor",
+            Position { x: 8, y: 3 },
+        ));
+        let mut companion = game.generated_actor(
+            "test.summon.echo-companion.1".to_owned(),
+            "demo.actor.echo-companion",
+            Position { x: 3, y: 4 },
+        );
+        companion.hp = 1;
+        companion.summon = Some(SummonIdentity {
+            owner_id: game.player.id.clone(),
+            source_ability_id: "demo.ability.echo-companion".to_owned(),
+            remaining_turns: 5,
+        });
+        game.entities.push(companion);
+        let ability = game
+            .content
+            .ability("demo.ability.echo-burst")
+            .expect("burst should exist")
+            .clone();
+        let plan = game
+            .monster_ability_plan(0, ability, 2)
+            .expect("burst should cover both enemies");
+        let player_hp_before = game.player.hp;
+        let mut changed = BTreeSet::new();
+        let mut removed = Vec::new();
+        let resolution = game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.echo-cantor",
+            &plan,
+            &mut Vec::new(),
+            &mut changed,
+            &mut removed,
+        );
+        assert_eq!(resolution.targets.len(), 2);
+        assert!(game.player.hp < player_hp_before);
+        assert_eq!(removed, ["test.summon.echo-companion.1"]);
+        assert!(
+            game.entities
+                .iter()
+                .all(|entity| entity.id != "test.summon.echo-companion.1")
+        );
+        assert!(changed.contains(&Position { x: 3, y: 4 }));
+    }
+
+    #[test]
+    fn smart_caster_learns_only_observed_player_resistance_and_round_trips() {
+        let mut game = Game::new(3);
+        clear_monsters(&mut game);
+        game.entities.push(game.generated_actor(
+            "test.monster.echo-cantor.1".to_owned(),
+            "demo.actor.echo-cantor",
+            Position { x: 8, y: 3 },
+        ));
+        game.player
+            .resistances
+            .set(DamageType::Electricity, ResistanceLevel::Resistant);
+        let ability = game
+            .content
+            .ability("demo.ability.resonant-bolt")
+            .expect("bolt should exist")
+            .clone();
+        let before = game
+            .monster_ability_plan(0, ability.clone(), 3)
+            .expect("unknown resistance must not affect the first decision");
+        assert_eq!(before.effective_weight, 6);
+        assert!(game.entities[0].observed_player_resistances.is_empty());
+
+        game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.echo-cantor",
+            &before,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+        assert_eq!(
+            game.entities[0]
+                .observed_player_resistances
+                .get(&DamageType::Electricity),
+            Some(&ResistanceLevel::Resistant)
+        );
+        let after = game
+            .monster_ability_plan(0, ability, 3)
+            .expect("observed resistance should downweight rather than forbid the bolt");
+        assert_eq!(after.effective_weight, 3);
+
+        let restored =
+            Game::from_save(game.to_save()).expect("resistance memory should round-trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored.entities[0].observed_player_resistances,
+            game.entities[0].observed_player_resistances
+        );
+    }
+
+    #[test]
+    fn caster_keeps_distance_and_flees_when_wounded_without_extra_rng() {
+        let mut game = Game::new(4);
+        clear_monsters(&mut game);
+        game.entities.push(game.generated_actor(
+            "test.monster.echo-cantor.1".to_owned(),
+            "demo.actor.echo-cantor",
+            Position { x: 5, y: 3 },
+        ));
+        game.entities[0].casting_cooldown_remaining = 1;
+        let draws_before = game.rng.draw_counter;
+        let mut events = Vec::new();
+        game.resolve_monster_action(
+            0,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+        );
+        assert_eq!(game.entities[0].position, Position { x: 6, y: 2 });
+        assert_eq!(game.rng.draw_counter, draws_before);
+        assert!(
+            events
+                .iter()
+                .any(|event| { matches!(event, DomainEvent::MonsterKeptDistance { .. }) })
+        );
+
+        game.entities[0].position = Position { x: 5, y: 3 };
+        game.entities[0].hp = 2;
+        game.entities[0].casting_cooldown_remaining = 1;
+        events.clear();
+        game.resolve_monster_action(
+            0,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+        );
+        assert_eq!(game.entities[0].position, Position { x: 6, y: 2 });
+        assert!(
+            events
+                .iter()
+                .any(|event| { matches!(event, DomainEvent::MonsterFled { .. }) })
+        );
     }
 
     #[test]

@@ -395,6 +395,31 @@ pub(crate) enum DomainEvent {
         method_id: Option<String>,
         damage: DamageOutcome,
     },
+    MonsterMeleeEntityMissed {
+        source_kind_id: String,
+        target_kind_id: String,
+        method_id: Option<String>,
+    },
+    MonsterMeleeEntityHit {
+        source_kind_id: String,
+        target_kind_id: String,
+        method_id: Option<String>,
+        damage: DamageOutcome,
+    },
+    MonsterMeleeEntitySlew {
+        source_kind_id: String,
+        target_kind_id: String,
+        method_id: Option<String>,
+        damage: DamageOutcome,
+    },
+    MonsterFled {
+        source_kind_id: String,
+        target_kind_id: String,
+    },
+    MonsterKeptDistance {
+        source_kind_id: String,
+        target_kind_id: String,
+    },
     PlayerDied {
         source_kind_id: String,
         method_id: Option<String>,
@@ -1348,6 +1373,74 @@ impl DomainEvent {
                     },
                 ),
                 method_id,
+            ),
+            Self::MonsterMeleeEntityMissed {
+                source_kind_id,
+                target_kind_id,
+                method_id,
+            } => with_method(
+                dto(
+                    "combat.monster-entity-miss",
+                    "combat-monster-entity-miss",
+                    [("source", source_kind_id), ("target", target_kind_id)],
+                ),
+                method_id,
+            ),
+            Self::MonsterMeleeEntityHit {
+                source_kind_id,
+                target_kind_id,
+                method_id,
+                damage,
+            } => with_method(
+                dto_with_outcome(
+                    "combat.monster-entity-hit",
+                    "combat-monster-entity-hit",
+                    [
+                        ("source", source_kind_id),
+                        ("target", target_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                method_id,
+            ),
+            Self::MonsterMeleeEntitySlew {
+                source_kind_id,
+                target_kind_id,
+                method_id,
+                damage,
+            } => with_method(
+                dto_with_outcome(
+                    "combat.monster-entity-slew",
+                    "combat-monster-entity-slew",
+                    [
+                        ("source", source_kind_id),
+                        ("target", target_kind_id),
+                        ("damage", damage.applied.to_string()),
+                    ],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
+                method_id,
+            ),
+            Self::MonsterFled {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "combat.monster-fled",
+                "combat-monster-fled",
+                [("source", source_kind_id), ("target", target_kind_id)],
+            ),
+            Self::MonsterKeptDistance {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "combat.monster-kept-distance",
+                "combat-monster-kept-distance",
+                [("source", source_kind_id), ("target", target_kind_id)],
             ),
             Self::PlayerDied {
                 source_kind_id,

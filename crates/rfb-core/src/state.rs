@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_protocol::{ItemQualityDto, MonsterPackBehaviorDto, MonsterPackRoleDto, Position};
 use serde::{Deserialize, Serialize};
 
+use crate::resistance::{DamageType, ResistanceLevel};
 use crate::{effect::StatusInstance, resistance::ResistanceProfile};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,6 +19,7 @@ pub(crate) struct Actor {
     pub(crate) energy_need: i32,
     pub(crate) alerted: bool,
     pub(crate) casting_cooldown_remaining: u16,
+    pub(crate) observed_player_resistances: BTreeMap<DamageType, ResistanceLevel>,
     pub(crate) statuses: Vec<StatusInstance>,
     pub(crate) resistances: ResistanceProfile,
     pub(crate) pack: Option<MonsterPackIdentity>,

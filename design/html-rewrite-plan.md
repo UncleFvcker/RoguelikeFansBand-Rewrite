@@ -79,6 +79,7 @@
 - [Contract v85：状态能力与有序多效果](contract-v85-ordered-status-effects.md)
 - [Contract v86：首个怪物施法与能力选择 AI](contract-v86-monster-casting-ai.md)
 - [Contract v87：怪物施法效用与目标扩展](contract-v87-monster-casting-utility.md)
+- [Contract v88：怪物目标、战术移动与施法记忆](contract-v88-monster-targets-tactics-memory.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -668,12 +669,13 @@ interface SaveGame {
 - 协议 1.85 和 contract-v85 已建立；内容包 1.77.0 新增 Echo Quickening/Echo Binding，以及 `apply-status`、`remove-status` 和 2–8 个同目标 actor 有序 `sequence`。核心整次施法只支付一次资源并抽一次失败率，随后按声明顺序处理堆叠、抗性缩时、免疫、部分无效、`no-target` 和 `target-dead`；被跳过的伤害效果不抽骰。Web 能力行显示组合数量并格式化 `ability.effects` 事件；content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`，该历史 baseline 共 242 个 exact fixtures，save v1/state hash Schema v36 保持不变。
 - 协议 1.86 和 contract-v86 已建立；内容包 1.78.0 新增 Echo Cantor 与 Monster `monsterCasting`，以百分比频率、声明顺序权重、射程/墙体/友军 clean-shot 过滤复用直接伤害与状态管线。成功施法按逆频率设置自身行动冷却，50% 为 2 行动、25% 为 4 行动，冷却期不抽施法 RNG。Web 格式化选择与施法事件；content hash 为 `be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd`，该历史 baseline 共 249 个 exact fixtures，save v1/state hash 升至 Schema v37。
 - 协议 1.87 和 contract-v87 已建立；内容包 1.79.0 扩展 Echo Cantor 的自身治疗/增益、范围/射线/锥形与 Call Discord 敌对召唤。候选 outcome 暴露基础/有效权重、目标、footprint 与拒绝原因，HP/状态/距离效用计算不抽 RNG，多格效果保守拒绝次级实体。content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`，active baseline 共 257 个 exact fixtures、零 waiver，save v1/state hash Schema v37 不变。
+- 协议 1.88 和 contract-v88 已建立；内容包 1.80.0 让玩家阵营召唤物成为怪物法术/追踪/近战目标，多格候选暴露敌我计数并按敌方命中数加权，cast outcome 返回每个实际目标。Echo Cantor 按内容阈值保持距离或受伤撤退，smart 抗性知识只在效果实际命中玩家后更新。content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`，active baseline 共 265 个 exact fixtures、零 waiver，save v1/state hash 升至 Schema v38。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage H：扩展怪物目标选择与有限施法记忆，让玩家阵营召唤物成为合法目标，按敌我数量决定多目标风险，并加入保持距离、低 HP 逃跑和 smart caster 抗性知识；多资源职业继续后置；
+1. 继续 Stage H：让玩家友方召唤物执行跟随、攻击、保持距离和守卫，并建立首版玩家命令、主人/跨楼层/生命周期边界；多资源职业随后恢复排期；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。
