@@ -63,6 +63,8 @@ pub struct ContentImportReport {
     pub monsters_imported: usize,
     pub monsters_skipped: usize,
     pub monsters_with_unmapped_spells: usize,
+    pub monsters_with_casting: usize,
+    pub spells_mapped: BTreeMap<String, usize>,
     pub monsters_with_melee_routine: usize,
     pub monsters_with_inexpressible_blows: usize,
     pub unmapped_terrain_flags: BTreeMap<String, usize>,
@@ -312,6 +314,7 @@ fn monster_json(
     blow: &LegacyBlow,
     damage_type: &str,
     melee_routine: Option<serde_json::Value>,
+    monster_casting: Option<serde_json::Value>,
 ) -> serde_json::Value {
     let (hp_dice, hp_sides) = entry.hp_dice.unwrap_or((1, 1));
     let max_hp = ((hp_dice * (hp_sides + 1)) / 2).max(1);
@@ -339,6 +342,9 @@ fn monster_json(
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
     }
+    if let Some(casting) = monster_casting {
+        value["monsterCasting"] = casting;
+    }
     value
 }
 
@@ -346,6 +352,96 @@ pub struct ContentImportOutcome {
     pub report: ContentImportReport,
     pub terrain_files: Vec<(String, serde_json::Value)>,
     pub actor_files: Vec<(String, serde_json::Value)>,
+    pub ability_files: Vec<(String, serde_json::Value)>,
+    pub resource_files: Vec<(String, serde_json::Value)>,
+}
+
+const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
+
+fn status_ability(id: &str, status: &str, self_target: bool) -> serde_json::Value {
+    let target = if self_target {
+        serde_json::json!({ "modes": ["self"], "range": 0, "requiresLineOfEffect": false })
+    } else {
+        serde_json::json!({ "modes": ["position", "entity"], "range": 6, "requiresLineOfEffect": true })
+    };
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.{id}"),
+        "nameKey": format!("ability-legacy-{id}-name"),
+        "descriptionKey": format!("ability-legacy-{id}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": target,
+        "effect": {
+            "type": "apply-status",
+            "statusKindId": format!("rfb.status.{status}"),
+            "intensity": 1,
+            "durationTicks": 25,
+            "stacking": "extend",
+        },
+        "tags": ["legacy-import", "status"],
+    })
+}
+
+fn heal_ability(amount: u32) -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.ability.heal-{amount}"),
+        "nameKey": format!("ability-legacy-heal-{amount}-name"),
+        "descriptionKey": format!("ability-legacy-heal-{amount}-description"),
+        "minimumLevel": 1,
+        "resourceId": LEGACY_RESOURCE_ID,
+        "resourceCost": 1,
+        "baseFailurePercent": 20,
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effect": { "type": "heal", "amount": amount },
+        "tags": ["legacy-import", "heal"],
+    })
+}
+
+/// Maps one legacy spell token to a generated ability id, registering the
+/// shared ability definition on first use.
+fn map_spell_token(
+    token: &str,
+    level: u16,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    match token {
+        "SCARE" => {
+            let id = "rfb-legacy.ability.scare".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| status_ability("scare", "fear", false));
+            Some(id)
+        }
+        "SLOW" => {
+            let id = "rfb-legacy.ability.slow".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| status_ability("slow", "slow", false));
+            Some(id)
+        }
+        "HASTE" => {
+            let id = "rfb-legacy.ability.haste-self".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| status_ability("haste-self", "haste", true));
+            Some(id)
+        }
+        "HEAL" => {
+            let amount = u32::from(level).saturating_mul(3).clamp(5, 300);
+            let id = format!("rfb-legacy.ability.heal-{amount}");
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| heal_ability(amount));
+            Some(id)
+        }
+        _ => None,
+    }
 }
 
 pub fn convert_content(
@@ -390,6 +486,7 @@ pub fn convert_content(
 
     let mut actor_files = Vec::new();
     let mut seen_actor_ids = BTreeMap::new();
+    let mut shared_abilities: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     report.monsters_total = monsters.len();
     for entry in monsters {
         if entry.name.is_empty() || entry.name == "player" || entry.glyph.is_none() {
@@ -461,12 +558,43 @@ pub fn convert_content(
                 .collect();
             serde_json::json!({ "blows": blows })
         });
-        if !entry.spells.is_empty() {
-            report.monsters_with_unmapped_spells += 1;
-            for spell in &entry.spells {
+        let mut frequency_percent: Option<u32> = None;
+        let mut mapped_ability_ids: Vec<String> = Vec::new();
+        let mut has_unmapped_spell = false;
+        for spell in &entry.spells {
+            if let Some(divisor) = spell.strip_prefix("1_IN_") {
+                if let Ok(divisor) = divisor.parse::<u32>() {
+                    frequency_percent = Some((100 / divisor.max(1)).clamp(1, 100));
+                }
+                continue;
+            }
+            if let Some(ability_id) = map_spell_token(
+                spell,
+                entry.level.unwrap_or(1).max(1),
+                &mut shared_abilities,
+            ) {
+                if !mapped_ability_ids.contains(&ability_id) {
+                    mapped_ability_ids.push(ability_id);
+                }
+                *report.spells_mapped.entry(spell.clone()).or_default() += 1;
+            } else {
+                has_unmapped_spell = true;
                 *report.unmapped_spells.entry(spell.clone()).or_default() += 1;
             }
         }
+        if has_unmapped_spell {
+            report.monsters_with_unmapped_spells += 1;
+        }
+        let monster_casting = (!mapped_ability_ids.is_empty()).then(|| {
+            report.monsters_with_casting += 1;
+            serde_json::json!({
+                "frequencyPercent": frequency_percent.unwrap_or(10),
+                "abilities": mapped_ability_ids
+                    .iter()
+                    .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
+                    .collect::<Vec<_>>(),
+            })
+        });
         for flag in &entry.flags {
             *report
                 .unmapped_monster_flags
@@ -493,15 +621,53 @@ pub fn convert_content(
         }
         actor_files.push((
             format!("{id}.json"),
-            monster_json(entry, &id, blow, damage_type, melee_routine),
+            monster_json(
+                entry,
+                &id,
+                blow,
+                damage_type,
+                melee_routine,
+                monster_casting,
+            ),
         ));
         report.monsters_imported += 1;
     }
+
+    let ability_files = shared_abilities
+        .into_iter()
+        .map(|(id, value)| {
+            let name = id
+                .rsplit('.')
+                .next()
+                .expect("generated ability id has a tail")
+                .to_owned();
+            (format!("{name}.json"), value)
+        })
+        .collect::<Vec<_>>();
+    let resource_files = if ability_files.is_empty() {
+        Vec::new()
+    } else {
+        vec![(
+            "essence.json".to_owned(),
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/resource.schema.json"),
+                "formatVersion": 1,
+                "id": LEGACY_RESOURCE_ID,
+                "nameKey": "resource-legacy-essence-name",
+                "descriptionKey": "resource-legacy-essence-description",
+                "waitRecoveryAmount": 0,
+                "restRecoveryAmount": 0,
+                "tags": ["legacy-import"],
+            }),
+        )]
+    };
 
     ContentImportOutcome {
         report,
         terrain_files,
         actor_files,
+        ability_files,
+        resource_files,
     }
 }
 
@@ -522,6 +688,24 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let actor_dir = output.join("actors");
     fs::create_dir_all(&terrain_dir)?;
     fs::create_dir_all(&actor_dir)?;
+    for (directory, files) in [
+        ("abilities", &outcome.ability_files),
+        ("resources", &outcome.resource_files),
+    ] {
+        if files.is_empty() {
+            continue;
+        }
+        let target = output.join(directory);
+        fs::create_dir_all(&target)?;
+        for (name, value) in files {
+            fs::write(
+                target.join(name),
+                serde_json::to_string_pretty(value)?
+                    + "
+",
+            )?;
+        }
+    }
     for (name, value) in &outcome.terrain_files {
         fs::write(
             terrain_dir.join(name),
@@ -542,7 +726,11 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         "titleKey": "pack-rfb-legacy-title",
         "dependencies": [],
         "loadAfter": [],
-        "contentRoots": ["actors", "terrain"],
+        "contentRoots": if outcome.ability_files.is_empty() {
+            serde_json::json!(["actors", "terrain"])
+        } else {
+            serde_json::json!(["abilities", "actors", "resources", "terrain"])
+        },
     });
     fs::write(
         output.join("pack.json"),
@@ -582,7 +770,7 @@ W:4:2:30:9:20:64\n\
 B:TOUCH:FIRE(2d4)\n\
 B:CRUSH:HURT(1d6):STUN(1d3)\n\
 F:NEVER_MOVE | RES_FIRE\n\
-S:1_IN_5 | BR_FIRE\n\
+S:1_IN_5 | SCARE | BR_FIRE\n\
 N:2:test hollow shade\n\
 G:G:w\n\
 I:110:2d3:8:5:10:10\n\
@@ -604,7 +792,7 @@ B:GAZE:TERRIFY\n";
         assert_eq!(monsters[0].armor_class, Some(14));
         assert_eq!(monsters[0].level, Some(4));
         assert_eq!(monsters[0].blows.len(), 2);
-        assert_eq!(monsters[0].spells.len(), 2);
+        assert_eq!(monsters[0].spells.len(), 3);
 
         let outcome = convert_content(&terrain, &monsters);
         assert_eq!(outcome.report.terrain_imported, 2);
@@ -614,7 +802,11 @@ B:GAZE:TERRIFY\n";
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 1);
         assert_eq!(outcome.report.monsters_with_melee_routine, 1);
         assert_eq!(outcome.report.monsters_with_inexpressible_blows, 0);
-        assert_eq!(outcome.report.unmapped_spells.len(), 2);
+        assert_eq!(outcome.report.unmapped_spells.len(), 1);
+        assert_eq!(outcome.report.spells_mapped["SCARE"], 1);
+        assert_eq!(outcome.report.monsters_with_casting, 1);
+        assert_eq!(outcome.ability_files.len(), 1);
+        assert_eq!(outcome.resource_files.len(), 1);
         assert_eq!(
             outcome.report.skip_reasons["monster-without-expressible-melee"],
             1
@@ -637,6 +829,11 @@ B:GAZE:TERRIFY\n";
         assert_eq!(blows[1]["damageType"], "physical");
         assert_eq!(blows[1]["damageDice"], 1);
         assert_eq!(blows[1]["damageSides"], 6);
+        assert_eq!(lantern["monsterCasting"]["frequencyPercent"], 20);
+        assert_eq!(
+            lantern["monsterCasting"]["abilities"][0]["abilityId"],
+            "rfb-legacy.ability.scare"
+        );
 
         let (_, arch) = &outcome.terrain_files[0];
         assert_eq!(arch["walkable"], true);
