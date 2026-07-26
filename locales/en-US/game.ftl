@@ -106,6 +106,7 @@ message-resource-recovered = You recover { $amount } { $resource }.
 message-resource-gained = Your { $resource } rises by { $amount }.
 message-monster-blinked = { $source } blinks to a nearby spot.
 message-monster-teleported = { $source } tears open a rift and vanishes into the distance.
+message-monster-banished-target = { $source } banishes { $target } far away!
 message-monster-dragged-target = { $source } drags { $target } to its side!
 message-rest-completed = You rest for { $turns } turns ({ $reason }).
 message-rest-interrupted = Your rest stops after { $turns } turns ({ $reason }).

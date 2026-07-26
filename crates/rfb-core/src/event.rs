@@ -160,6 +160,11 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         resolution: MonsterDisplacementResolutionDto,
     },
+    MonsterBanishedTarget {
+        source_kind_id: String,
+        target_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
     RestCompleted {
         resolution: RestResolutionDto,
     },
@@ -830,6 +835,16 @@ impl DomainEvent {
             } => dto_with_outcome(
                 "monster.dragged-target",
                 "monster-dragged-target",
+                [("source", source_kind_id), ("target", target_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::MonsterBanishedTarget {
+                source_kind_id,
+                target_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "monster.banished-target",
+                "monster-banished-target",
                 [("source", source_kind_id), ("target", target_kind_id)],
                 GameEventOutcomeDto::MonsterDisplacement { resolution },
             ),

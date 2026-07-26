@@ -1768,6 +1768,11 @@ function formatEvent(event: GameEventDto): string {
         source: contentName(event.args.source),
         target: contentName(event.args.target),
       });
+    case "monster-banished-target":
+      return localization.format("message-monster-banished-target", {
+        source: contentName(event.args.source),
+        target: contentName(event.args.target),
+      });
     case "rest-completed":
     case "rest-interrupted":
       return localization.format(

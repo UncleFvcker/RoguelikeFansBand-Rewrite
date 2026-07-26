@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.veil-warden",
+  "role": "monster",
+  "nameKey": "actor-demo-veil-warden-name",
+  "descriptionKey": "actor-demo-veil-warden-description",
+  "glyph": "u",
+  "level": 4,
+  "experienceValue": 30,
+  "maxHp": 10,
+  "speed": 100,
+  "attack": 2,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "monsterCasting": {
+    "frequencyPercent": 50,
+    "abilities": [
+      {
+        "abilityId": "demo.ability.veil-banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "demo.ability.veil-drain",
+        "weight": 1
+      },
+      {
+        "abilityId": "demo.ability.veil-amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "demo.ability.veil-dispel",
+        "weight": 1
+      }
+    ]
+  },
+  "tags": [
+    "aberration"
+  ]
+}

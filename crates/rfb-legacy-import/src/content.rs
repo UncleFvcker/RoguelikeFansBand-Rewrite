@@ -385,6 +385,74 @@ fn map_mental_spell_token(
     Some(id)
 }
 
+/// The v99 misc pack: banishment, mana drain, amnesia and dispel map onto
+/// their dedicated small effect forms; DISPEL_MAGIC strips the haste echo
+/// (the only player buff status so far).
+fn map_misc_spell_token(
+    token: &str,
+    level: u16,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    fn misc_ability(suffix: &str, effect: serde_json::Value) -> serde_json::Value {
+        serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+            "formatVersion": 1,
+            "id": format!("rfb-legacy.ability.{suffix}"),
+            "nameKey": format!("ability-legacy-{suffix}-name"),
+            "descriptionKey": format!("ability-legacy-{suffix}-description"),
+            "minimumLevel": 1,
+            "resourceId": LEGACY_RESOURCE_ID,
+            "resourceCost": 1,
+            "baseFailurePercent": 20,
+            "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+            "effect": effect,
+            "tags": ["legacy-import", "misc"],
+        })
+    }
+    match token {
+        "TELE_OTHER" => {
+            let id = "rfb-legacy.ability.banish".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                misc_ability(
+                    "banish",
+                    serde_json::json!({"type": "teleport-away", "minimumDistance": 10}),
+                )
+            });
+            Some(id)
+        }
+        "DRAIN_MANA" => {
+            let amount = (1 + u32::from(level) / 2).clamp(1, 1_000_000);
+            let suffix = format!("drain-mana-{amount}");
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                misc_ability(
+                    &suffix,
+                    serde_json::json!({"type": "drain-resource", "amount": amount}),
+                )
+            });
+            Some(id)
+        }
+        "AMNESIA" => {
+            let id = "rfb-legacy.ability.amnesia".to_owned();
+            abilities
+                .entry(id.clone())
+                .or_insert_with(|| misc_ability("amnesia", serde_json::json!({"type": "amnesia"})));
+            Some(id)
+        }
+        "DISPEL_MAGIC" => {
+            let id = "rfb-legacy.ability.dispel".to_owned();
+            abilities.entry(id.clone()).or_insert_with(|| {
+                misc_ability(
+                    "dispel",
+                    serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.haste"}),
+                )
+            });
+            Some(id)
+        }
+        _ => None,
+    }
+}
+
 /// CAUSE curses gate on the player's saving throw instead of armour or
 /// resistances; HAND_DOOM (percent-of-current-HP) stays a gap.
 fn map_curse_spell_token(
@@ -780,6 +848,9 @@ fn map_spell_token(
         return Some(id);
     }
     if let Some(id) = map_curse_spell_token(token, abilities) {
+        return Some(id);
+    }
+    if let Some(id) = map_misc_spell_token(token, level, abilities) {
         return Some(id);
     }
     match token {
@@ -1888,6 +1959,53 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+    }
+
+    #[test]
+    fn misc_tokens_map_to_small_effect_forms() {
+        const WARDEN_R_INFO: &str = "N:8:test veil keeper
+G:u:v
+I:110:5d5:20:10:10:10
+W:20:2:20:9:10:40
+B:HIT:HURT(1d4)
+S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
+";
+        let monsters = parse_r_info(WARDEN_R_INFO);
+        let outcome = convert_content(&[], &monsters);
+        let (_, keeper) = &outcome.actor_files[0];
+        let ability_ids: Vec<&str> = keeper["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("casting should list abilities")
+            .iter()
+            .map(|entry| entry["abilityId"].as_str().expect("ability id"))
+            .collect();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.banish",
+                "rfb-legacy.ability.drain-mana-11",
+                "rfb-legacy.ability.amnesia",
+                "rfb-legacy.ability.dispel",
+            ]
+        );
+        // Room unlighting has no neutral state yet.
+        assert_eq!(outcome.report.unmapped_spells["DARKNESS"], 1);
+        let drain = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "drain-mana-11.json")
+            .map(|(_, value)| value)
+            .expect("drain ability should be generated");
+        assert_eq!(drain["effect"]["type"], "drain-resource");
+        assert_eq!(drain["effect"]["amount"], 11);
+        let banish = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "banish.json")
+            .map(|(_, value)| value)
+            .expect("banish ability should be generated");
+        assert_eq!(banish["effect"]["type"], "teleport-away");
+        assert_eq!(banish["effect"]["minimumDistance"], 10);
     }
 
     #[test]

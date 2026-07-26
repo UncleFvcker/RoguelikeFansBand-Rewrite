@@ -1,6 +1,6 @@
 # Contract v98：诅咒族（curse-damage）与首个法术豁免门
 
-状态：当前 active baseline。协议 1.98，内容包 1.89.0（content hash `086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34`）；save 容器 v1；state hash 沿用 Schema v40。active baseline 共 314 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v99](contract-v99-misc-effects.md)。协议 1.98，内容包 1.89.0（content hash `086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34`）；save 容器 v1；state hash 沿用 Schema v40。该 baseline 共 314 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

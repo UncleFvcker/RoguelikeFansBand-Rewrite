@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 90] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 91] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -184,9 +184,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 90] = [
     "01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4",
     "f1fba31216da594e34b36b23bdf4570b46a934c7360ad0d66e01f1284529a9f2",
     "bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b",
+    "086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34";
+    "b425bafec4d4108b9eab4fd323b7b592f1e65ffb4197d45bcb1bc59567b61eff";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -377,6 +378,11 @@ enum MonsterAbilityTargetPlan {
         trace: ProjectileTrace,
         destination: Position,
     },
+    BanishTarget {
+        target: MonsterHostileTarget,
+        trace: ProjectileTrace,
+        destinations: Vec<Position>,
+    },
 }
 
 fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHostileTarget> {
@@ -385,7 +391,8 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::Area { target, .. }
         | MonsterAbilityTargetPlan::Beam { target, .. }
         | MonsterAbilityTargetPlan::Cone { target, .. }
-        | MonsterAbilityTargetPlan::DragTarget { target, .. } => Some(target),
+        | MonsterAbilityTargetPlan::DragTarget { target, .. }
+        | MonsterAbilityTargetPlan::BanishTarget { target, .. } => Some(target),
         MonsterAbilityTargetPlan::SelfTarget
         | MonsterAbilityTargetPlan::Summon { .. }
         | MonsterAbilityTargetPlan::SummonCategory { .. }
@@ -5943,7 +5950,10 @@ impl Game {
             | AbilityEffectDefinition::TeleportTarget
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::SummonCategory { .. }
-            | AbilityEffectDefinition::CurseDamage { .. } => None,
+            | AbilityEffectDefinition::CurseDamage { .. }
+            | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::DrainResource { .. }
+            | AbilityEffectDefinition::Amnesia => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -7994,6 +8004,9 @@ impl Game {
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::BreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
+            | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::DrainResource { .. }
+            | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. }
@@ -8156,6 +8169,8 @@ impl Game {
             }
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
+            | AbilityEffectDefinition::DrainResource { .. }
+            | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. } => {
@@ -8163,6 +8178,60 @@ impl Game {
                     self.monster_projectile_trace(source_index, ability, &target, true, false)?;
                 (
                     MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
+                )
+            }
+            AbilityEffectDefinition::TeleportAway { minimum_distance } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                // The banished target lands away from the caster; candidates
+                // collect without RNG and the halved fallback mirrors
+                // teleport-self on cramped floors.
+                let banish_candidates = |minimum: u32| {
+                    let mut candidates = Vec::new();
+                    for y in 0..self.height {
+                        for x in 0..self.width {
+                            let position = Position {
+                                x: i32::from(x),
+                                y: i32::from(y),
+                            };
+                            if position == self.player.position
+                                || !self.is_walkable(position)
+                                || origin
+                                    .x
+                                    .abs_diff(position.x)
+                                    .max(origin.y.abs_diff(position.y))
+                                    < minimum
+                                || self
+                                    .entities
+                                    .iter()
+                                    .any(|entity| entity.hp > 0 && entity.position == position)
+                            {
+                                continue;
+                            }
+                            candidates.push(position);
+                        }
+                    }
+                    candidates
+                };
+                let minimum = u32::from(*minimum_distance);
+                let mut destinations = banish_candidates(minimum);
+                if destinations.is_empty() {
+                    destinations = banish_candidates(minimum.div_ceil(2));
+                }
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::BanishTarget {
+                        target,
+                        trace,
+                        destinations,
+                    },
                     vec![target_position],
                 )
             }
@@ -8484,6 +8553,13 @@ impl Game {
                 AbilityEffectDefinition::CurseDamage { .. } if hostile_target.is_some() => {
                     useful = true;
                 }
+                AbilityEffectDefinition::TeleportAway { .. }
+                | AbilityEffectDefinition::DrainResource { .. }
+                | AbilityEffectDefinition::Amnesia
+                    if hostile_target.is_some() =>
+                {
+                    useful = true;
+                }
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
                 AbilityEffectDefinition::TeleportTarget if hostile_target.is_some() => {
@@ -8622,6 +8698,12 @@ impl Game {
                     Some(target.position()),
                     vec![*destination],
                 ),
+                MonsterAbilityTargetPlan::BanishTarget { target, .. } => (
+                    Some(target.entity_id().to_owned()),
+                    Some(target.kind_id().to_owned()),
+                    Some(target.position()),
+                    Vec::new(),
+                ),
             };
         MonsterAbilityCandidateResolutionDto {
             ability_id: plan.ability.id.clone(),
@@ -8676,6 +8758,7 @@ impl Game {
                     &plan.ability,
                     target,
                     events,
+                    changed,
                 );
                 changed.insert(target.position());
                 let targets = vec![MonsterAbilityTargetResolutionDto {
@@ -9114,6 +9197,71 @@ impl Game {
                     trace: None,
                 }
             }
+            MonsterAbilityTargetPlan::BanishTarget {
+                target,
+                trace,
+                destinations,
+            } => {
+                // One bounded draw picks the landing cell from the
+                // plan-collected candidates, mirroring the escape family.
+                let choice = usize::try_from(
+                    self.rng
+                        .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
+                )
+                .expect("bounded draw fits usize");
+                let destination = destinations[choice];
+                match target {
+                    MonsterHostileTarget::Player { .. } => {
+                        let from = self.player.position;
+                        events.push(DomainEvent::MonsterBanishedTarget {
+                            source_kind_id: source_kind_id.to_owned(),
+                            target_kind_id: target.kind_id().to_owned(),
+                            resolution: MonsterDisplacementResolutionDto {
+                                actor_id: target.entity_id().to_owned(),
+                                from,
+                                to: destination,
+                            },
+                        });
+                        let relocation = self.relocate_player(destination, changed);
+                        events.extend(relocation);
+                    }
+                    MonsterHostileTarget::Summon { entity_id, .. } => {
+                        if let Some(banished_index) = self
+                            .entities
+                            .iter()
+                            .position(|entity| entity.id == *entity_id && entity.hp > 0)
+                        {
+                            let from = self.entities[banished_index].position;
+                            self.entities[banished_index].position = destination;
+                            changed.insert(from);
+                            changed.insert(destination);
+                            events.push(DomainEvent::MonsterBanishedTarget {
+                                source_kind_id: source_kind_id.to_owned(),
+                                target_kind_id: target.kind_id().to_owned(),
+                                resolution: MonsterDisplacementResolutionDto {
+                                    actor_id: entity_id.clone(),
+                                    from,
+                                    to: destination,
+                                },
+                            });
+                        }
+                    }
+                }
+                MonsterAbilityPlanResolution {
+                    target_entity_id: target.entity_id().to_owned(),
+                    target_kind_id: target.kind_id().to_owned(),
+                    affected_positions: vec![destination],
+                    summon: None,
+                    effects: Vec::new(),
+                    targets: vec![MonsterAbilityTargetResolutionDto {
+                        target_entity_id: target.entity_id().to_owned(),
+                        target_kind_id: target.kind_id().to_owned(),
+                        target_position: destination,
+                        effects: Vec::new(),
+                    }],
+                    trace: Some(trace.clone()),
+                }
+            }
             MonsterAbilityTargetPlan::DragTarget {
                 target,
                 trace,
@@ -9300,6 +9448,7 @@ impl Game {
         ability: &AbilityDefinition,
         target: &MonsterHostileTarget,
         events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
     ) -> Vec<AbilityEffectResolutionDto> {
         if target.is_player() {
             return self.resolve_monster_player_effects(
@@ -9307,6 +9456,7 @@ impl Game {
                 source_kind_id,
                 ability,
                 events,
+                changed,
             );
         }
         let effects = ability.effect.ordered_effects();
@@ -9392,6 +9542,15 @@ impl Game {
                         events,
                     )
                 }
+                AbilityEffectDefinition::DrainResource { .. }
+                | AbilityEffectDefinition::Amnesia => {
+                    // Summons carry no resource pools or map knowledge; both
+                    // effects fizzle against them (documented v99 boundary).
+                    AbilityEffectResolutionDto::Skipped {
+                        effect_index,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }
+                }
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -9430,6 +9589,7 @@ impl Game {
         source_kind_id: &str,
         ability: &AbilityDefinition,
         events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
     ) -> Vec<AbilityEffectResolutionDto> {
         let effects = ability.effect.ordered_effects();
         let mut resolutions = Vec::with_capacity(effects.len());
@@ -9536,6 +9696,126 @@ impl Game {
                             DamageType::Curse,
                             events,
                         )
+                    }
+                }
+                AbilityEffectDefinition::DrainResource { amount } => {
+                    // The casting-profile pool is drained when present; other
+                    // players lose their first non-empty pool in id order.
+                    let pool_id = self
+                        .casting_profile()
+                        .map(|profile| profile.resource_id.clone())
+                        .filter(|id| self.resources.contains_key(id))
+                        .or_else(|| {
+                            self.resources
+                                .iter()
+                                .find(|(_, pool)| pool.current > 0)
+                                .map(|(id, _)| id.clone())
+                        });
+                    let requested = *amount;
+                    let (resource_id, drained) = match pool_id {
+                        Some(id) => {
+                            let pool = self
+                                .resources
+                                .get_mut(&id)
+                                .expect("selected drain pool must remain available");
+                            let drained = pool.current.min(requested);
+                            pool.current -= drained;
+                            (id, drained)
+                        }
+                        None => (String::new(), 0),
+                    };
+                    // The caster feeds on the stolen power, capped at its
+                    // own maximum life.
+                    let mut caster_healed = 0_u32;
+                    if drained > 0
+                        && let Some(caster_index) = self
+                            .entities
+                            .iter()
+                            .position(|entity| entity.id == *source_entity_id)
+                    {
+                        let caster = &mut self.entities[caster_index];
+                        let missing = caster.max_hp.saturating_sub(caster.hp).max(0);
+                        let healed = i32::try_from(drained).unwrap_or(i32::MAX).min(missing);
+                        caster.hp += healed;
+                        caster_healed = u32::try_from(healed).unwrap_or(0);
+                        changed.insert(caster.position);
+                    }
+                    AbilityEffectResolutionDto::DrainResource {
+                        effect_index,
+                        resource_id,
+                        requested,
+                        drained,
+                        caster_healed,
+                    }
+                }
+                AbilityEffectDefinition::Amnesia => {
+                    // The saving throw gates the memory wipe exactly like the
+                    // curse family; success costs no further RNG.
+                    let ability_stat = self.player_derived_stats().saving_throw_skill;
+                    let caster_level = self
+                        .content
+                        .actor(source_kind_id)
+                        .map_or(1, |definition| definition.level);
+                    let mut difficulty_pipeline = DerivedStatsPipeline::new();
+                    difficulty_pipeline.add(
+                        StatKind::ActionDifficulty,
+                        StatLayer::Environment,
+                        source_kind_id,
+                        i32::try_from(caster_level).unwrap_or(i32::MAX),
+                    );
+                    let check = resolve_check(
+                        &mut self.rng,
+                        CheckContext {
+                            kind: CheckKind::SavingThrow,
+                            actor_id: self.player.id.clone(),
+                            target_id: Some(source_kind_id.to_owned()),
+                            ability: ability_stat,
+                            difficulty: difficulty_pipeline
+                                .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                        },
+                    );
+                    let succeeded = check.succeeded();
+                    let skill_id = self
+                        .content
+                        .skill_by_kind(SkillKind::SavingThrow)
+                        .expect("validated saving throw skill must remain available")
+                        .id
+                        .clone();
+                    events.push(DomainEvent::SavingThrowChecked {
+                        source_kind_id: source_kind_id.to_owned(),
+                        position: self.player.position,
+                        succeeded,
+                        resolution: check.to_dto(skill_id),
+                    });
+                    if succeeded {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Saved,
+                        }
+                    } else {
+                        // Only the current floor map memory fades; item
+                        // knowledge stays authoritative per the long-term
+                        // design constraints.
+                        let width = usize::from(self.width);
+                        let mut cleared_cells = 0_u32;
+                        for (index, explored) in self.explored.iter_mut().enumerate() {
+                            if *explored {
+                                *explored = false;
+                                cleared_cells += 1;
+                                changed.insert(Position {
+                                    x: i32::try_from(index % width)
+                                        .expect("explored x must fit i32"),
+                                    y: i32::try_from(index / width)
+                                        .expect("explored y must fit i32"),
+                                });
+                            }
+                        }
+                        cleared_cells += u32::try_from(self.revealed_terrain.len()).unwrap_or(0);
+                        self.revealed_terrain.clear();
+                        AbilityEffectResolutionDto::Amnesia {
+                            effect_index,
+                            cleared_cells,
+                        }
                     }
                 }
                 AbilityEffectDefinition::ApplyStatus {
@@ -15506,6 +15786,15 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
         },
+        AbilityEffectDefinition::TeleportAway { minimum_distance } => {
+            AbilityEffectSpecDto::TeleportAway {
+                minimum_distance: *minimum_distance,
+            }
+        }
+        AbilityEffectDefinition::DrainResource { amount } => {
+            AbilityEffectSpecDto::DrainResource { amount: *amount }
+        }
+        AbilityEffectDefinition::Amnesia => AbilityEffectSpecDto::Amnesia,
         AbilityEffectDefinition::Teleport => AbilityEffectSpecDto::Teleport,
         AbilityEffectDefinition::Summon {
             actor_kind_id,

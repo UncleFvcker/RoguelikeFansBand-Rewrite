@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v98、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v99、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -51,7 +51,16 @@
 | P40 | 抗性档导入 | 已由 contract-v96 完成 | actor 内容层 resistances 字段（类型→档位，normal 缺省）、11 处生成路径盖章（存档保持权威）、slag-crawler kin 召唤纵切、fixtures 309-310（盖章召唤体电弹减半 / 显式免疫覆盖）、310 个 exact fixtures。导入器 RES_/IM_/HURT_ → resistant/immune/vulnerable：1023 只怪 3842 条条目 |
 | P41 | 心灵族 | 已由 contract-v97 完成 | psi 伤害类型（协议 1.97）、MIND_BLAST/BRAIN_SMASH→Sequence[psi 伤害+骑手]（既有白名单零新机制）、PSY_SPEAR→首个导入 beam、mind-lasher 纵切、fixtures 311-312（同种子孪生：Normal 全额 vs psi 抗性减伤+缩时）、312 个 exact fixtures。导入 248 实例全数（casting 怪 831、映射累计 4097、未映射 1131） |
 | P42 | 诅咒族与豁免门 | 已由 contract-v98 完成 | curse-damage 效果（豁免成功全免零后续 RNG、失败全额无护甲无抗性；难度=施法者等级；复用 v72 saving-throw 检定与 SavingThrowChecked 事件）+ curse 伤害类型（协议 1.98）、hex-chanter 纵切、fixtures 313-314（同设置双种子：成功 skip saved / 对抗失败 raw=final 全额）、314 个 exact fixtures。导入 CAUSE_1-4 240 实例全数（casting 怪 832、映射累计 4337、未映射 891） |
-| P43 | 候选：小型效果杂项 或 k_info 物品导入 | 下一候选 | 杂项 TELE_OTHER 69（推走玩家）/DARKNESS 85（压光）/DRAIN_MANA 83（吸资源）/AMNESIA 64（清知识）/ANIM_DEAD 58/DISPEL 48（驱散增益）；k_info 545 条物品导入是导入管线 v2 的最大空白 |
+| P43 | 小型效果杂项包 | 已由 contract-v99 完成 | teleport-away（BanishTarget 专用计划、候选规划期收集+减半回退、复用 relocate 管线与 v91 位移事件族）、drain-resource（吸施法档资源池+施法者回血封顶）、amnesia（豁免门+清当前层 explored/revealedTerrain）、DISPEL→既有 remove-status haste；veil-warden 四式纵切、fixtures 315-318、318 个 exact fixtures。导入 264 实例全数（casting 怪 844、映射累计 4601、未映射 627） |
+| P44 | 候选：k_info 物品导入 或 法术缺口清尾 | 下一候选 | k_info 545 条基础物品（导入管线 v2 最大空白，开启装备/消耗品内容线）；法术清尾：S_ 特殊/字形 177（glyph 派生标签）、DARKNESS 85（需房间光照状态）、ANIM_DEAD 58（需尸体）、ANTI_MAGIC 47、TRAPS 44、SHRIEK 42（骚动警觉） |
+
+## contract-v99 明确遗留
+
+- amnesia 只清当前层地图记忆（原版 lose_all_info 忘全部楼层与物品感知；物品知识按长期约束保持存档级权威）；
+- drain-resource 吸取施法档资源池（原版限 SP 且有 mana_loss_save 二段豁免；吸取量固定非随机）；无池玩家吸取 0；
+- teleport-away 对玩家召唤物直接重定位（原版决斗家 30 级可对抗传送——反制机制未建立）；
+- DISPEL 仅驱散加速（玩家增益现役唯一）；增益族扩展后驱散列表同步扩展；
+- DARKNESS 85（房间光照状态未建立）、ANIM_DEAD 58（无尸体）、ANTI_MAGIC 47、TELE_LEVEL 25（跨层强制传送）、HAND_DOOM 30 继续留缺口。
 
 ## contract-v98 明确遗留
 

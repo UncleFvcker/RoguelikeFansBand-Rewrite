@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.98";
+pub const PROTOCOL_VERSION: &str = "1.99";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -452,6 +452,13 @@ pub enum AbilityEffectSpecDto {
         damage_sides: u16,
         damage_bonus: u16,
     },
+    TeleportAway {
+        minimum_distance: u8,
+    },
+    DrainResource {
+        amount: u32,
+    },
+    Amnesia,
     Teleport,
     Summon {
         actor_kind_id: String,
@@ -1038,6 +1045,17 @@ pub enum AbilityEffectResolutionDto {
     Skipped {
         effect_index: u8,
         reason: AbilityEffectSkipReasonDto,
+    },
+    DrainResource {
+        effect_index: u8,
+        resource_id: String,
+        requested: u32,
+        drained: u32,
+        caster_healed: u32,
+    },
+    Amnesia {
+        effect_index: u8,
+        cleared_cells: u32,
     },
 }
 
