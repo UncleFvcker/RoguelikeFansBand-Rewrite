@@ -453,8 +453,8 @@ pub fn convert_content(
                     serde_json::json!({
                         "methodId": format!("rfb-legacy.blow.{method}"),
                         "toHit": 20,
-                        "damageDice": dice.max(1).min(100),
-                        "damageSides": sides.max(1).min(10_000),
+                        "damageDice": dice.clamp(1, 100),
+                        "damageSides": sides.clamp(1, 10_000),
                         "damageType": blow_type,
                     })
                 })
