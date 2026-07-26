@@ -1583,6 +1583,13 @@
           "format": "int32",
           "default": 0
         },
+        "castingCooldownRemaining": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "defense": {
           "type": "integer",
           "format": "int32",
@@ -2425,6 +2432,38 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/MonsterAbilityDecisionResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "monster-ability-decision"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/MonsterAbilityCastResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "monster-ability-cast"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/AbilityCastResolutionDto"
             },
             "type": {
@@ -3056,6 +3095,190 @@
       },
       "required": [
         "blows"
+      ]
+    },
+    "MonsterAbilityCandidateResolutionDto": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "affectedPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "baseWeight": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "effectiveWeight": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "rejectionReason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonsterAbilityRejectionReasonDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "targetEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetKindId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetPosition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "abilityId",
+        "baseWeight",
+        "effectiveWeight"
+      ]
+    },
+    "MonsterAbilityCastResolutionDto": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "affectedPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AbilityEffectResolutionDto"
+          }
+        },
+        "sourceEntityId": {
+          "type": "string"
+        },
+        "sourceKindId": {
+          "type": "string"
+        },
+        "summon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AbilitySummonResolutionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "targetEntityId": {
+          "type": "string"
+        },
+        "targetKindId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceEntityId",
+        "sourceKindId",
+        "abilityId",
+        "targetEntityId",
+        "targetKindId",
+        "effects"
+      ]
+    },
+    "MonsterAbilityDecisionResolutionDto": {
+      "type": "object",
+      "properties": {
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MonsterAbilityCandidateResolutionDto"
+          }
+        },
+        "frequencyPercent": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "frequencyRoll": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "selectedAbilityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selectionRoll": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "sourceEntityId": {
+          "type": "string"
+        },
+        "sourceKindId": {
+          "type": "string"
+        },
+        "totalWeight": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "viableAbilityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "sourceEntityId",
+        "sourceKindId",
+        "frequencyPercent",
+        "frequencyRoll",
+        "viableAbilityIds",
+        "totalWeight"
+      ]
+    },
+    "MonsterAbilityRejectionReasonDto": {
+      "type": "string",
+      "enum": [
+        "invalid-target",
+        "out-of-range",
+        "blocked",
+        "friendly-risk",
+        "no-space",
+        "no-utility"
       ]
     },
     "PlayerBuildDto": {

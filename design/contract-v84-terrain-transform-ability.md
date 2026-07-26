@@ -1,6 +1,6 @@
 # Contract v84：首个地形改变能力
 
-状态：历史 baseline；当前 active baseline 已迁移到 [contract-v85](contract-v85-ordered-status-effects.md)。协议版本为 1.84，demo 内容包版本为 1.76.0，content hash 为 `6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4`。save 容器继续使用 v1；地形数组原本已经进入存档和 state hash，因此 state hash 继续使用 Schema v36。
+状态：历史 baseline。协议版本为 1.84，demo 内容包版本为 1.76.0，content hash 为 `6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4`。save 容器继续使用 v1；地形数组原本已经进入存档和 state hash，因此 state hash 继续使用 Schema v36。
 
 ## 1. 原版参照与纵切范围
 
@@ -86,4 +86,4 @@ resolution 返回中心、半径、规范化来源集合、目标 terrain ID 和
 
 ## 7. 下一步
 
-P25 已由 contract-v85 完成：状态添加/移除、有序 effect sequence、抗性缩时、部分无效、目标死亡跳过和逐效果 outcome 已固定。下一候选为首个怪物施法与能力选择 AI。
+P25 已由 contract-v85 完成状态添加/移除与有序 effect sequence；P26 已由 [contract-v86](contract-v86-monster-casting-ai.md) 完成首个怪物施法与能力选择 AI。

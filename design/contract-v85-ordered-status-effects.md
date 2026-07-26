@@ -1,6 +1,6 @@
 # Contract v85：状态能力与有序多效果
 
-状态：当前 active baseline。协议版本为 1.85，demo 内容包版本为 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`。save 容器继续使用 v1；actor statuses 原本已经进入 save 与 state hash，因此 state hash 继续使用 Schema v36。
+状态：历史 baseline；当前 active baseline 已迁移到 [contract-v87](contract-v87-monster-casting-utility.md)。协议版本为 1.85，demo 内容包版本为 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`。save 容器继续使用 v1；actor statuses 原本已经进入 save 与 state hash，因此 state hash 继续使用 Schema v36。
 
 ## 1. 原版参照
 
@@ -70,7 +70,7 @@ demo 新增：
 
 ## 6. contract-v85
 
-active baseline 位于 [`tests/fixtures/contract-v85/scenarios`](../tests/fixtures/contract-v85/scenarios)，共 242 个 exact fixtures、零 waiver。新增 232–242 覆盖：
+该历史 baseline 位于 [`tests/fixtures/contract-v85/scenarios`](../tests/fixtures/contract-v85/scenarios)，共 242 个 exact fixtures、零 waiver。新增 232–242 覆盖：
 
 - 自身状态添加后清除、移除不存在状态的部分无效；
 - 重复施法的 extend；
@@ -83,4 +83,4 @@ active baseline 位于 [`tests/fixtures/contract-v85/scenarios`](../tests/fixtur
 
 ## 7. 下一步
 
-P26 候选为首个怪物施法与能力选择 AI：复用同一 effect sequence、目标计划、抗性、事件和死亡管线，为怪物内容增加有限能力列表、冷却与确定性选择；多资源职业继续后置。
+P26 已由 [contract-v86](contract-v86-monster-casting-ai.md) 完成首个怪物施法与能力选择 AI；后续扩展自身增益、多目标法术、召唤、友军风险与状态驱动效用。

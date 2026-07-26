@@ -147,13 +147,17 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.81 不新增 save 字段：位移效果、position 目标、落点验证和传送事件来自当前内容与命令结果；资源当前值、已学集合与 `abilityProgress` 继续使用既有字段。载入 v80 及更早存档时，不自动学习 Echo Step、不补发 Echo Primer、不重建地图、不推进 RNG；显式 study-save 仍按当前书本和能力定义学习。传送起点/终点、落点检查与到达事件只存在于命令执行结果/回放中，权威终态仍由既有玩家位置、资源、物品、任务和 RNG 字段表达。save 容器仍为 v1，state hash 仍为 Schema v34。完整边界见 [Contract v81](contract-v81-teleport-ability.md)。
 
-协议 1.82 为 `ActorSaveDto` 增加可选 `summon`，其中 `SummonSaveDto` 保存 `ownerId`、`sourceAbilityId` 和 `remainingTurns`。缺少该字段的 v81 及更早 actor 按普通敌对 actor 载入，不生成召唤物、不改变已有实体、不推进 RNG。显式召唤状态必须以当前玩家为所有者，源能力必须存在且仍召唤同一 actor kind，剩余回合必须为正，并且不能与 pack identity 同时存在；任一不一致都会原子拒绝存档。召唤规格继续由锁定内容包提供，阵营由 summon identity 推导。save 容器仍为 v1，召唤身份和生命周期进入 state hash Schema v35。完整边界见 [Contract v82](contract-v82-summon-ability.md)。
+协议 1.82 为 `ActorSaveDto` 增加可选 `summon`，其中 `SummonSaveDto` 保存 `ownerId`、`sourceAbilityId` 和 `remainingTurns`。缺少该字段的 v81 及更早 actor 按普通敌对 actor 载入，不生成召唤物、不改变已有实体、不推进 RNG。v82 首版只生成玩家 owner；协议 1.87 允许保存有效规则 ID 的怪物 owner。源能力必须存在且仍召唤同一 actor kind，剩余回合必须为正，并且不能与 pack identity 同时存在；任一不一致都会原子拒绝存档。召唤规格继续由锁定内容包提供，阵营由 owner 是否为当前玩家推导。save 容器仍为 v1，召唤身份和生命周期进入 state hash Schema v35。完整边界见 [Contract v82](contract-v82-summon-ability.md) 和 [Contract v87](contract-v87-monster-casting-utility.md)。
 
 协议 1.83 不新增 save 字段：持久侦测复用既有 `revealedTerrain`，瞬时侦测结果只存在于本次事件。载入 v82 及更早存档时，不自动学习 Echo Pulse/Echo Sight、不补发能力书、不重建地图、不推进 RNG；已有秘密 terrain 发现知识原样保留。持久侦测命中的真实 terrain 会进入 `revealedTerrain`，瞬时命中不会进入存档。save 容器仍为 v1，新的知识/RNG 规则边界进入 state hash Schema v36。完整边界见 [Contract v83](contract-v83-detection-ability.md)。
 
 协议 1.84 仍不新增 save 字段：地形改变能力直接修改当前 `TerrainSaveDto.terrainIds`，离层时继续由既有 `FloorSaveDto.terrain` 保存；修改格会从 `revealedTerrain` 移除。载入 v83 及更早存档时，不自动学习 Echo Delving/Echo Rampart、不补发能力书、不改写 terrain、不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。terrain 原本已进入 state hash，故 save 容器保持 v1、state hash 保持 Schema v36。完整边界见 [Contract v84](contract-v84-terrain-transform-ability.md)。
 
 协议 1.85 仍不新增 save 字段：Echo Quickening/Echo Binding 产生的状态继续写入既有 `ActorSaveDto.statuses` / `StatusSaveDto`，包括稳定 kind ID、强度、剩余 tick 和能力来源 ID。逐效果索引、抗性缩放结果、`no-target` 与 `target-dead` 只属于命令事件，不重复保存。载入 v84 及更早存档时不自动学习新能力、不添加或移除状态、不补发书本且不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。actor statuses 原本已进入 state hash，故 save 容器保持 v1、state hash 保持 Schema v36。完整边界见 [Contract v85](contract-v85-ordered-status-effects.md)。
+
+协议 1.86 为 `ActorSaveDto` 新增默认零的 `castingCooldownRemaining`。成功怪物施法按内容频率计算并保存剩余自身行动冷却；当前层和 `FloorSaveDto` 离层 actor 使用同一字段。频率骰、可用候选、权重骰和逐效果结果属于命令事件，不重复保存。载入 v85 及更早存档时缺失字段迁移为零，不自动触发怪物施法、不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。save 容器保持 v1，新增权威冷却状态使 state hash 升至 Schema v37。完整边界见 [Contract v86](contract-v86-monster-casting-ai.md)。
+
+协议 1.87 不新增 save 字段。候选有效权重、主目标、footprint、拒绝原因和选择骰只属于命令事件；自疗/状态效用由已保存 actor HP/status 与当前内容纯计算。敌对召唤继续写入既有 `SummonSaveDto`，其中 owner 是怪物施法者实例 ID；owner 后续死亡不会使存档无效或提前删除召唤物。载入 v86 及更早存档时不补生成 Discordant Echo、不触发施法、不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。save 容器保持 v1，state hash 保持 Schema v37。完整边界见 [Contract v87](contract-v87-monster-casting-utility.md)。
 
 禁止保存：
 

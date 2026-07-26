@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.85 / contract-v85
+状态：长期规则实现路线；当前基线为协议 1.87 / contract-v87
 
 ## 1. 目的与边界
 
@@ -14,7 +14,7 @@
 - 当前内容包继续使用原创测试内容。若未来迁移旧内容，必须先单独完成许可证和内容审计，并通过显式内容转换流程；
 - 每个系统进入主线前都必须拥有固定种子、contract fixture、存档回环和回放检查点。
 
-当前阶段定位：截至 contract-v85，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑，阶段 F 已建立原版式经验、等级、HP 成长、六维属性、Race/Class/Personality、技能集合、出生构筑、四类可观察技能检定和胜利解锁上限的基础闭环；阶段 G 已完成 Mana、实体能力书、目标施法、等待/休息恢复、自身目标、治疗能力、RFB 五档熟练度、统计、冷却、学习容量、主动遗忘、RFB 式范围爆发、方向射线、固定八向锥形、定点/实体延长射线、精确短距位移、首个友方召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态能力和有序多效果的首轮纵切。项目尚未达到旧 RFB 的完整职业矩阵、法术广度、怪物生态、世界经济或内容规模。
+当前阶段定位：截至 contract-v87，重构已经形成确定性、可存档、可回放并可持续扩展的规则引擎，阶段 E 的地牢生成与探索闭环达到阶段性里程碑，阶段 F 已建立原版式角色成长、构筑和首轮技能检定，阶段 G 已完成玩家 Mana、能力书、目标施法及伤害/治疗/位移/召唤/侦测/地形/状态效果的首轮纵切；阶段 H 已建立怪物百分比施法、效用权重、自身/多格目标、footprint 风险、敌对召唤和自身行动冷却。项目尚未达到旧 RFB 的完整职业矩阵、法术广度、怪物生态、世界经济或内容规模。
 
 ## 2. 旧 RFB 的系统规模
 
@@ -140,7 +140,7 @@ flowchart TD
 | 法术领域 | 生命、自然、混沌、死亡、恶魔、圣战、末日等 19 个领域 | 已建立最小公共模型 | contract-v73 的 `AbilityDefinition`、`AbilityBookDefinition` 和实体书本建立稳定身份，contract-v74 证明伤害与治疗两类能力，contract-v75 加入熟练度/冷却；领域、职业能力和种族能力继续共用能力模型，尚未录入完整领域 |
 | 学习与熟练 | 等级、法力、失败率、学习数量、熟练度和遗忘 | 已建立首版 | contract-v73 已保存资源与已学能力，并按等级、属性和职业下限计算失败率；contract-v74 补齐恢复；contract-v75 固定 RFB 五档熟练度、成本/失败率修正、统计和冷却；contract-v76 固定学习容量/遗忘，contract-v82–v84 证明召唤、侦测和 terrain 转换复用同一资源/RNG 边界；随机学习和职业资源继续后置 |
 | 目标选择 | 自身、方向、格子、怪物、范围、投射、锥形等 | 部分建立 | contract-v16 已由核心声明方向/格子/实体 `TargetSpec` 并接收稳定 `TargetSelection`，contract-v74 增加 `self`，contract-v77–v81 固定范围/锥形/延长射线/位移，contract-v82–v84 复用 `self` 或 `position` 完成召唤、侦测和地形转换；仍缺鼠标预览和复杂多目标选择 |
-| 效果执行 | 伤害、治疗、传送、召唤、侦测、地形改变、附魔等 | 已建立基础版 | `EffectSpec` 已支持伤害、治疗和状态添加/移除并返回结构化结果；contract-v74 已让玩家能力实际复用治疗 outcome，contract-v81 固定 teleport，contract-v82 固定最小 summon，contract-v83 固定 FOV 内瞬时/持久 terrain detect，contract-v84 固定原版式 terrain 来源/目标转换，contract-v85 固定状态能力与同一 actor 上的有序多效果；多目标组合和附魔继续扩展同一组合器 |
+| 效果执行 | 伤害、治疗、传送、召唤、侦测、地形改变、附魔等 | 已建立基础版 | 玩家能力已覆盖治疗、位移、召唤、侦测、地形、状态和有序效果；contract-v86 让首个怪物 caster 复用直接伤害/状态子集。怪物多目标组合和附魔继续扩展同一组合器 |
 | 消耗品 | 食物、药水、卷轴 | 部分建立 | contract-v21 已让 `UseAction` 引用首个治疗 effect，并在同一事务结算堆叠消耗、回合成本、结构化结果与可观察鉴定；后续增加状态、目标和多 effect 组合 |
 | 魔杖/法杖/魔棒 | 设备难度、充能、SP、失败、词条和专精 | 未建立 | `DeviceState` 保存当前/最大能量和 effect；设备技能只进入统一失败率计算 |
 | 装备激活 | 神器和装备的主动能力及冷却 | 未建立 | 装备实例保存 cooldown；激活本身仍是 ability/effect，不创建第二套施法系统 |
@@ -164,8 +164,8 @@ flowchart TD
 | --- | --- | --- | --- |
 | 怪物定义 | HP、AC、速度、经验、抗性、blow、法术、掉落、标签 | 部分建立 | 扩展 `ActorDefinition` 为角色公共部分 + `MonsterDefinition`，避免玩家和怪物字段无限并集 |
 | 回合与移动 AI | 追踪、视线、气味/flow、保持距离、逃跑、守卫、射击 | 部分建立 | contract-v8 已有八方向 BFS 追踪、占位避让和确定性 tie-breaker；后续以 `AiIntent` 扩展视线、距离、逃跑和能力选择 |
-| 怪物施法 | 选择法术、频率、射线检查、召唤和智能学习 | 未建立 | 能力系统共用 effect；AI 仅从可用能力评分，不直接执行效果 |
-| 群体与生成 | 成群、护卫、朋友、召唤、繁殖、独特和守护者 | 已建立基础版 | contract-v47 的 Vault 固定群体、contract-v48 的同类巢穴、contract-v51 的动态 friends/escort 与 `cluster/ring` formation、contract-v56 的复合 pit、contract-v59 的持久 pack identity 与 `seek/surround/guard-leader`、contract-v82 的玩家友方召唤已建立；后续增加任意形状/散布、更复杂 AI、敌对召唤、繁殖、唯一性和种群上限 |
+| 怪物施法 | 选择法术、频率、射线检查、召唤和智能学习 | 基础纵切已建立 | contract-v86–v87 已建立频率、有效权重、直接/自身/多格目标、风险过滤、敌对召唤与逆频率冷却；后续加入玩家召唤物目标、抗性记忆、逃跑和协同评分 |
+| 群体与生成 | 成群、护卫、朋友、召唤、繁殖、独特和守护者 | 已建立基础版 | contract-v47 的 Vault 固定群体、contract-v48 的同类巢穴、contract-v51 的动态 friends/escort 与 `cluster/ring` formation、contract-v56 的复合 pit、contract-v59 的持久 pack identity 与 `seek/surround/guard-leader`、contract-v82 的玩家友方召唤和 contract-v87 的敌对召唤已建立；后续增加任意形状/散布、更复杂 AI、繁殖、唯一性和种群上限 |
 | 怪物物品与掉落 | 携带物、偷窃、掉落次数和主题 | 已建立基础版 | contract-v25 已建立真实携带实例、出生生成和统一死亡掉落事务；后续增加偷窃、缴械、怪物拾物、掉落次数和主题 |
 | 怪物回忆 | 观察攻击、抗性、掉落、击杀次数和死亡次数 | 未建立 | `MonsterKnowledge` 与怪物定义分开；观察事件逐项揭示 |
 | 宠物/友好 | 阵营、跟随、命令、维持费用、解散 | 未建立 | `FactionId` + `CompanionState` + 宠物命令；不使用多个 pet/friendly bool 组合 |
@@ -330,7 +330,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：让战斗、物品和法术共享规则原语。
 
-当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已足以承载普通战斗纵切；contract-v21 已复用 `EffectSpec::Heal` 完成首个消耗品，contract-v29/v31 复用 check 完成门与搜索，contract-v72 统一投影 device/saving-throw/stealth/perception 的完整检定结果，contract-v73 让首个法术复用目标、伤害、抗性、击杀、经验、任务和掉落管线，contract-v74 又让自身能力复用固定治疗 outcome，contract-v75 固定能力熟练度与冷却，contract-v76 固定学习容量与遗忘，contract-v77 固定 RFB 式范围爆发、墙体遮挡、距离衰减和逐 actor 伤害，contract-v78 固定方向射线、actor 穿透、墙体截断和共享伤害骰，contract-v79 固定八向锥形、逐层展开、墙体截断、横向衰减和稳定目标顺序，contract-v80 固定定点/实体延长射线、稳定整数斜率和延长后的目标/阻断边界，contract-v81 固定精确短距位移、落点验证与普通移动到达管线复用，contract-v82 固定友方召唤、空间前置、所有者和生命周期，contract-v83 固定 terrain 侦测、FOV 真值隔离和瞬时/持久知识，contract-v84 固定 terrain 来源/目标集合、占用/连接保护和原子提交，contract-v85 固定状态添加/移除、有序组合、抗性缩时与逐效果结果。当前 active baseline 已进入 contract-v85，阶段 B 后续只按实际规则入口补充新的状态、抗性和效果。
+当前进度：阶段 B 的基础伤害、抗性、效果与检定原语已承载普通战斗与玩家施法纵切；contract-v73–v85 逐步固定伤害、治疗、范围、射线、锥形、位移、召唤、侦测、地形、状态和有序效果。contract-v86–v87 让怪物 caster 复用直接/自身/多格伤害、状态、抗性、死亡、召唤和逐效果结果。当前 active baseline 已进入 contract-v87，后续只按实际规则入口补充新的状态、抗性和效果。
 
 首批内容：毒、流血、眩晕、恐惧、加速、减速；火、冷、电、酸、毒抗性；治疗、传送、侦测。
 
@@ -372,7 +372,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：从固定 20×20 地图升级为可连续游玩的地牢。
 
-当前进度：contract-v26–v35 已建立楼层生命周期、程序化房间、权威 terrain 交互、多深度连接和离开后清除的探索实例；contract-v46 已建立最终层与持久守护者；contract-v47–v50 已建立独立 Vault、楼层级 encounter/loot/theme 表、加权选择、第一类同类巢穴、actor/loot 总预算、两段深度主题、十层压力地牢以及 Vault 空间管线；contract-v51 建立动态 friends/escort formation 与群体预算；contract-v52 新增 terrain feature 表与额外预算；contract-v53–v55 建立 cavern、lake/river、maze/destroyed/streamer 分阶段地貌；contract-v56 建立原版式 pit；contract-v57 参考原版 `DF1_MAZE` 独立分支建立 maze-only；contract-v58 建立多楼梯、权威连接 ID、独立到达点和 shaft；contract-v59 建立持久 pack identity 与首版 pack AI；contract-v60 建立同层房间区域、局部 encounter/loot/theme 和持久边界；contract-v61 补齐暂停任务的地表管理、重接上限和确定性成员层重建；contract-v62 完成区域与全层 theme/Vault、动态群体、feature、pit、分阶段地貌、守护者和显式连接的组合；contract-v63 完成单根树状地牢、不同楼梯进入不同子层、多个程序化最终叶层和共享守护者镜像；contract-v64 完成 1–8 个 Vault 边界入口、模板/整层连通证明和确定性 BFS connector；contract-v65 完成实例身份、实例序号与实例级清理；contract-v66 完成加权动态楼梯候选、无放回分支解析、解析目标持久化和实例级探索树；contract-v67 完成入口守卫软门槛、可选硬进入条件和原子拒绝；contract-v68 完成 campaign 胜利、退休状态、确定性评分、存档迁移和结算 UI；contract-v69 完成 `reset-on-surface`/`persistent`/`turn-ttl` 生命周期、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理。普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复；contract-v84 已让玩家用内容驱动的掘进/造墙能力修改合法 terrain。角色成长与技能见 contract-v70–v72，玩家施法循环见 contract-v73–v85。当前内容包为 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`，active baseline 共 242 个 exact fixtures，save v1 / state hash Schema v36。详细边界见 [Contract v85](contract-v85-ordered-status-effects.md)。
+当前进度：contract-v26–v69 已建立从程序化楼层到树状多 dungeon、Vault、区域主题、群体、入口守卫、campaign 与实例生命周期的地牢纵切；普通 Echo/Resonance 仍回地表即清理，Archive 覆盖 retained/TTL。运行时地形破坏直接写入权威地图，不触发自动连通修复。角色成长与技能见 contract-v70–v72，玩家施法循环见 contract-v73–v85，怪物施法与效用见 contract-v86–v87。当前内容包为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`，active baseline 共 257 个 exact fixtures，save v1 / state hash Schema v37。详细边界见 [Contract v87](contract-v87-monster-casting-utility.md)。
 
 实现：
 
@@ -401,7 +401,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 目标：统一主动能力生态。
 
-当前进度：contract-v73 已完成独立 resource/ability/ability-book 内容根、实体书本、学习、Mana、等级/属性失败率、目标伤害施法、结构化事件、存档和 Web 面板；contract-v74 又完成等待/休息恢复、真实调度与危险中断、稳定自身目标、第二本能力书和固定治疗；contract-v75 完成 RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝和 `abilityProgress` 存档迁移；contract-v76 完成独立学习容量、容量投影、主动遗忘、重新学习进度保留和旧存档兼容；contract-v77 参考原版 `fire_ball()` 完成定点/方向范围爆发、墙体遮挡、距离衰减、逐 actor 伤害管线和空爆边界；contract-v78 参考原版 `fire_beam()` 完成方向射线、actor 穿透、墙体截断、近到远顺序、共享一次基础伤害骰和空射边界；contract-v79 完成固定八向锥形、逐层展开、墙体截断、横向衰减、稳定目标顺序和空锥边界；contract-v80 参考原版 `project_hook()`/`PROJECT_THRU` 完成定点/实体延长射线、稳定整数斜率、目标验证、延长后的墙体截断和共享伤害骰；contract-v81 完成 Echo Step 精确短距位移、落点前置验证、`ability.teleport` outcome 与普通移动到达处理复用；contract-v82 完成内容驱动 Echo Companion 召唤、稳定友方实体 ID、空间原子回退、owner/lifetime 存档与到期事件；contract-v83 完成 Echo Pulse/Echo Sight、category/radius、FOV 与隐藏投影筛选、瞬时/持久知识和 `ability.detect` outcome；contract-v84 参考原版 `GF_KILL_WALL`/`GF_MAKE_WALL` 完成 Echo Delving/Echo Rampart、来源/目标 terrain 集、占用/连接保护、稳定原子写入和 `ability.terrain-transform` outcome；contract-v85 参考原版同一施法顺序调用多个效果的方式，完成 Echo Quickening/Echo Binding、状态添加/移除、有序 effect、堆叠、抗性缩时、免疫和逐效果 outcome。下一步优先实现首个怪物施法与能力选择 AI；多资源职业继续后置。
+当前进度：contract-v73–v85 已完成玩家资源、能力书、恢复、熟练度、学习容量，以及伤害、治疗、范围、射线、锥形、位移、召唤、侦测、地形、状态和有序效果。contract-v86 参考原版先做频率检定、再过滤并选择法术的形式，完成 Echo Cantor、百分比频率、稳定权重、clean-shot、普通行动回退、效果管线复用和自身行动冷却；contract-v87 又加入 HP/状态/距离有效权重、自身/多格目标、保守友军风险和敌对召唤。下一步优先扩展怪物主目标、战术移动与有限抗性记忆；多资源职业继续后置。
 
 实现：
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v84 阶段性里程碑
+## 8. contract-v75–v87 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.85、内容包 1.77.0、contract-v85、save v1 和 state hash Schema v36；内容 hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`。active baseline 包含 242 个 exact fixtures，零 waiver。v73 在 v72 可观察技能层之上接入 resource/ability/ability-book 内容根、Class casting profile、实体书本学习、Mana、失败率、目标施法、结构化 ability-cast outcome 和旧存档资源迁移；v74 增加等待/休息恢复、确定性宏命令、危险中断、自身目标、第二本能力书、固定治疗与结构化 resource-recovery/rest outcome；v75 增加 RFB 五档熟练度、Mana 成本与 Expert/Master 失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝和能力进度存档迁移；v76 增加学习容量/等级与属性修正、容量投影、主动遗忘、重新学习进度保留和旧存档兼容；v77 增加 RFB `fire_ball()` 式定点/方向停止、墙体遮挡、整数距离衰减、稳定爆发 footprint、逐 actor 伤害管线、`ability.area-damage` outcome、空爆与无效目标 RNG 边界；v78 增加 RFB `fire_beam()` 式方向射线、actor 穿透、墙体截断、近到远稳定顺序、共享一次基础伤害骰、`ability.beam-damage` outcome 和空射/无效目标 RNG 边界；v79 增加固定八向锥形、逐层展开、墙体截断、横向整数衰减、稳定 `ability.cone-damage` outcome、空锥与无效目标 RNG 边界；v80 增加 `project_hook()`/`PROJECT_THRU` 式定点/实体延长射线、稳定整数斜率、目标验证、延长后的墙体截断、共享伤害骰和 `ability.beam-damage` 既有 outcome 复用；v81 增加内容驱动的 `teleport`、position 落点验证、零资源/零 RNG 前置拒绝、精确移动、`ability.teleport` outcome 和普通移动到达管线复用；v82 增加内容驱动 `summon`、Monster actor 校验、稳定空地落位、玩家阵营/所有者、生命周期、空间不足原子拒绝、`ability.summon`/`summon.expired` 事件和召唤 save round-trip；v83 增加内容驱动 `detect`、category/radius、FOV 与隐藏投影过滤、稳定顺序、瞬时/持久知识、空结果和 `ability.detect` outcome；v84 增加内容驱动 `transform-terrain`、来源/目标 terrain 集、FOV/line-of-effect、占用/连接/边界保护、稳定原子提交、空结果和 `ability.terrain-transform` outcome；v85 增加状态添加/移除、2–8 个同目标 actor 有序效果、堆叠、抗性缩时、免疫、跳过语义和 `ability.effects` outcome。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.87、内容包 1.79.0、contract-v87、save v1 和 state hash Schema v37；内容 hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`。active baseline 包含 257 个 exact fixtures，零 waiver。v73–v85 已建立最小玩家施法循环及伤害、治疗、范围、射线、锥形、位移、召唤、侦测、地形、状态和有序效果；v86 在同一效果管线上增加 Monster 百分比施法频率、声明顺序权重、射程/墙体/友军 clean-shot 过滤、频率失败回退和按自身行动计数的逆频率冷却；v87 增加 HP/状态/距离有效权重、自身/多格目标、保守 footprint 风险和敌对召唤。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、首轮技能消费和可恢复的最小玩家施法循环已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 47 种 terrain、13 种 actor、8 种 item、1 种 resource、14 个 ability、2 本 ability book、10 个 skill、11 个 skill set、3 个 Race、5 个 Class、3 个 Personality、5 个 build、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版 1396 种怪物、545 种基础物品、392 件固定神器、44 座地牢、92 个任务和 19 个法术领域的内容规模。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、最小玩家施法循环和怪物 caster 纵切已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 47 种 terrain、15 种 actor、8 种 item、1 种 resource、15 个 ability、2 本 ability book、10 个 skill、11 个 skill set、3 个 Race、5 个 Class、3 个 Personality、5 个 build、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -473,10 +473,10 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 | 状态、抗性与基础战斗 | 基础纵切已建立 | 已覆盖近战、多 blow、射击、投掷和代表性状态/元素；仍缺暴击、品牌、克制、吸血、反击、姿态和骑乘等广度 |
 | 物品、装备与知识 | 基础闭环已建立 | 已覆盖背包、地面堆、装备、affix、质量、鉴别、携带物和掉落；仍缺完整神器、诅咒、激活、随机神器和锻造 |
 | 地图、地牢与探索 | 阶段 E 里程碑完成 | 已覆盖原版式房间外地貌、Vault、pit、maze-only、多区域、多楼梯、树状分支、共享守护者镜像和可配置实例生命周期 |
-| 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围和守卫；仍缺远程决策、施法、召唤、逃跑、繁殖、unique 生态、智能学习和回忆 |
+| 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围、守卫、施法效用、多格法术和敌对召唤；仍缺玩家召唤物目标、保持距离/逃跑、繁殖、unique 生态、智能学习和回忆 |
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和职业资源 |
-| 法术、能力与设备 | 可恢复的玩家施法纵切已建立 | 已有 Mana、实体能力书、学习容量、主动遗忘、熟练度、冷却、等级/属性失败率、目标伤害、自身治疗、精确短距位移、友方召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态能力、有序多效果、等待/休息恢复、Web 面板和存档迁移；仍缺随机学习、首次奖励、多资源、多领域和怪物施法 |
+| 法术、能力与设备 | 玩家/怪物基础施法纵切已建立 | 已有 Mana、实体能力书、学习容量、主动遗忘、熟练度、冷却、等级/属性失败率、目标伤害、自身治疗、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态能力、有序多效果、怪物效用选择、等待/休息恢复、Web 面板和存档迁移；仍缺随机学习、首次奖励、多资源、多领域和完整怪物法术表 |
 | 荒野、城镇与经济 | 未建立 | 多城镇旅行、商店、家、建筑服务、交易、声望和长期经济循环尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
@@ -494,19 +494,20 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 - 首个侦测能力已使用内容驱动 category/radius、玩家 FOV 与秘密 terrain 真值隔离；瞬时结果只进入事件，持久结果进入 `revealedTerrain`/save/state hash，空结果与前置拒绝保持明确 RNG 边界。
 - 首个地形改变能力已参考 `GF_KILL_WALL`/`GF_MAKE_WALL` 使用内容驱动来源/目标 terrain 集；候选按 FOV、line of effect、占用格、连接/边界过滤后稳定原子提交，直接进入 `changedCells` 和既有楼层 terrain 存档，不做自动连通修复。
 - 首个状态能力与有序组合已参考原版同一施法按顺序调用多个效果的形式；整次施法只支付一次资源和失败率，逐效果结果明确堆叠、抗性缩时、免疫、部分无效、`no-target` 与 `target-dead`，并复用既有 actor status 存档、tick 与 state hash。
+- 首个怪物 caster 已参考原版“频率检定后过滤并选择法术”的行动形式；内容声明百分比频率与稳定权重，核心处理 clean-shot、普通行动回退、效果复用和 `ceil(100 / frequencyPercent)` 自身行动冷却。
+- 怪物施法效用已参考原版 wounded/direct/indirect 过滤层，把 HP、状态、距离和 footprint 转为无 RNG 有效权重；自身法术、范围/射线/锥形和敌对召唤复用既有效果、存档与回放边界。
 - 等待恢复与休息宏命令复用同一能量调度器；可见敌人、受伤与死亡按固定顺序中断，自身治疗复用既有 heal outcome。
 
 ### 8.3 下一执行里程碑
 
-下一执行里程碑建议为 P26“首个怪物施法与能力选择 AI”：
+下一执行里程碑建议为 P28“怪物目标选择与施法记忆”：
 
-1. 为怪物内容声明可用能力集合、施法频率和必要资源/冷却入口，首版优先复用无需玩家专属成长数据的现有伤害与状态能力；
-2. 复用玩家能力的目标验证、line of effect、抗性、状态、击杀、召唤和结构化逐效果管线，不另建第二套法术执行器；
-3. 参考原版怪物法术选择，把可用性筛选、目标模式、距离/视野、友军风险和效用评分分层，并以稳定内容顺序解决同分；
-4. 固定怪物施法与移动/近战的行动选择、资源支付、失败率、伤害骰及跳过效果 RNG 边界；
-5. 让怪物能力身份、冷却/资源（若首版启用）、AI 决策结果进入 save、state hash、replay、contract fixtures 和 Web 事件展示。
+1. 把玩家阵营召唤物纳入怪物合法敌对目标，并以稳定距离/威胁顺序选择玩家或召唤物；
+2. 把 P27 的保守 footprint 拒绝扩展为敌我数量与伤害价值评分，仍避免未声明的友军误伤；
+3. 增加保持距离、低 HP 逃跑与无安全施法位置时的普通行动回退；
+4. 为 smart caster 建立只从已观察结果更新的有限抗性记忆，并固定 save/hash、RNG 与知识泄漏边界。
 
-阶段 H 由此开始进入怪物施法；多资源职业继续等待首个怪物施法纵切稳定。地牢系统继续只修复阻塞角色/法术验证的缺陷。
+阶段 H 已由 P26–P27 建立怪物施法和效用层；多资源职业继续等待 P28 的主目标与记忆边界稳定。地牢系统继续只修复阻塞角色/法术验证的缺陷。
 
 ## 9. 内容迁移策略
 

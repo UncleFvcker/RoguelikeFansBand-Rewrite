@@ -17,6 +17,7 @@ pub(crate) struct Actor {
     pub(crate) speed: u16,
     pub(crate) energy_need: i32,
     pub(crate) alerted: bool,
+    pub(crate) casting_cooldown_remaining: u16,
     pub(crate) statuses: Vec<StatusInstance>,
     pub(crate) resistances: ResistanceProfile,
     pub(crate) pack: Option<MonsterPackIdentity>,

@@ -1602,6 +1602,41 @@ function formatEvent(event: GameEventDto): string {
         ability: contentName(event.args.target),
         count: event.args.count ?? "0",
       });
+    case "monster-ability-decision": {
+      const resolution =
+        event.outcome?.type === "monster-ability-decision"
+          ? event.outcome.resolution
+          : undefined;
+      const selectedAbilityId = resolution?.selectedAbilityId;
+      return localization.format(
+        selectedAbilityId
+          ? "message-monster-ability-decision-cast"
+          : "message-monster-ability-decision-fallback",
+        {
+          source: contentName(event.args.source),
+          ability: selectedAbilityId ? contentName(selectedAbilityId) : "",
+          roll: resolution?.frequencyRoll ?? event.args.roll ?? "?",
+          frequency: resolution?.frequencyPercent ?? event.args.frequency ?? "?",
+        },
+      );
+    }
+    case "monster-ability-cast": {
+      const resolution =
+        event.outcome?.type === "monster-ability-cast" ? event.outcome.resolution : undefined;
+      if (resolution?.summon) {
+        return localization.format("message-monster-ability-summon", {
+          source: contentName(event.args.source),
+          ability: contentName(event.args.target),
+          actor: contentName(resolution.summon.actorKindId),
+          count: resolution.summon.entityIds.length,
+        });
+      }
+      return localization.format("message-monster-ability-cast", {
+        source: contentName(event.args.source),
+        ability: contentName(event.args.target),
+        count: event.args.count ?? "0",
+      });
+    }
     case "summon-expired":
       return localization.format("message-summon-expired", {
         actor: contentName(event.args.actor),
@@ -2081,6 +2116,9 @@ function contentName(id: string | undefined): string {
   }
   if (id === "demo.actor.echo-hound") {
     return localization.format("actor-demo-echo-hound-name");
+  }
+  if (id === "demo.actor.echo-cantor") {
+    return localization.format("actor-demo-echo-cantor-name");
   }
   if (id === "demo.terrain.floor") {
     return localization.format("terrain-demo-floor-name");

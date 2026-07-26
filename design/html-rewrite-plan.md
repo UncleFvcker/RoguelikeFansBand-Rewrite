@@ -77,6 +77,8 @@
 - [Contract v83：首个侦测能力](contract-v83-detection-ability.md)
 - [Contract v84：首个地形改变能力](contract-v84-terrain-transform-ability.md)
 - [Contract v85：状态能力与有序多效果](contract-v85-ordered-status-effects.md)
+- [Contract v86：首个怪物施法与能力选择 AI](contract-v86-monster-casting-ai.md)
+- [Contract v87：怪物施法效用与目标扩展](contract-v87-monster-casting-utility.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -663,13 +665,15 @@ interface SaveGame {
 - 协议 1.82 和 contract-v82 已建立；内容包 1.74.0 新增 Echo Companion summon，声明 Monster actor、数量/半径/生命周期，按距离/坐标稳定选择空地并生成带 owner/source 的 player faction 实例；空间不足在 Mana/RNG 前原子拒绝，失败率失败仍支付资源但不生成 actor，召唤物按玩家回合到期并发出移除事件。Web 能力行显示召唤规格，实体 DTO/save 暴露阵营与召唤身份；content hash 为 `aab3548090030a1d2d46496581fb41a9f2892213186aeb2236a7a79065fc069f`，active baseline 共 213 个 exact fixtures，state hash 升至 Schema v35。
 - 协议 1.83 和 contract-v83 已建立；内容包 1.75.0 新增 Echo Pulse/Echo Sight detect，声明 category、半径和瞬时/持久知识。核心只扫描当前 FOV 内具有隐藏投影且 tag 匹配的 terrain，按距离/坐标稳定排序；瞬时结果只进入事件，持久结果写入 `revealedTerrain` 并通过 changed cells 更新地图。Web 能力行显示侦测规格并格式化 `ability.detect` 事件；content hash 为 `8ac0aee6fe54abb2c97bbed3eedaaa510d32393126bd08f89d046d515a66213b`，active baseline 共 221 个 exact fixtures，state hash 升至 Schema v36。
 - 协议 1.84 和 contract-v84 已建立；内容包 1.76.0 新增 Echo Delving/Echo Rampart `transform-terrain`，声明规范化来源 terrain 集、目标 terrain 和半径。核心只处理 position/FOV/line-of-effect 内合法来源，跳过玩家、actor、地面物品、连接/入口标签和地图边界，按距离/坐标稳定预收集并在成功后一次提交；空结果、非法目标、资源不足和失败率边界均已固定。Web 能力行显示转换规格并格式化 `ability.terrain-transform` 事件；content hash 为 `6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4`，该历史 baseline 共 231 个 exact fixtures，save v1/state hash Schema v36 保持不变。
-- 协议 1.85 和 contract-v85 已建立；内容包 1.77.0 新增 Echo Quickening/Echo Binding，以及 `apply-status`、`remove-status` 和 2–8 个同目标 actor 有序 `sequence`。核心整次施法只支付一次资源并抽一次失败率，随后按声明顺序处理堆叠、抗性缩时、免疫、部分无效、`no-target` 和 `target-dead`；被跳过的伤害效果不抽骰。Web 能力行显示组合数量并格式化 `ability.effects` 事件；content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`，active baseline 共 242 个 exact fixtures，save v1/state hash Schema v36 保持不变。
+- 协议 1.85 和 contract-v85 已建立；内容包 1.77.0 新增 Echo Quickening/Echo Binding，以及 `apply-status`、`remove-status` 和 2–8 个同目标 actor 有序 `sequence`。核心整次施法只支付一次资源并抽一次失败率，随后按声明顺序处理堆叠、抗性缩时、免疫、部分无效、`no-target` 和 `target-dead`；被跳过的伤害效果不抽骰。Web 能力行显示组合数量并格式化 `ability.effects` 事件；content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`，该历史 baseline 共 242 个 exact fixtures，save v1/state hash Schema v36 保持不变。
+- 协议 1.86 和 contract-v86 已建立；内容包 1.78.0 新增 Echo Cantor 与 Monster `monsterCasting`，以百分比频率、声明顺序权重、射程/墙体/友军 clean-shot 过滤复用直接伤害与状态管线。成功施法按逆频率设置自身行动冷却，50% 为 2 行动、25% 为 4 行动，冷却期不抽施法 RNG。Web 格式化选择与施法事件；content hash 为 `be6b9b098c495ee3f2af6075ea5790d16eae7e8487c1fa310575c0dad8cba5bd`，该历史 baseline 共 249 个 exact fixtures，save v1/state hash 升至 Schema v37。
+- 协议 1.87 和 contract-v87 已建立；内容包 1.79.0 扩展 Echo Cantor 的自身治疗/增益、范围/射线/锥形与 Call Discord 敌对召唤。候选 outcome 暴露基础/有效权重、目标、footprint 与拒绝原因，HP/状态/距离效用计算不抽 RNG，多格效果保守拒绝次级实体。content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`，active baseline 共 257 个 exact fixtures、零 waiver，save v1/state hash Schema v37 不变。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 进入 Stage H：实现首个怪物施法与能力选择 AI，为怪物声明能力集合，复用既有目标、伤害、状态、抗性与有序效果管线，并固定可用性筛选、目标选择、效用评分、同分顺序及行动/RNG 边界；多资源职业继续后置；
+1. 继续 Stage H：扩展怪物目标选择与有限施法记忆，让玩家阵营召唤物成为合法目标，按敌我数量决定多目标风险，并加入保持距离、低 HP 逃跑和 smart caster 抗性知识；多资源职业继续后置；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

@@ -117,6 +117,14 @@ export type AbilityEffectResolutionDto = { "type": "damage", effectIndex: number
 
 export type AbilityEffectsResolutionDto = { targetEntityId?: string | null, targetKindId?: string | null, effects: Array<AbilityEffectResolutionDto>, };
 
+export type MonsterAbilityRejectionReasonDto = "invalid-target" | "out-of-range" | "blocked" | "friendly-risk" | "no-space" | "no-utility";
+
+export type MonsterAbilityCandidateResolutionDto = { abilityId: string, baseWeight: number, effectiveWeight: number, targetEntityId?: string | null, targetKindId?: string | null, targetPosition?: Position | null, affectedPositions?: Array<Position>, rejectionReason?: MonsterAbilityRejectionReasonDto | null, };
+
+export type MonsterAbilityDecisionResolutionDto = { sourceEntityId: string, sourceKindId: string, frequencyPercent: number, frequencyRoll: number, candidates?: Array<MonsterAbilityCandidateResolutionDto>, viableAbilityIds: Array<string>, totalWeight: number, selectionRoll?: number | null, selectedAbilityId?: string | null, };
+
+export type MonsterAbilityCastResolutionDto = { sourceEntityId: string, sourceKindId: string, abilityId: string, targetEntityId: string, targetKindId: string, affectedPositions?: Array<Position>, summon?: AbilitySummonResolutionDto | null, effects: Array<AbilityEffectResolutionDto>, };
+
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 
 export type RestStopReasonDto = "damaged" | "enemy-visible" | "full-resources" | "invalid-turns" | "player-died" | "turn-limit";
@@ -125,7 +133,7 @@ export type RestResolutionDto = { requestedTurns: number, completedTurns: number
 
 export type HealingResolutionDto = { requested: number, applied: number, };
 
-export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-effects", resolution: AbilityEffectsResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
+export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-effects", resolution: AbilityEffectsResolutionDto, } | { "type": "monster-ability-decision", resolution: MonsterAbilityDecisionResolutionDto, } | { "type": "monster-ability-cast", resolution: MonsterAbilityCastResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
@@ -135,7 +143,7 @@ export type EntityFactionDto = "hostile" | "player";
 
 export type SummonDto = { ownerId: string, sourceAbilityId: string, remainingTurns: number, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, summon?: SummonDto | null, };
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, castingCooldownRemaining: number, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, summon?: SummonDto | null, };
 
 export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, position: Position, quantity: number, };
 

@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v85、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v87、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -34,17 +34,31 @@
 | P23 | 首个侦测能力 | 已由 contract-v83 完成 | Echo Pulse/Echo Sight 内容驱动 detect；category/radius、FOV 与隐藏投影过滤、稳定顺序、持久/瞬时知识、空结果、非法目标/资源不足 RNG 边界、save/replay 与 Schema v36 |
 | P24 | 首个地形改变能力 | 已由 contract-v84 完成 | Echo Delving/Echo Rampart 内容驱动 transform-terrain；来源/目标 terrain 集、position/FOV/line of effect、稳定原子提交、占用格与连接/边界保护、空结果、changed cells、save/replay 与 Schema v36 |
 | P25 | 状态能力与多 effect 组合 | 已由 contract-v85 完成 | Echo Quickening/Echo Binding；状态添加/移除、2–8 个有序同目标 actor 效果、堆叠、抗性缩时、免疫、部分无效、目标死亡/无目标跳过、save/replay 与结构化 Web outcome |
-| P26 | 首个怪物施法与能力选择 AI | 下一候选 | 为怪物声明能力集合与施法参数，复用玩家能力效果管线，固定可用性筛选、目标选择、效用评分、平局顺序、资源/RNG、视野/射程和 save/replay 边界 |
+| P26 | 首个怪物施法与能力选择 AI | 已由 contract-v86 完成 | Monster 百分比频率与加权能力集合、射程/墙体/友军 clean-shot、频率失败普通行动回退、伤害/状态/有序效果复用、逆频率自身行动冷却、save/replay 与 Schema v37 |
+| P27 | 怪物施法效用与目标扩展 | 已由 contract-v87 完成 | HP/状态/距离有效权重、自身治疗/增益、范围/射线/锥形、保守 footprint 风险、敌对召唤、逐候选协议观察与 257 个 exact fixtures |
+| P28 | 怪物目标选择与施法记忆 | 下一候选 | 玩家阵营召唤物目标、敌我多目标评分、保持距离/低 HP 逃跑、smart caster 有限抗性记忆与稳定 RNG 边界 |
+
+## contract-v87 明确遗留
+
+- 怪物当前只把玩家本体作为敌对主目标；玩家阵营召唤物不会成为直接目标，多格法术也会把任何次级实体保守视为风险；
+- 选择层已按 HP、状态和距离调整有效权重，但尚未按敌我目标数量、伤害期望、抗性知识、逃跑位置或协同法术建立更完整评分；
+- 怪物召唤物已是 hostile 并可执行普通 AI，但没有召唤命令、主人死亡联动、种群上限、unique 过滤或繁殖规则；
+- 怪物位移、地形、侦测、反制和特殊投射效果仍未开放；
+- 怪物首版不消费 Mana、学习、熟练度、失败率或玩家能力冷却；只使用百分比频率与按自身行动计数的逆频率冷却；
+- 仍缺怪物智能学习、反制、沉默、施法打断、领域协同与完整原版怪物法术表；
+- 多资源职业、装备激活与设备共享能力继续后置。
+
+contract-v87 已将效用和目标扩展接入协议 1.87、内容包 1.79.0、save v1 与 state hash Schema v37。频率骰之后纯计算基础/有效权重、主目标、footprint 和拒绝原因；频率通过且存在有效候选时仍只抽一次权重骰。自疗使用 20% 伤势阈值和最高四倍权重，重复/免疫状态剔除，三格以上对玩家施法加权；范围、射线、锥形和敌对召唤复用既有效果与生命周期。active baseline 为 257 个 exact fixtures、零 waiver。详细边界见 [contract-v87](contract-v87-monster-casting-utility.md)。
 
 ## contract-v85 明确遗留
 
 - sequence 首版只组合同一 actor 目标上的伤害、治疗和状态；多目标、terrain、召唤、侦测、位移等专用效果尚未进入组合器；
 - 状态持续时间当前为固定整数并通过既有元素抗性确定性缩放；随机持续时间、独立 saving throw 和更复杂驱散优先级尚未建立；
 - 仍缺 confusion、paralysis、blindness、sleep 等完整状态族及其对应行动规则；
-- 怪物施法、能力选择 AI、装备激活、设备共享能力与多资源职业仍未实现；
+- 怪物施法与 HP/状态/距离能力选择已由 contract-v86–v87 建立；装备激活、设备共享能力与多资源职业仍未实现；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型尚未建立。
 
-contract-v85 已将 Echo Quickening/Echo Binding 接入协议 1.85、内容包 1.77.0、save v1 与 state hash Schema v36。整次施法只支付一次资源并先抽一次失败率，子效果按声明顺序结算；前序击杀会把后续效果标为 `target-dead`，无 actor 命中标为 `no-target`，且不抽取被跳过的伤害骰。状态沿用既有 actor status 存档与 tick 管线，cold 抗性确定性缩短 slow，免疫返回零持续时间。active baseline 为 242 个 exact fixtures、零 waiver。详细边界见 [contract-v85](contract-v85-ordered-status-effects.md)。
+contract-v85 已将 Echo Quickening/Echo Binding 接入协议 1.85、内容包 1.77.0、save v1 与 state hash Schema v36。整次施法只支付一次资源并先抽一次失败率，子效果按声明顺序结算；前序击杀会把后续效果标为 `target-dead`，无 actor 命中标为 `no-target`，且不抽取被跳过的伤害骰。状态沿用既有 actor status 存档与 tick 管线，cold 抗性确定性缩短 slow，免疫返回零持续时间。该历史 baseline 为 242 个 exact fixtures、零 waiver。详细边界见 [contract-v85](contract-v85-ordered-status-effects.md)。
 
 ## contract-v84 明确遗留
 
@@ -61,7 +75,7 @@ contract-v84 已将 Echo Delving/Echo Rampart 接入协议 1.84、内容包 1.76
 - 完整地图、怪物、物品、楼梯和陷阱等更多侦测类别及对应知识菜单；
 - 侦测范围的特殊穿墙、全层感知、持续 buff、黑暗/失明/反侦测修正；
 - 地形改变已由 contract-v84 完成，状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
-- 怪物施法、能力选择 AI、装备激活与设备共享能力；
+- 怪物更完整的目标/知识 AI、装备激活与设备共享能力；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
 
 contract-v83 已将 Echo Pulse/Echo Sight 接入协议 1.83、内容包 1.75.0、save v1 与 state hash Schema v36。侦测只考虑当前地图、半径、玩家 FOV、隐藏投影与 category tag，按距离/坐标稳定排序；瞬时结果只进入事件，持久结果写入 `revealedTerrain`。空结果仍按正常施法消费资源和 RNG，非法目标与资源不足不推进 RNG。active baseline 为 221 个 exact fixtures、零 waiver。详细边界见 [contract-v83](contract-v83-detection-ability.md)。
@@ -81,7 +95,7 @@ contract-v82 已将 Echo Companion 接入协议 1.82、内容包 1.74.0、save v
 - 召唤、侦测和地形改变已由 contract-v82–v84 完成；
 - 传送到不可见、不可行走或被 actor 占用格以外的复杂位移规则（随机传送、穿墙、跨层和群体传送）；
 - 射线范围内物品破坏、地形变更或玩家伤害；
-- 射线反射、穿透墙体例外和怪物施法；
+- 射线反射、穿透墙体例外和怪物对玩家召唤物的目标选择；
 - 多资源职业和怪物能力选择/施法 AI；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
 
@@ -91,7 +105,7 @@ contract-v81 已将内容驱动的 Echo Step 接入协议 1.81、内容包 1.73.
 
 - 位移、召唤、侦测和地形改变已由 contract-v81–v84 完成；
 - 射线范围内物品破坏、地形变更或玩家伤害；
-- 射线反射、穿透墙体例外和怪物施法；
+- 射线反射、穿透墙体例外和怪物多目标价值评分；
 - 多资源职业和怪物能力选择/施法 AI；
 - 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
 
@@ -112,7 +126,7 @@ RFB 式范围爆发、目标停止策略、墙体遮挡、距离衰减、空爆/
 - 怒气、专注、鲜血等多种职业资源，资源互转与职业专属恢复条件；
 - 范围、锥形、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和首版多 effect 组合已由 contract-v85 完成；
 - 装备负重、状态、环境与职业规则对失败率、恢复率和效果强度的完整修正；
-- 怪物施法、能力选择 AI、智能学习和完整领域/职业矩阵；
+- 怪物基础施法/效用已完成；仍缺智能学习和完整领域/职业矩阵；
 - 饥饿、HP 自然恢复、旅行、自动探索和更高层的安全休息策略。
 
 v76 的独立学习容量、能力容量投影、主动遗忘、重新学习进度保留、容量满零 RNG 拒绝和旧存档兼容已进入协议 1.76、内容包 1.68.0、save v1 与 state hash Schema v34；active baseline 为 186 个 exact fixtures、零 waiver。详细边界见 [contract-v76](contract-v76-learning-capacity-and-forgetting.md)。
@@ -123,7 +137,7 @@ v76 的独立学习容量、能力容量投影、主动遗忘、重新学习进�
 - 学习容量、随机学习、遗忘、首次施放奖励、熟练度和冷却；
 - 自身目标与治疗已由 contract-v74 完成；范围爆发、方向射线、锥形、定点/实体延长射线、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和首版多 effect 组合已由 contract-v85 完成；
 - 装备负重、状态、环境和职业规则对失败率的完整修正；
-- 怪物施法、能力选择 AI、智能学习和完整领域/职业矩阵。
+- 怪物基础施法/效用已完成；仍缺智能学习和完整领域/职业矩阵。
 
 v73 的 Mana、能力书、学习、失败率、目标施法、结构化 ability-cast outcome、旧存档满资源/空已学迁移和 166 个 exact fixtures 已进入协议 1.73、save v1 与 state hash Schema v32。详细边界见 [contract-v73](contract-v73-ability-books.md)。
 

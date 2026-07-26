@@ -91,6 +91,46 @@
         "blows"
       ],
       "type": "object"
+    },
+    "MonsterAbilityCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "abilityId",
+        "weight"
+      ],
+      "type": "object"
+    },
+    "MonsterCastingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilities": {
+          "items": {
+            "$ref": "#/$defs/MonsterAbilityCandidateDefinition"
+          },
+          "type": "array"
+        },
+        "frequencyPercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "frequencyPercent",
+        "abilities"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
@@ -209,6 +249,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/MeleeRoutineDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "monsterCasting": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MonsterCastingDefinition"
         },
         {
           "type": "null"

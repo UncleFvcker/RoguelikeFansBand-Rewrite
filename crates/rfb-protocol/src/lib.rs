@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.85";
+pub const PROTOCOL_VERSION: &str = "1.87";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -951,6 +951,71 @@ pub struct AbilityEffectsResolutionDto {
     pub effects: Vec<AbilityEffectResolutionDto>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterAbilityRejectionReasonDto {
+    InvalidTarget,
+    OutOfRange,
+    Blocked,
+    FriendlyRisk,
+    NoSpace,
+    NoUtility,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterAbilityCandidateResolutionDto {
+    pub ability_id: String,
+    pub base_weight: u32,
+    pub effective_weight: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_entity_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_kind_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_position: Option<Position>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affected_positions: Vec<Position>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rejection_reason: Option<MonsterAbilityRejectionReasonDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterAbilityDecisionResolutionDto {
+    pub source_entity_id: String,
+    pub source_kind_id: String,
+    pub frequency_percent: u8,
+    pub frequency_roll: u8,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub candidates: Vec<MonsterAbilityCandidateResolutionDto>,
+    pub viable_ability_ids: Vec<String>,
+    pub total_weight: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_roll: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_ability_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterAbilityCastResolutionDto {
+    pub source_entity_id: String,
+    pub source_kind_id: String,
+    pub ability_id: String,
+    pub target_entity_id: String,
+    pub target_kind_id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affected_positions: Vec<Position>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summon: Option<AbilitySummonResolutionDto>,
+    pub effects: Vec<AbilityEffectResolutionDto>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -1014,6 +1079,12 @@ pub enum GameEventOutcomeDto {
     },
     AbilityEffects {
         resolution: AbilityEffectsResolutionDto,
+    },
+    MonsterAbilityDecision {
+        resolution: MonsterAbilityDecisionResolutionDto,
+    },
+    MonsterAbilityCast {
+        resolution: MonsterAbilityCastResolutionDto,
     },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
@@ -1127,6 +1198,8 @@ pub struct EntityDto {
     pub energy_need: i32,
     #[serde(default = "default_actor_alerted")]
     pub alerted: bool,
+    #[serde(default)]
+    pub casting_cooldown_remaining: u16,
     #[serde(default)]
     pub attack: i32,
     #[serde(default)]
@@ -1473,6 +1546,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityEffectSkipReasonDto);
     push_declaration!(AbilityEffectResolutionDto);
     push_declaration!(AbilityEffectsResolutionDto);
+    push_declaration!(MonsterAbilityRejectionReasonDto);
+    push_declaration!(MonsterAbilityCandidateResolutionDto);
+    push_declaration!(MonsterAbilityDecisionResolutionDto);
+    push_declaration!(MonsterAbilityCastResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);
@@ -1631,6 +1708,8 @@ pub struct ActorSaveDto {
     pub energy_need: i32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alerted: Option<bool>,
+    #[serde(default)]
+    pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -2154,6 +2233,7 @@ mod tests {
                 speed: 110,
                 energy_need: 100,
                 alerted: true,
+                casting_cooldown_remaining: 0,
                 attack: 1,
                 defense: 1,
                 melee_skill: 32,

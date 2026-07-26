@@ -109,6 +109,8 @@ pub struct EntityEffectsPrecondition {
     #[serde(default)]
     pub alerted: Option<bool>,
     #[serde(default)]
+    pub casting_cooldown_remaining: Option<u16>,
+    #[serde(default)]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default)]
     pub resistances: Vec<ResistanceSaveDto>,
@@ -244,6 +246,8 @@ pub struct ActorStateAssertion {
     pub energy_need: i32,
     #[serde(default = "default_assertion_alerted")]
     pub alerted: bool,
+    #[serde(default)]
+    pub casting_cooldown_remaining: u16,
     #[serde(default)]
     pub statuses: Vec<StatusDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -409,6 +413,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         if let Some(alerted) = effects.alerted {
             entity.alerted = Some(alerted);
         }
+        if let Some(cooldown) = effects.casting_cooldown_remaining {
+            entity.casting_cooldown_remaining = cooldown;
+        }
         entity.statuses = effects.statuses.clone();
         entity.resistances = effects.resistances.clone();
         entity.summon = effects.summon.clone();
@@ -502,6 +509,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                     speed: entity.speed,
                     energy_need: entity.energy_need,
                     alerted: entity.alerted,
+                    casting_cooldown_remaining: entity.casting_cooldown_remaining,
                     statuses: entity.statuses.clone(),
                     pack: save
                         .entities

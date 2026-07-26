@@ -7,8 +7,8 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     CheckResolutionDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto,
-    Position, ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto, Position,
+    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -95,6 +95,13 @@ pub(crate) enum DomainEvent {
     AbilityEffectsResolved {
         ability_id: String,
         resolution: AbilityEffectsResolutionDto,
+        trace: Option<ProjectileTrace>,
+    },
+    MonsterAbilityDecision {
+        resolution: MonsterAbilityDecisionResolutionDto,
+    },
+    MonsterAbilityCast {
+        resolution: MonsterAbilityCastResolutionDto,
         trace: Option<ProjectileTrace>,
     },
     SummonExpired {
@@ -582,6 +589,39 @@ impl DomainEvent {
                         ("count", resolution.effects.len().to_string()),
                     ],
                     GameEventOutcomeDto::AbilityEffects { resolution },
+                );
+                match trace {
+                    Some(trace) => with_trace(event, trace),
+                    None => event,
+                }
+            }
+            Self::MonsterAbilityDecision { resolution } => {
+                let target = resolution
+                    .selected_ability_id
+                    .clone()
+                    .unwrap_or_else(|| "none".to_owned());
+                dto_with_outcome(
+                    "monster.ability-decision",
+                    "monster-ability-decision",
+                    [
+                        ("source", resolution.source_kind_id.clone()),
+                        ("target", target),
+                        ("roll", resolution.frequency_roll.to_string()),
+                        ("frequency", resolution.frequency_percent.to_string()),
+                    ],
+                    GameEventOutcomeDto::MonsterAbilityDecision { resolution },
+                )
+            }
+            Self::MonsterAbilityCast { resolution, trace } => {
+                let event = dto_with_outcome(
+                    "monster.ability-cast",
+                    "monster-ability-cast",
+                    [
+                        ("source", resolution.source_kind_id.clone()),
+                        ("target", resolution.ability_id.clone()),
+                        ("count", resolution.effects.len().to_string()),
+                    ],
+                    GameEventOutcomeDto::MonsterAbilityCast { resolution },
                 );
                 match trace {
                     Some(trace) => with_trace(event, trace),

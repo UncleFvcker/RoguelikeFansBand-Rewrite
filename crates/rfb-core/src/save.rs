@@ -40,6 +40,7 @@ pub(crate) fn actor_from_spawn(
         speed,
         energy_need,
         alerted,
+        casting_cooldown_remaining: 0,
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
@@ -65,6 +66,7 @@ pub(crate) fn actor_from_runtime_spawn(
         speed,
         energy_need,
         alerted,
+        casting_cooldown_remaining: 0,
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
@@ -103,6 +105,7 @@ pub(crate) fn actor_from_player(
         speed: player.base_speed,
         energy_need: player.energy_need,
         alerted: true,
+        casting_cooldown_remaining: 0,
         statuses,
         resistances,
         pack: None,
@@ -157,6 +160,7 @@ pub(crate) fn actor_from_entity(
                 .as_ref()
                 .is_none_or(|awareness| awareness.starts_alerted)
         }),
+        casting_cooldown_remaining: entity.casting_cooldown_remaining,
         statuses,
         resistances,
         pack: entity.pack.map(|pack| MonsterPackIdentity {
@@ -311,6 +315,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             base_speed: entity.speed,
             energy_need: entity.energy_need,
             alerted: Some(entity.alerted),
+            casting_cooldown_remaining: entity.casting_cooldown_remaining,
             statuses: entity
                 .statuses
                 .iter()

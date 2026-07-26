@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 35;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 37;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -1043,6 +1043,115 @@ mod tests {
     }
 
     #[test]
+    fn monster_ability_selection_and_status_round_trip_through_replay() {
+        let seed = (0..1_000_u64)
+            .find(|seed| {
+                let mut recorder = ReplayRecorder::new(monster_caster_game(*seed));
+                let update = recorder
+                    .dispatch(GameCommand::Wait)
+                    .expect("caster replay probe should execute");
+                update.events.iter().any(|event| {
+                    matches!(
+                        event.outcome.as_ref(),
+                        Some(rfb_protocol::GameEventOutcomeDto::MonsterAbilityCast {
+                            resolution
+                        }) if resolution.ability_id == "demo.ability.echo-binding"
+                    )
+                })
+            })
+            .expect("a deterministic seed should select echo binding");
+        let initial = monster_caster_game(seed);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        let update = recorder
+            .dispatch(GameCommand::Wait)
+            .expect("caster replay command should execute");
+
+        assert!(update.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(rfb_protocol::GameEventOutcomeDto::MonsterAbilityDecision {
+                    resolution
+                }) if resolution.selected_ability_id.as_deref()
+                    == Some("demo.ability.echo-binding")
+            )
+        }));
+        assert!(update.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(rfb_protocol::GameEventOutcomeDto::MonsterAbilityCast {
+                    resolution
+                }) if resolution.ability_id == "demo.ability.echo-binding"
+                    && resolution.effects.len() == 2
+            )
+        }));
+        assert_eq!(
+            recorder.game().snapshot().entities[0].casting_cooldown_remaining,
+            2
+        );
+        let (final_game, replay) = recorder.finish();
+
+        assert!(
+            final_game
+                .snapshot()
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == "rfb.status.slow")
+        );
+        let verification = verify(&replay, initial).expect("monster ability replay should verify");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn monster_hostile_summon_round_trips_through_replay() {
+        let seed = (0..10_000_u64)
+            .find(|seed| {
+                let mut recorder = ReplayRecorder::new(monster_caster_game(*seed));
+                let update = recorder
+                    .dispatch(GameCommand::Wait)
+                    .expect("hostile summon replay probe should execute");
+                update.events.iter().any(|event| {
+                    matches!(
+                        event.outcome.as_ref(),
+                        Some(rfb_protocol::GameEventOutcomeDto::MonsterAbilityCast {
+                            resolution
+                        }) if resolution.ability_id == "demo.ability.call-discord"
+                    )
+                })
+            })
+            .expect("a deterministic seed should select the hostile summon");
+        let initial = monster_caster_game(seed);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        let update = recorder
+            .dispatch(GameCommand::Wait)
+            .expect("hostile summon replay command should execute");
+        let summon = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(rfb_protocol::GameEventOutcomeDto::MonsterAbilityCast { resolution })
+                    if resolution.ability_id == "demo.ability.call-discord" =>
+                {
+                    resolution.summon.as_ref()
+                }
+                _ => None,
+            })
+            .expect("monster summon outcome should expose generated entities");
+        assert_eq!(summon.entity_ids.len(), 2);
+        assert!(recorder.game().snapshot().entities.iter().any(|entity| {
+            summon.entity_ids.contains(&entity.id)
+                && entity.faction == rfb_protocol::EntityFactionDto::Hostile
+        }));
+        let (final_game, replay) = recorder.finish();
+
+        let verification =
+            verify(&replay, initial).expect("hostile summon replay should verify exactly");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
     fn healing_and_multi_turn_rest_round_trip_through_replay() {
         let mut payload = Game::new_with_build(0, "demo.build.scholar")
             .expect("scholar replay fixture should create")
@@ -1410,6 +1519,36 @@ mod tests {
         });
         payload.carried_items.clear();
         Game::from_save(payload).expect("quiet replay fixture should restore")
+    }
+
+    fn monster_caster_game(seed: u64) -> Game {
+        let mut payload = Game::new(seed).to_save();
+        let mut caster = payload
+            .entities
+            .into_iter()
+            .next()
+            .expect("demo save should contain an actor template");
+        caster.id = "replay.monster.echo-cantor.1".to_owned();
+        caster.kind_id = "demo.actor.echo-cantor".to_owned();
+        caster.position = rfb_protocol::Position { x: 8, y: 3 };
+        caster.hp = 8;
+        caster.max_hp = 8;
+        caster.base_speed = 110;
+        caster.energy_need = 100;
+        caster.alerted = Some(true);
+        caster.statuses.clear();
+        caster.resistances.clear();
+        caster.pack = None;
+        caster.summon = None;
+        payload.entities = vec![caster];
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        Game::from_save(payload).expect("caster replay fixture should restore")
     }
 
     fn path_to_monster_and_three_attacks() -> Vec<GameCommand> {

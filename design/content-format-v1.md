@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.77.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.79.0
 
 ## 1. 目标
 
@@ -190,6 +190,10 @@ contract-v84 为 `AbilityEffectDefinition` 增加 `transform-terrain { sourceTer
 
 contract-v85 为 `AbilityEffectDefinition` 增加 `apply-status`、`remove-status` 和含 2–8 个子效果的 `sequence`。旧单一 `effect` 对象继续直接读取；sequence 禁止嵌套，并在首版限制为同一 actor 目标上的 damage/heal/status 组合。状态添加声明稳定 kind ID、强度、持续 tick、replace/extend/keep-strongest 与可选抗性类型。编译器拒绝零持续时间、零强度、混合 self/投影语义和 sequence 中的世界/多目标效果。DTO 通过 `AbilityDto.effects` 按声明顺序投影扁平规格。
 
+contract-v86 为 Monster actor 增加可选 `monsterCasting`：`frequencyPercent` 使用 1–100 百分比，`abilities` 使用 1–32 个唯一能力 ID 与正权重。50% 等价于 1 in 2，25% 等价于 1 in 4；成功施法后的运行时冷却由核心按 `ceil(100 / frequencyPercent)` 计算。编译器拒绝玩家 actor、重复或缺失能力、零权重，以及首版怪物执行器不支持的 self/世界/多目标效果；首版只接受直接 actor 目标的 damage/status/sequence。
+
+contract-v87 扩展 `monsterCasting` 可引用的能力子集：允许 self 目标的 heal/status/sequence/summon、实体目标的 area/beam、方向目标的 cone，并继续拒绝 teleport、detect、terrain transform 和混合目标语义。内容权重仍是基础概率；HP/状态/距离效用、footprint 风险、召唤空间和拒绝原因由核心纯计算。怪物召唤与玩家召唤复用同一个 `summon` 内容效果，运行时 owner 决定阵营。
+
 contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结算组，共享进度与结果；组内目标种类、required 和重接策略必须一致，并且整组恰好声明一个奖励。`kill-actor-kind` 可用 `spawnCount` 控制单个成员楼层生成的目标数量。
 
 当前已完成第 1、2、3、7、8 项的单包版本，包括：
@@ -204,7 +208,7 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 - `content.lock.json` 固定包 ID、版本和编译 content hash；
 - 二十一份提交到 `schemas/content-v1/` 的 JSON Schema。
 
-角色定义使用必需的基础战斗字段；玩家通过 `carryCapacityTenthsPound` 声明正整数携带容量，并可用 `doorSkill` / `bashPower` / `searchSkill` 声明开锁、破门和搜索基础能力。怪物可声明 `meleeRoutine.blows`、出生携带用 `carriedLootTableId`、死亡生成用 `lootTableId` 和可选 awareness。物品必须声明整数重量，并可声明近战、发射、投掷、使用 profile 或能力书引用；使用 profile 可声明 device difficulty，能力书物品必须保持单件且不能混用装备/使用入口。独立 `ResourceDefinition`、`AbilityDefinition` 和 `AbilityBookDefinition` 建立资源、能力和书本引用；Class casting profile 提供施法资源、属性、学习容量与失败率参数，资源定义提供等待/休息恢复速率，能力效果已覆盖普通伤害、RFB 式范围伤害、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果与固定治疗；AbilityDefinition 的 proficiency/cooldown 字段提供熟练度与可选冷却。独立 `AffixDefinition` 声明实例修正；世界实例可声明 `ordinary`、`fine`、`exceptional` 质量，非普通质量与 affix 都只允许数量为一、不可堆叠的实例，affix 还要求物品可装备。独立 `LootTableDefinition` 声明加权物品、品质和词条。独立 `EncounterTableDefinition` 声明楼层怪物 roll 与深度加权候选；独立 `ThemeTableDefinition` 声明楼层主题 terrain 与加权 Vault 候选；独立 `RegionTableDefinition` 把稳定区域 ID 绑定到明确主题与局部 encounter/loot 表；独立 `VaultDefinition` 声明主题 terrain、空间变换、深度加权 encounter group 与主题掉落。地形可声明互斥的 `openToTerrainId` 或 `closeToTerrainId`；普通门互反转换要求关闭态不可行走/阻光、开启态可行走/透光。带 `openCheckDifficulty` 的锁门允许单向解锁到普通开启态；`bashToTerrainId` / `bashCheckDifficulty` 成对声明破门结果；`concealedAsTerrainId` 可配合主动搜索、被动 perception 或内容驱动侦测声明隐藏投影，真实/伪装 terrain 必须保持相同碰撞与阻光语义。世界定义必须声明稳定 `initialFloorId` 和程序化楼层；含 dungeon lifecycle 楼层时还必须在 `dungeons` 中逐一声明地牢。程序化楼层固定楼层 ID、名称、深度、尺寸、地形引用、楼层表引用、连接以及可选 actor/loot/Vault/region 空间预算。怪物候选必须引用怪物定义且至少包含一个等级不高于该层深度的候选；运行时只从符合深度的候选中抽取。旧 `actorSpawns/lootSpawns/themeId/vaultId` 保留为兼容输入，但不能与对应新表引用混用。原创包 1.77.0 覆盖角色成长与构筑、可观察技能检定、Mana/能力书/目标施法、等待与休息恢复、自身治疗、能力熟练度/冷却、学习容量/主动遗忘、RFB 式范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方召唤、terrain 侦测与转换、状态能力与有序多效果、固定词条与鉴别、怪物携带物/掉落、楼层/任务/地牢生命周期、树状地牢、共享守护者镜像、预算化十层压力地牢、多 Vault、动态群体与 pack AI、同层多区域主题、分阶段地貌、原版式 pit、maze-only、多楼梯与 shaft。
+角色定义使用必需的基础战斗字段；玩家可声明携带容量与门/搜索技能，怪物可声明 melee routine、出生携带与死亡掉落、awareness，以及 `monsterCasting` 的百分比频率和加权能力集合。物品、资源、能力、能力书、affix、encounter/loot/theme/region/terrain-feature 表、Vault 和 world 使用独立稳定 ID 与交叉引用；编译器验证目标存在、角色类别、范围、数量、权重和互斥旧字段。原创包 1.79.0 覆盖角色成长与构筑、玩家能力循环、怪物 caster 效用/多格目标/敌对召唤、固定词条与鉴别，以及楼层/任务/树状地牢/Vault/区域主题/群体/分阶段地貌等现有纵切。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
@@ -222,7 +226,11 @@ contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving �
 
 contract-v85 以 1.77.0 增加状态添加/移除、有序 `sequence`、Echo Quickening 与 Echo Binding；逐效果顺序、堆叠、抗性缩时、免疫、部分无效和目标死亡跳过由核心定义。
 
-当前原创包的 active 编译版本为 1.77.0，content hash 为 `d056b65f8e2c61615e48badd8a6f02cd725007789535aa363448c8a0e8288bea`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果和固定治疗。
+contract-v86 以 1.78.0 增加 Echo Cantor 和 Monster actor `monsterCasting`；百分比频率、稳定加权候选、直接投影可用性、clean-shot 友军阻挡与按自身行动计数的逆频率冷却由核心定义。
+
+contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord 与 Discordant Echo；怪物可复用自身治疗/增益、范围/射线/锥形和召唤效果，HP/状态/距离有效权重、次级实体风险与敌对 owner 由核心定义。
+
+当前原创包的 active 编译版本为 1.79.0，content hash 为 `f9e9ccc93635da7f568a2cdd83f90024f86cd13d1d0ff43627f725dde4e3ecac`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果和固定治疗，并由怪物 caster 复用 actor 与多格目标子集。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
@@ -302,4 +310,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73 以 1.65.0 增加 resource、ability、ability-book 根、书本物品引用和 Class casting profile；contract-v74 以 1.66.0 增加资源恢复速率、自身目标、治疗效果、第二本能力书和第二个能力；contract-v75 以 1.67.0 增加能力熟练度、Mana 成本/失败率派生、统计、冷却和 `abilityProgress` 存档字段；contract-v76 以 1.68.0 增加独立学习容量、主动遗忘和进度保留；contract-v77 以 1.69.0 增加 RFB 式 `area-damage` 能力效果和 Echo Burst；contract-v78 以 1.70.0 增加方向型 `beam-damage` 能力效果和 Echo Lance；contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；contract-v80 以 1.72.0 增加 Echo Lance 的定点/实体延长射线目标模式；contract-v81 以 1.73.0 增加 `teleport` 能力效果和 Echo Step；contract-v82 以 1.74.0 增加 `summon` 能力效果和 Echo Companion；contract-v83 以 1.75.0 增加 `detect` 能力效果、Echo Pulse 与 Echo Sight；contract-v84 以 1.76.0 增加 `transform-terrain` 能力效果、Echo Delving 与 Echo Rampart；contract-v85 以 1.77.0 增加状态能力与有序多效果。当前 state hash 为 Schema v36。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73–v85 依次建立玩家资源、能力书、恢复、熟练度/冷却、学习容量、范围/射线/锥形/位移/召唤/侦测/地形/状态及有序效果；contract-v86 以 1.78.0 增加首个怪物施法 actor、频率/权重选择、clean-shot 与自身行动冷却。当前 state hash 为 Schema v37。

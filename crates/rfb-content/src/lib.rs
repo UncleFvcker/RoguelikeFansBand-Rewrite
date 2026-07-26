@@ -226,6 +226,8 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub awareness: Option<ActorAwarenessDefinition>,
     #[serde(default)]
+    pub monster_casting: Option<MonsterCastingDefinition>,
+    #[serde(default)]
     pub loot_table_id: Option<String>,
     #[serde(default)]
     pub carried_loot_table_id: Option<String>,
@@ -240,6 +242,22 @@ pub struct ActorAwarenessDefinition {
     pub detection_range: u16,
     #[serde(default)]
     pub starts_alerted: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterCastingDefinition {
+    pub frequency_percent: u8,
+    pub abilities: Vec<MonsterAbilityCandidateDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterAbilityCandidateDefinition {
+    pub ability_id: String,
+    pub weight: u32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2440,6 +2458,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
     let mut actor_roles = BTreeMap::new();
     let mut actor_levels = BTreeMap::new();
     let mut actor_loot_table_ids = Vec::new();
+    let mut actor_monster_casting = Vec::new();
     for actor in &mut content.actors {
         require_schema(&actor.schema, ACTOR_SCHEMA, &actor.id)?;
         require_format_version(actor.format_version, &actor.id)?;
@@ -2483,6 +2502,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 || awareness.detection_range > 64
         }) {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
+        }
+        if let Some(casting) = &actor.monster_casting {
+            let mut ability_ids = BTreeSet::new();
+            if actor.role != ActorRole::Monster
+                || !(1..=100).contains(&casting.frequency_percent)
+                || casting.abilities.is_empty()
+                || casting.abilities.len() > 32
+                || casting.abilities.iter().any(|candidate| {
+                    validate_id(&candidate.ability_id).is_err()
+                        || !(1..=1_000_000).contains(&candidate.weight)
+                        || !ability_ids.insert(candidate.ability_id.clone())
+                })
+            {
+                return Err(ContentError::InvalidMonsterCasting(actor.id.clone()));
+            }
+            actor_monster_casting.push((actor.id.clone(), casting.clone()));
         }
         if let Some(routine) = &actor.melee_routine
             && (actor.role != ActorRole::Monster
@@ -2782,6 +2817,71 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         insert_definition_id(&mut all_ids, &ability.id)?;
         ability_resources.insert(ability.id.clone(), ability.resource_id.clone());
         ability_ids.insert(ability.id.clone());
+    }
+    for (actor_id, casting) in actor_monster_casting {
+        for candidate in casting.abilities {
+            let Some(ability) = content
+                .abilities
+                .iter()
+                .find(|ability| ability.id == candidate.ability_id)
+            else {
+                return Err(ContentError::DanglingReference {
+                    owner: actor_id.clone(),
+                    target: candidate.ability_id,
+                });
+            };
+            let self_target = ability.target.modes.as_slice()
+                == [AbilityTargetModeDefinition::SelfTarget]
+                && ability.target.range == 0
+                && !ability.target.requires_line_of_effect;
+            let projectile_target = ability
+                .target
+                .modes
+                .contains(&AbilityTargetModeDefinition::Entity)
+                && !ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget)
+                && ability.target.requires_line_of_effect;
+            let supported = match &ability.effect {
+                AbilityEffectDefinition::Damage { .. }
+                | AbilityEffectDefinition::AreaDamage { .. }
+                | AbilityEffectDefinition::BeamDamage { .. } => projectile_target,
+                AbilityEffectDefinition::ConeDamage { .. } => {
+                    ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
+                        && ability.target.requires_line_of_effect
+                }
+                AbilityEffectDefinition::Heal { .. } | AbilityEffectDefinition::Summon { .. } => {
+                    self_target
+                }
+                AbilityEffectDefinition::ApplyStatus { .. }
+                | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
+                AbilityEffectDefinition::Sequence { effects } => {
+                    (self_target
+                        && effects.iter().all(|effect| {
+                            matches!(
+                                effect,
+                                AbilityEffectDefinition::Heal { .. }
+                                    | AbilityEffectDefinition::ApplyStatus { .. }
+                                    | AbilityEffectDefinition::RemoveStatus { .. }
+                            )
+                        }))
+                        || (projectile_target
+                            && effects.iter().all(|effect| {
+                                matches!(
+                                    effect,
+                                    AbilityEffectDefinition::Damage { .. }
+                                        | AbilityEffectDefinition::ApplyStatus { .. }
+                                        | AbilityEffectDefinition::RemoveStatus { .. }
+                                )
+                            }))
+                }
+                _ => false,
+            };
+            if !supported {
+                return Err(ContentError::InvalidMonsterCasting(actor_id.clone()));
+            }
+        }
     }
 
     let mut ability_books_by_id = BTreeMap::new();
@@ -6370,6 +6470,8 @@ pub enum ContentError {
     InvalidActorCarryCapacity(String),
     #[error("actor melee routine is invalid or requires the monster role: {0}")]
     InvalidMeleeRoutine(String),
+    #[error("actor monster casting profile is invalid or references an unsupported ability: {0}")]
+    InvalidMonsterCasting(String),
     #[error("actor loot table reference is invalid or requires the monster role: {0}")]
     InvalidActorLootTable(String),
     #[error("item stack limit is outside supported limits: {0}")]
@@ -6499,11 +6601,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 13);
+        assert_eq!(first.content.actors.len(), 15);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 14);
+        assert_eq!(first.content.abilities.len(), 15);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
@@ -6527,7 +6629,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.77.0");
+        assert_eq!(catalog.pack_version(), "1.79.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8746,6 +8848,74 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidMeleeRoutine(_))
+        ));
+    }
+
+    #[test]
+    fn monster_casting_requires_weighted_supported_abilities() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut invalid_frequency = artifact.content.clone();
+        invalid_frequency
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-cantor")
+            .expect("fixture should contain the echo cantor")
+            .monster_casting
+            .as_mut()
+            .expect("echo cantor should cast")
+            .frequency_percent = 0;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_frequency),
+            Err(ContentError::InvalidMonsterCasting(_))
+        ));
+
+        let mut duplicate_ability = artifact.content.clone();
+        let casting = duplicate_ability
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-cantor")
+            .expect("fixture should contain the echo cantor")
+            .monster_casting
+            .as_mut()
+            .expect("echo cantor should cast");
+        casting.abilities.push(casting.abilities[0].clone());
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_ability),
+            Err(ContentError::InvalidMonsterCasting(_))
+        ));
+
+        let mut dangling_ability = artifact.content.clone();
+        dangling_ability
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-cantor")
+            .expect("fixture should contain the echo cantor")
+            .monster_casting
+            .as_mut()
+            .expect("echo cantor should cast")
+            .abilities[0]
+            .ability_id = "demo.ability.missing".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut dangling_ability),
+            Err(ContentError::DanglingReference { .. })
+        ));
+
+        let mut unsupported_ability = artifact.content;
+        unsupported_ability
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.echo-cantor")
+            .expect("fixture should contain the echo cantor")
+            .monster_casting
+            .as_mut()
+            .expect("echo cantor should cast")
+            .abilities[0]
+            .ability_id = "demo.ability.echo-step".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut unsupported_ability),
+            Err(ContentError::InvalidMonsterCasting(_))
         ));
     }
 
