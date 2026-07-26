@@ -2,7 +2,7 @@
 
 状态：P0 规则、RNG、`rfb-replay` v1 和 Tauri 诊断导出已建立
 
-当前 state hash Schema 为 v34：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却、RNG、世界脉冲和命令序号。contract-v65 因新增实例身份与序号升级 Schema v24；contract-v66 因解析连接目标升级 Schema v25；contract-v67 因入口守卫持久状态升级 Schema v26；contract-v68 因 campaign 状态升级 Schema v27；contract-v69 因可配置实例 retained 状态升级 Schema v28；contract-v70 因角色成长 progress 与装备属性派生边界升级 Schema v29；contract-v71 因构筑身份、技能聚合和出生装备知识升级 Schema v30；contract-v72 因怪物警戒状态和可观察技能消费升级 Schema v31；contract-v73 因资源池、已学能力和施法结果升级 Schema v32；contract-v74 因等待/休息恢复、宏命令回合语义和自身治疗结果升级 Schema v33；contract-v75 因能力进度、熟练度、统计和冷却升级 Schema v34。
+当前 state hash Schema 为 v36：哈希输入覆盖运行时内容包 ID/hash、world ID、当前 `FloorId`、当前 dungeon instance ID、当前与离层的连接 ID→位置→解析目标、离层 floor 实例身份、区域 ID/theme/局部表引用/格集合、actor 的 pack identity/behavior/alerted 与 summon identity/lifetime、战斗状态、物品实例、怪物携带物、种类/实例知识、秘密 terrain 发现知识、含重接次数的完整任务状态机、持久地牢守护者、入口守卫与实例序号/retained 状态、campaign 胜利/退休/最终分数、玩家 Race/Class/Personality/build 身份、技能聚合与成长、角色成长 progress、资源池、已学能力、能力熟练度/统计/冷却、RNG、世界脉冲和命令序号。contract-v65 因新增实例身份与序号升级 Schema v24；contract-v66 因解析连接目标升级 Schema v25；contract-v67 因入口守卫持久状态升级 Schema v26；contract-v68 因 campaign 状态升级 Schema v27；contract-v69 因可配置实例 retained 状态升级 Schema v28；contract-v70 因角色成长 progress 与装备属性派生边界升级 Schema v29；contract-v71 因构筑身份、技能聚合和出生装备知识升级 Schema v30；contract-v72 因怪物警戒状态和可观察技能消费升级 Schema v31；contract-v73 因资源池、已学能力和施法结果升级 Schema v32；contract-v74 因等待/休息恢复、宏命令回合语义和自身治疗结果升级 Schema v33；contract-v75 因能力进度、熟练度、统计和冷却升级 Schema v34；contract-v82 因召唤所有者、源能力和剩余生命周期升级 Schema v35；contract-v83 因持久/瞬时侦测知识与 FOV 真值隔离规则升级 Schema v36。
 
 contract-v47 固定 vault 的生成顺序：先绘制规范化基础 terrain/覆盖，再按 group ID、成员位置逐个消费一次深度加权 actor 抽取，最后按 spawn ID 执行既有 loot table 三抽取事务。它没有新增权威状态字段；生成后的 terrain、actor、item、实例分配器、RNG 和 content hash 已进入 Schema v19，因此本切片不升级 state hash Schema。
 
@@ -48,7 +48,7 @@ contract-v27 固定程序化楼层的布局、怪物种类/位置、携带物、
 
 contract-v28 的门开关直接替换权威 terrain ID；contract-v29 的锁定、开锁和破损结果继续使用同一数组。开锁/破门检定固定先抽 percentile，非自动结果再抽 ability contest。contract-v30 的相邻交互列表完全由 terrain、实体和地面物品派生，不消费 RNG。contract-v31 按固定八方向只对尚未发现的隐藏 terrain 执行搜索检定；发现位置作为权威知识进入 Schema v15，普通探索记忆仍不进入 hash。
 
-state hash 与正式存档 DTO 已解耦。Schema v34 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰、装备派生 modifier、能力失败率、恢复速率和可用性标志不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识、任务状态机、当前阶段与重接次数、最终守护者与入口守卫击败状态、campaign 胜利/退休状态和最终分数、dungeon instance 身份/序号/retained 回合、楼层连接映射及其解析目标、区域边界/局部表引用、pack identity/behavior/alerted、Race/Class/Personality/build 身份、技能聚合、出生装备知识、角色成长 progress、资源池、已学能力和能力进度属于权威规则状态并参与 hash。恢复速率、熟练度内容上限和冷却规则由已哈希的内容包决定；未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
+state hash 与正式存档 DTO 已解耦。Schema v36 使用显式、版本固定的兼容投影，正式 `.rfbsave` 则只保存权威字段；清理存档中的最终攻击、AC、伤害骰、装备派生 modifier、能力失败率、恢复速率和可用性标志不会静默改变 hash。探索记忆仍保存于每个楼层但不参与 hash，秘密 terrain 知识（包括持久侦测）、任务状态机、当前阶段与重接次数、最终守护者与入口守卫击败状态、campaign 胜利/退休状态和最终分数、dungeon instance 身份/序号/retained 回合、楼层连接映射及其解析目标、区域边界/局部表引用、pack identity/behavior/alerted、召唤 owner/source/lifetime、Race/Class/Personality/build 身份、技能聚合、出生装备知识、角色成长 progress、资源池、已学能力和能力进度属于权威规则状态并参与 hash。恢复速率、熟练度内容上限、冷却、召唤、侦测和 terrain 转换规格由已哈希的内容包决定；瞬时侦测和地形修改事件只存在于命令结果，修改后的权威 terrain 则通过既有 terrain 数组进入 save/hash。未来规则状态边界变化时必须建立新的 state hash Schema，不得借修改存档序列化顺序隐式更新基准。
 
 ## 1. 原则
 
@@ -112,7 +112,7 @@ interface ReplayV1 {
   contentHash: string;
   initialSaveHash: string;
   rngAlgorithm: string;
-  stateHashSchemaVersion: 34;
+  stateHashSchemaVersion: 35;
   commands: ReplayCommand[];
   checkpoints: ReplayCheckpoint[];
 }
@@ -184,3 +184,9 @@ v79 的固定八向锥形先验证方向目标，再按中心线逐层展开；a
 v80 的定点/实体射线在目标存在、可见且不超距后才扣资源并抽施法失败率；核心用同一整数 Bresenham 误差从玩家推进到目标，并沿相同斜率继续到内容射程上限。actor 不阻挡，墙体/不可行走地形/边界截断，路径按近到远稳定结算并共享一次基础伤害骰。自身、缺失、不可见或超距目标在 Mana/RNG/熟练度前拒绝；延长 footprint、目标顺序与事件只存在于命令/回放，save 与 state hash 仍使用 Schema v34。
 
 v81 的 `teleport` 先验证 position 落点：目标必须非当前格、在地图内、处于 Chebyshev 射程内、当前可见、满足 line of effect、可行走且无存活 actor 占据。验证失败不扣 Mana、不抽施法或能力 RNG、不改变能力进度；成功才按既有能力失败率、资源、熟练度和冷却规则结算。成功传送不增加随机骰，位置更新随后复用普通移动的被动感知、陷阱和死亡处理；落点与事件不写入 save，state hash 继续使用 Schema v34。
+
+v82 的 `summon` 在扣 Mana和抽施法失败率之前收集全部落位。候选格按 Chebyshev 距离、`y`、`x` 稳定排序，必须可行走且不被玩家、actor 或地面物品占用；不足配置数量时整次拒绝，不改变资源、RNG 或能力进度。空间足够时只抽既有一次失败率骰；失败仍支付 Mana，成功不再抽额外位置 RNG，而是按稳定顺序生成 `summon.<ability-id>.<command-seq>.<ordinal>`。召唤生命周期在每个玩家完成的世界回合末按实体 ID 顺序递减，到期按同一顺序发出移除事件。owner/source/lifetime 写入 save 并进入 state hash Schema v35。
+
+v83 的 `detect` 只接受 `self` 目标；非法目标和资源不足在任何能力 RNG 前拒绝。合法施法按既有规则支付 Mana并抽一次失败率骰；失败不产生侦测结果，成功后按当前地图、Chebyshev 半径、FOV/line of sight、尚未发现、存在隐藏投影和 terrain tag 类别依次过滤，再按距离、`y`、`x` 稳定排序。空结果仍是成功施法且不额外抽 RNG。持久结果写入 `revealedTerrain` 并进入 save/state hash Schema v36，瞬时结果只进入 `ability.detect` 事件且不改变普通地图知识。
+
+v84 的 `transform-terrain` 只接受 position 中心；中心必须在地图、内容射程、FOV 和 line of effect 内，非法目标和资源不足在任何能力 RNG 前拒绝。有效中心在支付 Mana 前按 RFB 距离、FOV、中心 line of effect、规范化来源 terrain 集、占用格、地图边界、floor connection 和连接 terrain tag 收集候选，并按距离、`y`、`x` 稳定排序。失败施法支付 Mana但不写 terrain；成功后不抽额外 RNG，一次提交预收集集合并移除对应 `revealedTerrain`，空集合仍返回 `ability.terrain-transform`。实际格通过 `changedCells` 更新并由既有当前/离层 terrain 数组进入 save/hash；state hash 保持 Schema v36，运行时不做自动连通修复。

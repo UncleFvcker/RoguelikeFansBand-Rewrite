@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.echo-pulse",
+  "nameKey": "ability-demo-echo-pulse-name",
+  "descriptionKey": "ability-demo-echo-pulse-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 3,
+  "baseFailurePercent": 10,
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "effect": {
+    "type": "detect",
+    "category": "perception-cue",
+    "radius": 4,
+    "persistent": false
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["detection", "spell", "transient-knowledge"]
+}

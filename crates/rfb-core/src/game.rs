@@ -23,8 +23,8 @@ use crate::{
     event::{DomainEvent, ProjectileTrace, project_events},
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
-        GENERATED_ITEM_ID_PREFIX, actor_from_entity, actor_from_player, actor_from_spawn,
-        actors_to_save, carried_item_from_dto, carried_items_to_save,
+        GENERATED_ITEM_ID_PREFIX, actor_from_entity, actor_from_player, actor_from_runtime_spawn,
+        actor_from_spawn, actors_to_save, carried_item_from_dto, carried_items_to_save,
         derive_next_item_instance_serial, equipment_item_from_dto, equipment_to_save,
         floor_connections_from_save, floor_connections_to_save, floor_from_save,
         floor_regions_from_save, floor_regions_to_save, floor_to_save, inventory_item_from_dto,
@@ -37,7 +37,7 @@ use crate::{
     },
     state::{
         Actor, EquipOutcome, FloorConnectionState, FloorRegionState, FloorState, ItemInstance,
-        ItemLocation, MonsterPackIdentity, ResourcePool,
+        ItemLocation, MonsterPackIdentity, ResourcePool, SummonIdentity,
     },
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -60,28 +60,30 @@ use rfb_content::{
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityConeDamageResolutionDto, AbilityDto, AbilityLearningDto, AbilityProficiencyRankDto,
-    AbilityProgressSaveDto, AbilityTeleportResolutionDto, ActorSaveDto, AttackProfileDto,
-    AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto,
-    CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto,
-    Direction, DungeonStateSaveDto, EntityDto, EquipmentItemDto, EquipmentItemSaveDto,
-    FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GameCommandEnvelope, GameSnapshot,
-    GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto,
-    ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto,
-    PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto,
-    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto, StatModifiersDto,
-    TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
-    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
+    AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityDetectSpecDto, AbilityDto,
+    AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
+    AbilitySummonResolutionDto, AbilitySummonSpecDto, AbilityTeleportResolutionDto,
+    AbilityTerrainTransformResolutionDto, AbilityTerrainTransformSpecDto, ActorSaveDto,
+    AttackProfileDto, AttributeSetDto, AttributeValueDto, CampaignStateDto, CampaignStateSaveDto,
+    CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
+    DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EntityFactionDto, EquipmentItemDto,
+    EquipmentItemSaveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
+    GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto,
+    InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
+    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
+    MeleeRoutineDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto,
+    PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ProjectileProfileDto, ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto,
+    RestResolutionDto, RestStopReasonDto, RngSaveDto, SavePayloadV1, SkillProgressDto,
+    StatModifiersDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto,
+    TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
     TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 74] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 77] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -156,9 +158,12 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 74] = [
     "6f5f545e3b2c9cab98b6cd33f328679228b643ae147f20739c982863eba47bea",
     "817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835",
     "30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504",
+    "66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d",
+    "aab3548090030a1d2d46496581fb41a9f2892213186aeb2236a7a79065fc069f",
+    "8ac0aee6fe54abb2c97bbed3eedaaa510d32393126bd08f89d046d515a66213b",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d";
+    "6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 const VISIBILITY_RADIUS: i32 = 8;
@@ -214,6 +219,11 @@ impl AbilityProgress {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum AbilityTargetPlan {
     SelfTarget,
+    Detect,
+    TerrainTransform {
+        center: Position,
+        positions: Vec<Position>,
+    },
     Teleport {
         destination: Position,
     },
@@ -226,11 +236,14 @@ enum AbilityTargetPlan {
         direction: Direction,
         radius: u8,
     },
+    Summon {
+        positions: Vec<Position>,
+    },
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV34 {
+struct StateHashPayloadV36 {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -2217,8 +2230,8 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV34 {
-            schema_version: 34,
+        let payload = StateHashPayloadV36 {
+            schema_version: 36,
             revision: self.revision,
             turn: self.turn,
             world_tick: self.world_tick,
@@ -2868,9 +2881,9 @@ impl Game {
     }
 
     fn visible_hostile_exists(&self) -> bool {
-        self.entities
-            .iter()
-            .any(|entity| entity.hp > 0 && self.is_visible(entity.position))
+        self.entities.iter().any(|entity| {
+            entity.hp > 0 && entity.summon.is_none() && self.is_visible(entity.position)
+        })
     }
 
     fn resolve_player_rest(
@@ -2994,6 +3007,44 @@ impl Game {
                         _ => None,
                     },
                     teleport: matches!(ability.effect, AbilityEffectDefinition::Teleport),
+                    summon: match &ability.effect {
+                        AbilityEffectDefinition::Summon {
+                            actor_kind_id,
+                            count,
+                            radius,
+                            duration_turns,
+                        } => Some(AbilitySummonSpecDto {
+                            actor_kind_id: actor_kind_id.clone(),
+                            count: *count,
+                            radius: *radius,
+                            duration_turns: *duration_turns,
+                        }),
+                        _ => None,
+                    },
+                    detect: match &ability.effect {
+                        AbilityEffectDefinition::Detect {
+                            category,
+                            radius,
+                            persistent,
+                        } => Some(AbilityDetectSpecDto {
+                            category: category.clone(),
+                            radius: *radius,
+                            persistent: *persistent,
+                        }),
+                        _ => None,
+                    },
+                    terrain_transform: match &ability.effect {
+                        AbilityEffectDefinition::TransformTerrain {
+                            source_terrain_ids,
+                            target_terrain_id,
+                            radius,
+                        } => Some(AbilityTerrainTransformSpecDto {
+                            source_terrain_ids: source_terrain_ids.clone(),
+                            target_terrain_id: target_terrain_id.clone(),
+                            radius: *radius,
+                        }),
+                        _ => None,
+                    },
                     target_spec: ability_target_spec_dto(ability),
                     learned,
                     book_item_id: book_item_id.clone(),
@@ -3059,6 +3110,16 @@ impl Game {
                         .iter()
                         .map(crate::effect::StatusInstance::to_dto)
                         .collect(),
+                    faction: if entity.summon.is_some() {
+                        EntityFactionDto::Player
+                    } else {
+                        EntityFactionDto::Hostile
+                    },
+                    summon: entity.summon.as_ref().map(|summon| SummonDto {
+                        owner_id: summon.owner_id.clone(),
+                        source_ability_id: summon.source_ability_id.clone(),
+                        remaining_turns: summon.remaining_turns,
+                    }),
                 }
             })
             .collect::<Vec<_>>();
@@ -4806,6 +4867,104 @@ impl Game {
                 events.extend(self.relocate_player(destination, changed));
             }
             (
+                AbilityEffectDefinition::Summon {
+                    actor_kind_id,
+                    count,
+                    duration_turns,
+                    ..
+                },
+                AbilityTargetPlan::Summon { positions },
+            ) => {
+                debug_assert_eq!(usize::from(count), positions.len());
+                let definition = self
+                    .content
+                    .actor(&actor_kind_id)
+                    .expect("validated summon actor must remain available")
+                    .clone();
+                let mut entity_ids = Vec::with_capacity(positions.len());
+                for (ordinal, position) in positions.iter().copied().enumerate() {
+                    let id = self.summon_entity_id(&ability.id, ordinal);
+                    let mut entity = actor_from_runtime_spawn(
+                        &id,
+                        &actor_kind_id,
+                        position,
+                        definition.max_hp,
+                        definition.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        true,
+                    );
+                    entity.summon = Some(SummonIdentity {
+                        owner_id: self.player.id.clone(),
+                        source_ability_id: ability.id.clone(),
+                        remaining_turns: duration_turns,
+                    });
+                    changed.insert(position);
+                    entity_ids.push(id);
+                    self.entities.push(entity);
+                }
+                events.push(DomainEvent::AbilitySummoned {
+                    ability_id: ability.id,
+                    resolution: AbilitySummonResolutionDto {
+                        owner_id: self.player.id.clone(),
+                        actor_kind_id,
+                        entity_ids,
+                        positions,
+                        duration_turns,
+                    },
+                });
+            }
+            (
+                AbilityEffectDefinition::Detect {
+                    category,
+                    radius,
+                    persistent,
+                },
+                AbilityTargetPlan::Detect,
+            ) => {
+                let detected_positions =
+                    self.detect_terrain_positions(&category, radius, persistent);
+                if persistent {
+                    changed.extend(detected_positions.iter().copied());
+                }
+                events.push(DomainEvent::AbilityDetected {
+                    ability_id: ability.id,
+                    resolution: AbilityDetectResolutionDto {
+                        category,
+                        radius,
+                        persistent,
+                        detected_positions,
+                    },
+                });
+            }
+            (
+                AbilityEffectDefinition::TransformTerrain {
+                    source_terrain_ids,
+                    target_terrain_id,
+                    radius,
+                },
+                AbilityTargetPlan::TerrainTransform { center, positions },
+            ) => {
+                for position in &positions {
+                    let index = self
+                        .index(*position)
+                        .expect("planned terrain transformation must remain in bounds");
+                    debug_assert!(source_terrain_ids.contains(&self.terrain[index]));
+                    self.terrain[index].clone_from(&target_terrain_id);
+                    self.revealed_terrain.remove(position);
+                    changed.insert(*position);
+                }
+                events.push(DomainEvent::AbilityTerrainTransformed {
+                    ability_id: ability.id,
+                    resolution: AbilityTerrainTransformResolutionDto {
+                        center,
+                        radius,
+                        source_terrain_ids,
+                        target_terrain_id,
+                        transformed_positions: positions,
+                    },
+                });
+            }
+            (
                 AbilityEffectDefinition::Damage {
                     damage_dice,
                     damage_sides,
@@ -5015,6 +5174,44 @@ impl Game {
                 self.teleport_destination(ability, *position)
                     .map(|destination| AbilityTargetPlan::Teleport { destination })
             }
+            AbilityEffectDefinition::Summon { count, radius, .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then(|| self.summon_positions(count, radius))
+                .flatten()
+                .map(|positions| AbilityTargetPlan::Summon { positions })
+            }
+            AbilityEffectDefinition::Detect { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::Detect)
+            }
+            AbilityEffectDefinition::TransformTerrain {
+                ref source_terrain_ids,
+                ref target_terrain_id,
+                radius,
+            } => {
+                let TargetSelection::Position { position } = target else {
+                    return None;
+                };
+                self.terrain_transform_positions(
+                    ability,
+                    *position,
+                    source_terrain_ids,
+                    target_terrain_id,
+                    radius,
+                )
+                .map(|positions| AbilityTargetPlan::TerrainTransform {
+                    center: *position,
+                    positions,
+                })
+            }
             AbilityEffectDefinition::Heal { .. } => (matches!(target, TargetSelection::SelfTarget)
                 && ability
                     .target
@@ -5084,6 +5281,207 @@ impl Game {
             return None;
         }
         Some(destination)
+    }
+
+    fn summon_positions(&self, count: u8, radius: u8) -> Option<Vec<Position>> {
+        let origin = self.player.position;
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .chain(std::iter::once(origin))
+            .chain(self.items.iter().filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some(position),
+                ItemLocation::Inventory
+                | ItemLocation::Equipped { .. }
+                | ItemLocation::CarriedBy { .. } => None,
+            }))
+            .collect::<BTreeSet<_>>();
+        let mut candidates = Vec::new();
+        for y in
+            origin.y.saturating_sub(i32::from(radius))..=origin.y.saturating_add(i32::from(radius))
+        {
+            for x in origin.x.saturating_sub(i32::from(radius))
+                ..=origin.x.saturating_add(i32::from(radius))
+            {
+                let position = Position { x, y };
+                let distance = origin.x.abs_diff(x).max(origin.y.abs_diff(y));
+                if distance == 0
+                    || distance > u32::from(radius)
+                    || self.index(position).is_none()
+                    || !self.is_walkable(position)
+                    || occupied.contains(&position)
+                {
+                    continue;
+                }
+                candidates.push((distance, position.y, position.x, position));
+            }
+        }
+        candidates.sort_unstable_by_key(|(distance, y, x, _)| (*distance, *y, *x));
+        let count = usize::from(count);
+        (candidates.len() >= count).then(|| {
+            candidates
+                .into_iter()
+                .take(count)
+                .map(|entry| entry.3)
+                .collect()
+        })
+    }
+
+    fn detect_terrain_positions(
+        &mut self,
+        category: &str,
+        radius: u8,
+        persistent: bool,
+    ) -> Vec<Position> {
+        let origin = self.player.position;
+        let radius_distance = u32::from(radius);
+        let radius_offset = i32::from(radius);
+        let mut candidates = Vec::new();
+        for y in origin.y.saturating_sub(radius_offset)..=origin.y.saturating_add(radius_offset) {
+            for x in origin.x.saturating_sub(radius_offset)..=origin.x.saturating_add(radius_offset)
+            {
+                let position = Position { x, y };
+                let distance = origin.x.abs_diff(x).max(origin.y.abs_diff(y));
+                if distance > radius_distance
+                    || self.revealed_terrain.contains(&position)
+                    || !self.is_visible(position)
+                {
+                    continue;
+                }
+                let Some(index) = self.index(position) else {
+                    continue;
+                };
+                let Some(terrain) = self.content.terrain(&self.terrain[index]) else {
+                    continue;
+                };
+                if terrain.concealed_as_terrain_id.is_none()
+                    || !terrain.tags.iter().any(|tag| tag == category)
+                {
+                    continue;
+                }
+                candidates.push((distance, position.y, position.x, position));
+            }
+        }
+        candidates.sort_unstable_by_key(|(distance, y, x, _)| (*distance, *y, *x));
+        let positions = candidates
+            .into_iter()
+            .map(|(_, _, _, position)| position)
+            .collect::<Vec<_>>();
+        if persistent {
+            self.revealed_terrain.extend(positions.iter().copied());
+        }
+        positions
+    }
+
+    fn terrain_transform_positions(
+        &self,
+        ability: &AbilityDefinition,
+        center: Position,
+        source_terrain_ids: &[String],
+        target_terrain_id: &str,
+        radius: u8,
+    ) -> Option<Vec<Position>> {
+        let origin = self.player.position;
+        if !ability
+            .target
+            .modes
+            .contains(&AbilityTargetModeDefinition::Position)
+            || self.index(center).is_none()
+            || origin.x.abs_diff(center.x).max(origin.y.abs_diff(center.y))
+                > u32::from(ability.target.range)
+            || !self.is_visible(center)
+            || (ability.target.requires_line_of_effect && !has_line_of_effect(self, origin, center))
+        {
+            return None;
+        }
+        debug_assert!(self.content.terrain(target_terrain_id).is_some());
+
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .chain(std::iter::once(origin))
+            .chain(self.items.iter().filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some(position),
+                ItemLocation::Inventory
+                | ItemLocation::Equipped { .. }
+                | ItemLocation::CarriedBy { .. } => None,
+            }))
+            .collect::<BTreeSet<_>>();
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        let radius_limit = u32::from(radius);
+        let radius_offset = i32::from(radius);
+        let max_x = i32::from(self.width).saturating_sub(1);
+        let max_y = i32::from(self.height).saturating_sub(1);
+        let mut candidates = Vec::new();
+        for y in center.y.saturating_sub(radius_offset)..=center.y.saturating_add(radius_offset) {
+            for x in center.x.saturating_sub(radius_offset)..=center.x.saturating_add(radius_offset)
+            {
+                let position = Position { x, y };
+                let distance = rfb_distance(center, position);
+                if distance > radius_limit
+                    || position.x <= 0
+                    || position.y <= 0
+                    || position.x >= max_x
+                    || position.y >= max_y
+                    || occupied.contains(&position)
+                    || connections.contains(&position)
+                    || !self.is_visible(position)
+                    || !has_line_of_effect(self, center, position)
+                {
+                    continue;
+                }
+                let Some(index) = self.index(position) else {
+                    continue;
+                };
+                let terrain_id = &self.terrain[index];
+                let Some(terrain) = self.content.terrain(terrain_id) else {
+                    continue;
+                };
+                if terrain.tags.iter().any(|tag| {
+                    matches!(
+                        tag.as_str(),
+                        "stairs-down" | "stairs-up" | "shaft" | "dungeon-entry" | "task-entry"
+                    )
+                }) {
+                    continue;
+                }
+                if source_terrain_ids.binary_search(terrain_id).is_err() {
+                    continue;
+                }
+                candidates.push((distance, position.y, position.x, position));
+            }
+        }
+        candidates.sort_unstable_by_key(|(distance, y, x, _)| (*distance, *y, *x));
+        Some(
+            candidates
+                .into_iter()
+                .map(|(_, _, _, position)| position)
+                .collect(),
+        )
+    }
+
+    fn summon_entity_id(&self, ability_id: &str, ordinal: usize) -> String {
+        let command_seq = self.last_command_seq.saturating_add(1);
+        let base = format!("summon.{ability_id}.{command_seq}.{ordinal}");
+        if self.entities.iter().all(|entity| entity.id != base) {
+            return base;
+        }
+        let mut suffix = 1_u32;
+        loop {
+            let candidate = format!("{base}.{suffix}");
+            if self.entities.iter().all(|entity| entity.id != candidate) {
+                return candidate;
+            }
+            suffix = suffix.saturating_add(1);
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -5859,7 +6257,50 @@ impl Game {
                 break;
             }
         }
+        self.advance_summon_lifetimes(events, changed, removed_entities);
         Ok(())
+    }
+
+    fn advance_summon_lifetimes(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .filter(|entity| entity.summon.is_some())
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+        for entity_id in entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let expires = self.entities[index]
+                .summon
+                .as_ref()
+                .is_some_and(|summon| summon.remaining_turns <= 1);
+            if expires {
+                let position = self.entities[index].position;
+                let target_kind_id = self.entities[index].kind_id.clone();
+                let removed_id = self.entities[index].id.clone();
+                self.entities.remove(index);
+                changed.insert(position);
+                removed_entities.push(removed_id.clone());
+                events.push(DomainEvent::SummonExpired {
+                    entity_id: removed_id,
+                    target_kind_id,
+                });
+            } else if let Some(summon) = self.entities[index].summon.as_mut() {
+                summon.remaining_turns = summon.remaining_turns.saturating_sub(1);
+            }
+        }
     }
 
     fn process_status_tick(
@@ -5981,6 +6422,11 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         surround_reservations: &mut BTreeSet<Position>,
     ) {
+        if self.entities[index].summon.is_some() {
+            // The first summon contract establishes ownership and lifecycle;
+            // friendly combat AI is intentionally deferred to a later slice.
+            return;
+        }
         if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
             return;
         }
@@ -10508,6 +10954,11 @@ impl Game {
         positions.insert(self.player.position);
         for entity in &self.entities {
             self.validate_actor(entity, ActorRole::Monster)?;
+            if let Some(summon) = &entity.summon
+                && !self.summon_identity_is_valid(entity, summon)
+            {
+                return Err(CoreError::InvalidSave("summon state is invalid"));
+            }
             if !instance_ids.insert(entity.id.clone())
                 || !self.is_walkable(entity.position)
                 || !positions.insert(entity.position)
@@ -11018,10 +11469,35 @@ impl Game {
             || actor.energy_need < -STANDARD_ACTION_COST
             || actor.hp > effective_max_hp
             || (expected_role == ActorRole::Player && actor.pack.is_some())
+            || (actor.summon.is_some() && actor.pack.is_some())
         {
             return Err(CoreError::InvalidSave("actor state is invalid"));
         }
         Ok(())
+    }
+
+    fn summon_identity_is_valid(&self, actor: &Actor, summon: &SummonIdentity) -> bool {
+        let valid_id = |id: &str| {
+            !id.is_empty()
+                && id.len() <= 256
+                && id.bytes().all(|byte| {
+                    byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
+                })
+        };
+        valid_id(&summon.owner_id)
+            && summon.owner_id == self.player.id
+            && valid_id(&summon.source_ability_id)
+            && summon.remaining_turns > 0
+            && self
+                .content
+                .ability(&summon.source_ability_id)
+                .is_some_and(|ability| {
+                    matches!(
+                        &ability.effect,
+                        AbilityEffectDefinition::Summon { actor_kind_id, .. }
+                            if actor_kind_id == &actor.kind_id
+                    )
+                })
     }
 }
 
@@ -19923,6 +20399,653 @@ mod tests {
     }
 
     #[test]
+    fn summon_is_deterministic_owned_persistent_and_expires_by_turn() {
+        let ability_id = "demo.ability.echo-companion";
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .unwrap()
+                .proficiency = 1600;
+            for entity in &mut candidate.entities {
+                entity.energy_need = 1_000;
+            }
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::SelfTarget,
+                },
+            );
+            if update
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.summon")
+            {
+                selected = Some((candidate, update));
+                break;
+            }
+        }
+        let (mut game, update) = selected.expect("a deterministic seed should cast successfully");
+        let summon = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilitySummon { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("summon outcome should be present");
+        assert_eq!(summon.entity_ids.len(), 2);
+        assert_eq!(summon.positions.len(), 2);
+        assert!(summon.positions[0] != summon.positions[1]);
+        assert!(game.entities.iter().all(|entity| {
+            entity.summon.as_ref().is_none_or(|identity| {
+                identity.owner_id == game.player.id
+                    && identity.source_ability_id == ability_id
+                    && identity.remaining_turns == 4
+            })
+        }));
+        assert!(
+            game.snapshot()
+                .entities
+                .iter()
+                .filter(|entity| entity.faction == EntityFactionDto::Player)
+                .all(|entity| entity.summon.is_some())
+        );
+
+        let restored = Game::from_save(game.to_save()).expect("summon save should round-trip");
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.snapshot().entities, game.snapshot().entities);
+
+        for sequence in 0..4 {
+            let update = dispatch_next(&mut game, GameCommand::Wait);
+            if sequence < 3 {
+                assert_eq!(
+                    update
+                        .entities
+                        .iter()
+                        .filter(|entity| entity.faction == EntityFactionDto::Player)
+                        .count(),
+                    2
+                );
+            }
+        }
+        assert!(
+            game.snapshot()
+                .entities
+                .iter()
+                .all(|entity| entity.faction == EntityFactionDto::Hostile)
+        );
+    }
+
+    #[test]
+    fn summon_space_rejection_is_atomic_before_mana_and_rng() {
+        let ability_id = "demo.ability.echo-companion";
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        clear_monsters(&mut game);
+        game.learned_abilities.insert(ability_id.to_owned());
+        let origin = game.player.position;
+        for y in origin.y - 2..=origin.y + 2 {
+            for x in origin.x - 2..=origin.x + 2 {
+                let position = Position { x, y };
+                if position != origin && game.index(position).is_some() {
+                    replace_terrain(&mut game, position, "demo.terrain.wall");
+                }
+            }
+        }
+        let mana_before = game.resources["demo.resource.mana"].current;
+        let draws_before = game.rng_draw_counter();
+        let progress_before = game.ability_progress[ability_id];
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+        assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert_eq!(game.ability_progress[ability_id], progress_before);
+        assert!(game.entities.is_empty());
+    }
+
+    #[test]
+    fn summon_failure_costs_mana_but_does_not_create_entities() {
+        let ability_id = "demo.ability.echo-companion";
+        for seed in 0..128 {
+            let mut game = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut game);
+            game.learned_abilities.insert(ability_id.to_owned());
+            for entity in &mut game.entities {
+                entity.energy_need = 1_000;
+            }
+            let mana_before = game.resources["demo.resource.mana"].current;
+            let draws_before = game.rng_draw_counter();
+            let update = dispatch_next(
+                &mut game,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::SelfTarget,
+                },
+            );
+            let Some(cast) = update
+                .events
+                .iter()
+                .find_map(|event| match event.outcome.as_ref() {
+                    Some(GameEventOutcomeDto::AbilityCast { resolution }) => Some(resolution),
+                    _ => None,
+                })
+            else {
+                continue;
+            };
+            if !cast.succeeded {
+                assert!(game.resources["demo.resource.mana"].current < mana_before);
+                assert_eq!(game.rng_draw_counter(), draws_before + 1);
+                assert!(game.entities.is_empty());
+                return;
+            }
+        }
+        panic!("a failure seed should exist in the deterministic search range");
+    }
+
+    #[test]
+    fn detect_persistent_filters_category_visibility_and_round_trips() {
+        let ability_id = "demo.ability.echo-sight";
+        let visible_rune = Position { x: 4, y: 2 };
+        let visible_door = Position { x: 4, y: 4 };
+        let blocked_rune = Position { x: 6, y: 3 };
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate
+                .items
+                .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("detect ability progress should exist")
+                .proficiency = 1600;
+            for y in 1..=5 {
+                for x in 1..=8 {
+                    replace_terrain(&mut candidate, Position { x, y }, "demo.terrain.floor");
+                }
+            }
+            replace_terrain(
+                &mut candidate,
+                visible_rune,
+                "demo.terrain.echo-rune-hidden",
+            );
+            replace_terrain(&mut candidate, visible_door, "demo.terrain.door-secret");
+            replace_terrain(&mut candidate, Position { x: 5, y: 3 }, "demo.terrain.wall");
+            replace_terrain(
+                &mut candidate,
+                blocked_rune,
+                "demo.terrain.echo-rune-hidden",
+            );
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::SelfTarget,
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update));
+                break;
+            }
+        }
+        let (game, update) = selected.expect("a deterministic detect success seed should exist");
+        let detection = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityDetect { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("successful detection should expose its result");
+        assert_eq!(detection.category, "hidden");
+        assert_eq!(detection.radius, 6);
+        assert!(detection.persistent);
+        assert_eq!(
+            detection.detected_positions,
+            vec![visible_rune, visible_door]
+        );
+        assert!(game.revealed_terrain.contains(&visible_rune));
+        assert!(game.revealed_terrain.contains(&visible_door));
+        assert!(!game.revealed_terrain.contains(&blocked_rune));
+        assert_eq!(
+            game.known_terrain_at(visible_rune),
+            "demo.terrain.echo-rune-hidden"
+        );
+        assert_eq!(
+            game.known_terrain_at(visible_door),
+            "demo.terrain.door-secret"
+        );
+        assert_eq!(game.known_terrain_at(blocked_rune), "demo.terrain.wall");
+        assert_eq!(
+            update
+                .changed_cells
+                .iter()
+                .map(|cell| cell.position)
+                .collect::<Vec<_>>(),
+            vec![visible_rune, visible_door]
+        );
+
+        let restored = Game::from_save(game.to_save()).expect("detected terrain should reload");
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn detect_transient_empty_and_invalid_targets_preserve_knowledge_boundaries() {
+        let ability_id = "demo.ability.echo-pulse";
+        let rune = Position { x: 4, y: 3 };
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate
+                .items
+                .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("detect ability progress should exist")
+                .proficiency = 1600;
+            replace_terrain(&mut candidate, rune, "demo.terrain.echo-rune-hidden");
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::SelfTarget,
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update));
+                break;
+            }
+        }
+        let (mut game, update) =
+            selected.expect("a deterministic detect success seed should exist");
+        let detection = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityDetect { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("transient detection should expose its result");
+        assert_eq!(detection.detected_positions, vec![rune]);
+        assert!(!detection.persistent);
+        assert!(!game.revealed_terrain.contains(&rune));
+        assert_eq!(game.known_terrain_at(rune), "demo.terrain.wall");
+        assert!(update.changed_cells.is_empty());
+
+        replace_terrain(&mut game, rune, "demo.terrain.floor");
+        let empty = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        let empty_detection = empty
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityDetect { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("empty detection should still resolve");
+        assert!(empty_detection.detected_positions.is_empty());
+
+        let mana_before = game.resources["demo.resource.mana"].current;
+        let draws_before = game.rng_draw_counter();
+        let progress_before = game.ability_progress[ability_id];
+        let rejected = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        assert!(
+            rejected
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+        assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert_eq!(game.ability_progress[ability_id], progress_before);
+    }
+
+    #[test]
+    fn terrain_transform_digging_is_stable_atomic_and_round_trips() {
+        let ability_id = "demo.ability.echo-delving";
+        let center = Position { x: 5, y: 3 };
+        let transformed = vec![center, Position { x: 5, y: 2 }, Position { x: 4, y: 4 }];
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate
+                .items
+                .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("terrain transform progress should exist")
+                .proficiency = SPELL_EXP_MASTER;
+            for (position, terrain_id) in [
+                (center, "demo.terrain.wall"),
+                (Position { x: 5, y: 2 }, "demo.terrain.echo-rubble"),
+                (Position { x: 6, y: 3 }, "demo.terrain.resonance-vein"),
+                (Position { x: 4, y: 4 }, "demo.terrain.resonance-ruin"),
+                (Position { x: 5, y: 4 }, "demo.terrain.floor"),
+            ] {
+                replace_terrain(&mut candidate, position, terrain_id);
+            }
+            candidate.revealed_terrain.insert(Position { x: 5, y: 2 });
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::Position { position: center },
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update));
+                break;
+            }
+        }
+        let (game, update) =
+            selected.expect("a deterministic terrain transformation success should exist");
+        let resolution = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityTerrainTransform { resolution }) => {
+                    Some(resolution)
+                }
+                _ => None,
+            })
+            .expect("successful terrain transformation should expose its result");
+        assert_eq!(resolution.center, center);
+        assert_eq!(resolution.radius, 1);
+        assert_eq!(resolution.target_terrain_id, "demo.terrain.floor");
+        assert_eq!(resolution.transformed_positions, transformed);
+        for position in &transformed {
+            assert_eq!(game.terrain_at(*position), "demo.terrain.floor");
+        }
+        assert_eq!(
+            game.terrain_at(Position { x: 5, y: 4 }),
+            "demo.terrain.floor"
+        );
+        assert_eq!(
+            game.terrain_at(Position { x: 6, y: 3 }),
+            "demo.terrain.resonance-vein"
+        );
+        assert!(!game.revealed_terrain.contains(&Position { x: 5, y: 2 }));
+        assert_eq!(
+            update
+                .changed_cells
+                .iter()
+                .map(|cell| cell.position)
+                .collect::<BTreeSet<_>>(),
+            transformed.iter().copied().collect()
+        );
+
+        let restored = Game::from_save(game.to_save()).expect("transformed terrain should reload");
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+
+    #[test]
+    fn terrain_transform_creation_filters_occupied_connections_and_borders() {
+        let ability_id = "demo.ability.echo-rampart";
+        let center = Position { x: 3, y: 3 };
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            candidate.entities.truncate(1);
+            candidate.entities[0].position = Position { x: 2, y: 3 };
+            candidate.entities[0].energy_need = i32::MAX / 2;
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("terrain transform progress should exist")
+                .proficiency = SPELL_EXP_MASTER;
+            for position in [
+                Position { x: 2, y: 2 },
+                Position { x: 3, y: 2 },
+                Position { x: 4, y: 2 },
+                Position { x: 2, y: 3 },
+                Position { x: 3, y: 3 },
+                Position { x: 4, y: 3 },
+                Position { x: 2, y: 4 },
+                Position { x: 4, y: 4 },
+            ] {
+                replace_terrain(&mut candidate, position, "demo.terrain.floor");
+            }
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::Position { position: center },
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update));
+                break;
+            }
+        }
+        let (game, update) =
+            selected.expect("a deterministic terrain creation success should exist");
+        let resolution = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityTerrainTransform { resolution }) => {
+                    Some(resolution)
+                }
+                _ => None,
+            })
+            .expect("successful terrain creation should expose its result");
+        let expected = vec![
+            Position { x: 2, y: 2 },
+            Position { x: 3, y: 2 },
+            Position { x: 4, y: 2 },
+            Position { x: 2, y: 4 },
+            Position { x: 4, y: 4 },
+        ];
+        assert_eq!(resolution.transformed_positions, expected);
+        for position in &expected {
+            assert_eq!(game.terrain_at(*position), "demo.terrain.echo-rubble");
+        }
+        assert_eq!(game.terrain_at(center), "demo.terrain.floor");
+        assert_eq!(
+            game.terrain_at(Position { x: 2, y: 3 }),
+            "demo.terrain.floor"
+        );
+        assert_eq!(
+            game.terrain_at(Position { x: 4, y: 3 }),
+            "demo.terrain.floor"
+        );
+        assert_eq!(
+            game.terrain_at(Position { x: 3, y: 4 }),
+            "demo.terrain.stairs-down"
+        );
+
+        let ability = game
+            .content
+            .ability(ability_id)
+            .expect("terrain creation ability should exist");
+        assert!(
+            game.terrain_transform_positions(
+                ability,
+                center,
+                &["demo.terrain.stairs-down".to_owned()],
+                "demo.terrain.echo-rubble",
+                1,
+            )
+            .expect("the current cell should be a valid target")
+            .is_empty()
+        );
+        let border_game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        let border_ability = border_game
+            .content
+            .ability(ability_id)
+            .expect("terrain creation ability should exist");
+        assert!(
+            border_game
+                .terrain_transform_positions(
+                    border_ability,
+                    Position { x: 1, y: 1 },
+                    &["demo.terrain.wall".to_owned()],
+                    "demo.terrain.echo-rubble",
+                    1,
+                )
+                .expect("the near-border cell should be a valid target")
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn terrain_transform_empty_invalid_and_failure_preserve_rng_boundaries() {
+        let ability_id = "demo.ability.echo-delving";
+        let empty_center = Position { x: 8, y: 3 };
+        let mut selected = None;
+        for seed in 0..128 {
+            let mut candidate = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut candidate);
+            candidate
+                .items
+                .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+            candidate.learned_abilities.insert(ability_id.to_owned());
+            candidate
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("terrain transform progress should exist")
+                .proficiency = SPELL_EXP_MASTER;
+            let mana_before = candidate.resources["demo.resource.mana"].current;
+            let draws_before = candidate.rng_draw_counter();
+            let update = dispatch_next(
+                &mut candidate,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::Position {
+                        position: empty_center,
+                    },
+                },
+            );
+            if ability_cast_resolution(&update).succeeded {
+                selected = Some((candidate, update, mana_before, draws_before));
+                break;
+            }
+        }
+        let (mut game, empty, mana_before, draws_before) =
+            selected.expect("a deterministic empty terrain transformation should succeed");
+        let resolution = empty
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::AbilityTerrainTransform { resolution }) => {
+                    Some(resolution)
+                }
+                _ => None,
+            })
+            .expect("empty terrain transformation should still resolve");
+        assert!(resolution.transformed_positions.is_empty());
+        assert!(game.resources["demo.resource.mana"].current < mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before + 1);
+        assert!(empty.changed_cells.is_empty());
+
+        let mana_before_rejection = game.resources["demo.resource.mana"].current;
+        let draws_before_rejection = game.rng_draw_counter();
+        let progress_before_rejection = game.ability_progress[ability_id];
+        let rejected = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target: TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+            },
+        );
+        assert!(
+            rejected
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.target-unavailable")
+        );
+        assert_eq!(
+            game.resources["demo.resource.mana"].current,
+            mana_before_rejection
+        );
+        assert_eq!(game.rng_draw_counter(), draws_before_rejection);
+        assert_eq!(game.ability_progress[ability_id], progress_before_rejection);
+
+        for seed in 0..128 {
+            let mut failure = Game::new_with_build(seed, "demo.build.scholar")
+                .expect("scholar build should create");
+            clear_monsters(&mut failure);
+            failure
+                .items
+                .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+            failure.learned_abilities.insert(ability_id.to_owned());
+            replace_terrain(&mut failure, Position { x: 5, y: 3 }, "demo.terrain.wall");
+            let terrain_before = failure.terrain.clone();
+            let mana_before = failure.resources["demo.resource.mana"].current;
+            let update = dispatch_next(
+                &mut failure,
+                GameCommand::CastAbility {
+                    ability_id: ability_id.to_owned(),
+                    target: TargetSelection::Position {
+                        position: Position { x: 5, y: 3 },
+                    },
+                },
+            );
+            if !ability_cast_resolution(&update).succeeded {
+                assert!(failure.resources["demo.resource.mana"].current < mana_before);
+                assert_eq!(failure.terrain, terrain_before);
+                assert!(!update.events.iter().any(|event| {
+                    matches!(
+                        event.outcome,
+                        Some(GameEventOutcomeDto::AbilityTerrainTransform { .. })
+                    )
+                }));
+                return;
+            }
+        }
+        panic!("a terrain transformation failure seed should exist");
+    }
+
+    #[test]
     fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
         let mut game =
             Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
@@ -19938,7 +21061,7 @@ mod tests {
                 remaining_slots: 2,
             })
         );
-        assert_eq!(initial.player.abilities.len(), 7);
+        assert_eq!(initial.player.abilities.len(), 12);
         assert!(
             initial
                 .player

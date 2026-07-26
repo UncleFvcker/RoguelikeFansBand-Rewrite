@@ -5,11 +5,11 @@ use std::collections::BTreeSet;
 use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
-    CharacterSummary, GameCommand, GameCommandEnvelope, GameEventDto, InventoryItemSaveDto,
-    ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto,
-    ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SaveHeaderV1, StatusDto,
-    StatusSaveDto, TaskStatusDto, TerrainInteractionDto,
+    CharacterSummary, EntityFactionDto, GameCommand, GameCommandEnvelope, GameEventDto,
+    InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position,
+    ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SaveHeaderV1,
+    StatusDto, StatusSaveDto, SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -112,6 +112,8 @@ pub struct EntityEffectsPrecondition {
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default)]
     pub resistances: Vec<ResistanceSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summon: Option<SummonSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -246,6 +248,14 @@ pub struct ActorStateAssertion {
     pub statuses: Vec<StatusDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pack: Option<MonsterPackSaveDto>,
+    #[serde(default, skip_serializing_if = "entity_faction_is_hostile")]
+    pub faction: EntityFactionDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summon: Option<SummonSaveDto>,
+}
+
+fn entity_faction_is_hostile(faction: &EntityFactionDto) -> bool {
+    *faction == EntityFactionDto::Hostile
 }
 
 const fn default_assertion_alerted() -> bool {
@@ -401,6 +411,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
         entity.statuses = effects.statuses.clone();
         entity.resistances = effects.resistances.clone();
+        entity.summon = effects.summon.clone();
     }
     if fixture.preconditions.debug_clear_entities {
         payload.entities.clear();
@@ -497,6 +508,12 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                         .iter()
                         .find(|saved| saved.id == entity.id)
                         .and_then(|saved| saved.pack.clone()),
+                    faction: entity.faction,
+                    summon: save
+                        .entities
+                        .iter()
+                        .find(|saved| saved.id == entity.id)
+                        .and_then(|saved| saved.summon.clone()),
                 })
                 .collect(),
             ground_item_count: snapshot.items.len(),

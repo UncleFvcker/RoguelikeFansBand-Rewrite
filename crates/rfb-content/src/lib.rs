@@ -574,6 +574,23 @@ pub enum AbilityEffectDefinition {
         radius: u8,
     },
     Teleport,
+    Summon {
+        actor_kind_id: String,
+        count: u8,
+        radius: u8,
+        duration_turns: u16,
+    },
+    Detect {
+        category: String,
+        radius: u8,
+        #[serde(default)]
+        persistent: bool,
+    },
+    TransformTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+        radius: u8,
+    },
     Heal {
         amount: u32,
     },
@@ -2513,48 +2530,92 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&ability.id, "ability")?;
         validate_definition_text(&ability.id, &ability.name_key, &ability.description_key)?;
         ability.target.modes.sort();
+        if let AbilityEffectDefinition::TransformTerrain {
+            source_terrain_ids, ..
+        } = &mut ability.effect
+        {
+            source_terrain_ids.sort();
+        }
         let mut modes = BTreeSet::new();
-        let valid_effect = match ability.effect {
+        let valid_effect = match &ability.effect {
             AbilityEffectDefinition::Damage {
                 damage_dice,
                 damage_sides,
                 ..
-            } => (1..=100).contains(&damage_dice) && (1..=10_000).contains(&damage_sides),
+            } => (1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides),
             AbilityEffectDefinition::AreaDamage {
                 damage_dice,
                 damage_sides,
                 radius,
                 ..
             } => {
-                (1..=100).contains(&damage_dice)
-                    && (1..=10_000).contains(&damage_sides)
-                    && (1..=9).contains(&radius)
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && (1..=9).contains(radius)
             }
             AbilityEffectDefinition::BeamDamage {
                 damage_dice,
                 damage_sides,
                 ..
-            } => (1..=100).contains(&damage_dice) && (1..=10_000).contains(&damage_sides),
+            } => (1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides),
             AbilityEffectDefinition::ConeDamage {
                 damage_dice,
                 damage_sides,
                 radius,
                 ..
             } => {
-                (1..=100).contains(&damage_dice)
-                    && (1..=10_000).contains(&damage_sides)
-                    && (1..=9).contains(&radius)
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && (1..=9).contains(radius)
             }
             AbilityEffectDefinition::Teleport => true,
-            AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
+            AbilityEffectDefinition::Summon {
+                actor_kind_id,
+                count,
+                radius,
+                duration_turns,
+            } => {
+                validate_id(actor_kind_id).is_ok()
+                    && (1..=8).contains(count)
+                    && (1..=8).contains(radius)
+                    && (1..=10_000).contains(duration_turns)
+            }
+            AbilityEffectDefinition::Detect {
+                category, radius, ..
+            } => {
+                !category.is_empty()
+                    && category.len() <= 64
+                    && category.bytes().all(|byte| {
+                        byte.is_ascii_lowercase()
+                            || byte.is_ascii_digit()
+                            || matches!(byte, b'-' | b'_')
+                    })
+                    && (1..=8).contains(radius)
+                    && terrain_tags.values().any(|tags| tags.contains(category))
+            }
+            AbilityEffectDefinition::TransformTerrain {
+                source_terrain_ids,
+                target_terrain_id,
+                radius,
+            } => {
+                !source_terrain_ids.is_empty()
+                    && source_terrain_ids.len() <= 32
+                    && !target_terrain_id.is_empty()
+                    && *radius <= 8
+                    && source_terrain_ids.windows(2).all(|pair| pair[0] != pair[1])
+                    && source_terrain_ids
+                        .iter()
+                        .all(|source_id| source_id != target_terrain_id)
+            }
+            AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
         };
         let self_targeted = ability
             .target
             .modes
             .contains(&AbilityTargetModeDefinition::SelfTarget);
         let directional_effect =
-            matches!(ability.effect, AbilityEffectDefinition::ConeDamage { .. });
-        let valid_target = match ability.effect {
+            matches!(&ability.effect, AbilityEffectDefinition::ConeDamage { .. });
+        let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::AreaDamage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
@@ -2569,10 +2630,25 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
             }
+            AbilityEffectDefinition::Summon { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
+                    && ability.target.range == 0
+                    && !ability.target.requires_line_of_effect
+            }
             AbilityEffectDefinition::Heal { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
                     && !ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::Detect { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
+                    && ability.target.range == 0
+                    && !ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::TransformTerrain { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
+                    && (1..=64).contains(&ability.target.range)
+                    && ability.target.requires_line_of_effect
             }
         };
         let directional_target = !directional_effect
@@ -2606,6 +2682,20 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             return Err(ContentError::InvalidAbility(ability.id.clone()));
         }
         require_reference(&resource_ids, &ability.resource_id, &ability.id)?;
+        if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = &ability.effect {
+            require_actor_role(&actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
+        }
+        if let AbilityEffectDefinition::TransformTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+            ..
+        } = &ability.effect
+        {
+            for source_terrain_id in source_terrain_ids {
+                require_reference(&terrain_ids, source_terrain_id, &ability.id)?;
+            }
+            require_reference(&terrain_ids, target_terrain_id, &ability.id)?;
+        }
         normalize_tags(&ability.id, &mut ability.tags)?;
         insert_definition_id(&mut all_ids, &ability.id)?;
         ability_resources.insert(ability.id.clone(), ability.resource_id.clone());
@@ -6327,11 +6417,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 12);
+        assert_eq!(first.content.actors.len(), 13);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 1);
-        assert_eq!(first.content.abilities.len(), 7);
+        assert_eq!(first.content.abilities.len(), 12);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 11);
@@ -6355,7 +6445,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.73.0");
+        assert_eq!(catalog.pack_version(), "1.76.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -6371,8 +6461,13 @@ mod tests {
             Some(
                 [
                     "demo.ability.echo-burst".to_owned(),
+                    "demo.ability.echo-companion".to_owned(),
+                    "demo.ability.echo-delving".to_owned(),
                     "demo.ability.echo-fan".to_owned(),
                     "demo.ability.echo-lance".to_owned(),
+                    "demo.ability.echo-pulse".to_owned(),
+                    "demo.ability.echo-rampart".to_owned(),
+                    "demo.ability.echo-sight".to_owned(),
                     "demo.ability.echo-step".to_owned(),
                     "demo.ability.harmonic-spark".to_owned(),
                     "demo.ability.resonant-bolt".to_owned(),
@@ -8258,6 +8353,117 @@ mod tests {
             .modes = vec![AbilityTargetModeDefinition::Entity];
         assert!(matches!(
             validate_and_normalize(&mut invalid_teleport_target),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_detect_category = artifact.content.clone();
+        let AbilityEffectDefinition::Detect { category, .. } = &mut invalid_detect_category
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-sight")
+            .expect("fixture should contain the persistent detection ability")
+            .effect
+        else {
+            panic!("echo sight should use detection");
+        };
+        *category = "missing-category".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_detect_category),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_detect_radius = artifact.content.clone();
+        let AbilityEffectDefinition::Detect { radius, .. } = &mut invalid_detect_radius
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-sight")
+            .expect("fixture should contain the persistent detection ability")
+            .effect
+        else {
+            panic!("echo sight should use detection");
+        };
+        *radius = 9;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_detect_radius),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_detect_target = artifact.content.clone();
+        invalid_detect_target
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-pulse")
+            .expect("fixture should contain the transient detection ability")
+            .target
+            .range = 1;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_detect_target),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut duplicate_transform_source = artifact.content.clone();
+        let AbilityEffectDefinition::TransformTerrain {
+            source_terrain_ids, ..
+        } = &mut duplicate_transform_source
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-delving")
+            .expect("fixture should contain the digging terrain ability")
+            .effect
+        else {
+            panic!("echo delving should transform terrain");
+        };
+        source_terrain_ids.push("demo.terrain.wall".to_owned());
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate_transform_source),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_transform_target = artifact.content.clone();
+        let AbilityEffectDefinition::TransformTerrain {
+            target_terrain_id, ..
+        } = &mut invalid_transform_target
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-rampart")
+            .expect("fixture should contain the terrain creation ability")
+            .effect
+        else {
+            panic!("echo rampart should transform terrain");
+        };
+        *target_terrain_id = "demo.terrain.missing".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_transform_target),
+            Err(ContentError::DanglingReference { .. })
+        ));
+
+        let mut invalid_transform_radius = artifact.content.clone();
+        let AbilityEffectDefinition::TransformTerrain { radius, .. } =
+            &mut invalid_transform_radius
+                .abilities
+                .iter_mut()
+                .find(|ability| ability.id == "demo.ability.echo-delving")
+                .expect("fixture should contain the digging terrain ability")
+                .effect
+        else {
+            panic!("echo delving should transform terrain");
+        };
+        *radius = 9;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_transform_radius),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut invalid_transform_target_mode = artifact.content.clone();
+        invalid_transform_target_mode
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.echo-rampart")
+            .expect("fixture should contain the terrain creation ability")
+            .target
+            .modes = vec![AbilityTargetModeDefinition::Direction];
+        assert!(matches!(
+            validate_and_normalize(&mut invalid_transform_target_mode),
             Err(ContentError::InvalidAbility(_))
         ));
 

@@ -100,6 +100,9 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v79：RFB 式锥形能力伤害](design/contract-v79-cone-damage.md)
 - [Contract v80：RFB 式定点延长射线](design/contract-v80-targeted-beam-extension.md)
 - [Contract v81：首个短距位移能力](design/contract-v81-teleport-ability.md)
+- [Contract v82：首个召唤能力](design/contract-v82-summon-ability.md)
+- [Contract v83：首个侦测能力](design/contract-v83-detection-ability.md)
+- [Contract v84：首个地形改变能力](design/contract-v84-terrain-transform-ability.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
 - [待实现内容清单](design/pending-implementation.md)
@@ -117,7 +120,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v81/scenarios`](tests/fixtures/contract-v81/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v80` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v84/scenarios`](tests/fixtures/contract-v84/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v83` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -202,7 +205,13 @@ RoguelikeFansBand 的新一代重构工程。
 
 协议 1.81 / contract-v81 在 v80 之上加入首个短距位移能力 Echo Step：teleport 效果只接受 position 目标，落点必须非当前格、在地图内、可见、满足 line of effect、可行走且无存活 actor 占据。所有落点拒绝在 Mana、施法 RNG 和熟练度前返回；成功后精确移动并复用普通移动的被动感知、陷阱触发和死亡处理，不增加误传送骰或存档字段；demo 内容包升至 1.73.0，content hash 为 `66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d`，active baseline 共 209 个 exact fixtures、零 waiver。state hash 仍为 Schema v34，save 容器仍为 v1。完整边界见 [Contract v81 说明](design/contract-v81-teleport-ability.md)。
 
-阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v81 固定：Mana、能力书、学习容量、主动遗忘、失败率、等待/休息恢复、自身治疗、熟练度、统计、冷却、RFB 式范围爆发、方向射线、锥形能力、定点延长射线、精确短距位移和存档回读。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步适合继续实现召唤能力，再进入多资源和怪物施法。
+协议 1.82 / contract-v82 在 v81 之上加入首个内容驱动召唤能力 Echo Companion：`summon` 声明友方 actor、数量、半径和生命周期；核心按距离/坐标稳定选择空地，生成带所有者与源能力的稳定实例 ID。空间不足在 Mana、施法 RNG 和熟练度前原子拒绝，失败率失败仍消耗 Mana但不生成 actor；召唤物不进入敌对 AI 或可见敌人判断，并按玩家回合递减后发出到期移除事件。demo 内容包升至 1.74.0，content hash 为 `aab3548090030a1d2d46496581fb41a9f2892213186aeb2236a7a79065fc069f`，active baseline 共 213 个 exact fixtures、零 waiver。save 容器仍为 v1，state hash 升至 Schema v35。完整边界见 [Contract v82 说明](design/contract-v82-summon-ability.md)。
+
+协议 1.83 / contract-v83 在 v82 之上加入首个内容驱动侦测能力：Echo Pulse 返回 `perception-cue` 的瞬时位置，Echo Sight 把 `hidden` terrain 写入持久 `revealedTerrain`。侦测只扫描当前地图、半径和玩家 FOV 内尚未发现且具有隐藏投影的 terrain；结果按距离、`y`、`x` 稳定排序，墙后或视野外真值不会泄漏。空结果仍按正常施法支付 Mana、抽失败率并增加熟练度，非法目标和资源不足则在 RNG 前拒绝。demo 内容包升至 1.75.0，content hash 为 `8ac0aee6fe54abb2c97bbed3eedaaa510d32393126bd08f89d046d515a66213b`，active baseline 共 221 个 exact fixtures、零 waiver。save 容器仍为 v1，state hash 升至 Schema v36。完整边界见 [Contract v83 说明](design/contract-v83-detection-ability.md)。
+
+协议 1.84 / contract-v84 在 v83 之上加入内容驱动 `transform-terrain`：Echo Delving 参考原版 `GF_KILL_WALL` 把合法岩壁/瓦砾转为地面，Echo Rampart 参考 `GF_MAKE_WALL` 把未占用地面转为阻挡瓦砾。目标中心必须在射程、FOV 和 line of effect 内；候选按距离、`y`、`x` 稳定排序，并跳过玩家、存活 actor、地面物品、地图边界、floor connection 及楼梯/shaft/入口标签。候选在资源与失败率前完整收集，成功时一次提交；空结果仍正常施法，非法/超距目标和资源不足保持零 RNG，失败支付 Mana但不改地形。修改直接进入 `changedCells`、楼层存档和既有 terrain state hash，不做自动连通修复。demo 内容包升至 1.76.0，content hash 为 `6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4`；active baseline 共 231 个 exact fixtures、零 waiver，save v1 与 state hash Schema v36 保持不变。完整边界见 [Contract v84 说明](design/contract-v84-terrain-transform-ability.md)。
+
+阶段 E 的楼层生命周期、房间内容分配、门、秘密地形、陷阱、挖掘、三层/十层地牢、动态树状分支、多个最终层、共享持久守护者、楼层生成表、actor/loot 总预算、深度与同层多区域主题、区域特殊阶段组合、Vault 多入口/空间落位/跨走廊拼接、巢穴、动态 friends/escort formation、持久 pack AI、程序化地貌、原版式 pit、maze-only、多楼梯、独立到达点、shaft、实例级探索生命周期、入口守卫/可选进入条件、campaign 胜利/退休评分和可配置实例生命周期已经建立。阶段 F 的角色成长、构筑与首轮技能消费已由 v72 固定；阶段 G 的玩家施法循环已由 v73–v84 固定：Mana、能力书、学习容量、主动遗忘、失败率、等待/休息恢复、自身治疗、熟练度、统计、冷却、RFB 式范围爆发、方向射线、锥形能力、定点延长射线、精确短距位移、首个友方召唤、瞬时/持久侦测、原版式地形转换和存档回读。普通 Echo/Resonance 仍返回地表即清空；原创 Archive 覆盖 retained/TTL。任务线也已补齐暂停任务的地表放弃、重接上限与确定性重建。运行时地形破坏直接写入权威地图，不触发自动连通修复；玩家可通过挖掘自行恢复通路。下一步优先实现状态能力与多 effect 组合，多资源与怪物施法继续后置。
 
 Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接调用 Rust 核心，移动、等待、怪物追踪、基础战斗、地面物品拾取、背包多选、鉴别、装备/卸下、整堆批量丢弃和部分数量丢弃均已接入；攻击、防御和最大生命由 Rust 权威派生，回声护符基础提供攻击 +1、防御 +1、最大生命 +4，完整识别后其谐振锋芒再提供攻击 +1。拆分物品使用持久化 `generated.item.N` 实例 ID。三套键位预设、Fluent 中英双语热切换、五层 PixiJS RendererBackend、Rust 权威 FOV/探索记忆/内容标签光源、桌面命名存档槽、`.rfbsave` 手动导入导出和 `.rfbreplay` 诊断回放均已接入。PixiJS 地形层根据 192×64 原创压力场景实测使用默认 16×16 RenderTexture chunk；`pixi-layered-chunks-v3` 后端保留整图语义数据，但玩家居中模式只为可见 chunk 挂载并复用 object/actor/visibility/lighting 动态视图。16 格 profile 的动态对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；整图滚动模式仍会按需挂载全部 chunk。动态规则 dirty cells、静态缓存和视图复用相互独立。原生存档使用应用私有目录、原子替换和三份备份，并提供结构化错误与本地日志。Rust panic、未正常退出和前端未处理异常已接入自动本地 `.rfbdiagnostic` 闭环，最多轮换保留 5 份且不自动上传。简体中文为默认语言；相机、缩放和本地化属于前端显示状态，不影响权威 state hash。旧 `rfb-wasm`、Web Worker、wasm-pack 和 wasm32 构建目标已经从 workspace、前端和 CI 删除。
 
@@ -274,10 +283,10 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v81/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v84/baseline-policy.json
 ```
 
-当前 209 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 231 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

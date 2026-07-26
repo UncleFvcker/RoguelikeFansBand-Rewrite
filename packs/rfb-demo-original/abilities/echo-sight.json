@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.echo-sight",
+  "nameKey": "ability-demo-echo-sight-name",
+  "descriptionKey": "ability-demo-echo-sight-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 4,
+  "baseFailurePercent": 15,
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "effect": {
+    "type": "detect",
+    "category": "hidden",
+    "radius": 6,
+    "persistent": true
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["detection", "persistent-knowledge", "spell"]
+}

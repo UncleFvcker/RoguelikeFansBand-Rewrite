@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.81";
+pub const PROTOCOL_VERSION: &str = "1.84";
 
 const fn default_actor_speed() -> u16 {
     110
@@ -396,6 +396,12 @@ pub struct AbilityDto {
     pub cone_radius: Option<u8>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub teleport: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summon: Option<AbilitySummonSpecDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detect: Option<AbilityDetectSpecDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub terrain_transform: Option<AbilityTerrainTransformSpecDto>,
     pub target_spec: TargetSpecDto,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -404,6 +410,35 @@ pub struct AbilityDto {
     #[serde(default)]
     pub can_forget: bool,
     pub can_cast: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilitySummonSpecDto {
+    pub actor_kind_id: String,
+    pub count: u8,
+    pub radius: u8,
+    pub duration_turns: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityDetectSpecDto {
+    pub category: String,
+    pub radius: u8,
+    #[serde(default)]
+    pub persistent: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityTerrainTransformSpecDto {
+    pub source_terrain_ids: Vec<String>,
+    pub target_terrain_id: String,
+    pub radius: u8,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -739,6 +774,41 @@ pub struct AbilityTeleportResolutionDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct AbilitySummonResolutionDto {
+    pub owner_id: String,
+    pub actor_kind_id: String,
+    pub entity_ids: Vec<String>,
+    pub positions: Vec<Position>,
+    pub duration_turns: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityDetectResolutionDto {
+    pub category: String,
+    pub radius: u8,
+    #[serde(default)]
+    pub persistent: bool,
+    #[serde(default)]
+    pub detected_positions: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityTerrainTransformResolutionDto {
+    pub center: Position,
+    pub radius: u8,
+    pub source_terrain_ids: Vec<String>,
+    pub target_terrain_id: String,
+    #[serde(default)]
+    pub transformed_positions: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceRecoveryResolutionDto {
     pub resource_id: String,
     pub before: u32,
@@ -787,6 +857,15 @@ pub enum GameEventOutcomeDto {
     },
     AbilityTeleport {
         resolution: AbilityTeleportResolutionDto,
+    },
+    AbilitySummon {
+        resolution: AbilitySummonResolutionDto,
+    },
+    AbilityDetect {
+        resolution: AbilityDetectResolutionDto,
+    },
+    AbilityTerrainTransform {
+        resolution: AbilityTerrainTransformResolutionDto,
     },
     AbilityCast {
         resolution: AbilityCastResolutionDto,
@@ -916,6 +995,28 @@ pub struct EntityDto {
     pub melee_routine: MeleeRoutineDto,
     #[serde(default)]
     pub statuses: Vec<StatusDto>,
+    #[serde(default)]
+    pub faction: EntityFactionDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summon: Option<SummonDto>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum EntityFactionDto {
+    #[default]
+    Hostile,
+    Player,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SummonDto {
+    pub owner_id: String,
+    pub source_ability_id: String,
+    pub remaining_turns: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1185,6 +1286,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(ResourcePoolDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(AbilityProficiencyRankDto);
+    push_declaration!(AbilitySummonSpecDto);
+    push_declaration!(AbilityDetectSpecDto);
+    push_declaration!(AbilityTerrainTransformSpecDto);
     push_declaration!(AbilityDto);
     push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);
@@ -1212,6 +1316,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityBeamDamageResolutionDto);
     push_declaration!(AbilityConeDamageResolutionDto);
     push_declaration!(AbilityTeleportResolutionDto);
+    push_declaration!(AbilitySummonResolutionDto);
+    push_declaration!(AbilityDetectResolutionDto);
+    push_declaration!(AbilityTerrainTransformResolutionDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);
@@ -1219,6 +1326,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
     push_declaration!(PlayerDto);
+    push_declaration!(EntityFactionDto);
+    push_declaration!(SummonDto);
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
     push_declaration!(ItemKnowledgeDto);
@@ -1374,6 +1483,16 @@ pub struct ActorSaveDto {
     pub resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pack: Option<MonsterPackSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summon: Option<SummonSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SummonSaveDto {
+    pub owner_id: String,
+    pub source_ability_id: String,
+    pub remaining_turns: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1893,6 +2012,8 @@ mod tests {
                 melee_profile: AttackProfileDto::default(),
                 melee_routine: MeleeRoutineDto::default(),
                 statuses: Vec::new(),
+                faction: EntityFactionDto::Hostile,
+                summon: None,
             }],
             items: vec![ItemDto {
                 id: "demo.item.ground.1".to_owned(),

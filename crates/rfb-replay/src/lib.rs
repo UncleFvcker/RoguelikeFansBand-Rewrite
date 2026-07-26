@@ -8,7 +8,7 @@ use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
 pub const REPLAY_FORMAT_VERSION: u16 = 1;
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 34;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 35;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
 const MAGIC: &[u8; 8] = b"RFBREPL\0";
@@ -826,6 +826,141 @@ mod tests {
             rfb_protocol::Position { x: 6, y: 3 }
         );
         let verification = verify(&replay, initial).expect("teleport replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn detection_ability_round_trips_through_replay() {
+        let mut payload = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create")
+            .to_save();
+        payload.entities.clear();
+        payload.items.clear();
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        payload
+            .player
+            .ability_progress
+            .iter_mut()
+            .find(|progress| progress.id == "demo.ability.echo-sight")
+            .expect("detect ability progress should exist")
+            .proficiency = 1600;
+        let rune = rfb_protocol::Position { x: 4, y: 3 };
+        let index = usize::try_from(rune.y).expect("rune y should fit")
+            * usize::from(payload.terrain.width)
+            + usize::try_from(rune.x).expect("rune x should fit");
+        payload.terrain.terrain_ids[index] = "demo.terrain.echo-rune-hidden".to_owned();
+        let initial = Game::from_save(payload).expect("detection replay fixture should load");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-primer")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the echo primer");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.echo-sight".to_owned(),
+            })
+            .expect("detection ability study should execute");
+        let update = recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.echo-sight".to_owned(),
+                target: rfb_protocol::TargetSelection::SelfTarget,
+            })
+            .expect("detection ability cast should execute");
+        assert!(update.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(rfb_protocol::GameEventOutcomeDto::AbilityDetect { resolution })
+                    if resolution.persistent && resolution.detected_positions == [rune]
+            )
+        }));
+        let (final_game, replay) = recorder.finish();
+
+        assert!(final_game.to_save().revealed_terrain.contains(&rune));
+        let verification = verify(&replay, initial).expect("detection replay should verify");
+        assert_eq!(verification.commands_verified, 2);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn terrain_transform_ability_round_trips_through_replay() {
+        let mut payload = Game::new_with_build(0, "demo.build.scholar")
+            .expect("scholar replay fixture should create")
+            .to_save();
+        payload.entities.clear();
+        payload.items.clear();
+        payload.carried_items.clear();
+        payload
+            .dungeon_states
+            .iter_mut()
+            .find(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
+            .expect("resonance dungeon state should exist")
+            .entrance_guardian_defeated = Some(true);
+        payload
+            .player
+            .ability_progress
+            .iter_mut()
+            .find(|progress| progress.id == "demo.ability.echo-delving")
+            .expect("terrain transform ability progress should exist")
+            .proficiency = 1600;
+        let wall = rfb_protocol::Position { x: 5, y: 3 };
+        let index = usize::try_from(wall.y).expect("wall y should fit")
+            * usize::from(payload.terrain.width)
+            + usize::try_from(wall.x).expect("wall x should fit");
+        payload.terrain.terrain_ids[index] = "demo.terrain.wall".to_owned();
+        let initial =
+            Game::from_save(payload).expect("terrain transform replay fixture should load");
+        let book_item_id = initial
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.echo-primer")
+            .map(|item| item.id.clone())
+            .expect("scholar should carry the echo primer");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::StudyAbility {
+                book_item_id,
+                ability_id: "demo.ability.echo-delving".to_owned(),
+            })
+            .expect("terrain transform ability study should execute");
+        let update = recorder
+            .dispatch(GameCommand::CastAbility {
+                ability_id: "demo.ability.echo-delving".to_owned(),
+                target: rfb_protocol::TargetSelection::Position { position: wall },
+            })
+            .expect("terrain transform ability cast should execute");
+        assert!(update.events.iter().any(|event| {
+            matches!(
+                event.outcome.as_ref(),
+                Some(rfb_protocol::GameEventOutcomeDto::AbilityTerrainTransform { resolution })
+                    if resolution.target_terrain_id == "demo.terrain.floor"
+                        && resolution.transformed_positions.contains(&wall)
+            )
+        }));
+        let (final_game, replay) = recorder.finish();
+
+        assert_eq!(
+            final_game
+                .snapshot()
+                .cells
+                .iter()
+                .find(|cell| cell.position == wall)
+                .map(|cell| cell.terrain_id.as_str()),
+            Some("demo.terrain.floor")
+        );
+        let verification =
+            verify(&replay, initial).expect("terrain transform replay should verify");
         assert_eq!(verification.commands_verified, 2);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }

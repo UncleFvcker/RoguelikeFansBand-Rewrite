@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.echo-companion",
+  "role": "monster",
+  "nameKey": "actor-demo-echo-companion-name",
+  "descriptionKey": "actor-demo-echo-companion-description",
+  "glyph": "c",
+  "level": 1,
+  "experienceValue": 0,
+  "maxHp": 4,
+  "speed": 100,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "electricity",
+  "tags": ["echo", "summon", "companion"]
+}

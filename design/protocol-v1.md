@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.81、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.84、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -66,7 +66,7 @@ interface HelloResponse {
 
 ```ts
 interface ProtocolEnvelope<T> {
-  protocolVersion: "1.81";
+  protocolVersion: "1.84";
   sessionId: string;
   requestId?: string;
   commandSeq?: number;
@@ -205,6 +205,12 @@ interface GameCoreV1 {
 协议 1.80 扩展既有 `AbilityEffectDefinition.beam-damage` 的目标入口，不新增伤害字段；`AbilityDto.targetSpec` 继续投影 `direction`、`position` 与 `entity` 模式，`AbilityBeamDamageResolutionDto` 和 `GameEventOutcomeDto.ability-beam-damage` 继续复用。定点/实体目标必须存在、可见且不超距，核心沿稳定整数斜率经过目标继续到内容射程，actor 不阻挡，墙体/不可行走地形/边界截断，按近到远结算并共享一次基础伤害骰。自身、缺失、不可见和超距目标在 Mana/RNG/熟练度之前拒绝；save 容器与 state hash Schema v34 不变。完整边界见 [Contract v80](contract-v80-targeted-beam-extension.md)。
 
 协议 1.81 新增 `AbilityEffectDefinition.teleport` 的 DTO 投影 `AbilityDto.teleport`、`AbilityTeleportResolutionDto` 与 `GameEventOutcomeDto.ability-teleport`。首版只接受 `position` 目标；落点必须非当前格、在地图内、可见、满足 line of effect、可行走且无存活 actor 占据。落点验证在 Mana、施法 RNG 和熟练度前完成；成功后精确移动并复用普通移动的被动感知、陷阱触发和死亡处理。save 容器与 state hash Schema v34 不变。完整边界见 [Contract v81](contract-v81-teleport-ability.md)。
+
+协议 1.82 新增 `AbilitySummonSpecDto` 与 `AbilityDto.summon`，以及 `AbilitySummonResolutionDto` 和 `GameEventOutcomeDto.ability-summon`。`EntityDto` 新增带兼容默认值的 `faction` 与可选 `SummonDto`；`ActorSaveDto` 新增可选 `SummonSaveDto`，保存所有者、源能力和剩余回合。首版召唤只接受 `self` 目标，空间不足在 Mana/RNG/熟练度前原子拒绝；成功生成稳定 actor 实例，失败率失败仍支付资源但不生成实体。召唤物不参加敌对怪物 AI或可见敌人判断，并按玩家回合到期移除。save 容器仍为 v1，state hash 升至 Schema v35。完整边界见 [Contract v82](contract-v82-summon-ability.md)。
+
+协议 1.83 新增 `AbilityDetectSpecDto` 与 `AbilityDto.detect`，以及 `AbilityDetectResolutionDto` 和 `GameEventOutcomeDto.ability-detect`。首版侦测只接受 `self` 目标，并按内容 category/radius 筛选当前 FOV 内具有隐藏投影的 terrain；结果按距离、`y`、`x` 稳定输出。`persistent` 结果写入 `revealedTerrain` 并通过 `changedCells` 返回，瞬时结果只存在于 `ability.detect` outcome。空结果仍是合法施法，非法目标和资源不足在 RNG 前拒绝；save 容器仍为 v1，state hash 升至 Schema v36。完整边界见 [Contract v83](contract-v83-detection-ability.md)。
+
+协议 1.84 新增 `AbilityTerrainTransformSpecDto` 与 `AbilityDto.terrainTransform`，以及 `AbilityTerrainTransformResolutionDto` 和 `GameEventOutcomeDto.ability-terrain-transform`。首版地形改变只接受 `position` 目标，返回中心、半径、规范化来源 terrain 集、目标 terrain 和稳定排序的 `transformedPositions`。实际修改格同步进入 `changedCells`；非法/超距目标和资源不足在 RNG 前拒绝，失败不产生地形 outcome，空结果成功仍返回结构化 outcome。save 容器继续为 v1，terrain 原本已进入 save/hash，因此 state hash 保持 Schema v36。完整边界见 [Contract v84](contract-v84-terrain-transform-ability.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

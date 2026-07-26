@@ -20,6 +20,7 @@ pub(crate) struct Actor {
     pub(crate) statuses: Vec<StatusInstance>,
     pub(crate) resistances: ResistanceProfile,
     pub(crate) pack: Option<MonsterPackIdentity>,
+    pub(crate) summon: Option<SummonIdentity>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,6 +35,13 @@ pub(crate) struct MonsterPackIdentity {
     pub(crate) leader_id: String,
     pub(crate) role: MonsterPackRoleDto,
     pub(crate) behavior: MonsterPackBehaviorDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SummonIdentity {
+    pub(crate) owner_id: String,
+    pub(crate) source_ability_id: String,
+    pub(crate) remaining_turns: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

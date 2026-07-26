@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.echo-rampart",
+  "nameKey": "ability-demo-echo-rampart-name",
+  "descriptionKey": "ability-demo-echo-rampart-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 6,
+  "baseFailurePercent": 25,
+  "target": {
+    "modes": ["position"],
+    "range": 4,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "transform-terrain",
+    "sourceTerrainIds": [
+      "demo.terrain.floor",
+      "demo.terrain.resonance-cavern",
+      "demo.terrain.resonance-water-shallow",
+      "demo.terrain.resonant-floor"
+    ],
+    "targetTerrainId": "demo.terrain.echo-rubble",
+    "radius": 1
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["creation", "spell", "terrain"]
+}

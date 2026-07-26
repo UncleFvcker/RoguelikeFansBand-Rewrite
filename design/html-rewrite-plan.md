@@ -73,6 +73,9 @@
 - [Contract v79：RFB 式锥形能力伤害](contract-v79-cone-damage.md)
 - [Contract v80：RFB 式定点延长射线](contract-v80-targeted-beam-extension.md)
 - [Contract v81：首个短距位移能力](contract-v81-teleport-ability.md)
+- [Contract v82：首个召唤能力](contract-v82-summon-ability.md)
+- [Contract v83：首个侦测能力](contract-v83-detection-ability.md)
+- [Contract v84：首个地形改变能力](contract-v84-terrain-transform-ability.md)
 - [前端目标模式 v1](frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)
 - [核心协议 v1](protocol-v1.md)
@@ -656,12 +659,15 @@ interface SaveGame {
 - 协议 1.79 和 contract-v79 已建立；内容包 1.71.0 增加 RFB 式固定八向锥形、逐层展开、墙体截断、横向整数衰减和 `ability.cone-damage` 事件。Web 能力行显示锥形半径并格式化锥形事件；方向以外目标在 Mana/RNG 前拒绝，空锥仍消费资源并投一次基础伤害骰。旧存档继续按当前内容迁移。content hash 为 `817ccfc5924d6dd8d957fb1f2c97f191c08dd5c34aa1ff9dea265716d3236835`，active baseline 共 198 个 exact fixtures。
 - 协议 1.80 和 contract-v80 已建立；内容包 1.72.0 扩展 Echo Lance 为方向、格子和实体目标，定点/实体目标沿稳定整数斜率穿过目标继续到最大射程，actor 不阻挡、墙体/边界截断，并复用一次基础伤害骰。Web 能力行继续使用目标模式投影并格式化延长射线事件；自身、缺失、不可见和超距目标在 Mana/RNG 前拒绝。旧存档继续按当前内容迁移。content hash 为 `30c38e57bd9a9d22694e02da9c2b5f07b76af0a4009deb59bbbc605703f5a504`，active baseline 共 202 个 exact fixtures。
 - 协议 1.81 和 contract-v81 已建立；内容包 1.73.0 新增 Echo Step teleport，仅接受 position 目标，落点必须非当前格、可见、满足 line of effect、可行走且无存活 actor 占据；无效落点在 Mana/RNG 前拒绝，成功后复用普通移动的到达管线。Web 能力行显示 teleport 摘要并格式化起点/终点事件；旧存档继续按当前内容迁移。content hash 为 `66e60826777d1bf79efb3eef6d718bcf3ed101e30c43d562fd122ff402eda95d`，active baseline 共 209 个 exact fixtures。
+- 协议 1.82 和 contract-v82 已建立；内容包 1.74.0 新增 Echo Companion summon，声明 Monster actor、数量/半径/生命周期，按距离/坐标稳定选择空地并生成带 owner/source 的 player faction 实例；空间不足在 Mana/RNG 前原子拒绝，失败率失败仍支付资源但不生成 actor，召唤物按玩家回合到期并发出移除事件。Web 能力行显示召唤规格，实体 DTO/save 暴露阵营与召唤身份；content hash 为 `aab3548090030a1d2d46496581fb41a9f2892213186aeb2236a7a79065fc069f`，active baseline 共 213 个 exact fixtures，state hash 升至 Schema v35。
+- 协议 1.83 和 contract-v83 已建立；内容包 1.75.0 新增 Echo Pulse/Echo Sight detect，声明 category、半径和瞬时/持久知识。核心只扫描当前 FOV 内具有隐藏投影且 tag 匹配的 terrain，按距离/坐标稳定排序；瞬时结果只进入事件，持久结果写入 `revealedTerrain` 并通过 changed cells 更新地图。Web 能力行显示侦测规格并格式化 `ability.detect` 事件；content hash 为 `8ac0aee6fe54abb2c97bbed3eedaaa510d32393126bd08f89d046d515a66213b`，active baseline 共 221 个 exact fixtures，state hash 升至 Schema v36。
+- 协议 1.84 和 contract-v84 已建立；内容包 1.76.0 新增 Echo Delving/Echo Rampart `transform-terrain`，声明规范化来源 terrain 集、目标 terrain 和半径。核心只处理 position/FOV/line-of-effect 内合法来源，跳过玩家、actor、地面物品、连接/入口标签和地图边界，按距离/坐标稳定预收集并在成功后一次提交；空结果、非法目标、资源不足和失败率边界均已固定。Web 能力行显示转换规格并格式化 `ability.terrain-transform` 事件；content hash 为 `6e3906fff5447c3b83630e85e6c789a0dc151d9e16e1faa484ed10dda41a3ee4`，active baseline 共 231 个 exact fixtures，save v1/state hash Schema v36 保持不变。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 继续 Stage G：在现有范围爆发、方向射线和锥形公共管线之上实现定点延长射线、位移或召唤能力；多资源和怪物施法继续后置；
+1. 继续 Stage G：在现有能力公共管线之上实现首个状态能力与多 effect 组合，复用状态添加/移除、tick、抵抗和结构化 outcome，并固定逐效果顺序与整次施法的资源/RNG 原子边界；多资源和怪物施法继续后置；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

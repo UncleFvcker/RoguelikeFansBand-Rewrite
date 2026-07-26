@@ -4,9 +4,10 @@ use std::collections::BTreeMap;
 
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityConeDamageResolutionDto, AbilityTeleportResolutionDto, CheckResolutionDto, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, Position, ProjectileTraceDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilitySummonResolutionDto,
+    AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto, CheckResolutionDto,
+    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, Position,
+    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -77,6 +78,22 @@ pub(crate) enum DomainEvent {
     AbilityTeleported {
         ability_id: String,
         resolution: AbilityTeleportResolutionDto,
+    },
+    AbilitySummoned {
+        ability_id: String,
+        resolution: AbilitySummonResolutionDto,
+    },
+    AbilityDetected {
+        ability_id: String,
+        resolution: AbilityDetectResolutionDto,
+    },
+    AbilityTerrainTransformed {
+        ability_id: String,
+        resolution: AbilityTerrainTransformResolutionDto,
+    },
+    SummonExpired {
+        entity_id: String,
+        target_kind_id: String,
     },
     AbilityLanded {
         ability_id: String,
@@ -506,6 +523,53 @@ impl DomainEvent {
                     ("toY", resolution.to.y.to_string()),
                 ],
                 GameEventOutcomeDto::AbilityTeleport { resolution },
+            ),
+            Self::AbilitySummoned {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.summon",
+                "ability-summon",
+                [
+                    ("target", ability_id),
+                    ("actor", resolution.actor_kind_id.clone()),
+                    ("count", resolution.entity_ids.len().to_string()),
+                ],
+                GameEventOutcomeDto::AbilitySummon { resolution },
+            ),
+            Self::AbilityDetected {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.detect",
+                "ability-detect",
+                [
+                    ("target", ability_id),
+                    ("category", resolution.category.clone()),
+                    ("count", resolution.detected_positions.len().to_string()),
+                ],
+                GameEventOutcomeDto::AbilityDetect { resolution },
+            ),
+            Self::AbilityTerrainTransformed {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.terrain-transform",
+                "ability-terrain-transform",
+                [
+                    ("target", ability_id),
+                    ("terrain", resolution.target_terrain_id.clone()),
+                    ("count", resolution.transformed_positions.len().to_string()),
+                ],
+                GameEventOutcomeDto::AbilityTerrainTransform { resolution },
+            ),
+            Self::SummonExpired {
+                entity_id,
+                target_kind_id,
+            } => dto(
+                "summon.expired",
+                "summon-expired",
+                [("target", entity_id), ("actor", target_kind_id)],
             ),
             Self::AbilityLanded { ability_id, trace } => with_trace(
                 dto("ability.landed", "ability-landed", [("target", ability_id)]),

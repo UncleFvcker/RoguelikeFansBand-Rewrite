@@ -229,6 +229,57 @@
         "targetCount"
       ]
     },
+    "AbilityDetectResolutionDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "detectedPositions": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "persistent": {
+          "type": "boolean",
+          "default": false
+        },
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "category",
+        "radius"
+      ]
+    },
+    "AbilityDetectSpecDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "persistent": {
+          "type": "boolean",
+          "default": false
+        },
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "category",
+        "radius"
+      ]
+    },
     "AbilityDto": {
       "type": "object",
       "properties": {
@@ -304,6 +355,16 @@
         "descriptionKey": {
           "type": "string"
         },
+        "detect": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AbilityDetectSpecDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "failCount": {
           "type": "integer",
           "format": "uint32",
@@ -357,11 +418,31 @@
         "resourceId": {
           "type": "string"
         },
+        "summon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AbilitySummonSpecDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "targetSpec": {
           "$ref": "#/$defs/TargetSpecDto"
         },
         "teleport": {
           "type": "boolean"
+        },
+        "terrainTransform": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AbilityTerrainTransformSpecDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -416,6 +497,74 @@
         "master"
       ]
     },
+    "AbilitySummonResolutionDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "durationTurns": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "entityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        }
+      },
+      "required": [
+        "ownerId",
+        "actorKindId",
+        "entityIds",
+        "positions",
+        "durationTurns"
+      ]
+    },
+    "AbilitySummonSpecDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "durationTurns": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "actorKindId",
+        "count",
+        "radius",
+        "durationTurns"
+      ]
+    },
     "AbilityTeleportResolutionDto": {
       "type": "object",
       "properties": {
@@ -429,6 +578,67 @@
       "required": [
         "from",
         "to"
+      ]
+    },
+    "AbilityTerrainTransformResolutionDto": {
+      "type": "object",
+      "properties": {
+        "center": {
+          "$ref": "#/$defs/Position"
+        },
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "sourceTerrainIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targetTerrainId": {
+          "type": "string"
+        },
+        "transformedPositions": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        }
+      },
+      "required": [
+        "center",
+        "radius",
+        "sourceTerrainIds",
+        "targetTerrainId"
+      ]
+    },
+    "AbilityTerrainTransformSpecDto": {
+      "type": "object",
+      "properties": {
+        "radius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "sourceTerrainIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targetTerrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceTerrainIds",
+        "targetTerrainId",
+        "radius"
       ]
     },
     "AttackProfileDto": {
@@ -833,6 +1043,10 @@
           "format": "int32",
           "default": 100
         },
+        "faction": {
+          "$ref": "#/$defs/EntityFactionDto",
+          "default": "hostile"
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -895,6 +1109,16 @@
           "items": {
             "$ref": "#/$defs/StatusDto"
           }
+        },
+        "summon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SummonDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -903,6 +1127,13 @@
         "position",
         "hp",
         "maxHp"
+      ]
+    },
+    "EntityFactionDto": {
+      "type": "string",
+      "enum": [
+        "hostile",
+        "player"
       ]
     },
     "EquipmentItemDto": {
@@ -1569,6 +1800,54 @@
             "type": {
               "type": "string",
               "const": "ability-teleport"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilitySummonResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-summon"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityDetectResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-detect"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityTerrainTransformResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-terrain-transform"
             }
           },
           "required": [
@@ -2863,6 +3142,28 @@
         "kindId",
         "intensity",
         "remainingTicks"
+      ]
+    },
+    "SummonDto": {
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string"
+        },
+        "remainingTurns": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "sourceAbilityId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ownerId",
+        "sourceAbilityId",
+        "remainingTurns"
       ]
     },
     "TargetModeDto": {

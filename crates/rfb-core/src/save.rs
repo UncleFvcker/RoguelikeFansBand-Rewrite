@@ -8,7 +8,7 @@ use crate::{
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
         Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
-        MonsterPackIdentity,
+        MonsterPackIdentity, SummonIdentity,
     },
     stats::{CharacterBuildIdentity, CharacterProgress},
 };
@@ -17,7 +17,7 @@ use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
     FloorRegionSaveDto, FloorSaveDto, InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto,
     NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ResistanceSaveDto, SkillProgressSaveDto, StatusSaveDto, TerrainSaveDto,
+    ResistanceSaveDto, SkillProgressSaveDto, StatusSaveDto, SummonSaveDto, TerrainSaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -43,6 +43,32 @@ pub(crate) fn actor_from_spawn(
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
+        summon: None,
+    }
+}
+
+pub(crate) fn actor_from_runtime_spawn(
+    id: &str,
+    kind_id: &str,
+    position: Position,
+    max_hp: i32,
+    speed: u16,
+    energy_need: i32,
+    alerted: bool,
+) -> Actor {
+    Actor {
+        id: id.to_owned(),
+        kind_id: kind_id.to_owned(),
+        position,
+        hp: max_hp,
+        max_hp,
+        speed,
+        energy_need,
+        alerted,
+        statuses: Vec::new(),
+        resistances: ResistanceProfile::default(),
+        pack: None,
+        summon: None,
     }
 }
 
@@ -80,6 +106,7 @@ pub(crate) fn actor_from_player(
         statuses,
         resistances,
         pack: None,
+        summon: None,
     })
 }
 
@@ -137,6 +164,11 @@ pub(crate) fn actor_from_entity(
             leader_id: pack.leader_id,
             role: pack.role,
             behavior: pack.behavior,
+        }),
+        summon: entity.summon.map(|summon| SummonIdentity {
+            owner_id: summon.owner_id,
+            source_ability_id: summon.source_ability_id,
+            remaining_turns: summon.remaining_turns,
         }),
     })
 }
@@ -290,6 +322,11 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
                 leader_id: pack.leader_id.clone(),
                 role: pack.role,
                 behavior: pack.behavior,
+            }),
+            summon: entity.summon.as_ref().map(|summon| SummonSaveDto {
+                owner_id: summon.owner_id.clone(),
+                source_ability_id: summon.source_ability_id.clone(),
+                remaining_turns: summon.remaining_turns,
             }),
         })
         .collect::<Vec<_>>();

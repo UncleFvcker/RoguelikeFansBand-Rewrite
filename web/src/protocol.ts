@@ -39,7 +39,13 @@ export type AbilityLearningDto = { learnedCount: number, capacity: number, remai
 
 export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
 
-export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
+export type AbilitySummonSpecDto = { actorKindId: string, count: number, radius: number, durationTurns: number, };
+
+export type AbilityDetectSpecDto = { category: string, radius: number, persistent: boolean, };
+
+export type AbilityTerrainTransformSpecDto = { sourceTerrainIds: Array<string>, targetTerrainId: string, radius: number, };
+
+export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, minimumLevel: number, resourceId: string, baseResourceCost: number, resourceCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, targetSpec: TargetSpecDto, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
 
 export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "self" };
 
@@ -93,6 +99,12 @@ export type AbilityConeDamageResolutionDto = { radius: number, baseRawDamage: nu
 
 export type AbilityTeleportResolutionDto = { from: Position, to: Position, };
 
+export type AbilitySummonResolutionDto = { ownerId: string, actorKindId: string, entityIds: Array<string>, positions: Array<Position>, durationTurns: number, };
+
+export type AbilityDetectResolutionDto = { category: string, radius: number, persistent: boolean, detectedPositions: Array<Position>, };
+
+export type AbilityTerrainTransformResolutionDto = { center: Position, radius: number, sourceTerrainIds: Array<string>, targetTerrainId: string, transformedPositions: Array<Position>, };
+
 export type ResourceRecoveryResolutionDto = { resourceId: string, before: number, after: number, recovered: number, };
 
 export type RestStopReasonDto = "damaged" | "enemy-visible" | "full-resources" | "invalid-turns" | "player-died" | "turn-limit";
@@ -101,13 +113,17 @@ export type RestResolutionDto = { requestedTurns: number, completedTurns: number
 
 export type HealingResolutionDto = { requested: number, applied: number, };
 
-export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
+export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: AbilityAreaDamageResolutionDto, } | { "type": "ability-beam-damage", resolution: AbilityBeamDamageResolutionDto, } | { "type": "ability-cone-damage", resolution: AbilityConeDamageResolutionDto, } | { "type": "ability-teleport", resolution: AbilityTeleportResolutionDto, } | { "type": "ability-summon", resolution: AbilitySummonResolutionDto, } | { "type": "ability-detect", resolution: AbilityDetectResolutionDto, } | { "type": "ability-terrain-transform", resolution: AbilityTerrainTransformResolutionDto, } | { "type": "ability-cast", resolution: AbilityCastResolutionDto, } | { "type": "check", resolution: CheckResolutionDto, } | { "type": "damage", resolution: DamageResolutionDto, } | { "type": "death", resolution: DamageResolutionDto, } | { "type": "heal", resolution: HealingResolutionDto, } | { "type": "resource-recovery", resolution: ResourceRecoveryResolutionDto, } | { "type": "rest", resolution: RestResolutionDto, };
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, };
 
 export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, };
 
-export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, };
+export type EntityFactionDto = "hostile" | "player";
+
+export type SummonDto = { ownerId: string, sourceAbilityId: string, remainingTurns: number, };
+
+export type EntityDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, alerted: boolean, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, summon?: SummonDto | null, };
 
 export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, position: Position, quantity: number, };
 

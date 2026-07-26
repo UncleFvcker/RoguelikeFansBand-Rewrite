@@ -1113,6 +1113,40 @@ function renderAbilities(
       teleport.textContent = localization.format("ability-teleport-summary");
       details.append(teleport);
     }
+    if (ability.summon != null) {
+      const summon = document.createElement("span");
+      summon.className = "ability-status";
+      summon.textContent = localization.format("ability-summon-summary", {
+        count: ability.summon.count,
+        radius: ability.summon.radius,
+        turns: ability.summon.durationTurns,
+      });
+      details.append(summon);
+    }
+    if (ability.detect != null) {
+      const detect = document.createElement("span");
+      detect.className = "ability-status";
+      detect.textContent = localization.format("ability-detect-summary", {
+        category: ability.detect.category,
+        radius: ability.detect.radius,
+        persistence: localization.format(
+          ability.detect.persistent
+            ? "ability-detect-persistent"
+            : "ability-detect-transient",
+        ),
+      });
+      details.append(detect);
+    }
+    if (ability.terrainTransform != null) {
+      const transform = document.createElement("span");
+      transform.className = "ability-status";
+      transform.textContent = localization.format("ability-terrain-transform-summary", {
+        sources: ability.terrainTransform.sourceTerrainIds.length,
+        terrain: contentName(ability.terrainTransform.targetTerrainId),
+        radius: ability.terrainTransform.radius,
+      });
+      details.append(transform);
+    }
     if (ability.cooldownTurns > 0) {
       const cooldown = document.createElement("span");
       cooldown.className = "ability-status";
@@ -1537,6 +1571,28 @@ function formatEvent(event: GameEventDto): string {
         toY: resolution?.to.y ?? event.args.toY ?? "?",
       });
     }
+    case "ability-summon":
+      return localization.format("message-ability-summon", {
+        ability: contentName(event.args.target),
+        actor: contentName(event.args.actor),
+        count: event.args.count ?? "0",
+      });
+    case "ability-detect":
+      return localization.format("message-ability-detect", {
+        ability: contentName(event.args.target),
+        category: event.args.category ?? "?",
+        count: event.args.count ?? "0",
+      });
+    case "ability-terrain-transform":
+      return localization.format("message-ability-terrain-transform", {
+        ability: contentName(event.args.target),
+        terrain: contentName(event.args.terrain),
+        count: event.args.count ?? "0",
+      });
+    case "summon-expired":
+      return localization.format("message-summon-expired", {
+        actor: contentName(event.args.actor),
+      });
     case "ability-hit":
       return localization.format("message-ability-hit", {
         ability: contentName(event.args.source),
@@ -1950,6 +2006,21 @@ function contentName(id: string | undefined): string {
   if (id === "demo.ability.echo-burst") {
     return localization.format("ability-demo-echo-burst-name");
   }
+  if (id === "demo.ability.echo-companion") {
+    return localization.format("ability-demo-echo-companion-name");
+  }
+  if (id === "demo.ability.echo-pulse") {
+    return localization.format("ability-demo-echo-pulse-name");
+  }
+  if (id === "demo.ability.echo-sight") {
+    return localization.format("ability-demo-echo-sight-name");
+  }
+  if (id === "demo.ability.echo-delving") {
+    return localization.format("ability-demo-echo-delving-name");
+  }
+  if (id === "demo.ability.echo-rampart") {
+    return localization.format("ability-demo-echo-rampart-name");
+  }
   if (id === "demo.ability.mending-echo") {
     return localization.format("ability-demo-mending-echo-name");
   }
@@ -1991,6 +2062,12 @@ function contentName(id: string | undefined): string {
   }
   if (id === "demo.actor.echo-hound") {
     return localization.format("actor-demo-echo-hound-name");
+  }
+  if (id === "demo.terrain.floor") {
+    return localization.format("terrain-demo-floor-name");
+  }
+  if (id === "demo.terrain.echo-rubble") {
+    return localization.format("terrain-demo-echo-rubble-name");
   }
   return localization.format(
     id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",

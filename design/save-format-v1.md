@@ -147,6 +147,12 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.81 不新增 save 字段：位移效果、position 目标、落点验证和传送事件来自当前内容与命令结果；资源当前值、已学集合与 `abilityProgress` 继续使用既有字段。载入 v80 及更早存档时，不自动学习 Echo Step、不补发 Echo Primer、不重建地图、不推进 RNG；显式 study-save 仍按当前书本和能力定义学习。传送起点/终点、落点检查与到达事件只存在于命令执行结果/回放中，权威终态仍由既有玩家位置、资源、物品、任务和 RNG 字段表达。save 容器仍为 v1，state hash 仍为 Schema v34。完整边界见 [Contract v81](contract-v81-teleport-ability.md)。
 
+协议 1.82 为 `ActorSaveDto` 增加可选 `summon`，其中 `SummonSaveDto` 保存 `ownerId`、`sourceAbilityId` 和 `remainingTurns`。缺少该字段的 v81 及更早 actor 按普通敌对 actor 载入，不生成召唤物、不改变已有实体、不推进 RNG。显式召唤状态必须以当前玩家为所有者，源能力必须存在且仍召唤同一 actor kind，剩余回合必须为正，并且不能与 pack identity 同时存在；任一不一致都会原子拒绝存档。召唤规格继续由锁定内容包提供，阵营由 summon identity 推导。save 容器仍为 v1，召唤身份和生命周期进入 state hash Schema v35。完整边界见 [Contract v82](contract-v82-summon-ability.md)。
+
+协议 1.83 不新增 save 字段：持久侦测复用既有 `revealedTerrain`，瞬时侦测结果只存在于本次事件。载入 v82 及更早存档时，不自动学习 Echo Pulse/Echo Sight、不补发能力书、不重建地图、不推进 RNG；已有秘密 terrain 发现知识原样保留。持久侦测命中的真实 terrain 会进入 `revealedTerrain`，瞬时命中不会进入存档。save 容器仍为 v1，新的知识/RNG 规则边界进入 state hash Schema v36。完整边界见 [Contract v83](contract-v83-detection-ability.md)。
+
+协议 1.84 仍不新增 save 字段：地形改变能力直接修改当前 `TerrainSaveDto.terrainIds`，离层时继续由既有 `FloorSaveDto.terrain` 保存；修改格会从 `revealedTerrain` 移除。载入 v83 及更早存档时，不自动学习 Echo Delving/Echo Rampart、不补发能力书、不改写 terrain、不推进 RNG；旧 built-in content hash 只迁移到当前内容定义。terrain 原本已进入 state hash，故 save 容器保持 v1、state hash 保持 Schema v36。完整边界见 [Contract v84](contract-v84-terrain-transform-ability.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；
