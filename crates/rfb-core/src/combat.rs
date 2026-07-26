@@ -2,6 +2,11 @@
 
 use rfb_protocol::Position;
 
+use crate::{
+    effect::{DamageOutcome, DamagePacket, resolve_damage},
+    resistance::{DamageType, ResistanceLevel},
+};
+
 const ATTACK_SKILL_PER_RATING: i32 = 20;
 const ARMOR_CLASS_PER_RATING: i32 = 10;
 const MONSTER_MINIMUM_LEVEL: i32 = 4;
@@ -29,6 +34,26 @@ pub(crate) fn monster_melee_skill(attack: i32, level: u32) -> i32 {
         .max(MONSTER_MINIMUM_LEVEL);
     rating_to_combat_value(attack)
         .saturating_add(level.saturating_mul(MONSTER_LEVEL_SKILL_MULTIPLIER))
+}
+
+/// Physical damage is reduced by armor before resistance scaling; every
+/// non-physical type skips the armor step. All melee-family resolution paths
+/// share this exact sequence.
+pub(crate) fn resolve_armored_damage(
+    raw_damage: i32,
+    damage_type: DamageType,
+    armor_class: i32,
+    resistance: ResistanceLevel,
+) -> DamageOutcome {
+    let prepared = if damage_type == DamageType::Physical {
+        apply_melee_armor_reduction(raw_damage, armor_class)
+    } else {
+        raw_damage
+    };
+    resolve_damage(
+        DamagePacket::after_armor(raw_damage, prepared, damage_type),
+        resistance,
+    )
 }
 
 pub(crate) fn apply_melee_armor_reduction(damage: i32, armor_class: i32) -> i32 {
