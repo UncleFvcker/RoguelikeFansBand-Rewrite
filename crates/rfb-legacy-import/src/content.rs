@@ -319,6 +319,101 @@ fn damage_type_for(blow: &LegacyBlow) -> (&'static str, Option<&str>) {
     }
 }
 
+/// Legacy resistance-flag suffixes and their damage-type names; applied in
+/// RES -> IM -> HURT order so immunities and vulnerabilities win.
+const RESISTANCE_FLAG_TYPES: [(&str, &str); 19] = [
+    ("ACID", "acid"),
+    ("ELEC", "electricity"),
+    ("FIRE", "fire"),
+    ("COLD", "cold"),
+    ("POIS", "poison"),
+    ("LITE", "light"),
+    ("DARK", "dark"),
+    ("NETH", "nether"),
+    ("NEXU", "nexus"),
+    ("SOUN", "sound"),
+    ("SHAR", "shards"),
+    ("CHAO", "chaos"),
+    ("DISE", "disenchant"),
+    ("TIME", "time"),
+    ("GRAV", "gravity"),
+    ("INER", "inertia"),
+    ("PLAS", "plasma"),
+    ("WATE", "water"),
+    ("DISI", "disintegrate"),
+];
+
+const RESISTANCE_ALL_TYPES: [&str; 27] = [
+    "acid",
+    "electricity",
+    "fire",
+    "cold",
+    "poison",
+    "light",
+    "dark",
+    "confusion",
+    "nether",
+    "nexus",
+    "sound",
+    "shards",
+    "chaos",
+    "disenchant",
+    "time",
+    "mana",
+    "gravity",
+    "inertia",
+    "plasma",
+    "force",
+    "nuke",
+    "disintegrate",
+    "storm",
+    "holy-fire",
+    "hell-fire",
+    "ice",
+    "water",
+];
+
+fn resistance_flag_is_mapped(flag: &str) -> bool {
+    if flag == "RES_ALL" {
+        return true;
+    }
+    for (suffix, _) in RESISTANCE_FLAG_TYPES {
+        if flag.strip_prefix("RES_") == Some(suffix)
+            || flag.strip_prefix("IM_") == Some(suffix)
+            || flag.strip_prefix("HURT_") == Some(suffix)
+        {
+            return true;
+        }
+    }
+    false
+}
+
+/// Folds RES_/IM_/HURT_ flags into a content resistance map; later tiers
+/// (immunity, then vulnerability) overwrite earlier ones for the same type.
+fn resistances_from_flags(flags: &[String]) -> BTreeMap<&'static str, &'static str> {
+    let mut resistances = BTreeMap::new();
+    if flags.iter().any(|flag| flag == "RES_ALL") {
+        for damage_type in RESISTANCE_ALL_TYPES {
+            resistances.insert(damage_type, "resistant");
+        }
+    }
+    for (prefix, level) in [
+        ("RES_", "resistant"),
+        ("IM_", "immune"),
+        ("HURT_", "vulnerable"),
+    ] {
+        for (suffix, damage_type) in RESISTANCE_FLAG_TYPES {
+            if flags
+                .iter()
+                .any(|flag| flag.strip_prefix(prefix) == Some(suffix))
+            {
+                resistances.insert(damage_type, level);
+            }
+        }
+    }
+    resistances
+}
+
 fn monster_json(
     entry: &LegacyMonsterEntry,
     id: &str,
@@ -363,6 +458,10 @@ fn monster_json(
         "damageType": damage_type,
         "tags": tags,
     });
+    let resistances = resistances_from_flags(&entry.flags);
+    if !resistances.is_empty() {
+        value["resistances"] = serde_json::json!(resistances);
+    }
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
     }
@@ -1130,6 +1229,9 @@ pub fn convert_content(
             })
         });
         for flag in &entry.flags {
+            if resistance_flag_is_mapped(flag) {
+                continue;
+            }
             *report
                 .unmapped_monster_flags
                 .entry(flag.clone())
@@ -1355,6 +1457,8 @@ B:GAZE:TERRIFY\n";
         assert_eq!(blows[1]["damageType"], "physical");
         assert_eq!(blows[1]["damageDice"], 1);
         assert_eq!(blows[1]["damageSides"], 6);
+        // RES_FIRE folds into the content resistance map.
+        assert_eq!(lantern["resistances"]["fire"], "resistant");
         assert_eq!(lantern["monsterCasting"]["frequencyPercent"], 20);
         assert_eq!(
             lantern["monsterCasting"]["abilities"][0]["abilityId"],

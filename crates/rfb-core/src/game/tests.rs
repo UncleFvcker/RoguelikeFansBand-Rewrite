@@ -6523,6 +6523,82 @@ fn category_summon_picks_tagged_kinds_and_rejects_empty_categories() {
 }
 
 #[test]
+fn spawned_entities_get_content_declared_resistances_stamped() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for cell in game.terrain.iter_mut() {
+        *cell = "demo.terrain.wall".to_owned();
+    }
+    let player = game.player.position;
+    for step in 0..=3 {
+        for dy in -2..=2 {
+            if let Some(index) = game.index(Position {
+                x: player.x + step,
+                y: player.y + dy,
+            }) {
+                game.terrain[index] = "demo.terrain.floor".to_owned();
+            }
+        }
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.slag-test",
+        "demo.actor.slag-crawler",
+        Position {
+            x: player.x + 3,
+            y: player.y,
+        },
+        10,
+        100,
+        100,
+        true,
+    ));
+
+    for _ in 0..60 {
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        for event in &update.events {
+            if let Some(GameEventOutcomeDto::MonsterAbilityCast { resolution }) =
+                event.outcome.as_ref()
+            {
+                assert_eq!(resolution.ability_id, "demo.ability.slag-call");
+                let summon = resolution
+                    .summon
+                    .as_ref()
+                    .expect("kin summon should expose its resolution");
+                let entity_id = &summon.entity_ids[0];
+                let summoned = game
+                    .entities
+                    .iter()
+                    .find(|entity| &entity.id == entity_id)
+                    .expect("summoned crawler should exist");
+                // The summon spawn path stamps the content-declared tiers;
+                // the test-injected caster itself keeps the default profile.
+                assert_eq!(
+                    summoned.resistances.level(DamageType::Electricity),
+                    ResistanceLevel::Resistant
+                );
+                assert_eq!(
+                    summoned.resistances.level(DamageType::Fire),
+                    ResistanceLevel::Immune
+                );
+                assert_eq!(
+                    summoned.resistances.level(DamageType::Cold),
+                    ResistanceLevel::Vulnerable
+                );
+                assert_eq!(
+                    summoned.resistances.level(DamageType::Physical),
+                    ResistanceLevel::Normal
+                );
+                return;
+            }
+        }
+        if game.player_is_dead() {
+            break;
+        }
+    }
+    panic!("slag crawler should kin-summon within 60 turns");
+}
+
+#[test]
 fn targeted_beam_continues_through_position_and_entity_targets() {
     let ability_id = "demo.ability.echo-lance";
     let expected_path = vec![

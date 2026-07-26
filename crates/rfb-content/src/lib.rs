@@ -153,7 +153,7 @@ pub enum ActorRole {
     Monster,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ActorDamageType {
@@ -186,6 +186,17 @@ pub enum ActorDamageType {
     HellFire,
     Ice,
     Water,
+}
+
+/// Content-declared resistance tier; `normal` is expressed by omission.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ActorResistanceLevel {
+    Vulnerable,
+    Resistant,
+    Strong,
+    Immune,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -243,6 +254,8 @@ pub struct ActorDefinition {
     pub carry_capacity_tenths_pound: u32,
     #[serde(default)]
     pub damage_type: ActorDamageType,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
     #[serde(default)]
@@ -6826,11 +6839,11 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 20);
+        assert_eq!(first.content.actors.len(), 21);
         assert_eq!(first.content.affixes.len(), 1);
         assert_eq!(first.content.items.len(), 8);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 29);
+        assert_eq!(first.content.abilities.len(), 30);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
@@ -6854,7 +6867,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.86.0");
+        assert_eq!(catalog.pack_version(), "1.87.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

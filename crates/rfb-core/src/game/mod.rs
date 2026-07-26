@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use crate::resistance::{DamageType, ResistanceLevel};
+use crate::resistance::{DamageType, ResistanceLevel, definition_resistance_profile};
 use crate::{
     action::GameAction,
     check::{CheckContext, CheckKind, resolve_check},
@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 87] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 88] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -181,9 +181,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 87] = [
     "3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc",
     "134479da14e58dfd8c52d6587a33ad61ac97f7c430632ffca6ccd378b9ba7f30",
     "2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae",
+    "01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4";
+    "f1fba31216da594e34b36b23bdf4570b46a934c7360ad0d66e01f1284529a9f2";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -1388,14 +1389,17 @@ impl Game {
                 let definition = content
                     .actor(&spawn.kind_id)
                     .ok_or_else(|| CoreError::UnknownActor(spawn.kind_id.clone()))?;
-                Ok(actor_from_spawn(
-                    &spawn.instance_id,
-                    &spawn.kind_id,
-                    spawn.position,
-                    definition.max_hp,
-                    definition.speed,
-                    INITIAL_MONSTER_ENERGY_NEED,
-                    actor_starts_alerted(definition),
+                Ok(stamped_spawn(
+                    actor_from_spawn(
+                        &spawn.instance_id,
+                        &spawn.kind_id,
+                        spawn.position,
+                        definition.max_hp,
+                        definition.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(definition),
+                    ),
+                    definition,
                 ))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
@@ -1406,14 +1410,17 @@ impl Game {
             let definition = content
                 .actor(&guardian.actor_kind_id)
                 .ok_or_else(|| CoreError::UnknownActor(guardian.actor_kind_id.clone()))?;
-            let mut actor = actor_from_spawn(
-                &guardian.instance_id,
-                &guardian.actor_kind_id,
-                guardian.position,
-                definition.max_hp,
-                definition.speed,
-                INITIAL_MONSTER_ENERGY_NEED,
-                actor_starts_alerted(definition),
+            let mut actor = stamped_spawn(
+                actor_from_spawn(
+                    &guardian.instance_id,
+                    &guardian.actor_kind_id,
+                    guardian.position,
+                    definition.max_hp,
+                    definition.speed,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(definition),
+                ),
+                definition,
             );
             actor.pack = Some(MonsterPackIdentity {
                 id: guardian.instance_id.clone(),
@@ -5416,6 +5423,7 @@ impl Game {
                         INITIAL_MONSTER_ENERGY_NEED,
                         true,
                     );
+                    entity.resistances = definition_resistance_profile(&definition);
                     entity.summon = Some(SummonIdentity {
                         owner_id: self.player.id.clone(),
                         source_ability_id: ability.id.clone(),
@@ -8949,6 +8957,7 @@ impl Game {
                         INITIAL_MONSTER_ENERGY_NEED,
                         true,
                     );
+                    entity.resistances = definition_resistance_profile(&definition);
                     entity.summon = Some(SummonIdentity {
                         owner_id: owner_id.clone(),
                         source_ability_id: plan.ability.id.clone(),
@@ -9025,6 +9034,7 @@ impl Game {
                         INITIAL_MONSTER_ENERGY_NEED,
                         true,
                     );
+                    entity.resistances = definition_resistance_profile(&definition);
                     entity.summon = Some(SummonIdentity {
                         owner_id: owner_id.clone(),
                         source_ability_id: plan.ability.id.clone(),
@@ -12168,17 +12178,20 @@ impl Game {
                         .content
                         .actor(&entry.actor_kind_id)
                         .expect("validated nest actor must remain available");
-                    entities.push(actor_from_spawn(
-                        &format!("{}.nest.{}", definition.id, ordinal + 1),
-                        &entry.actor_kind_id,
-                        ContentPosition {
-                            x: u16::try_from(position.x).expect("nest actor x must fit u16"),
-                            y: u16::try_from(position.y).expect("nest actor y must fit u16"),
-                        },
-                        actor.max_hp,
-                        actor.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        actor_starts_alerted(actor),
+                    entities.push(stamped_spawn(
+                        actor_from_spawn(
+                            &format!("{}.nest.{}", definition.id, ordinal + 1),
+                            &entry.actor_kind_id,
+                            ContentPosition {
+                                x: u16::try_from(position.x).expect("nest actor x must fit u16"),
+                                y: u16::try_from(position.y).expect("nest actor y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
+                        ),
+                        actor,
                     ));
                 }
             }
@@ -12209,17 +12222,20 @@ impl Game {
                     .content
                     .actor(kind_id)
                     .expect("validated procedural actor kind must remain available");
-                entities.push(actor_from_spawn(
-                    &spawn.instance_id,
-                    kind_id,
-                    ContentPosition {
-                        x: u16::try_from(position.x).expect("generated actor x must fit u16"),
-                        y: u16::try_from(position.y).expect("generated actor y must fit u16"),
-                    },
-                    actor.max_hp,
-                    actor.speed,
-                    INITIAL_MONSTER_ENERGY_NEED,
-                    actor_starts_alerted(actor),
+                entities.push(stamped_spawn(
+                    actor_from_spawn(
+                        &spawn.instance_id,
+                        kind_id,
+                        ContentPosition {
+                            x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                            y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+                        },
+                        actor.max_hp,
+                        actor.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(actor),
+                    ),
+                    actor,
                 ));
             }
         }
@@ -12268,17 +12284,20 @@ impl Game {
                     } else {
                         format!("{}.{}.{}", definition.id, group.id, ordinal + 1)
                     };
-                    entities.push(actor_from_spawn(
-                        &instance_id,
-                        &entry.actor_kind_id,
-                        ContentPosition {
-                            x: u16::try_from(position.x).expect("vault actor x must fit u16"),
-                            y: u16::try_from(position.y).expect("vault actor y must fit u16"),
-                        },
-                        actor.max_hp,
-                        actor.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        actor_starts_alerted(actor),
+                    entities.push(stamped_spawn(
+                        actor_from_spawn(
+                            &instance_id,
+                            &entry.actor_kind_id,
+                            ContentPosition {
+                                x: u16::try_from(position.x).expect("vault actor x must fit u16"),
+                                y: u16::try_from(position.y).expect("vault actor y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
+                        ),
+                        actor,
                     ));
                 }
             }
@@ -12291,17 +12310,20 @@ impl Game {
             let max_hp = actor.max_hp;
             let speed = actor.speed;
             let position = guardian_position.expect("present guardian must retain a position");
-            entities.push(actor_from_spawn(
-                &guardian.instance_id,
-                &guardian.actor_kind_id,
-                ContentPosition {
-                    x: u16::try_from(position.x).expect("guardian x must fit u16"),
-                    y: u16::try_from(position.y).expect("guardian y must fit u16"),
-                },
-                max_hp,
-                speed,
-                INITIAL_MONSTER_ENERGY_NEED,
-                actor_starts_alerted(actor),
+            entities.push(stamped_spawn(
+                actor_from_spawn(
+                    &guardian.instance_id,
+                    &guardian.actor_kind_id,
+                    ContentPosition {
+                        x: u16::try_from(position.x).expect("guardian x must fit u16"),
+                        y: u16::try_from(position.y).expect("guardian y must fit u16"),
+                    },
+                    max_hp,
+                    speed,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(actor),
+                ),
+                actor,
             ));
         }
         let mut items =
@@ -12447,20 +12469,24 @@ impl Game {
                         .content
                         .actor(kind_id)
                         .expect("validated objective actor must remain available");
-                    entities.push(actor_from_spawn(
-                        objective
-                            .actor_instance_id
-                            .as_ref()
-                            .expect("validated kill objective must have an instance ID"),
-                        kind_id,
-                        ContentPosition {
-                            x: u16::try_from(first_center.x + 1).expect("objective x must fit u16"),
-                            y: u16::try_from(first_center.y).expect("objective y must fit u16"),
-                        },
-                        actor.max_hp,
-                        actor.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        actor_starts_alerted(actor),
+                    entities.push(stamped_spawn(
+                        actor_from_spawn(
+                            objective
+                                .actor_instance_id
+                                .as_ref()
+                                .expect("validated kill objective must have an instance ID"),
+                            kind_id,
+                            ContentPosition {
+                                x: u16::try_from(first_center.x + 1)
+                                    .expect("objective x must fit u16"),
+                                y: u16::try_from(first_center.y).expect("objective y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
+                        ),
+                        actor,
                     ));
                 }
                 TaskObjectiveKind::KillActorKind => {
@@ -12483,20 +12509,26 @@ impl Game {
                         .unwrap_or(objective.required)
                         .min(remaining);
                     for ordinal in 0..spawn_count {
-                        entities.push(actor_from_spawn(
-                            &format!("{}.task-target.{}", definition.id, ordinal + 1),
-                            kind_id,
-                            ContentPosition {
-                                x: u16::try_from(
-                                    first_center.x + 1 + i32::try_from(ordinal).unwrap_or(i32::MAX),
-                                )
-                                .expect("objective x must fit u16"),
-                                y: u16::try_from(first_center.y).expect("objective y must fit u16"),
-                            },
-                            actor.max_hp,
-                            actor.speed,
-                            INITIAL_MONSTER_ENERGY_NEED,
-                            actor_starts_alerted(actor),
+                        entities.push(stamped_spawn(
+                            actor_from_spawn(
+                                &format!("{}.task-target.{}", definition.id, ordinal + 1),
+                                kind_id,
+                                ContentPosition {
+                                    x: u16::try_from(
+                                        first_center.x
+                                            + 1
+                                            + i32::try_from(ordinal).unwrap_or(i32::MAX),
+                                    )
+                                    .expect("objective x must fit u16"),
+                                    y: u16::try_from(first_center.y)
+                                        .expect("objective y must fit u16"),
+                                },
+                                actor.max_hp,
+                                actor.speed,
+                                INITIAL_MONSTER_ENERGY_NEED,
+                                actor_starts_alerted(actor),
+                            ),
+                            actor,
                         ));
                     }
                 }
@@ -15632,6 +15664,13 @@ const fn monster_pack_behavior_dto(behavior: MonsterPackBehavior) -> MonsterPack
         MonsterPackBehavior::GuardLeader => MonsterPackBehaviorDto::GuardLeader,
         MonsterPackBehavior::GuardPosition => MonsterPackBehaviorDto::GuardPosition,
     }
+}
+
+/// Content-declared resistances are stamped whenever an entity is built from
+/// its definition; loaded saves keep their stored profiles untouched.
+fn stamped_spawn(mut actor: Actor, definition: &rfb_content::ActorDefinition) -> Actor {
+    actor.resistances = definition_resistance_profile(definition);
+    actor
 }
 
 fn actor_starts_alerted(definition: &rfb_content::ActorDefinition) -> bool {

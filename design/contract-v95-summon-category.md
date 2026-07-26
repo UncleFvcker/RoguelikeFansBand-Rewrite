@@ -1,6 +1,6 @@
 # Contract v95：按类别召唤（summon-category）与召唤族导入
 
-状态：当前 active baseline。协议 1.95，内容包 1.86.0（content hash `01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4`）；save 容器继续 v1；类别召唤复用既有 SummonIdentity 权威结构（存档校验同步接受类别召唤物：kind 带类别标签且等级 ≤ 上限），state hash 沿用 Schema v40。active baseline 共 308 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v96](contract-v96-resistance-profiles.md)。协议 1.95，内容包 1.86.0（content hash `01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4`）；save 容器继续 v1；类别召唤复用既有 SummonIdentity 权威结构（存档校验同步接受类别召唤物：kind 带类别标签且等级 ≤ 上限），state hash 沿用 Schema v40。该 baseline 共 308 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

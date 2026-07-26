@@ -18,7 +18,7 @@
 
 ## 3. 首次全量导入结果（本地实测）
 
-地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P39（伤害类型扩展）已有 829 条生成 `monsterCasting`，法术映射累计 3849 实例（吐息 337+异种、召唤 493、异种元素弹/球/吐息 +778），`FREQ_N` 频率语法已解析，附身组 522 实例入 notApplicableSpells 桶，类型旗标（UNDEAD/DEMON/DRAGON/ANIMAL）折算为 actor 标签，blow 元素名（DISENCHANT/TIME/NETHER 等）直映伤害类型，施法表上限 64、源包文件预算 4096。缺口报告当前优先级（按覆盖数）：CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、BRAIN/MIND/PSY 心灵组合 248、S_ 特殊/字形子类 177、TELE_OTHER/LEVEL 94、DARKNESS 85、DRAIN_MANA 83、AMNESIA 64、ANIM_DEAD 58；blow 效果缺口以 DRAIN_MANA、SHATTER、VAMP、CONFUSE 等效果语义为首（326 实例）；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP、RES_*/IM_*（待抗性档导入）为首。
+地形 180/188；怪物 1332/1396（95.4%），跳过 64 条无可表达近战的条目。1124 条怪物已带完整多段 `meleeRoutine`，107 条仍有无骰副攻（TOUCH/GAZE/WAIL 类）；截至 P40（抗性档导入：RES_/IM_/HURT_ → 1023 只怪 3842 条抗性条目）已有 829 条生成 `monsterCasting`，法术映射累计 3849 实例（吐息 337+异种、召唤 493、异种元素弹/球/吐息 +778），`FREQ_N` 频率语法已解析，附身组 522 实例入 notApplicableSpells 桶，类型旗标（UNDEAD/DEMON/DRAGON/ANIMAL）折算为 actor 标签，blow 元素名（DISENCHANT/TIME/NETHER 等）直映伤害类型，施法表上限 64、源包文件预算 4096。缺口报告当前优先级（按覆盖数）：CAUSE_1–4 诅咒直伤 240（需豁免机制归属）、BRAIN/MIND/PSY 心灵组合 248、S_ 特殊/字形子类 177、TELE_OTHER/LEVEL 94、DARKNESS 85、DRAIN_MANA 83、AMNESIA 64、ANIM_DEAD 58；blow 效果缺口以 DRAIN_MANA、SHATTER、VAMP、CONFUSE 等效果语义为首（326 实例）；flag 缺口以 BASH_DOOR、DROP_CORPSE、NO_CONF/NO_SLEEP、FORCE_MAXHP、RES_TELE/RES_WALL/HURT_ROCK 为首。
 
 ## 4. v2 方向
 

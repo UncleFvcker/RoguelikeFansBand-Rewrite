@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v95、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v96、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -48,7 +48,15 @@
 | P37 | BR_ 吐息族 | 已由 contract-v94 完成 | breath-damage 效果（当前 HP×pct% 封顶 max、零伤害骰、锥形复用 v79）、ash-drake 纵切、fixtures 304-306（封顶/残血衰减/致死闭环）、306 个 exact fixtures。导入映射吐息 337 实例（casting 怪 696→765）+ FREQ_N 频率修复（297 实例消化）+ 附身组 522 实例重分类 notApplicable；施法表上限 32→64（旧版最大杂烩 34 技能悉数保留，导入器仍留 64 截断守卫） |
 | P38 | S_ 召唤族 | 已由 contract-v95 完成 | summon-category 效果（标签+等级上限候选、数量骰、逐只有界抽 kind、落位/生命周期复用既有召唤）、mote-binder 纵切、fixtures 307-308、308 个 exact fixtures。导入器类型旗标→标签（undead/demon/dragon/animal）+ S_ 映射 493 实例（casting 怪 765→783、S_KIN 76 用固定召唤映射召唤同类）；源包文件预算 2048→4096 |
 | P39 | 伤害类型扩展（RFB 原版元素表） | 已完成（纯枚举+导入器，无契约迁移） | 按 gf.h 原序新增 22 类（light/dark/confusion/nether/nexus/sound/shards/chaos/disenchant/time/mana/gravity/inertia/plasma/force/nuke/disintegrate/storm/holy-fire/hell-fire/ice/water），协议 1.96；导入器近似转正 + 异种元素/吐息全解锁 + blow 元素名直映——法术映射 3849（+778）、casting 怪 829、未映射 1379。见 [damage-type-roster-v1](damage-type-roster-v1.md) |
-| P40 | 候选：抗性档导入 或 心灵族 或 小型效果杂项 | 下一候选 | 抗性档：actor 内容层 resistances 字段 + RES_/IM_/HURT_ 旗标导入（让 28 类元素的攻防交互生效）；心灵族：MIND/BRAIN/PSY 248 实例（伤害+状态骑手+豁免）；杂项：TELE_OTHER 69/DARKNESS 85/DRAIN_MANA 83/AMNESIA 64 各一个小效果形态 |
+| P40 | 抗性档导入 | 已由 contract-v96 完成 | actor 内容层 resistances 字段（类型→档位，normal 缺省）、11 处生成路径盖章（存档保持权威）、slag-crawler kin 召唤纵切、fixtures 309-310（盖章召唤体电弹减半 / 显式免疫覆盖）、310 个 exact fixtures。导入器 RES_/IM_/HURT_ → resistant/immune/vulnerable：1023 只怪 3842 条条目 |
+| P41 | 候选：心灵族 或 CAUSE 豁免 或 小型效果杂项 | 下一候选 | 心灵族 MIND/BRAIN/PSY 248 实例（伤害+状态骑手+豁免语义）；CAUSE_1-4 240 实例（豁免检定归属）；杂项 TELE_OTHER 69/DARKNESS 85/DRAIN_MANA 83/AMNESIA 64 各一个小效果形态 |
+
+## contract-v96 明确遗留
+
+- 玩家侧抗性来源（种族/职业/装备的内容层声明）未建立；玩家 resistances 仍只由既有运行时来源决定；
+- 抗性档只在生成时盖章；临时抗性 buff、装备切换即时重算等动态来源等实际内容需要时接入；
+- RES_TELE 238（传送抗性，等位移抗性机制）、RES_WALL 34（语义待核）、HURT_ROCK 29（削岩弱点）留缺口；
+- 怪物抗性对玩家不可见（快照不暴露）；玩家侧的怪物回忆/知识系统仍未建立。
 
 ## contract-v95 明确遗留
 

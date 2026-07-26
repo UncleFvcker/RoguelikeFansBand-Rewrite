@@ -198,6 +198,32 @@ impl From<rfb_content::ActorDamageType> for DamageType {
     }
 }
 
+impl From<rfb_content::ActorResistanceLevel> for ResistanceLevel {
+    fn from(value: rfb_content::ActorResistanceLevel) -> Self {
+        match value {
+            rfb_content::ActorResistanceLevel::Vulnerable => Self::Vulnerable,
+            rfb_content::ActorResistanceLevel::Resistant => Self::Resistant,
+            rfb_content::ActorResistanceLevel::Strong => Self::Strong,
+            rfb_content::ActorResistanceLevel::Immune => Self::Immune,
+        }
+    }
+}
+
+/// Stamps the content-declared resistance tiers onto a runtime profile;
+/// omitted types stay at the normal default.
+pub(crate) fn definition_resistance_profile(
+    definition: &rfb_content::ActorDefinition,
+) -> ResistanceProfile {
+    let mut profile = ResistanceProfile::default();
+    for (damage_type, level) in &definition.resistances {
+        profile.set(
+            DamageType::from(*damage_type),
+            ResistanceLevel::from(*level),
+        );
+    }
+    profile
+}
+
 impl From<ResistanceLevel> for ResistanceLevelDto {
     fn from(value: ResistanceLevel) -> Self {
         match value {

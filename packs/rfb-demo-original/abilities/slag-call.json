@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.slag-call",
+  "nameKey": "ability-demo-slag-call-name",
+  "descriptionKey": "ability-demo-slag-call-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 4,
+  "baseFailurePercent": 25,
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "effect": {
+    "type": "summon",
+    "actorKindId": "demo.actor.slag-crawler",
+    "count": 1,
+    "radius": 2,
+    "durationTurns": 5
+  },
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  },
+  "tags": ["spell", "summon"]
+}
