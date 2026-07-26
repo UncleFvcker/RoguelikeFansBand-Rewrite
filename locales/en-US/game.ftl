@@ -177,6 +177,7 @@ damage-type-hell-fire-name = hellfire
 damage-type-ice-name = ice
 damage-type-water-name = water
 damage-type-psi-name = psionics
+damage-type-curse-name = curse
 message-item-pickup-success = You pick up { $target } ×{ $quantity }.
 message-item-pickup-over-capacity = You cannot pick up { $target } ×{ $quantity }: { $currentWeight } + { $pickupWeight } exceeds your { $capacity } lb carrying limit.
 message-item-pickup-none = There is nothing here to pick up.

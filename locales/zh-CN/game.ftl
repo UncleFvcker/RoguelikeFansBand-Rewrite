@@ -177,6 +177,7 @@ damage-type-hell-fire-name = 地狱之火
 damage-type-ice-name = 寒冰
 damage-type-water-name = 水流
 damage-type-psi-name = 心灵异能
+damage-type-curse-name = 诅咒
 message-item-pickup-success = 你将 { $quantity } 个{ $target }收入了背包。
 message-item-pickup-over-capacity = 你无法拾取 { $quantity } 个{ $target }：当前 { $currentWeight } 磅加上 { $pickupWeight } 磅，超过了 { $capacity } 磅的携带上限。
 message-item-pickup-none = 脚下没有可以拾取的物品。

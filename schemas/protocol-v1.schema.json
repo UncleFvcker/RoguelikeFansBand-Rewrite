@@ -643,7 +643,8 @@
       "type": "string",
       "enum": [
         "no-target",
-        "target-dead"
+        "target-dead",
+        "saved"
       ]
     },
     "AbilityEffectSpecDto": {
@@ -845,6 +846,39 @@
             "maxDamage",
             "damageType",
             "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "curse-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageBonus"
           ]
         },
         {
@@ -1756,7 +1790,8 @@
         "hell-fire",
         "ice",
         "water",
-        "psi"
+        "psi",
+        "curse"
       ]
     },
     "Direction": {

@@ -36,6 +36,7 @@ pub enum DamageType {
     Ice,
     Water,
     Psi,
+    Curse,
 }
 
 /// A compact first-pass resistance scale.
@@ -126,6 +127,7 @@ impl From<DamageType> for DamageTypeDto {
             DamageType::Ice => Self::Ice,
             DamageType::Water => Self::Water,
             DamageType::Psi => Self::Psi,
+            DamageType::Curse => Self::Curse,
         }
     }
 }
@@ -162,6 +164,7 @@ impl From<DamageTypeDto> for DamageType {
             DamageTypeDto::Ice => Self::Ice,
             DamageTypeDto::Water => Self::Water,
             DamageTypeDto::Psi => Self::Psi,
+            DamageTypeDto::Curse => Self::Curse,
         }
     }
 }

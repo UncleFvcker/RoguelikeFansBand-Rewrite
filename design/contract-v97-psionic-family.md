@@ -1,6 +1,6 @@
 # Contract v97：心灵族（psi 伤害 + 状态骑手组合）
 
-状态：当前 active baseline。协议 1.97（唯一变更：`psi` 伤害类型加入 DTO 联合），内容包 1.88.0（content hash `bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b`）；save 容器 v1；state hash 沿用 Schema v40。active baseline 共 312 个 exact fixtures、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v98](contract-v98-curse-family.md)。协议 1.97（唯一变更：`psi` 伤害类型加入 DTO 联合），内容包 1.88.0（content hash `bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b`）；save 容器 v1；state hash 沿用 Schema v40。该 baseline 共 312 个 exact fixtures、零 waiver。
 
 ## 1. 原版参考与本轮边界
 

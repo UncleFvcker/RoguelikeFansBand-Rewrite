@@ -385,6 +385,62 @@ fn map_mental_spell_token(
     Some(id)
 }
 
+/// CAUSE curses gate on the player's saving throw instead of armour or
+/// resistances; HAND_DOOM (percent-of-current-HP) stays a gap.
+fn map_curse_spell_token(
+    token: &str,
+    abilities: &mut BTreeMap<String, serde_json::Value>,
+) -> Option<String> {
+    let (base, explicit) = match token.split_once('(') {
+        Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
+        None => (token, None),
+    };
+    let default_dice = match base {
+        "CAUSE_1" => (3, 8, 0),
+        "CAUSE_2" => (8, 8, 0),
+        "CAUSE_3" => (10, 15, 0),
+        "CAUSE_4" => (15, 15, 0),
+        _ => return None,
+    };
+    let (dice, sides, bonus) = match explicit {
+        Some(spec) => parse_explicit_damage_dice(spec)?,
+        None => default_dice,
+    };
+    let dice = dice.clamp(1, 100);
+    let sides = sides.clamp(1, 10_000);
+    let bonus = bonus.min(10_000);
+    let mut suffix = format!("curse-{dice}d{sides}");
+    if bonus > 0 {
+        suffix.push_str(&format!("-{bonus}"));
+    }
+    let id = format!("rfb-legacy.ability.{suffix}");
+    abilities.entry(id.clone()).or_insert_with(|| {
+        let mut effect = serde_json::json!({
+            "type": "curse-damage",
+            "damageDice": dice,
+            "damageSides": sides,
+        });
+        if bonus > 0 {
+            effect["damageBonus"] = serde_json::json!(bonus);
+        }
+        serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+            "formatVersion": 1,
+            "id": format!("rfb-legacy.ability.{suffix}"),
+            "nameKey": format!("ability-legacy-{suffix}-name"),
+            "descriptionKey": format!("ability-legacy-{suffix}-description"),
+            "minimumLevel": 1,
+            "resourceId": LEGACY_RESOURCE_ID,
+            "resourceCost": 1,
+            "baseFailurePercent": 20,
+            "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+            "effect": effect,
+            "tags": ["curse", "legacy-import"],
+        })
+    });
+    Some(id)
+}
+
 fn psi_damage_effect(dice: u32, sides: u32, bonus: u32) -> serde_json::Value {
     let mut effect = serde_json::json!({
         "type": "damage",
@@ -721,6 +777,9 @@ fn map_spell_token(
         return Some(id);
     }
     if let Some(id) = map_mental_spell_token(token, level, abilities) {
+        return Some(id);
+    }
+    if let Some(id) = map_curse_spell_token(token, abilities) {
         return Some(id);
     }
     match token {
@@ -1829,6 +1888,44 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         assert_eq!(any["effect"]["countDice"], 1);
         assert_eq!(any["effect"]["countSides"], 1);
         assert!(any["effect"].get("countBonus").is_none());
+    }
+
+    #[test]
+    fn curse_tokens_map_to_save_gated_damage() {
+        const CURSER_R_INFO: &str = "N:7:test doom whisperer
+G:p:D
+I:110:5d5:20:10:10:10
+W:25:2:20:9:10:40
+B:HIT:HURT(1d4)
+S:1_IN_3 | CAUSE_1 | CAUSE_4 | HAND_DOOM
+";
+        let monsters = parse_r_info(CURSER_R_INFO);
+        let outcome = convert_content(&[], &monsters);
+        let (_, whisperer) = &outcome.actor_files[0];
+        let ability_ids: Vec<&str> = whisperer["monsterCasting"]["abilities"]
+            .as_array()
+            .expect("casting should list abilities")
+            .iter()
+            .map(|entry| entry["abilityId"].as_str().expect("ability id"))
+            .collect();
+        assert_eq!(
+            ability_ids,
+            [
+                "rfb-legacy.ability.curse-3d8",
+                "rfb-legacy.ability.curse-15d15",
+            ]
+        );
+        assert_eq!(outcome.report.unmapped_spells["HAND_DOOM"], 1);
+        let curse = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "curse-15d15.json")
+            .map(|(_, value)| value)
+            .expect("heavy curse should be generated");
+        assert_eq!(curse["effect"]["type"], "curse-damage");
+        assert_eq!(curse["effect"]["damageDice"], 15);
+        assert_eq!(curse["effect"]["damageSides"], 15);
+        assert!(curse["effect"].get("damageType").is_none());
     }
 
     #[test]

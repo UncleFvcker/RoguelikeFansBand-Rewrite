@@ -93,7 +93,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 89] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 90] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -183,9 +183,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 89] = [
     "2646a2fe3c9bd4f56f22bbc604a4e303bf15f28d9ba6445645b396ef03f27dae",
     "01b74e86466aa5abfe682443819379504dde2efdf5d67d126fc3f1d20eb197a4",
     "f1fba31216da594e34b36b23bdf4570b46a934c7360ad0d66e01f1284529a9f2",
+    "bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b";
+    "086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 40;
@@ -5941,7 +5942,8 @@ impl Game {
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
             | AbilityEffectDefinition::BreathDamage { .. }
-            | AbilityEffectDefinition::SummonCategory { .. } => None,
+            | AbilityEffectDefinition::SummonCategory { .. }
+            | AbilityEffectDefinition::CurseDamage { .. } => None,
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;
@@ -7991,6 +7993,7 @@ impl Game {
             | AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::BreathDamage { .. }
+            | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. }
@@ -8152,6 +8155,7 @@ impl Game {
                 )
             }
             AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Sequence { .. } => {
@@ -8477,6 +8481,9 @@ impl Game {
         for effect in effects {
             match effect {
                 AbilityEffectDefinition::Damage { .. } if hostile_target.is_some() => useful = true,
+                AbilityEffectDefinition::CurseDamage { .. } if hostile_target.is_some() => {
+                    useful = true;
+                }
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => useful = true,
                 AbilityEffectDefinition::TeleportTarget if hostile_target.is_some() => {
@@ -9362,6 +9369,29 @@ impl Game {
                         events,
                     )
                 }
+                AbilityEffectDefinition::CurseDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                } => {
+                    // Summoned targets have no saving-throw skill; the curse
+                    // lands in full (documented v98 simplification).
+                    let raw_damage = self
+                        .roll_damage(*damage_dice, *damage_sides)
+                        .saturating_add(i32::from(*damage_bonus))
+                        .max(0);
+                    self.resolve_monster_damage_to_hostile(
+                        source_entity_id,
+                        source_kind_id,
+                        &ability.id,
+                        effect_index,
+                        raw_damage,
+                        raw_damage,
+                        DamageType::Curse,
+                        target,
+                        events,
+                    )
+                }
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -9441,6 +9471,72 @@ impl Game {
                         damage_type,
                         events,
                     )
+                }
+                AbilityEffectDefinition::CurseDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                } => {
+                    // A successful saving throw negates the curse before any
+                    // damage dice are drawn; difficulty follows the caster's
+                    // definition level.
+                    let ability_stat = self.player_derived_stats().saving_throw_skill;
+                    let caster_level = self
+                        .content
+                        .actor(source_kind_id)
+                        .map_or(1, |definition| definition.level);
+                    let mut difficulty_pipeline = DerivedStatsPipeline::new();
+                    difficulty_pipeline.add(
+                        StatKind::ActionDifficulty,
+                        StatLayer::Environment,
+                        source_kind_id,
+                        i32::try_from(caster_level).unwrap_or(i32::MAX),
+                    );
+                    let check = resolve_check(
+                        &mut self.rng,
+                        CheckContext {
+                            kind: CheckKind::SavingThrow,
+                            actor_id: self.player.id.clone(),
+                            target_id: Some(source_kind_id.to_owned()),
+                            ability: ability_stat,
+                            difficulty: difficulty_pipeline
+                                .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+                        },
+                    );
+                    let succeeded = check.succeeded();
+                    let skill_id = self
+                        .content
+                        .skill_by_kind(SkillKind::SavingThrow)
+                        .expect("validated saving throw skill must remain available")
+                        .id
+                        .clone();
+                    events.push(DomainEvent::SavingThrowChecked {
+                        source_kind_id: source_kind_id.to_owned(),
+                        position: self.player.position,
+                        succeeded,
+                        resolution: check.to_dto(skill_id),
+                    });
+                    if succeeded {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Saved,
+                        }
+                    } else {
+                        let raw_damage = self
+                            .roll_damage(*damage_dice, *damage_sides)
+                            .saturating_add(i32::from(*damage_bonus))
+                            .max(0);
+                        self.resolve_monster_damage_to_player(
+                            source_entity_id,
+                            source_kind_id,
+                            &ability.id,
+                            effect_index,
+                            raw_damage,
+                            raw_damage,
+                            DamageType::Curse,
+                            events,
+                        )
+                    }
                 }
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
@@ -15400,6 +15496,15 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             max_damage: *max_damage,
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
+        },
+        AbilityEffectDefinition::CurseDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+        } => AbilityEffectSpecDto::CurseDamage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
         },
         AbilityEffectDefinition::Teleport => AbilityEffectSpecDto::Teleport,
         AbilityEffectDefinition::Summon {

@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.97 / contract-v97（P31–P41 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.98 / contract-v98（P31–P42 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -509,7 +509,7 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 阶段 H 已由 P26–P29 建立怪物施法、阵营目标、战术移动、有限记忆与玩家召唤物闭环；P30 建立职业资源底子。
 
-**实际走向修订（2026-07）**：用户确认多职业资源"有通用接口即可"，后续内容改由旧版导入管线供给。P31 建立 f_info/r_info 只读导入管线（`.local/` 本地包 + 缺口报告），P32–P37 按缺口报告覆盖数依次落地规则族并回灌导入映射：多 blow 近战（P32）、状态/治疗法术（P33）、位移族（P34，contract-v91）、混乱/致盲/麻痹状态族（P35，contract-v92）、bolt/ball 直伤族与伤害平坦加值（P36，contract-v93）、吐息族与 HP 比例伤害（P37，contract-v94，同轮修复 FREQ_N 频率语法并把 `MST_POSSESSOR` 附身组 522 实例重分类为不适用）、按类别召唤与召唤族导入（P38，contract-v95，类型旗标折算标签、S_ 映射 493 实例）、伤害类型扩展（P39，协议 1.96，按 gf.h 原版元素表扩至 28 类，纯枚举+导入器迭代无契约迁移，异种元素全解锁 +778 实例）。抗性档导入已由 P40（contract-v96）完成：内容层 resistances 字段 + 生成盖章 + RES_/IM_/HURT_ 旗标导入（1023 只怪 3842 条）；心灵族已由 P41（contract-v97）完成：psi 伤害类型 + Sequence 骑手组合 + 首个导入 beam（248 实例全数）。下一执行里程碑候选为 CAUSE 豁免（240，可依托 v72 saving-throw 技能建立中性豁免）、小型效果杂项或 k_info 物品导入；滚动缺口清单见[待实现内容清单](pending-implementation.md)的 contract-v95 遗留段与 [damage-type-roster-v1](damage-type-roster-v1.md)。
+**实际走向修订（2026-07）**：用户确认多职业资源"有通用接口即可"，后续内容改由旧版导入管线供给。P31 建立 f_info/r_info 只读导入管线（`.local/` 本地包 + 缺口报告），P32–P37 按缺口报告覆盖数依次落地规则族并回灌导入映射：多 blow 近战（P32）、状态/治疗法术（P33）、位移族（P34，contract-v91）、混乱/致盲/麻痹状态族（P35，contract-v92）、bolt/ball 直伤族与伤害平坦加值（P36，contract-v93）、吐息族与 HP 比例伤害（P37，contract-v94，同轮修复 FREQ_N 频率语法并把 `MST_POSSESSOR` 附身组 522 实例重分类为不适用）、按类别召唤与召唤族导入（P38，contract-v95，类型旗标折算标签、S_ 映射 493 实例）、伤害类型扩展（P39，协议 1.96，按 gf.h 原版元素表扩至 28 类，纯枚举+导入器迭代无契约迁移，异种元素全解锁 +778 实例）。抗性档导入已由 P40（contract-v96）完成：内容层 resistances 字段 + 生成盖章 + RES_/IM_/HURT_ 旗标导入（1023 只怪 3842 条）；心灵族已由 P41（contract-v97）完成：psi 伤害类型 + Sequence 骑手组合 + 首个导入 beam（248 实例全数）；诅咒族与首个法术豁免门已由 P42（contract-v98）完成：curse-damage 复用 v72 saving-throw 检定（240 实例全数，法术未映射首次跌破千）。下一执行里程碑候选为小型效果杂项（TELE_OTHER/DARKNESS/DRAIN_MANA/AMNESIA 约 300）或 k_info 物品导入（545 条，导入管线 v2 最大空白）；滚动缺口清单见[待实现内容清单](pending-implementation.md)的 contract-v95 遗留段与 [damage-type-roster-v1](damage-type-roster-v1.md)。
 
 ## 9. 内容迁移策略
 

@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v97、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v98、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -50,7 +50,15 @@
 | P39 | 伤害类型扩展（RFB 原版元素表） | 已完成（纯枚举+导入器，无契约迁移） | 按 gf.h 原序新增 22 类（light/dark/confusion/nether/nexus/sound/shards/chaos/disenchant/time/mana/gravity/inertia/plasma/force/nuke/disintegrate/storm/holy-fire/hell-fire/ice/water），协议 1.96；导入器近似转正 + 异种元素/吐息全解锁 + blow 元素名直映——法术映射 3849（+778）、casting 怪 829、未映射 1379。见 [damage-type-roster-v1](damage-type-roster-v1.md) |
 | P40 | 抗性档导入 | 已由 contract-v96 完成 | actor 内容层 resistances 字段（类型→档位，normal 缺省）、11 处生成路径盖章（存档保持权威）、slag-crawler kin 召唤纵切、fixtures 309-310（盖章召唤体电弹减半 / 显式免疫覆盖）、310 个 exact fixtures。导入器 RES_/IM_/HURT_ → resistant/immune/vulnerable：1023 只怪 3842 条条目 |
 | P41 | 心灵族 | 已由 contract-v97 完成 | psi 伤害类型（协议 1.97）、MIND_BLAST/BRAIN_SMASH→Sequence[psi 伤害+骑手]（既有白名单零新机制）、PSY_SPEAR→首个导入 beam、mind-lasher 纵切、fixtures 311-312（同种子孪生：Normal 全额 vs psi 抗性减伤+缩时）、312 个 exact fixtures。导入 248 实例全数（casting 怪 831、映射累计 4097、未映射 1131） |
-| P42 | 候选：CAUSE 豁免 或 小型效果杂项 或 k_info 物品导入 | 下一候选 | CAUSE_1-4 240 实例（需中性豁免检定归属，可复用 v72 saving-throw 技能）；杂项 TELE_OTHER 69/DARKNESS 85/DRAIN_MANA 83/AMNESIA 64/ANIM_DEAD 58/DISPEL 48；k_info 545 条物品导入是导入管线 v2 的最大空白 |
+| P42 | 诅咒族与豁免门 | 已由 contract-v98 完成 | curse-damage 效果（豁免成功全免零后续 RNG、失败全额无护甲无抗性；难度=施法者等级；复用 v72 saving-throw 检定与 SavingThrowChecked 事件）+ curse 伤害类型（协议 1.98）、hex-chanter 纵切、fixtures 313-314（同设置双种子：成功 skip saved / 对抗失败 raw=final 全额）、314 个 exact fixtures。导入 CAUSE_1-4 240 实例全数（casting 怪 832、映射累计 4337、未映射 891） |
+| P43 | 候选：小型效果杂项 或 k_info 物品导入 | 下一候选 | 杂项 TELE_OTHER 69（推走玩家）/DARKNESS 85（压光）/DRAIN_MANA 83（吸资源）/AMNESIA 64（清知识）/ANIM_DEAD 58/DISPEL 48（驱散增益）；k_info 545 条物品导入是导入管线 v2 的最大空白 |
+
+## contract-v98 明确遗留
+
+- 豁免公式为 v72 中性检定（技能 vs 3/4 难度阈值 + 5%/5% 自动窗口），非原版连续概率（sav×100/(100+rlev/2+dam/5)）；dam/5 难度加成未纳入；
+- 装备诅咒副作用（curse_equipment）无对应系统；HAND_DOOM（当前 HP 百分比 + 豁免，30 实例）留缺口；
+- 玩家召唤物作为诅咒目标时无豁免（无豁免技能概念），直接全额；
+- 心灵族（MIND_BLAST dam/5、BRAIN_SMASH dam/3）的豁免门回补待排期——机制已就位，只差在 Sequence 骑手前插入豁免检定的形态设计。
 
 ## contract-v97 明确遗留
 

@@ -2202,6 +2202,7 @@ function damageTypeName(damageType: DamageTypeDto): string {
     ice: "damage-type-ice-name",
     water: "damage-type-water-name",
     psi: "damage-type-psi-name",
+    curse: "damage-type-curse-name",
   };
   return localization.format(keys[damageType]);
 }
