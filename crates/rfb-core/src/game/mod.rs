@@ -40,7 +40,7 @@ use crate::{
     },
     state::{
         Actor, EquipOutcome, FloorConnectionState, FloorRegionState, FloorState, ItemInstance,
-        ItemLocation, MonsterPackIdentity, ResourcePool, SummonIdentity,
+        ItemLocation, MonsterPackIdentity, ResourcePool, RolledAffixState, SummonIdentity,
     },
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -50,18 +50,19 @@ use crate::{
 };
 use rfb_content::{
     AbilityDefinition, AbilityEffectDefinition, AbilityStatusStackingDefinition,
-    AbilityTargetModeDefinition, ActorRole, CampaignDefinition, CastingAttribute,
-    CastingProfileDefinition, CharacterBuildDefinition, ClassDefinition, ContentCatalog,
-    ContentPosition, DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
-    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterFormation,
-    EncounterTableDefinition, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
+    AbilityTargetModeDefinition, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
+    CampaignDefinition, CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition,
+    ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
+    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
+    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
+    EquipmentPassive, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
     PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
     ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
     ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
-    SkillKind, SkillSetDefinition, StartingItemDefinition, StatModifiers, TaskObjectiveDefinition,
-    TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
+    SkillKind, SkillSetDefinition, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers,
+    TaskObjectiveDefinition, TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
     TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
-    VaultDefinition, VaultTransform,
+    VaultDefinition, VaultTransform, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -74,28 +75,30 @@ use rfb_protocol::{
     AttackProfileDto, AttributeSetDto, AttributeValueDto, BodySlotDto, BodySlotSaveDto,
     CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
     CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
-    EntityDto, EntityFactionDto, EquipmentItemDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
-    FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate, HealingResolutionDto,
-    InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
-    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
-    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
-    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION,
-    PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
-    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto,
-    StatModifiersDto, SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto,
-    SummonDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStateSaveDto, TaskStatusDto,
-    TaskStatusKindDto, TerrainInteractionDto, TerrainInteractionKindDto,
-    TerrainInteractionUnavailableReasonDto, TerrainSaveDto, ThrowProfileDto, VisibilityState,
+    EntityDto, EntityFactionDto, EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto,
+    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope,
+    GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto,
+    ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
+    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
+    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto,
+    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto,
+    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto, SlayDto, SlayLevelDto,
+    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
+    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
+    ThrowProfileDto, VisibilityState, WeaponBrandDto,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 93] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 95] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -189,12 +192,15 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 93] = [
     "086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34",
     "b425bafec4d4108b9eab4fd323b7b592f1e65ffb4197d45bcb1bc59567b61eff",
     "1380958f4743b474abe00c2dbbcf6719aa791945405f0276badc0d8d35a106e1",
+    "83dc1e5a58f408b9945d627e469d2b53c1731963fb19752dcbc5c9c91359b188",
+    "66842fb3b3291494aed23368a30374e93a8bceea2b397382ff89f08ecac180aa",
 ];
+const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "83dc1e5a58f408b9945d627e469d2b53c1731963fb19752dcbc5c9c91359b188";
+    "271fcf3f85ca347791150dbc8eec0040b9dd70e8315bdb3874bc2fc628d637bd";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 41;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 42;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1312,6 +1318,7 @@ fn append_starting_item(
         quantity: starting_item.quantity,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
         location,
     });
     Ok(())
@@ -1545,6 +1552,7 @@ impl Game {
                 quantity: spawn.quantity,
                 quality: item_quality_dto(spawn.quality),
                 affix_ids: spawn.affix_ids.clone(),
+                rolled_affixes: Vec::new(),
                 location: ItemLocation::Ground(position_from_content(spawn.position)),
             })
             .collect::<Vec<_>>();
@@ -1780,8 +1788,8 @@ impl Game {
         let mut items = payload
             .items
             .into_iter()
-            .map(item_from_dto)
-            .collect::<Vec<_>>();
+            .map(|item| item_from_dto(item, &content))
+            .collect::<Result<Vec<_>, CoreError>>()?;
         items.extend(
             payload
                 .inventory
@@ -3822,8 +3830,12 @@ impl Game {
                         .item(&item.kind_id)
                         .and_then(|definition| definition.equipment_slot.clone()),
                     modifiers: self.visible_item_modifiers(item),
+                    equipment_bonuses: self.visible_item_equipment_bonuses(item),
                     resistances: self.visible_item_resistances(item),
                     status_immunities: self.visible_item_status_immunities(item),
+                    slays: self.visible_item_slays(item),
+                    brands: self.visible_item_brands(item),
+                    passives: self.visible_item_passives(item),
                     identification: self.item_identification(item),
                     quality: self.visible_item_quality(item),
                     known_properties: self.known_item_properties(item),
@@ -3854,8 +3866,12 @@ impl Game {
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),
+                    equipment_bonuses: self.visible_item_equipment_bonuses(item),
                     resistances: self.visible_item_resistances(item),
                     status_immunities: self.visible_item_status_immunities(item),
+                    slays: self.visible_item_slays(item),
+                    brands: self.visible_item_brands(item),
+                    passives: self.visible_item_passives(item),
                     identification: self.item_identification(item),
                     quality: self.visible_item_quality(item),
                     known_properties: self.known_item_properties(item),
@@ -3935,6 +3951,7 @@ impl Game {
                 quantity,
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
                 location: ItemLocation::Ground(self.player.position),
             });
         }
@@ -4158,6 +4175,14 @@ impl Game {
                     }
                 }
             }
+            for rolled in &item.rolled_affixes {
+                for (damage_type, level) in &rolled.properties.resistances {
+                    record(
+                        DamageType::from(*damage_type),
+                        ResistanceLevel::from(*level),
+                    );
+                }
+            }
         }
         let mut profile = ResistanceProfile::default();
         for (damage_type, (immune, strong, resistant, vulnerable)) in sources {
@@ -4200,12 +4225,15 @@ impl Game {
                     immunities.extend(affix.status_immunities.iter().cloned());
                 }
             }
+            for rolled in &item.rolled_affixes {
+                immunities.extend(rolled.properties.status_immunities.iter().cloned());
+            }
         }
         immunities
     }
 
     fn item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
-        item.affix_ids.iter().fold(
+        let mut modifiers = item.affix_ids.iter().fold(
             self.item_base_modifiers(&item.kind_id),
             |total, affix_id| {
                 let affix = self
@@ -4229,7 +4257,53 @@ impl Game {
                     speed: total.speed.saturating_add(affix.modifiers.speed),
                 }
             },
-        )
+        );
+        for rolled in &item.rolled_affixes {
+            add_stat_modifiers_dto(&mut modifiers, &rolled.properties.modifiers);
+        }
+        modifiers
+    }
+
+    fn item_equipment_bonuses(&self, item: &ItemInstance) -> EquipmentBonuses {
+        let mut bonuses = self
+            .content
+            .item(&item.kind_id)
+            .map_or_else(EquipmentBonuses::default, |definition| {
+                definition.equipment_bonuses.clone()
+            });
+        for affix_id in &item.affix_ids {
+            if let Some(affix) = self.content.affix(affix_id) {
+                merge_equipment_bonuses(&mut bonuses, &affix.equipment_bonuses);
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            merge_equipment_bonuses(&mut bonuses, &rolled.properties.equipment_bonuses);
+        }
+        bonuses
+    }
+
+    fn item_passives(&self, item: &ItemInstance) -> BTreeSet<EquipmentPassive> {
+        let mut passives = self
+            .content
+            .item(&item.kind_id)
+            .map_or_else(BTreeSet::new, |definition| definition.passives.clone());
+        for affix_id in &item.affix_ids {
+            if let Some(affix) = self.content.affix(affix_id) {
+                passives.extend(&affix.passives);
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            passives.extend(&rolled.properties.passives);
+        }
+        passives
+    }
+
+    fn player_equipment_passives(&self) -> BTreeSet<EquipmentPassive> {
+        self.items
+            .iter()
+            .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
+            .flat_map(|item| self.item_passives(item))
+            .collect()
     }
 
     fn item_knowledge_dto(&self, kind_id: &str) -> ItemKnowledgeDto {
@@ -4296,7 +4370,7 @@ impl Game {
             return StatModifiersDto::default();
         }
         let known = self.item_property_knowledge.get(&item.id);
-        item.affix_ids.iter().fold(
+        let mut modifiers = item.affix_ids.iter().fold(
             self.item_base_modifiers(&item.kind_id),
             |total, affix_id| {
                 let Some(affix) = known
@@ -4322,7 +4396,63 @@ impl Game {
                     speed: total.speed.saturating_add(affix.modifiers.speed),
                 }
             },
-        )
+        );
+        for rolled in &item.rolled_affixes {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(&rolled.affix_id)) {
+                add_stat_modifiers_dto(&mut modifiers, &rolled.properties.modifiers);
+            }
+        }
+        modifiers
+    }
+
+    fn visible_item_equipment_bonuses(&self, item: &ItemInstance) -> EquipmentBonusesDto {
+        if self.item_knowledge_dto(&item.kind_id) != ItemKnowledgeDto::Aware {
+            return EquipmentBonusesDto::default();
+        }
+        let mut bonuses = self
+            .content
+            .item(&item.kind_id)
+            .map_or_else(EquipmentBonuses::default, |definition| {
+                definition.equipment_bonuses.clone()
+            });
+        let known = self.item_property_knowledge.get(&item.id);
+        for affix_id in &item.affix_ids {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(affix_id))
+                && let Some(affix) = self.content.affix(affix_id)
+            {
+                merge_equipment_bonuses(&mut bonuses, &affix.equipment_bonuses);
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(&rolled.affix_id)) {
+                merge_equipment_bonuses(&mut bonuses, &rolled.properties.equipment_bonuses);
+            }
+        }
+        equipment_bonuses_dto(&bonuses)
+    }
+
+    fn visible_item_passives(&self, item: &ItemInstance) -> Vec<EquipmentPassiveDto> {
+        if self.item_knowledge_dto(&item.kind_id) != ItemKnowledgeDto::Aware {
+            return Vec::new();
+        }
+        let mut passives = self
+            .content
+            .item(&item.kind_id)
+            .map_or_else(BTreeSet::new, |definition| definition.passives.clone());
+        let known = self.item_property_knowledge.get(&item.id);
+        for affix_id in &item.affix_ids {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(affix_id))
+                && let Some(affix) = self.content.affix(affix_id)
+            {
+                passives.extend(&affix.passives);
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(&rolled.affix_id)) {
+                passives.extend(&rolled.properties.passives);
+            }
+        }
+        passives.into_iter().map(equipment_passive_dto).collect()
     }
 
     fn known_item_properties(&self, item: &ItemInstance) -> Vec<ItemPropertyDto> {
@@ -4331,21 +4461,29 @@ impl Game {
             .into_iter()
             .flat_map(|knowledge| &knowledge.known_affix_ids)
             .filter_map(|affix_id| {
-                self.content.affix(affix_id).map(|affix| ItemPropertyDto {
-                    affix_id: affix.id.clone(),
-                    name_key: affix.name_key.clone(),
-                    modifiers: StatModifiersDto {
-                        attack: affix.modifiers.attack,
-                        defense: affix.modifiers.defense,
-                        max_hp: affix.modifiers.max_hp,
-                        strength: affix.modifiers.strength,
-                        intelligence: affix.modifiers.intelligence,
-                        wisdom: affix.modifiers.wisdom,
-                        dexterity: affix.modifiers.dexterity,
-                        constitution: affix.modifiers.constitution,
-                        charisma: affix.modifiers.charisma,
-                        speed: affix.modifiers.speed,
-                    },
+                self.content.affix(affix_id).map(|affix| {
+                    let mut modifiers = stat_modifiers_dto(&affix.modifiers);
+                    let mut equipment_bonuses = affix.equipment_bonuses.clone();
+                    let mut passives = affix.passives.clone();
+                    if let Some(rolled) = item
+                        .rolled_affixes
+                        .iter()
+                        .find(|rolled| rolled.affix_id == *affix_id)
+                    {
+                        add_stat_modifiers_dto(&mut modifiers, &rolled.properties.modifiers);
+                        merge_equipment_bonuses(
+                            &mut equipment_bonuses,
+                            &rolled.properties.equipment_bonuses,
+                        );
+                        passives.extend(&rolled.properties.passives);
+                    }
+                    ItemPropertyDto {
+                        affix_id: affix.id.clone(),
+                        name_key: affix.name_key.clone(),
+                        modifiers,
+                        equipment_bonuses: equipment_bonuses_dto(&equipment_bonuses),
+                        passives: passives.into_iter().map(equipment_passive_dto).collect(),
+                    }
                 })
             })
             .collect()
@@ -4411,6 +4549,16 @@ impl Game {
                 }
             }
         }
+        for rolled in &item.rolled_affixes {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(&rolled.affix_id)) {
+                for (damage_type, level) in &rolled.properties.resistances {
+                    record(
+                        DamageType::from(*damage_type),
+                        ResistanceLevel::from(*level),
+                    );
+                }
+            }
+        }
         profile.to_dtos()
     }
 
@@ -4429,7 +4577,68 @@ impl Game {
                 immunities.extend(affix.status_immunities.iter().cloned());
             }
         }
+        for rolled in &item.rolled_affixes {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(&rolled.affix_id)) {
+                immunities.extend(rolled.properties.status_immunities.iter().cloned());
+            }
+        }
         immunities.into_iter().collect()
+    }
+
+    fn visible_item_offense(
+        &self,
+        item: &ItemInstance,
+    ) -> (BTreeMap<SlayTarget, SlayLevel>, BTreeSet<WeaponBrand>) {
+        let mut slays = BTreeMap::new();
+        let mut brands = BTreeSet::new();
+        let mut record = |source_slays: &BTreeMap<SlayTarget, SlayLevel>,
+                          source_brands: &BTreeSet<WeaponBrand>| {
+            for (target, level) in source_slays {
+                let current = slays.entry(*target).or_insert(*level);
+                if *level > *current {
+                    *current = *level;
+                }
+            }
+            brands.extend(source_brands);
+        };
+        if self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
+            && let Some(definition) = self.content.item(&item.kind_id)
+        {
+            record(&definition.slays, &definition.brands);
+        }
+        let known = self.item_property_knowledge.get(&item.id);
+        for affix_id in &item.affix_ids {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(affix_id))
+                && let Some(affix) = self.content.affix(affix_id)
+            {
+                record(&affix.slays, &affix.brands);
+            }
+        }
+        for rolled in &item.rolled_affixes {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(&rolled.affix_id)) {
+                record(&rolled.properties.slays, &rolled.properties.brands);
+            }
+        }
+        (slays, brands)
+    }
+
+    fn visible_item_slays(&self, item: &ItemInstance) -> Vec<SlayDto> {
+        self.visible_item_offense(item)
+            .0
+            .into_iter()
+            .map(|(target, level)| SlayDto {
+                target: slay_target_dto(target),
+                level: slay_level_dto(level),
+            })
+            .collect()
+    }
+
+    fn visible_item_brands(&self, item: &ItemInstance) -> Vec<WeaponBrandDto> {
+        self.visible_item_offense(item)
+            .1
+            .into_iter()
+            .map(weapon_brand_dto)
+            .collect()
     }
 
     fn visible_item_projectile_profile(&self, item: &ItemInstance) -> Option<ProjectileProfileDto> {
@@ -5032,6 +5241,48 @@ impl Game {
         }
     }
 
+    fn player_melee_damage_multiplier(
+        &self,
+        profile: &ResolvedAttackProfile,
+        target: &Actor,
+        definition: &rfb_content::ActorDefinition,
+    ) -> i32 {
+        if profile.source_item_id.is_none() {
+            return 10;
+        }
+        let mut multiplier = 10;
+        let mut apply = |slays: &BTreeMap<SlayTarget, SlayLevel>,
+                         brands: &BTreeSet<WeaponBrand>| {
+            for (slay_target, level) in slays {
+                if slay_target_matches(*slay_target, definition) {
+                    multiplier = multiplier.max(slay_multiplier(*slay_target, *level));
+                }
+            }
+            for brand in brands {
+                if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
+                    multiplier = multiplier.max(24);
+                }
+            }
+        };
+        for item in &self.items {
+            if !matches!(&item.location, ItemLocation::Equipped { .. }) {
+                continue;
+            }
+            if let Some(item_definition) = self.content.item(&item.kind_id) {
+                apply(&item_definition.slays, &item_definition.brands);
+            }
+            for affix_id in &item.affix_ids {
+                if let Some(affix) = self.content.affix(affix_id) {
+                    apply(&affix.slays, &affix.brands);
+                }
+            }
+            for rolled in &item.rolled_affixes {
+                apply(&rolled.properties.slays, &rolled.properties.brands);
+            }
+        }
+        multiplier
+    }
+
     fn add_character_stat_contributions(&self, pipeline: &mut DerivedStatsPipeline) {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
@@ -5311,6 +5562,73 @@ impl Game {
                     rating_to_armor_class(modifiers.defense),
                 );
                 add_equipment_stat(&mut pipeline, StatKind::Speed, &item.id, modifiers.speed);
+                let bonuses = self.item_equipment_bonuses(item);
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::MeleeAttacks,
+                    &item.id,
+                    bonuses.melee_attacks,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::MeleeSkill,
+                    &item.id,
+                    bonuses.melee_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::RangedSkill,
+                    &item.id,
+                    bonuses.ranged_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::ThrowingSkill,
+                    &item.id,
+                    bonuses.throwing_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::DeviceSkill,
+                    &item.id,
+                    bonuses.device_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::SavingThrowSkill,
+                    &item.id,
+                    bonuses.saving_throw_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::StealthSkill,
+                    &item.id,
+                    bonuses.stealth_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::SearchSkill,
+                    &item.id,
+                    bonuses.search_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::PerceptionSkill,
+                    &item.id,
+                    bonuses.perception_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::DisarmSkill,
+                    &item.id,
+                    bonuses.disarming_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::DigSkill,
+                    &item.id,
+                    bonuses.digging_skill,
+                );
                 if let Some(profile) = self
                     .content
                     .item(&item.kind_id)
@@ -7013,6 +7331,7 @@ impl Game {
                 quantity: 1,
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
                 location: ItemLocation::Inventory,
             }))
         }
@@ -7179,6 +7498,7 @@ impl Game {
                 quantity: 1,
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
                 location: ItemLocation::Inventory,
             }))
         }
@@ -7369,6 +7689,8 @@ impl Game {
         let attacker = self.player_derived_stats();
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
         let profile = self.player_melee_profile(&attacker);
+        let damage_multiplier =
+            self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
         for _ in 0..profile.attacks {
             if attacker.melee_skill.value <= 0
                 || !resolve_check(
@@ -7389,8 +7711,10 @@ impl Game {
                 continue;
             }
 
-            let rolled_damage = self
-                .roll_damage(profile.damage_dice, profile.damage_sides)
+            let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
+            let rolled_damage = weapon_damage
+                .saturating_mul(damage_multiplier)
+                .saturating_div(10)
                 .saturating_add(profile.to_damage)
                 .max(0);
             let damage_type = profile.damage_type;
@@ -7432,6 +7756,7 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
+            self.process_equipment_regeneration(events);
             self.process_monster_energy_pulse(events, changed, removed_entities)?;
             if self.player_is_dead() {
                 break;
@@ -7444,6 +7769,30 @@ impl Game {
         }
         self.advance_summon_lifetimes(events, changed, removed_entities);
         Ok(())
+    }
+
+    fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
+        if !self
+            .world_tick
+            .is_multiple_of(EQUIPMENT_REGENERATION_INTERVAL_TICKS)
+            || !self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::Regeneration)
+        {
+            return;
+        }
+        let maximum = self.effective_player_max_hp();
+        let before = self.player.hp;
+        self.player.hp = self.player.hp.saturating_add(1).min(maximum);
+        let applied = self.player.hp.saturating_sub(before);
+        if applied > 0 {
+            events.push(DomainEvent::EquipmentRegenerated {
+                resolution: HealingResolutionDto {
+                    requested: 1,
+                    applied,
+                },
+            });
+        }
     }
 
     fn advance_summon_lifetimes(
@@ -11135,17 +11484,59 @@ impl Game {
                     .cloned()
                     .collect()
             };
+            let rolled_affixes = self.roll_affix_properties(&affix_ids, context.depth);
             let item = ItemInstance {
                 id: self.allocate_item_instance_id()?,
                 kind_id: entry.item_kind_id.clone(),
                 quantity: entry.quantity,
                 quality,
                 affix_ids,
+                rolled_affixes,
                 location: location.clone(),
             };
             generated.push(item);
         }
         Ok(generated)
+    }
+
+    fn roll_affix_properties(&mut self, affix_ids: &[String], depth: u16) -> Vec<RolledAffixState> {
+        let mut rolled_affixes = Vec::new();
+        for affix_id in affix_ids {
+            let roll_groups = self
+                .content
+                .affix(affix_id)
+                .expect("selected affix must remain available")
+                .roll_groups
+                .clone();
+            let mut properties = AffixPropertyBundleDefinition::default();
+            for group in roll_groups {
+                let eligible = group
+                    .candidates
+                    .iter()
+                    .filter(|candidate| {
+                        candidate.min_depth <= depth && depth <= candidate.max_depth
+                    })
+                    .collect::<Vec<_>>();
+                if eligible.is_empty() {
+                    continue;
+                }
+                let weights = eligible
+                    .iter()
+                    .map(|candidate| candidate.weight)
+                    .collect::<Vec<_>>();
+                for _ in 0..group.rolls {
+                    let selected = eligible[self.roll_weighted_index(&weights)];
+                    merge_affix_properties(&mut properties, &selected.properties);
+                }
+            }
+            if properties != AffixPropertyBundleDefinition::default() {
+                rolled_affixes.push(RolledAffixState {
+                    affix_id: affix_id.clone(),
+                    properties,
+                });
+            }
+        }
+        rolled_affixes
     }
 
     fn roll_weighted_index(&mut self, weights: &[u32]) -> usize {
@@ -11904,6 +12295,7 @@ impl Game {
                     quantity: reward.quantity,
                     quality: ItemQualityDto::Ordinary,
                     affix_ids: Vec::new(),
+                    rolled_affixes: Vec::new(),
                     location: ItemLocation::Ground(destination.player_position),
                 });
             }
@@ -13167,6 +13559,7 @@ impl Game {
                     quantity: 1,
                     quality: ItemQualityDto::Ordinary,
                     affix_ids: Vec::new(),
+                    rolled_affixes: Vec::new(),
                     location: ItemLocation::Ground(first_center),
                 }),
                 TaskObjectiveKind::KillActor => {
@@ -15067,6 +15460,7 @@ impl Game {
                     .affix_ids
                     .iter()
                     .all(|affix_id| self.content.affix(affix_id).is_some())
+                && rolled_affixes_are_valid(item)
                 && (item.affix_ids.is_empty()
                     || (definition.max_stack == 1
                         && definition.equipment_slot.is_some()
@@ -15204,6 +15598,7 @@ impl Game {
                         .affix_ids
                         .iter()
                         .all(|affix_id| self.content.affix(affix_id).is_some())
+                    && rolled_affixes_are_valid(item)
                     && (item.affix_ids.is_empty()
                         || (definition.max_stack == 1
                             && definition.equipment_slot.is_some()
@@ -15875,11 +16270,159 @@ fn item_property_knowledge_from_save(
     Ok(knowledge)
 }
 
+fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
+    item.rolled_affixes
+        .windows(2)
+        .all(|pair| pair[0].affix_id < pair[1].affix_id)
+        && item.rolled_affixes.iter().all(|rolled| {
+            item.affix_ids.binary_search(&rolled.affix_id).is_ok()
+                && rolled.properties != AffixPropertyBundleDefinition::default()
+        })
+}
+
 fn item_quality_dto(quality: rfb_content::ItemQuality) -> ItemQualityDto {
     match quality {
         rfb_content::ItemQuality::Ordinary => ItemQualityDto::Ordinary,
         rfb_content::ItemQuality::Fine => ItemQualityDto::Fine,
         rfb_content::ItemQuality::Exceptional => ItemQualityDto::Exceptional,
+    }
+}
+
+fn stat_modifiers_dto(modifiers: &StatModifiers) -> StatModifiersDto {
+    StatModifiersDto {
+        attack: modifiers.attack,
+        defense: modifiers.defense,
+        max_hp: modifiers.max_hp,
+        strength: modifiers.strength,
+        intelligence: modifiers.intelligence,
+        wisdom: modifiers.wisdom,
+        dexterity: modifiers.dexterity,
+        constitution: modifiers.constitution,
+        charisma: modifiers.charisma,
+        speed: modifiers.speed,
+    }
+}
+
+fn add_stat_modifiers_dto(total: &mut StatModifiersDto, addition: &StatModifiers) {
+    total.attack = total.attack.saturating_add(addition.attack);
+    total.defense = total.defense.saturating_add(addition.defense);
+    total.max_hp = total.max_hp.saturating_add(addition.max_hp);
+    total.strength = total.strength.saturating_add(addition.strength);
+    total.intelligence = total.intelligence.saturating_add(addition.intelligence);
+    total.wisdom = total.wisdom.saturating_add(addition.wisdom);
+    total.dexterity = total.dexterity.saturating_add(addition.dexterity);
+    total.constitution = total.constitution.saturating_add(addition.constitution);
+    total.charisma = total.charisma.saturating_add(addition.charisma);
+    total.speed = total.speed.saturating_add(addition.speed);
+}
+
+fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
+    EquipmentBonusesDto {
+        melee_attacks: bonuses.melee_attacks,
+        melee_skill: bonuses.melee_skill,
+        ranged_skill: bonuses.ranged_skill,
+        throwing_skill: bonuses.throwing_skill,
+        device_skill: bonuses.device_skill,
+        saving_throw_skill: bonuses.saving_throw_skill,
+        stealth_skill: bonuses.stealth_skill,
+        search_skill: bonuses.search_skill,
+        perception_skill: bonuses.perception_skill,
+        disarming_skill: bonuses.disarming_skill,
+        digging_skill: bonuses.digging_skill,
+        infravision: bonuses.infravision,
+        light_radius: bonuses.light_radius,
+    }
+}
+
+const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto {
+    match passive {
+        EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
+        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
+        EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
+        EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
+        EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
+        EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
+        EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
+        EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
+        EquipmentPassive::SustainDexterity => EquipmentPassiveDto::SustainDexterity,
+        EquipmentPassive::SustainConstitution => EquipmentPassiveDto::SustainConstitution,
+        EquipmentPassive::SustainCharisma => EquipmentPassiveDto::SustainCharisma,
+        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
+        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
+        EquipmentPassive::DevicePower => EquipmentPassiveDto::DevicePower,
+    }
+}
+
+fn merge_affix_properties(
+    total: &mut AffixPropertyBundleDefinition,
+    addition: &AffixPropertyBundleDefinition,
+) {
+    merge_stat_modifiers(&mut total.modifiers, &addition.modifiers);
+    merge_equipment_bonuses(&mut total.equipment_bonuses, &addition.equipment_bonuses);
+    for (damage_type, level) in &addition.resistances {
+        let current = total.resistances.entry(*damage_type).or_insert(*level);
+        if actor_resistance_rank(*level) > actor_resistance_rank(*current) {
+            *current = *level;
+        }
+    }
+    let mut status_immunities = total
+        .status_immunities
+        .iter()
+        .chain(&addition.status_immunities)
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    total.status_immunities = std::mem::take(&mut status_immunities).into_iter().collect();
+    for (target, level) in &addition.slays {
+        let current = total.slays.entry(*target).or_insert(*level);
+        if *level > *current {
+            *current = *level;
+        }
+    }
+    total.brands.extend(&addition.brands);
+    total.passives.extend(&addition.passives);
+}
+
+fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
+    total.attack = total.attack.saturating_add(addition.attack);
+    total.defense = total.defense.saturating_add(addition.defense);
+    total.max_hp = total.max_hp.saturating_add(addition.max_hp);
+    total.strength = total.strength.saturating_add(addition.strength);
+    total.intelligence = total.intelligence.saturating_add(addition.intelligence);
+    total.wisdom = total.wisdom.saturating_add(addition.wisdom);
+    total.dexterity = total.dexterity.saturating_add(addition.dexterity);
+    total.constitution = total.constitution.saturating_add(addition.constitution);
+    total.charisma = total.charisma.saturating_add(addition.charisma);
+    total.speed = total.speed.saturating_add(addition.speed);
+}
+
+fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
+    total.melee_attacks = total.melee_attacks.saturating_add(addition.melee_attacks);
+    total.melee_skill = total.melee_skill.saturating_add(addition.melee_skill);
+    total.ranged_skill = total.ranged_skill.saturating_add(addition.ranged_skill);
+    total.throwing_skill = total.throwing_skill.saturating_add(addition.throwing_skill);
+    total.device_skill = total.device_skill.saturating_add(addition.device_skill);
+    total.saving_throw_skill = total
+        .saving_throw_skill
+        .saturating_add(addition.saving_throw_skill);
+    total.stealth_skill = total.stealth_skill.saturating_add(addition.stealth_skill);
+    total.search_skill = total.search_skill.saturating_add(addition.search_skill);
+    total.perception_skill = total
+        .perception_skill
+        .saturating_add(addition.perception_skill);
+    total.disarming_skill = total
+        .disarming_skill
+        .saturating_add(addition.disarming_skill);
+    total.digging_skill = total.digging_skill.saturating_add(addition.digging_skill);
+    total.infravision = total.infravision.saturating_add(addition.infravision);
+    total.light_radius = total.light_radius.saturating_add(addition.light_radius);
+}
+
+const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
+    match level {
+        ActorResistanceLevel::Vulnerable => 0,
+        ActorResistanceLevel::Resistant => 1,
+        ActorResistanceLevel::Strong => 2,
+        ActorResistanceLevel::Immune => 3,
     }
 }
 
@@ -15911,6 +16454,90 @@ fn projectile_target_spec(range: u16) -> TargetSpecDto {
         ],
         range,
         requires_line_of_effect: true,
+    }
+}
+
+const fn slay_target_dto(target: SlayTarget) -> SlayTargetDto {
+    match target {
+        SlayTarget::Animal => SlayTargetDto::Animal,
+        SlayTarget::Evil => SlayTargetDto::Evil,
+        SlayTarget::Good => SlayTargetDto::Good,
+        SlayTarget::Living => SlayTargetDto::Living,
+        SlayTarget::Human => SlayTargetDto::Human,
+        SlayTarget::Undead => SlayTargetDto::Undead,
+        SlayTarget::Demon => SlayTargetDto::Demon,
+        SlayTarget::Orc => SlayTargetDto::Orc,
+        SlayTarget::Troll => SlayTargetDto::Troll,
+        SlayTarget::Giant => SlayTargetDto::Giant,
+        SlayTarget::Dragon => SlayTargetDto::Dragon,
+    }
+}
+
+const fn slay_level_dto(level: SlayLevel) -> SlayLevelDto {
+    match level {
+        SlayLevel::Slay => SlayLevelDto::Slay,
+        SlayLevel::Kill => SlayLevelDto::Kill,
+    }
+}
+
+const fn weapon_brand_dto(brand: WeaponBrand) -> WeaponBrandDto {
+    match brand {
+        WeaponBrand::Acid => WeaponBrandDto::Acid,
+        WeaponBrand::Electricity => WeaponBrandDto::Electricity,
+        WeaponBrand::Fire => WeaponBrandDto::Fire,
+        WeaponBrand::Cold => WeaponBrandDto::Cold,
+        WeaponBrand::Poison => WeaponBrandDto::Poison,
+    }
+}
+
+const fn brand_damage_type(brand: WeaponBrand) -> DamageType {
+    match brand {
+        WeaponBrand::Acid => DamageType::Acid,
+        WeaponBrand::Electricity => DamageType::Electricity,
+        WeaponBrand::Fire => DamageType::Fire,
+        WeaponBrand::Cold => DamageType::Cold,
+        WeaponBrand::Poison => DamageType::Poison,
+    }
+}
+
+fn slay_target_matches(target: SlayTarget, definition: &rfb_content::ActorDefinition) -> bool {
+    let has_tag = |expected: &str| definition.tags.iter().any(|tag| tag == expected);
+    match target {
+        SlayTarget::Animal => has_tag("animal"),
+        SlayTarget::Evil => has_tag("evil"),
+        SlayTarget::Good => has_tag("good"),
+        SlayTarget::Living => !has_tag("demon") && !has_tag("undead") && !has_tag("nonliving"),
+        SlayTarget::Human => has_tag("human"),
+        SlayTarget::Undead => has_tag("undead"),
+        SlayTarget::Demon => has_tag("demon"),
+        SlayTarget::Orc => has_tag("orc"),
+        SlayTarget::Troll => has_tag("troll"),
+        SlayTarget::Giant => has_tag("giant"),
+        SlayTarget::Dragon => has_tag("dragon"),
+    }
+}
+
+/// FrogComposband's melee `slay_tiers`, expressed in tenths. Integer
+/// truncation is preserved (the mid-tier kill multiplier is 46, not 46.25).
+const fn slay_multiplier(target: SlayTarget, level: SlayLevel) -> i32 {
+    let tier = match target {
+        SlayTarget::Evil | SlayTarget::Good | SlayTarget::Living => 0,
+        SlayTarget::Animal | SlayTarget::Human => 1,
+        SlayTarget::Undead
+        | SlayTarget::Demon
+        | SlayTarget::Orc
+        | SlayTarget::Troll
+        | SlayTarget::Giant
+        | SlayTarget::Dragon => 2,
+    };
+    match (tier, level) {
+        (0, SlayLevel::Slay) => 19,
+        (1, SlayLevel::Slay) => 24,
+        (2, SlayLevel::Slay) => 28,
+        (0, SlayLevel::Kill) => 40,
+        (1, SlayLevel::Kill) => 46,
+        (2, SlayLevel::Kill) => 56,
+        _ => unreachable!(),
     }
 }
 

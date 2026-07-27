@@ -15,5 +15,5 @@
   "damageDice": 1,
   "damageSides": 2,
   "damageType": "physical",
-  "tags": ["construct", "leader"]
+  "tags": ["construct", "leader", "nonliving"]
 }

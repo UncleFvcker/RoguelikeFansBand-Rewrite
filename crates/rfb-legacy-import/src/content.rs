@@ -743,6 +743,16 @@ fn item_json(
     } else {
         DefensiveFold::default()
     };
+    let offense = if shape.slot.is_some() {
+        offensive_fold(&entry.flags)
+    } else {
+        OffensiveFold::default()
+    };
+    let equipment = if shape.slot.is_some() {
+        equipment_fold(&entry.flags, entry.pval)
+    } else {
+        EquipmentFold::default()
+    };
     let mut modifiers = serde_json::Map::new();
     let defense = entry.armor_class.saturating_add(entry.to_armor);
     if shape.slot.is_some() && defense != 0 {
@@ -755,10 +765,14 @@ fn item_json(
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
     apply_defensive_fold(&mut value, &fold);
+    apply_offensive_fold(&mut value, &offense);
+    apply_equipment_fold(&mut value, &equipment);
     for flag in &entry.flags {
         account_item_flag(
             flag,
             &fold,
+            &offense,
+            &equipment,
             &mut report.unmapped_item_flags,
             &mut report.not_applicable_item_flags,
         );
@@ -985,6 +999,16 @@ fn defensive_fold(flags: &[String], pval: i32) -> DefensiveFold {
     let mut fold = DefensiveFold::default();
     let mut ranked: BTreeMap<&'static str, (u8, &'static str)> = BTreeMap::new();
     for flag in flags {
+        if flag == "RES_FEAR" {
+            fold.status_immunities.push("rfb.status.fear");
+            fold.consumed.insert(flag.clone());
+            continue;
+        }
+        if flag == "RES_BLIND" {
+            fold.status_immunities.push("rfb.status.blindness");
+            fold.consumed.insert(flag.clone());
+            continue;
+        }
         let (token, rank, level) = if let Some(suffix) = flag.strip_prefix("VULN_") {
             (suffix, 1_u8, "vulnerable")
         } else if let Some(suffix) = flag.strip_prefix("RES_") {
@@ -1017,6 +1041,8 @@ fn defensive_fold(flags: &[String], pval: i32) -> DefensiveFold {
         .into_iter()
         .map(|(damage_type, (_, level))| (damage_type, level))
         .collect();
+    fold.status_immunities.sort_unstable();
+    fold.status_immunities.dedup();
     fold
 }
 
@@ -1029,15 +1055,158 @@ fn apply_defensive_fold(value: &mut serde_json::Value, fold: &DefensiveFold) {
     }
 }
 
+const OFFENSIVE_SLAY_TARGETS: [(&str, &str); 11] = [
+    ("ANIMAL", "animal"),
+    ("EVIL", "evil"),
+    ("GOOD", "good"),
+    ("LIVING", "living"),
+    ("HUMAN", "human"),
+    ("UNDEAD", "undead"),
+    ("DEMON", "demon"),
+    ("ORC", "orc"),
+    ("TROLL", "troll"),
+    ("GIANT", "giant"),
+    ("DRAGON", "dragon"),
+];
+
+const OFFENSIVE_BRANDS: [(&str, &str); 5] = [
+    ("BRAND_ACID", "acid"),
+    ("BRAND_ELEC", "electricity"),
+    ("BRAND_FIRE", "fire"),
+    ("BRAND_COLD", "cold"),
+    ("BRAND_POIS", "poison"),
+];
+
+#[derive(Debug, Default)]
+struct OffensiveFold {
+    slays: BTreeMap<&'static str, &'static str>,
+    brands: Vec<&'static str>,
+    consumed: BTreeSet<String>,
+}
+
+fn offensive_fold(flags: &[String]) -> OffensiveFold {
+    let mut fold = OffensiveFold::default();
+    for (suffix, target) in OFFENSIVE_SLAY_TARGETS {
+        let slay = format!("SLAY_{suffix}");
+        let kill = format!("KILL_{suffix}");
+        if flags.contains(&kill) {
+            fold.slays.insert(target, "kill");
+            fold.consumed.insert(kill);
+            if flags.contains(&slay) {
+                fold.consumed.insert(slay);
+            }
+        } else if flags.contains(&slay) {
+            fold.slays.insert(target, "slay");
+            fold.consumed.insert(slay);
+        }
+    }
+    for (flag, brand) in OFFENSIVE_BRANDS {
+        if flags.iter().any(|value| value == flag) {
+            fold.brands.push(brand);
+            fold.consumed.insert(flag.to_owned());
+        }
+    }
+    fold.brands.sort_unstable();
+    fold
+}
+
+fn apply_offensive_fold(value: &mut serde_json::Value, fold: &OffensiveFold) {
+    if !fold.slays.is_empty() {
+        value["slays"] = serde_json::json!(fold.slays);
+    }
+    if !fold.brands.is_empty() {
+        value["brands"] = serde_json::json!(fold.brands);
+    }
+}
+
+#[derive(Debug, Default)]
+struct EquipmentFold {
+    bonuses: serde_json::Map<String, serde_json::Value>,
+    passives: Vec<&'static str>,
+    consumed: BTreeSet<String>,
+}
+
+fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
+    let mut fold = EquipmentFold::default();
+    let pval = pval.clamp(-1_000_000, 1_000_000);
+    for (flag, field) in [
+        ("BLOWS", "meleeAttacks"),
+        ("TUNNEL", "diggingSkill"),
+        ("STEALTH", "stealthSkill"),
+        ("SEARCH", "searchSkill"),
+        ("MAGIC_MASTERY", "deviceSkill"),
+        ("INFRA", "infravision"),
+        ("LITE", "lightRadius"),
+    ] {
+        if flags.iter().any(|value| value == flag) && (pval != 0 || flag == "LITE") {
+            let amount = match flag {
+                "BLOWS" | "LITE" => pval.clamp(-8, 8),
+                "INFRA" => pval.clamp(-64, 64),
+                _ => pval,
+            };
+            let amount = if flag == "LITE" && amount == 0 {
+                1
+            } else {
+                amount
+            };
+            fold.bonuses
+                .insert(field.to_owned(), serde_json::json!(amount));
+            fold.consumed.insert(flag.to_owned());
+        }
+    }
+    if flags.iter().any(|value| value == "DEC_STEALTH") && pval != 0 {
+        fold.bonuses
+            .insert("stealthSkill".to_owned(), serde_json::json!(-pval));
+        fold.consumed.insert("DEC_STEALTH".to_owned());
+    }
+    for (flag, passive) in [
+        ("SEE_INVIS", "see-invisible"),
+        ("TELEPATHY", "telepathy"),
+        ("LEVITATION", "levitation"),
+        ("REGEN", "regeneration"),
+        ("HOLD_LIFE", "hold-life"),
+        ("SUST_STR", "sustain-strength"),
+        ("SUST_INT", "sustain-intelligence"),
+        ("SUST_WIS", "sustain-wisdom"),
+        ("SUST_DEX", "sustain-dexterity"),
+        ("SUST_CON", "sustain-constitution"),
+        ("SUST_CHR", "sustain-charisma"),
+        ("BLESSED", "blessed"),
+        ("EASY_SPELL", "easy-spell"),
+        ("DEVICE_POWER", "device-power"),
+    ] {
+        if flags.iter().any(|value| value == flag) {
+            fold.passives.push(passive);
+            fold.consumed.insert(flag.to_owned());
+        }
+    }
+    fold.passives.sort_unstable();
+    fold
+}
+
+fn apply_equipment_fold(value: &mut serde_json::Value, fold: &EquipmentFold) {
+    if !fold.bonuses.is_empty() {
+        value["equipmentBonuses"] = serde_json::Value::Object(fold.bonuses.clone());
+    }
+    if !fold.passives.is_empty() {
+        value["passives"] = serde_json::json!(fold.passives);
+    }
+}
+
 /// Routes one legacy object flag to the right report bucket unless the
-/// defensive fold already consumed it.
+/// defensive or offensive fold already consumed it.
 fn account_item_flag(
     flag: &str,
     fold: &DefensiveFold,
+    offense: &OffensiveFold,
+    equipment: &EquipmentFold,
     unmapped: &mut BTreeMap<String, usize>,
     not_applicable: &mut BTreeMap<String, usize>,
 ) {
-    if fold.consumed.contains(flag) {
+    if fold.consumed.contains(flag)
+        || offense.consumed.contains(flag)
+        || equipment.consumed.contains(flag)
+    {
         return;
     }
     if item_flag_not_applicable(flag) {
@@ -1066,6 +1235,8 @@ fn ego_json(
     // Defensive flags ride the same generation-time ceiling as attributes:
     // SPEED folds the max pval, resistances and free action are binary.
     let fold = defensive_fold(&entry.flags, entry.max_pval);
+    let offense = offensive_fold(&entry.flags);
+    let equipment = equipment_fold(&entry.flags, entry.max_pval);
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
@@ -1079,9 +1250,14 @@ fn ego_json(
         if attribute_flag_is_mapped(flag) {
             continue;
         }
+        if ego_roll_recipe_consumes(entry, flag) {
+            continue;
+        }
         account_item_flag(
             flag,
             &fold,
+            &offense,
+            &equipment,
             &mut report.unmapped_ego_flags,
             &mut report.not_applicable_item_flags,
         );
@@ -1106,7 +1282,125 @@ fn ego_json(
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
     apply_defensive_fold(&mut value, &fold);
+    apply_offensive_fold(&mut value, &offense);
+    apply_equipment_fold(&mut value, &equipment);
+    apply_ego_roll_recipe(&mut value, entry);
     value
+}
+
+fn ego_roll_recipe_consumes(entry: &LegacyEgoEntry, flag: &str) -> bool {
+    matches!(entry.index, 148 | 209) && flag == "SPEED"
+}
+
+fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) {
+    let groups = match entry.index {
+        // Original `_ego_create_weapon_slaying`: weighted target choice with
+        // rare kill upgrades. The original roll count is level-scaled; this
+        // first content recipe fixes it at two while retaining depth filters
+        // and relative target/upgrade rarity.
+        1 => vec![serde_json::json!({
+            "rolls": 2,
+            "candidates": slaying_roll_candidates(),
+        })],
+        // Original craft rolls one of five elemental brands and sometimes
+        // grants the matching resistance.
+        9 => vec![serde_json::json!({
+            "rolls": 2,
+            "candidates": elemental_craft_roll_candidates(),
+        })],
+        // Strong/weak ESP distinctions are not yet represented, so both
+        // original branches materialize as the current coarse telepathy
+        // passive without inventing a false secondary capability.
+        125 | 243 => vec![serde_json::json!({
+            "rolls": 1,
+            "candidates": [{
+                "weight": 1,
+                "properties": {"passives": ["telepathy"]}
+            }],
+        })],
+        // Original boots/ring speed pvals are depth-biased generation rolls.
+        // Increasing minDepth thresholds keep high bonuses out of shallow
+        // instances while preserving the materialized per-item value.
+        148 | 209 => vec![serde_json::json!({
+            "rolls": 1,
+            "candidates": speed_roll_candidates(entry.index == 209),
+        })],
+        _ => Vec::new(),
+    };
+    if !groups.is_empty() {
+        value["rollGroups"] = serde_json::Value::Array(groups);
+    }
+}
+
+fn slaying_roll_candidates() -> Vec<serde_json::Value> {
+    [
+        ("orc", 2_u32, 20_u16),
+        ("troll", 2, 30),
+        ("giant", 2, 40),
+        ("dragon", 3, 80),
+        ("demon", 3, 90),
+        ("undead", 3, 95),
+        ("animal", 2, 60),
+        ("human", 3, 50),
+        ("evil", 5, u16::MAX),
+        ("good", 5, u16::MAX),
+        ("living", 20, u16::MAX),
+    ]
+    .into_iter()
+    .flat_map(|(target, rarity, max_depth)| {
+        let base = (255 / rarity).max(1);
+        let scale = 400_u32;
+        let kill_weight = base.saturating_mul(scale) / rarity.saturating_mul(rarity);
+        let slay_weight = base.saturating_mul(scale).saturating_sub(kill_weight);
+        [
+            serde_json::json!({
+                "weight": slay_weight.max(1),
+                "maxDepth": max_depth,
+                "properties": {"slays": {target: "slay"}}
+            }),
+            serde_json::json!({
+                "weight": kill_weight.max(1),
+                "maxDepth": max_depth,
+                "properties": {"slays": {target: "kill"}}
+            }),
+        ]
+    })
+    .collect()
+}
+
+fn elemental_craft_roll_candidates() -> Vec<serde_json::Value> {
+    ["acid", "electricity", "fire", "cold", "poison"]
+        .into_iter()
+        .flat_map(|element| {
+            [
+                serde_json::json!({
+                    "weight": 2,
+                    "properties": {"brands": [element]}
+                }),
+                serde_json::json!({
+                    "weight": 1,
+                    "properties": {
+                        "brands": [element],
+                        "resistances": {element: "resistant"}
+                    }
+                }),
+            ]
+        })
+        .collect()
+}
+
+fn speed_roll_candidates(ring: bool) -> Vec<serde_json::Value> {
+    let maximum = if ring { 12_i32 } else { 10_i32 };
+    (1..=maximum)
+        .map(|speed| {
+            let min_depth = u16::try_from((speed - 1).saturating_mul(10)).unwrap_or(u16::MAX);
+            serde_json::json!({
+                "weight": u32::try_from(maximum - speed + 1).unwrap_or(1),
+                "minDepth": min_depth,
+                "properties": {"modifiers": {"speed": speed}}
+            })
+        })
+        .collect()
 }
 
 fn artifact_json(
@@ -1175,6 +1469,16 @@ fn artifact_json(
     } else {
         DefensiveFold::default()
     };
+    let offense = if has_slot {
+        offensive_fold(&entry.flags)
+    } else {
+        OffensiveFold::default()
+    };
+    let equipment = if has_slot {
+        equipment_fold(&entry.flags, entry.pval)
+    } else {
+        EquipmentFold::default()
+    };
     let mut modifiers = serde_json::Map::new();
     if has_slot {
         let defense = entry.armor_class.saturating_add(entry.to_armor);
@@ -1196,6 +1500,8 @@ fn artifact_json(
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
     apply_defensive_fold(&mut value, &fold);
+    apply_offensive_fold(&mut value, &offense);
+    apply_equipment_fold(&mut value, &equipment);
     if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -1211,6 +1517,8 @@ fn artifact_json(
         account_item_flag(
             flag,
             &fold,
+            &offense,
+            &equipment,
             &mut report.unmapped_artifact_flags,
             &mut report.not_applicable_item_flags,
         );
@@ -2205,9 +2513,16 @@ fn monster_json(
     let mut tags = vec!["legacy-import".to_owned()];
     for (flag, tag) in [
         ("ANIMAL", "animal"),
+        ("EVIL", "evil"),
+        ("GOOD", "good"),
+        ("HUMAN", "human"),
         ("DEMON", "demon"),
         ("DRAGON", "dragon"),
         ("UNDEAD", "undead"),
+        ("ORC", "orc"),
+        ("TROLL", "troll"),
+        ("GIANT", "giant"),
+        ("NONLIVING", "nonliving"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -3119,8 +3434,13 @@ pub fn convert_content(
         // substance at all, which the affix contract rejects; skip them but
         // keep their flags visible in the gap report above.
         if value.get("modifiers").is_none()
+            && value.get("equipmentBonuses").is_none()
             && value.get("resistances").is_none()
             && value.get("statusImmunities").is_none()
+            && value.get("slays").is_none()
+            && value.get("brands").is_none()
+            && value.get("passives").is_none()
+            && value.get("rollGroups").is_none()
         {
             *report
                 .skip_reasons
@@ -4158,9 +4478,14 @@ N:4:of Test Warding
 T:CLOAK
 W:20:*:8
 F:RES_FIRE | IM_COLD | VULN_LITE | FREE_ACT | RES_FEAR
+
+N:5:of Test Dragonfire
+T:WEAPON
+W:30:*:5
+F:SLAY_DRAGON | BRAND_FIRE
 ";
         let egos = parse_e_info(SYNTHETIC_E_INFO);
-        assert_eq!(egos.len(), 4);
+        assert_eq!(egos.len(), 5);
         let outcome = convert_content(
             &[],
             &[],
@@ -4169,11 +4494,11 @@ F:RES_FIRE | IM_COLD | VULN_LITE | FREE_ACT | RES_FEAR
             &[],
             &LegacyCharacterSources::default(),
         );
-        assert_eq!(outcome.report.egos_total, 4);
+        assert_eq!(outcome.report.egos_total, 5);
         // The aura ego has no expressible modifier surface: skipped with a
         // reason while its flag still lands in the gap report.
-        assert_eq!(outcome.report.egos_imported, 3);
-        assert_eq!(outcome.affix_files.len(), 3);
+        assert_eq!(outcome.report.egos_imported, 4);
+        assert_eq!(outcome.affix_files.len(), 4);
         assert_eq!(outcome.report.skip_reasons["ego-inexpressible"], 1);
         assert_eq!(outcome.report.unmapped_ego_flags["SPELL_POWER"], 1);
 
@@ -4212,19 +4537,36 @@ F:RES_FIRE | IM_COLD | VULN_LITE | FREE_ACT | RES_FEAR
         assert!(!outcome.report.unmapped_ego_flags.contains_key("SPEED"));
 
         // A purely defensive ego used to be inexpressible; the flag fold now
-        // carries it, with only the fear resistance left in the gap report.
+        // carries its elemental defenses and status immunities.
         let (name, warding) = &outcome.affix_files[2];
         assert_eq!(name, "test-warding.json");
         assert!(warding.get("modifiers").is_none());
         assert_eq!(warding["resistances"]["fire"], "resistant");
         assert_eq!(warding["resistances"]["cold"], "immune");
         assert_eq!(warding["resistances"]["light"], "vulnerable");
-        assert_eq!(warding["statusImmunities"][0], "rfb.status.paralysis");
-        assert_eq!(outcome.report.unmapped_ego_flags["RES_FEAR"], 1);
+        let immunities = warding["statusImmunities"].as_array().unwrap();
+        assert!(
+            immunities
+                .iter()
+                .any(|value| value == "rfb.status.paralysis")
+        );
+        assert!(immunities.iter().any(|value| value == "rfb.status.fear"));
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("RES_FEAR"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("RES_FIRE"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("IM_COLD"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("VULN_LITE"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("FREE_ACT"));
+
+        let (_, dragonfire) = &outcome.affix_files[3];
+        assert_eq!(dragonfire["slays"]["dragon"], "slay");
+        assert_eq!(dragonfire["brands"][0], "fire");
+        assert!(
+            !outcome
+                .report
+                .unmapped_ego_flags
+                .contains_key("SLAY_DRAGON")
+        );
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_FIRE"));
     }
 
     #[test]
@@ -4242,7 +4584,7 @@ N:2:'Test Fang'
 I:23:17:2
 W:20:5:130:50000
 P:0:2d6:10:15:0
-F:DEX | SLAY_EVIL
+F:DEX | SLAY_EVIL | KILL_DRAGON | BRAND_FIRE | BRAND_CHAOS
 
 N:3:of Test Warding
 I:45:20:4
@@ -4307,7 +4649,28 @@ F:CHR
         assert_eq!(fang["meleeProfile"]["toHit"], 10);
         assert_eq!(fang["meleeProfile"]["toDamage"], 15);
         assert_eq!(fang["modifiers"]["dexterity"], 2);
-        assert_eq!(outcome.report.unmapped_artifact_flags["SLAY_EVIL"], 1);
+        assert_eq!(fang["slays"]["evil"], "slay");
+        assert_eq!(fang["slays"]["dragon"], "kill");
+        assert_eq!(fang["brands"][0], "fire");
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("SLAY_EVIL")
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("KILL_DRAGON")
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("BRAND_FIRE")
+        );
+        assert_eq!(outcome.report.unmapped_artifact_flags["BRAND_CHAOS"], 1);
 
         // Fixed-pval jewelry proves the split: the base ring stays bare while
         // the artifact carries the attribute bonus. The defensive fold rides

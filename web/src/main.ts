@@ -27,7 +27,9 @@ import type {
   DamageTypeDto,
   Direction,
   BodySlotDto,
+  EquipmentBonusesDto,
   EquipmentItemDto,
+  EquipmentPassiveDto,
   AttributeKindDto,
   GameCommand,
   GameEventDto,
@@ -40,10 +42,13 @@ import type {
   ResistanceDto,
   ResistanceLevelDto,
   ResourcePoolDto,
+  SlayDto,
+  SlayTargetDto,
   StatModifiersDto,
   SummonCommandDto,
   SummonCommandModeDto,
   TargetSpecDto,
+  WeaponBrandDto,
 } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import type { TilesetWarning } from "./tileset-runtime";
@@ -1339,7 +1344,10 @@ function renderInventory(
         details.append(equippable);
       }
       appendItemModifiers(details, item.modifiers);
+      appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
+      appendItemOffense(details, item.slays, item.brands);
+      appendEquipmentPassives(details, item.passives);
       appendItemQuality(details, item.quality);
       appendKnownItemProperties(details, item.knownProperties);
       const quantity = document.createElement("span");
@@ -1401,7 +1409,10 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
       slotTag.textContent = slotLabel;
       details.append(name, slotTag);
       appendItemModifiers(details, item.modifiers);
+      appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
+      appendItemOffense(details, item.slays, item.brands);
+      appendEquipmentPassives(details, item.passives);
       appendItemQuality(details, item.quality);
       appendKnownItemProperties(details, item.knownProperties);
       const unequip = document.createElement("button");
@@ -1558,6 +1569,47 @@ function appendItemModifiers(
   }
 }
 
+function appendEquipmentBonuses(
+  container: HTMLElement,
+  bonuses: EquipmentBonusesDto | undefined,
+): void {
+  if (!bonuses) return;
+  const entries: Array<[MessageKey, number]> = [
+    ["item-bonus-melee-attacks", bonuses.meleeAttacks],
+    ["item-bonus-melee-skill", bonuses.meleeSkill],
+    ["item-bonus-ranged-skill", bonuses.rangedSkill],
+    ["item-bonus-throwing-skill", bonuses.throwingSkill],
+    ["item-bonus-device-skill", bonuses.deviceSkill],
+    ["item-bonus-saving-throw-skill", bonuses.savingThrowSkill],
+    ["item-bonus-stealth-skill", bonuses.stealthSkill],
+    ["item-bonus-search-skill", bonuses.searchSkill],
+    ["item-bonus-perception-skill", bonuses.perceptionSkill],
+    ["item-bonus-disarming-skill", bonuses.disarmingSkill],
+    ["item-bonus-digging-skill", bonuses.diggingSkill],
+    ["item-bonus-infravision", bonuses.infravision],
+    ["item-bonus-light-radius", bonuses.lightRadius],
+  ];
+  for (const [key, value] of entries) {
+    if (value === 0) continue;
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format(key, { value: signedModifier(value) });
+    container.append(label);
+  }
+}
+
+function appendEquipmentPassives(
+  container: HTMLElement,
+  passives: EquipmentPassiveDto[] | undefined,
+): void {
+  for (const passive of passives ?? []) {
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format(`item-passive-${passive}` as MessageKey);
+    container.append(label);
+  }
+}
+
 function appendItemDefenses(
   container: HTMLElement,
   resistances: ResistanceDto[] | undefined,
@@ -1588,6 +1640,38 @@ function appendItemDefenses(
     });
     container.append(label);
   }
+}
+
+function appendItemOffense(
+  container: HTMLElement,
+  slays: SlayDto[] | undefined,
+  brands: WeaponBrandDto[] | undefined,
+): void {
+  for (const slay of slays ?? []) {
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format(
+      slay.level === "kill" ? "item-kill-label" : "item-slay-label",
+      { target: slayTargetName(slay.target) },
+    );
+    container.append(label);
+  }
+  for (const brand of brands ?? []) {
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format("item-brand-label", {
+      brand: weaponBrandName(brand),
+    });
+    container.append(label);
+  }
+}
+
+function slayTargetName(target: SlayTargetDto): string {
+  return localization.format(`slay-target-${target}-name` as MessageKey);
+}
+
+function weaponBrandName(brand: WeaponBrandDto): string {
+  return localization.format(`weapon-brand-${brand}-name` as MessageKey);
 }
 
 function appendKnownItemProperties(

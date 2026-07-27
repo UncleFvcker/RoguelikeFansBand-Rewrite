@@ -2071,12 +2071,91 @@
         "player"
       ]
     },
+    "EquipmentBonusesDto": {
+      "type": "object",
+      "properties": {
+        "deviceSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "diggingSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "disarmingSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "infravision": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "lightRadius": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "meleeAttacks": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "meleeSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "perceptionSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "rangedSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "savingThrowSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "searchSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "stealthSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "throwingSkill": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        }
+      }
+    },
     "EquipmentItemDto": {
       "type": "object",
       "properties": {
+        "brands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeaponBrandDto"
+          }
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
+        },
+        "equipmentBonuses": {
+          "$ref": "#/$defs/EquipmentBonusesDto"
         },
         "id": {
           "type": "string"
@@ -2123,6 +2202,12 @@
             "wisdom": 0
           }
         },
+        "passives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquipmentPassiveDto"
+          }
+        },
         "projectileProfile": {
           "anyOf": [
             {
@@ -2152,6 +2237,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "slays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlayDto"
           }
         },
         "slotId": {
@@ -2186,6 +2277,25 @@
         "kindId",
         "quantity",
         "slotId"
+      ]
+    },
+    "EquipmentPassiveDto": {
+      "type": "string",
+      "enum": [
+        "see-invisible",
+        "telepathy",
+        "levitation",
+        "regeneration",
+        "hold-life",
+        "sustain-strength",
+        "sustain-intelligence",
+        "sustain-wisdom",
+        "sustain-dexterity",
+        "sustain-constitution",
+        "sustain-charisma",
+        "blessed",
+        "easy-spell",
+        "device-power"
       ]
     },
     "GameCommand": {
@@ -3331,9 +3441,18 @@
     "InventoryItemDto": {
       "type": "object",
       "properties": {
+        "brands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeaponBrandDto"
+          }
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
+        },
+        "equipmentBonuses": {
+          "$ref": "#/$defs/EquipmentBonusesDto"
         },
         "equipmentSlot": {
           "type": [
@@ -3387,6 +3506,12 @@
             "wisdom": 0
           }
         },
+        "passives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquipmentPassiveDto"
+          }
+        },
         "projectileProfile": {
           "anyOf": [
             {
@@ -3416,6 +3541,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "slays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlayDto"
           }
         },
         "statusImmunities": {
@@ -3507,6 +3638,9 @@
         "affixId": {
           "type": "string"
         },
+        "equipmentBonuses": {
+          "$ref": "#/$defs/EquipmentBonusesDto"
+        },
         "modifiers": {
           "$ref": "#/$defs/StatModifiersDto",
           "default": {
@@ -3524,6 +3658,12 @@
         },
         "nameKey": {
           "type": "string"
+        },
+        "passives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquipmentPassiveDto"
+          }
         }
       },
       "required": [
@@ -4460,6 +4600,44 @@
         "growthPerTenLevels"
       ]
     },
+    "SlayDto": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/SlayLevelDto"
+        },
+        "target": {
+          "$ref": "#/$defs/SlayTargetDto"
+        }
+      },
+      "required": [
+        "target",
+        "level"
+      ]
+    },
+    "SlayLevelDto": {
+      "type": "string",
+      "enum": [
+        "slay",
+        "kill"
+      ]
+    },
+    "SlayTargetDto": {
+      "type": "string",
+      "enum": [
+        "animal",
+        "evil",
+        "good",
+        "living",
+        "human",
+        "undead",
+        "demon",
+        "orc",
+        "troll",
+        "giant",
+        "dragon"
+      ]
+    },
     "StatModifiersDto": {
       "type": "object",
       "properties": {
@@ -4877,6 +5055,16 @@
         "visible",
         "remembered",
         "hidden"
+      ]
+    },
+    "WeaponBrandDto": {
+      "type": "string",
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
       ]
     }
   }

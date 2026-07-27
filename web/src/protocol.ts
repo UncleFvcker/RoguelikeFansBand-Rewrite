@@ -9,6 +9,10 @@ export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number
 
 export type StatModifiersDto = { attack: number, defense: number, maxHp: number, strength: number, intelligence: number, wisdom: number, dexterity: number, constitution: number, charisma: number, speed: number, };
 
+export type EquipmentBonusesDto = { meleeAttacks: number, meleeSkill: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
+
+export type EquipmentPassiveDto = "see-invisible" | "telepathy" | "levitation" | "regeneration" | "hold-life" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma" | "blessed" | "easy-spell" | "device-power";
+
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 
 export type AttributeValueDto = { natural: number, effective: number, index: number, };
@@ -86,6 +90,14 @@ export type DamageTypeDto = "physical" | "acid" | "electricity" | "fire" | "cold
 export type ResistanceLevelDto = "vulnerable" | "normal" | "resistant" | "strong" | "immune";
 
 export type ResistanceDto = { damageType: DamageTypeDto, level: ResistanceLevelDto, };
+
+export type SlayTargetDto = "animal" | "evil" | "good" | "living" | "human" | "undead" | "demon" | "orc" | "troll" | "giant" | "dragon";
+
+export type SlayLevelDto = "slay" | "kill";
+
+export type WeaponBrandDto = "acid" | "electricity" | "fire" | "cold" | "poison";
+
+export type SlayDto = { target: SlayTargetDto, level: SlayLevelDto, };
 
 export type DamageResolutionDto = { rawDamage: number, armorReduction: number, resistanceAdjustment: number, finalDamage: number, damageType: DamageTypeDto, resistance: ResistanceLevelDto, };
 
@@ -172,13 +184,13 @@ export type ItemQualityDto = "ordinary" | "fine" | "exceptional";
 
 export type ItemIdentificationDto = "unexamined" | "appraised" | "identified";
 
-export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: StatModifiersDto, };
+export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, passives?: Array<EquipmentPassiveDto>, };
 
-export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type BodySlotDto = { id: string, slotType: string, };
 
-export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 

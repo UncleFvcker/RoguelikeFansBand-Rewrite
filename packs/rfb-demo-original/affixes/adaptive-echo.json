@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "demo.affix.adaptive-echo",
+  "nameKey": "affix-demo-adaptive-echo-name",
+  "descriptionKey": "affix-demo-adaptive-echo-description",
+  "passives": ["regeneration"],
+  "rollGroups": [
+    {
+      "rolls": 1,
+      "candidates": [
+        {
+          "weight": 3,
+          "maxDepth": 9,
+          "properties": {
+            "equipmentBonuses": {
+              "meleeSkill": 12,
+              "searchSkill": 3
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "maxDepth": 9,
+          "properties": {
+            "equipmentBonuses": {
+              "meleeAttacks": 1,
+              "diggingSkill": 4
+            }
+          }
+        },
+        {
+          "weight": 2,
+          "minDepth": 10,
+          "properties": {
+            "equipmentBonuses": {
+              "deviceSkill": 8,
+              "savingThrowSkill": 5
+            },
+            "passives": ["telepathy"]
+          }
+        },
+        {
+          "weight": 1,
+          "minDepth": 10,
+          "properties": {
+            "equipmentBonuses": {
+              "meleeAttacks": 2,
+              "stealthSkill": 6
+            },
+            "brands": ["electricity"]
+          }
+        }
+      ]
+    }
+  ],
+  "tags": ["dynamic", "equipment", "test"]
+}

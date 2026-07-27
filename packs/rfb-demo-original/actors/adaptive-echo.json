@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.adaptive-echo",
+  "role": "monster",
+  "nameKey": "actor-demo-adaptive-echo-name",
+  "descriptionKey": "actor-demo-adaptive-echo-description",
+  "glyph": "e",
+  "level": 1,
+  "experienceValue": 1,
+  "maxHp": 1,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "lootTableId": "demo.loot-table.adaptive-echo",
+  "tags": ["construct", "dynamic", "test"]
+}

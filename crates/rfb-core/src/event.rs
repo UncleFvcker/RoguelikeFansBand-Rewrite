@@ -141,6 +141,9 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         resolution: HealingResolutionDto,
     },
+    EquipmentRegenerated {
+        resolution: HealingResolutionDto,
+    },
     ResourceRecovered {
         resolution: ResourceRecoveryResolutionDto,
     },
@@ -799,6 +802,12 @@ impl DomainEvent {
                     ("source", ability_id),
                     ("amount", resolution.applied.to_string()),
                 ],
+                GameEventOutcomeDto::Heal { resolution },
+            ),
+            Self::EquipmentRegenerated { resolution } => dto_with_outcome(
+                "equipment.regenerated",
+                "equipment-regenerated",
+                [("amount", resolution.applied.to_string())],
                 GameEventOutcomeDto::Heal { resolution },
             ),
             Self::ResourceRecovered { resolution } => dto_with_outcome(

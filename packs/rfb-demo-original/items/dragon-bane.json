@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dragon-bane",
+  "nameKey": "item-demo-dragon-bane-name",
+  "descriptionKey": "item-demo-dragon-bane-description",
+  "glyph": "/",
+  "weightTenthsPound": 40,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 10,
+    "toDamage": 1,
+    "damageDice": 1,
+    "damageSides": 4,
+    "damageType": "physical"
+  },
+  "slays": {
+    "dragon": "kill"
+  },
+  "tags": ["equipment", "weapon"]
+}

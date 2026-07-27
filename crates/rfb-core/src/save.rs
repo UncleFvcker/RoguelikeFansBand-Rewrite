@@ -8,16 +8,23 @@ use crate::{
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
         Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
-        MonsterPackIdentity, SummonIdentity,
+        MonsterPackIdentity, RolledAffixState, SummonIdentity,
     },
     stats::{CharacterBuildIdentity, CharacterProgress},
 };
-use rfb_content::{ContentCatalog, ContentPosition};
+use rfb_content::{
+    ActorDamageType, ActorResistanceLevel, AffixPropertyBundleDefinition, ContentCatalog,
+    ContentPosition, EquipmentBonuses, EquipmentPassive, SlayLevel, SlayTarget, StatModifiers,
+    WeaponBrand,
+};
 use rfb_protocol::{
-    ActorSaveDto, CarriedItemSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
-    FloorRegionSaveDto, FloorSaveDto, InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ResistanceSaveDto, SkillProgressSaveDto, StatusSaveDto, SummonSaveDto, TerrainSaveDto,
+    ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
+    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
+    InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
+    PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceDto,
+    ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto, SlayDto,
+    SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto, TerrainSaveDto,
+    WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -183,15 +190,23 @@ pub(crate) fn actor_from_entity(
     })
 }
 
-pub(crate) fn item_from_dto(item: ItemSaveDto) -> ItemInstance {
-    ItemInstance {
+pub(crate) fn item_from_dto(
+    item: ItemSaveDto,
+    content: &ContentCatalog,
+) -> Result<ItemInstance, CoreError> {
+    content
+        .item(&item.kind_id)
+        .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
         quality: item.quality,
         affix_ids: item.affix_ids,
+        rolled_affixes,
         location: ItemLocation::Ground(item.position),
-    }
+    })
 }
 
 pub(crate) fn inventory_item_from_dto(
@@ -201,12 +216,14 @@ pub(crate) fn inventory_item_from_dto(
     content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
         quality: item.quality,
         affix_ids: item.affix_ids,
+        rolled_affixes,
         location: ItemLocation::Inventory,
     })
 }
@@ -223,12 +240,14 @@ pub(crate) fn equipment_item_from_dto(
     if definition.equipment_slot.is_none() {
         return Err(CoreError::InvalidSave("equipment metadata is invalid"));
     }
+    let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
         quality: item.quality,
         affix_ids: item.affix_ids,
+        rolled_affixes,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
         },
@@ -242,12 +261,14 @@ pub(crate) fn carried_item_from_dto(
     content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
         quality: item.quality,
         affix_ids: item.affix_ids,
+        rolled_affixes,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
         },
@@ -425,6 +446,425 @@ fn valid_rule_id(id: &str) -> bool {
         })
 }
 
+fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffixSaveDto> {
+    rolled_affixes
+        .iter()
+        .map(|rolled| {
+            let properties = &rolled.properties;
+            RolledAffixSaveDto {
+                affix_id: rolled.affix_id.clone(),
+                modifiers: stat_modifiers_to_dto(&properties.modifiers),
+                equipment_bonuses: equipment_bonuses_to_dto(&properties.equipment_bonuses),
+                resistances: properties
+                    .resistances
+                    .iter()
+                    .map(|(damage_type, level)| ResistanceDto {
+                        damage_type: damage_type_dto(*damage_type),
+                        level: resistance_level_dto(*level),
+                    })
+                    .collect(),
+                status_immunities: properties.status_immunities.clone(),
+                slays: properties
+                    .slays
+                    .iter()
+                    .map(|(target, level)| SlayDto {
+                        target: slay_target_dto(*target),
+                        level: slay_level_dto(*level),
+                    })
+                    .collect(),
+                brands: properties
+                    .brands
+                    .iter()
+                    .copied()
+                    .map(weapon_brand_dto)
+                    .collect(),
+                passives: properties
+                    .passives
+                    .iter()
+                    .copied()
+                    .map(equipment_passive_dto)
+                    .collect(),
+            }
+        })
+        .collect()
+}
+
+fn rolled_affixes_from_save(
+    rolled_affixes: Vec<RolledAffixSaveDto>,
+    affix_ids: &[String],
+) -> Result<Vec<RolledAffixState>, CoreError> {
+    if rolled_affixes
+        .windows(2)
+        .any(|pair| pair[0].affix_id >= pair[1].affix_id)
+    {
+        return Err(CoreError::InvalidSave(
+            "rolled affix instance state is invalid",
+        ));
+    }
+    rolled_affixes
+        .into_iter()
+        .map(|rolled| {
+            if !valid_rule_id(&rolled.affix_id)
+                || affix_ids.binary_search(&rolled.affix_id).is_err()
+                || rolled
+                    .resistances
+                    .windows(2)
+                    .any(|pair| pair[0].damage_type >= pair[1].damage_type)
+                || rolled
+                    .status_immunities
+                    .windows(2)
+                    .any(|pair| pair[0] >= pair[1])
+                || rolled
+                    .status_immunities
+                    .iter()
+                    .any(|status_id| !valid_rule_id(status_id))
+                || rolled
+                    .slays
+                    .windows(2)
+                    .any(|pair| pair[0].target >= pair[1].target)
+                || rolled.brands.windows(2).any(|pair| pair[0] >= pair[1])
+                || rolled.passives.windows(2).any(|pair| pair[0] >= pair[1])
+            {
+                return Err(CoreError::InvalidSave(
+                    "rolled affix instance state is invalid",
+                ));
+            }
+            let mut resistances = BTreeMap::new();
+            for resistance in rolled.resistances {
+                let Some(damage_type) = actor_damage_type(resistance.damage_type) else {
+                    return Err(CoreError::InvalidSave(
+                        "rolled affix instance state is invalid",
+                    ));
+                };
+                let Some(level) = actor_resistance_level(resistance.level) else {
+                    return Err(CoreError::InvalidSave(
+                        "rolled affix instance state is invalid",
+                    ));
+                };
+                resistances.insert(damage_type, level);
+            }
+            let properties = AffixPropertyBundleDefinition {
+                modifiers: stat_modifiers_from_dto(rolled.modifiers),
+                equipment_bonuses: equipment_bonuses_from_dto(rolled.equipment_bonuses),
+                resistances,
+                status_immunities: rolled.status_immunities,
+                slays: rolled
+                    .slays
+                    .into_iter()
+                    .map(|slay| (slay_target(slay.target), slay_level(slay.level)))
+                    .collect(),
+                brands: rolled.brands.into_iter().map(weapon_brand).collect(),
+                passives: rolled.passives.into_iter().map(equipment_passive).collect(),
+            };
+            if affix_property_bundle_out_of_range(&properties)
+                || properties == AffixPropertyBundleDefinition::default()
+            {
+                return Err(CoreError::InvalidSave(
+                    "rolled affix instance state is invalid",
+                ));
+            }
+            Ok(RolledAffixState {
+                affix_id: rolled.affix_id,
+                properties,
+            })
+        })
+        .collect()
+}
+
+fn stat_modifiers_to_dto(modifiers: &StatModifiers) -> StatModifiersDto {
+    StatModifiersDto {
+        attack: modifiers.attack,
+        defense: modifiers.defense,
+        max_hp: modifiers.max_hp,
+        strength: modifiers.strength,
+        intelligence: modifiers.intelligence,
+        wisdom: modifiers.wisdom,
+        dexterity: modifiers.dexterity,
+        constitution: modifiers.constitution,
+        charisma: modifiers.charisma,
+        speed: modifiers.speed,
+    }
+}
+
+fn stat_modifiers_from_dto(modifiers: StatModifiersDto) -> StatModifiers {
+    StatModifiers {
+        attack: modifiers.attack,
+        defense: modifiers.defense,
+        max_hp: modifiers.max_hp,
+        strength: modifiers.strength,
+        intelligence: modifiers.intelligence,
+        wisdom: modifiers.wisdom,
+        dexterity: modifiers.dexterity,
+        constitution: modifiers.constitution,
+        charisma: modifiers.charisma,
+        speed: modifiers.speed,
+    }
+}
+
+fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
+    EquipmentBonusesDto {
+        melee_attacks: bonuses.melee_attacks,
+        melee_skill: bonuses.melee_skill,
+        ranged_skill: bonuses.ranged_skill,
+        throwing_skill: bonuses.throwing_skill,
+        device_skill: bonuses.device_skill,
+        saving_throw_skill: bonuses.saving_throw_skill,
+        stealth_skill: bonuses.stealth_skill,
+        search_skill: bonuses.search_skill,
+        perception_skill: bonuses.perception_skill,
+        disarming_skill: bonuses.disarming_skill,
+        digging_skill: bonuses.digging_skill,
+        infravision: bonuses.infravision,
+        light_radius: bonuses.light_radius,
+    }
+}
+
+fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses {
+    EquipmentBonuses {
+        melee_attacks: bonuses.melee_attacks,
+        melee_skill: bonuses.melee_skill,
+        ranged_skill: bonuses.ranged_skill,
+        throwing_skill: bonuses.throwing_skill,
+        device_skill: bonuses.device_skill,
+        saving_throw_skill: bonuses.saving_throw_skill,
+        stealth_skill: bonuses.stealth_skill,
+        search_skill: bonuses.search_skill,
+        perception_skill: bonuses.perception_skill,
+        disarming_skill: bonuses.disarming_skill,
+        digging_skill: bonuses.digging_skill,
+        infravision: bonuses.infravision,
+        light_radius: bonuses.light_radius,
+    }
+}
+
+fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition) -> bool {
+    let modifiers = &properties.modifiers;
+    let bonuses = &properties.equipment_bonuses;
+    [
+        modifiers.attack,
+        modifiers.defense,
+        modifiers.max_hp,
+        bonuses.melee_skill,
+        bonuses.ranged_skill,
+        bonuses.throwing_skill,
+        bonuses.device_skill,
+        bonuses.saving_throw_skill,
+        bonuses.stealth_skill,
+        bonuses.search_skill,
+        bonuses.perception_skill,
+        bonuses.disarming_skill,
+        bonuses.digging_skill,
+    ]
+    .into_iter()
+    .any(|value| !(-1_000_000..=1_000_000).contains(&value))
+        || [
+            modifiers.strength,
+            modifiers.intelligence,
+            modifiers.wisdom,
+            modifiers.dexterity,
+            modifiers.constitution,
+            modifiers.charisma,
+            modifiers.speed,
+        ]
+        .into_iter()
+        .any(|value| !(-100..=100).contains(&value))
+        || !(-8..=8).contains(&bonuses.melee_attacks)
+        || !(-64..=64).contains(&bonuses.infravision)
+        || !(-8..=8).contains(&bonuses.light_radius)
+}
+
+const fn damage_type_dto(value: ActorDamageType) -> DamageTypeDto {
+    match value {
+        ActorDamageType::Physical => DamageTypeDto::Physical,
+        ActorDamageType::Acid => DamageTypeDto::Acid,
+        ActorDamageType::Electricity => DamageTypeDto::Electricity,
+        ActorDamageType::Fire => DamageTypeDto::Fire,
+        ActorDamageType::Cold => DamageTypeDto::Cold,
+        ActorDamageType::Poison => DamageTypeDto::Poison,
+        ActorDamageType::Light => DamageTypeDto::Light,
+        ActorDamageType::Dark => DamageTypeDto::Dark,
+        ActorDamageType::Confusion => DamageTypeDto::Confusion,
+        ActorDamageType::Nether => DamageTypeDto::Nether,
+        ActorDamageType::Nexus => DamageTypeDto::Nexus,
+        ActorDamageType::Sound => DamageTypeDto::Sound,
+        ActorDamageType::Shards => DamageTypeDto::Shards,
+        ActorDamageType::Chaos => DamageTypeDto::Chaos,
+        ActorDamageType::Disenchant => DamageTypeDto::Disenchant,
+        ActorDamageType::Time => DamageTypeDto::Time,
+        ActorDamageType::Mana => DamageTypeDto::Mana,
+        ActorDamageType::Gravity => DamageTypeDto::Gravity,
+        ActorDamageType::Inertia => DamageTypeDto::Inertia,
+        ActorDamageType::Plasma => DamageTypeDto::Plasma,
+        ActorDamageType::Force => DamageTypeDto::Force,
+        ActorDamageType::Nuke => DamageTypeDto::Nuke,
+        ActorDamageType::Disintegrate => DamageTypeDto::Disintegrate,
+        ActorDamageType::Storm => DamageTypeDto::Storm,
+        ActorDamageType::HolyFire => DamageTypeDto::HolyFire,
+        ActorDamageType::HellFire => DamageTypeDto::HellFire,
+        ActorDamageType::Ice => DamageTypeDto::Ice,
+        ActorDamageType::Water => DamageTypeDto::Water,
+        ActorDamageType::Psi => DamageTypeDto::Psi,
+    }
+}
+
+const fn actor_damage_type(value: DamageTypeDto) -> Option<ActorDamageType> {
+    Some(match value {
+        DamageTypeDto::Physical => ActorDamageType::Physical,
+        DamageTypeDto::Acid => ActorDamageType::Acid,
+        DamageTypeDto::Electricity => ActorDamageType::Electricity,
+        DamageTypeDto::Fire => ActorDamageType::Fire,
+        DamageTypeDto::Cold => ActorDamageType::Cold,
+        DamageTypeDto::Poison => ActorDamageType::Poison,
+        DamageTypeDto::Light => ActorDamageType::Light,
+        DamageTypeDto::Dark => ActorDamageType::Dark,
+        DamageTypeDto::Confusion => ActorDamageType::Confusion,
+        DamageTypeDto::Nether => ActorDamageType::Nether,
+        DamageTypeDto::Nexus => ActorDamageType::Nexus,
+        DamageTypeDto::Sound => ActorDamageType::Sound,
+        DamageTypeDto::Shards => ActorDamageType::Shards,
+        DamageTypeDto::Chaos => ActorDamageType::Chaos,
+        DamageTypeDto::Disenchant => ActorDamageType::Disenchant,
+        DamageTypeDto::Time => ActorDamageType::Time,
+        DamageTypeDto::Mana => ActorDamageType::Mana,
+        DamageTypeDto::Gravity => ActorDamageType::Gravity,
+        DamageTypeDto::Inertia => ActorDamageType::Inertia,
+        DamageTypeDto::Plasma => ActorDamageType::Plasma,
+        DamageTypeDto::Force => ActorDamageType::Force,
+        DamageTypeDto::Nuke => ActorDamageType::Nuke,
+        DamageTypeDto::Disintegrate => ActorDamageType::Disintegrate,
+        DamageTypeDto::Storm => ActorDamageType::Storm,
+        DamageTypeDto::HolyFire => ActorDamageType::HolyFire,
+        DamageTypeDto::HellFire => ActorDamageType::HellFire,
+        DamageTypeDto::Ice => ActorDamageType::Ice,
+        DamageTypeDto::Water => ActorDamageType::Water,
+        DamageTypeDto::Psi => ActorDamageType::Psi,
+        DamageTypeDto::Curse => return None,
+    })
+}
+
+const fn resistance_level_dto(value: ActorResistanceLevel) -> ResistanceLevelDto {
+    match value {
+        ActorResistanceLevel::Vulnerable => ResistanceLevelDto::Vulnerable,
+        ActorResistanceLevel::Resistant => ResistanceLevelDto::Resistant,
+        ActorResistanceLevel::Strong => ResistanceLevelDto::Strong,
+        ActorResistanceLevel::Immune => ResistanceLevelDto::Immune,
+    }
+}
+
+const fn actor_resistance_level(value: ResistanceLevelDto) -> Option<ActorResistanceLevel> {
+    match value {
+        ResistanceLevelDto::Vulnerable => Some(ActorResistanceLevel::Vulnerable),
+        ResistanceLevelDto::Normal => None,
+        ResistanceLevelDto::Resistant => Some(ActorResistanceLevel::Resistant),
+        ResistanceLevelDto::Strong => Some(ActorResistanceLevel::Strong),
+        ResistanceLevelDto::Immune => Some(ActorResistanceLevel::Immune),
+    }
+}
+
+const fn slay_target_dto(value: SlayTarget) -> SlayTargetDto {
+    match value {
+        SlayTarget::Animal => SlayTargetDto::Animal,
+        SlayTarget::Evil => SlayTargetDto::Evil,
+        SlayTarget::Good => SlayTargetDto::Good,
+        SlayTarget::Living => SlayTargetDto::Living,
+        SlayTarget::Human => SlayTargetDto::Human,
+        SlayTarget::Undead => SlayTargetDto::Undead,
+        SlayTarget::Demon => SlayTargetDto::Demon,
+        SlayTarget::Orc => SlayTargetDto::Orc,
+        SlayTarget::Troll => SlayTargetDto::Troll,
+        SlayTarget::Giant => SlayTargetDto::Giant,
+        SlayTarget::Dragon => SlayTargetDto::Dragon,
+    }
+}
+
+const fn slay_target(value: SlayTargetDto) -> SlayTarget {
+    match value {
+        SlayTargetDto::Animal => SlayTarget::Animal,
+        SlayTargetDto::Evil => SlayTarget::Evil,
+        SlayTargetDto::Good => SlayTarget::Good,
+        SlayTargetDto::Living => SlayTarget::Living,
+        SlayTargetDto::Human => SlayTarget::Human,
+        SlayTargetDto::Undead => SlayTarget::Undead,
+        SlayTargetDto::Demon => SlayTarget::Demon,
+        SlayTargetDto::Orc => SlayTarget::Orc,
+        SlayTargetDto::Troll => SlayTarget::Troll,
+        SlayTargetDto::Giant => SlayTarget::Giant,
+        SlayTargetDto::Dragon => SlayTarget::Dragon,
+    }
+}
+
+const fn slay_level_dto(value: SlayLevel) -> SlayLevelDto {
+    match value {
+        SlayLevel::Slay => SlayLevelDto::Slay,
+        SlayLevel::Kill => SlayLevelDto::Kill,
+    }
+}
+
+const fn slay_level(value: SlayLevelDto) -> SlayLevel {
+    match value {
+        SlayLevelDto::Slay => SlayLevel::Slay,
+        SlayLevelDto::Kill => SlayLevel::Kill,
+    }
+}
+
+const fn weapon_brand_dto(value: WeaponBrand) -> WeaponBrandDto {
+    match value {
+        WeaponBrand::Acid => WeaponBrandDto::Acid,
+        WeaponBrand::Electricity => WeaponBrandDto::Electricity,
+        WeaponBrand::Fire => WeaponBrandDto::Fire,
+        WeaponBrand::Cold => WeaponBrandDto::Cold,
+        WeaponBrand::Poison => WeaponBrandDto::Poison,
+    }
+}
+
+const fn weapon_brand(value: WeaponBrandDto) -> WeaponBrand {
+    match value {
+        WeaponBrandDto::Acid => WeaponBrand::Acid,
+        WeaponBrandDto::Electricity => WeaponBrand::Electricity,
+        WeaponBrandDto::Fire => WeaponBrand::Fire,
+        WeaponBrandDto::Cold => WeaponBrand::Cold,
+        WeaponBrandDto::Poison => WeaponBrand::Poison,
+    }
+}
+
+const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
+    match value {
+        EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
+        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
+        EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
+        EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
+        EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
+        EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
+        EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
+        EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
+        EquipmentPassive::SustainDexterity => EquipmentPassiveDto::SustainDexterity,
+        EquipmentPassive::SustainConstitution => EquipmentPassiveDto::SustainConstitution,
+        EquipmentPassive::SustainCharisma => EquipmentPassiveDto::SustainCharisma,
+        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
+        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
+        EquipmentPassive::DevicePower => EquipmentPassiveDto::DevicePower,
+    }
+}
+
+const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
+    match value {
+        EquipmentPassiveDto::SeeInvisible => EquipmentPassive::SeeInvisible,
+        EquipmentPassiveDto::Telepathy => EquipmentPassive::Telepathy,
+        EquipmentPassiveDto::Levitation => EquipmentPassive::Levitation,
+        EquipmentPassiveDto::Regeneration => EquipmentPassive::Regeneration,
+        EquipmentPassiveDto::HoldLife => EquipmentPassive::HoldLife,
+        EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
+        EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
+        EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,
+        EquipmentPassiveDto::SustainDexterity => EquipmentPassive::SustainDexterity,
+        EquipmentPassiveDto::SustainConstitution => EquipmentPassive::SustainConstitution,
+        EquipmentPassiveDto::SustainCharisma => EquipmentPassive::SustainCharisma,
+        EquipmentPassiveDto::Blessed => EquipmentPassive::Blessed,
+        EquipmentPassiveDto::EasySpell => EquipmentPassive::EasySpell,
+        EquipmentPassiveDto::DevicePower => EquipmentPassive::DevicePower,
+    }
+}
+
 pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
     let mut items = items
         .iter()
@@ -439,6 +879,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 quantity: item.quantity,
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
+                rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
             })
         })
         .collect::<Vec<_>>();
@@ -459,6 +900,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 quantity: item.quantity,
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
+                rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
             })
         })
         .collect::<Vec<_>>();
@@ -480,6 +922,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 slot_id: slot_id.clone(),
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
+                rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
             })
         })
         .collect::<Vec<_>>();
@@ -505,6 +948,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 actor_id: actor_id.clone(),
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
+                rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
             })
         })
         .collect::<Vec<_>>();
@@ -563,8 +1007,8 @@ pub(crate) fn floor_from_save(
     let mut items = floor
         .items
         .into_iter()
-        .map(item_from_dto)
-        .collect::<Vec<_>>();
+        .map(|item| item_from_dto(item, content))
+        .collect::<Result<Vec<_>, CoreError>>()?;
     items.extend(
         floor
             .carried_items

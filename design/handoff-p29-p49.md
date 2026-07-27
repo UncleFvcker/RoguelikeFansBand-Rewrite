@@ -1,6 +1,6 @@
-# 交接文档：P29–P49 迭代史与当前状态
+# 交接文档：P29–P51 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-27，main @ `707fb7f`，CI 全绿。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-27，P50–P51 已在当前工作树完成，等待提交。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -8,7 +8,7 @@
 用 Rust + Tauri + Web 前端确定性重写 FrogComposband（原版 C 源钉在
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个 `contract-vN` 基线，行为由 `tests/fixtures/contract-vN/scenarios`
-下的 exact fixtures 锁死。当前基线 **contract-v101，323 个 fixtures，零 waiver**。
+下的 exact fixtures 锁死。当前基线 **contract-v103，328 个 fixtures，零 waiver**。
 
 ## 1. 架构速查
 
@@ -35,11 +35,11 @@
 1. **每迭代五件套**：`PROTOCOL_VERSION`、state hash `STATE_HASH_SCHEMA_VERSION`（改 hash 输入结构才 bump）、`pack.json` 版本、`content.lock.json`、`BUILT_IN_CONTENT_HASH`（旧 hash 追加进 `PREVIOUS_BUILT_IN_CONTENT_HASHES` 数组）。内容结构体加字段（即使 serde default）会改内容 hash——lock 不匹配时 rfb-core build.rs 直接 panic，**必须先走五件套再编核心**。内容 hash 用 `rfb-contentc inspect-source` 取新值手写 lock。
 2. **fixture 跨基线**：`rfb-contract migrate-baseline <旧>/scenarios <新>/scenarios`；新场景 `refresh` 录制前要塞完整占位 assertions 才能解析，录制后人工审阅；怪物场景种子狩猎=批量改 seed 重 refresh。每个 `contract-vN/waivers/` 必须有 `.gitkeep`。
 3. **显示状态**（镜头/缩放/tileset/语言/准星）永不进存档/回放/state hash。
-4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；其内钉死 `contentVisualCount` 等值，**加带字形的内容必改**（P36 72→73、P47 79→80、P49 80→83 三次踩中）。本地 `cd web && npm run e2e` 约 35s。
+4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；其内钉死 `contentVisualCount` 等值，**加带字形的内容必改**（P36 72→73、P47 79→80、P49 80→83、P50 83→85、P51 85→87）。本地 `cd web && npm run e2e` 约 35s。
 5. 新法术/效果形态**永远放新怪物**，别动既有加权池（P34 教训）；clippy 退出码别被管道吞掉，单独跑验证。
 6. 全套验证：`cargo fmt --check` / `cargo test --workspace --exclude rfb-tauri` / `cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings` / bindings `--check` / schemas `--check` / `rfb-contentc verify-source` / `validate-policy` / web `check:protocol`+`test`+`typecheck`+`build:ui`（+必要时 e2e）。
 
-## 3. P29–P49 迭代史
+## 3. P29–P51 迭代史
 
 ### 阶段 H 收尾与基建（P29–P30）
 - **P29（contract-v89，fe07a7d）友方召唤命令**：玩家召唤物命令/行动模式（跟随/驻守等），阶段 H（怪物施法 AI v86–v89）收官。
@@ -69,13 +69,15 @@
 - **P47（contract-v100，3c0671b）身体/槽位模板**：装备模型从"物品自声明槽+同名一件"升级为显式身体模板。核心 `STANDARD_BODY_SLOTS` 13 槽（**ring-1+ring-2 双戒指、light 光源槽**；单实例槽 id=类型名故旧档零迁移）；`RaceDefinition.bodySlots` 种族自声明（对齐 b_info 按种族绑定）；装备按类型找首个空实例、满则确定性顶替首实例（item.equip.swap）；player.bodySlots 入档入 hash（**Schema v41**）、旧档零 RNG 派生。前端全槽位面板（空槽"空缺"、同类型序号）。导入器光源接 light 槽（帕蓝提尔等 8 件神器六维回收）。记录差异：双持手与箭袋未纳入。
 - **P48（c8ce182）b_info+种族+性格导入（T1）**：**首次代码侧结构化提取**——种族/性格无数据文件，从 src/*.c 提取函数体并解析 `me.field = 值;` 赋值行（右值非整数字面量的 21 个怪物种族标记 dynamic 跳过）。67/88 种族、20/21 性格、113 身体模板普查；钩子缺口量化（calc_bonuses 76/birth 27）；八技能花名册 1:1 + 87 skillSets；玩家种族绑 Standard 12 槽（刻意无原创 charm 槽）。
 - **P49（contract-v101，ec91b5b+707fb7f）装备/内在旗标·防御面（T2 前半）**：协议 1.101 / 包 1.92.0 / Schema 保持 v41 / 323 fixtures。Item/Affix/Race 三处统一声明 `resistances`（复用 v96 档位词表）+ `statusImmunities`（FREE_ACT→rfb.status.paralysis）、StatModifiers 新增 `speed`。核心 `effective_player_resistances()` 确定性合并：**immune 任一即胜；strong>resistant 取最高正档、遇任一 vulnerable 源降一档；纯 vulnerable 保持**——派生值不入存档/hash，穿脱即时生效。免疫查表在落状态前跳过（既有 skip 形状零后续 RNG）；装备 speed 进派生速度管线。物品 DTO 知识门控暴露防御表面。demo 三新物品：御火指环/疾行靴/镇静吊坠（fixtures 321-323）。导入器回灌：ego 105/160（+17）、神器 392/392、35 词条/33 种族/321 物品带防御表面，RES_*/IM_*/SPEED/FREE_ACT 全部退出未映射清单。本迭代细节见 `design/contract-v101-defensive-flags.md`。
+- **P50（contract-v102）装备旗标·进攻面（T2 后半）**：协议 1.102 / 包 1.93.0 / Schema 保持 v41 / 326 fixtures。Item/Affix 统一 `slays`（11 类目标，slay/kill 两档）与五元素 `brands`；玩家持武器近战按原版 tier 只放大武器骰，多项取最高，元素 immune 压制对应 brand，零额外 RNG。DTO 与 Web 按物品知识门控显示。demo 新增屠龙刃/余烬刃/寒霜猎手词条（fixtures 324-326）。导入回灌：ego 107/160、神器 392/392，12 词条/130 物品带 slay，5 词条/90 物品带基础 brand。详见 `design/contract-v102-offensive-flags.md`。
+- **P51（contract-v103）动态 affix 实例 + 装备 passive**：协议 1.103 / 包 1.94.0 / Schema v42 / 328 fixtures。Affix 新增按深度过滤的加权 `rollGroups`，生成结果以 `rolledAffixes` materialize 到物品实例、存档和 hash；旧档缺结果保持空且零 RNG。`equipmentBonuses` 覆盖额外攻击、十类技能、红外/光照，`passives` 建立 14 项能力词表；regeneration 已每 10 ticks 恢复 1 HP，其余 passive 保留为后续系统的权威数据。Web 中英显示完整属性，contract final state 直接记录 inventory/equipment DTO。demo Adaptive Echo 的 fixtures 327-328 锁住两个浅层候选、真实掉落、鉴定、装备、再生和回档。真实导入 ego 128/160、神器 392/392；详见 `design/contract-v103-dynamic-affixes.md`。
 
 ## 4. 当前缺口与下一步候选
 
-- **P50 首选：进攻面旗标（T2 后半）**——SLAY_*/BRAND_* 斩杀/品牌进词条/神器（unmappedArtifactFlags 里 SLAY_EVIL 58/BRAND_FIRE 40 等）。
+- **P52 首选：职业壳 + m_info 施法档案导入（T3）**——54 职业 stats/skills/casting 壳、领域可读性表，s_info 差异入报告。
 - 备选：**设备与消耗品效果系统**（行为缺口 231 + 激活 193，解锁卷轴/魔杖/药水实际效果）；**法术清尾**（S_ 特殊/字形 177、SHRIEK、TRAPS、DARKNESS 房间光照、ANIM_DEAD、ANTI_MAGIC）。
-- 导入优先级路线（design/legacy-import-priority-v1.md）：T1✅ T2 防御面✅ → T2 进攻面 → T3 职业壳+m_info → T4 玩家领域法术∥设备效果 → T5 d_info/v_info/任务/城镇荒野。
-- 能力性旗标（SEE_INVIS/REGEN/HOLD_LIFE/STEALTH/SUST_*）、种族 rank 动态（21 怪物种族）、双持/箭袋槽、非标准身体玩法：各待对应系统。
+- 导入优先级路线（design/legacy-import-priority-v1.md）：T1✅ T2 防御面✅ T2 进攻面✅ T2 动态实例/passive✅ → T3 职业壳+m_info → T4 玩家领域法术∥设备效果 → T5 d_info/v_info/任务/城镇荒野。
+- 能力性旗标已结构化入内容/实例/DTO，但除 REGEN 外仍需运行时消费者；另有种族 rank 动态（21 怪物种族）、双持/箭袋槽、非标准身体玩法待对应系统。
 - 长期设计约束（用户已确认、不得推翻）与地牢/楼梯/守护者决定见既有设计文档；显示状态不入档是铁律。
 
 ## 5. 常用命令
@@ -88,7 +90,7 @@ cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
 cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
 cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
 cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v101/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v103/baseline-policy.json
 # web（在 web/ 下）
 npm run check:protocol && npm test && npm run typecheck && npm run build:ui && npm run e2e
 # 导入器实跑

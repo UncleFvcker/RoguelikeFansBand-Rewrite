@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.adaptive-glaive",
+  "nameKey": "item-demo-adaptive-glaive-name",
+  "descriptionKey": "item-demo-adaptive-glaive-description",
+  "glyph": "/",
+  "weightTenthsPound": 25,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 2,
+    "toDamage": 2,
+    "damageDice": 1,
+    "damageSides": 4,
+    "damageType": "physical"
+  },
+  "tags": ["dynamic", "equipment", "test", "weapon"]
+}

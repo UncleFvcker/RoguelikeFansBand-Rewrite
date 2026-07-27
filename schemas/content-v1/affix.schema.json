@@ -10,6 +10,386 @@
       ],
       "type": "string"
     },
+    "AffixPropertyBundleDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "brands": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/WeaponBrand"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "equipmentBonuses": {
+          "$ref": "#/$defs/EquipmentBonuses",
+          "default": {
+            "deviceSkill": 0,
+            "diggingSkill": 0,
+            "disarmingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0,
+            "meleeAttacks": 0,
+            "meleeSkill": 0,
+            "perceptionSkill": 0,
+            "rangedSkill": 0,
+            "savingThrowSkill": 0,
+            "searchSkill": 0,
+            "stealthSkill": 0,
+            "throwingSkill": 0
+          }
+        },
+        "modifiers": {
+          "$ref": "#/$defs/StatModifiers",
+          "default": {
+            "attack": 0,
+            "charisma": 0,
+            "constitution": 0,
+            "defense": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "maxHp": 0,
+            "speed": 0,
+            "strength": 0,
+            "wisdom": 0
+          }
+        },
+        "passives": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EquipmentPassive"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "resistances": {
+          "additionalProperties": false,
+          "default": {},
+          "properties": {
+            "acid": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "chaos": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "cold": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "confusion": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "dark": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "disenchant": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "disintegrate": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "electricity": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "force": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "gravity": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "hell-fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "holy-fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "ice": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "inertia": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "light": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "mana": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nether": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nexus": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nuke": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "physical": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "plasma": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "poison": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "psi": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "shards": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "sound": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "storm": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "time": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "water": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            }
+          },
+          "type": "object"
+        },
+        "slays": {
+          "additionalProperties": false,
+          "default": {},
+          "properties": {
+            "animal": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "demon": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "dragon": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "evil": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "giant": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "good": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "human": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "living": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "orc": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "troll": {
+              "$ref": "#/$defs/SlayLevel"
+            },
+            "undead": {
+              "$ref": "#/$defs/SlayLevel"
+            }
+          },
+          "type": "object"
+        },
+        "statusImmunities": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "AffixRollCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "maxDepth": {
+          "default": 65535,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "properties": {
+          "$ref": "#/$defs/AffixPropertyBundleDefinition",
+          "default": {
+            "brands": [],
+            "equipmentBonuses": {
+              "deviceSkill": 0,
+              "diggingSkill": 0,
+              "disarmingSkill": 0,
+              "infravision": 0,
+              "lightRadius": 0,
+              "meleeAttacks": 0,
+              "meleeSkill": 0,
+              "perceptionSkill": 0,
+              "rangedSkill": 0,
+              "savingThrowSkill": 0,
+              "searchSkill": 0,
+              "stealthSkill": 0,
+              "throwingSkill": 0
+            },
+            "modifiers": {
+              "attack": 0,
+              "charisma": 0,
+              "constitution": 0,
+              "defense": 0,
+              "dexterity": 0,
+              "intelligence": 0,
+              "maxHp": 0,
+              "speed": 0,
+              "strength": 0,
+              "wisdom": 0
+            },
+            "passives": [],
+            "resistances": {},
+            "slays": {},
+            "statusImmunities": []
+          }
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "weight"
+      ],
+      "type": "object"
+    },
+    "AffixRollGroupDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/AffixRollCandidateDefinition"
+          },
+          "type": "array"
+        },
+        "rolls": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rolls",
+        "candidates"
+      ],
+      "type": "object"
+    },
+    "EquipmentBonuses": {
+      "additionalProperties": false,
+      "properties": {
+        "deviceSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "diggingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "disarmingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "infravision": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "lightRadius": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeAttacks": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "perceptionSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "rangedSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "savingThrowSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "searchSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "stealthSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "throwingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "EquipmentPassive": {
+      "enum": [
+        "see-invisible",
+        "telepathy",
+        "levitation",
+        "regeneration",
+        "hold-life",
+        "sustain-strength",
+        "sustain-intelligence",
+        "sustain-wisdom",
+        "sustain-dexterity",
+        "sustain-constitution",
+        "sustain-charisma",
+        "blessed",
+        "easy-spell",
+        "device-power"
+      ],
+      "type": "string"
+    },
+    "SlayLevel": {
+      "enum": [
+        "slay",
+        "kill"
+      ],
+      "type": "string"
+    },
     "StatModifiers": {
       "additionalProperties": false,
       "properties": {
@@ -65,6 +445,16 @@
         }
       },
       "type": "object"
+    },
+    "WeaponBrand": {
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
@@ -74,8 +464,36 @@
     "$schema": {
       "type": "string"
     },
+    "brands": {
+      "default": [],
+      "description": "Elemental brands multiplying melee weapon dice unless the target is\nimmune to the matching element.",
+      "items": {
+        "$ref": "#/$defs/WeaponBrand"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
     "descriptionKey": {
       "type": "string"
+    },
+    "equipmentBonuses": {
+      "$ref": "#/$defs/EquipmentBonuses",
+      "default": {
+        "deviceSkill": 0,
+        "diggingSkill": 0,
+        "disarmingSkill": 0,
+        "infravision": 0,
+        "lightRadius": 0,
+        "meleeAttacks": 0,
+        "meleeSkill": 0,
+        "perceptionSkill": 0,
+        "rangedSkill": 0,
+        "savingThrowSkill": 0,
+        "searchSkill": 0,
+        "stealthSkill": 0,
+        "throwingSkill": 0
+      },
+      "description": "Equipment-only combat, skill, and sensory bonuses."
     },
     "formatVersion": {
       "format": "uint16",
@@ -103,6 +521,15 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "passives": {
+      "default": [],
+      "description": "Passive capabilities granted while the affixed item is equipped.",
+      "items": {
+        "$ref": "#/$defs/EquipmentPassive"
+      },
+      "type": "array",
+      "uniqueItems": true
     },
     "resistances": {
       "additionalProperties": false,
@@ -195,6 +622,55 @@
         },
         "water": {
           "$ref": "#/$defs/ActorResistanceLevel"
+        }
+      },
+      "type": "object"
+    },
+    "rollGroups": {
+      "default": [],
+      "description": "Generation-time weighted rolls. Results are materialized into the\nitem instance and never recomputed while loading a save.",
+      "items": {
+        "$ref": "#/$defs/AffixRollGroupDefinition"
+      },
+      "type": "array"
+    },
+    "slays": {
+      "additionalProperties": false,
+      "default": {},
+      "description": "Target categories receiving an original-compatible slay or kill\nmultiplier from melee weapon dice.",
+      "properties": {
+        "animal": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "demon": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "dragon": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "evil": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "giant": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "good": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "human": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "living": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "orc": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "troll": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "undead": {
+          "$ref": "#/$defs/SlayLevel"
         }
       },
       "type": "object"

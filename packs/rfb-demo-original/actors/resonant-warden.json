@@ -16,5 +16,5 @@
   "damageSides": 2,
   "damageType": "physical",
   "lootTableId": "demo.loot-table.resonant-warden",
-  "tags": ["guardian", "construct"]
+  "tags": ["guardian", "construct", "nonliving"]
 }

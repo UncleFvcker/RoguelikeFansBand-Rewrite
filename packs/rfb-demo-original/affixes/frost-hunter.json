@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "demo.affix.frost-hunter",
+  "nameKey": "affix-demo-frost-hunter-name",
+  "descriptionKey": "affix-demo-frost-hunter-description",
+  "slays": {
+    "animal": "slay"
+  },
+  "brands": ["cold"],
+  "tags": ["offense"]
+}

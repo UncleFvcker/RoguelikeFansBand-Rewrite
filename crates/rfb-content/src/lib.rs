@@ -328,6 +328,38 @@ pub struct StatModifiers {
     pub speed: i32,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EquipmentBonuses {
+    #[serde(default)]
+    pub melee_attacks: i32,
+    #[serde(default)]
+    pub melee_skill: i32,
+    #[serde(default)]
+    pub ranged_skill: i32,
+    #[serde(default)]
+    pub throwing_skill: i32,
+    #[serde(default)]
+    pub device_skill: i32,
+    #[serde(default)]
+    pub saving_throw_skill: i32,
+    #[serde(default)]
+    pub stealth_skill: i32,
+    #[serde(default)]
+    pub search_skill: i32,
+    #[serde(default)]
+    pub perception_skill: i32,
+    #[serde(default)]
+    pub disarming_skill: i32,
+    #[serde(default)]
+    pub digging_skill: i32,
+    #[serde(default)]
+    pub infravision: i32,
+    #[serde(default)]
+    pub light_radius: i32,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -837,6 +869,107 @@ const fn default_percent() -> u16 {
     100
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum SlayTarget {
+    Animal,
+    Evil,
+    Good,
+    Living,
+    Human,
+    Undead,
+    Demon,
+    Orc,
+    Troll,
+    Giant,
+    Dragon,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum SlayLevel {
+    Slay,
+    Kill,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum WeaponBrand {
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+    Poison,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum EquipmentPassive {
+    SeeInvisible,
+    Telepathy,
+    Levitation,
+    Regeneration,
+    HoldLife,
+    SustainStrength,
+    SustainIntelligence,
+    SustainWisdom,
+    SustainDexterity,
+    SustainConstitution,
+    SustainCharisma,
+    Blessed,
+    EasySpell,
+    DevicePower,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AffixPropertyBundleDefinition {
+    #[serde(default)]
+    pub modifiers: StatModifiers,
+    #[serde(default)]
+    pub equipment_bonuses: EquipmentBonuses,
+    #[serde(default)]
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    #[serde(default)]
+    pub status_immunities: Vec<String>,
+    #[serde(default)]
+    pub slays: BTreeMap<SlayTarget, SlayLevel>,
+    #[serde(default)]
+    pub brands: BTreeSet<WeaponBrand>,
+    #[serde(default)]
+    pub passives: BTreeSet<EquipmentPassive>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AffixRollCandidateDefinition {
+    pub weight: u32,
+    #[serde(default)]
+    pub min_depth: u16,
+    #[serde(default = "default_u16_max")]
+    pub max_depth: u16,
+    #[serde(default)]
+    pub properties: AffixPropertyBundleDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AffixRollGroupDefinition {
+    pub rolls: u8,
+    pub candidates: Vec<AffixRollCandidateDefinition>,
+}
+
+const fn default_u16_max() -> u16 {
+    u16::MAX
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -849,6 +982,9 @@ pub struct AffixDefinition {
     pub description_key: String,
     #[serde(default)]
     pub modifiers: StatModifiers,
+    /// Equipment-only combat, skill, and sensory bonuses.
+    #[serde(default)]
+    pub equipment_bonuses: EquipmentBonuses,
     /// Defensive resistance tiers granted while the affixed item is
     /// equipped.
     #[serde(default)]
@@ -857,6 +993,21 @@ pub struct AffixDefinition {
     /// equipped.
     #[serde(default)]
     pub status_immunities: Vec<String>,
+    /// Target categories receiving an original-compatible slay or kill
+    /// multiplier from melee weapon dice.
+    #[serde(default)]
+    pub slays: BTreeMap<SlayTarget, SlayLevel>,
+    /// Elemental brands multiplying melee weapon dice unless the target is
+    /// immune to the matching element.
+    #[serde(default)]
+    pub brands: BTreeSet<WeaponBrand>,
+    /// Passive capabilities granted while the affixed item is equipped.
+    #[serde(default)]
+    pub passives: BTreeSet<EquipmentPassive>,
+    /// Generation-time weighted rolls. Results are materialized into the
+    /// item instance and never recomputed while loading a save.
+    #[serde(default)]
+    pub roll_groups: Vec<AffixRollGroupDefinition>,
     pub tags: Vec<String>,
 }
 
@@ -940,6 +1091,8 @@ pub struct ItemDefinition {
     #[serde(default)]
     pub modifiers: StatModifiers,
     #[serde(default)]
+    pub equipment_bonuses: EquipmentBonuses,
+    #[serde(default)]
     pub melee_profile: Option<AttackProfileDefinition>,
     #[serde(default)]
     pub projectile_profile: Option<ProjectileProfileDefinition>,
@@ -957,6 +1110,17 @@ pub struct ItemDefinition {
     /// Status kind ids the wearer is immune to while the item is equipped.
     #[serde(default)]
     pub status_immunities: Vec<String>,
+    /// Target categories receiving an original-compatible slay or kill
+    /// multiplier from melee weapon dice while this item is equipped.
+    #[serde(default)]
+    pub slays: BTreeMap<SlayTarget, SlayLevel>,
+    /// Elemental brands applied to melee weapon dice while this item is
+    /// equipped.
+    #[serde(default)]
+    pub brands: BTreeSet<WeaponBrand>,
+    /// Passive capabilities granted while this item is equipped.
+    #[serde(default)]
+    pub passives: BTreeSet<EquipmentPassive>,
     pub tags: Vec<String>,
 }
 
@@ -2737,10 +2901,44 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&affix.id, "affix")?;
         validate_definition_text(&affix.id, &affix.name_key, &affix.description_key)?;
         validate_status_immunities(&affix.id, &mut affix.status_immunities)?;
+        let mut roll_substance = false;
+        if affix.roll_groups.len() > 16 {
+            return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+        }
+        for group in &mut affix.roll_groups {
+            if group.rolls == 0
+                || group.rolls > 16
+                || group.candidates.is_empty()
+                || group.candidates.len() > 64
+            {
+                return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+            }
+            let mut group_substance = false;
+            for candidate in &mut group.candidates {
+                validate_status_immunities(&affix.id, &mut candidate.properties.status_immunities)?;
+                if candidate.weight == 0
+                    || candidate.weight > 1_000_000
+                    || candidate.min_depth > candidate.max_depth
+                    || affix_property_bundle_out_of_range(&candidate.properties)
+                {
+                    return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+                }
+                group_substance |= candidate.properties != AffixPropertyBundleDefinition::default();
+            }
+            if !group_substance {
+                return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+            }
+            roll_substance = true;
+        }
         let modifiers = &affix.modifiers;
         let has_substance = modifiers != &StatModifiers::default()
+            || affix.equipment_bonuses != EquipmentBonuses::default()
             || !affix.resistances.is_empty()
-            || !affix.status_immunities.is_empty();
+            || !affix.status_immunities.is_empty()
+            || !affix.slays.is_empty()
+            || !affix.brands.is_empty()
+            || !affix.passives.is_empty()
+            || roll_substance;
         if !has_substance
             || modifiers.max_hp < -1_000_000
             || modifiers.max_hp > 1_000_000
@@ -2750,6 +2948,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || modifiers.defense > 1_000_000
             || !(-100..=100).contains(&modifiers.speed)
             || attribute_modifiers_out_of_range(modifiers)
+            || equipment_bonuses_out_of_range(&affix.equipment_bonuses)
         {
             return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
         }
@@ -3222,13 +3421,20 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || item.modifiers.defense > 1_000_000
             || !(-100..=100).contains(&item.modifiers.speed)
             || attribute_modifiers_out_of_range(&item.modifiers)
-            || (item.equipment_slot.is_none() && item.modifiers != StatModifiers::default())
+            || equipment_bonuses_out_of_range(&item.equipment_bonuses)
+            || (item.equipment_slot.is_none()
+                && (item.modifiers != StatModifiers::default()
+                    || item.equipment_bonuses != EquipmentBonuses::default()))
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
         validate_status_immunities(&item.id, &mut item.status_immunities)?;
         if item.equipment_slot.is_none()
-            && (!item.resistances.is_empty() || !item.status_immunities.is_empty())
+            && (!item.resistances.is_empty()
+                || !item.status_immunities.is_empty()
+                || !item.slays.is_empty()
+                || !item.brands.is_empty()
+                || !item.passives.is_empty())
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
@@ -6516,6 +6722,38 @@ fn attribute_modifiers_out_of_range(modifiers: &StatModifiers) -> bool {
     .any(|value| !(-100..=100).contains(&value))
 }
 
+fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool {
+    !(-8..=8).contains(&bonuses.melee_attacks)
+        || [
+            bonuses.melee_skill,
+            bonuses.ranged_skill,
+            bonuses.throwing_skill,
+            bonuses.device_skill,
+            bonuses.saving_throw_skill,
+            bonuses.stealth_skill,
+            bonuses.search_skill,
+            bonuses.perception_skill,
+            bonuses.disarming_skill,
+            bonuses.digging_skill,
+        ]
+        .into_iter()
+        .any(|value| !(-1_000_000..=1_000_000).contains(&value))
+        || !(-64..=64).contains(&bonuses.infravision)
+        || !(-8..=8).contains(&bonuses.light_radius)
+}
+
+fn affix_property_bundle_out_of_range(bundle: &AffixPropertyBundleDefinition) -> bool {
+    bundle.modifiers.max_hp < -1_000_000
+        || bundle.modifiers.max_hp > 1_000_000
+        || bundle.modifiers.attack < -1_000_000
+        || bundle.modifiers.attack > 1_000_000
+        || bundle.modifiers.defense < -1_000_000
+        || bundle.modifiers.defense > 1_000_000
+        || !(-100..=100).contains(&bundle.modifiers.speed)
+        || attribute_modifiers_out_of_range(&bundle.modifiers)
+        || equipment_bonuses_out_of_range(&bundle.equipment_bonuses)
+}
+
 fn validate_definition_text(
     id: &str,
     name_key: &str,
@@ -6966,9 +7204,9 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 24);
-        assert_eq!(first.content.affixes.len(), 1);
-        assert_eq!(first.content.items.len(), 12);
+        assert_eq!(first.content.actors.len(), 25);
+        assert_eq!(first.content.affixes.len(), 3);
+        assert_eq!(first.content.items.len(), 15);
         assert_eq!(first.content.resources.len(), 2);
         assert_eq!(first.content.abilities.len(), 36);
         assert_eq!(first.content.ability_books.len(), 2);
@@ -6979,7 +7217,7 @@ mod tests {
         assert_eq!(first.content.personalities.len(), 3);
         assert_eq!(first.content.builds.len(), 6);
         assert_eq!(first.content.encounter_tables.len(), 6);
-        assert_eq!(first.content.loot_tables.len(), 7);
+        assert_eq!(first.content.loot_tables.len(), 8);
         assert_eq!(first.content.theme_tables.len(), 3);
         assert_eq!(first.content.region_tables.len(), 1);
         assert_eq!(first.content.terrain_feature_tables.len(), 1);
@@ -6994,7 +7232,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.92.0");
+        assert_eq!(catalog.pack_version(), "1.94.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8726,6 +8964,13 @@ mod tests {
 
         let mut invalid = artifact.content.clone();
         invalid.affixes[0].modifiers = StatModifiers::default();
+        invalid.affixes[0].equipment_bonuses = EquipmentBonuses::default();
+        invalid.affixes[0].resistances.clear();
+        invalid.affixes[0].status_immunities.clear();
+        invalid.affixes[0].slays.clear();
+        invalid.affixes[0].brands.clear();
+        invalid.affixes[0].passives.clear();
+        invalid.affixes[0].roll_groups.clear();
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidAffixModifiers(_))

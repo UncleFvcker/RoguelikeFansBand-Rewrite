@@ -87,6 +87,96 @@
       ],
       "type": "object"
     },
+    "EquipmentBonuses": {
+      "additionalProperties": false,
+      "properties": {
+        "deviceSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "diggingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "disarmingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "infravision": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "lightRadius": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeAttacks": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "perceptionSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "rangedSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "savingThrowSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "searchSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "stealthSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "throwingSkill": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "EquipmentPassive": {
+      "enum": [
+        "see-invisible",
+        "telepathy",
+        "levitation",
+        "regeneration",
+        "hold-life",
+        "sustain-strength",
+        "sustain-intelligence",
+        "sustain-wisdom",
+        "sustain-dexterity",
+        "sustain-constitution",
+        "sustain-charisma",
+        "blessed",
+        "easy-spell",
+        "device-power"
+      ],
+      "type": "string"
+    },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -176,6 +266,13 @@
         "ammoKindId"
       ],
       "type": "object"
+    },
+    "SlayLevel": {
+      "enum": [
+        "slay",
+        "kill"
+      ],
+      "type": "string"
     },
     "StatModifiers": {
       "additionalProperties": false,
@@ -268,6 +365,16 @@
         "damageSides"
       ],
       "type": "object"
+    },
+    "WeaponBrand": {
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
@@ -291,6 +398,15 @@
         "null"
       ]
     },
+    "brands": {
+      "default": [],
+      "description": "Elemental brands applied to melee weapon dice while this item is\nequipped.",
+      "items": {
+        "$ref": "#/$defs/WeaponBrand"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
     "breakChancePercent": {
       "default": 0,
       "format": "uint8",
@@ -300,6 +416,24 @@
     },
     "descriptionKey": {
       "type": "string"
+    },
+    "equipmentBonuses": {
+      "$ref": "#/$defs/EquipmentBonuses",
+      "default": {
+        "deviceSkill": 0,
+        "diggingSkill": 0,
+        "disarmingSkill": 0,
+        "infravision": 0,
+        "lightRadius": 0,
+        "meleeAttacks": 0,
+        "meleeSkill": 0,
+        "perceptionSkill": 0,
+        "rangedSkill": 0,
+        "savingThrowSkill": 0,
+        "searchSkill": 0,
+        "stealthSkill": 0,
+        "throwingSkill": 0
+      }
     },
     "equipmentSlot": {
       "default": null,
@@ -353,6 +487,15 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "passives": {
+      "default": [],
+      "description": "Passive capabilities granted while this item is equipped.",
+      "items": {
+        "$ref": "#/$defs/EquipmentPassive"
+      },
+      "type": "array",
+      "uniqueItems": true
     },
     "projectileProfile": {
       "anyOf": [
@@ -456,6 +599,47 @@
         },
         "water": {
           "$ref": "#/$defs/ActorResistanceLevel"
+        }
+      },
+      "type": "object"
+    },
+    "slays": {
+      "additionalProperties": false,
+      "default": {},
+      "description": "Target categories receiving an original-compatible slay or kill\nmultiplier from melee weapon dice while this item is equipped.",
+      "properties": {
+        "animal": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "demon": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "dragon": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "evil": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "giant": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "good": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "human": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "living": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "orc": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "troll": {
+          "$ref": "#/$defs/SlayLevel"
+        },
+        "undead": {
+          "$ref": "#/$defs/SlayLevel"
         }
       },
       "type": "object"

@@ -2148,6 +2148,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             quantity: 1,
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
             location: ItemLocation::Inventory,
         });
     }
@@ -5623,6 +5624,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         quantity: 19,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
         location: ItemLocation::Inventory,
     });
     game.player.position = Position { x: 6, y: 4 };
@@ -9187,6 +9189,7 @@ fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         quantity: 1,
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
         location: ItemLocation::Inventory,
     });
 }
@@ -10311,6 +10314,262 @@ fn escape_teleport_falls_back_to_half_distance_and_blink_rejects_without_space()
         }
     }
     assert!(saw_rejection, "boxed blink should report no-space");
+}
+
+#[test]
+fn offensive_flag_multipliers_and_living_predicate_match_original_tiers() {
+    assert_eq!(slay_multiplier(SlayTarget::Evil, SlayLevel::Slay), 19);
+    assert_eq!(slay_multiplier(SlayTarget::Animal, SlayLevel::Kill), 46);
+    assert_eq!(slay_multiplier(SlayTarget::Dragon, SlayLevel::Slay), 28);
+    assert_eq!(slay_multiplier(SlayTarget::Dragon, SlayLevel::Kill), 56);
+
+    let game = Game::new(0);
+    let dragon = game
+        .content
+        .actor("demo.actor.ash-drake")
+        .expect("demo dragon");
+    let construct = game
+        .content
+        .actor("demo.actor.resonant-warden")
+        .expect("demo construct");
+    assert!(slay_target_matches(SlayTarget::Dragon, dragon));
+    assert!(slay_target_matches(SlayTarget::Living, dragon));
+    assert!(!slay_target_matches(SlayTarget::Living, construct));
+}
+
+#[test]
+fn elemental_brand_is_suppressed_only_by_matching_immunity() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.items.push(ItemInstance {
+        id: "test.item.ember-edge".to_owned(),
+        kind_id: "demo.item.ember-edge".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
+        location: ItemLocation::Equipped {
+            slot_id: "weapon".to_owned(),
+        },
+    });
+    let profile = game.player_melee_profile(&game.player_derived_stats());
+    let definition = game
+        .content
+        .actor("demo.actor.ash-drake")
+        .expect("demo target")
+        .clone();
+    let mut target = actor_from_runtime_spawn(
+        "test.actor.brand-target",
+        &definition.id,
+        Position { x: 4, y: 3 },
+        definition.max_hp,
+        definition.speed,
+        0,
+        true,
+    );
+
+    target
+        .resistances
+        .set(DamageType::Fire, ResistanceLevel::Resistant);
+    assert_eq!(
+        game.player_melee_damage_multiplier(&profile, &target, &definition),
+        24
+    );
+    target
+        .resistances
+        .set(DamageType::Fire, ResistanceLevel::Immune);
+    assert_eq!(
+        game.player_melee_damage_multiplier(&profile, &target, &definition),
+        10
+    );
+}
+
+#[test]
+fn offensive_flag_dto_hides_unknown_affix_contributions() {
+    let mut game = Game::new(0);
+    let item_id = "test.item.known-offense".to_owned();
+    game.items.push(ItemInstance {
+        id: item_id.clone(),
+        kind_id: "demo.item.ember-edge".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Fine,
+        affix_ids: vec!["demo.affix.frost-hunter".to_owned()],
+        rolled_affixes: Vec::new(),
+        location: ItemLocation::Inventory,
+    });
+
+    let hidden = game
+        .inventory_dto()
+        .into_iter()
+        .find(|item| item.id == item_id)
+        .expect("test item");
+    assert_eq!(hidden.brands, vec![WeaponBrandDto::Fire]);
+    assert!(hidden.slays.is_empty());
+
+    game.item_property_knowledge.insert(
+        item_id.clone(),
+        ItemPropertyKnowledgeState {
+            appraised: true,
+            identified: true,
+            known_affix_ids: BTreeSet::from(["demo.affix.frost-hunter".to_owned()]),
+        },
+    );
+    let visible = game
+        .inventory_dto()
+        .into_iter()
+        .find(|item| item.id == item_id)
+        .expect("test item");
+    assert_eq!(
+        visible.brands,
+        vec![WeaponBrandDto::Fire, WeaponBrandDto::Cold]
+    );
+    assert_eq!(
+        visible.slays,
+        vec![SlayDto {
+            target: SlayTargetDto::Animal,
+            level: SlayLevelDto::Slay,
+        }]
+    );
+}
+
+#[test]
+fn dynamic_affix_rolls_are_seeded_depth_filtered_and_materialized() {
+    let roll = |seed, depth| {
+        let mut game = Game::new(seed);
+        game.roll_affix_properties(&["demo.affix.adaptive-echo".to_owned()], depth)
+    };
+    let shallow = roll(17, 1);
+    assert_eq!(shallow, roll(17, 1));
+    assert_eq!(shallow.len(), 1);
+    assert!(
+        shallow[0].properties.equipment_bonuses.melee_skill == 12
+            || shallow[0].properties.equipment_bonuses.melee_attacks == 1
+    );
+    assert!(
+        !shallow[0]
+            .properties
+            .passives
+            .contains(&EquipmentPassive::Telepathy)
+    );
+
+    let deep = roll(17, 10);
+    assert_eq!(deep.len(), 1);
+    assert!(
+        deep[0].properties.equipment_bonuses.device_skill == 8
+            || deep[0].properties.equipment_bonuses.melee_attacks == 2
+    );
+    assert_eq!(
+        deep[0].properties.equipment_bonuses.melee_skill, 0,
+        "shallow candidates must not leak into deep rolls"
+    );
+}
+
+#[test]
+fn rolled_affix_save_round_trip_does_not_redraw_rng() {
+    let mut game = Game::new(23);
+    let before_roll = game.rng.draw_counter;
+    let rolled = game.roll_affix_properties(&["demo.affix.adaptive-echo".to_owned()], 1);
+    assert!(game.rng.draw_counter > before_roll);
+    game.items.push(ItemInstance {
+        id: "test.item.dynamic-save".to_owned(),
+        kind_id: "demo.item.adaptive-glaive".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Fine,
+        affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
+        rolled_affixes: rolled.clone(),
+        location: ItemLocation::Inventory,
+    });
+    let saved = game.to_save();
+    let saved_draws = saved.rng.draw_counter;
+    let restored = Game::from_save(saved).expect("rolled affix payload should reload");
+    let restored_item = restored
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.dynamic-save")
+        .expect("dynamic item should survive reload");
+    assert_eq!(restored_item.rolled_affixes, rolled);
+    assert_eq!(restored.rng.draw_counter, saved_draws);
+
+    let mut legacy = restored.to_save();
+    legacy
+        .inventory
+        .iter_mut()
+        .find(|item| item.id == "test.item.dynamic-save")
+        .expect("dynamic inventory item")
+        .rolled_affixes
+        .clear();
+    let migrated = Game::from_save(legacy).expect("missing rolled payload is a zero-RNG migration");
+    assert_eq!(migrated.rng.draw_counter, saved_draws);
+    assert!(
+        migrated
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.dynamic-save")
+            .expect("legacy dynamic item")
+            .rolled_affixes
+            .is_empty()
+    );
+}
+
+#[test]
+fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
+    let mut game = Game::new(31);
+    clear_monsters(&mut game);
+    let properties = AffixPropertyBundleDefinition {
+        equipment_bonuses: EquipmentBonuses {
+            melee_attacks: 2,
+            melee_skill: 11,
+            digging_skill: 7,
+            ..EquipmentBonuses::default()
+        },
+        ..AffixPropertyBundleDefinition::default()
+    };
+    game.items.push(ItemInstance {
+        id: "test.item.dynamic-equipped".to_owned(),
+        kind_id: "demo.item.adaptive-glaive".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Fine,
+        affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
+        rolled_affixes: vec![RolledAffixState {
+            affix_id: "demo.affix.adaptive-echo".to_owned(),
+            properties,
+        }],
+        location: ItemLocation::Equipped {
+            slot_id: "weapon".to_owned(),
+        },
+    });
+    let item_id = "test.item.dynamic-equipped".to_owned();
+    game.item_property_knowledge.insert(
+        item_id.clone(),
+        ItemPropertyKnowledgeState {
+            appraised: true,
+            identified: true,
+            known_affix_ids: BTreeSet::from(["demo.affix.adaptive-echo".to_owned()]),
+        },
+    );
+    let stats = game.player_derived_stats();
+    assert_eq!(stats.melee_attacks.value, 3);
+    assert!(stats.melee_skill.value >= 11);
+    assert!(stats.dig_skill.value >= 7);
+    let equipped = game
+        .equipment_dto()
+        .into_iter()
+        .find(|item| item.id == item_id)
+        .expect("dynamic item should be visible");
+    assert_eq!(equipped.equipment_bonuses.melee_attacks, 2);
+    assert_eq!(equipped.passives, vec![EquipmentPassiveDto::Regeneration]);
+
+    game.player.hp = game.effective_player_max_hp() - 2;
+    game.world_tick = EQUIPMENT_REGENERATION_INTERVAL_TICKS - 1;
+    let before = game.player.hp;
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.player.hp, before + 1);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "equipment.regenerated")
+    );
 }
 
 fn clear_monsters(game: &mut Game) {

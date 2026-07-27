@@ -58,7 +58,16 @@
 | P47 | 身体/槽位模板 | 已由 contract-v100 完成 | RaceDefinition.bodySlots 槽实例表（空=标准身体）+ 核心标准身体 13 槽（**ring-1/ring-2 双戒指、light 光源槽**，单实例 id=类型名故旧档零迁移）+ 装备按类型找空实例/满则顶替首实例（item.equip.swap）+ 存档权威（Schema v41）/旧档零 RNG 派生 + 快照 bodySlots（协议 1.100）+ 前端全槽位面板（空槽"空缺"、同类型序号）+ 导入器光源接 light 槽（帕蓝提尔等 8 件神器六维回收）。demo 新增共鸣指环（包 1.91.0），fixtures 319-320（双戒指/顶替），320 个 exact。记录差异：双持手与箭袋未纳入（待各自系统） |
 | P48 | b_info+种族+性格导入（T1） | 已完成（纯工具，见 [legacy-character-import-v1](legacy-character-import-v1.md)） | 代码侧结构化提取（函数头识别+花括号配平+赋值行解析，rank 动态右值标记跳过）：**67/88 种族**（21 怪物种族 race-code-dynamic）、**20/21 性格**、113 身体模板全解析（缺口普查 any 76/quiver 13/capture-ball 4）；玩家种族绑 Standard 12 槽（刻意无 charm）；八技能花名册 1:1 映射+87 skillSets；钩子缺口 calc_bonuses 76/birth 27 为 T2/种族能力线提供覆盖数；霍比特抽查逐项一致 |
 | P49 | 装备/内在旗标系统·防御面（T2 前半） | 已由 contract-v101 完成 | 装备/词条/种族三处统一 resistances/statusImmunities/modifiers.speed 声明表面；有效抗性确定性合并（immune 胜、正档遇 vulnerable 降档）、免疫查表跳过、装备速度进派生管线；协议 1.101（物品 DTO 知识门控暴露）、包 1.92.0（御火指环/疾行靴/镇静吊坠）、fixtures 321-323 共 323 exact、Schema 保持 v41。回灌收割：ego 105/160（+17）、神器 392/392、35 词条/33 种族/321 物品带防御表面，RES_*/IM_*/SPEED/FREE_ACT 清零。进攻面（SLAY_/BRAND_）留 T2 后半 |
-| P50 | 候选：进攻面旗标（T2 后半） | 下一候选 | 斩杀/品牌旗标进词条/神器；备选插队：设备效果系统（缺口 231+激活 193）、法术清尾（S_ 字形 177/SHRIEK/TRAPS） |
+| P50 | 进攻面旗标（T2 后半） | 已由 contract-v102 完成 | Item/Affix 统一 slays（11 类目标，slay/kill 两档）+ brands（酸电火冷毒）；玩家持武器近战按原版 tier 只放大武器骰、多项取最高、元素 immune 压制对应 brand，零额外 RNG；协议 1.102、包 1.93.0、Schema 保持 v41、fixtures 324-326 共 326 exact。回灌：ego 107/160、神器 392/392，12 词条/130 物品带 slay，5 词条/90 物品带基础 brand |
+| P51 | 动态 affix 实例 + 装备被动属性 | 已由 contract-v103 完成 | Item/Affix 统一 equipmentBonuses/passives，Affix rollGroups 按深度过滤并加权抽取，物品实例保存 materialized rolledAffixes；旧档缺字段保持空且零 RNG。技能/额外攻击进入派生管线，regeneration 每 10 world ticks 恢复 1 HP；协议 1.103、包 1.94.0、Schema v42、fixtures 327-328 共 328 exact。真实导入 ego 128/160（+21），其余 32 个主要依赖反射、光环、诅咒、额外射击/威力与高级品牌 |
+| P52 | 候选：职业壳 + m_info 施法档案导入（T3） | 下一候选 | 54 职业 stats/skills/casting 壳与领域可读性表；备选插队：设备效果系统（缺口 231+激活 193）、法术清尾（S_ 字形 177/SHRIEK/TRAPS） |
+
+## contract-v103 明确遗留
+
+- 首版 passive 中仅 regeneration 已有独立运行时消费；see-invisible、telepathy、levitation、hold-life、六维 sustain、blessed、easy-spell 与 device-power 已入内容/存档/DTO，分别等待视野、经验吸取、属性损伤、施法和设备系统接入；
+- equipmentBonuses 中近战攻击次数与现有十类技能已经进入派生管线；infravision/light-radius 已保存和显示，但真实视觉半径消费仍待多视觉通道迭代；
+- 旧存档缺 rolledAffixes 时刻意保持空，绝不按当前 rollGroups 补抽；内容作者修改候选只影响未来生成的物品；
+- 剩余 32/160 ego 的主要系统缺口是反射、伤害光环、诅咒、额外射击/威力、高级品牌、随机抗性/维持配方与设备/法术威力。
 
 ## contract-v99 明确遗留
 

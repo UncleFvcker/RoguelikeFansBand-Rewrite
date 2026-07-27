@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.101";
+pub const PROTOCOL_VERSION: &str = "1.103";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -198,6 +198,64 @@ pub struct StatModifiersDto {
     pub charisma: i32,
     #[serde(default)]
     pub speed: i32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct EquipmentBonusesDto {
+    #[serde(default)]
+    pub melee_attacks: i32,
+    #[serde(default)]
+    pub melee_skill: i32,
+    #[serde(default)]
+    pub ranged_skill: i32,
+    #[serde(default)]
+    pub throwing_skill: i32,
+    #[serde(default)]
+    pub device_skill: i32,
+    #[serde(default)]
+    pub saving_throw_skill: i32,
+    #[serde(default)]
+    pub stealth_skill: i32,
+    #[serde(default)]
+    pub search_skill: i32,
+    #[serde(default)]
+    pub perception_skill: i32,
+    #[serde(default)]
+    pub disarming_skill: i32,
+    #[serde(default)]
+    pub digging_skill: i32,
+    #[serde(default)]
+    pub infravision: i32,
+    #[serde(default)]
+    pub light_radius: i32,
+}
+
+impl EquipmentBonusesDto {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum EquipmentPassiveDto {
+    SeeInvisible,
+    Telepathy,
+    Levitation,
+    Regeneration,
+    HoldLife,
+    SustainStrength,
+    SustainIntelligence,
+    SustainWisdom,
+    SustainDexterity,
+    SustainConstitution,
+    SustainCharisma,
+    Blessed,
+    EasySpell,
+    DevicePower,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -843,6 +901,71 @@ pub struct ResistanceDto {
     pub level: ResistanceLevelDto,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum SlayTargetDto {
+    Animal,
+    Evil,
+    Good,
+    Living,
+    Human,
+    Undead,
+    Demon,
+    Orc,
+    Troll,
+    Giant,
+    Dragon,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum SlayLevelDto {
+    Slay,
+    Kill,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum WeaponBrandDto {
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+    Poison,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SlayDto {
+    pub target: SlayTargetDto,
+    pub level: SlayLevelDto,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RolledAffixSaveDto {
+    pub affix_id: String,
+    #[serde(default)]
+    pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "EquipmentBonusesDto::is_empty")]
+    pub equipment_bonuses: EquipmentBonusesDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resistances: Vec<ResistanceDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub status_immunities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slays: Vec<SlayDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub brands: Vec<WeaponBrandDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub passives: Vec<EquipmentPassiveDto>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -1479,6 +1602,10 @@ pub struct ItemPropertyDto {
     pub name_key: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "EquipmentBonusesDto::is_empty")]
+    pub equipment_bonuses: EquipmentBonusesDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub passives: Vec<EquipmentPassiveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1500,10 +1627,18 @@ pub struct InventoryItemDto {
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "EquipmentBonusesDto::is_empty")]
+    pub equipment_bonuses: EquipmentBonusesDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub status_immunities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slays: Vec<SlayDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub brands: Vec<WeaponBrandDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub passives: Vec<EquipmentPassiveDto>,
     #[serde(default)]
     pub identification: ItemIdentificationDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1545,10 +1680,18 @@ pub struct EquipmentItemDto {
     pub slot_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "EquipmentBonusesDto::is_empty")]
+    pub equipment_bonuses: EquipmentBonusesDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub status_immunities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slays: Vec<SlayDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub brands: Vec<WeaponBrandDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub passives: Vec<EquipmentPassiveDto>,
     #[serde(default)]
     pub identification: ItemIdentificationDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1700,6 +1843,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
+    push_declaration!(EquipmentBonusesDto);
+    push_declaration!(EquipmentPassiveDto);
     push_declaration!(AttributeKindDto);
     push_declaration!(AttributeValueDto);
     push_declaration!(AttributeSetDto);
@@ -1739,6 +1884,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(DamageTypeDto);
     push_declaration!(ResistanceLevelDto);
     push_declaration!(ResistanceDto);
+    push_declaration!(SlayTargetDto);
+    push_declaration!(SlayLevelDto);
+    push_declaration!(WeaponBrandDto);
+    push_declaration!(SlayDto);
     push_declaration!(DamageResolutionDto);
     push_declaration!(CheckOutcomeDto);
     push_declaration!(CheckResolutionDto);
@@ -2010,6 +2159,8 @@ pub struct ItemSaveDto {
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rolled_affixes: Vec<RolledAffixSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2022,6 +2173,8 @@ pub struct InventoryItemSaveDto {
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rolled_affixes: Vec<RolledAffixSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2035,6 +2188,8 @@ pub struct EquipmentItemSaveDto {
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rolled_affixes: Vec<RolledAffixSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2048,6 +2203,8 @@ pub struct CarriedItemSaveDto {
     pub quality: ItemQualityDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rolled_affixes: Vec<RolledAffixSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2503,8 +2660,12 @@ mod tests {
                     max_hp: 4,
                     ..StatModifiersDto::default()
                 },
+                equipment_bonuses: EquipmentBonusesDto::default(),
                 resistances: Vec::new(),
                 status_immunities: Vec::new(),
+                slays: Vec::new(),
+                brands: Vec::new(),
+                passives: Vec::new(),
                 identification: ItemIdentificationDto::Unexamined,
                 quality: None,
                 known_properties: Vec::new(),
@@ -2526,8 +2687,12 @@ mod tests {
                     max_hp: 4,
                     ..StatModifiersDto::default()
                 },
+                equipment_bonuses: EquipmentBonusesDto::default(),
                 resistances: Vec::new(),
                 status_immunities: Vec::new(),
+                slays: Vec::new(),
+                brands: Vec::new(),
+                passives: Vec::new(),
                 identification: ItemIdentificationDto::Unexamined,
                 quality: None,
                 known_properties: Vec::new(),
