@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-nether-wave",
+  "nameKey": "ability-demo-death-nether-wave-name",
+  "descriptionKey": "ability-demo-death-nether-wave-description",
+  "minimumLevel": 38,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 35,
+  "baseFailurePercent": 70,
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "effect": { "type": "visible-damage", "damageDice": 1, "damageSides": 3, "damageType": "nether", "targetCategory": "living" },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 3, "divisor": 1 }
+  ],
+  "tags": ["death", "living", "nether", "spell", "visible"]
+}

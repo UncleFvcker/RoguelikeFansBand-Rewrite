@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-vampiric-branding",
+  "nameKey": "ability-demo-death-vampiric-branding-name",
+  "descriptionKey": "ability-demo-death-vampiric-branding-description",
+  "minimumLevel": 34,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 90,
+  "baseFailurePercent": 70,
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "effect": { "type": "enchant-equipped-weapon", "affixId": "demo.affix.vampiric" },
+  "tags": ["brand", "death", "permanent", "spell", "vampiric"]
+}

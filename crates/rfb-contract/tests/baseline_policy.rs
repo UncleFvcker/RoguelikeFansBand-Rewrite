@@ -26,12 +26,13 @@ fn committed_baseline_policy_and_waivers_are_valid() {
         "v67", "v68", "v69", "v70", "v71", "v72", "v73", "v74", "v75", "v76", "v77", "v78", "v79",
         "v80", "v81", "v82", "v83", "v84", "v85", "v86", "v87", "v88", "v89", "v90", "v91", "v92",
         "v93", "v94", "v95", "v96", "v97", "v98", "v99", "v100", "v101", "v102", "v103", "v104",
-        "v105",
+        "v105", "v106",
     ] {
         let policy = root.join(format!("contract-{version}/baseline-policy.json"));
         let report = validate_policy_file(&policy).expect("baseline policy should validate");
         assert_eq!(report.policy_id, format!("rfb-contract-baseline-{version}"));
         let minimum = match version {
+            "v106" => 353,
             "v105" => 343,
             "v104" => 334,
             "v103" => 328,

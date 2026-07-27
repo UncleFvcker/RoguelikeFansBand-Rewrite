@@ -167,6 +167,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.91 不新增存档字段：怪物位移只改变实体/玩家位置，全部由既有字段承载，state hash 沿用 Schema v40。完整边界见 [Contract v91](contract-v91-monster-displacement.md)。
 
+协议 1.106 为 `StatusSaveDto` 增加带默认值的 `grantedModifiers`、`grantedEquipmentBonuses` 与 `grantedStatusImmunities`；持续时间骰只在施放时消费，存档继续保存最终 `remainingTicks`，读档不重掷。Vampiric Branding 生成的 affix 通过既有物品实例 `affixIds` 保存，吸血 passive 由该权威实例派生；RandomChoice、VisibleDamage、重复 Drain Life 的分支/目标/逐击结果只属于事件和回放，不重复保存。旧档缺失新增字段时按空值迁移，不补 affix、不重抽 RNG；状态授予字段与永久 affix 使 state hash 升至 Schema v45。完整边界见 [Contract v106](contract-v106-death-third-book.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

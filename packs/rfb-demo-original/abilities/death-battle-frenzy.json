@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-battle-frenzy",
+  "nameKey": "ability-demo-death-battle-frenzy-name",
+  "descriptionKey": "ability-demo-death-battle-frenzy-description",
+  "minimumLevel": 30,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 25,
+  "baseFailurePercent": 75,
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "effect": {
+    "type": "sequence",
+    "effects": [
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.hero",
+        "intensity": 1,
+        "durationTicks": 25,
+        "durationDice": 1,
+        "durationSides": 25,
+        "stacking": "replace",
+        "grantedModifiers": { "maxHp": 10 },
+        "grantedEquipmentBonuses": { "meleeSkill": 12, "rangedSkill": 12 },
+        "grantedStatusImmunities": ["rfb.status.fear"]
+      },
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.blessed",
+        "intensity": 1,
+        "durationTicks": 25,
+        "durationDice": 1,
+        "durationSides": 25,
+        "stacking": "replace",
+        "grantedModifiers": { "defense": 5 },
+        "grantedEquipmentBonuses": { "meleeSkill": 10, "rangedSkill": 10 }
+      },
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.haste",
+        "intensity": 1,
+        "durationTicks": 0,
+        "durationDice": 1,
+        "durationSides": 20,
+        "stacking": "replace"
+      }
+    ]
+  },
+  "levelScaling": [
+    { "effectIndex": 2, "field": "status-duration-ticks", "multiplier": 1, "divisor": 2 },
+    { "effectIndex": 2, "field": "status-duration-sides", "multiplier": 1, "divisor": 2 }
+  ],
+  "tags": ["blessed", "death", "haste", "hero", "spell", "status"]
+}

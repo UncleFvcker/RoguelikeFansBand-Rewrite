@@ -427,6 +427,15 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
                 .into_iter()
                 .map(weapon_brand)
                 .collect();
+            if status
+                .granted_status_immunities
+                .windows(2)
+                .any(|pair| pair[0] >= pair[1])
+            {
+                return Err(CoreError::InvalidSave(
+                    "actor status immunity state is invalid",
+                ));
+            }
             Ok(StatusInstance {
                 kind_id: status.kind_id,
                 intensity: status.intensity,
@@ -434,6 +443,9 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
                 source_id: status.source_id,
                 granted_resistances,
                 granted_brands,
+                granted_modifiers: status.granted_modifiers,
+                granted_equipment_bonuses: status.granted_equipment_bonuses,
+                granted_status_immunities: status.granted_status_immunities.into_iter().collect(),
             })
         })
         .collect()
@@ -638,6 +650,7 @@ fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
     EquipmentBonusesDto {
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
+        melee_damage: bonuses.melee_damage,
         ranged_skill: bonuses.ranged_skill,
         throwing_skill: bonuses.throwing_skill,
         device_skill: bonuses.device_skill,
@@ -656,6 +669,7 @@ fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses 
     EquipmentBonuses {
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
+        melee_damage: bonuses.melee_damage,
         ranged_skill: bonuses.ranged_skill,
         throwing_skill: bonuses.throwing_skill,
         device_skill: bonuses.device_skill,
@@ -678,6 +692,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
         modifiers.defense,
         modifiers.max_hp,
         bonuses.melee_skill,
+        bonuses.melee_damage,
         bonuses.ranged_skill,
         bonuses.throwing_skill,
         bonuses.device_skill,
@@ -876,6 +891,7 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
         EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
         EquipmentPassive::DevicePower => EquipmentPassiveDto::DevicePower,
+        EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
     }
 }
 
@@ -895,6 +911,7 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::Blessed => EquipmentPassive::Blessed,
         EquipmentPassiveDto::EasySpell => EquipmentPassive::EasySpell,
         EquipmentPassiveDto::DevicePower => EquipmentPassive::DevicePower,
+        EquipmentPassiveDto::Vampiric => EquipmentPassive::Vampiric,
     }
 }
 

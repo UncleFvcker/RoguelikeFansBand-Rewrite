@@ -19,7 +19,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v105";
+pub const ACTIVE_BASELINE: &str = "contract-v106";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -54,6 +54,8 @@ pub struct Preconditions {
     pub debug_clear_entities: bool,
     #[serde(default)]
     pub debug_clear_carried_items: bool,
+    #[serde(default)]
+    pub debug_ability_casts_succeed: bool,
     #[serde(default)]
     pub player_build_id: Option<String>,
     #[serde(default)]
@@ -461,6 +463,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
     }
     let mut game = Game::from_save(payload)?;
+    game.debug_set_ability_casts_succeed(fixture.preconditions.debug_ability_casts_succeed);
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
     let mut removed_entities = Vec::new();

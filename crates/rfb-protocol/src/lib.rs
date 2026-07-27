@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.105";
+pub const PROTOCOL_VERSION: &str = "1.106";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -209,6 +209,8 @@ pub struct EquipmentBonusesDto {
     #[serde(default)]
     pub melee_skill: i32,
     #[serde(default)]
+    pub melee_damage: i32,
+    #[serde(default)]
     pub ranged_skill: i32,
     #[serde(default)]
     pub throwing_skill: i32,
@@ -256,6 +258,7 @@ pub enum EquipmentPassiveDto {
     Blessed,
     EasySpell,
     DevicePower,
+    Vampiric,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -490,6 +493,24 @@ pub enum AbilityGenocideScopeDto {
     Glyph,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityRandomTargetDto {
+    #[default]
+    CastTarget,
+    SelfTarget,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityRandomBranchSpecDto {
+    pub maximum_roll: u16,
+    pub target: AbilityRandomTargetDto,
+    pub effect: Box<AbilityEffectSpecDto>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -562,6 +583,8 @@ pub enum AbilityEffectSpecDto {
         count: u8,
         radius: u8,
         duration_turns: u16,
+        #[serde(default)]
+        hostile: bool,
     },
     SummonCategory {
         category: String,
@@ -588,6 +611,10 @@ pub enum AbilityEffectSpecDto {
         status_kind_id: String,
         intensity: u16,
         duration_ticks: u32,
+        #[serde(default)]
+        duration_dice: u16,
+        #[serde(default)]
+        duration_sides: u32,
         stacking: AbilityStatusStackingDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance_type: Option<DamageTypeDto>,
@@ -597,6 +624,12 @@ pub enum AbilityEffectSpecDto {
         granted_resistances: Vec<ResistanceDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         granted_brands: Vec<WeaponBrandDto>,
+        #[serde(default)]
+        granted_modifiers: StatModifiersDto,
+        #[serde(default)]
+        granted_equipment_bonuses: EquipmentBonusesDto,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        granted_status_immunities: Vec<String>,
     },
     BlinkSelf {
         radius: u8,
@@ -619,6 +652,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         target_category: String,
+        #[serde(default = "default_ability_effect_repeat")]
+        repeat: u8,
     },
     Genocide {
         scope: AbilityGenocideScopeDto,
@@ -633,6 +668,37 @@ pub enum AbilityEffectSpecDto {
     Heal {
         amount: u32,
     },
+    VisibleDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_bonus: u16,
+        damage_type: DamageTypeDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_category: Option<String>,
+    },
+    VisibleApplyStatus {
+        status_kind_id: String,
+        intensity: u16,
+        duration_ticks: u32,
+        stacking: AbilityStatusStackingDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_category: Option<String>,
+    },
+    EnchantEquippedWeapon {
+        affix_id: String,
+    },
+    RandomChoice {
+        roll_sides: u16,
+        level_bonus_divisor: u16,
+        branches: Vec<AbilityRandomBranchSpecDto>,
+    },
+    NoOp {
+        reason: String,
+    },
+}
+
+const fn default_ability_effect_repeat() -> u8 {
+    1
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -700,6 +766,8 @@ pub struct AbilitySummonSpecDto {
     pub count: u8,
     pub radius: u8,
     pub duration_turns: u16,
+    #[serde(default)]
+    pub hostile: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1116,6 +1184,16 @@ pub struct AbilityAreaDamageResolutionDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct AbilityVisibleDamageResolutionDto {
+    pub base_raw_damage: i32,
+    pub damage_type: DamageTypeDto,
+    pub affected_positions: Vec<Position>,
+    pub target_count: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct AbilityBeamDamageResolutionDto {
     pub base_raw_damage: i32,
     pub damage_type: DamageTypeDto,
@@ -1151,6 +1229,8 @@ pub struct AbilitySummonResolutionDto {
     pub entity_ids: Vec<String>,
     pub positions: Vec<Position>,
     pub duration_turns: u16,
+    #[serde(default)]
+    pub hostile: bool,
     /// Per-entity kinds for category summons; empty for fixed-kind summons,
     /// where `actor_kind_id` already names the summoned definition.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1216,6 +1296,12 @@ pub enum AbilityEffectSkipReasonDto {
     rename_all_fields = "camelCase"
 )]
 pub enum AbilityEffectResolutionDto {
+    RandomChoice {
+        effect_index: u8,
+        roll: u16,
+        branch_index: u16,
+        maximum_roll: u16,
+    },
     Damage {
         effect_index: u8,
         resolution: DamageResolutionDto,
@@ -1301,6 +1387,17 @@ pub enum AbilityEffectResolutionDto {
         consumed_corpse_item_ids: Vec<String>,
         entity_ids: Vec<String>,
         positions: Vec<Position>,
+    },
+    EnchantEquippedWeapon {
+        effect_index: u8,
+        item_id: String,
+        item_kind_id: String,
+        affix_id: String,
+        added: bool,
+    },
+    NoOp {
+        effect_index: u8,
+        reason: String,
     },
 }
 
@@ -1476,6 +1573,9 @@ pub enum GameEventOutcomeDto {
     AbilityAreaDamage {
         resolution: AbilityAreaDamageResolutionDto,
     },
+    AbilityVisibleDamage {
+        resolution: AbilityVisibleDamageResolutionDto,
+    },
     AbilityBeamDamage {
         resolution: AbilityBeamDamageResolutionDto,
     },
@@ -1554,6 +1654,12 @@ pub struct StatusDto {
     pub granted_resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_brands: Vec<WeaponBrandDto>,
+    #[serde(default)]
+    pub granted_modifiers: StatModifiersDto,
+    #[serde(default)]
+    pub granted_equipment_bonuses: EquipmentBonusesDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_status_immunities: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1959,9 +2065,12 @@ pub fn generated_typescript() -> String {
 
     macro_rules! push_declaration {
         ($type:ty) => {{
-            output.push_str("export ");
-            output.push_str(&<$type as TS>::decl(&config));
-            output.push_str("\n\n");
+            let declaration = format!("export {}", <$type as TS>::decl(&config));
+            for line in declaration.lines() {
+                output.push_str(line.trim_end());
+                output.push('\n');
+            }
+            output.push('\n');
         }};
     }
 
@@ -1990,6 +2099,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityDetectSubjectDto);
     push_declaration!(AbilityControlOutcomeDto);
     push_declaration!(AbilityGenocideScopeDto);
+    push_declaration!(AbilityRandomTargetDto);
+    push_declaration!(AbilityRandomBranchSpecDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);
@@ -2022,6 +2133,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CheckResolutionDto);
     push_declaration!(AbilityCastResolutionDto);
     push_declaration!(AbilityAreaDamageResolutionDto);
+    push_declaration!(AbilityVisibleDamageResolutionDto);
     push_declaration!(AbilityBeamDamageResolutionDto);
     push_declaration!(AbilityConeDamageResolutionDto);
     push_declaration!(AbilityTeleportResolutionDto);
@@ -2274,6 +2386,12 @@ pub struct StatusSaveDto {
     pub granted_resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_brands: Vec<WeaponBrandDto>,
+    #[serde(default)]
+    pub granted_modifiers: StatModifiersDto,
+    #[serde(default)]
+    pub granted_equipment_bonuses: EquipmentBonusesDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_status_immunities: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2927,6 +3045,11 @@ mod tests {
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
+        assert!(
+            typescript
+                .lines()
+                .all(|line| line.trim_end().len() == line.len())
+        );
 
         let schema: serde_json::Value = serde_json::from_str(
             &generated_json_schema().expect("protocol schema should serialize"),

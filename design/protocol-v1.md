@@ -228,6 +228,8 @@ interface GameCoreV1 {
 
 协议 1.92 增加事件 `status.confused-move`（args: intended/actual 方向 token）与 `status.paralyzed`（args: status）；`ability.cast-unavailable` 的开放 reason 集合新增 `confused`。无新增 DTO；三个新状态种类（`rfb.status.confusion`/`rfb.status.blindness`/`rfb.status.paralysis`）沿用既有 `StatusDto`。内容包升至 1.83.0，state hash 沿用 Schema v40。完整边界见 [Contract v92](contract-v92-status-family.md)。
 
+协议 1.106 为 Death 第三册增加随机效果与持久装备状态的通用表面：`AbilityEffectSpecDto` 新增 `random-choice`、`no-op`、`visible-damage` 和 `enchant-equipped-weapon`，`drain-life` 增加 `repeat`，固定 `summon` 增加 `hostile`；逐效果结果返回随机分支、明确空操作和永久附魔事务。`ApplyStatus`/`StatusDto`/`StatusSaveDto` 增加随机持续骰、属性修正、装备加值与状态免疫，装备 passive 新增 `vampiric`。永久 affix、状态授予字段与吸血结算进入 save/replay/state hash Schema v45；旧字段缺失时按空值迁移。完整边界见 [Contract v106](contract-v106-death-third-book.md)。
+
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。

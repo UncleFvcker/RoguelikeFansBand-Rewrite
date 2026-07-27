@@ -339,6 +339,8 @@ pub struct EquipmentBonuses {
     #[serde(default)]
     pub melee_skill: i32,
     #[serde(default)]
+    pub melee_damage: i32,
+    #[serde(default)]
     pub ranged_skill: i32,
     #[serde(default)]
     pub throwing_skill: i32,
@@ -738,9 +740,20 @@ pub enum AbilityLevelScalingField {
     BeamChancePercent,
     StatusIntensity,
     StatusDurationTicks,
+    StatusDurationSides,
     StatusPower,
+    StatusMeleeDamage,
     ControlPower,
     GenocidePower,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityLevelScalingCurveDefinition {
+    #[default]
+    Linear,
+    Prorated,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -763,6 +776,31 @@ pub struct AbilityLevelScalingDefinition {
     pub level_offset: u16,
     #[serde(default)]
     pub maximum: Option<u64>,
+    #[serde(default)]
+    pub curve: AbilityLevelScalingCurveDefinition,
+    #[serde(default)]
+    pub quadratic_weight: u16,
+    #[serde(default)]
+    pub cubic_weight: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityRandomTargetDefinition {
+    #[default]
+    CastTarget,
+    SelfTarget,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityRandomBranchDefinition {
+    pub maximum_roll: u16,
+    #[serde(default)]
+    pub target: AbilityRandomTargetDefinition,
+    pub effect: Box<AbilityEffectDefinition>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -861,6 +899,8 @@ pub enum AbilityEffectDefinition {
         count: u8,
         radius: u8,
         duration_turns: u16,
+        #[serde(default)]
+        hostile: bool,
     },
     SummonCategory {
         category: String,
@@ -889,6 +929,10 @@ pub enum AbilityEffectDefinition {
         status_kind_id: String,
         intensity: u16,
         duration_ticks: u32,
+        #[serde(default)]
+        duration_dice: u16,
+        #[serde(default)]
+        duration_sides: u32,
         stacking: AbilityStatusStackingDefinition,
         #[serde(default)]
         resistance_type: Option<ActorDamageType>,
@@ -898,6 +942,12 @@ pub enum AbilityEffectDefinition {
         granted_resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
         #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
         granted_brands: BTreeSet<WeaponBrand>,
+        #[serde(default)]
+        granted_modifiers: StatModifiers,
+        #[serde(default)]
+        granted_equipment_bonuses: EquipmentBonuses,
+        #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+        granted_status_immunities: BTreeSet<String>,
     },
     RemoveStatus {
         status_kind_id: String,
@@ -914,6 +964,8 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
         target_category: String,
+        #[serde(default = "default_ability_effect_repeat")]
+        repeat: u8,
     },
     Genocide {
         scope: AbilityGenocideScopeDefinition,
@@ -928,9 +980,43 @@ pub enum AbilityEffectDefinition {
     Heal {
         amount: u32,
     },
+    VisibleDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        #[serde(default)]
+        target_category: Option<String>,
+    },
+    VisibleApplyStatus {
+        status_kind_id: String,
+        intensity: u16,
+        duration_ticks: u32,
+        stacking: AbilityStatusStackingDefinition,
+        #[serde(default)]
+        target_category: Option<String>,
+    },
+    EnchantEquippedWeapon {
+        affix_id: String,
+    },
+    RandomChoice {
+        roll_sides: u16,
+        #[serde(default)]
+        level_bonus_divisor: u16,
+        branches: Vec<AbilityRandomBranchDefinition>,
+    },
+    NoOp {
+        reason: String,
+    },
     Sequence {
         effects: Vec<AbilityEffectDefinition>,
     },
+}
+
+const fn default_ability_effect_repeat() -> u8 {
+    1
 }
 
 impl AbilityEffectDefinition {
@@ -955,6 +1041,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
             | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_dice, .. }
             | AbilityEffectDefinition::DrainLife { damage_dice, .. },
             AbilityLevelScalingField::DamageDice,
         ) => Some((u64::from(*damage_dice), 100)),
@@ -965,6 +1052,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
             | AbilityEffectDefinition::CurseDamage { damage_sides, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_sides, .. }
             | AbilityEffectDefinition::DrainLife { damage_sides, .. },
             AbilityLevelScalingField::DamageSides,
         ) => Some((u64::from(*damage_sides), 10_000)),
@@ -975,6 +1063,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
             | AbilityEffectDefinition::CurseDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_bonus, .. }
             | AbilityEffectDefinition::DrainLife { damage_bonus, .. },
             AbilityLevelScalingField::DamageBonus,
         ) => Some((u64::from(*damage_bonus), 10_000)),
@@ -1000,11 +1089,25 @@ fn ability_level_scaling_base_and_limit(
             AbilityLevelScalingField::StatusDurationTicks,
         ) => Some((u64::from(*duration_ticks), 1_000_000)),
         (
+            AbilityEffectDefinition::ApplyStatus { duration_sides, .. },
+            AbilityLevelScalingField::StatusDurationSides,
+        ) => Some((u64::from(*duration_sides), 1_000_000)),
+        (
             AbilityEffectDefinition::ApplyStatus {
                 power: Some(power), ..
             },
             AbilityLevelScalingField::StatusPower,
         ) => Some((u64::from(*power), 1_000)),
+        (
+            AbilityEffectDefinition::ApplyStatus {
+                granted_equipment_bonuses,
+                ..
+            },
+            AbilityLevelScalingField::StatusMeleeDamage,
+        ) => Some((
+            u64::try_from(granted_equipment_bonuses.melee_damage).ok()?,
+            10_000,
+        )),
         (
             AbilityEffectDefinition::Control { power, .. },
             AbilityLevelScalingField::ControlPower,
@@ -1035,16 +1138,33 @@ fn valid_ability_level_scaling(
                 return false;
             };
             let level_delta = 100_u64.saturating_sub(u64::from(scaling.level_offset));
-            let scaled = level_delta
-                .saturating_mul(u64::from(scaling.multiplier))
-                .checked_div(u64::from(scaling.divisor))
-                .and_then(|addition| base.checked_add(addition))
-                .map(|value| scaling.maximum.map_or(value, |maximum| value.min(maximum)));
+            let scaled = match scaling.curve {
+                AbilityLevelScalingCurveDefinition::Linear => level_delta
+                    .saturating_mul(u64::from(scaling.multiplier))
+                    .checked_div(u64::from(scaling.divisor))
+                    .and_then(|addition| base.checked_add(addition))
+                    .map(|value| scaling.maximum.map_or(value, |maximum| value.min(maximum))),
+                AbilityLevelScalingCurveDefinition::Prorated => {
+                    base.checked_add(u64::from(scaling.multiplier))
+                }
+            };
             scaling.multiplier > 0
                 && scaling.multiplier <= 1_000_000
                 && scaling.divisor > 0
                 && scaling.divisor <= 1_000_000
                 && scaling.level_offset <= 100
+                && match scaling.curve {
+                    AbilityLevelScalingCurveDefinition::Linear => {
+                        scaling.quadratic_weight == 0 && scaling.cubic_weight == 0
+                    }
+                    AbilityLevelScalingCurveDefinition::Prorated => {
+                        scaling.divisor == 1
+                            && scaling.level_offset == 0
+                            && scaling.maximum.is_none()
+                            && scaling.quadratic_weight <= 100
+                            && scaling.cubic_weight <= 100
+                    }
+                }
                 && scaling
                     .maximum
                     .is_none_or(|maximum| (base..=limit).contains(&maximum))
@@ -1150,6 +1270,7 @@ pub enum EquipmentPassive {
     Blessed,
     EasySpell,
     DevicePower,
+    Vampiric,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -3339,11 +3460,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 count,
                 radius,
                 duration_turns,
+                hostile,
             } => {
                 validate_id(actor_kind_id).is_ok()
                     && (1..=8).contains(count)
                     && (1..=8).contains(radius)
-                    && (1..=10_000).contains(duration_turns)
+                    && ((*hostile && *duration_turns <= 10_000)
+                        || (!*hostile && (1..=10_000).contains(duration_turns)))
             }
             AbilityEffectDefinition::SummonCategory {
                 category,
@@ -3411,17 +3534,36 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 status_kind_id,
                 intensity,
                 duration_ticks,
+                duration_dice,
+                duration_sides,
                 power,
                 granted_resistances,
                 granted_brands,
+                granted_modifiers,
+                granted_equipment_bonuses,
+                granted_status_immunities,
                 ..
             } => {
                 validate_id(status_kind_id).is_ok()
                     && (1..=1_000).contains(intensity)
-                    && (1..=1_000_000).contains(duration_ticks)
+                    && (*duration_ticks > 0 || *duration_dice > 0)
+                    && *duration_ticks <= 1_000_000
+                    && *duration_dice <= 100
+                    && ((*duration_dice == 0 && *duration_sides == 0)
+                        || (*duration_dice > 0 && (1..=1_000_000).contains(duration_sides)))
                     && power.is_none_or(|power| (1..=1_000).contains(&power))
                     && granted_resistances.len() <= 29
                     && granted_brands.len() <= 5
+                    && granted_modifiers.max_hp.abs() <= 1_000_000
+                    && granted_modifiers.attack.abs() <= 1_000_000
+                    && granted_modifiers.defense.abs() <= 1_000_000
+                    && (-100..=100).contains(&granted_modifiers.speed)
+                    && !attribute_modifiers_out_of_range(granted_modifiers)
+                    && !equipment_bonuses_out_of_range(granted_equipment_bonuses)
+                    && granted_status_immunities.len() <= 32
+                    && granted_status_immunities
+                        .iter()
+                        .all(|status_id| validate_id(status_id).is_ok())
             }
             AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                 validate_id(status_kind_id).is_ok()
@@ -3442,6 +3584,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 damage_sides,
                 damage_bonus,
                 target_category,
+                repeat,
                 ..
             } => {
                 (1..=100).contains(damage_dice)
@@ -3455,6 +3598,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                             || matches!(byte, b'-' | b'_')
                     })
                     && actor_tag_values.contains(target_category)
+                    && (1..=16).contains(repeat)
             }
             AbilityEffectDefinition::Genocide { power, .. } => (1..=1_000).contains(power),
             AbilityEffectDefinition::AnimateDead {
@@ -3469,11 +3613,93 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=8).contains(count)
             }
             AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
+            AbilityEffectDefinition::VisibleDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                target_category,
+                ..
+            } => {
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
+                    && target_category
+                        .as_ref()
+                        .is_none_or(|category| actor_tag_values.contains(category))
+            }
+            AbilityEffectDefinition::VisibleApplyStatus {
+                status_kind_id,
+                intensity,
+                duration_ticks,
+                target_category,
+                ..
+            } => {
+                validate_id(status_kind_id).is_ok()
+                    && (1..=1_000).contains(intensity)
+                    && (1..=1_000_000).contains(duration_ticks)
+                    && target_category
+                        .as_ref()
+                        .is_none_or(|category| actor_tag_values.contains(category))
+            }
+            AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } => {
+                validate_id(affix_id).is_ok()
+            }
+            AbilityEffectDefinition::RandomChoice { .. } => false,
+            AbilityEffectDefinition::NoOp { reason } => {
+                !reason.is_empty() && reason.len() <= 128 && reason.is_ascii()
+            }
             AbilityEffectDefinition::Sequence { .. } => false,
         };
         let valid_effect = match &ability.effect {
             AbilityEffectDefinition::Sequence { effects } => {
                 (2..=8).contains(&effects.len()) && effects.iter().all(valid_single_effect)
+            }
+            AbilityEffectDefinition::RandomChoice {
+                roll_sides,
+                level_bonus_divisor,
+                branches,
+            } => {
+                let maximum_roll = u32::from(*roll_sides)
+                    + if *level_bonus_divisor == 0 {
+                        0
+                    } else {
+                        100 / u32::from(*level_bonus_divisor)
+                    };
+                (2..=10_000).contains(roll_sides)
+                    && (*level_bonus_divisor == 0 || *level_bonus_divisor <= 100)
+                    && (2..=64).contains(&branches.len())
+                    && branches.iter().all(|branch| {
+                        valid_single_effect(&branch.effect)
+                            && match branch.target {
+                                AbilityRandomTargetDefinition::SelfTarget => matches!(
+                                    branch.effect.as_ref(),
+                                    AbilityEffectDefinition::Heal { .. }
+                                        | AbilityEffectDefinition::ApplyStatus { .. }
+                                        | AbilityEffectDefinition::Summon { .. }
+                                        | AbilityEffectDefinition::VisibleDamage { .. }
+                                        | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                                        | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+                                        | AbilityEffectDefinition::NoOp { .. }
+                                ),
+                                AbilityRandomTargetDefinition::CastTarget => matches!(
+                                    branch.effect.as_ref(),
+                                    AbilityEffectDefinition::Damage { .. }
+                                        | AbilityEffectDefinition::AreaDamage { .. }
+                                        | AbilityEffectDefinition::BeamDamage { .. }
+                                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                                        | AbilityEffectDefinition::ApplyStatus { .. }
+                                        | AbilityEffectDefinition::DrainLife { .. }
+                                        | AbilityEffectDefinition::Genocide { .. }
+                                        | AbilityEffectDefinition::NoOp { .. }
+                                ),
+                            }
+                    })
+                    && branches
+                        .windows(2)
+                        .all(|pair| pair[0].maximum_roll < pair[1].maximum_roll)
+                    && branches
+                        .last()
+                        .is_some_and(|branch| u32::from(branch.maximum_roll) >= maximum_roll)
             }
             effect => valid_single_effect(effect),
         };
@@ -3505,7 +3731,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DrainLife { .. }
-            | AbilityEffectDefinition::Genocide { .. } => projectile_target_rule,
+            | AbilityEffectDefinition::Genocide { .. }
+            | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule
             }
@@ -3524,7 +3751,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && ability.target.range == 0
                     && !ability.target.requires_line_of_effect
             }
-            AbilityEffectDefinition::Heal { .. } => self_target_rule,
+            AbilityEffectDefinition::Heal { .. }
+            | AbilityEffectDefinition::VisibleDamage { .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { .. }
+            | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+            | AbilityEffectDefinition::NoOp { .. } => self_target_rule,
             AbilityEffectDefinition::Detect { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
@@ -3550,6 +3781,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                             AbilityEffectDefinition::Heal { .. }
                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                 | AbilityEffectDefinition::RemoveStatus { .. }
+                                | AbilityEffectDefinition::VisibleDamage { .. }
+                                | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                                | AbilityEffectDefinition::NoOp { .. }
                         )
                     }))
                     || (projectile_target_rule
@@ -3595,6 +3829,21 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             return Err(ContentError::InvalidAbility(ability.id.clone()));
         }
         require_reference(&resource_ids, &ability.resource_id, &ability.id)?;
+        let referenced_effects = match &ability.effect {
+            AbilityEffectDefinition::RandomChoice { branches, .. } => branches
+                .iter()
+                .map(|branch| branch.effect.as_ref())
+                .collect::<Vec<_>>(),
+            effect => vec![effect],
+        };
+        for effect in referenced_effects {
+            if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = effect {
+                require_actor_role(&actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
+            }
+            if let AbilityEffectDefinition::EnchantEquippedWeapon { affix_id } = effect {
+                require_reference(&affix_ids, affix_id, &ability.id)?;
+            }
+        }
         if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = &ability.effect {
             require_actor_role(&actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
         }
@@ -7127,6 +7376,7 @@ fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool {
     !(-8..=8).contains(&bonuses.melee_attacks)
         || [
             bonuses.melee_skill,
+            bonuses.melee_damage,
             bonuses.ranged_skill,
             bonuses.throwing_skill,
             bonuses.device_skill,
@@ -7606,11 +7856,11 @@ mod tests {
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 26);
-        assert_eq!(first.content.affixes.len(), 3);
-        assert_eq!(first.content.items.len(), 17);
+        assert_eq!(first.content.affixes.len(), 4);
+        assert_eq!(first.content.items.len(), 18);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 52);
-        assert_eq!(first.content.ability_books.len(), 3);
+        assert_eq!(first.content.abilities.len(), 60);
+        assert_eq!(first.content.ability_books.len(), 4);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
         assert_eq!(first.content.races.len(), 3);
@@ -7633,7 +7883,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.96.0");
+        assert_eq!(catalog.pack_version(), "1.97.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -7708,6 +7958,7 @@ mod tests {
                 16,
                 5,
                 [
+                    "demo.ability-book.black-channels".to_owned(),
                     "demo.ability-book.echo-primer".to_owned(),
                     "demo.ability-book.sepulchral-ways".to_owned(),
                     "demo.ability-book.stillwater-notes".to_owned(),

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-darkness-storm",
+  "nameKey": "ability-demo-death-darkness-storm-name",
+  "descriptionKey": "ability-demo-death-darkness-storm-description",
+  "minimumLevel": 40,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 40,
+  "baseFailurePercent": 70,
+  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "effect": { "type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 99, "damageType": "dark", "radius": 4 },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-bonus", "multiplier": 200, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+  ],
+  "tags": ["area", "dark", "death", "prorated", "spell"]
+}

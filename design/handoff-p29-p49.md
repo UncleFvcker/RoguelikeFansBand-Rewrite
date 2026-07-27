@@ -1,6 +1,6 @@
-# 交接文档：P29–P51 迭代史与当前状态
+# 交接文档：P29–P56 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-27，P50–P51 已在当前工作树完成，等待提交。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-27，P56 已在当前工作树完成，等待提交。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -8,7 +8,7 @@
 用 Rust + Tauri + Web 前端确定性重写 FrogComposband（原版 C 源钉在
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个 `contract-vN` 基线，行为由 `tests/fixtures/contract-vN/scenarios`
-下的 exact fixtures 锁死。当前基线 **contract-v103，328 个 fixtures，零 waiver**。
+下的 exact fixtures 锁死。当前基线 **contract-v106，353 个 fixtures，零 waiver**。
 
 ## 1. 架构速查
 
@@ -35,11 +35,11 @@
 1. **每迭代五件套**：`PROTOCOL_VERSION`、state hash `STATE_HASH_SCHEMA_VERSION`（改 hash 输入结构才 bump）、`pack.json` 版本、`content.lock.json`、`BUILT_IN_CONTENT_HASH`（旧 hash 追加进 `PREVIOUS_BUILT_IN_CONTENT_HASHES` 数组）。内容结构体加字段（即使 serde default）会改内容 hash——lock 不匹配时 rfb-core build.rs 直接 panic，**必须先走五件套再编核心**。内容 hash 用 `rfb-contentc inspect-source` 取新值手写 lock。
 2. **fixture 跨基线**：`rfb-contract migrate-baseline <旧>/scenarios <新>/scenarios`；新场景 `refresh` 录制前要塞完整占位 assertions 才能解析，录制后人工审阅；怪物场景种子狩猎=批量改 seed 重 refresh。每个 `contract-vN/waivers/` 必须有 `.gitkeep`。
 3. **显示状态**（镜头/缩放/tileset/语言/准星）永不进存档/回放/state hash。
-4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；其内钉死 `contentVisualCount` 等值，**加带字形的内容必改**（P36 72→73、P47 79→80、P49 80→83、P50 83→85、P51 85→87）。本地 `cd web && npm run e2e` 约 35s。
+4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；其内钉死 `contentVisualCount` 等值，**加带字形的内容必改**（P56 第三本实体法书后为 91）。本地 `cd web && npm run e2e` 约 35s。
 5. 新法术/效果形态**永远放新怪物**，别动既有加权池（P34 教训）；clippy 退出码别被管道吞掉，单独跑验证。
 6. 全套验证：`cargo fmt --check` / `cargo test --workspace --exclude rfb-tauri` / `cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings` / bindings `--check` / schemas `--check` / `rfb-contentc verify-source` / `validate-policy` / web `check:protocol`+`test`+`typecheck`+`build:ui`（+必要时 e2e）。
 
-## 3. P29–P51 迭代史
+## 3. P29–P56 迭代史
 
 ### 阶段 H 收尾与基建（P29–P30）
 - **P29（contract-v89，fe07a7d）友方召唤命令**：玩家召唤物命令/行动模式（跟随/驻守等），阶段 H（怪物施法 AI v86–v89）收官。
@@ -78,7 +78,8 @@
 - **P53 已完成（首批运行时纵切）**：`CastingProfileDefinition.abilityOverrides` 保留同一法术的职业级等级/耗魔/失败率；Death 第一册 `[Stench of Death]` 映射 Malediction、Stinking Cloud、Horrify，12 个静态职业生成真实 castingProfile，共 3 abilities / 1 ability book / 36 行职业参数。敏捷、生命与动态档案继续显式排除。大型源包文件预算 4096→32768，16 MiB 源字节预算不变。详见 `design/legacy-player-spell-import-v1.md`。
 - **P54 已完成（contract-v104）**：七类 `levelScaling` 在能力投影/施放统一物化；actor Detect、status power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部入协议、存档和 Schema v43。Death 第一册达到 8 abilities / 1 ability book / 12 casting profiles / 96 行覆盖；协议 1.104、包 1.95.0、334 exact fixtures、零 waiver。真实 Death 效果缺口 480→384，详见 `design/contract-v104-death-first-book.md`。
 - **P55 已完成（contract-v105）**：Death 第二册 8/8 槽位落地；活体限定、bolt-or-beam、职业 beam 概率、自身中心 AoE、single/glyph Genocide、临时 poison 品牌、Drain Life、尸体与永久 Animate Dead 全部进入协议/存档/回放。两册合计 16 abilities、2 books、12 casting profiles、192 行覆盖；协议 1.105、包 1.96.0、Schema v44、343 exact fixtures、零 waiver，Death 效果缺口 480→288。详见 `design/contract-v105-death-second-book.md`。
-- **P56 候选**：先读取 Death 第三册八个实际槽位并按系统族聚类；设备/消耗品效果系统仍是并列高收益候选，不以法术名或物品名做行为近似。
+- **P56 已完成（contract-v106）**：Death 第三册 8/8 槽位落地；随机状态时长、状态派生加值/免疫、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰和 linear/prorated 曲线进入协议、存档与回放。三册合计 24 abilities、3 books、12 casting profiles、288 行覆盖；协议 1.106、包 1.97.0、Schema v45、353 exact fixtures、零 waiver，Death 效果缺口 288→192。Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 明确保留为 `NoOp`。详见 `design/contract-v106-death-third-book.md`。
+- **P57 候选**：继续读取 Death 第四册八个实际槽位并按系统族聚类；设备/消耗品效果系统仍是并列高收益候选。
 - 备选：**设备与消耗品效果系统**（行为缺口 231 + 激活 193，解锁卷轴/魔杖/药水实际效果）；**法术清尾**（S_ 特殊/字形 177、SHRIEK、TRAPS、DARKNESS 房间光照、ANIM_DEAD、ANTI_MAGIC）。
 - 导入优先级路线（design/legacy-import-priority-v1.md）：T1✅ T2 防御面✅ T2 进攻面✅ T2 动态实例/passive✅ T3 职业壳+m_info✅ T4 玩家领域法术首批✅（继续逐册）∥设备效果 → T5 d_info/v_info/任务/城镇荒野。
 - 能力性旗标已结构化入内容/实例/DTO，但除 REGEN 外仍需运行时消费者；另有种族 rank 动态（21 怪物种族）、双持/箭袋槽、非标准身体玩法待对应系统。
@@ -94,7 +95,7 @@ cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
 cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
 cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
 cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v105/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v106/baseline-policy.json
 # web（在 web/ 下）
 npm run check:protocol && npm test && npm run typecheck && npm run build:ui && npm run e2e
 # 导入器实跑

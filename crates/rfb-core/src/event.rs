@@ -6,11 +6,12 @@ use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    CheckResolutionDto, Direction, GameEventDto, GameEventOutcomeDto, HealingResolutionDto,
-    ItemQualityDto, MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceGainResolutionDto,
-    ResourceGainSourceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
-    SummonCommandModeDto, SummonCommandResolutionDto,
+    AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
+    GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
+    ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SummonCommandModeDto,
+    SummonCommandResolutionDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -67,6 +68,10 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         resolution: AbilityAreaDamageResolutionDto,
         trace: ProjectileTrace,
+    },
+    AbilityVisibleDamage {
+        ability_id: String,
+        resolution: AbilityVisibleDamageResolutionDto,
     },
     AbilityBeamDamage {
         ability_id: String,
@@ -139,6 +144,9 @@ pub(crate) enum DomainEvent {
     },
     AbilityHealed {
         ability_id: String,
+        resolution: HealingResolutionDto,
+    },
+    PlayerVampiricHealed {
         resolution: HealingResolutionDto,
     },
     EquipmentRegenerated {
@@ -581,6 +589,18 @@ impl DomainEvent {
                 ),
                 trace,
             ),
+            Self::AbilityVisibleDamage {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.visible-damage",
+                "ability-visible-damage",
+                [
+                    ("target", ability_id),
+                    ("targets", resolution.target_count.to_string()),
+                ],
+                GameEventOutcomeDto::AbilityVisibleDamage { resolution },
+            ),
             Self::AbilityBeamDamage {
                 ability_id,
                 resolution,
@@ -807,6 +827,15 @@ impl DomainEvent {
                 [
                     ("source", ability_id),
                     ("amount", resolution.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Heal { resolution },
+            ),
+            Self::PlayerVampiricHealed { resolution } => dto_with_outcome(
+                "player.vampiric-heal",
+                "player-vampiric-heal",
+                [
+                    ("requested", resolution.requested.to_string()),
+                    ("applied", resolution.applied.to_string()),
                 ],
                 GameEventOutcomeDto::Heal { resolution },
             ),

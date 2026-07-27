@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.black-channels",
+  "nameKey": "ability-book-demo-black-channels-name",
+  "descriptionKey": "ability-book-demo-black-channels-description",
+  "abilityIds": [
+    "demo.ability.death-berserk",
+    "demo.ability.death-invoke-spirits",
+    "demo.ability.death-dark-bolt",
+    "demo.ability.death-battle-frenzy",
+    "demo.ability.death-vampiric-branding",
+    "demo.ability.death-vampirism-true",
+    "demo.ability.death-nether-wave",
+    "demo.ability.death-darkness-storm"
+  ],
+  "tags": ["death", "spellbook"]
+}

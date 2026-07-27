@@ -504,6 +504,46 @@
         {
           "type": "object",
           "properties": {
+            "branchIndex": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maximumRoll": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "roll": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "random-choice"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "roll",
+            "branchIndex",
+            "maximumRoll"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -961,6 +1001,64 @@
             "entityIds",
             "positions"
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "added": {
+              "type": "boolean"
+            },
+            "affixId": {
+              "type": "string"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "itemKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "enchant-equipped-weapon"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemId",
+            "itemKindId",
+            "affixId",
+            "added"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "reason": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "no-op"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "reason"
+          ]
         }
       ]
     },
@@ -1336,6 +1434,10 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "hostile": {
+              "type": "boolean",
+              "default": false
+            },
             "radius": {
               "type": "integer",
               "format": "uint8",
@@ -1477,6 +1579,19 @@
         {
           "type": "object",
           "properties": {
+            "durationDice": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 0,
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationSides": {
+              "type": "integer",
+              "format": "uint32",
+              "default": 0,
+              "minimum": 0
+            },
             "durationTicks": {
               "type": "integer",
               "format": "uint32",
@@ -1488,10 +1603,50 @@
                 "$ref": "#/$defs/WeaponBrandDto"
               }
             },
+            "grantedEquipmentBonuses": {
+              "$ref": "#/$defs/EquipmentBonusesDto",
+              "default": {
+                "deviceSkill": 0,
+                "diggingSkill": 0,
+                "disarmingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0,
+                "meleeAttacks": 0,
+                "meleeDamage": 0,
+                "meleeSkill": 0,
+                "perceptionSkill": 0,
+                "rangedSkill": 0,
+                "savingThrowSkill": 0,
+                "searchSkill": 0,
+                "stealthSkill": 0,
+                "throwingSkill": 0
+              }
+            },
+            "grantedModifiers": {
+              "$ref": "#/$defs/StatModifiersDto",
+              "default": {
+                "attack": 0,
+                "charisma": 0,
+                "constitution": 0,
+                "defense": 0,
+                "dexterity": 0,
+                "intelligence": 0,
+                "maxHp": 0,
+                "speed": 0,
+                "strength": 0,
+                "wisdom": 0
+              }
+            },
             "grantedResistances": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ResistanceDto"
+              }
+            },
+            "grantedStatusImmunities": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             },
             "intensity": {
@@ -1652,6 +1807,13 @@
             "damageType": {
               "$ref": "#/$defs/DamageTypeDto"
             },
+            "repeat": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 1,
+              "maximum": 255,
+              "minimum": 0
+            },
             "targetCategory": {
               "type": "string"
             },
@@ -1742,6 +1904,153 @@
             "type",
             "amount"
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "targetCategory": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "visible-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageBonus",
+            "damageType"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "intensity": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "stacking": {
+              "$ref": "#/$defs/AbilityStatusStackingDto"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "targetCategory": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "visible-apply-status"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "intensity",
+            "durationTicks",
+            "stacking"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "affixId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "enchant-equipped-weapon"
+            }
+          },
+          "required": [
+            "type",
+            "affixId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "branches": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbilityRandomBranchSpecDto"
+              }
+            },
+            "levelBonusDivisor": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "rollSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "random-choice"
+            }
+          },
+          "required": [
+            "type",
+            "rollSides",
+            "levelBonusDivisor",
+            "branches"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "no-op"
+            }
+          },
+          "required": [
+            "type",
+            "reason"
+          ]
         }
       ]
     },
@@ -1816,6 +2125,35 @@
         "master"
       ]
     },
+    "AbilityRandomBranchSpecDto": {
+      "type": "object",
+      "properties": {
+        "effect": {
+          "$ref": "#/$defs/AbilityEffectSpecDto"
+        },
+        "maximumRoll": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "target": {
+          "$ref": "#/$defs/AbilityRandomTargetDto"
+        }
+      },
+      "required": [
+        "maximumRoll",
+        "target",
+        "effect"
+      ]
+    },
+    "AbilityRandomTargetDto": {
+      "type": "string",
+      "enum": [
+        "cast-target",
+        "self-target"
+      ]
+    },
     "AbilityStatusChangeDto": {
       "type": "string",
       "enum": [
@@ -1853,6 +2191,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "hostile": {
+          "type": "boolean",
+          "default": false
         },
         "ownerId": {
           "type": "string"
@@ -1896,6 +2238,10 @@
           "format": "uint16",
           "maximum": 65535,
           "minimum": 0
+        },
+        "hostile": {
+          "type": "boolean",
+          "default": false
         },
         "radius": {
           "type": "integer",
@@ -1985,6 +2331,36 @@
         "sourceTerrainIds",
         "targetTerrainId",
         "radius"
+      ]
+    },
+    "AbilityVisibleDamageResolutionDto": {
+      "type": "object",
+      "properties": {
+        "affectedPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "baseRawDamage": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "baseRawDamage",
+        "damageType",
+        "affectedPositions",
+        "targetCount"
       ]
     },
     "AttackProfileDto": {
@@ -2574,6 +2950,11 @@
           "format": "int32",
           "default": 0
         },
+        "meleeDamage": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
         "meleeSkill": {
           "type": "integer",
           "format": "int32",
@@ -2765,7 +3146,8 @@
         "sustain-charisma",
         "blessed",
         "easy-spell",
-        "device-power"
+        "device-power",
+        "vampiric"
       ]
     },
     "GameCommand": {
@@ -3296,6 +3678,22 @@
             "type": {
               "type": "string",
               "const": "ability-area-damage"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilityVisibleDamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-visible-damage"
             }
           },
           "required": [
@@ -5172,10 +5570,50 @@
             "$ref": "#/$defs/WeaponBrandDto"
           }
         },
+        "grantedEquipmentBonuses": {
+          "$ref": "#/$defs/EquipmentBonusesDto",
+          "default": {
+            "deviceSkill": 0,
+            "diggingSkill": 0,
+            "disarmingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0,
+            "meleeAttacks": 0,
+            "meleeDamage": 0,
+            "meleeSkill": 0,
+            "perceptionSkill": 0,
+            "rangedSkill": 0,
+            "savingThrowSkill": 0,
+            "searchSkill": 0,
+            "stealthSkill": 0,
+            "throwingSkill": 0
+          }
+        },
+        "grantedModifiers": {
+          "$ref": "#/$defs/StatModifiersDto",
+          "default": {
+            "attack": 0,
+            "charisma": 0,
+            "constitution": 0,
+            "defense": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "maxHp": 0,
+            "speed": 0,
+            "strength": 0,
+            "wisdom": 0
+          }
+        },
         "grantedResistances": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "grantedStatusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
         "intensity": {

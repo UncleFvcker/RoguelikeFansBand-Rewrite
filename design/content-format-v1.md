@@ -210,6 +210,8 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 
 角色定义使用必需的基础战斗字段；玩家可声明携带容量与门/搜索技能，怪物可声明 melee routine、出生携带与死亡掉落、awareness，以及 `monsterCasting` 的百分比频率、加权能力集合、smart、偏好距离和撤退阈值。物品、资源、能力、能力书、affix、encounter/loot/theme/region/terrain-feature 表、Vault 和 world 使用独立稳定 ID 与交叉引用；编译器验证目标存在、角色类别、范围、数量、权重和互斥旧字段。原创包 1.80.0 覆盖角色成长与构筑、玩家能力循环、怪物 caster 效用/阵营目标/多格结算/战术移动/有限记忆、固定词条与鉴别，以及楼层/任务/树状地牢/Vault/区域主题/群体/分阶段地貌等现有纵切。
 
+contract-v106 扩展能力内容词汇：`apply-status` 可声明基础时长加骰时长、属性修正、装备加值和状态免疫；`random-choice` 使用有序 `maximumRoll` 阈值、等级加值除数和分支目标；`visible-damage` 对当前可见目标共享伤害骰；`enchant-equipped-weapon` 引用稳定 affix；`drain-life.repeat` 声明重复追踪次数；`summon.hostile` 区分敌对固定召唤；`no-op.reason` 为尚无通用系统的具名分支保留可观察缺口。等级缩放增加 `linear`/`prorated` 曲线以及状态/装备加值字段。编译器验证阈值覆盖、目标语义、引用、骰值和边界；demo 包 1.97.0 含 60 abilities、4 ability books、18 items 和 4 affixes，当前 state hash 为 Schema v45。完整边界见 [Contract v106](contract-v106-death-third-book.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

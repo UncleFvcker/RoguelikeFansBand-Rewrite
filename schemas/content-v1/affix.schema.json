@@ -30,6 +30,7 @@
             "infravision": 0,
             "lightRadius": 0,
             "meleeAttacks": 0,
+            "meleeDamage": 0,
             "meleeSkill": 0,
             "perceptionSkill": 0,
             "rangedSkill": 0,
@@ -234,6 +235,7 @@
               "infravision": 0,
               "lightRadius": 0,
               "meleeAttacks": 0,
+              "meleeDamage": 0,
               "meleeSkill": 0,
               "perceptionSkill": 0,
               "rangedSkill": 0,
@@ -326,6 +328,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "meleeDamage": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeSkill": {
           "default": 0,
           "format": "int32",
@@ -379,7 +386,8 @@
         "sustain-charisma",
         "blessed",
         "easy-spell",
-        "device-power"
+        "device-power",
+        "vampiric"
       ],
       "type": "string"
     },
@@ -485,6 +493,7 @@
         "infravision": 0,
         "lightRadius": 0,
         "meleeAttacks": 0,
+        "meleeDamage": 0,
         "meleeSkill": 0,
         "perceptionSkill": 0,
         "rangedSkill": 0,

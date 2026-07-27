@@ -985,6 +985,9 @@ mod tests {
             source_id: Some("test.slow".to_owned()),
             granted_resistances: Vec::new(),
             granted_brands: Vec::new(),
+            granted_modifiers: rfb_protocol::StatModifiersDto::default(),
+            granted_equipment_bonuses: rfb_protocol::EquipmentBonusesDto::default(),
+            granted_status_immunities: Vec::new(),
         });
         let initial = Game::from_save(payload).expect("status replay fixture should load");
         let book_item_id = initial

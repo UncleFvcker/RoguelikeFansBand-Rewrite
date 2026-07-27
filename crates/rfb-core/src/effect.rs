@@ -5,7 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
 use rfb_content::WeaponBrand;
 use rfb_protocol::{
-    DamageResolutionDto, ResistanceDto, ResistanceSaveDto, StatusDto, StatusSaveDto, WeaponBrandDto,
+    DamageResolutionDto, EquipmentBonusesDto, ResistanceDto, ResistanceSaveDto, StatModifiersDto,
+    StatusDto, StatusSaveDto, WeaponBrandDto,
 };
 
 pub const STATUS_HASTE: &str = "rfb.status.haste";
@@ -81,6 +82,9 @@ pub struct StatusInstance {
     pub source_id: Option<String>,
     pub granted_resistances: BTreeMap<DamageType, ResistanceLevel>,
     pub granted_brands: BTreeSet<WeaponBrand>,
+    pub granted_modifiers: StatModifiersDto,
+    pub granted_equipment_bonuses: EquipmentBonusesDto,
+    pub granted_status_immunities: BTreeSet<String>,
 }
 
 impl StatusInstance {
@@ -104,6 +108,9 @@ impl StatusInstance {
                 .copied()
                 .map(weapon_brand_dto)
                 .collect(),
+            granted_modifiers: self.granted_modifiers,
+            granted_equipment_bonuses: self.granted_equipment_bonuses,
+            granted_status_immunities: self.granted_status_immunities.iter().cloned().collect(),
         }
     }
 
@@ -128,6 +135,9 @@ impl StatusInstance {
                 .copied()
                 .map(weapon_brand_dto)
                 .collect(),
+            granted_modifiers: self.granted_modifiers,
+            granted_equipment_bonuses: self.granted_equipment_bonuses,
+            granted_status_immunities: self.granted_status_immunities.iter().cloned().collect(),
         }
     }
 }
@@ -158,7 +168,7 @@ pub enum StatusChange {
 pub enum EffectSpec {
     Damage(DamagePacket),
     Heal { amount: i32 },
-    ApplyStatus(StatusApplication),
+    ApplyStatus(Box<StatusApplication>),
     RemoveStatus { kind_id: String },
 }
 
@@ -226,7 +236,7 @@ pub fn apply_effect(target: &mut EffectTarget<'_>, effect: EffectSpec) -> Effect
         }
         EffectSpec::ApplyStatus(application) => {
             let kind_id = application.status.kind_id.clone();
-            let change = apply_status(target.statuses, application);
+            let change = apply_status(target.statuses, *application);
             EffectOutcome::StatusApplied { kind_id, change }
         }
         EffectSpec::RemoveStatus { kind_id } => {
@@ -338,6 +348,9 @@ mod tests {
             source_id: Some("actor.source".to_owned()),
             granted_resistances: BTreeMap::new(),
             granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
         }
     }
 

@@ -31,6 +31,7 @@
     "abilityBookIds": [
       "demo.ability-book.echo-primer",
       "demo.ability-book.sepulchral-ways",
+      "demo.ability-book.black-channels",
       "demo.ability-book.stillwater-notes"
     ]
   },
@@ -39,6 +40,7 @@
     { "itemKindId": "demo.item.luminous-shard", "quantity": 2 },
     { "itemKindId": "demo.item.echo-primer", "quantity": 1 },
     { "itemKindId": "demo.item.sepulchral-ways", "quantity": 1 },
+    { "itemKindId": "demo.item.black-channels", "quantity": 1 },
     { "itemKindId": "demo.item.stillwater-notes", "quantity": 1 }
   ],
   "tags": ["book-caster", "prototype"]

@@ -64,7 +64,17 @@
 | P53 | 玩家领域法术首批映射（T4） | 已完成（见 [legacy-player-spell-import-v1](legacy-player-spell-import-v1.md)） | Class castingProfile 新增逐 ability 的职业参数覆盖；Death 第一册生成 3 abilities、1 ability book、Mana 与实体书绑定，12 个静态职业共 36 行覆盖；学习/显示/失败率/耗魔/施放/读档统一读取覆盖。Rogue/Blood Mage/Skillmaster 显式排除；真实包 4157 文件通过编译，源文件预算 4096→32768 |
 | P54 | 玩家等级效果缩放 + Death 第一册收尾 | 已由 contract-v104 完成 | Ability `levelScaling` 覆盖 7 类标量；actor Detect、状态 power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部接入协议、存档和 Schema v43。Death 第一册 8/8 ability、12 个静态职业 96 条覆盖；协议 1.104、包 1.95.0、fixtures 329-334 共 334 exact。真实 Death 效果缺口 480→384，等级缩放与状态 power 缺口清零 |
 | P55 | Death 第二册系统盘点与纵切 | 已由 contract-v105 完成 | 第二册 8/8 ability、两本实体书总计 16 个 Death ability、12 个静态职业 192 条覆盖；新增活体限定、bolt-or-beam、职业 beam 档案、自身中心 AoE、单体/字形 Genocide、临时品牌、Drain Life、尸体与永久 Animate Dead。协议 1.105、包 1.96.0、Schema v44、fixtures 335-343 共 343 exact；真实 Death 效果缺口 384→288 |
-| P56 | Death 第三册系统盘点或设备/消耗品效果纵切 | 下一候选 | 优先读取第三册 8 个实际槽位并按新系统聚类；若设备收益更高，则先建立卷轴/魔杖/药水的内容驱动使用与充能/识别边界。两条路线都必须先以真实缺口报告排序，不做名称近似 |
+| P56 | Death 第三册系统盘点与纵切 | 已由 contract-v106 完成 | 第三册 8/8 ability、三本实体书总计 24 个 Death ability、12 个静态职业 288 条覆盖；新增随机状态时长、状态派生加值/免疫、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰及 linear/prorated 曲线。协议 1.106、包 1.97.0、Schema v45、fixtures 344-353 共 353 exact；真实 Death 效果缺口 288→192 |
+| P57 | Death 第四册系统盘点或设备/消耗品效果纵切 | 下一候选 | 优先读取第四册 8 个实际槽位并按新系统聚类；设备路线则建立卷轴/魔杖/药水的内容驱动使用与充能/识别边界。Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 继续按通用系统清零，不做名称近似 |
+
+## contract-v106 明确遗留
+
+- Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 尚无通用系统，四个分支明确返回 `NoOp`，导入报告各保留 12 条行为缺口；
+- `vampiric` 首版只消费持用武器的近战实际伤害；远程、投掷、法术伤害和非武器装备不会触发；
+- 永久 Vampiric Branding 直接写入当前武器实例，不包含附魔失败、词条容量、冲突或费用系统；重复施放同一 affix 是可观察但无重复实例的成功；
+- VisibleDamage 只按当前权威 FOV 选择目标，不建立跨层感知或怪物回忆；
+- Rogue（Dexterity）、Blood Mage（HP）和 Skillmaster（动态 caster_info）仍等待对应施法资源/属性表面；
+- P57 候选为 Death 第四册逐槽盘点；设备/消耗品效果系统和怪物法术清尾仍可按真实覆盖收益插队。
 
 ## contract-v105 明确遗留
 
@@ -73,7 +83,7 @@
 - corpse 首版是不可堆叠通用物品，不保存死者个体属性、装备、腐烂时间或复活原身身份；
 - Genocide 直接移除且不触发普通死亡事务；独立的怪物知识、唯一生态和跨层种群记忆仍未建立；
 - Rogue（Dexterity）、Blood Mage（HP）与 Skillmaster（dynamic caster）继续显式排除，等待通用施法资源与动态档案表面；
-- P56 候选为 Death 第三册逐槽盘点；设备/消耗品效果系统和怪物法术清尾仍可按真实覆盖收益插队。
+- Death 第三册已由 contract-v106 完成；本节其余差异继续保留。
 
 ## contract-v104 明确遗留
 

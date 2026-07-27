@@ -38,9 +38,27 @@
       ],
       "type": "object"
     },
+    "AbilityLevelScalingCurveDefinition": {
+      "enum": [
+        "linear",
+        "prorated"
+      ],
+      "type": "string"
+    },
     "AbilityLevelScalingDefinition": {
       "additionalProperties": false,
       "properties": {
+        "cubicWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "curve": {
+          "$ref": "#/$defs/AbilityLevelScalingCurveDefinition",
+          "default": "linear"
+        },
         "divisor": {
           "format": "uint32",
           "minimum": 0,
@@ -75,6 +93,13 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "quadraticWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
         }
       },
       "required": [
@@ -94,7 +119,9 @@
         "beam-chance-percent",
         "status-intensity",
         "status-duration-ticks",
+        "status-duration-sides",
         "status-power",
+        "status-melee-damage",
         "control-power",
         "genocide-power"
       ],
