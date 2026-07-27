@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.swift-treads",
+  "nameKey": "item-demo-swift-treads-name",
+  "descriptionKey": "item-demo-swift-treads-description",
+  "glyph": "[",
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "modifiers": {
+    "speed": 10
+  },
+  "tags": [
+    "equipment"
+  ]
+}

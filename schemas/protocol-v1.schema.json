@@ -2118,6 +2118,7 @@
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
+            "speed": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -2147,8 +2148,20 @@
           "format": "uint32",
           "minimum": 0
         },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
         "slotId": {
           "type": "string"
+        },
+        "statusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "throwProfile": {
           "anyOf": [
@@ -3369,6 +3382,7 @@
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
+            "speed": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -3397,6 +3411,18 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "statusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "throwProfile": {
           "anyOf": [
@@ -3491,6 +3517,7 @@
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
+            "speed": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -3935,6 +3962,7 @@
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
+            "speed": 0,
             "strength": 0,
             "wisdom": 0
           }
@@ -4466,6 +4494,11 @@
           "default": 0
         },
         "maxHp": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "speed": {
           "type": "integer",
           "format": "int32",
           "default": 0

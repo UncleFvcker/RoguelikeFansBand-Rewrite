@@ -6,7 +6,9 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use crate::resistance::{DamageType, ResistanceLevel, definition_resistance_profile};
+use crate::resistance::{
+    DamageType, ResistanceLevel, ResistanceProfile, definition_resistance_profile,
+};
 use crate::{
     action::GameAction,
     check::{CheckContext, CheckKind, resolve_check},
@@ -93,7 +95,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 92] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 93] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -186,9 +188,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 92] = [
     "bb07fafa930ab51316bb5f11c819dda81b3003b238dfa2bf5e7dbb4b161b9a1b",
     "086d65709052cee99f2ddd3e44ed5b8776c3a3d52f9d96799bbddec9282cda34",
     "b425bafec4d4108b9eab4fd323b7b592f1e65ffb4197d45bcb1bc59567b61eff",
+    "1380958f4743b474abe00c2dbbcf6719aa791945405f0276badc0d8d35a106e1",
 ];
 const BUILT_IN_CONTENT_HASH: &str =
-    "1380958f4743b474abe00c2dbbcf6719aa791945405f0276badc0d8d35a106e1";
+    "83dc1e5a58f408b9945d627e469d2b53c1731963fb19752dcbc5c9c91359b188";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 41;
@@ -2812,7 +2815,7 @@ impl Game {
                 .iter()
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
-            resistances: self.player.resistances.to_dtos(),
+            resistances: self.effective_player_resistances().to_dtos(),
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
@@ -3819,6 +3822,8 @@ impl Game {
                         .item(&item.kind_id)
                         .and_then(|definition| definition.equipment_slot.clone()),
                     modifiers: self.visible_item_modifiers(item),
+                    resistances: self.visible_item_resistances(item),
+                    status_immunities: self.visible_item_status_immunities(item),
                     identification: self.item_identification(item),
                     quality: self.visible_item_quality(item),
                     known_properties: self.known_item_properties(item),
@@ -3849,6 +3854,8 @@ impl Game {
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),
+                    resistances: self.visible_item_resistances(item),
+                    status_immunities: self.visible_item_status_immunities(item),
                     identification: self.item_identification(item),
                     quality: self.visible_item_quality(item),
                     known_properties: self.known_item_properties(item),
@@ -4097,7 +4104,104 @@ impl Game {
                 dexterity: definition.modifiers.dexterity,
                 constitution: definition.modifiers.constitution,
                 charisma: definition.modifiers.charisma,
+                speed: definition.modifiers.speed,
             })
+    }
+
+    /// Combines resistance tiers from every defensive source the player
+    /// carries: the actor's own profile, the build's race, and each equipped
+    /// item plus its affixes. Deterministic merge: immune anywhere wins, then
+    /// strong; a resistant source is cancelled back to normal by any
+    /// vulnerable source; lone vulnerability stays vulnerable.
+    fn effective_player_resistances(&self) -> ResistanceProfile {
+        let mut sources: BTreeMap<DamageType, (bool, bool, bool, bool)> = BTreeMap::new();
+        let mut record = |damage_type: DamageType, level: ResistanceLevel| {
+            let entry = sources.entry(damage_type).or_default();
+            match level {
+                ResistanceLevel::Immune => entry.0 = true,
+                ResistanceLevel::Strong => entry.1 = true,
+                ResistanceLevel::Resistant => entry.2 = true,
+                ResistanceLevel::Vulnerable => entry.3 = true,
+                ResistanceLevel::Normal => {}
+            }
+        };
+        for (damage_type, level) in self.player.resistances.iter() {
+            record(damage_type, level);
+        }
+        if let Some((_, race, _, _)) = self.character_definitions() {
+            for (damage_type, level) in &race.resistances {
+                record(
+                    DamageType::from(*damage_type),
+                    ResistanceLevel::from(*level),
+                );
+            }
+        }
+        for item in &self.items {
+            if !matches!(&item.location, ItemLocation::Equipped { .. }) {
+                continue;
+            }
+            if let Some(definition) = self.content.item(&item.kind_id) {
+                for (damage_type, level) in &definition.resistances {
+                    record(
+                        DamageType::from(*damage_type),
+                        ResistanceLevel::from(*level),
+                    );
+                }
+            }
+            for affix_id in &item.affix_ids {
+                if let Some(affix) = self.content.affix(affix_id) {
+                    for (damage_type, level) in &affix.resistances {
+                        record(
+                            DamageType::from(*damage_type),
+                            ResistanceLevel::from(*level),
+                        );
+                    }
+                }
+            }
+        }
+        let mut profile = ResistanceProfile::default();
+        for (damage_type, (immune, strong, resistant, vulnerable)) in sources {
+            let level = if immune {
+                ResistanceLevel::Immune
+            } else if strong {
+                ResistanceLevel::Strong
+            } else if resistant {
+                if vulnerable {
+                    ResistanceLevel::Normal
+                } else {
+                    ResistanceLevel::Resistant
+                }
+            } else if vulnerable {
+                ResistanceLevel::Vulnerable
+            } else {
+                ResistanceLevel::Normal
+            };
+            profile.set(damage_type, level);
+        }
+        profile
+    }
+
+    /// Status kinds the player cannot receive: the union of the race's
+    /// innate immunities and every equipped item's (plus affixes').
+    fn player_status_immunities(&self) -> BTreeSet<String> {
+        let mut immunities = BTreeSet::new();
+        if let Some((_, race, _, _)) = self.character_definitions() {
+            immunities.extend(race.status_immunities.iter().cloned());
+        }
+        for item in &self.items {
+            if !matches!(&item.location, ItemLocation::Equipped { .. }) {
+                continue;
+            }
+            if let Some(definition) = self.content.item(&item.kind_id) {
+                immunities.extend(definition.status_immunities.iter().cloned());
+            }
+            for affix_id in &item.affix_ids {
+                if let Some(affix) = self.content.affix(affix_id) {
+                    immunities.extend(affix.status_immunities.iter().cloned());
+                }
+            }
+        }
+        immunities
     }
 
     fn item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
@@ -4122,6 +4226,7 @@ impl Game {
                         .constitution
                         .saturating_add(affix.modifiers.constitution),
                     charisma: total.charisma.saturating_add(affix.modifiers.charisma),
+                    speed: total.speed.saturating_add(affix.modifiers.speed),
                 }
             },
         )
@@ -4214,6 +4319,7 @@ impl Game {
                         .constitution
                         .saturating_add(affix.modifiers.constitution),
                     charisma: total.charisma.saturating_add(affix.modifiers.charisma),
+                    speed: total.speed.saturating_add(affix.modifiers.speed),
                 }
             },
         )
@@ -4238,6 +4344,7 @@ impl Game {
                         dexterity: affix.modifiers.dexterity,
                         constitution: affix.modifiers.constitution,
                         charisma: affix.modifiers.charisma,
+                        speed: affix.modifiers.speed,
                     },
                 })
             })
@@ -4268,6 +4375,61 @@ impl Game {
         (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
             .then(|| self.item_melee_profile(item))
             .flatten()
+    }
+
+    /// Item resistance tiers visible to the player: the base definition is
+    /// gated by kind awareness, affix contributions by per-instance affix
+    /// knowledge.
+    fn visible_item_resistances(&self, item: &ItemInstance) -> Vec<ResistanceDto> {
+        let mut profile = ResistanceProfile::default();
+        let mut record = |damage_type: DamageType, level: ResistanceLevel| {
+            let current = profile.level(damage_type);
+            if resistance_rank(level) > resistance_rank(current) {
+                profile.set(damage_type, level);
+            }
+        };
+        if self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
+            && let Some(definition) = self.content.item(&item.kind_id)
+        {
+            for (damage_type, level) in &definition.resistances {
+                record(
+                    DamageType::from(*damage_type),
+                    ResistanceLevel::from(*level),
+                );
+            }
+        }
+        let known = self.item_property_knowledge.get(&item.id);
+        for affix_id in &item.affix_ids {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(affix_id))
+                && let Some(affix) = self.content.affix(affix_id)
+            {
+                for (damage_type, level) in &affix.resistances {
+                    record(
+                        DamageType::from(*damage_type),
+                        ResistanceLevel::from(*level),
+                    );
+                }
+            }
+        }
+        profile.to_dtos()
+    }
+
+    fn visible_item_status_immunities(&self, item: &ItemInstance) -> Vec<String> {
+        let mut immunities = BTreeSet::new();
+        if self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
+            && let Some(definition) = self.content.item(&item.kind_id)
+        {
+            immunities.extend(definition.status_immunities.iter().cloned());
+        }
+        let known = self.item_property_knowledge.get(&item.id);
+        for affix_id in &item.affix_ids {
+            if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(affix_id))
+                && let Some(affix) = self.content.affix(affix_id)
+            {
+                immunities.extend(affix.status_immunities.iter().cloned());
+            }
+        }
+        immunities.into_iter().collect()
     }
 
     fn visible_item_projectile_profile(&self, item: &ItemInstance) -> Option<ProjectileProfileDto> {
@@ -4531,6 +4693,7 @@ impl Game {
                     dexterity: total.dexterity.saturating_add(item.dexterity),
                     constitution: total.constitution.saturating_add(item.constitution),
                     charisma: total.charisma.saturating_add(item.charisma),
+                    speed: total.speed.saturating_add(item.speed),
                 }
             })
     }
@@ -5147,6 +5310,7 @@ impl Game {
                     &item.id,
                     rating_to_armor_class(modifiers.defense),
                 );
+                add_equipment_stat(&mut pipeline, StatKind::Speed, &item.id, modifiers.speed);
                 if let Some(profile) = self
                     .content
                     .item(&item.kind_id)
@@ -5952,6 +6116,7 @@ impl Game {
                             *duration_ticks,
                             *stacking,
                             *resistance_type,
+                            None,
                         ),
                         AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                             remove_ability_status_effect(
@@ -6065,6 +6230,7 @@ impl Game {
                                 *duration_ticks,
                                 *stacking,
                                 *resistance_type,
+                                None,
                             )
                         }
                         AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
@@ -9587,6 +9753,7 @@ impl Game {
                     *duration_ticks,
                     *stacking,
                     *resistance_type,
+                    None,
                 ),
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     remove_ability_status_effect(
@@ -9727,6 +9894,7 @@ impl Game {
                     *duration_ticks,
                     *stacking,
                     *resistance_type,
+                    None,
                 ),
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     remove_ability_status_effect(
@@ -9986,6 +10154,8 @@ impl Game {
                     stacking,
                     resistance_type,
                 } => {
+                    let effective = self.effective_player_resistances();
+                    let immunities = self.player_status_immunities();
                     let resolution = apply_ability_status_effect(
                         &mut self.player,
                         &ability.id,
@@ -9995,9 +10165,10 @@ impl Game {
                         *duration_ticks,
                         *stacking,
                         *resistance_type,
+                        Some((&effective, &immunities)),
                     );
                     if let Some(damage_type) = resistance_type.map(DamageType::from) {
-                        let level = self.player.resistances.level(damage_type);
+                        let level = effective.level(damage_type);
                         self.record_monster_player_resistance(source_entity_id, damage_type, level);
                     }
                     resolution
@@ -10075,7 +10246,7 @@ impl Game {
         damage_type: DamageType,
         events: &mut Vec<DomainEvent>,
     ) -> AbilityEffectResolutionDto {
-        let resistance = self.player.resistances.level(damage_type);
+        let resistance = self.effective_player_resistances().level(damage_type);
         self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
         let damage = resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
@@ -10309,7 +10480,7 @@ impl Game {
             }
 
             let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
-            let resistance = self.player.resistances.level(blow.damage_type);
+            let resistance = self.effective_player_resistances().level(blow.damage_type);
             let damage =
                 resolve_armored_damage(raw_damage, blow.damage_type, armor_class, resistance);
             self.player.hp = self.player.hp.saturating_sub(damage.applied);
@@ -14364,7 +14535,8 @@ impl Game {
         }
         let damage = resolve_damage(
             DamagePacket::new(trap.damage, trap.damage_type.into()),
-            self.player.resistances.level(trap.damage_type.into()),
+            self.effective_player_resistances()
+                .level(trap.damage_type.into()),
         );
         self.player.hp = self.player.hp.saturating_sub(damage.applied);
         Some(PlayerTrapOutcome::Triggered {
@@ -15770,6 +15942,16 @@ fn ability_status_change_dto(change: StatusChange) -> AbilityStatusChangeDto {
     }
 }
 
+const fn resistance_rank(level: ResistanceLevel) -> u8 {
+    match level {
+        ResistanceLevel::Vulnerable => 0,
+        ResistanceLevel::Normal => 1,
+        ResistanceLevel::Resistant => 2,
+        ResistanceLevel::Strong => 3,
+        ResistanceLevel::Immune => 4,
+    }
+}
+
 fn resisted_status_duration(requested: u32, resistance: ResistanceLevel) -> u32 {
     if resistance == ResistanceLevel::Immune {
         return 0;
@@ -15794,10 +15976,29 @@ fn apply_ability_status_effect(
     duration_ticks: u32,
     stacking: AbilityStatusStackingDefinition,
     resistance_type: Option<rfb_content::ActorDamageType>,
+    defenses: Option<(&ResistanceProfile, &BTreeSet<String>)>,
 ) -> AbilityEffectResolutionDto {
-    let resistance = resistance_type
-        .map(DamageType::from)
-        .map(|damage_type| actor.resistances.level(damage_type));
+    // Gear- or race-granted immunity blocks the status outright before any
+    // resistance scaling; the resolution reuses the immune shape.
+    if defenses.is_some_and(|(_, immunities)| immunities.contains(status_kind_id)) {
+        return AbilityEffectResolutionDto::ApplyStatus {
+            effect_index,
+            status_kind_id: status_kind_id.to_owned(),
+            intensity,
+            requested_duration_ticks: duration_ticks,
+            applied_duration_ticks: 0,
+            stacking: ability_status_stacking_dto(stacking),
+            resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+            resistance: None,
+            change: AbilityStatusChangeDto::Immune,
+        };
+    }
+    let resistance = resistance_type.map(DamageType::from).map(|damage_type| {
+        defenses.map_or_else(
+            || actor.resistances.level(damage_type),
+            |(profile, _)| profile.level(damage_type),
+        )
+    });
     let applied_duration_ticks = resistance.map_or(duration_ticks, |level| {
         resisted_status_duration(duration_ticks, level)
     });

@@ -1,5 +1,15 @@
 {
   "$defs": {
+    "ActorResistanceLevel": {
+      "description": "Content-declared resistance tier; `normal` is expressed by omission.",
+      "enum": [
+        "vulnerable",
+        "resistant",
+        "strong",
+        "immune"
+      ],
+      "type": "string"
+    },
     "StatModifiers": {
       "additionalProperties": false,
       "properties": {
@@ -34,6 +44,11 @@
           "type": "integer"
         },
         "maxHp": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "speed": {
           "default": 0,
           "format": "int32",
           "type": "integer"
@@ -81,12 +96,116 @@
         "dexterity": 0,
         "intelligence": 0,
         "maxHp": 0,
+        "speed": 0,
         "strength": 0,
         "wisdom": 0
       }
     },
     "nameKey": {
       "type": "string"
+    },
+    "resistances": {
+      "additionalProperties": false,
+      "default": {},
+      "description": "Defensive resistance tiers granted while the affixed item is\nequipped.",
+      "properties": {
+        "acid": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "chaos": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "cold": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "confusion": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "dark": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "disenchant": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "disintegrate": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "electricity": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "force": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "gravity": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "hell-fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "holy-fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "ice": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "inertia": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "light": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "mana": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nether": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nexus": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nuke": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "physical": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "plasma": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "poison": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psi": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "shards": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "sound": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "storm": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "time": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "water": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        }
+      },
+      "type": "object"
+    },
+    "statusImmunities": {
+      "default": [],
+      "description": "Status kind ids the wearer is immune to while the affixed item is\nequipped.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "tags": {
       "items": {

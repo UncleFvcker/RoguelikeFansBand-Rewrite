@@ -1,5 +1,15 @@
 {
   "$defs": {
+    "ActorResistanceLevel": {
+      "description": "Content-declared resistance tier; `normal` is expressed by omission.",
+      "enum": [
+        "vulnerable",
+        "resistant",
+        "strong",
+        "immune"
+      ],
+      "type": "string"
+    },
     "BodySlotDefinition": {
       "additionalProperties": false,
       "description": "One equipment slot instance on a body: `slot_type` is the item-facing\nclass (matches `ItemDefinition.equipment_slot`), `id` names the instance\nso a body can carry several slots of the same type (e.g. two rings).",
@@ -77,6 +87,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "speed": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "strength": {
           "default": 0,
           "format": "int32",
@@ -147,12 +162,108 @@
         "dexterity": 0,
         "intelligence": 0,
         "maxHp": 0,
+        "speed": 0,
         "strength": 0,
         "wisdom": 0
       }
     },
     "nameKey": {
       "type": "string"
+    },
+    "resistances": {
+      "additionalProperties": false,
+      "default": {},
+      "description": "Intrinsic resistance tiers every member of this race carries.",
+      "properties": {
+        "acid": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "chaos": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "cold": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "confusion": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "dark": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "disenchant": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "disintegrate": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "electricity": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "force": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "gravity": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "hell-fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "holy-fire": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "ice": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "inertia": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "light": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "mana": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nether": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nexus": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "nuke": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "physical": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "plasma": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "poison": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psi": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "shards": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "sound": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "storm": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "time": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "water": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        }
+      },
+      "type": "object"
     },
     "skillSetId": {
       "type": "string"
@@ -161,6 +272,14 @@
       "default": [],
       "items": {
         "$ref": "#/$defs/StartingItemDefinition"
+      },
+      "type": "array"
+    },
+    "statusImmunities": {
+      "default": [],
+      "description": "Status kind ids members of this race are innately immune to.",
+      "items": {
+        "type": "string"
       },
       "type": "array"
     },

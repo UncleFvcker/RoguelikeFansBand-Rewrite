@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.100";
+pub const PROTOCOL_VERSION: &str = "1.101";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -196,6 +196,8 @@ pub struct StatModifiersDto {
     pub constitution: i32,
     #[serde(default)]
     pub charisma: i32,
+    #[serde(default)]
+    pub speed: i32,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1498,6 +1500,10 @@ pub struct InventoryItemDto {
     pub equipment_slot: Option<String>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resistances: Vec<ResistanceDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub status_immunities: Vec<String>,
     #[serde(default)]
     pub identification: ItemIdentificationDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1539,6 +1545,10 @@ pub struct EquipmentItemDto {
     pub slot_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resistances: Vec<ResistanceDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub status_immunities: Vec<String>,
     #[serde(default)]
     pub identification: ItemIdentificationDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2493,6 +2503,8 @@ mod tests {
                     max_hp: 4,
                     ..StatModifiersDto::default()
                 },
+                resistances: Vec::new(),
+                status_immunities: Vec::new(),
                 identification: ItemIdentificationDto::Unexamined,
                 quality: None,
                 known_properties: Vec::new(),
@@ -2514,6 +2526,8 @@ mod tests {
                     max_hp: 4,
                     ..StatModifiersDto::default()
                 },
+                resistances: Vec::new(),
+                status_immunities: Vec::new(),
                 identification: ItemIdentificationDto::Unexamined,
                 quality: None,
                 known_properties: Vec::new(),

@@ -144,6 +144,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "speed": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
         "strength": {
           "default": 0,
           "format": "int32",
@@ -276,6 +281,7 @@
         "dexterity": 0,
         "intelligence": 0,
         "maxHp": 0,
+        "speed": 0,
         "strength": 0,
         "wisdom": 0
       }

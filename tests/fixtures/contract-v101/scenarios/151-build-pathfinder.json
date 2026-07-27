@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "id": "build.pathfinder.initial",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "44",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "debugClearEntities": false,
+    "debugClearCarriedItems": false,
+    "playerBuildId": "demo.build.pathfinder",
+    "playerHp": null,
+    "playerLevel": null,
+    "playerExperience": null,
+    "playerMaxLevel": null,
+    "playerPendingAttributeIncreases": null,
+    "playerAttributes": null,
+    "legacyPlayerProgress": false,
+    "playerResources": null,
+    "playerLearnedAbilityIds": null,
+    "playerAbilityProgress": null,
+    "legacyPlayerAbilityState": false,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [],
+    "inventoryItems": [],
+    "terrainOverrides": [],
+    "revealedTerrain": [],
+    "campaignConqueredDungeons": [],
+    "campaignState": null
+  },
+  "commands": [],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 0,
+      "turn": 0,
+      "worldTick": 0,
+      "lastCommandSeq": 0,
+      "rngDrawCounter": 3,
+      "floorId": "demo.floor.surface",
+      "dungeonInstanceId": null,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 18,
+      "playerMaxHp": 18,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 77,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "playerLevel": 1,
+      "playerExperience": 0,
+      "playerMaxLevel": 1,
+      "playerPendingAttributeIncreases": 0,
+      "playerAttributes": {
+        "level": 1,
+        "maxLevel": 1,
+        "experience": 0,
+        "levelCap": 50,
+        "attributeCap": 238,
+        "attributeIndexCap": 37,
+        "experienceForNextLevel": 10,
+        "pendingAttributeIncreases": 0,
+        "victoryLevelCapUnlocked": false,
+        "attributes": {
+          "strength": {
+            "natural": 13,
+            "effective": 13,
+            "index": 10
+          },
+          "intelligence": {
+            "natural": 13,
+            "effective": 16,
+            "index": 13
+          },
+          "wisdom": {
+            "natural": 13,
+            "effective": 17,
+            "index": 14
+          },
+          "dexterity": {
+            "natural": 13,
+            "effective": 16,
+            "index": 13
+          },
+          "constitution": {
+            "natural": 13,
+            "effective": 12,
+            "index": 9
+          },
+          "charisma": {
+            "natural": 13,
+            "effective": 14,
+            "index": 11
+          }
+        },
+        "skills": [
+          {
+            "id": "demo.skill.device",
+            "nameKey": "skill-demo-device-name",
+            "current": 47,
+            "maximum": 1000,
+            "base": 46,
+            "growthPerTenLevels": 11
+          },
+          {
+            "id": "demo.skill.digging",
+            "nameKey": "skill-demo-digging-name",
+            "current": 20,
+            "maximum": 1000,
+            "base": 20,
+            "growthPerTenLevels": 5
+          },
+          {
+            "id": "demo.skill.disarming",
+            "nameKey": "skill-demo-disarming-name",
+            "current": 35,
+            "maximum": 1000,
+            "base": 35,
+            "growthPerTenLevels": 8
+          },
+          {
+            "id": "demo.skill.melee",
+            "nameKey": "skill-demo-melee-name",
+            "current": 47,
+            "maximum": 1000,
+            "base": 46,
+            "growthPerTenLevels": 18
+          },
+          {
+            "id": "demo.skill.perception",
+            "nameKey": "skill-demo-perception-name",
+            "current": 22,
+            "maximum": 1000,
+            "base": 22,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.ranged",
+            "nameKey": "skill-demo-ranged-name",
+            "current": 56,
+            "maximum": 1000,
+            "base": 55,
+            "growthPerTenLevels": 16
+          },
+          {
+            "id": "demo.skill.saving-throw",
+            "nameKey": "skill-demo-saving-throw-name",
+            "current": 42,
+            "maximum": 1000,
+            "base": 41,
+            "growthPerTenLevels": 10
+          },
+          {
+            "id": "demo.skill.search",
+            "nameKey": "skill-demo-search-name",
+            "current": 30,
+            "maximum": 1000,
+            "base": 30,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.stealth",
+            "nameKey": "skill-demo-stealth-name",
+            "current": 6,
+            "maximum": 1000,
+            "base": 6,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.throwing",
+            "nameKey": "skill-demo-throwing-name",
+            "current": 41,
+            "maximum": 1000,
+            "base": 40,
+            "growthPerTenLevels": 10
+          }
+        ]
+      },
+      "playerBuild": {
+        "buildId": "demo.build.pathfinder",
+        "buildNameKey": "build-demo-pathfinder-name",
+        "raceId": "demo.race.elf",
+        "raceNameKey": "race-demo-elf-name",
+        "classId": "demo.class.ranger",
+        "classNameKey": "class-demo-ranger-name",
+        "personalityId": "demo.personality.cautious",
+        "personalityNameKey": "personality-demo-cautious-name",
+        "lifePercent": 103,
+        "experiencePercent": 168
+      },
+      "playerResources": [],
+      "playerAbilityLearning": null,
+      "playerAbilities": [],
+      "playerSummonCommand": {
+        "mode": "follow"
+      },
+      "entityCount": 2,
+      "entities": [
+        {
+          "id": "demo.monster.ember-mote.1",
+          "position": {
+            "x": 8,
+            "y": 5
+          },
+          "hp": 3,
+          "speed": 110,
+          "energyNeed": 100,
+          "alerted": true,
+          "castingCooldownRemaining": 0,
+          "statuses": []
+        },
+        {
+          "id": "demo.z-entrance-guardian.resonance-descent.1",
+          "position": {
+            "x": 2,
+            "y": 1
+          },
+          "hp": 6,
+          "speed": 110,
+          "energyNeed": 100,
+          "alerted": true,
+          "castingCooldownRemaining": 0,
+          "statuses": [],
+          "pack": {
+            "id": "demo.z-entrance-guardian.resonance-descent.1",
+            "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
+            "role": "leader",
+            "behavior": "guard-position"
+          }
+        }
+      ],
+      "groundItemCount": 5,
+      "inventoryStackCount": 2,
+      "equipmentCount": 1,
+      "itemKnowledge": [],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "generated.item.3",
+          "appraised": true,
+          "identified": true
+        }
+      ],
+      "nextItemInstanceSerial": 5,
+      "terrainInteractions": [
+        {
+          "kind": "dig-terrain",
+          "direction": "south-west",
+          "position": {
+            "x": 2,
+            "y": 4
+          },
+          "terrainId": "demo.terrain.echo-rubble",
+          "requiresCheck": true,
+          "available": true
+        }
+      ],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0,
+          "maxRetakes": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3,
+          "retakesUsed": 0,
+          "maxRetakes": 2
+        }
+      ],
+      "campaign": {
+        "status": "active",
+        "score": 0,
+        "conqueredDungeons": 0,
+        "completedTasks": 0
+      },
+      "revealedTerrain": [],
+      "stateHash": "a388c6a964a5f631196929b97b57a3def16e5cc5b06d89825a3f445ab1a2d639"
+    },
+    "events": [],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "a388c6a964a5f631196929b97b57a3def16e5cc5b06d89825a3f445ab1a2d639"
+  }
+}

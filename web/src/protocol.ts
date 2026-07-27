@@ -7,7 +7,7 @@ export type GameCommand = { "type": "abandon-task" } | { "type": "abandon-paused
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
-export type StatModifiersDto = { attack: number, defense: number, maxHp: number, strength: number, intelligence: number, wisdom: number, dexterity: number, constitution: number, charisma: number, };
+export type StatModifiersDto = { attack: number, defense: number, maxHp: number, strength: number, intelligence: number, wisdom: number, dexterity: number, constitution: number, charisma: number, speed: number, };
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 
@@ -174,11 +174,11 @@ export type ItemIdentificationDto = "unexamined" | "appraised" | "identified";
 
 export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: StatModifiersDto, };
 
-export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type BodySlotDto = { id: string, slotType: string, };
 
-export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, quantity: number, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 

@@ -125,6 +125,14 @@ pub struct LegacyCharacterEntry {
     pub flags: Vec<String>,
     pub hooks: Vec<String>,
     pub dynamic: bool,
+    /// Right-hand symbol of `me.calc_bonuses = _fn;` when present, so the
+    /// hook body can be mined for its static defensive surface.
+    pub calc_bonuses_fn: Option<String>,
+    /// Damage-type/tier pairs recovered from top-level `res_add` family
+    /// statements in the calc_bonuses hook.
+    pub resistances: Vec<(String, String)>,
+    pub free_act: bool,
+    pub speed: i32,
 }
 
 impl Default for LegacyCharacterEntry {
@@ -141,6 +149,10 @@ impl Default for LegacyCharacterEntry {
             flags: Vec::new(),
             hooks: Vec::new(),
             dynamic: false,
+            calc_bonuses_fn: None,
+            resistances: Vec::new(),
+            free_act: false,
+            speed: 0,
         }
     }
 }
@@ -186,6 +198,7 @@ pub struct ContentImportReport {
     pub unmapped_item_flags: BTreeMap<String, usize>,
     pub unmapped_ego_flags: BTreeMap<String, usize>,
     pub unmapped_artifact_flags: BTreeMap<String, usize>,
+    pub not_applicable_item_flags: BTreeMap<String, usize>,
     pub bodies_total: usize,
     pub races_total: usize,
     pub races_imported: usize,
@@ -723,16 +736,32 @@ fn item_json(
     }
     // Armour class and to-armor bonuses fold into the defense modifier; base
     // items stay attribute-free — pval powers arrive via egos and artifacts.
+    // Defensive flags (dragon scale resistances, Silver DSM free action) are
+    // inherent base properties and fold when a slot exists to carry them.
+    let fold = if shape.slot.is_some() {
+        defensive_fold(&entry.flags, entry.pval)
+    } else {
+        DefensiveFold::default()
+    };
     let mut modifiers = serde_json::Map::new();
     let defense = entry.armor_class.saturating_add(entry.to_armor);
     if shape.slot.is_some() && defense != 0 {
         modifiers.insert("defense".to_owned(), serde_json::json!(defense));
     }
+    if fold.speed != 0 {
+        modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
+    }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
+    apply_defensive_fold(&mut value, &fold);
     for flag in &entry.flags {
-        *report.unmapped_item_flags.entry(flag.clone()).or_default() += 1;
+        account_item_flag(
+            flag,
+            &fold,
+            &mut report.unmapped_item_flags,
+            &mut report.not_applicable_item_flags,
+        );
     }
     value
 }
@@ -906,6 +935,118 @@ fn attribute_flag_is_mapped(flag: &str) -> bool {
         .any(|(known, _)| *known == flag || flag.strip_prefix("DEC_") == Some(*known))
 }
 
+/// Object-flag resistance suffixes shared by base items, egos, artifacts
+/// and race hooks, mapped to the content damage-type vocabulary. FEAR and
+/// BLIND have no damage type and stay in the gap reports.
+const DEFENSIVE_RESISTANCE_TYPES: [(&str, &str); 15] = [
+    ("ACID", "acid"),
+    ("ELEC", "electricity"),
+    ("FIRE", "fire"),
+    ("COLD", "cold"),
+    ("POIS", "poison"),
+    ("LITE", "light"),
+    ("DARK", "dark"),
+    ("CONF", "confusion"),
+    ("NETHER", "nether"),
+    ("NEXUS", "nexus"),
+    ("SOUND", "sound"),
+    ("SHARDS", "shards"),
+    ("CHAOS", "chaos"),
+    ("DISEN", "disenchant"),
+    ("TIME", "time"),
+];
+
+fn defensive_resistance_type(token: &str) -> Option<&'static str> {
+    DEFENSIVE_RESISTANCE_TYPES
+        .iter()
+        .find(|(known, _)| *known == token)
+        .map(|(_, damage_type)| *damage_type)
+}
+
+/// Durability and display flags with no RFB behaviour to express: items
+/// never corrode and names always render from content keys.
+fn item_flag_not_applicable(flag: &str) -> bool {
+    flag.starts_with("IGNORE_") || matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME")
+}
+
+#[derive(Debug, Default)]
+struct DefensiveFold {
+    resistances: BTreeMap<&'static str, &'static str>,
+    status_immunities: Vec<&'static str>,
+    speed: i32,
+    consumed: BTreeSet<String>,
+}
+
+/// Folds RES_/IM_/VULN_/FREE_ACT/SPEED object flags into the defensive
+/// content surface. Ranked overwrite keeps the strongest tier per damage
+/// type; SPEED consumes the pval budget like the attribute fold and stays
+/// unexpressed (a visible gap) when the entry carries no pval.
+fn defensive_fold(flags: &[String], pval: i32) -> DefensiveFold {
+    let mut fold = DefensiveFold::default();
+    let mut ranked: BTreeMap<&'static str, (u8, &'static str)> = BTreeMap::new();
+    for flag in flags {
+        let (token, rank, level) = if let Some(suffix) = flag.strip_prefix("VULN_") {
+            (suffix, 1_u8, "vulnerable")
+        } else if let Some(suffix) = flag.strip_prefix("RES_") {
+            (suffix, 2, "resistant")
+        } else if let Some(suffix) = flag.strip_prefix("IM_") {
+            (suffix, 3, "immune")
+        } else if flag == "FREE_ACT" {
+            fold.status_immunities = vec!["rfb.status.paralysis"];
+            fold.consumed.insert(flag.clone());
+            continue;
+        } else if flag == "SPEED" {
+            if pval != 0 {
+                fold.speed = pval.clamp(-100, 100);
+                fold.consumed.insert(flag.clone());
+            }
+            continue;
+        } else {
+            continue;
+        };
+        let Some(damage_type) = defensive_resistance_type(token) else {
+            continue;
+        };
+        let entry = ranked.entry(damage_type).or_insert((rank, level));
+        if rank > entry.0 {
+            *entry = (rank, level);
+        }
+        fold.consumed.insert(flag.clone());
+    }
+    fold.resistances = ranked
+        .into_iter()
+        .map(|(damage_type, (_, level))| (damage_type, level))
+        .collect();
+    fold
+}
+
+fn apply_defensive_fold(value: &mut serde_json::Value, fold: &DefensiveFold) {
+    if !fold.resistances.is_empty() {
+        value["resistances"] = serde_json::json!(fold.resistances);
+    }
+    if !fold.status_immunities.is_empty() {
+        value["statusImmunities"] = serde_json::json!(fold.status_immunities);
+    }
+}
+
+/// Routes one legacy object flag to the right report bucket unless the
+/// defensive fold already consumed it.
+fn account_item_flag(
+    flag: &str,
+    fold: &DefensiveFold,
+    unmapped: &mut BTreeMap<String, usize>,
+    not_applicable: &mut BTreeMap<String, usize>,
+) {
+    if fold.consumed.contains(flag) {
+        return;
+    }
+    if item_flag_not_applicable(flag) {
+        *not_applicable.entry(flag.to_owned()).or_default() += 1;
+        return;
+    }
+    *unmapped.entry(flag.to_owned()).or_default() += 1;
+}
+
 fn ego_json(
     entry: &LegacyEgoEntry,
     id: &str,
@@ -922,6 +1063,12 @@ fn ego_json(
         modifiers.insert("defense".to_owned(), serde_json::json!(entry.max_to_armor));
     }
     attribute_modifiers_from_flags(&entry.flags, entry.max_pval, &mut modifiers);
+    // Defensive flags ride the same generation-time ceiling as attributes:
+    // SPEED folds the max pval, resistances and free action are binary.
+    let fold = defensive_fold(&entry.flags, entry.max_pval);
+    if fold.speed != 0 {
+        modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
+    }
     if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -932,7 +1079,12 @@ fn ego_json(
         if attribute_flag_is_mapped(flag) {
             continue;
         }
-        *report.unmapped_ego_flags.entry(flag.clone()).or_default() += 1;
+        account_item_flag(
+            flag,
+            &fold,
+            &mut report.unmapped_ego_flags,
+            &mut report.not_applicable_item_flags,
+        );
     }
     let mut tags: Vec<String> = entry
         .slots
@@ -953,6 +1105,7 @@ fn ego_json(
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
+    apply_defensive_fold(&mut value, &fold);
     value
 }
 
@@ -1015,8 +1168,13 @@ fn artifact_json(
         }
     }
     // Artifacts carry fixed bonuses: armour folds into defense, the fixed
-    // pval feeds the attribute flags.
+    // pval feeds the attribute flags and the defensive fold alike.
     let has_slot = shape.slot.is_some();
+    let fold = if has_slot {
+        defensive_fold(&entry.flags, entry.pval)
+    } else {
+        DefensiveFold::default()
+    };
     let mut modifiers = serde_json::Map::new();
     if has_slot {
         let defense = entry.armor_class.saturating_add(entry.to_armor);
@@ -1030,10 +1188,14 @@ fn artifact_json(
             }
         }
         attribute_modifiers_from_flags(&entry.flags, entry.pval, &mut modifiers);
+        if fold.speed != 0 {
+            modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
+        }
     }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
     }
+    apply_defensive_fold(&mut value, &fold);
     if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -1041,15 +1203,17 @@ fn artifact_json(
             .or_default() += 1;
     }
     for flag in &entry.flags {
-        // Slotless shapes never applied the attribute fold, so their
-        // attribute flags stay visible in the gap report.
+        // Slotless shapes never applied the attribute or defensive folds,
+        // so their flags stay visible in the gap report.
         if (has_slot && attribute_flag_is_mapped(flag)) || flag == "INSTA_ART" {
             continue;
         }
-        *report
-            .unmapped_artifact_flags
-            .entry(flag.clone())
-            .or_default() += 1;
+        account_item_flag(
+            flag,
+            &fold,
+            &mut report.unmapped_artifact_flags,
+            &mut report.not_applicable_item_flags,
+        );
     }
     value
 }
@@ -1135,6 +1299,135 @@ pub fn extract_race_blocks(text: &str) -> Vec<(String, String)> {
         }
     }
     blocks
+}
+
+/// Finds the definition body of a `void <name>(...)` helper in the same
+/// translation unit (hook functions assigned to `me.calc_bonuses`).
+fn find_function_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
+    for (position, _) in text.match_indices(name) {
+        if !text[position + name.len()..].starts_with('(') {
+            continue;
+        }
+        let line_start = text[..position].rfind('\n').map_or(0, |index| index + 1);
+        let line_end = text[position..]
+            .find('\n')
+            .map_or(text.len(), |index| position + index);
+        let line = &text[line_start..line_end];
+        if !line.contains("void") || line.contains(';') {
+            continue;
+        }
+        if text[line_start..position]
+            .bytes()
+            .next_back()
+            .is_some_and(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+        {
+            continue;
+        }
+        return function_block(text, position);
+    }
+    None
+}
+
+/// Extracts the statically expressible defensive surface from a race's
+/// calc_bonuses hook: top-level `res_add` family calls, `free_act++` and
+/// literal `pspeed` adjustments. Conditional (level-gated) and computed
+/// statements are ignored and remain accounted as hook gaps.
+pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> (Vec<(String, String)>, bool, i32) {
+    fn resistance_token(rest: &str) -> Option<&'static str> {
+        let token = rest[..rest.find(')')?].trim();
+        defensive_resistance_type(token.strip_prefix("RES_")?)
+    }
+    let Some(body) = find_function_body(text, hook) else {
+        return (Vec::new(), false, 0);
+    };
+    let mut adds: BTreeMap<&'static str, i32> = BTreeMap::new();
+    let mut immune: BTreeSet<&'static str> = BTreeSet::new();
+    let mut free_act = false;
+    let mut speed = 0_i32;
+    let mut depth = 0_i32;
+    let mut suppressed = false;
+    for raw_line in body.lines() {
+        let line = raw_line.trim();
+        let depth_at_start = depth;
+        depth += i32::try_from(line.matches('{').count()).unwrap_or(0);
+        depth -= i32::try_from(line.matches('}').count()).unwrap_or(0);
+        if depth_at_start != 1 || line.is_empty() {
+            continue;
+        }
+        if line.starts_with("/*") || line.starts_with('*') || line.starts_with("//") {
+            continue;
+        }
+        if suppressed {
+            // A braceless conditional consumes the whole following
+            // statement, however many lines it spans.
+            if line.ends_with(';') || line.contains('{') {
+                suppressed = false;
+            }
+            continue;
+        }
+        let keyword_guard = ["if", "else", "for", "while", "switch", "do"]
+            .iter()
+            .any(|keyword| {
+                line == *keyword
+                    || line.starts_with(&format!("{keyword} "))
+                    || line.starts_with(&format!("{keyword}("))
+            });
+        if keyword_guard {
+            if !line.contains('{') && !line.ends_with(';') {
+                suppressed = true;
+            }
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("res_add_immune(") {
+            if let Some(damage_type) = resistance_token(rest) {
+                immune.insert(damage_type);
+            }
+        } else if let Some(rest) = line.strip_prefix("res_add_vuln(") {
+            if let Some(damage_type) = resistance_token(rest) {
+                *adds.entry(damage_type).or_default() -= 1;
+            }
+        } else if let Some(rest) = line.strip_prefix("res_add(") {
+            if let Some(damage_type) = resistance_token(rest) {
+                *adds.entry(damage_type).or_default() += 1;
+            }
+        } else if line == "p_ptr->free_act++;" {
+            free_act = true;
+        } else if let Some(rest) = line.strip_prefix("p_ptr->pspeed") {
+            let rest = rest.trim_start();
+            let (sign, tail) = if let Some(tail) = rest.strip_prefix("+=") {
+                (1, tail)
+            } else if let Some(tail) = rest.strip_prefix("-=") {
+                (-1, tail)
+            } else {
+                continue;
+            };
+            // Only literal adjustments are static; level-scaled speed
+            // stays a hook gap.
+            if let Ok(amount) = tail.trim().trim_end_matches(';').trim().parse::<i32>() {
+                speed += sign * amount;
+            }
+        }
+    }
+    let mut resistances = Vec::new();
+    for damage_type in adds
+        .keys()
+        .copied()
+        .chain(immune.iter().copied())
+        .collect::<BTreeSet<_>>()
+    {
+        let level = if immune.contains(damage_type) {
+            "immune"
+        } else {
+            match adds.get(damage_type).copied().unwrap_or(0) {
+                i32::MIN..=-1 => "vulnerable",
+                0 => continue,
+                1 => "resistant",
+                _ => "strong",
+            }
+        };
+        resistances.push((damage_type.to_owned(), level.to_owned()));
+    }
+    (resistances, free_act, speed)
 }
 
 /// Finds `personality_ptr _get_X_personality(...)` definitions.
@@ -1254,7 +1547,17 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
                         .collect()
                 }
                 "skills" | "stats" | "extra_skills" => entry.dynamic = true,
-                other => entry.hooks.push(other.to_owned()),
+                other => {
+                    if other == "calc_bonuses"
+                        && !rhs.is_empty()
+                        && rhs.bytes().all(|byte| {
+                            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'
+                        })
+                    {
+                        entry.calc_bonuses_fn = Some(rhs.to_owned());
+                    }
+                    entry.hooks.push(other.to_owned());
+                }
             }
         }
     }
@@ -1352,6 +1655,12 @@ fn character_modifiers(entry: &LegacyCharacterEntry) -> serde_json::Map<String, 
             );
         }
     }
+    if entry.speed != 0 {
+        modifiers.insert(
+            "speed".to_owned(),
+            serde_json::json!(entry.speed.clamp(-100, 100)),
+        );
+    }
     modifiers
 }
 
@@ -1419,6 +1728,18 @@ fn race_json(
     let modifiers = character_modifiers(entry);
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
+    }
+    if !entry.resistances.is_empty() {
+        value["resistances"] = serde_json::Value::Object(
+            entry
+                .resistances
+                .iter()
+                .map(|(damage_type, level)| (damage_type.clone(), serde_json::json!(level)))
+                .collect(),
+        );
+    }
+    if entry.free_act {
+        value["statusImmunities"] = serde_json::json!(["rfb.status.paralysis"]);
     }
     character_gap_accounting(entry, report);
     value
@@ -2794,10 +3115,13 @@ pub fn convert_content(
         }
         *duplicates += 1;
         let value = ego_json(entry, &id, &mut report);
-        // Egos whose entire power set lives in unmappable flags produce an
-        // empty modifier map, which the affix contract rejects; skip them but
+        // Egos whose entire power set lives in unmappable flags produce no
+        // substance at all, which the affix contract rejects; skip them but
         // keep their flags visible in the gap report above.
-        if value.get("modifiers").is_none() {
+        if value.get("modifiers").is_none()
+            && value.get("resistances").is_none()
+            && value.get("statusImmunities").is_none()
+        {
             *report
                 .skip_reasons
                 .entry("ego-inexpressible".to_owned())
@@ -2962,7 +3286,13 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         let bytes = fs::read(&path)?;
         let text = String::from_utf8_lossy(&bytes);
         for (name, body) in extract_race_blocks(&text) {
-            let entry = parse_character_block(&name, &body);
+            let mut entry = parse_character_block(&name, &body);
+            if let Some(hook) = entry.calc_bonuses_fn.clone() {
+                let (resistances, free_act, speed) = parse_calc_bonuses_defenses(&text, &hook);
+                entry.resistances = resistances;
+                entry.free_act = free_act;
+                entry.speed = speed;
+            }
             if seen_character_ids.insert(format!("race:{}", entry.id)) {
                 characters.races.push(entry);
             }
@@ -3446,6 +3776,7 @@ G:[:s
 I:37:4:0
 W:20:0:0:220:750
 P:14:1d4:-2:0:0
+F:RES_ACID | FREE_ACT | IGNORE_FIRE
 N:*:& Test Ring~
 G:=:y
 I:45:20:0
@@ -3506,16 +3837,23 @@ W:5:0:0:150:80
         assert_eq!(arrow["maxStack"], 99);
         assert_eq!(arrow["breakChancePercent"], 25);
 
+        // Inherent defensive flags fold onto the base item (dragon scale
+        // style); durability flags are not applicable to RFB items.
         let mail = get("test-chain-mail.json");
         assert_eq!(mail["equipmentSlot"], "body");
         assert_eq!(mail["modifiers"]["defense"], 14);
+        assert_eq!(mail["resistances"]["acid"], "resistant");
+        assert_eq!(mail["statusImmunities"][0], "rfb.status.paralysis");
+        assert!(!outcome.report.unmapped_item_flags.contains_key("RES_ACID"));
+        assert!(!outcome.report.unmapped_item_flags.contains_key("FREE_ACT"));
+        assert_eq!(outcome.report.not_applicable_item_flags["IGNORE_FIRE"], 1);
 
         // Base jewelry is a generic shell: attributes and pval only arrive
         // via egos or fixed artifacts, mirroring the legacy generation model.
         let ring = get("test-ring.json");
         assert_eq!(ring["equipmentSlot"], "ring");
         assert!(ring.get("modifiers").is_none());
-        assert_eq!(outcome.report.unmapped_item_flags["HIDE_TYPE"], 1);
+        assert_eq!(outcome.report.not_applicable_item_flags["HIDE_TYPE"], 1);
         assert_eq!(outcome.report.item_behavior_gaps["effect-jewelry"], 1);
 
         let potion = get("test-potion-of-mending.json");
@@ -3624,6 +3962,27 @@ S:ANY:Slot
     #[test]
     fn character_blocks_extract_regular_races_and_skip_dynamic_ones() {
         const SYNTHETIC_SOURCE: &str = r#"
+static void _test_calc_bonuses(void)
+{
+    res_add(RES_FIRE);
+    res_add(RES_FIRE);
+    res_add_vuln(RES_LITE);
+    res_add_immune(RES_ACID);
+    /*res_add_vuln(RES_ELEC); disabled for parity checks*/
+    p_ptr->free_act++;
+    p_ptr->pspeed += 3;
+    p_ptr->pspeed += p_ptr->lev / 10;
+    if (p_ptr->lev >= 45) res_add(RES_COLD);
+    if (p_ptr->lev >= 10)
+        res_add(RES_POIS);
+    if (p_ptr->lev >= 30)
+    {
+        res_add(RES_DARK);
+        p_ptr->pspeed += 2;
+    }
+    p_ptr->hold_life++;
+}
+
 race_t *test_folk_get_race(void)
 {
     static race_t me = {0};
@@ -3678,6 +4037,27 @@ race_t *test_beast_get_race(void)
         assert_eq!(folk.infra, 3);
         assert_eq!(folk.flags, ["RACE_IS_NONLIVING", "RACE_NO_POLY"]);
         assert_eq!(folk.hooks, ["calc_bonuses"]);
+        assert_eq!(folk.calc_bonuses_fn.as_deref(), Some("_test_calc_bonuses"));
+
+        // The hook body yields only its top-level static statements: doubled
+        // res_add stacks to strong, comments and level-gated branches are
+        // ignored, and only the literal speed adjustment counts.
+        let (resistances, free_act, speed) =
+            parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_test_calc_bonuses");
+        assert_eq!(
+            resistances,
+            [
+                ("acid".to_owned(), "immune".to_owned()),
+                ("fire".to_owned(), "strong".to_owned()),
+                ("light".to_owned(), "vulnerable".to_owned()),
+            ]
+        );
+        assert!(free_act);
+        assert_eq!(speed, 3);
+        let mut folk = folk;
+        folk.resistances = resistances;
+        folk.free_act = free_act;
+        folk.speed = speed;
 
         let beast = parse_character_block(&blocks[1].0, &blocks[1].1);
         assert!(beast.dynamic);
@@ -3694,6 +4074,14 @@ race_t *test_beast_get_race(void)
         assert_eq!(outcome.report.unmapped_race_flags["RACE_IS_NONLIVING"], 1);
         assert_eq!(outcome.report.race_hook_gaps["calc_bonuses"], 1);
         assert_eq!(outcome.report.race_hook_gaps["infra"], 1);
+
+        let (race_name, race) = &outcome.race_files[0];
+        assert_eq!(race_name, "test-folk.json");
+        assert_eq!(race["resistances"]["fire"], "strong");
+        assert_eq!(race["resistances"]["acid"], "immune");
+        assert_eq!(race["resistances"]["light"], "vulnerable");
+        assert_eq!(race["statusImmunities"][0], "rfb.status.paralysis");
+        assert_eq!(race["modifiers"]["speed"], 3);
     }
 
     #[test]
@@ -3758,16 +4146,21 @@ N:2:of the Test Bear
 T:AMULET | RING
 W:10:*:4
 C:0:0:0:3
-F:STR | DEC_INT | HIDE_TYPE
+F:STR | DEC_INT | HIDE_TYPE | SPEED
 E:BERSERK:50:100
 
 N:3:(Test Aura)
 T:WEAPON
 W:50:*:6
 F:SPELL_POWER
+
+N:4:of Test Warding
+T:CLOAK
+W:20:*:8
+F:RES_FIRE | IM_COLD | VULN_LITE | FREE_ACT | RES_FEAR
 ";
         let egos = parse_e_info(SYNTHETIC_E_INFO);
-        assert_eq!(egos.len(), 3);
+        assert_eq!(egos.len(), 4);
         let outcome = convert_content(
             &[],
             &[],
@@ -3776,11 +4169,11 @@ F:SPELL_POWER
             &[],
             &LegacyCharacterSources::default(),
         );
-        assert_eq!(outcome.report.egos_total, 3);
+        assert_eq!(outcome.report.egos_total, 4);
         // The aura ego has no expressible modifier surface: skipped with a
         // reason while its flag still lands in the gap report.
-        assert_eq!(outcome.report.egos_imported, 2);
-        assert_eq!(outcome.affix_files.len(), 2);
+        assert_eq!(outcome.report.egos_imported, 3);
+        assert_eq!(outcome.affix_files.len(), 3);
         assert_eq!(outcome.report.skip_reasons["ego-inexpressible"], 1);
         assert_eq!(outcome.report.unmapped_ego_flags["SPELL_POWER"], 1);
 
@@ -3802,6 +4195,8 @@ F:SPELL_POWER
         assert_eq!(name, "the-test-bear.json");
         assert_eq!(bear["modifiers"]["strength"], 3);
         assert_eq!(bear["modifiers"]["intelligence"], -3);
+        // SPEED rides the same C: pval ceiling as the attribute flags.
+        assert_eq!(bear["modifiers"]["speed"], 3);
         assert!(bear["modifiers"].get("attack").is_none());
         assert!(
             bear["tags"]
@@ -3811,9 +4206,25 @@ F:SPELL_POWER
                 .any(|tag| tag == "amulet")
         );
         assert_eq!(outcome.report.item_behavior_gaps["ego-activation"], 1);
-        assert_eq!(outcome.report.unmapped_ego_flags["HIDE_TYPE"], 1);
+        assert_eq!(outcome.report.not_applicable_item_flags["HIDE_TYPE"], 1);
         assert!(!outcome.report.unmapped_ego_flags.contains_key("STR"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("DEC_INT"));
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("SPEED"));
+
+        // A purely defensive ego used to be inexpressible; the flag fold now
+        // carries it, with only the fear resistance left in the gap report.
+        let (name, warding) = &outcome.affix_files[2];
+        assert_eq!(name, "test-warding.json");
+        assert!(warding.get("modifiers").is_none());
+        assert_eq!(warding["resistances"]["fire"], "resistant");
+        assert_eq!(warding["resistances"]["cold"], "immune");
+        assert_eq!(warding["resistances"]["light"], "vulnerable");
+        assert_eq!(warding["statusImmunities"][0], "rfb.status.paralysis");
+        assert_eq!(outcome.report.unmapped_ego_flags["RES_FEAR"], 1);
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("RES_FIRE"));
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("IM_COLD"));
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("VULN_LITE"));
+        assert!(!outcome.report.unmapped_ego_flags.contains_key("FREE_ACT"));
     }
 
     #[test]
@@ -3836,7 +4247,7 @@ F:DEX | SLAY_EVIL
 N:3:of Test Warding
 I:45:20:4
 W:40:8:2:80000
-F:CON
+F:CON | SPEED | FREE_ACT | IM_FIRE | VULN_COLD
 
 N:4:of Test Melody
 I:19:70:2
@@ -3873,7 +4284,14 @@ F:CHR
         assert_eq!(radiance["glyph"], "*");
         assert_eq!(radiance["equipmentSlot"], "light");
         assert_eq!(radiance["modifiers"]["wisdom"], 3);
+        assert_eq!(radiance["resistances"]["dark"], "resistant");
         assert!(!outcome.report.unmapped_artifact_flags.contains_key("WIS"));
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("RES_DARK")
+        );
         assert!(
             !outcome
                 .report
@@ -3892,10 +4310,22 @@ F:CHR
         assert_eq!(outcome.report.unmapped_artifact_flags["SLAY_EVIL"], 1);
 
         // Fixed-pval jewelry proves the split: the base ring stays bare while
-        // the artifact carries the attribute bonus.
+        // the artifact carries the attribute bonus. The defensive fold rides
+        // the same fixed pval for SPEED and maps the tiered flags.
         let warding = get("artifact-test-warding.json");
         assert_eq!(warding["equipmentSlot"], "ring");
         assert_eq!(warding["modifiers"]["constitution"], 4);
+        assert_eq!(warding["modifiers"]["speed"], 4);
+        assert_eq!(warding["resistances"]["fire"], "immune");
+        assert_eq!(warding["resistances"]["cold"], "vulnerable");
+        assert_eq!(warding["statusImmunities"][0], "rfb.status.paralysis");
+        assert!(!outcome.report.unmapped_artifact_flags.contains_key("SPEED"));
+        assert!(
+            !outcome
+                .report
+                .unmapped_artifact_flags
+                .contains_key("FREE_ACT")
+        );
         assert_eq!(warding["maxStack"], 1);
 
         // Fake-bow artifacts keep the launcher slot and their fixed

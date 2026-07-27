@@ -57,7 +57,8 @@
 | P46 | fake bow 修正（未配对发射器保槽） | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | 未配对发射器（基础 5 + 神器 7）从"去槽壳"改为原版 `obj_is_fake_bow` 语义：保 launcher 槽、不带射击档、神器固定修正全保留（阿波罗竖琴取回六维 +5×3）；P: 射击加成随射击档舍弃；依据：契约物品规则均为单向、launcher 槽无射击档合法，运行时查无射击档仅拒绝开火 |
 | P47 | 身体/槽位模板 | 已由 contract-v100 完成 | RaceDefinition.bodySlots 槽实例表（空=标准身体）+ 核心标准身体 13 槽（**ring-1/ring-2 双戒指、light 光源槽**，单实例 id=类型名故旧档零迁移）+ 装备按类型找空实例/满则顶替首实例（item.equip.swap）+ 存档权威（Schema v41）/旧档零 RNG 派生 + 快照 bodySlots（协议 1.100）+ 前端全槽位面板（空槽"空缺"、同类型序号）+ 导入器光源接 light 槽（帕蓝提尔等 8 件神器六维回收）。demo 新增共鸣指环（包 1.91.0），fixtures 319-320（双戒指/顶替），320 个 exact。记录差异：双持手与箭袋未纳入（待各自系统） |
 | P48 | b_info+种族+性格导入（T1） | 已完成（纯工具，见 [legacy-character-import-v1](legacy-character-import-v1.md)） | 代码侧结构化提取（函数头识别+花括号配平+赋值行解析，rank 动态右值标记跳过）：**67/88 种族**（21 怪物种族 race-code-dynamic）、**20/21 性格**、113 身体模板全解析（缺口普查 any 76/quiver 13/capture-ball 4）；玩家种族绑 Standard 12 槽（刻意无 charm）；八技能花名册 1:1 映射+87 skillSets；钩子缺口 calc_bonuses 76/birth 27 为 T2/种族能力线提供覆盖数；霍比特抽查逐项一致 |
-| P49 | 候选：装备/内在旗标系统（T2） | 下一候选 | 一次解锁三处：词条 ego-inexpressible 72、神器旗标主体（unmappedArtifactFlags 157 种）、种族内在旗标（unmappedRaceFlags 9 种+calc_bonuses 76）；落地后回灌重跑导入收割；备选插队：设备效果系统（缺口 231+激活 193）、法术清尾（S_ 字形 177/SHRIEK/TRAPS） |
+| P49 | 装备/内在旗标系统·防御面（T2 前半） | 已由 contract-v101 完成 | 装备/词条/种族三处统一 resistances/statusImmunities/modifiers.speed 声明表面；有效抗性确定性合并（immune 胜、正档遇 vulnerable 降档）、免疫查表跳过、装备速度进派生管线；协议 1.101（物品 DTO 知识门控暴露）、包 1.92.0（御火指环/疾行靴/镇静吊坠）、fixtures 321-323 共 323 exact、Schema 保持 v41。回灌收割：ego 105/160（+17）、神器 392/392、35 词条/33 种族/321 物品带防御表面，RES_*/IM_*/SPEED/FREE_ACT 清零。进攻面（SLAY_/BRAND_）留 T2 后半 |
+| P50 | 候选：进攻面旗标（T2 后半） | 下一候选 | 斩杀/品牌旗标进词条/神器；备选插队：设备效果系统（缺口 231+激活 193）、法术清尾（S_ 字形 177/SHRIEK/TRAPS） |
 
 ## contract-v99 明确遗留
 

@@ -37,6 +37,8 @@ import type {
   ItemPropertyDto,
   PlayerBuildDto,
   PlayerProgressDto,
+  ResistanceDto,
+  ResistanceLevelDto,
   ResourcePoolDto,
   StatModifiersDto,
   SummonCommandDto,
@@ -1337,6 +1339,7 @@ function renderInventory(
         details.append(equippable);
       }
       appendItemModifiers(details, item.modifiers);
+      appendItemDefenses(details, item.resistances, item.statusImmunities);
       appendItemQuality(details, item.quality);
       appendKnownItemProperties(details, item.knownProperties);
       const quantity = document.createElement("span");
@@ -1398,6 +1401,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
       slotTag.textContent = slotLabel;
       details.append(name, slotTag);
       appendItemModifiers(details, item.modifiers);
+      appendItemDefenses(details, item.resistances, item.statusImmunities);
       appendItemQuality(details, item.quality);
       appendKnownItemProperties(details, item.knownProperties);
       const unequip = document.createElement("button");
@@ -1543,6 +1547,7 @@ function appendItemModifiers(
     ["item-modifier-attack", modifiers.attack],
     ["item-modifier-defense", modifiers.defense],
     ["item-modifier-max-hp", modifiers.maxHp],
+    ["item-modifier-speed", modifiers.speed],
   ];
   for (const [key, value] of entries) {
     if (value === 0) continue;
@@ -1550,6 +1555,38 @@ function appendItemModifiers(
     modifier.className = "item-modifier";
     modifier.textContent = localization.format(key, { value: signedModifier(value) });
     container.append(modifier);
+  }
+}
+
+function appendItemDefenses(
+  container: HTMLElement,
+  resistances: ResistanceDto[] | undefined,
+  statusImmunities: string[] | undefined,
+): void {
+  const levelKeys: Partial<Record<ResistanceLevelDto, MessageKey>> = {
+    vulnerable: "resistance-level-vulnerable",
+    resistant: "resistance-level-resistant",
+    strong: "resistance-level-strong",
+    immune: "resistance-level-immune",
+  };
+  for (const resistance of resistances ?? []) {
+    const levelKey = levelKeys[resistance.level];
+    if (!levelKey) continue;
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format("item-resistance-label", {
+      type: damageTypeName(resistance.damageType),
+      level: localization.format(levelKey),
+    });
+    container.append(label);
+  }
+  for (const statusId of statusImmunities ?? []) {
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format("item-status-immunity-label", {
+      status: statusName(statusId),
+    });
+    container.append(label);
   }
 }
 

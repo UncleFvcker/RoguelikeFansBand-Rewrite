@@ -324,6 +324,8 @@ pub struct StatModifiers {
     pub constitution: i32,
     #[serde(default)]
     pub charisma: i32,
+    #[serde(default)]
+    pub speed: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -413,6 +415,12 @@ pub struct RaceDefinition {
     /// engine's standard body template applies.
     #[serde(default)]
     pub body_slots: Vec<BodySlotDefinition>,
+    /// Intrinsic resistance tiers every member of this race carries.
+    #[serde(default)]
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    /// Status kind ids members of this race are innately immune to.
+    #[serde(default)]
+    pub status_immunities: Vec<String>,
     pub tags: Vec<String>,
 }
 
@@ -841,6 +849,14 @@ pub struct AffixDefinition {
     pub description_key: String,
     #[serde(default)]
     pub modifiers: StatModifiers,
+    /// Defensive resistance tiers granted while the affixed item is
+    /// equipped.
+    #[serde(default)]
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    /// Status kind ids the wearer is immune to while the affixed item is
+    /// equipped.
+    #[serde(default)]
+    pub status_immunities: Vec<String>,
     pub tags: Vec<String>,
 }
 
@@ -935,6 +951,12 @@ pub struct ItemDefinition {
     pub ability_book_id: Option<String>,
     #[serde(default)]
     pub break_chance_percent: u8,
+    /// Defensive resistance tiers granted while the item is equipped.
+    #[serde(default)]
+    pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    /// Status kind ids the wearer is immune to while the item is equipped.
+    #[serde(default)]
+    pub status_immunities: Vec<String>,
     pub tags: Vec<String>,
 }
 
@@ -2714,14 +2736,19 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         require_format_version(affix.format_version, &affix.id)?;
         validate_definition_id(&affix.id, "affix")?;
         validate_definition_text(&affix.id, &affix.name_key, &affix.description_key)?;
+        validate_status_immunities(&affix.id, &mut affix.status_immunities)?;
         let modifiers = &affix.modifiers;
-        if modifiers == &StatModifiers::default()
+        let has_substance = modifiers != &StatModifiers::default()
+            || !affix.resistances.is_empty()
+            || !affix.status_immunities.is_empty();
+        if !has_substance
             || modifiers.max_hp < -1_000_000
             || modifiers.max_hp > 1_000_000
             || modifiers.attack < -1_000_000
             || modifiers.attack > 1_000_000
             || modifiers.defense < -1_000_000
             || modifiers.defense > 1_000_000
+            || !(-100..=100).contains(&modifiers.speed)
             || attribute_modifiers_out_of_range(modifiers)
         {
             return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
@@ -3193,8 +3220,15 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || item.modifiers.attack > 1_000_000
             || item.modifiers.defense < -1_000_000
             || item.modifiers.defense > 1_000_000
+            || !(-100..=100).contains(&item.modifiers.speed)
             || attribute_modifiers_out_of_range(&item.modifiers)
             || (item.equipment_slot.is_none() && item.modifiers != StatModifiers::default())
+        {
+            return Err(ContentError::InvalidItemModifiers(item.id.clone()));
+        }
+        validate_status_immunities(&item.id, &mut item.status_immunities)?;
+        if item.equipment_slot.is_none()
+            && (!item.resistances.is_empty() || !item.status_immunities.is_empty())
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
@@ -3406,6 +3440,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if race.body_slots.len() > 64 {
             return Err(ContentError::InvalidBodySlots(race.id.clone()));
         }
+        validate_status_immunities(&race.id, &mut race.status_immunities)?;
         let mut body_slot_ids = BTreeSet::new();
         for slot in &race.body_slots {
             if validate_equipment_slot(&slot.id).is_err()
@@ -6232,6 +6267,7 @@ fn validate_character_source(
         || source.modifiers.attack > 1_000_000
         || source.modifiers.defense < -1_000_000
         || source.modifiers.defense > 1_000_000
+        || !(-100..=100).contains(&source.modifiers.speed)
         || attribute_modifiers_out_of_range(source.modifiers)
         || !(25..=400).contains(&source.life_percent)
         || !(25..=500).contains(&source.experience_percent)
@@ -6427,6 +6463,30 @@ fn validate_message_key(key: &str) -> Result<(), ContentError> {
         })
     {
         return Err(ContentError::InvalidMessageKey(key.to_owned()));
+    }
+    Ok(())
+}
+
+/// Status immunity lists carry engine status kind ids: normalized to a
+/// sorted, unique list with a small size budget.
+fn validate_status_immunities(
+    owner_id: &str,
+    immunities: &mut Vec<String>,
+) -> Result<(), ContentError> {
+    immunities.sort();
+    immunities.dedup();
+    if immunities.len() > 16
+        || immunities.iter().any(|kind_id| {
+            kind_id.is_empty()
+                || kind_id.len() > 64
+                || !kind_id.bytes().all(|byte| {
+                    byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'-' | b'.')
+                })
+        })
+    {
+        return Err(ContentError::InvalidStatusImmunities(owner_id.to_owned()));
     }
     Ok(())
 }
@@ -6785,6 +6845,8 @@ pub enum ContentError {
     InvalidEquipmentSlot(String),
     #[error("race body slots are invalid: {0}")]
     InvalidBodySlots(String),
+    #[error("status immunity list is invalid: {0}")]
+    InvalidStatusImmunities(String),
     #[error("item stat modifiers are invalid or require an equipment slot: {0}")]
     InvalidItemModifiers(String),
     #[error("item attack profile is invalid or requires the weapon slot: {0}")]
@@ -6906,7 +6968,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 24);
         assert_eq!(first.content.affixes.len(), 1);
-        assert_eq!(first.content.items.len(), 9);
+        assert_eq!(first.content.items.len(), 12);
         assert_eq!(first.content.resources.len(), 2);
         assert_eq!(first.content.abilities.len(), 36);
         assert_eq!(first.content.ability_books.len(), 2);
@@ -6932,7 +6994,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.91.0");
+        assert_eq!(catalog.pack_version(), "1.92.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

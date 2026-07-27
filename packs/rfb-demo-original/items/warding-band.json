@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.warding-band",
+  "nameKey": "item-demo-warding-band-name",
+  "descriptionKey": "item-demo-warding-band-description",
+  "glyph": "=",
+  "weightTenthsPound": 1,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "resistances": {
+    "fire": "resistant"
+  },
+  "tags": [
+    "equipment",
+    "jewelry"
+  ]
+}
