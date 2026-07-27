@@ -22,6 +22,13 @@
       ],
       "type": "object"
     },
+    "AbilityDetectSubjectDefinition": {
+      "enum": [
+        "terrain",
+        "actor"
+      ],
+      "type": "string"
+    },
     "AbilityEffectDefinition": {
       "oneOf": [
         {
@@ -493,6 +500,10 @@
               "minimum": 0,
               "type": "integer"
             },
+            "subject": {
+              "$ref": "#/$defs/AbilityDetectSubjectDefinition",
+              "default": "terrain"
+            },
             "type": {
               "const": "detect",
               "type": "string"
@@ -544,11 +555,114 @@
               "minimum": 0,
               "type": "integer"
             },
+            "grantedResistances": {
+              "additionalProperties": false,
+              "properties": {
+                "acid": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "chaos": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "cold": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "confusion": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "dark": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "disenchant": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "disintegrate": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "electricity": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "fire": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "force": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "gravity": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "hell-fire": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "holy-fire": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "ice": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "inertia": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "light": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "mana": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "nether": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "nexus": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "nuke": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "physical": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "plasma": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "poison": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "psi": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "shards": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "sound": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "storm": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "time": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "water": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                }
+              },
+              "type": "object"
+            },
             "intensity": {
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0,
               "type": "integer"
+            },
+            "power": {
+              "default": null,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
             },
             "resistanceType": {
               "anyOf": [
@@ -601,6 +715,30 @@
         {
           "additionalProperties": false,
           "properties": {
+            "category": {
+              "type": "string"
+            },
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "control",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,
@@ -638,6 +776,56 @@
           "type": "object"
         }
       ]
+    },
+    "AbilityLevelScalingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "divisor": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "effectIndex": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "field": {
+          "$ref": "#/$defs/AbilityLevelScalingField"
+        },
+        "levelOffset": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "multiplier": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "effectIndex",
+        "field",
+        "multiplier",
+        "divisor"
+      ],
+      "type": "object"
+    },
+    "AbilityLevelScalingField": {
+      "enum": [
+        "damage-dice",
+        "damage-bonus",
+        "radius",
+        "status-intensity",
+        "status-duration-ticks",
+        "status-power",
+        "control-power"
+      ],
+      "type": "string"
     },
     "AbilityProficiencyDefinition": {
       "additionalProperties": false,
@@ -749,6 +937,16 @@
         "psi"
       ],
       "type": "string"
+    },
+    "ActorResistanceLevel": {
+      "description": "Content-declared resistance tier; `normal` is expressed by omission.",
+      "enum": [
+        "vulnerable",
+        "resistant",
+        "strong",
+        "immune"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
@@ -789,6 +987,12 @@
     },
     "id": {
       "type": "string"
+    },
+    "levelScaling": {
+      "items": {
+        "$ref": "#/$defs/AbilityLevelScalingDefinition"
+      },
+      "type": "array"
     },
     "minimumLevel": {
       "format": "uint16",

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.103";
+pub const PROTOCOL_VERSION: &str = "1.104";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -463,6 +463,25 @@ pub enum AbilityStatusStackingDto {
     KeepStrongest,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityDetectSubjectDto {
+    #[default]
+    Terrain,
+    Actor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityControlOutcomeDto {
+    Ineligible,
+    Resisted,
+    Controlled,
+    AlreadyControlled,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -536,6 +555,8 @@ pub enum AbilityEffectSpecDto {
         duration_turns: u16,
     },
     Detect {
+        #[serde(default)]
+        subject: AbilityDetectSubjectDto,
         category: String,
         radius: u8,
         persistent: bool,
@@ -552,6 +573,10 @@ pub enum AbilityEffectSpecDto {
         stacking: AbilityStatusStackingDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance_type: Option<DamageTypeDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        power: Option<u16>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        granted_resistances: Vec<ResistanceDto>,
     },
     BlinkSelf {
         radius: u8,
@@ -562,6 +587,10 @@ pub enum AbilityEffectSpecDto {
     TeleportTarget,
     RemoveStatus {
         status_kind_id: String,
+    },
+    Control {
+        category: String,
+        power: u16,
     },
     Heal {
         amount: u32,
@@ -639,6 +668,8 @@ pub struct AbilitySummonSpecDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AbilityDetectSpecDto {
+    #[serde(default)]
+    pub subject: AbilityDetectSubjectDto,
     pub category: String,
     pub radius: u8,
     #[serde(default)]
@@ -1092,12 +1123,16 @@ pub struct AbilitySummonResolutionDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AbilityDetectResolutionDto {
+    #[serde(default)]
+    pub subject: AbilityDetectSubjectDto,
     pub category: String,
     pub radius: u8,
     #[serde(default)]
     pub persistent: bool,
     #[serde(default)]
     pub detected_positions: Vec<Position>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub detected_entity_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1122,6 +1157,7 @@ pub enum AbilityStatusChangeDto {
     Strengthened,
     Unchanged,
     Immune,
+    Resisted,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1160,6 +1196,16 @@ pub enum AbilityEffectResolutionDto {
         resistance_type: Option<DamageTypeDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance: Option<ResistanceLevelDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        power: Option<u16>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_level: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        power_roll: Option<u16>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_roll: Option<u32>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        granted_resistances: Vec<ResistanceDto>,
         change: AbilityStatusChangeDto,
     },
     RemoveStatus {
@@ -1181,6 +1227,17 @@ pub enum AbilityEffectResolutionDto {
     Amnesia {
         effect_index: u8,
         cleared_cells: u32,
+    },
+    Control {
+        effect_index: u8,
+        category: String,
+        power: u16,
+        target_entity_id: String,
+        target_kind_id: String,
+        target_level: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roll: Option<u16>,
+        outcome: AbilityControlOutcomeDto,
     },
 }
 
@@ -1430,6 +1487,8 @@ pub struct StatusDto {
     pub kind_id: String,
     pub intensity: u16,
     pub remaining_ticks: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_resistances: Vec<ResistanceDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1528,6 +1587,8 @@ pub struct EntityDto {
     pub statuses: Vec<StatusDto>,
     #[serde(default)]
     pub faction: EntityFactionDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controller_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summon: Option<SummonDto>,
 }
@@ -1861,6 +1922,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityLearningDto);
     push_declaration!(AbilityProficiencyRankDto);
     push_declaration!(AbilityStatusStackingDto);
+    push_declaration!(AbilityDetectSubjectDto);
+    push_declaration!(AbilityControlOutcomeDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);
@@ -2095,6 +2158,8 @@ pub struct ActorSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pack: Option<MonsterPackSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controller_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summon: Option<SummonSaveDto>,
 }
 
@@ -2139,6 +2204,8 @@ pub struct StatusSaveDto {
     pub remaining_ticks: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_resistances: Vec<ResistanceSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2635,6 +2702,7 @@ mod tests {
                 melee_routine: MeleeRoutineDto::default(),
                 statuses: Vec::new(),
                 faction: EntityFactionDto::Hostile,
+                controller_id: None,
                 summon: None,
             }],
             items: vec![ItemDto {

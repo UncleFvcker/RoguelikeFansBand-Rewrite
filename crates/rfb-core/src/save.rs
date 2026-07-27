@@ -52,6 +52,7 @@ pub(crate) fn actor_from_spawn(
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
+        controller_id: None,
         summon: None,
     }
 }
@@ -79,6 +80,7 @@ pub(crate) fn actor_from_runtime_spawn(
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
         pack: None,
+        controller_id: None,
         summon: None,
     }
 }
@@ -119,6 +121,7 @@ pub(crate) fn actor_from_player(
         statuses,
         resistances,
         pack: None,
+        controller_id: None,
         summon: None,
     })
 }
@@ -182,6 +185,7 @@ pub(crate) fn actor_from_entity(
             role: pack.role,
             behavior: pack.behavior,
         }),
+        controller_id: entity.controller_id,
         summon: entity.summon.map(|summon| SummonIdentity {
             owner_id: summon.owner_id,
             source_ability_id: summon.source_ability_id,
@@ -368,6 +372,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
                 role: pack.role,
                 behavior: pack.behavior,
             }),
+            controller_id: entity.controller_id.clone(),
             summon: entity.summon.as_ref().map(|summon| SummonSaveDto {
                 owner_id: summon.owner_id.clone(),
                 source_ability_id: summon.source_ability_id.clone(),
@@ -396,11 +401,24 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
             {
                 return Err(CoreError::InvalidSave("actor status state is invalid"));
             }
+            let mut granted_resistances = BTreeMap::new();
+            for resistance in status.granted_resistances {
+                let damage_type = DamageType::from(resistance.damage_type);
+                let level = ResistanceLevel::from(resistance.level);
+                if level == ResistanceLevel::Normal
+                    || granted_resistances.insert(damage_type, level).is_some()
+                {
+                    return Err(CoreError::InvalidSave(
+                        "actor status resistance state is invalid",
+                    ));
+                }
+            }
             Ok(StatusInstance {
                 kind_id: status.kind_id,
                 intensity: status.intensity,
                 remaining_ticks: status.remaining_ticks,
                 source_id: status.source_id,
+                granted_resistances,
             })
         })
         .collect()

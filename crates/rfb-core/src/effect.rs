@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::BTreeMap;
+
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
-use rfb_protocol::{DamageResolutionDto, StatusDto, StatusSaveDto};
+use rfb_protocol::{
+    DamageResolutionDto, ResistanceDto, ResistanceSaveDto, StatusDto, StatusSaveDto,
+};
 
 pub const STATUS_HASTE: &str = "rfb.status.haste";
 pub const STATUS_SLOW: &str = "rfb.status.slow";
@@ -12,6 +16,7 @@ pub const STATUS_FEAR: &str = "rfb.status.fear";
 pub const STATUS_CONFUSION: &str = "rfb.status.confusion";
 pub const STATUS_BLINDNESS: &str = "rfb.status.blindness";
 pub const STATUS_PARALYSIS: &str = "rfb.status.paralysis";
+pub const STATUS_SLEEP: &str = "rfb.status.sleep";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {
@@ -73,6 +78,7 @@ pub struct StatusInstance {
     pub intensity: u16,
     pub remaining_ticks: u32,
     pub source_id: Option<String>,
+    pub granted_resistances: BTreeMap<DamageType, ResistanceLevel>,
 }
 
 impl StatusInstance {
@@ -82,6 +88,14 @@ impl StatusInstance {
             kind_id: self.kind_id.clone(),
             intensity: self.intensity,
             remaining_ticks: self.remaining_ticks,
+            granted_resistances: self
+                .granted_resistances
+                .iter()
+                .map(|(damage_type, level)| ResistanceDto {
+                    damage_type: (*damage_type).into(),
+                    level: (*level).into(),
+                })
+                .collect(),
         }
     }
 
@@ -92,6 +106,14 @@ impl StatusInstance {
             intensity: self.intensity,
             remaining_ticks: self.remaining_ticks,
             source_id: self.source_id.clone(),
+            granted_resistances: self
+                .granted_resistances
+                .iter()
+                .map(|(damage_type, level)| ResistanceSaveDto {
+                    damage_type: (*damage_type).into(),
+                    level: (*level).into(),
+                })
+                .collect(),
         }
     }
 }
@@ -234,6 +256,7 @@ pub fn apply_status(
             if application.status.intensity > existing.intensity {
                 existing.intensity = application.status.intensity;
                 existing.source_id = application.status.source_id;
+                existing.granted_resistances = application.status.granted_resistances;
             }
             StatusChange::Extended
         }
@@ -243,6 +266,7 @@ pub fn apply_status(
             if stronger {
                 existing.intensity = application.status.intensity;
                 existing.source_id = application.status.source_id.clone();
+                existing.granted_resistances = application.status.granted_resistances.clone();
             }
             if longer {
                 existing.remaining_ticks = application.status.remaining_ticks;
@@ -286,6 +310,7 @@ mod tests {
             intensity,
             remaining_ticks,
             source_id: Some("actor.source".to_owned()),
+            granted_resistances: BTreeMap::new(),
         }
     }
 

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-horrify",
+  "nameKey": "ability-demo-death-horrify-name",
+  "descriptionKey": "ability-demo-death-horrify-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 1,
+  "baseFailurePercent": 5,
+  "target": {
+    "modes": ["position", "entity"],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "sequence",
+    "effects": [
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.fear",
+        "intensity": 1,
+        "durationTicks": 200,
+        "stacking": "extend",
+        "power": 2
+      },
+      {
+        "type": "apply-status",
+        "statusKindId": "rfb.status.stun",
+        "intensity": 1,
+        "durationTicks": 5,
+        "stacking": "extend"
+      }
+    ]
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "status-power",
+      "levelOffset": 1,
+      "multiplier": 2,
+      "divisor": 1
+    },
+    {
+      "effectIndex": 1,
+      "field": "status-duration-ticks",
+      "multiplier": 1,
+      "divisor": 5
+    }
+  ],
+  "tags": ["death", "fear", "spell", "stun"]
+}

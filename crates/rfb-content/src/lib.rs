@@ -46,7 +46,7 @@ const CONTAINER_VERSION: u16 = 1;
 const FIXED_HEADER_LENGTH: usize = 8 + 2 + 2 + 8 + 32;
 const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
-const MAX_SOURCE_FILES: usize = 4096;
+const MAX_SOURCE_FILES: usize = 32_768;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
 const SUPPORTED_ROOTS: [&str; 20] = [
     "abilities",
@@ -507,6 +507,16 @@ pub enum CastingAttribute {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityCastingOverrideDefinition {
+    pub ability_id: String,
+    pub minimum_level: u16,
+    pub resource_cost: u32,
+    pub base_failure_percent: u8,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CastingProfileDefinition {
     pub resource_id: String,
     pub casting_attribute: CastingAttribute,
@@ -519,6 +529,8 @@ pub struct CastingProfileDefinition {
     pub learning_capacity_cap: u16,
     pub minimum_failure_percent: u8,
     pub ability_book_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ability_overrides: Vec<AbilityCastingOverrideDefinition>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -692,6 +704,40 @@ pub struct AbilityCooldownDefinition {
     pub group_id: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityDetectSubjectDefinition {
+    #[default]
+    Terrain,
+    Actor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityLevelScalingField {
+    DamageDice,
+    DamageBonus,
+    Radius,
+    StatusIntensity,
+    StatusDurationTicks,
+    StatusPower,
+    ControlPower,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AbilityLevelScalingDefinition {
+    pub effect_index: u8,
+    pub field: AbilityLevelScalingField,
+    pub multiplier: u32,
+    pub divisor: u32,
+    #[serde(default)]
+    pub level_offset: u16,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -789,6 +835,8 @@ pub enum AbilityEffectDefinition {
         duration_turns: u16,
     },
     Detect {
+        #[serde(default)]
+        subject: AbilityDetectSubjectDefinition,
         category: String,
         radius: u8,
         #[serde(default)]
@@ -806,9 +854,17 @@ pub enum AbilityEffectDefinition {
         stacking: AbilityStatusStackingDefinition,
         #[serde(default)]
         resistance_type: Option<ActorDamageType>,
+        #[serde(default)]
+        power: Option<u16>,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        granted_resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
     },
     RemoveStatus {
         status_kind_id: String,
+    },
+    Control {
+        category: String,
+        power: u16,
     },
     Heal {
         amount: u32,
@@ -828,6 +884,55 @@ impl AbilityEffectDefinition {
     }
 }
 
+fn ability_level_scaling_base_and_limit(
+    effect: &AbilityEffectDefinition,
+    field: AbilityLevelScalingField,
+) -> Option<(u64, u64)> {
+    match (effect, field) {
+        (
+            AbilityEffectDefinition::Damage { damage_dice, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
+            | AbilityEffectDefinition::CurseDamage { damage_dice, .. },
+            AbilityLevelScalingField::DamageDice,
+        ) => Some((u64::from(*damage_dice), 100)),
+        (
+            AbilityEffectDefinition::Damage { damage_bonus, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::CurseDamage { damage_bonus, .. },
+            AbilityLevelScalingField::DamageBonus,
+        ) => Some((u64::from(*damage_bonus), 10_000)),
+        (
+            AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::ConeDamage { radius, .. }
+            | AbilityEffectDefinition::BreathDamage { radius, .. },
+            AbilityLevelScalingField::Radius,
+        ) => Some((u64::from(*radius), 9)),
+        (
+            AbilityEffectDefinition::ApplyStatus { intensity, .. },
+            AbilityLevelScalingField::StatusIntensity,
+        ) => Some((u64::from(*intensity), 1_000)),
+        (
+            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. },
+            AbilityLevelScalingField::StatusDurationTicks,
+        ) => Some((u64::from(*duration_ticks), 1_000_000)),
+        (
+            AbilityEffectDefinition::ApplyStatus {
+                power: Some(power), ..
+            },
+            AbilityLevelScalingField::StatusPower,
+        ) => Some((u64::from(*power), 1_000)),
+        (
+            AbilityEffectDefinition::Control { power, .. },
+            AbilityLevelScalingField::ControlPower,
+        ) => Some((u64::from(*power), 1_000)),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -844,6 +949,8 @@ pub struct AbilityDefinition {
     pub base_failure_percent: u8,
     pub target: AbilityTargetDefinition,
     pub effect: AbilityEffectDefinition,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_scaling: Vec<AbilityLevelScalingDefinition>,
     #[serde(default)]
     pub proficiency: AbilityProficiencyDefinition,
     #[serde(default)]
@@ -2985,6 +3092,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&ability.id, "ability")?;
         validate_definition_text(&ability.id, &ability.name_key, &ability.description_key)?;
         ability.target.modes.sort();
+        ability
+            .level_scaling
+            .sort_by_key(|scaling| (scaling.effect_index, scaling.field));
         let ordered_effects = match &mut ability.effect {
             AbilityEffectDefinition::Sequence { effects } => effects.as_mut_slice(),
             effect => std::slice::from_mut(effect),
@@ -3110,7 +3220,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=10_000).contains(duration_turns)
             }
             AbilityEffectDefinition::Detect {
-                category, radius, ..
+                subject,
+                category,
+                radius,
+                persistent,
             } => {
                 !category.is_empty()
                     && category.len() <= 64
@@ -3120,7 +3233,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                             || matches!(byte, b'-' | b'_')
                     })
                     && (1..=8).contains(radius)
-                    && terrain_tags.values().any(|tags| tags.contains(category))
+                    && match subject {
+                        AbilityDetectSubjectDefinition::Terrain => {
+                            terrain_tags.values().any(|tags| tags.contains(category))
+                        }
+                        AbilityDetectSubjectDefinition::Actor => {
+                            !persistent && actor_tag_values.contains(category)
+                        }
+                    }
             }
             AbilityEffectDefinition::TransformTerrain {
                 source_terrain_ids,
@@ -3140,14 +3260,29 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 status_kind_id,
                 intensity,
                 duration_ticks,
+                power,
+                granted_resistances,
                 ..
             } => {
                 validate_id(status_kind_id).is_ok()
                     && (1..=1_000).contains(intensity)
                     && (1..=1_000_000).contains(duration_ticks)
+                    && power.is_none_or(|power| (1..=1_000).contains(&power))
+                    && granted_resistances.len() <= 29
             }
             AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                 validate_id(status_kind_id).is_ok()
+            }
+            AbilityEffectDefinition::Control { category, power } => {
+                !category.is_empty()
+                    && category.len() <= 64
+                    && category.bytes().all(|byte| {
+                        byte.is_ascii_lowercase()
+                            || byte.is_ascii_digit()
+                            || matches!(byte, b'-' | b'_')
+                    })
+                    && actor_tag_values.contains(category)
+                    && (1..=1_000).contains(power)
             }
             AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
             AbilityEffectDefinition::Sequence { .. } => false,
@@ -3158,6 +3293,34 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             }
             effect => valid_single_effect(effect),
         };
+        let mut scaling_fields = BTreeSet::new();
+        let valid_level_scaling = ability.level_scaling.len() <= 32
+            && ability.level_scaling.iter().all(|scaling| {
+                let Some(effect) = ability
+                    .effect
+                    .ordered_effects()
+                    .get(usize::from(scaling.effect_index))
+                else {
+                    return false;
+                };
+                let Some((base, limit)) =
+                    ability_level_scaling_base_and_limit(effect, scaling.field)
+                else {
+                    return false;
+                };
+                let level_delta = 100_u64.saturating_sub(u64::from(scaling.level_offset));
+                let scaled = level_delta
+                    .saturating_mul(u64::from(scaling.multiplier))
+                    .checked_div(u64::from(scaling.divisor))
+                    .and_then(|addition| base.checked_add(addition));
+                scaling.multiplier > 0
+                    && scaling.multiplier <= 1_000_000
+                    && scaling.divisor > 0
+                    && scaling.divisor <= 1_000_000
+                    && scaling.level_offset <= 100
+                    && scaling_fields.insert((scaling.effect_index, scaling.field))
+                    && scaled.is_some_and(|value| value <= limit)
+            });
         let self_targeted = ability
             .target
             .modes
@@ -3183,6 +3346,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia => projectile_target_rule,
+            AbilityEffectDefinition::Control { .. } => projectile_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted
@@ -3261,6 +3425,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || ability.target.modes.iter().any(|mode| !modes.insert(*mode))
             || !valid_target
             || !valid_effect
+            || !valid_level_scaling
             || !directional_target
         {
             return Err(ContentError::InvalidAbility(ability.id.clone()));
@@ -3682,7 +3847,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         )?;
         if let Some(profile) = &mut class.casting_profile {
             profile.ability_book_ids.sort();
+            profile
+                .ability_overrides
+                .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
             let mut books = BTreeSet::new();
+            let mut overrides = BTreeSet::new();
             let maximum_capacity = u64::from(profile.base_capacity)
                 .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
                 .saturating_add(
@@ -3700,6 +3869,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     .ability_book_ids
                     .iter()
                     .any(|book_id| !books.insert(book_id.clone()))
+                || profile.ability_overrides.len() > 1_024
+                || profile.ability_overrides.iter().any(|override_| {
+                    !overrides.insert(override_.ability_id.clone())
+                        || !(1..=100).contains(&override_.minimum_level)
+                        || !(1..=1_000_000).contains(&override_.resource_cost)
+                        || override_.base_failure_percent > 95
+                })
                 || maximum_capacity == 0
                 || maximum_capacity > 1_000_000_000
                 || profile.learning_capacity_cap == 0
@@ -3709,6 +3885,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 return Err(ContentError::InvalidCastingProfile(class.id.clone()));
             }
             require_reference(&resource_ids, &profile.resource_id, &class.id)?;
+            let mut supported_ability_ids = BTreeSet::new();
             for book_id in &profile.ability_book_ids {
                 require_reference(&ability_book_ids, book_id, &class.id)?;
                 let book = ability_books_by_id
@@ -3719,6 +3896,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 }) {
                     return Err(ContentError::InvalidCastingProfile(class.id.clone()));
                 }
+                supported_ability_ids.extend(book.ability_ids.iter().cloned());
+            }
+            if profile
+                .ability_overrides
+                .iter()
+                .any(|override_| !supported_ability_ids.contains(&override_.ability_id))
+            {
+                return Err(ContentError::InvalidCastingProfile(class.id.clone()));
             }
         }
         let mut technique_resource_ids = class
@@ -7208,7 +7393,7 @@ mod tests {
         assert_eq!(first.content.affixes.len(), 3);
         assert_eq!(first.content.items.len(), 15);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 36);
+        assert_eq!(first.content.abilities.len(), 44);
         assert_eq!(first.content.ability_books.len(), 2);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
@@ -7232,7 +7417,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.94.0");
+        assert_eq!(catalog.pack_version(), "1.95.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -7247,6 +7432,14 @@ mod tests {
                 .map(|book| book.ability_ids.as_slice()),
             Some(
                 [
+                    "demo.ability.death-black-sleep".to_owned(),
+                    "demo.ability.death-detect-evil".to_owned(),
+                    "demo.ability.death-detect-unlife".to_owned(),
+                    "demo.ability.death-enslave-undead".to_owned(),
+                    "demo.ability.death-horrify".to_owned(),
+                    "demo.ability.death-malediction".to_owned(),
+                    "demo.ability.death-necromantic-resistance".to_owned(),
+                    "demo.ability.death-stinking-cloud".to_owned(),
                     "demo.ability.echo-binding".to_owned(),
                     "demo.ability.echo-burst".to_owned(),
                     "demo.ability.echo-companion".to_owned(),
@@ -9394,6 +9587,148 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut mismatched_profile),
             Err(ContentError::InvalidCastingProfile(_))
+        ));
+    }
+
+    #[test]
+    fn casting_profiles_validate_per_ability_parameter_overrides() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let mut overridden = artifact.content;
+        let profile = overridden
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.mage")
+            .and_then(|class| class.casting_profile.as_mut())
+            .expect("fixture should contain the mage casting profile");
+        profile
+            .ability_overrides
+            .push(AbilityCastingOverrideDefinition {
+                ability_id: "demo.ability.mending-echo".to_owned(),
+                minimum_level: 7,
+                resource_cost: 11,
+                base_failure_percent: 42,
+            });
+        validate_and_normalize(&mut overridden).expect("valid override should compile");
+
+        let mut duplicate = overridden.clone();
+        duplicate
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.mage")
+            .and_then(|class| class.casting_profile.as_mut())
+            .expect("fixture should contain the mage casting profile")
+            .ability_overrides
+            .push(AbilityCastingOverrideDefinition {
+                ability_id: "demo.ability.mending-echo".to_owned(),
+                minimum_level: 8,
+                resource_cost: 12,
+                base_failure_percent: 43,
+            });
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate),
+            Err(ContentError::InvalidCastingProfile(_))
+        ));
+
+        let mut unsupported = overridden;
+        unsupported
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.mage")
+            .and_then(|class| class.casting_profile.as_mut())
+            .expect("fixture should contain the mage casting profile")
+            .ability_overrides[0]
+            .ability_id = "demo.ability.not-in-a-mage-book".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut unsupported),
+            Err(ContentError::InvalidCastingProfile(_))
+        ));
+    }
+
+    #[test]
+    fn abilities_validate_actor_detection_control_and_level_scaling() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+        let mut valid = artifact.content.clone();
+        let malediction = valid
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.death-malediction")
+            .expect("fixture should contain level-scaled damage");
+        assert_eq!(malediction.level_scaling.len(), 1);
+        let unlife = valid
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.death-detect-unlife")
+            .expect("fixture should contain actor detection");
+        assert!(matches!(
+            unlife.effect,
+            AbilityEffectDefinition::Detect {
+                subject: AbilityDetectSubjectDefinition::Actor,
+                persistent: false,
+                ..
+            }
+        ));
+        validate_and_normalize(&mut valid).expect("P54 abilities should compile");
+
+        let mut duplicate = artifact.content.clone();
+        let malediction = duplicate
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.death-malediction")
+            .expect("fixture should contain level-scaled damage");
+        malediction
+            .level_scaling
+            .push(malediction.level_scaling[0].clone());
+        assert!(matches!(
+            validate_and_normalize(&mut duplicate),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut out_of_bounds = artifact.content.clone();
+        out_of_bounds
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.death-horrify")
+            .expect("fixture should contain a scaled sequence")
+            .level_scaling[0]
+            .effect_index = 2;
+        assert!(matches!(
+            validate_and_normalize(&mut out_of_bounds),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut persistent_actor_detection = artifact.content.clone();
+        let AbilityEffectDefinition::Detect { persistent, .. } = &mut persistent_actor_detection
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.death-detect-unlife")
+            .expect("fixture should contain actor detection")
+            .effect
+        else {
+            panic!("detect unlife should use actor detection");
+        };
+        *persistent = true;
+        assert!(matches!(
+            validate_and_normalize(&mut persistent_actor_detection),
+            Err(ContentError::InvalidAbility(_))
+        ));
+
+        let mut missing_control_category = artifact.content;
+        let AbilityEffectDefinition::Control { category, .. } = &mut missing_control_category
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.death-enslave-undead")
+            .expect("fixture should contain actor control")
+            .effect
+        else {
+            panic!("enslave undead should use actor control");
+        };
+        *category = "missing-category".to_owned();
+        assert!(matches!(
+            validate_and_normalize(&mut missing_control_category),
+            Err(ContentError::InvalidAbility(_))
         ));
     }
 

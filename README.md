@@ -123,9 +123,12 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v101：装备/内在旗标系统·防御面（抗性/免疫/速度）](design/contract-v101-defensive-flags.md)
 - [Contract v102：装备旗标系统·进攻面（斩杀/击杀/品牌）](design/contract-v102-offensive-flags.md)
 - [Contract v103：动态 affix 实例与装备被动属性](design/contract-v103-dynamic-affixes.md)
+- [Contract v104：玩家等级效果缩放与 Death 第一册](design/contract-v104-death-first-book.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
+- [旧版职业与施法档案导入 v1（class / m_info / s_info）](design/legacy-class-import-v1.md)
+- [旧版玩家领域法术导入 v1（Death 第一册）](design/legacy-player-spell-import-v1.md)
 - [旧版内容导入管线 v1](design/legacy-content-import-v1.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
@@ -144,7 +147,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v103/scenarios`](tests/fixtures/contract-v103/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v102` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v104/scenarios`](tests/fixtures/contract-v104/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v103` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -253,6 +256,8 @@ Tauri 2 Windows 原生垂直切片已经建立：`TauriNativeTransport` 直接�
 
 v103 在 v102 装备旗标之上完成动态 affix 实例：按深度过滤加权候选，生成结果完整写入物品实例、存档与 state hash，旧档缺失结果保持空且零 RNG，不按新内容表补抽。装备加值覆盖额外近战次数、十类技能、红外与光照；首版 passive 词表进入内容/DTO/Web，其中 regeneration 已每 10 world ticks 权威恢复 1 HP。demo Adaptive Echo 以两个 seed fixture 锁住两种浅层候选、真实死亡掉落、拾取、鉴定、装备、再生和回档。协议 1.103、内容包 1.94.0、Schema v42、active baseline 328 条 exact、零 waiver。真实 e_info 导入达到 128/160 ego；其余主要依赖反射、光环、诅咒、额外射击/威力和高级品牌系统。完整边界见 [Contract v103 说明](design/contract-v103-dynamic-affixes.md)。
 
+P52–P54 已把旧版职业施法数据接入首个完整玩家领域法书：54 个职业壳、53 份 `m_info` 与 `s_info` 差异先形成固定提交中间档案；`CastingProfileDefinition.abilityOverrides` 保留同一本物理法书在不同职业下的等级、耗魔与失败率差异。P54 新增七类玩家等级效果缩放、actor Detect、状态 power、sleep、状态授予临时抗性和带持久 controller identity 的 Control，Death 第一册 `[Stench of Death]` 八个槽位现已全部生成并可执行。真实包有 12 个静态职业、96 行参数覆盖和 8 个玩家 abilities；敏捷施法、生命施法和动态 Skillmaster 继续显式排除。协议 1.104、demo 1.95.0、state hash Schema v43、active baseline 334 条 exact、零 waiver；大型源包文件预算为 32,768，源包 16 MiB 与编译产物 32 MiB 字节预算继续生效。详见[职业施法档案](design/legacy-class-import-v1.md)、[玩家领域法术导入](design/legacy-player-spell-import-v1.md)与[Contract v104](design/contract-v104-death-first-book.md)。
+
 ### 本地验证
 
 ```powershell
@@ -322,10 +327,10 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v103/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v104/baseline-policy.json
 ```
 
-当前 328 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 334 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

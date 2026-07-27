@@ -19,8 +19,8 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
         STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR, STATUS_HASTE, STATUS_PARALYSIS,
-        STATUS_POISON, STATUS_SLOW, STATUS_STUN, StatusApplication, StatusChange, StatusInstance,
-        StatusStacking, advance_status_ticks, apply_effect, resolve_damage,
+        STATUS_POISON, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, StatusApplication, StatusChange,
+        StatusInstance, StatusStacking, advance_status_ticks, apply_effect, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ProjectileTrace, project_events},
@@ -49,7 +49,8 @@ use crate::{
     },
 };
 use rfb_content::{
-    AbilityDefinition, AbilityEffectDefinition, AbilityStatusStackingDefinition,
+    AbilityDefinition, AbilityDetectSubjectDefinition, AbilityEffectDefinition,
+    AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityStatusStackingDefinition,
     AbilityTargetModeDefinition, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
     CampaignDefinition, CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition,
     ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
@@ -66,20 +67,21 @@ use rfb_content::{
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
-    AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityDetectSpecDto, AbilityDto,
-    AbilityEffectResolutionDto, AbilityEffectSkipReasonDto, AbilityEffectSpecDto,
-    AbilityEffectsResolutionDto, AbilityLearningDto, AbilityProficiencyRankDto,
-    AbilityProgressSaveDto, AbilityStatusChangeDto, AbilityStatusStackingDto,
-    AbilitySummonResolutionDto, AbilitySummonSpecDto, AbilityTeleportResolutionDto,
-    AbilityTerrainTransformResolutionDto, AbilityTerrainTransformSpecDto, ActorSaveDto,
-    AttackProfileDto, AttributeSetDto, AttributeValueDto, BodySlotDto, BodySlotSaveDto,
-    CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
-    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
-    EntityDto, EntityFactionDto, EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto,
-    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope,
-    GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto,
-    ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
+    AbilityConeDamageResolutionDto, AbilityControlOutcomeDto, AbilityDetectResolutionDto,
+    AbilityDetectSpecDto, AbilityDetectSubjectDto, AbilityDto, AbilityEffectResolutionDto,
+    AbilityEffectSkipReasonDto, AbilityEffectSpecDto, AbilityEffectsResolutionDto,
+    AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto, AbilityStatusChangeDto,
+    AbilityStatusStackingDto, AbilitySummonResolutionDto, AbilitySummonSpecDto,
+    AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
+    AbilityTerrainTransformSpecDto, ActorSaveDto, AttackProfileDto, AttributeSetDto,
+    AttributeValueDto, BodySlotDto, BodySlotSaveDto, CampaignStateDto, CampaignStateSaveDto,
+    CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
+    DamageDiceDto, Direction, DungeonStateSaveDto, EntityDto, EntityFactionDto,
+    EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto, EquipmentPassiveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
+    HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemDto, ItemIdentificationDto,
+    ItemKnowledgeDto, ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto,
+    ItemQualityDto, ItemSaveDto, MeleeBlowDto, MeleeRoutineDto,
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
@@ -98,7 +100,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 95] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 96] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -194,13 +196,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 95] = [
     "1380958f4743b474abe00c2dbbcf6719aa791945405f0276badc0d8d35a106e1",
     "83dc1e5a58f408b9945d627e469d2b53c1731963fb19752dcbc5c9c91359b188",
     "66842fb3b3291494aed23368a30374e93a8bceea2b397382ff89f08ecac180aa",
+    "271fcf3f85ca347791150dbc8eec0040b9dd70e8315bdb3874bc2fc628d637bd",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "271fcf3f85ca347791150dbc8eec0040b9dd70e8315bdb3874bc2fc628d637bd";
+    "c0708c7866d93bdbb6601d349300cd5ef5e95a7ebd754de60d62e27d6c4071c6";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 42;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 43;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -2576,13 +2579,7 @@ impl Game {
                 let affected_summons = self
                     .entities
                     .iter()
-                    .filter(|entity| {
-                        entity.hp > 0
-                            && entity
-                                .summon
-                                .as_ref()
-                                .is_some_and(|summon| summon.owner_id == self.player.id)
-                    })
+                    .filter(|entity| entity.hp > 0 && self.actor_is_player_aligned(entity))
                     .count()
                     .try_into()
                     .unwrap_or(u16::MAX);
@@ -2874,6 +2871,38 @@ impl Game {
             .and_then(|(_, _, class, _)| class.casting_profile.as_ref())
     }
 
+    fn effective_casting_ability(
+        profile: &CastingProfileDefinition,
+        ability: &AbilityDefinition,
+    ) -> AbilityDefinition {
+        let mut effective = ability.clone();
+        if let Some(override_) = profile
+            .ability_overrides
+            .iter()
+            .find(|override_| override_.ability_id == ability.id)
+        {
+            effective.minimum_level = override_.minimum_level;
+            effective.resource_cost = override_.resource_cost;
+            effective.base_failure_percent = override_.base_failure_percent;
+        }
+        effective
+    }
+
+    fn apply_player_level_scaling(ability: &mut AbilityDefinition, level: u16) {
+        for scaling in ability.level_scaling.clone() {
+            let effect = match &mut ability.effect {
+                AbilityEffectDefinition::Sequence { effects } => effects
+                    .get_mut(usize::from(scaling.effect_index))
+                    .expect("validated level scaling effect index must remain available"),
+                effect => {
+                    debug_assert_eq!(scaling.effect_index, 0);
+                    effect
+                }
+            };
+            apply_ability_level_scaling(effect, &scaling, level);
+        }
+    }
+
     fn profile_resource_maximum(&self, attribute: AttributeKind, params: (u32, u32, u32)) -> u32 {
         let (base_capacity, capacity_per_level, capacity_per_attribute_index) = params;
         let attribute_index = u32::from(self.effective_player_attributes().index(attribute));
@@ -3101,6 +3130,7 @@ impl Game {
                 let Some(ability) = self.content.ability(&ability_id) else {
                     return Err(CoreError::InvalidSave("learned ability ID is invalid"));
                 };
+                let ability = Self::effective_casting_ability(profile, ability);
                 if ability.minimum_level > self.progress.level
                     || !self.profile_supports_ability(profile, &ability_id)
                     || !self.learned_abilities.insert(ability_id)
@@ -3486,10 +3516,7 @@ impl Game {
     fn visible_hostile_exists(&self) -> bool {
         self.entities.iter().any(|entity| {
             entity.hp > 0
-                && entity
-                    .summon
-                    .as_ref()
-                    .is_none_or(|summon| summon.owner_id != self.player.id)
+                && !self.actor_is_player_aligned(entity)
                 && self.is_visible(entity.position)
         })
     }
@@ -3585,6 +3612,16 @@ impl Game {
             .filter_map(|ability_id| {
                 let ability = self.content.ability(&ability_id)?;
                 let innate = innate_ability_ids.contains(&ability_id);
+                let mut effective_ability = if innate {
+                    ability.clone()
+                } else {
+                    Self::effective_casting_ability(
+                        casting_profile.expect("book ability requires casting profile"),
+                        ability,
+                    )
+                };
+                Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
+                let ability = &effective_ability;
                 let progress = self.ability_progress_value(ability);
                 let resource_cost = self.ability_effective_resource_cost(ability, progress);
                 let cooldown_remaining = self.ability_cooldown_remaining(ability);
@@ -3656,10 +3693,12 @@ impl Game {
                     },
                     detect: match &ability.effect {
                         AbilityEffectDefinition::Detect {
+                            subject,
                             category,
                             radius,
                             persistent,
                         } => Some(AbilityDetectSpecDto {
+                            subject: ability_detect_subject_dto(*subject),
                             category: category.clone(),
                             radius: *radius,
                             persistent: *persistent,
@@ -3763,15 +3802,12 @@ impl Game {
                         .iter()
                         .map(crate::effect::StatusInstance::to_dto)
                         .collect(),
-                    faction: if entity
-                        .summon
-                        .as_ref()
-                        .is_some_and(|summon| summon.owner_id == self.player.id)
-                    {
+                    faction: if self.actor_is_player_aligned(entity) {
                         EntityFactionDto::Player
                     } else {
                         EntityFactionDto::Hostile
                     },
+                    controller_id: entity.controller_id.clone(),
                     summon: entity.summon.as_ref().map(|summon| SummonDto {
                         owner_id: summon.owner_id.clone(),
                         source_ability_id: summon.source_ability_id.clone(),
@@ -4144,6 +4180,11 @@ impl Game {
         };
         for (damage_type, level) in self.player.resistances.iter() {
             record(damage_type, level);
+        }
+        for status in &self.player.statuses {
+            for (damage_type, level) in &status.granted_resistances {
+                record(*damage_type, *level);
+            }
         }
         if let Some((_, race, _, _)) = self.character_definitions() {
             for (damage_type, level) in &race.resistances {
@@ -5800,6 +5841,7 @@ impl Game {
                     damage,
                     trace: trace.clone(),
                 });
+                self.wake_entity_after_damage(index, damage.applied, events);
                 if self.entities[index].hp <= 0 {
                     self.resolve_actor_death(
                         index,
@@ -5841,6 +5883,7 @@ impl Game {
         let Some(ability) = self.content.ability(ability_id) else {
             return Err("unknown-ability");
         };
+        let ability = Self::effective_casting_ability(&profile, ability);
         if self.learned_abilities.contains(ability_id) {
             return Err("already-learned");
         }
@@ -5928,6 +5971,11 @@ impl Game {
             });
             return Ok(());
         };
+        let mut ability = match (&technique_profile, &casting_profile) {
+            (None, Some(profile)) => Self::effective_casting_ability(profile, &ability),
+            _ => ability,
+        };
+        Self::apply_player_level_scaling(&mut ability, self.progress.level);
         // Innate technique abilities skip the study/book pipeline: they are
         // granted by the class technique profile and only gate on level,
         // cooldown, and resource availability.
@@ -6099,24 +6147,34 @@ impl Game {
             }
             (
                 AbilityEffectDefinition::Detect {
+                    subject,
                     category,
                     radius,
                     persistent,
                 },
                 AbilityTargetPlan::Detect,
             ) => {
-                let detected_positions =
-                    self.detect_terrain_positions(&category, radius, persistent);
+                let (detected_positions, detected_entity_ids) = match subject {
+                    AbilityDetectSubjectDefinition::Terrain => (
+                        self.detect_terrain_positions(&category, radius, persistent),
+                        Vec::new(),
+                    ),
+                    AbilityDetectSubjectDefinition::Actor => {
+                        self.detect_actor_positions(&category, radius)
+                    }
+                };
                 if persistent {
                     changed.extend(detected_positions.iter().copied());
                 }
                 events.push(DomainEvent::AbilityDetected {
                     ability_id: ability.id,
                     resolution: AbilityDetectResolutionDto {
+                        subject: ability_detect_subject_dto(subject),
                         category,
                         radius,
                         persistent,
                         detected_positions,
+                        detected_entity_ids,
                     },
                 });
             }
@@ -6153,6 +6211,7 @@ impl Game {
                     effect,
                     AbilityEffectDefinition::ApplyStatus { .. }
                         | AbilityEffectDefinition::RemoveStatus { .. }
+                        | AbilityEffectDefinition::Control { .. }
                         | AbilityEffectDefinition::Sequence { .. }
                 ) =>
             {
@@ -6425,6 +6484,8 @@ impl Game {
                             duration_ticks,
                             stacking,
                             resistance_type,
+                            power,
+                            granted_resistances,
                         } => apply_ability_status_effect(
                             &mut self.player,
                             ability_id,
@@ -6434,7 +6495,11 @@ impl Game {
                             *duration_ticks,
                             *stacking,
                             *resistance_type,
+                            *power,
+                            granted_resistances,
                             None,
+                            None,
+                            &mut self.rng,
                         ),
                         AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                             remove_ability_status_effect(
@@ -6536,7 +6601,13 @@ impl Game {
                             duration_ticks,
                             stacking,
                             resistance_type,
+                            power,
+                            granted_resistances,
                         } => {
+                            let target_level = self
+                                .content
+                                .actor(&self.entities[current_index].kind_id)
+                                .map(|definition| definition.level);
                             self.entities[current_index].alerted = true;
                             changed.insert(self.entities[current_index].position);
                             apply_ability_status_effect(
@@ -6548,7 +6619,11 @@ impl Game {
                                 *duration_ticks,
                                 *stacking,
                                 *resistance_type,
+                                *power,
+                                granted_resistances,
+                                target_level,
                                 None,
+                                &mut self.rng,
                             )
                         }
                         AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
@@ -6558,6 +6633,16 @@ impl Game {
                                 &mut self.entities[current_index],
                                 effect_index,
                                 status_kind_id,
+                            )
+                        }
+                        AbilityEffectDefinition::Control { category, power } => {
+                            self.entities[current_index].alerted = true;
+                            changed.insert(self.entities[current_index].position);
+                            self.resolve_ability_control(
+                                current_index,
+                                effect_index,
+                                category,
+                                *power,
                             )
                         }
                         _ => unreachable!(
@@ -6579,6 +6664,66 @@ impl Game {
             _ => unreachable!("actor effects require a self or projectile target plan"),
         }
         Ok(())
+    }
+
+    fn resolve_ability_control(
+        &mut self,
+        target_index: usize,
+        effect_index: u8,
+        category: &str,
+        power: u16,
+    ) -> AbilityEffectResolutionDto {
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&target_kind_id)
+            .expect("controlled actor definition must remain available");
+        let target_level = definition.level;
+        let eligible = definition.tags.iter().any(|tag| tag == category);
+        let already_controlled = self.entity_is_player_aligned(target_index);
+        let (roll, outcome) = if already_controlled {
+            (None, AbilityControlOutcomeDto::AlreadyControlled)
+        } else if !eligible {
+            (None, AbilityControlOutcomeDto::Ineligible)
+        } else {
+            let range = power.saturating_sub(10).max(1);
+            let roll = u16::try_from(self.rng.bounded(u64::from(range)) + 1)
+                .expect("validated control power roll must fit u16");
+            if target_level > u32::from(roll).saturating_add(10) {
+                (Some(roll), AbilityControlOutcomeDto::Resisted)
+            } else {
+                let pack = self.entities[target_index].pack.clone();
+                if let Some(pack) = pack {
+                    if pack.role == MonsterPackRoleDto::Leader || pack.leader_id == target_entity_id
+                    {
+                        for entity in &mut self.entities {
+                            if entity
+                                .pack
+                                .as_ref()
+                                .is_some_and(|identity| identity.id == pack.id)
+                            {
+                                entity.pack = None;
+                            }
+                        }
+                    } else {
+                        self.entities[target_index].pack = None;
+                    }
+                }
+                self.entities[target_index].controller_id = Some(self.player.id.clone());
+                (Some(roll), AbilityControlOutcomeDto::Controlled)
+            }
+        };
+        AbilityEffectResolutionDto::Control {
+            effect_index,
+            category: category.to_owned(),
+            power,
+            target_entity_id,
+            target_kind_id,
+            target_level,
+            roll,
+            outcome,
+        }
     }
 
     fn ability_target_plan(
@@ -6646,6 +6791,7 @@ impl Game {
             }
             AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
+            | AbilityEffectDefinition::Control { .. }
             | AbilityEffectDefinition::Sequence { .. } => {
                 if ability
                     .target
@@ -6828,6 +6974,45 @@ impl Game {
         positions
     }
 
+    fn detect_actor_positions(&self, category: &str, radius: u8) -> (Vec<Position>, Vec<String>) {
+        let origin = self.player.position;
+        let mut candidates = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .filter(|entity| {
+                chebyshev_distance(origin, entity.position) <= u32::from(radius)
+                    && self
+                        .content
+                        .actor(&entity.kind_id)
+                        .is_some_and(|definition| definition.tags.iter().any(|tag| tag == category))
+            })
+            .map(|entity| {
+                (
+                    chebyshev_distance(origin, entity.position),
+                    entity.position.y,
+                    entity.position.x,
+                    entity.id.clone(),
+                    entity.position,
+                )
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| {
+            (left.0, left.1, left.2, left.3.as_str()).cmp(&(
+                right.0,
+                right.1,
+                right.2,
+                right.3.as_str(),
+            ))
+        });
+        let positions = candidates.iter().map(|candidate| candidate.4).collect();
+        let entity_ids = candidates
+            .into_iter()
+            .map(|candidate| candidate.3)
+            .collect();
+        (positions, entity_ids)
+    }
+
     fn terrain_transform_positions(
         &self,
         ability: &AbilityDefinition,
@@ -6972,6 +7157,7 @@ impl Game {
             damage,
             trace: trace.clone(),
         });
+        self.wake_entity_after_damage(index, damage.applied, events);
         if self.entities[index].hp <= 0 {
             self.resolve_actor_death(
                 index,
@@ -7454,6 +7640,7 @@ impl Game {
                     damage,
                     trace: trace.clone(),
                 });
+                self.wake_entity_after_damage(index, damage.applied, events);
                 if self.entities[index].hp <= 0 {
                     self.resolve_actor_death(
                         index,
@@ -7725,6 +7912,7 @@ impl Game {
                 target_kind_id: target_kind.clone(),
                 damage,
             });
+            self.wake_entity_after_damage(index, damage.applied, events);
             self.gain_player_melee_resources(ResourceGainSourceDto::MeleeHit, events);
             if self.entities[index].hp <= 0 {
                 self.resolve_actor_death(
@@ -7877,6 +8065,11 @@ impl Game {
             };
             let target_kind_id = self.entities[index].kind_id.clone();
             let tick = process_actor_status_tick(&mut self.entities[index], true);
+            if tick.awakened {
+                events.push(DomainEvent::EntityAwakened {
+                    target_kind_id: target_kind_id.clone(),
+                });
+            }
             for damage in tick.damage {
                 events.push(DomainEvent::EntityStatusDamaged {
                     target_kind_id: target_kind_id.clone(),
@@ -7946,6 +8139,16 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            if self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLEEP)
+            {
+                events.push(DomainEvent::MonsterSlept {
+                    target_kind_id: self.entities[index].kind_id.clone(),
+                });
+                continue;
+            }
             self.resolve_monster_action(
                 index,
                 events,
@@ -7965,11 +8168,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
-        if self.entities[index]
-            .summon
-            .as_ref()
-            .is_some_and(|summon| summon.owner_id == self.player.id)
-        {
+        if self.entity_is_player_aligned(index) {
             self.resolve_player_summon_action(index, events, changed, removed_entities)?;
             return Ok(());
         }
@@ -8077,6 +8276,26 @@ impl Game {
         changed.insert(old_position);
         changed.insert(next_position);
         Ok(())
+    }
+
+    fn wake_entity_after_damage(
+        &mut self,
+        index: usize,
+        applied_damage: i32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if applied_damage <= 0 || self.entities[index].hp <= 0 {
+            return;
+        }
+        let before = self.entities[index].statuses.len();
+        self.entities[index]
+            .statuses
+            .retain(|status| status.kind_id != STATUS_SLEEP);
+        if self.entities[index].statuses.len() != before {
+            events.push(DomainEvent::EntityAwakened {
+                target_kind_id: self.entities[index].kind_id.clone(),
+            });
+        }
     }
 
     fn resolve_player_summon_action(
@@ -8196,10 +8415,7 @@ impl Game {
             .filter(|entity| {
                 entity.hp > 0
                     && entity.id != self.entities[index].id
-                    && entity
-                        .summon
-                        .as_ref()
-                        .is_none_or(|summon| summon.owner_id != self.player.id)
+                    && !self.actor_is_player_aligned(entity)
             })
             .map(|entity| {
                 (
@@ -8347,6 +8563,7 @@ impl Game {
                 .hp
                 .saturating_sub(damage.applied);
             changed.insert(target_position);
+            self.wake_entity_after_damage(target_index, damage.applied, events);
             if self.entities[target_index].hp <= 0 {
                 self.resolve_actor_death(
                     target_index,
@@ -9068,10 +9285,15 @@ impl Game {
     }
 
     fn entity_is_player_aligned(&self, index: usize) -> bool {
-        self.entities[index]
-            .summon
-            .as_ref()
-            .is_some_and(|summon| summon.owner_id == self.player.id)
+        self.actor_is_player_aligned(&self.entities[index])
+    }
+
+    fn actor_is_player_aligned(&self, actor: &Actor) -> bool {
+        actor.controller_id.as_deref() == Some(self.player.id.as_str())
+            || actor
+                .summon
+                .as_ref()
+                .is_some_and(|summon| summon.owner_id == self.player.id)
     }
 
     fn monster_hostile_targets(&self, source_index: usize) -> Vec<MonsterHostileTarget> {
@@ -10031,10 +10253,7 @@ impl Game {
                     .position(|entity| {
                         entity.id == entity_id
                             && entity.hp <= 0
-                            && entity
-                                .summon
-                                .as_ref()
-                                .is_some_and(|summon| summon.owner_id == self.player.id)
+                            && self.actor_is_player_aligned(entity)
                     })
                     .map(|index| self.entities[index].id.clone())
             })
@@ -10093,6 +10312,8 @@ impl Game {
                     duration_ticks,
                     stacking,
                     resistance_type,
+                    power,
+                    granted_resistances,
                 } => apply_ability_status_effect(
                     &mut self.entities[source_index],
                     &ability.id,
@@ -10102,7 +10323,11 @@ impl Game {
                     *duration_ticks,
                     *stacking,
                     *resistance_type,
+                    *power,
+                    granted_resistances,
                     None,
+                    None,
+                    &mut self.rng,
                 ),
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     remove_ability_status_effect(
@@ -10234,17 +10459,29 @@ impl Game {
                     duration_ticks,
                     stacking,
                     resistance_type,
-                } => apply_ability_status_effect(
-                    &mut self.entities[target_index],
-                    &ability.id,
-                    effect_index,
-                    status_kind_id,
-                    *intensity,
-                    *duration_ticks,
-                    *stacking,
-                    *resistance_type,
-                    None,
-                ),
+                    power,
+                    granted_resistances,
+                } => {
+                    let target_level = self
+                        .content
+                        .actor(&self.entities[target_index].kind_id)
+                        .map(|definition| definition.level);
+                    apply_ability_status_effect(
+                        &mut self.entities[target_index],
+                        &ability.id,
+                        effect_index,
+                        status_kind_id,
+                        *intensity,
+                        *duration_ticks,
+                        *stacking,
+                        *resistance_type,
+                        *power,
+                        granted_resistances,
+                        target_level,
+                        None,
+                        &mut self.rng,
+                    )
+                }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     remove_ability_status_effect(
                         &mut self.entities[target_index],
@@ -10502,9 +10739,12 @@ impl Game {
                     duration_ticks,
                     stacking,
                     resistance_type,
+                    power,
+                    granted_resistances,
                 } => {
                     let effective = self.effective_player_resistances();
                     let immunities = self.player_status_immunities();
+                    let target_level = u32::from(self.progress.level);
                     let resolution = apply_ability_status_effect(
                         &mut self.player,
                         &ability.id,
@@ -10514,7 +10754,11 @@ impl Game {
                         *duration_ticks,
                         *stacking,
                         *resistance_type,
+                        *power,
+                        granted_resistances,
+                        Some(target_level),
                         Some((&effective, &immunities)),
+                        &mut self.rng,
                     );
                     if let Some(damage_type) = resistance_type.map(DamageType::from) {
                         let level = effective.level(damage_type);
@@ -10577,6 +10821,7 @@ impl Game {
         self.entities[target_index].hp = self.entities[target_index]
             .hp
             .saturating_sub(damage.applied);
+        self.wake_entity_after_damage(target_index, damage.applied, events);
         AbilityEffectResolutionDto::Damage {
             effect_index,
             resolution: damage.into(),
@@ -10771,6 +11016,7 @@ impl Game {
             self.entities[target_index].hp = self.entities[target_index]
                 .hp
                 .saturating_sub(damage.applied);
+            self.wake_entity_after_damage(target_index, damage.applied, events);
             if self.entities[target_index].hp <= 0 {
                 events.push(DomainEvent::MonsterMeleeEntitySlew {
                     source_kind_id: source_kind_id.clone(),
@@ -12117,10 +12363,7 @@ impl Game {
         let mut remaining_entities = Vec::with_capacity(self.entities.len());
         for entity in std::mem::take(&mut self.entities) {
             let follows = entity.hp > 0
-                && entity
-                    .summon
-                    .as_ref()
-                    .is_some_and(|summon| summon.owner_id == self.player.id)
+                && self.actor_is_player_aligned(&entity)
                 && chebyshev_distance(entity.position, self.player.position) <= 2;
             if follows {
                 following_summons.push(entity);
@@ -15836,6 +16079,7 @@ impl Game {
                         <= usize::from(self.ability_learning_capacity(profile))
                         && self.learned_abilities.iter().all(|ability_id| {
                             self.content.ability(ability_id).is_some_and(|ability| {
+                                let ability = Self::effective_casting_ability(profile, ability);
                                 ability.minimum_level <= self.progress.level
                                     && self.profile_supports_ability(profile, ability_id)
                             })
@@ -15943,6 +16187,11 @@ impl Game {
                 && status.remaining_ticks > 0
                 && !status.kind_id.is_empty()
                 && status.kind_id.len() <= 128
+                && status.granted_resistances.len() <= 29
+                && status
+                    .granted_resistances
+                    .values()
+                    .all(|level| *level != ResistanceLevel::Normal)
         }) && actor
             .statuses
             .windows(2)
@@ -15956,10 +16205,7 @@ impl Game {
                     .monster_casting
                     .as_ref()
                     .is_some_and(|casting| casting.smart)
-                && actor
-                    .summon
-                    .as_ref()
-                    .is_none_or(|summon| summon.owner_id != self.player.id)
+                && !self.actor_is_player_aligned(actor)
         };
         if definition.role != expected_role
             || actor.max_hp != definition.max_hp
@@ -15975,6 +16221,12 @@ impl Game {
             || actor.energy_need < -STANDARD_ACTION_COST
             || actor.hp > effective_max_hp
             || (expected_role == ActorRole::Player && actor.pack.is_some())
+            || (expected_role == ActorRole::Player && actor.controller_id.is_some())
+            || actor
+                .controller_id
+                .as_deref()
+                .is_some_and(|controller_id| controller_id != self.player.id)
+            || (actor.controller_id.is_some() && actor.pack.is_some())
             || (actor.summon.is_some() && actor.pack.is_some())
             || definition.monster_casting.as_ref().map_or(
                 actor.casting_cooldown_remaining != 0,
@@ -16066,6 +16318,7 @@ struct ActorStatusTick {
     damage: Vec<StatusDamageTick>,
     expired: Vec<String>,
     fatal_damage: Option<StatusDamageTick>,
+    awakened: bool,
 }
 
 #[derive(Clone)]
@@ -16551,6 +16804,15 @@ fn ability_status_stacking_dto(
     }
 }
 
+const fn ability_detect_subject_dto(
+    subject: AbilityDetectSubjectDefinition,
+) -> AbilityDetectSubjectDto {
+    match subject {
+        AbilityDetectSubjectDefinition::Terrain => AbilityDetectSubjectDto::Terrain,
+        AbilityDetectSubjectDefinition::Actor => AbilityDetectSubjectDto::Actor,
+    }
+}
+
 fn ability_status_stacking(stacking: AbilityStatusStackingDefinition) -> StatusStacking {
     match stacking {
         AbilityStatusStackingDefinition::Replace => StatusStacking::Replace,
@@ -16593,6 +16855,110 @@ fn resisted_status_duration(requested: u32, resistance: ResistanceLevel) -> u32 
     .expect("clamped status duration must fit u32")
 }
 
+fn scaled_ability_level_value(
+    base: u64,
+    scaling: &AbilityLevelScalingDefinition,
+    level: u16,
+) -> u64 {
+    base.saturating_add(
+        u64::from(level.saturating_sub(scaling.level_offset))
+            .saturating_mul(u64::from(scaling.multiplier))
+            / u64::from(scaling.divisor),
+    )
+}
+
+fn apply_ability_level_scaling(
+    effect: &mut AbilityEffectDefinition,
+    scaling: &AbilityLevelScalingDefinition,
+    level: u16,
+) {
+    match (effect, scaling.field) {
+        (
+            AbilityEffectDefinition::Damage { damage_dice, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
+            | AbilityEffectDefinition::CurseDamage { damage_dice, .. },
+            AbilityLevelScalingField::DamageDice,
+        ) => {
+            *damage_dice = u16::try_from(scaled_ability_level_value(
+                u64::from(*damage_dice),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled damage dice must fit u16");
+        }
+        (
+            AbilityEffectDefinition::Damage { damage_bonus, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::CurseDamage { damage_bonus, .. },
+            AbilityLevelScalingField::DamageBonus,
+        ) => {
+            *damage_bonus = u16::try_from(scaled_ability_level_value(
+                u64::from(*damage_bonus),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled damage bonus must fit u16");
+        }
+        (
+            AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::ConeDamage { radius, .. }
+            | AbilityEffectDefinition::BreathDamage { radius, .. },
+            AbilityLevelScalingField::Radius,
+        ) => {
+            *radius = u8::try_from(scaled_ability_level_value(
+                u64::from(*radius),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled radius must fit u8");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus { intensity, .. },
+            AbilityLevelScalingField::StatusIntensity,
+        ) => {
+            *intensity = u16::try_from(scaled_ability_level_value(
+                u64::from(*intensity),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled status intensity must fit u16");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus { duration_ticks, .. },
+            AbilityLevelScalingField::StatusDurationTicks,
+        ) => {
+            *duration_ticks = u32::try_from(scaled_ability_level_value(
+                u64::from(*duration_ticks),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled status duration must fit u32");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus {
+                power: Some(power), ..
+            },
+            AbilityLevelScalingField::StatusPower,
+        )
+        | (
+            AbilityEffectDefinition::Control { power, .. },
+            AbilityLevelScalingField::ControlPower,
+        ) => {
+            *power = u16::try_from(scaled_ability_level_value(
+                u64::from(*power),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled effect power must fit u16");
+        }
+        _ => unreachable!("content validation must reject incompatible level scaling fields"),
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn apply_ability_status_effect(
     actor: &mut Actor,
@@ -16603,8 +16969,19 @@ fn apply_ability_status_effect(
     duration_ticks: u32,
     stacking: AbilityStatusStackingDefinition,
     resistance_type: Option<rfb_content::ActorDamageType>,
+    power: Option<u16>,
+    granted_resistances: &BTreeMap<rfb_content::ActorDamageType, rfb_content::ActorResistanceLevel>,
+    target_level: Option<u32>,
     defenses: Option<(&ResistanceProfile, &BTreeSet<String>)>,
+    rng: &mut RfbRng,
 ) -> AbilityEffectResolutionDto {
+    let granted_resistances_dto = granted_resistances
+        .iter()
+        .map(|(damage_type, level)| ResistanceDto {
+            damage_type: DamageType::from(*damage_type).into(),
+            level: ResistanceLevel::from(*level).into(),
+        })
+        .collect::<Vec<_>>();
     // Gear- or race-granted immunity blocks the status outright before any
     // resistance scaling; the resolution reuses the immune shape.
     if defenses.is_some_and(|(_, immunities)| immunities.contains(status_kind_id)) {
@@ -16617,7 +16994,43 @@ fn apply_ability_status_effect(
             stacking: ability_status_stacking_dto(stacking),
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
             resistance: None,
+            power,
+            target_level: None,
+            power_roll: None,
+            target_roll: None,
+            granted_resistances: granted_resistances_dto,
             change: AbilityStatusChangeDto::Immune,
+        };
+    }
+    let (resolved_target_level, power_roll, target_roll) =
+        if let (Some(power), Some(target_level)) = (power, target_level) {
+            let target_roll = u32::try_from(rng.bounded(u64::from(target_level.max(1))) + 1)
+                .expect("status target-level roll must fit u32");
+            let power_roll = u16::try_from(rng.bounded(u64::from(power.max(1))) + 1)
+                .expect("status power roll must fit u16");
+            (Some(target_level), Some(power_roll), Some(target_roll))
+        } else {
+            (None, None, None)
+        };
+    if power_roll
+        .zip(target_roll)
+        .is_some_and(|(power_roll, target_roll)| target_roll >= u32::from(power_roll))
+    {
+        return AbilityEffectResolutionDto::ApplyStatus {
+            effect_index,
+            status_kind_id: status_kind_id.to_owned(),
+            intensity,
+            requested_duration_ticks: duration_ticks,
+            applied_duration_ticks: 0,
+            stacking: ability_status_stacking_dto(stacking),
+            resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+            resistance: None,
+            power,
+            target_level: resolved_target_level,
+            power_roll,
+            target_roll,
+            granted_resistances: granted_resistances_dto,
+            change: AbilityStatusChangeDto::Resisted,
         };
     }
     let resistance = resistance_type.map(DamageType::from).map(|damage_type| {
@@ -16639,6 +17052,11 @@ fn apply_ability_status_effect(
             stacking: ability_status_stacking_dto(stacking),
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
             resistance: resistance.map(Into::into),
+            power,
+            target_level: resolved_target_level,
+            power_roll,
+            target_roll,
+            granted_resistances: granted_resistances_dto,
             change: AbilityStatusChangeDto::Immune,
         };
     }
@@ -16655,6 +17073,15 @@ fn apply_ability_status_effect(
                 intensity,
                 remaining_ticks: applied_duration_ticks,
                 source_id: Some(ability_id.to_owned()),
+                granted_resistances: granted_resistances
+                    .iter()
+                    .map(|(damage_type, level)| {
+                        (
+                            DamageType::from(*damage_type),
+                            ResistanceLevel::from(*level),
+                        )
+                    })
+                    .collect(),
             },
             stacking: ability_status_stacking(stacking),
         }),
@@ -16671,6 +17098,11 @@ fn apply_ability_status_effect(
         stacking: ability_status_stacking_dto(stacking),
         resistance_type: resistance_type.map(DamageType::from).map(Into::into),
         resistance: resistance.map(Into::into),
+        power,
+        target_level: resolved_target_level,
+        power_roll,
+        target_roll,
+        granted_resistances: granted_resistances_dto,
         change: ability_status_change_dto(change),
     }
 }
@@ -16819,10 +17251,12 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             duration_turns: *duration_turns,
         },
         AbilityEffectDefinition::Detect {
+            subject,
             category,
             radius,
             persistent,
         } => AbilityEffectSpecDto::Detect {
+            subject: ability_detect_subject_dto(*subject),
             category: category.clone(),
             radius: *radius,
             persistent: *persistent,
@@ -16842,18 +17276,32 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             duration_ticks,
             stacking,
             resistance_type,
+            power,
+            granted_resistances,
         } => AbilityEffectSpecDto::ApplyStatus {
             status_kind_id: status_kind_id.clone(),
             intensity: *intensity,
             duration_ticks: *duration_ticks,
             stacking: ability_status_stacking_dto(*stacking),
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
+            power: *power,
+            granted_resistances: granted_resistances
+                .iter()
+                .map(|(damage_type, level)| ResistanceDto {
+                    damage_type: DamageType::from(*damage_type).into(),
+                    level: ResistanceLevel::from(*level).into(),
+                })
+                .collect(),
         },
         AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
             AbilityEffectSpecDto::RemoveStatus {
                 status_kind_id: status_kind_id.clone(),
             }
         }
+        AbilityEffectDefinition::Control { category, power } => AbilityEffectSpecDto::Control {
+            category: category.clone(),
+            power: *power,
+        },
         AbilityEffectDefinition::Heal { amount } => AbilityEffectSpecDto::Heal { amount: *amount },
         AbilityEffectDefinition::Sequence { .. } => {
             unreachable!("nested ability effect sequences are rejected by content validation")
@@ -17005,6 +17453,7 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
         .collect::<Vec<_>>();
     let mut damage = Vec::new();
     let mut fatal_damage = None;
+    let mut awakened = false;
     for (status_kind_id, amount, damage_type) in periodic {
         let mut target = EffectTarget {
             hp: &mut actor.hp,
@@ -17022,6 +17471,13 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
             status_kind_id: status_kind_id.clone(),
             outcome,
         };
+        if outcome.applied > 0 && actor.hp > 0 {
+            let before = actor.statuses.len();
+            actor
+                .statuses
+                .retain(|status| status.kind_id != STATUS_SLEEP);
+            awakened |= actor.statuses.len() != before;
+        }
         damage.push(damage_tick.clone());
         if actor.hp < 0 || (lethal_at_zero && actor.hp == 0) {
             fatal_damage = Some(damage_tick);
@@ -17033,6 +17489,7 @@ fn process_actor_status_tick(actor: &mut Actor, lethal_at_zero: bool) -> ActorSt
         damage,
         expired,
         fatal_damage,
+        awakened,
     }
 }
 

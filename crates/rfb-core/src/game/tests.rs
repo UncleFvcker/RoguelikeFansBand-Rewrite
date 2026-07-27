@@ -1329,6 +1329,7 @@ fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
         intensity: 1,
         remaining_ticks: 20,
         source_id: None,
+        granted_resistances: Vec::new(),
     }];
     let mut haste = Game::from_save(haste_payload).expect("haste setup should load");
     assert_eq!(haste.snapshot().player.speed, 120);
@@ -1346,6 +1347,7 @@ fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
         intensity: 1,
         remaining_ticks: 40,
         source_id: None,
+        granted_resistances: Vec::new(),
     }];
     let mut slow = Game::from_save(slow_payload).expect("slow setup should load");
     let slow_update = slow
@@ -1364,6 +1366,7 @@ fn poison_uses_resistance_then_expires_and_round_trips() {
         intensity: 2,
         remaining_ticks: 3,
         source_id: Some("demo.actor.ember-mote.1".to_owned()),
+        granted_resistances: Vec::new(),
     }];
     payload.player.resistances = vec![ResistanceSaveDto {
         damage_type: DamageTypeDto::Poison,
@@ -1404,12 +1407,14 @@ fn bleeding_ticks_as_physical_damage_in_stable_status_order() {
             intensity: 1,
             remaining_ticks: 1,
             source_id: None,
+            granted_resistances: Vec::new(),
         },
         StatusSaveDto {
             kind_id: STATUS_BLEEDING.to_owned(),
             intensity: 2,
             remaining_ticks: 2,
             source_id: None,
+            granted_resistances: Vec::new(),
         },
     ];
     let mut game = Game::from_save(payload).expect("bleeding setup should load");
@@ -1495,6 +1500,7 @@ fn lethal_monster_status_removes_the_entity_before_energy_actions() {
         intensity: 3,
         remaining_ticks: 1,
         source_id: Some("demo.player.1".to_owned()),
+        granted_resistances: Vec::new(),
     }];
     let mut game = Game::from_save(payload).expect("monster poison setup should load");
     let update = game
@@ -1525,6 +1531,7 @@ fn leader_death_dissolves_pack_before_remaining_members_act() {
         intensity: 3,
         remaining_ticks: 1,
         source_id: Some("demo.player.1".to_owned()),
+        granted_resistances: Vec::new(),
     }];
     payload.entities[0].pack = Some(rfb_protocol::MonsterPackSaveDto {
         id: pack_id.clone(),
@@ -1576,6 +1583,7 @@ fn content_driven_loot_generation_is_deterministic_and_persistent() {
         intensity: 3,
         remaining_ticks: 1,
         source_id: Some(left.player.id.clone()),
+        granted_resistances: BTreeMap::new(),
     }];
     let mut right = left.clone();
     let death_position = left.entities[0].position;
@@ -4740,12 +4748,14 @@ fn player_derived_stats_retain_equipment_and_status_sources() {
         intensity: 2,
         remaining_ticks: 3,
         source_id: Some("demo.item.temporary-tonic.1".to_owned()),
+        granted_resistances: BTreeMap::new(),
     });
     game.player.statuses.push(StatusInstance {
         kind_id: STATUS_STUN.to_owned(),
         intensity: 2,
         remaining_ticks: 3,
         source_id: Some("demo.monster.impact.1".to_owned()),
+        granted_resistances: BTreeMap::new(),
     });
     game.player
         .statuses
@@ -4785,12 +4795,14 @@ fn fear_check_can_consume_a_melee_action_without_attacking() {
         intensity: 10,
         remaining_ticks: 20,
         source_id: None,
+        granted_resistances: BTreeMap::new(),
     });
     game.player.statuses.push(StatusInstance {
         kind_id: STATUS_FEAR.to_owned(),
         intensity: 2,
         remaining_ticks: 20,
         source_id: Some("demo.monster.ember-mote.1".to_owned()),
+        granted_resistances: BTreeMap::new(),
     });
 
     let update = game
@@ -7887,6 +7899,7 @@ fn self_status_sequence_applies_in_order_and_round_trips() {
             intensity: 1,
             remaining_ticks: 20,
             source_id: Some("test.slow".to_owned()),
+            granted_resistances: BTreeMap::new(),
         });
         let update = dispatch_next(
             &mut candidate,
@@ -8241,7 +8254,7 @@ fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
             remaining_slots: 2,
         })
     );
-    assert_eq!(initial.player.abilities.len(), 14);
+    assert_eq!(initial.player.abilities.len(), 22);
     assert!(
         initial
             .player
@@ -8375,6 +8388,529 @@ fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
             "learned ability set exceeds learning capacity"
         ))
     ));
+}
+
+#[test]
+fn class_casting_overrides_drive_study_cast_projection_and_save_validation() {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let profile = artifact
+        .content
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.mage")
+        .and_then(|class| class.casting_profile.as_mut())
+        .expect("demo mage should have a casting profile");
+    profile
+        .ability_overrides
+        .push(rfb_content::AbilityCastingOverrideDefinition {
+            ability_id: "demo.ability.resonant-bolt".to_owned(),
+            minimum_level: 2,
+            resource_cost: 9,
+            base_failure_percent: 47,
+        });
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("casting override content should remain valid"),
+    ));
+    let mut game = Game::from_content_with_build(
+        0,
+        Arc::clone(&catalog),
+        BUILT_IN_WORLD_ID,
+        "demo.build.scholar",
+    )
+    .expect("custom scholar build should create");
+    let book_item_id = ability_book_item_id(&game);
+
+    let initial = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.resonant-bolt")
+        .expect("override ability should be projected");
+    assert_eq!(initial.minimum_level, 2);
+    assert_eq!(initial.base_resource_cost, 9);
+    assert!(!initial.can_study);
+
+    game.apply_player_experience(10, &mut Vec::new());
+    assert_eq!(game.progress.level, 2);
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.resonant-bolt")
+        .expect("override ability should remain projected");
+    assert!(available.can_study);
+    assert_ne!(available.failure_percent, 20);
+
+    let studied = dispatch_next(
+        &mut game,
+        GameCommand::StudyAbility {
+            book_item_id,
+            ability_id: "demo.ability.resonant-bolt".to_owned(),
+        },
+    );
+    assert!(
+        studied
+            .events
+            .iter()
+            .any(|event| event.kind == "ability.studied")
+    );
+
+    let cast = dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.resonant-bolt".to_owned(),
+            target: TargetSelection::Entity {
+                entity_id: "demo.monster.ember-mote.1".to_owned(),
+            },
+        },
+    );
+    let resolution = ability_cast_resolution(&cast);
+    assert_eq!(resolution.base_resource_cost, 9);
+    assert_eq!(resolution.resource_cost, available.resource_cost);
+    assert_eq!(resolution.failure_percent, available.failure_percent);
+
+    let snapshot = game.snapshot();
+    let restored = Game::from_save_with_content(game.to_save(), catalog)
+        .expect("learned override ability should reload against the same content");
+    assert_eq!(restored.snapshot(), snapshot);
+}
+
+#[test]
+fn death_abilities_materialize_player_level_scaling_in_projection() {
+    let mut game =
+        Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+    game.progress.level = 11;
+    let abilities = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+
+    assert!(matches!(
+        abilities["demo.ability.death-malediction"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Damage {
+            damage_dice: 5,
+            damage_sides: 4,
+            damage_bonus: 0,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-stinking-cloud"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 14,
+            radius: 2,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-black-sleep"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            power: Some(22),
+            duration_ticks: 500,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-horrify"].effects.as_slice(),
+        [
+            AbilityEffectSpecDto::ApplyStatus {
+                power: Some(22),
+                ..
+            },
+            AbilityEffectSpecDto::ApplyStatus {
+                duration_ticks: 7,
+                ..
+            }
+        ]
+    ));
+    assert!(matches!(
+        abilities["demo.ability.death-enslave-undead"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Control { power: 22, .. }]
+    ));
+}
+
+#[test]
+fn actor_detection_ignores_los_and_orders_entities_stably() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    for (id, kind_id, position) in [
+        (
+            "test.actor.warden",
+            "demo.actor.resonant-warden",
+            Position {
+                x: origin.x + 6,
+                y: origin.y,
+            },
+        ),
+        (
+            "test.actor.captain",
+            "demo.actor.chorus-captain",
+            Position {
+                x: origin.x + 1,
+                y: origin.y + 1,
+            },
+        ),
+        (
+            "test.actor.evil",
+            "demo.actor.gloom-weaver",
+            Position {
+                x: origin.x + 7,
+                y: origin.y,
+            },
+        ),
+    ] {
+        let definition = game.content.actor(kind_id).expect("demo actor").clone();
+        game.entities.push(actor_from_runtime_spawn(
+            id,
+            kind_id,
+            position,
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+    }
+    replace_terrain(
+        &mut game,
+        Position {
+            x: origin.x + 2,
+            y: origin.y,
+        },
+        "demo.terrain.wall",
+    );
+
+    let (positions, ids) = game.detect_actor_positions("nonliving", 8);
+    assert_eq!(
+        ids,
+        vec![
+            "test.actor.captain".to_owned(),
+            "test.actor.warden".to_owned()
+        ]
+    );
+    assert_eq!(
+        positions,
+        vec![
+            Position {
+                x: origin.x + 1,
+                y: origin.y + 1,
+            },
+            Position {
+                x: origin.x + 6,
+                y: origin.y,
+            }
+        ]
+    );
+    assert_eq!(
+        game.detect_actor_positions("evil", 8).1,
+        vec!["test.actor.evil".to_owned()]
+    );
+    assert!(game.detect_actor_positions("evil", 6).1.is_empty());
+    assert!(game.revealed_terrain.is_empty());
+}
+
+#[test]
+fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
+    let template = Game::new(0).entities[0].clone();
+    let mut saw_added = false;
+    let mut saw_resisted = false;
+    for seed in 0..256 {
+        let mut actor = template.clone();
+        actor.statuses.clear();
+        let mut rng = RfbRng::seeded(seed);
+        let resolution = apply_ability_status_effect(
+            &mut actor,
+            "test.ability.sleep",
+            0,
+            STATUS_SLEEP,
+            1,
+            50,
+            AbilityStatusStackingDefinition::KeepStrongest,
+            None,
+            Some(10),
+            &BTreeMap::new(),
+            Some(10),
+            None,
+            &mut rng,
+        );
+        let AbilityEffectResolutionDto::ApplyStatus {
+            power_roll,
+            target_roll,
+            change,
+            ..
+        } = resolution
+        else {
+            panic!("sleep should resolve as a status");
+        };
+        assert!(power_roll.is_some());
+        assert!(target_roll.is_some());
+        saw_added |= change == AbilityStatusChangeDto::Added;
+        saw_resisted |= change == AbilityStatusChangeDto::Resisted;
+        if saw_added && saw_resisted {
+            break;
+        }
+    }
+    assert!(saw_added, "a deterministic sleep success seed should exist");
+    assert!(
+        saw_resisted,
+        "a deterministic sleep resistance seed should exist"
+    );
+
+    let mut game = Game::new(0);
+    let sleeping_actor = game.entities[0].clone();
+    clear_monsters(&mut game);
+    game.entities.push(sleeping_actor);
+    game.entities[0].statuses.push(StatusInstance {
+        kind_id: STATUS_SLEEP.to_owned(),
+        intensity: 1,
+        remaining_ticks: 50,
+        source_id: Some("test.ability.sleep".to_owned()),
+        granted_resistances: BTreeMap::new(),
+    });
+    let position = game.entities[0].position;
+    let snapshot = game.snapshot();
+    let restored = Game::from_save(game.to_save()).expect("sleep should round-trip");
+    assert_eq!(restored.snapshot(), snapshot);
+
+    game.entities[0].energy_need = 0;
+    let mut events = Vec::new();
+    game.process_monster_energy_pulse(&mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("sleeping monster energy should resolve");
+    assert_eq!(game.entities[0].position, position);
+    assert_eq!(game.entities[0].energy_need, 90);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterSlept { .. }))
+    );
+
+    game.entities[0].hp -= 1;
+    game.wake_entity_after_damage(0, 1, &mut events);
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_SLEEP)
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::EntityAwakened { .. }))
+    );
+}
+
+#[test]
+fn temporary_status_resistances_apply_expire_and_round_trip() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    let granted = BTreeMap::from([
+        (
+            rfb_content::ActorDamageType::Cold,
+            ActorResistanceLevel::Resistant,
+        ),
+        (
+            rfb_content::ActorDamageType::Poison,
+            ActorResistanceLevel::Resistant,
+        ),
+    ]);
+    let resolution = apply_ability_status_effect(
+        &mut game.player,
+        "demo.ability.death-necromantic-resistance",
+        0,
+        "rfb.status.necromantic-resistance",
+        1,
+        2,
+        AbilityStatusStackingDefinition::Replace,
+        None,
+        None,
+        &granted,
+        None,
+        None,
+        &mut game.rng,
+    );
+    assert!(matches!(
+        resolution,
+        AbilityEffectResolutionDto::ApplyStatus {
+            change: AbilityStatusChangeDto::Added,
+            ..
+        }
+    ));
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Cold),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+
+    let snapshot = game.snapshot();
+    let restored = Game::from_save(game.to_save()).expect("temporary resistance should reload");
+    assert_eq!(restored.snapshot(), snapshot);
+
+    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("first status tick should resolve");
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Cold),
+        ResistanceLevel::Resistant
+    );
+    game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("second status tick should expire");
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Cold),
+        ResistanceLevel::Normal
+    );
+}
+
+#[test]
+fn control_resists_ineligible_targets_and_turns_pack_leaders_into_allies() {
+    let pack_id = "test.pack.control".to_owned();
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    for (id, kind_id, position, role) in [
+        (
+            "test.actor.controlled",
+            "demo.actor.resonant-warden",
+            Position { x: 8, y: 3 },
+            MonsterPackRoleDto::Leader,
+        ),
+        (
+            "test.actor.member",
+            "demo.actor.chorus-captain",
+            Position { x: 10, y: 4 },
+            MonsterPackRoleDto::Member,
+        ),
+    ] {
+        let definition = game.content.actor(kind_id).expect("demo actor").clone();
+        let mut actor = actor_from_runtime_spawn(
+            id,
+            kind_id,
+            position,
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        );
+        actor.pack = Some(MonsterPackIdentity {
+            id: pack_id.clone(),
+            leader_id: "test.actor.controlled".to_owned(),
+            role,
+            behavior: MonsterPackBehaviorDto::GuardLeader,
+        });
+        game.entities.push(actor);
+    }
+
+    let draws_before = game.rng.draw_counter;
+    let ineligible = game.resolve_ability_control(1, 0, "undead", 100);
+    assert!(matches!(
+        ineligible,
+        AbilityEffectResolutionDto::Control {
+            outcome: AbilityControlOutcomeDto::Ineligible,
+            roll: None,
+            ..
+        }
+    ));
+    assert_eq!(game.rng.draw_counter, draws_before);
+
+    let controlled = game.resolve_ability_control(0, 0, "undead", 100);
+    assert!(matches!(
+        controlled,
+        AbilityEffectResolutionDto::Control {
+            outcome: AbilityControlOutcomeDto::Controlled,
+            roll: Some(_),
+            ..
+        }
+    ));
+    assert_eq!(
+        game.entities[0].controller_id.as_deref(),
+        Some(game.player.id.as_str())
+    );
+    assert!(game.entities.iter().all(|entity| entity.pack.is_none()));
+    assert_eq!(
+        game.snapshot().entities[0].faction,
+        EntityFactionDto::Player
+    );
+
+    for y in 2..=4 {
+        for x in 3..=10 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    let old_distance = chebyshev_distance(game.entities[0].position, game.player.position);
+    game.resolve_monster_action(
+        0,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    )
+    .expect("controlled actor should use player summon AI");
+    assert!(chebyshev_distance(game.entities[0].position, game.player.position) < old_distance);
+
+    let snapshot = game.snapshot();
+    let restored = Game::from_save(game.to_save()).expect("controller identity should reload");
+    assert_eq!(restored.snapshot(), snapshot);
+
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    artifact
+        .content
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.serpent-of-chaos")
+        .expect("demo final guardian")
+        .tags
+        .push("undead".to_owned());
+    artifact
+        .content
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.serpent-of-chaos")
+        .expect("demo final guardian")
+        .level = 50;
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(artifact));
+    let mut resisted_game =
+        Game::from_content_with_build(0, catalog, BUILT_IN_WORLD_ID, "demo.build.scholar")
+            .expect("custom scholar build should create");
+    resisted_game.entities.truncate(1);
+    resisted_game.entities[0].kind_id = "demo.actor.serpent-of-chaos".to_owned();
+    let resisted = resisted_game.resolve_ability_control(0, 0, "undead", 20);
+    assert!(matches!(
+        resisted,
+        AbilityEffectResolutionDto::Control {
+            target_level: 50,
+            outcome: AbilityControlOutcomeDto::Resisted,
+            roll: Some(_),
+            ..
+        }
+    ));
+    assert!(resisted_game.entities[0].controller_id.is_none());
 }
 
 #[test]
@@ -8858,6 +9394,7 @@ fn rest_interrupts_for_visible_enemies_and_damage_before_recovery() {
         intensity: 1,
         remaining_ticks: 1,
         source_id: None,
+        granted_resistances: Vec::new(),
     }];
     let mut damaged = Game::from_save(payload).expect("bleeding rest fixture should load");
     let interrupted = dispatch_next(&mut damaged, GameCommand::Rest { turns: 10 });
@@ -9502,6 +10039,7 @@ fn monster_casting_utility_uses_wounds_status_and_distance_without_rng() {
         intensity: 1,
         remaining_ticks: 30,
         source_id: Some(quickening.id.clone()),
+        granted_resistances: BTreeMap::new(),
     });
     assert_eq!(
         game.monster_ability_plan(0, quickening, 2)

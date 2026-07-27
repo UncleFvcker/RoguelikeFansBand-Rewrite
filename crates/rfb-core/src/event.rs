@@ -422,6 +422,12 @@ pub(crate) enum DomainEvent {
     PlayerParalyzed {
         status_kind_id: String,
     },
+    MonsterSlept {
+        target_kind_id: String,
+    },
+    EntityAwakened {
+        target_kind_id: String,
+    },
     PlayerMeleeHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -1483,6 +1489,16 @@ impl DomainEvent {
                 "status.paralyzed",
                 "status-paralyzed",
                 [("status", status_kind_id)],
+            ),
+            Self::MonsterSlept { target_kind_id } => dto(
+                "status.monster-slept",
+                "status-monster-slept",
+                [("target", target_kind_id)],
+            ),
+            Self::EntityAwakened { target_kind_id } => dto(
+                "status.entity-awakened",
+                "status-entity-awakened",
+                [("target", target_kind_id)],
             ),
             Self::PlayerMeleeHit {
                 target_kind_id,

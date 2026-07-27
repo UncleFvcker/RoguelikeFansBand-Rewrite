@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v103/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v102` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v104/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v103` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v103/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v104/baseline-policy.json
 ```
 
 ## 2. 禁止操作

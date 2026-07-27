@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-black-sleep",
+  "nameKey": "ability-demo-death-black-sleep-name",
+  "descriptionKey": "ability-demo-death-black-sleep-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 1,
+  "baseFailurePercent": 5,
+  "target": {
+    "modes": ["position", "entity"],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "apply-status",
+    "statusKindId": "rfb.status.sleep",
+    "intensity": 1,
+    "durationTicks": 500,
+    "stacking": "keep-strongest",
+    "power": 2
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "status-power",
+      "levelOffset": 1,
+      "multiplier": 2,
+      "divisor": 1
+    }
+  ],
+  "tags": ["death", "sleep", "spell"]
+}

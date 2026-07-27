@@ -17,7 +17,7 @@ use serde::Serialize;
 
 use crate::{LEGACY_BASELINE_COMMIT, LegacyImportError};
 
-pub const CONTENT_IMPORT_SCHEMA_VERSION: u16 = 1;
+pub const CONTENT_IMPORT_SCHEMA_VERSION: u16 = 2;
 const SCHEMA_BASE: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1";
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -164,6 +164,73 @@ pub struct LegacyCharacterSources {
     pub bodies: Vec<LegacyBodyTemplate>,
     pub races: Vec<LegacyCharacterEntry>,
     pub personalities: Vec<LegacyCharacterEntry>,
+    pub classes: Vec<LegacyClassEntry>,
+    pub magic_profiles: Vec<LegacyMagicProfile>,
+    pub proficiency_profiles: Vec<LegacyProficiencyProfile>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LegacyClassRegistration {
+    pub index: u16,
+    pub id: String,
+    pub function: String,
+    pub registered: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LegacyClassEntry {
+    pub registration: LegacyClassRegistration,
+    pub character: LegacyCharacterEntry,
+    pub caster_profile: Option<LegacyCasterProfile>,
+    pub source_found: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyCasterProfile {
+    pub dynamic: bool,
+    pub casting_attribute: String,
+    pub minimum_failure_percent: u8,
+    pub minimum_level: u16,
+    pub max_encumbrance_weight: i32,
+    pub weapon_encumbrance_percent: i32,
+    pub zero_mana_encumbrance_weight: i32,
+    pub options: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyMagicProfile {
+    pub class_index: u16,
+    pub name_hint: String,
+    pub book_type: String,
+    pub casting_attribute: String,
+    pub extra_flags: u32,
+    pub spell_type: i32,
+    pub first_spell_level: u16,
+    pub spell_weight: i32,
+    pub realms: Vec<LegacyRealmProfile>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyRealmProfile {
+    pub index: u8,
+    pub readable: bool,
+    pub spells: Vec<LegacySpellProfile>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct LegacySpellProfile {
+    pub index: u8,
+    pub level: u16,
+    pub mana: u16,
+    pub failure_percent: u8,
+    pub experience: u16,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyProficiencyProfile {
+    pub class_index: u16,
+    pub weapon_entries: usize,
+    pub skill_entries: BTreeMap<u16, usize>,
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -204,8 +271,36 @@ pub struct ContentImportReport {
     pub races_imported: usize,
     pub personalities_total: usize,
     pub personalities_imported: usize,
+    pub classes_total: usize,
+    pub classes_imported: usize,
+    pub classes_registered: usize,
+    pub classes_with_source: usize,
+    pub magic_profiles_total: usize,
+    pub classes_with_casting_shells: usize,
+    pub class_caster_profiles_imported: usize,
+    pub class_caster_profiles_dynamic: usize,
+    pub classes_with_readable_realms: usize,
+    pub magic_realm_rows: usize,
+    pub magic_readable_realm_rows: usize,
+    pub magic_spell_profile_rows: usize,
+    pub realm_readability: BTreeMap<String, usize>,
+    pub player_abilities_imported: usize,
+    pub player_ability_books_imported: usize,
+    pub classes_with_runtime_casting_profiles: usize,
+    pub player_spell_parameter_overrides: usize,
+    pub player_spell_mapped_rows: usize,
+    pub player_spell_effect_gaps: BTreeMap<String, usize>,
+    pub player_spell_behavior_gaps: BTreeMap<String, usize>,
+    pub casting_attribute_gaps: BTreeMap<String, usize>,
+    pub class_magic_gaps: BTreeMap<String, usize>,
+    pub proficiency_profiles_total: usize,
+    pub proficiency_weapon_rows: usize,
+    pub proficiency_skill_rows: usize,
+    pub class_proficiency_gaps: BTreeMap<String, usize>,
     pub unmapped_race_flags: BTreeMap<String, usize>,
+    pub unmapped_class_flags: BTreeMap<String, usize>,
     pub race_hook_gaps: BTreeMap<String, usize>,
+    pub class_hook_gaps: BTreeMap<String, usize>,
     pub body_slot_gaps: BTreeMap<String, usize>,
     pub item_behavior_gaps: BTreeMap<String, usize>,
     pub skip_reasons: BTreeMap<String, usize>,
@@ -272,6 +367,34 @@ pub fn read_legacy_object(source: &Path, path: &str) -> Result<String, LegacyImp
         ));
     }
     Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+}
+
+fn list_legacy_c_sources(source: &Path) -> Result<Vec<String>, LegacyImportError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(source)
+        .args([
+            "ls-tree",
+            "-r",
+            "--name-only",
+            LEGACY_BASELINE_COMMIT,
+            "--",
+            "src",
+        ])
+        .output()
+        .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
+    if !output.status.success() {
+        return Err(LegacyImportError::LegacyGit(
+            String::from_utf8_lossy(&output.stderr).trim().to_owned(),
+        ));
+    }
+    let mut paths = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter(|path| path.ends_with(".c"))
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    paths.sort();
+    Ok(paths)
 }
 
 pub fn parse_f_info(text: &str) -> Vec<LegacyTerrainEntry> {
@@ -676,14 +799,22 @@ fn launcher_ammo_for(entry: &LegacyItemEntry, ammo: &LauncherAmmoIndex) -> Optio
     }
 }
 
+fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
+    (entry.tval == DEATH_FIRST_BOOK_TVAL && entry.sval == DEATH_FIRST_BOOK_SVAL)
+        .then_some(DEATH_FIRST_BOOK_ID)
+}
+
 fn item_json(
     entry: &LegacyItemEntry,
     id: &str,
     ammo: &LauncherAmmoIndex,
+    ability_book_id: Option<&str>,
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
-    if let Some(gap) = shape.behavior_gap {
+    if let Some(gap) = shape.behavior_gap
+        && ability_book_id.is_none()
+    {
         *report.item_behavior_gaps.entry(gap.to_owned()).or_default() += 1;
     }
     let mut value = serde_json::json!({
@@ -697,6 +828,10 @@ fn item_json(
         "maxStack": shape.max_stack,
         "tags": shape.tags,
     });
+    if let Some(ability_book_id) = ability_book_id {
+        value["maxStack"] = serde_json::json!(1);
+        value["abilityBookId"] = serde_json::json!(ability_book_id);
+    }
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
     }
@@ -1872,6 +2007,445 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
     entry
 }
 
+/// Parses the selectable class registry by joining numeric `CLASS_*`
+/// definitions with the single dispatch switch in `classes.c`.
+pub fn parse_class_registrations(defines: &str, classes: &str) -> Vec<LegacyClassRegistration> {
+    let indices = defines
+        .lines()
+        .filter_map(|line| {
+            let mut parts = line.split_whitespace();
+            if parts.next()? != "#define" {
+                return None;
+            }
+            let token = parts.next()?;
+            let index = parts.next()?.parse::<u16>().ok()?;
+            token
+                .starts_with("CLASS_")
+                .then(|| (token.to_owned(), index))
+        })
+        .collect::<BTreeMap<_, _>>();
+    let mut registrations = Vec::new();
+    let mut current_token: Option<&str> = None;
+    for raw_line in classes.lines() {
+        let line = raw_line.trim();
+        if let Some(token) = line
+            .strip_prefix("case ")
+            .and_then(|line| line.strip_suffix(':'))
+            .filter(|token| token.starts_with("CLASS_"))
+        {
+            current_token = Some(token);
+            continue;
+        }
+        let Some(token) = current_token else {
+            continue;
+        };
+        let Some(rest) = line.strip_prefix("result = ") else {
+            continue;
+        };
+        let Some(paren) = rest.find('(') else {
+            continue;
+        };
+        let function = rest[..paren].trim();
+        if function.is_empty()
+            || !function
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+        {
+            continue;
+        }
+        if let Some(index) = indices.get(token) {
+            registrations.push(LegacyClassRegistration {
+                index: *index,
+                id: token
+                    .trim_start_matches("CLASS_")
+                    .to_ascii_lowercase()
+                    .replace('_', "-"),
+                function: function.to_owned(),
+                registered: true,
+            });
+        }
+        current_token = None;
+    }
+    registrations.sort_by_key(|entry| entry.index);
+    registrations
+}
+
+/// Finds one canonical `class_t *foo_get_class(...)` definition.
+pub fn extract_class_block<'a>(text: &'a str, function: &str) -> Option<&'a str> {
+    for (position, _) in text.match_indices(function) {
+        if !text[position + function.len()..].starts_with('(') {
+            continue;
+        }
+        if text[..position]
+            .bytes()
+            .next_back()
+            .is_some_and(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+        {
+            continue;
+        }
+        let line_start = text[..position].rfind('\n').map_or(0, |index| index + 1);
+        let line_end = text[position..]
+            .find('\n')
+            .map_or(text.len(), |index| position + index);
+        let line = &text[line_start..line_end];
+        if !line.contains("class_t *") || line.contains(';') {
+            continue;
+        }
+        return function_block(text, position);
+    }
+    None
+}
+
+fn assignment_value<'a>(body: &'a str, field: &str) -> Option<&'a str> {
+    let marker = format!("me.{field}");
+    for line in body.lines() {
+        let line = line.trim();
+        let Some(rest) = line.strip_prefix(&marker) else {
+            continue;
+        };
+        let Some(rest) = rest.trim_start().strip_prefix('=') else {
+            continue;
+        };
+        let rest = rest.trim();
+        return Some(rest.trim_end_matches(';').trim());
+    }
+    None
+}
+
+fn parse_skill_initializer(body: &str, variable: &str) -> Option<[i32; 8]> {
+    let marker = format!("skills_t {variable}");
+    let start = body.find(&marker)?;
+    let open = body[start..].find('{')? + start;
+    let close = body[open..].find('}')? + open;
+    let values = body[open + 1..close]
+        .split(',')
+        .map(str::trim)
+        .map(str::parse::<i32>)
+        .collect::<Result<Vec<_>, _>>()
+        .ok()?;
+    values.try_into().ok()
+}
+
+fn parse_assigned_skill_set(body: &str, field: &str) -> Option<[i32; 8]> {
+    let variable = assignment_value(body, field)?;
+    if variable.is_empty()
+        || !variable
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+    {
+        return None;
+    }
+    parse_skill_initializer(body, variable)
+}
+
+fn parse_multiline_flags(body: &str) -> Vec<String> {
+    parse_multiline_assignment(body, "me.flags")
+        .unwrap_or_default()
+        .split('|')
+        .map(str::trim)
+        .filter(|token| {
+            !token.is_empty()
+                && *token != "0"
+                && token
+                    .bytes()
+                    .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit() || byte == b'_')
+        })
+        .map(str::to_owned)
+        .collect()
+}
+
+fn parse_multiline_assignment<'a>(body: &'a str, marker: &str) -> Option<&'a str> {
+    let start = body.find(marker)?;
+    let eq = body[start..].find('=')?;
+    let value_start = start + eq + 1;
+    let end = body[value_start..].find(';')?;
+    Some(body[value_start..value_start + end].trim())
+}
+
+fn extract_caster_block<'a>(text: &'a str, function: &str) -> Option<&'a str> {
+    for (position, _) in text.match_indices(function) {
+        if !text[position + function.len()..].starts_with('(') {
+            continue;
+        }
+        if text[..position]
+            .bytes()
+            .next_back()
+            .is_some_and(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+        {
+            continue;
+        }
+        let line_start = text[..position].rfind('\n').map_or(0, |index| index + 1);
+        let line_end = text[position..]
+            .find('\n')
+            .map_or(text.len(), |index| position + index);
+        let line = &text[line_start..line_end];
+        if !line.contains("caster_info") || line.contains(';') {
+            continue;
+        }
+        return function_block(text, position);
+    }
+    None
+}
+
+pub fn parse_class_caster_profile(source: &str, class_body: &str) -> Option<LegacyCasterProfile> {
+    let function = assignment_value(class_body, "caster_info")?;
+    let body = extract_caster_block(source, function)?;
+    let casting_attribute = assignment_value(body, "which_stat")
+        .and_then(|value| value.strip_prefix("A_"))
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    let parse_i32 = |field: &str| {
+        assignment_value(body, field)
+            .and_then(|value| value.parse::<i32>().ok())
+            .unwrap_or(0)
+    };
+    let options = parse_multiline_assignment(body, "me.options")
+        .unwrap_or_default()
+        .split('|')
+        .map(str::trim)
+        .filter(|token| {
+            !token.is_empty()
+                && *token != "0"
+                && token
+                    .bytes()
+                    .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit() || byte == b'_')
+        })
+        .map(|token| {
+            token
+                .trim_start_matches("CASTER_")
+                .to_ascii_lowercase()
+                .replace('_', "-")
+        })
+        .collect();
+    Some(LegacyCasterProfile {
+        dynamic: casting_attribute.is_empty(),
+        casting_attribute,
+        minimum_failure_percent: u8::try_from(parse_i32("min_fail").clamp(0, 100)).unwrap_or(0),
+        minimum_level: u16::try_from(parse_i32("min_level").max(0)).unwrap_or(0),
+        max_encumbrance_weight: parse_i32("encumbrance.max_wgt"),
+        weapon_encumbrance_percent: parse_i32("encumbrance.weapon_pct"),
+        zero_mana_encumbrance_weight: parse_i32("encumbrance.enc_wgt"),
+        options,
+    })
+}
+
+/// Parses the static class shell. Subclass- and allocation-dependent values
+/// remain zero/default and are reported as dynamic class gaps.
+pub fn parse_class_block(registration: LegacyClassRegistration, body: &str) -> LegacyClassEntry {
+    let mut character = parse_character_block(&registration.id, body);
+    if let Some(skills) = parse_assigned_skill_set(body, "base_skills") {
+        character.skills = skills;
+    } else if body.contains("me.base_skills") || body.contains("skills_init(&me.base_skills)") {
+        character.hooks.push("dynamic-base-skills".to_owned());
+    }
+    character.hooks.retain(|hook| hook != "base_skills");
+    if let Some(skills) = parse_assigned_skill_set(body, "extra_skills") {
+        character.extra_skills = skills;
+    } else if body.contains("me.extra_skills") || body.contains("skills_init(&me.extra_skills)") {
+        character.hooks.push("dynamic-extra-skills".to_owned());
+    }
+    character.hooks.retain(|hook| hook != "extra_skills");
+    if !body.contains("static class_t me") {
+        character.hooks.push("dynamic-class-delegation".to_owned());
+    }
+    if body.contains("me.flags") {
+        character.flags = parse_multiline_flags(body);
+    }
+    character.hooks.sort();
+    character.hooks.dedup();
+    character.dynamic = character.hooks.iter().any(|hook| {
+        matches!(
+            hook.as_str(),
+            "dynamic-adjustment"
+                | "dynamic-base-skills"
+                | "dynamic-class-delegation"
+                | "dynamic-extra-skills"
+        )
+    }) || body.lines().any(|raw_line| {
+        let line = raw_line.trim();
+        let Some(rest) = line.strip_prefix("me.") else {
+            return false;
+        };
+        let Some(eq_index) = rest.find('=') else {
+            return false;
+        };
+        let lhs = rest[..eq_index].trim_end();
+        let scalar = CHARACTER_STAT_KEYS.contains(&lhs)
+            || matches!(lhs, "life" | "base_hp" | "exp" | "infra")
+            || lhs.starts_with("stats[");
+        scalar
+            && rest[eq_index + 1..]
+                .trim()
+                .trim_end_matches(';')
+                .trim()
+                .parse::<i32>()
+                .is_err()
+    });
+    LegacyClassEntry {
+        registration,
+        character,
+        caster_profile: None,
+        source_found: true,
+    }
+}
+
+const LEGACY_REALM_IDS: [&str; 12] = [
+    "life",
+    "sorcery",
+    "nature",
+    "chaos",
+    "death",
+    "trump",
+    "arcane",
+    "craft",
+    "daemon",
+    "crusade",
+    "necromancy",
+    "armageddon",
+];
+
+fn parse_prefixed_u32(value: &str) -> Option<u32> {
+    value
+        .strip_prefix("0x")
+        .and_then(|value| u32::from_str_radix(value, 16).ok())
+        .or_else(|| value.parse().ok())
+}
+
+/// Parses the complete per-class realm readability and spell parameter
+/// matrix from `m_info.txt`.
+pub fn parse_m_info(text: &str) -> Vec<LegacyMagicProfile> {
+    let mut profiles = Vec::new();
+    let mut current: Option<LegacyMagicProfile> = None;
+    let mut current_realm: Option<usize> = None;
+    let mut pending_name = String::new();
+    for raw_line in text.lines() {
+        let line = raw_line.trim();
+        if let Some(name) = line
+            .strip_prefix("### ")
+            .and_then(|line| line.strip_suffix(" ###"))
+        {
+            pending_name = name.trim().to_owned();
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("N:") {
+            if let Some(profile) = current.take() {
+                profiles.push(profile);
+            }
+            current = rest
+                .trim()
+                .parse::<u16>()
+                .ok()
+                .map(|class_index| LegacyMagicProfile {
+                    class_index,
+                    name_hint: std::mem::take(&mut pending_name),
+                    ..LegacyMagicProfile::default()
+                });
+            current_realm = None;
+            continue;
+        }
+        let Some(profile) = current.as_mut() else {
+            continue;
+        };
+        if let Some(rest) = line.strip_prefix("I:") {
+            let parts = rest.split(':').map(str::trim).collect::<Vec<_>>();
+            if parts.len() == 6 {
+                profile.book_type = parts[0].to_ascii_lowercase();
+                profile.casting_attribute = parts[1].to_ascii_lowercase();
+                profile.extra_flags = parse_prefixed_u32(parts[2]).unwrap_or(0);
+                profile.spell_type = parts[3].parse().unwrap_or(0);
+                profile.first_spell_level = parts[4].parse().unwrap_or(0);
+                profile.spell_weight = parts[5].parse().unwrap_or(0);
+            }
+        } else if let Some(rest) = line.strip_prefix("R:") {
+            let values = rest
+                .split(':')
+                .map(str::trim)
+                .map(str::parse::<u16>)
+                .collect::<Result<Vec<_>, _>>();
+            if let Ok(values) = values
+                && values.len() == 2
+                && values[0] < LEGACY_REALM_IDS.len() as u16
+            {
+                profile.realms.push(LegacyRealmProfile {
+                    index: values[0] as u8,
+                    readable: values[1] != 0,
+                    spells: Vec::new(),
+                });
+                current_realm = Some(profile.realms.len() - 1);
+            }
+        } else if let Some(rest) = line.strip_prefix("T:")
+            && let Some(realm_index) = current_realm
+        {
+            let values = rest
+                .split('#')
+                .next()
+                .unwrap_or(rest)
+                .split(':')
+                .map(str::trim)
+                .map(str::parse::<u16>)
+                .collect::<Result<Vec<_>, _>>();
+            if let Ok(values) = values
+                && values.len() == 4
+                && profile.realms[realm_index].readable
+            {
+                let spell_index = profile.realms[realm_index].spells.len();
+                if let Ok(spell_index) = u8::try_from(spell_index) {
+                    profile.realms[realm_index].spells.push(LegacySpellProfile {
+                        index: spell_index,
+                        level: values[0],
+                        mana: values[1],
+                        failure_percent: u8::try_from(values[2]).unwrap_or(u8::MAX),
+                        experience: values[3],
+                    });
+                }
+            }
+        }
+    }
+    if let Some(profile) = current.take() {
+        profiles.push(profile);
+    }
+    profiles
+}
+
+/// Parses `s_info.txt` only far enough to quantify the proficiency systems
+/// that the current content model cannot yet represent.
+pub fn parse_s_info(text: &str) -> Vec<LegacyProficiencyProfile> {
+    let mut profiles = Vec::new();
+    let mut current: Option<LegacyProficiencyProfile> = None;
+    for raw_line in text.lines() {
+        let line = raw_line.trim();
+        if let Some(rest) = line.strip_prefix("N:") {
+            if let Some(profile) = current.take() {
+                profiles.push(profile);
+            }
+            current = rest
+                .trim()
+                .parse::<u16>()
+                .ok()
+                .map(|class_index| LegacyProficiencyProfile {
+                    class_index,
+                    ..LegacyProficiencyProfile::default()
+                });
+        } else if line.starts_with("W:") {
+            if let Some(profile) = current.as_mut() {
+                profile.weapon_entries += 1;
+            }
+        } else if let Some(rest) = line.strip_prefix("S:")
+            && let Some(profile) = current.as_mut()
+            && let Some(skill_index) = rest
+                .split(':')
+                .next()
+                .and_then(|value| value.parse::<u16>().ok())
+        {
+            *profile.skill_entries.entry(skill_index).or_default() += 1;
+        }
+    }
+    if let Some(profile) = current.take() {
+        profiles.push(profile);
+    }
+    profiles
+}
+
 /// Legacy skill roster: (id suffix, kind, index into the skills array,
 /// following the dis/dev/sav/stl/srh/fos/thn/thb legacy order).
 const LEGACY_SKILL_ROSTER: [(&str, &str); 8] = [
@@ -2075,6 +2649,400 @@ fn personality_json(
     }
     character_gap_accounting(entry, report);
     value
+}
+
+fn class_gap_accounting(entry: &LegacyClassEntry, report: &mut ContentImportReport) {
+    for flag in &entry.character.flags {
+        *report.unmapped_class_flags.entry(flag.clone()).or_default() += 1;
+    }
+    for hook in &entry.character.hooks {
+        *report.class_hook_gaps.entry(hook.clone()).or_default() += 1;
+    }
+    if entry.character.dynamic {
+        *report
+            .class_hook_gaps
+            .entry("dynamic-static-surface".to_owned())
+            .or_default() += 1;
+    }
+    if !entry.source_found {
+        *report
+            .class_magic_gaps
+            .entry("class-source-missing".to_owned())
+            .or_default() += 1;
+    }
+    if !entry.registration.registered {
+        *report
+            .class_magic_gaps
+            .entry("class-not-in-current-registry".to_owned())
+            .or_default() += 1;
+    }
+}
+
+fn class_json(
+    entry: &LegacyClassEntry,
+    has_casting_shell: bool,
+    runtime_casting_profile: Option<&serde_json::Value>,
+    report: &mut ContentImportReport,
+) -> serde_json::Value {
+    let character = &entry.character;
+    let mut tags = vec!["legacy-import"];
+    if has_casting_shell {
+        tags.push("legacy-casting-shell");
+    }
+    if character.dynamic || !entry.source_found {
+        tags.push("legacy-dynamic-shell");
+    }
+    if !entry.registration.registered {
+        tags.push("legacy-unregistered");
+    }
+    let mut value = serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/class.schema.json"),
+        "formatVersion": 1,
+        "id": format!("rfb-legacy.class.{}", entry.registration.id),
+        "nameKey": format!("class-legacy-{}-name", entry.registration.id),
+        "descriptionKey": format!("class-legacy-{}-description", entry.registration.id),
+        "lifePercent": character.life.clamp(25, 400),
+        "experiencePercent": character.exp.clamp(25, 500),
+        "baseHp": character.base_hp.clamp(-1_000, 1_000),
+        "skillSetId": format!("rfb-legacy.skill-set.class-{}", entry.registration.id),
+        "tags": tags,
+    });
+    let modifiers = character_modifiers(character);
+    if !modifiers.is_empty() {
+        value["modifiers"] = serde_json::Value::Object(modifiers);
+    }
+    if let Some(profile) = runtime_casting_profile {
+        value["castingProfile"] = profile.clone();
+    }
+    class_gap_accounting(entry, report);
+    value
+}
+
+fn magic_profile_json(profile: &LegacyMagicProfile, class_id: &str) -> serde_json::Value {
+    serde_json::json!({
+        "schemaVersion": 1,
+        "sourceCommit": LEGACY_BASELINE_COMMIT,
+        "classId": format!("rfb-legacy.class.{class_id}"),
+        "legacyClassIndex": profile.class_index,
+        "legacyNameHint": profile.name_hint,
+        "bookType": profile.book_type,
+        "castingAttribute": profile.casting_attribute,
+        "extraFlags": profile.extra_flags,
+        "spellType": profile.spell_type,
+        "firstSpellLevel": profile.first_spell_level,
+        "spellWeight": profile.spell_weight,
+        "realms": profile.realms.iter().map(|realm| {
+            let realm_id = LEGACY_REALM_IDS
+                .get(usize::from(realm.index))
+                .copied()
+                .unwrap_or("unknown");
+            serde_json::json!({
+                "legacyRealmIndex": realm.index,
+                "realmId": realm_id,
+                "readable": realm.readable,
+                "spells": realm.spells.iter().map(|spell| serde_json::json!({
+                    "slot": spell.index,
+                    "level": spell.level,
+                    "mana": spell.mana,
+                    "failurePercent": spell.failure_percent,
+                    "experience": spell.experience,
+                })).collect::<Vec<_>>(),
+            })
+        }).collect::<Vec<_>>(),
+    })
+}
+
+fn realm_readability_json(
+    profiles: &[LegacyMagicProfile],
+    class_ids: &BTreeMap<u16, String>,
+) -> serde_json::Value {
+    serde_json::json!({
+        "schemaVersion": 1,
+        "sourceCommit": LEGACY_BASELINE_COMMIT,
+        "realms": LEGACY_REALM_IDS.iter().enumerate().map(|(index, realm_id)| {
+            let readable_by_class_ids = profiles
+                .iter()
+                .filter(|profile| {
+                    profile.realms.iter().any(|realm| {
+                        usize::from(realm.index) == index && realm.readable
+                    })
+                })
+                .filter_map(|profile| class_ids.get(&profile.class_index))
+                .map(|class_id| format!("rfb-legacy.class.{class_id}"))
+                .collect::<Vec<_>>();
+            serde_json::json!({
+                "legacyRealmIndex": index,
+                "realmId": realm_id,
+                "readableByClassIds": readable_by_class_ids,
+            })
+        }).collect::<Vec<_>>(),
+    })
+}
+
+fn class_casting_shells_json(
+    classes: &[LegacyClassEntry],
+    profiles: &[LegacyMagicProfile],
+) -> serde_json::Value {
+    let profiles = profiles
+        .iter()
+        .map(|profile| (profile.class_index, profile))
+        .collect::<BTreeMap<_, _>>();
+    serde_json::json!({
+        "schemaVersion": 1,
+        "sourceCommit": LEGACY_BASELINE_COMMIT,
+        "classes": classes.iter().map(|entry| {
+            let profile = profiles.get(&entry.registration.index).copied();
+            let readable_realm_ids = profile
+                .into_iter()
+                .flat_map(|profile| profile.realms.iter())
+                .filter(|realm| realm.readable)
+                .filter_map(|realm| LEGACY_REALM_IDS.get(usize::from(realm.index)))
+                .copied()
+                .collect::<Vec<_>>();
+            let caster_info = entry.caster_profile.as_ref().map(|caster| {
+                serde_json::json!({
+                    "dynamic": caster.dynamic,
+                    "castingAttribute": caster.casting_attribute,
+                    "minimumFailurePercent": caster.minimum_failure_percent,
+                    "minimumLevel": caster.minimum_level,
+                    "maxEncumbranceWeight": caster.max_encumbrance_weight,
+                    "weaponEncumbrancePercent": caster.weapon_encumbrance_percent,
+                    "zeroManaEncumbranceWeight": caster.zero_mana_encumbrance_weight,
+                    "options": caster.options,
+                })
+            });
+            serde_json::json!({
+                "classId": format!("rfb-legacy.class.{}", entry.registration.id),
+                "legacyClassIndex": entry.registration.index,
+                "registered": entry.registration.registered,
+                "hasMInfoProfile": profile.is_some(),
+                "readableRealmIds": readable_realm_ids,
+                "casterInfo": caster_info,
+            })
+        }).collect::<Vec<_>>(),
+    })
+}
+
+fn runtime_casting_attribute(entry: &LegacyClassEntry) -> Option<&'static str> {
+    let caster = entry.caster_profile.as_ref()?;
+    if caster.dynamic || caster.options.iter().any(|option| option == "use-hp") {
+        return None;
+    }
+    match caster.casting_attribute.as_str() {
+        "int" => Some("intelligence"),
+        "wis" => Some("wisdom"),
+        "chr" => Some("charisma"),
+        _ => None,
+    }
+}
+
+fn death_realm(profile: &LegacyMagicProfile) -> Option<&LegacyRealmProfile> {
+    profile
+        .realms
+        .iter()
+        .find(|realm| realm.index == DEATH_REALM_INDEX && realm.readable)
+}
+
+fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json::Value)> {
+    let self_target = serde_json::json!({
+        "modes": ["self"],
+        "range": 0,
+        "requiresLineOfEffect": false,
+    });
+    let directional_target = serde_json::json!({
+        "modes": ["direction"],
+        "range": 8,
+        "requiresLineOfEffect": true,
+    });
+    let (id, target, effect, level_scaling, tags) = match spell.index {
+        0 => (
+            "death-detect-unlife",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "detect",
+                "subject": "actor",
+                "category": "nonliving",
+                "radius": 8,
+            }),
+            Vec::new(),
+            vec!["death", "detection", "spell"],
+        ),
+        1 => (
+            "death-malediction",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "damage",
+                "damageDice": 3,
+                "damageSides": 4,
+                "damageType": "hell-fire",
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "damage-dice",
+                "levelOffset": 1,
+                "multiplier": 1,
+                "divisor": 5,
+            })],
+            vec!["damage", "death", "hell-fire", "spell"],
+        ),
+        2 => (
+            "death-detect-evil",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "detect",
+                "subject": "actor",
+                "category": "evil",
+                "radius": 8,
+            }),
+            Vec::new(),
+            vec!["death", "detection", "spell"],
+        ),
+        3 => (
+            "death-stinking-cloud",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "area-damage",
+                "damageDice": 1,
+                "damageSides": 1,
+                "damageBonus": 9,
+                "damageType": "poison",
+                "radius": 2,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "damage-bonus",
+                "multiplier": 1,
+                "divisor": 2,
+            })],
+            vec!["area", "death", "poison", "spell"],
+        ),
+        4 => (
+            "death-black-sleep",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.sleep",
+                "intensity": 1,
+                "durationTicks": 500,
+                "stacking": "keep-strongest",
+                "power": 2,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "status-power",
+                "levelOffset": 1,
+                "multiplier": 2,
+                "divisor": 1,
+            })],
+            vec!["death", "sleep", "spell"],
+        ),
+        5 => (
+            "death-necromantic-resistance",
+            self_target,
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.necromantic-resistance",
+                "intensity": 1,
+                "durationTicks": 300,
+                "stacking": "replace",
+                "grantedResistances": {
+                    "cold": "resistant",
+                    "poison": "resistant",
+                },
+            }),
+            Vec::new(),
+            vec!["death", "resistance", "spell"],
+        ),
+        6 => (
+            "death-horrify",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "sequence",
+                "effects": [
+                    {
+                        "type": "apply-status",
+                        "statusKindId": "rfb.status.fear",
+                        "intensity": 1,
+                        "durationTicks": 200,
+                        "stacking": "extend",
+                        "power": 2,
+                    },
+                    {
+                        "type": "apply-status",
+                        "statusKindId": "rfb.status.stun",
+                        "intensity": 1,
+                        "durationTicks": 5,
+                        "stacking": "extend",
+                    },
+                ],
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "status-power",
+                    "levelOffset": 1,
+                    "multiplier": 2,
+                    "divisor": 1,
+                }),
+                serde_json::json!({
+                    "effectIndex": 1,
+                    "field": "status-duration-ticks",
+                    "multiplier": 1,
+                    "divisor": 5,
+                }),
+            ],
+            vec!["death", "fear", "spell", "stun"],
+        ),
+        7 => (
+            "death-enslave-undead",
+            directional_target,
+            serde_json::json!({
+                "type": "control",
+                "category": "undead",
+                "power": 2,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "control-power",
+                "levelOffset": 1,
+                "multiplier": 2,
+                "divisor": 1,
+            })],
+            vec!["control", "death", "spell", "undead"],
+        ),
+        _ => return None,
+    };
+    let ability_id = format!("rfb-legacy.ability.{id}");
+    let mut ability = serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+        "formatVersion": 1,
+        "id": ability_id,
+        "nameKey": format!("ability-legacy-{id}-name"),
+        "descriptionKey": format!("ability-legacy-{id}-description"),
+        "minimumLevel": spell.level.max(1),
+        "resourceId": LEGACY_MANA_RESOURCE_ID,
+        "resourceCost": u32::from(spell.mana.max(1)),
+        "baseFailurePercent": spell.failure_percent.min(95),
+        "target": target,
+        "effect": effect,
+        "tags": tags,
+    });
+    if !level_scaling.is_empty() {
+        ability["levelScaling"] = serde_json::Value::Array(level_scaling);
+    }
+    Some((ability_id, ability))
+}
+
+fn death_first_book_json(ability_ids: &[String]) -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
+        "formatVersion": 1,
+        "id": DEATH_FIRST_BOOK_ID,
+        "nameKey": "ability-book-legacy-death-stench-of-death-name",
+        "descriptionKey": "ability-book-legacy-death-stench-of-death-description",
+        "abilityIds": ability_ids,
+        "tags": ["death", "legacy-import", "spellbook"],
+    })
 }
 
 fn legacy_skill_files() -> Vec<(String, serde_json::Value)> {
@@ -2528,6 +3496,14 @@ fn monster_json(
             tags.push(tag.to_owned());
         }
     }
+    if entry
+        .flags
+        .iter()
+        .any(|flag| matches!(flag.as_str(), "UNDEAD" | "DEMON" | "NONLIVING"))
+        && !tags.iter().any(|tag| tag == "nonliving")
+    {
+        tags.push("nonliving".to_owned());
+    }
     let mut value = serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/actor.schema.json"),
         "formatVersion": 1,
@@ -2565,16 +3541,28 @@ pub struct ContentImportOutcome {
     pub terrain_files: Vec<(String, serde_json::Value)>,
     pub actor_files: Vec<(String, serde_json::Value)>,
     pub ability_files: Vec<(String, serde_json::Value)>,
+    pub ability_book_files: Vec<(String, serde_json::Value)>,
     pub resource_files: Vec<(String, serde_json::Value)>,
     pub item_files: Vec<(String, serde_json::Value)>,
     pub affix_files: Vec<(String, serde_json::Value)>,
     pub race_files: Vec<(String, serde_json::Value)>,
+    pub class_files: Vec<(String, serde_json::Value)>,
     pub personality_files: Vec<(String, serde_json::Value)>,
+    /// Normalized `m_info` diagnostics. Runtime-ready subsets are emitted
+    /// through regular class, ability, and ability-book definitions instead.
+    pub magic_profile_files: Vec<(String, serde_json::Value)>,
+    pub realm_readability: Option<serde_json::Value>,
+    pub class_casting_shells: Option<serde_json::Value>,
     pub skill_files: Vec<(String, serde_json::Value)>,
     pub skill_set_files: Vec<(String, serde_json::Value)>,
 }
 
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
+const LEGACY_MANA_RESOURCE_ID: &str = "rfb-legacy.resource.mana";
+const DEATH_REALM_INDEX: u8 = 4;
+const DEATH_FIRST_BOOK_TVAL: u16 = 100;
+const DEATH_FIRST_BOOK_SVAL: u16 = 0;
+const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-stench-of-death";
 
 fn status_ability(id: &str, status: &str, self_target: bool) -> serde_json::Value {
     let target = if self_target {
@@ -3408,7 +4396,13 @@ pub fn convert_content(
         *duplicates += 1;
         item_files.push((
             format!("{id}.json"),
-            item_json(entry, &id, &ammo_index, &mut report),
+            item_json(
+                entry,
+                &id,
+                &ammo_index,
+                player_ability_book_for_item(entry),
+                &mut report,
+            ),
         ));
         report.items_imported += 1;
     }
@@ -3475,7 +4469,9 @@ pub fn convert_content(
     }
 
     let mut race_files = Vec::new();
+    let mut class_files = Vec::new();
     let mut personality_files = Vec::new();
+    let mut magic_profile_files = Vec::new();
     let mut skill_set_files = Vec::new();
     report.bodies_total = characters.bodies.len();
     // Slot-gap census runs over every template; only the Standard body has
@@ -3526,11 +4522,267 @@ pub fn convert_content(
         ));
         report.personalities_imported += 1;
     }
-    let skill_files = if race_files.is_empty() && personality_files.is_empty() {
-        Vec::new()
-    } else {
-        legacy_skill_files()
-    };
+    let class_ids = characters
+        .classes
+        .iter()
+        .map(|entry| (entry.registration.index, entry.registration.id.clone()))
+        .collect::<BTreeMap<_, _>>();
+    let magic_profile_indices = characters
+        .magic_profiles
+        .iter()
+        .map(|profile| profile.class_index)
+        .collect::<BTreeSet<_>>();
+    let casting_shell_indices = characters
+        .magic_profiles
+        .iter()
+        .filter(|profile| {
+            profile.realms.iter().any(|realm| realm.readable)
+                || profile.book_type != "none"
+                || profile.first_spell_level != 99
+        })
+        .map(|profile| profile.class_index)
+        .collect::<BTreeSet<_>>();
+    report.classes_with_casting_shells = casting_shell_indices.len();
+    report.classes_total = characters.classes.len();
+    report.classes_registered = characters
+        .classes
+        .iter()
+        .filter(|entry| entry.registration.registered)
+        .count();
+    report.classes_with_source = characters
+        .classes
+        .iter()
+        .filter(|entry| entry.source_found)
+        .count();
+    report.class_caster_profiles_imported = characters
+        .classes
+        .iter()
+        .filter(|entry| entry.caster_profile.is_some())
+        .count();
+    report.class_caster_profiles_dynamic = characters
+        .classes
+        .iter()
+        .filter(|entry| {
+            entry
+                .caster_profile
+                .as_ref()
+                .is_some_and(|profile| profile.dynamic)
+        })
+        .count();
+    let magic_profiles_by_class = characters
+        .magic_profiles
+        .iter()
+        .map(|profile| (profile.class_index, profile))
+        .collect::<BTreeMap<_, _>>();
+    let mut runtime_casting_profiles = BTreeMap::new();
+    let mut mapped_player_spell_rows = BTreeSet::new();
+    let mut death_ability_ids = BTreeSet::new();
+    for entry in &characters.classes {
+        let Some(magic_profile) = magic_profiles_by_class
+            .get(&entry.registration.index)
+            .copied()
+        else {
+            continue;
+        };
+        let Some(realm) = death_realm(magic_profile) else {
+            continue;
+        };
+        let Some(casting_attribute) = runtime_casting_attribute(entry) else {
+            *report
+                .class_magic_gaps
+                .entry("runtime-casting-profile-unsupported".to_owned())
+                .or_default() += 1;
+            continue;
+        };
+        let overrides = realm
+            .spells
+            .iter()
+            .filter_map(|spell| {
+                let (ability_id, ability) = death_spell_ability(spell)?;
+                shared_abilities.entry(ability_id.clone()).or_insert(ability);
+                death_ability_ids.insert(ability_id.clone());
+                mapped_player_spell_rows.insert((
+                    magic_profile.class_index,
+                    realm.index,
+                    spell.index,
+                ));
+                report.player_spell_parameter_overrides += 1;
+                report.player_spell_mapped_rows += 1;
+                if spell.index == 1 {
+                    *report
+                        .player_spell_behavior_gaps
+                        .entry("malediction-random-rider".to_owned())
+                        .or_default() += 1;
+                } else if spell.index == 5 {
+                    *report
+                        .player_spell_behavior_gaps
+                        .entry("random-resistance-duration".to_owned())
+                        .or_default() += 1;
+                }
+                Some(serde_json::json!({
+                    "abilityId": ability_id,
+                    "minimumLevel": spell.level.max(entry.caster_profile.as_ref()?.minimum_level).max(1),
+                    "resourceCost": u32::from(spell.mana.max(1)),
+                    "baseFailurePercent": spell.failure_percent.min(95),
+                }))
+            })
+            .collect::<Vec<_>>();
+        if overrides.is_empty() {
+            continue;
+        }
+        let caster = entry
+            .caster_profile
+            .as_ref()
+            .expect("runtime casting attribute requires a caster profile");
+        runtime_casting_profiles.insert(
+            entry.registration.index,
+            serde_json::json!({
+                "resourceId": LEGACY_MANA_RESOURCE_ID,
+                "castingAttribute": casting_attribute,
+                "baseCapacity": 0,
+                "capacityPerLevel": 1,
+                "capacityPerAttributeIndex": 1,
+                "baseLearningCapacity": 4,
+                "learningCapacityPerLevel": 1,
+                "learningCapacityPerAttributeIndex": 0,
+                "learningCapacityCap": 32,
+                "minimumFailurePercent": caster.minimum_failure_percent,
+                "abilityBookIds": [DEATH_FIRST_BOOK_ID],
+                "abilityOverrides": overrides,
+            }),
+        );
+        report.classes_with_runtime_casting_profiles += 1;
+        for gap in [
+            "caster-encumbrance",
+            "mana-capacity-formula",
+            "spell-learning-formula",
+        ] {
+            *report
+                .player_spell_behavior_gaps
+                .entry(gap.to_owned())
+                .or_default() += 1;
+        }
+    }
+    let mut ability_book_files = Vec::new();
+    if !death_ability_ids.is_empty() {
+        let ability_ids = death_ability_ids.into_iter().collect::<Vec<_>>();
+        report.player_abilities_imported = ability_ids.len();
+        report.player_ability_books_imported = 1;
+        ability_book_files.push((
+            "death-stench-of-death.json".to_owned(),
+            death_first_book_json(&ability_ids),
+        ));
+    }
+    for entry in &characters.classes {
+        let id = &entry.registration.id;
+        let has_magic_profile = magic_profile_indices.contains(&entry.registration.index);
+        if !has_magic_profile {
+            *report
+                .class_magic_gaps
+                .entry("m-info-profile-missing".to_owned())
+                .or_default() += 1;
+        }
+        class_files.push((
+            format!("{id}.json"),
+            class_json(
+                entry,
+                casting_shell_indices.contains(&entry.registration.index),
+                runtime_casting_profiles.get(&entry.registration.index),
+                &mut report,
+            ),
+        ));
+        skill_set_files.push((
+            format!("class-{id}.json"),
+            character_skill_set_json(&entry.character, &format!("class-{id}")),
+        ));
+        report.classes_imported += 1;
+    }
+    report.magic_profiles_total = characters.magic_profiles.len();
+    for profile in &characters.magic_profiles {
+        let Some(class_id) = class_ids.get(&profile.class_index) else {
+            *report
+                .class_magic_gaps
+                .entry("m-info-class-missing".to_owned())
+                .or_default() += 1;
+            continue;
+        };
+        let readable_realms = profile.realms.iter().filter(|realm| realm.readable).count();
+        if readable_realms > 0 {
+            report.classes_with_readable_realms += 1;
+        }
+        report.magic_realm_rows += profile.realms.len();
+        report.magic_readable_realm_rows += readable_realms;
+        let has_casting_surface =
+            readable_realms > 0 || profile.book_type != "none" || profile.first_spell_level != 99;
+        if has_casting_surface
+            && !matches!(profile.casting_attribute.as_str(), "int" | "wis" | "chr")
+        {
+            *report
+                .casting_attribute_gaps
+                .entry(profile.casting_attribute.clone())
+                .or_default() += 1;
+        }
+        for realm in &profile.realms {
+            let realm_id = LEGACY_REALM_IDS
+                .get(usize::from(realm.index))
+                .copied()
+                .unwrap_or("unknown");
+            if realm.readable {
+                *report
+                    .realm_readability
+                    .entry(realm_id.to_owned())
+                    .or_default() += 1;
+            }
+            report.magic_spell_profile_rows += realm.spells.len();
+            let unmapped_spells = realm
+                .spells
+                .iter()
+                .filter(|spell| {
+                    !mapped_player_spell_rows.contains(&(
+                        profile.class_index,
+                        realm.index,
+                        spell.index,
+                    ))
+                })
+                .count();
+            *report
+                .player_spell_effect_gaps
+                .entry(realm_id.to_owned())
+                .or_default() += unmapped_spells;
+        }
+        magic_profile_files.push((
+            format!("{class_id}.json"),
+            magic_profile_json(profile, class_id),
+        ));
+    }
+    report.proficiency_profiles_total = characters.proficiency_profiles.len();
+    for profile in &characters.proficiency_profiles {
+        report.proficiency_weapon_rows += profile.weapon_entries;
+        *report
+            .class_proficiency_gaps
+            .entry("weapon-proficiency".to_owned())
+            .or_default() += profile.weapon_entries;
+        for (skill_index, count) in &profile.skill_entries {
+            let gap = match skill_index {
+                0 => "martial-arts-proficiency".to_owned(),
+                1 => "dual-wielding-proficiency".to_owned(),
+                2 => "riding-proficiency".to_owned(),
+                other => format!("skill-{other}-proficiency"),
+            };
+            report.proficiency_skill_rows += *count;
+            *report.class_proficiency_gaps.entry(gap).or_default() += *count;
+        }
+    }
+    let realm_readability = (!characters.magic_profiles.is_empty())
+        .then(|| realm_readability_json(&characters.magic_profiles, &class_ids));
+    let class_casting_shells = (!characters.classes.is_empty())
+        .then(|| class_casting_shells_json(&characters.classes, &characters.magic_profiles));
+    let skill_files =
+        if race_files.is_empty() && personality_files.is_empty() && class_files.is_empty() {
+            Vec::new()
+        } else {
+            legacy_skill_files()
+        };
 
     let ability_files = shared_abilities
         .into_iter()
@@ -3543,7 +4795,7 @@ pub fn convert_content(
             (format!("{name}.json"), value)
         })
         .collect::<Vec<_>>();
-    let resource_files = if ability_files.is_empty() {
+    let mut resource_files = if ability_files.is_empty() {
         Vec::new()
     } else {
         vec![(
@@ -3560,17 +4812,37 @@ pub fn convert_content(
             }),
         )]
     };
+    if report.player_abilities_imported > 0 {
+        resource_files.push((
+            "mana.json".to_owned(),
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/resource.schema.json"),
+                "formatVersion": 1,
+                "id": LEGACY_MANA_RESOURCE_ID,
+                "nameKey": "resource-legacy-mana-name",
+                "descriptionKey": "resource-legacy-mana-description",
+                "waitRecoveryAmount": 1,
+                "restRecoveryAmount": 3,
+                "tags": ["casting", "legacy-import", "mana"],
+            }),
+        ));
+    }
 
     ContentImportOutcome {
         report,
         terrain_files,
         actor_files,
         ability_files,
+        ability_book_files,
         resource_files,
         item_files,
         affix_files,
         race_files,
+        class_files,
         personality_files,
+        magic_profile_files,
+        realm_readability,
+        class_casting_shells,
         skill_files,
         skill_set_files,
     }
@@ -3591,24 +4863,47 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let e_info = read_legacy_object(source, "lib/edit/e_info.txt")?;
     let a_info = read_legacy_object(source, "lib/edit/a_info.txt")?;
     let b_info = read_legacy_object(source, "lib/edit/b_info.txt")?;
+    let m_info = read_legacy_object(source, "lib/edit/m_info.txt")?;
+    let s_info = read_legacy_object(source, "lib/edit/s_info.txt")?;
+    let defines = read_legacy_object(source, "src/defines.h")?;
+    let classes_source = read_legacy_object(source, "src/classes.c")?;
+    let magic_profiles = parse_m_info(&m_info);
+    let mut class_registrations = parse_class_registrations(&defines, &classes_source);
+    let mut registered_indices = class_registrations
+        .iter()
+        .map(|entry| entry.index)
+        .collect::<BTreeSet<_>>();
+    for profile in &magic_profiles {
+        if registered_indices.insert(profile.class_index) {
+            let id = kebab(&profile.name_hint);
+            class_registrations.push(LegacyClassRegistration {
+                index: profile.class_index,
+                function: format!("{}_get_class", id.replace('-', "_")),
+                id,
+                registered: false,
+            });
+        }
+    }
+    class_registrations.sort_by_key(|entry| entry.index);
     let mut characters = LegacyCharacterSources {
         bodies: parse_b_info(&b_info),
+        magic_profiles,
+        proficiency_profiles: parse_s_info(&s_info),
         ..LegacyCharacterSources::default()
     };
-    let mut source_paths: Vec<PathBuf> = fs::read_dir(source.join("src"))?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().is_some_and(|extension| extension == "c"))
-        .collect();
-    source_paths.sort();
+    let source_objects = list_legacy_c_sources(source)?
+        .into_iter()
+        .map(|path| {
+            let text = read_legacy_object(source, &path)?;
+            Ok((path, text))
+        })
+        .collect::<Result<Vec<_>, LegacyImportError>>()?;
     let mut seen_character_ids = BTreeSet::new();
-    for path in source_paths {
-        let bytes = fs::read(&path)?;
-        let text = String::from_utf8_lossy(&bytes);
-        for (name, body) in extract_race_blocks(&text) {
+    for (path, text) in &source_objects {
+        for (name, body) in extract_race_blocks(text) {
             let mut entry = parse_character_block(&name, &body);
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
-                let (resistances, free_act, speed) = parse_calc_bonuses_defenses(&text, &hook);
+                let (resistances, free_act, speed) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.free_act = free_act;
                 entry.speed = speed;
@@ -3617,14 +4912,51 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 characters.races.push(entry);
             }
         }
-        if path.file_name().is_some_and(|name| name == "personality.c") {
-            for (name, body) in extract_personality_blocks(&text) {
+        if Path::new(path)
+            .file_name()
+            .is_some_and(|name| name == "personality.c")
+        {
+            for (name, body) in extract_personality_blocks(text) {
                 let entry = parse_character_block(&name, &body);
                 if seen_character_ids.insert(format!("personality:{}", entry.id)) {
                     characters.personalities.push(entry);
                 }
             }
         }
+    }
+    for registration in class_registrations {
+        let parsed = source_objects.iter().find_map(|(_, text)| {
+            extract_class_block(text, &registration.function).map(|body| {
+                let mut entry = parse_class_block(registration.clone(), body);
+                entry.caster_profile = parse_class_caster_profile(text, body);
+                if entry.caster_profile.is_some() {
+                    entry.character.hooks.retain(|hook| hook != "caster_info");
+                }
+                if entry
+                    .caster_profile
+                    .as_ref()
+                    .is_some_and(|profile| profile.dynamic)
+                {
+                    entry.character.dynamic = true;
+                    entry.character.hooks.push("dynamic-caster-info".to_owned());
+                }
+                entry
+            })
+        });
+        characters.classes.push(parsed.unwrap_or_else(|| {
+            let mut character = LegacyCharacterEntry {
+                id: registration.id.clone(),
+                dynamic: true,
+                ..LegacyCharacterEntry::default()
+            };
+            character.hooks.push("missing-class-source".to_owned());
+            LegacyClassEntry {
+                registration,
+                character,
+                caster_profile: None,
+                source_found: false,
+            }
+        }));
     }
     let outcome = convert_content(
         &parse_f_info(&f_info),
@@ -3641,10 +4973,12 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     fs::create_dir_all(&actor_dir)?;
     for (directory, files) in [
         ("abilities", &outcome.ability_files),
+        ("abilityBooks", &outcome.ability_book_files),
         ("resources", &outcome.resource_files),
         ("items", &outcome.item_files),
         ("affixes", &outcome.affix_files),
         ("races", &outcome.race_files),
+        ("classes", &outcome.class_files),
         ("personalities", &outcome.personality_files),
         ("skills", &outcome.skill_files),
         ("skillSets", &outcome.skill_set_files),
@@ -3657,9 +4991,29 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         for (name, value) in files {
             fs::write(
                 target.join(name),
-                serde_json::to_string_pretty(value)?
-                    + "
-",
+                serde_json::to_string_pretty(value)? + "\n",
+            )?;
+        }
+    }
+    if !outcome.magic_profile_files.is_empty() {
+        let target = output.join("legacyMagicProfiles");
+        fs::create_dir_all(&target)?;
+        for (name, value) in &outcome.magic_profile_files {
+            fs::write(
+                target.join(name),
+                serde_json::to_string_pretty(value)? + "\n",
+            )?;
+        }
+        if let Some(value) = &outcome.realm_readability {
+            fs::write(
+                target.join("realm-readability.json"),
+                serde_json::to_string_pretty(value)? + "\n",
+            )?;
+        }
+        if let Some(value) = &outcome.class_casting_shells {
+            fs::write(
+                target.join("class-casting-shells.json"),
+                serde_json::to_string_pretty(value)? + "\n",
             )?;
         }
     }
@@ -3679,9 +5033,15 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     if !outcome.ability_files.is_empty() {
         content_roots.push("abilities");
     }
+    if !outcome.ability_book_files.is_empty() {
+        content_roots.push("abilityBooks");
+    }
     content_roots.push("actors");
     if !outcome.affix_files.is_empty() {
         content_roots.push("affixes");
+    }
+    if !outcome.class_files.is_empty() {
+        content_roots.push("classes");
     }
     if !outcome.item_files.is_empty() {
         content_roots.push("items");
@@ -3714,9 +5074,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     });
     fs::write(
         output.join("pack.json"),
-        serde_json::to_string_pretty(&pack_manifest)?
-            + "
-",
+        serde_json::to_string_pretty(&pack_manifest)? + "\n",
     )?;
     let report_path = output.join("import-report.json");
     fs::write(
@@ -3829,6 +5187,236 @@ B:GAZE:TERRIFY\n";
         assert_eq!(arch["walkable"], true);
         assert_eq!(arch["blocksSight"], false);
         assert_eq!(arch["id"], "rfb-legacy.terrain.test-arch");
+    }
+
+    #[test]
+    fn class_shells_and_magic_profiles_parse_without_suffix_collisions() {
+        const DEFINES: &str = "\
+#define CLASS_WARRIOR 0
+#define CLASS_MAGE 1
+#define CLASS_BLOOD_MAGE 36
+";
+        const CLASSES: &str = "\
+case CLASS_BLOOD_MAGE:
+    result = blood_mage_get_class();
+    break;
+case CLASS_MAGE:
+    result = mage_get_class();
+    break;
+case CLASS_WARRIOR:
+    result = warrior_get_class();
+    break;
+";
+        const CLASS_SOURCE: &str = r#"
+static caster_info * _caster_info(void)
+{
+    static caster_info me = {0};
+    me.which_stat = A_INT;
+    me.min_fail = 5;
+    me.min_level = 1;
+    me.encumbrance.max_wgt = 430;
+    me.encumbrance.weapon_pct = 100;
+    me.encumbrance.enc_wgt = 600;
+    me.options = CASTER_ALLOW_DEC_MANA |
+                 CASTER_GLOVE_ENCUMBRANCE;
+    return &me;
+}
+
+class_t *blood_mage_get_class(void)
+{
+    static class_t me = {0};
+    me.stats[A_STR] = 5;
+    return &me;
+}
+
+class_t *mage_get_class(void)
+{
+    static class_t me = {0};
+    skills_t bs = { 30, 40, 38, 3, 16, 20, 34, 20 };
+    skills_t xs = { 7, 15, 11, 0, 0, 0, 6, 7 };
+    me.stats[A_STR] = -4;
+    me.stats[A_INT] = 3;
+    me.stats[A_DEX] = 1;
+    me.stats[A_CON] = -2;
+    me.stats[A_CHR] = -2;
+    me.base_skills = bs;
+    me.extra_skills = xs;
+    me.life = 95;
+    me.base_hp = 0;
+    me.exp = 130;
+    me.flags = CLASS_SENSE1_MED |
+               CLASS_REGEN_MANA;
+    me.birth = _birth;
+    me.caster_info = _caster_info;
+    return &me;
+}
+"#;
+        const M_INFO: &str = "\
+### Mage ###
+N:1
+I:SORCERY:INT:0x05:0:1:430
+R:0:1
+T:1:1:30:4
+T:3:2:35:4
+R:1:0
+R:4:1
+T:1:1:25:4
+T:2:2:25:4
+T:2:2:25:4
+T:3:3:27:4
+T:5:5:30:4
+T:7:10:75:4
+T:9:9:30:4
+T:11:12:40:4
+";
+        const S_INFO: &str = "\
+N:1
+W:4:1:0:2
+W:4:2:0:3
+S:0:0:4000
+S:1:0:2000
+S:2:0:6000
+";
+
+        let registrations = parse_class_registrations(DEFINES, CLASSES);
+        assert_eq!(
+            registrations
+                .iter()
+                .map(|entry| (entry.index, entry.id.as_str()))
+                .collect::<Vec<_>>(),
+            [(0, "warrior"), (1, "mage"), (36, "blood-mage")]
+        );
+        let mage_registration = registrations[1].clone();
+        let mage_body =
+            extract_class_block(CLASS_SOURCE, "mage_get_class").expect("exact mage function");
+        let mut mage = parse_class_block(mage_registration, mage_body);
+        assert_eq!(mage.character.stats, [-4, 3, 0, 1, -2, -2]);
+        assert_eq!(mage.character.skills, [30, 40, 38, 3, 16, 20, 34, 20]);
+        assert_eq!(mage.character.extra_skills, [7, 15, 11, 0, 0, 0, 6, 7]);
+        assert_eq!(mage.character.life, 95);
+        assert_eq!(mage.character.exp, 130);
+        assert_eq!(
+            mage.character.flags,
+            ["CLASS_SENSE1_MED", "CLASS_REGEN_MANA"]
+        );
+        assert!(!mage.character.dynamic, "{:?}", mage.character);
+        let caster = parse_class_caster_profile(CLASS_SOURCE, mage_body).expect("caster profile");
+        assert!(!caster.dynamic);
+        assert_eq!(caster.casting_attribute, "int");
+        assert_eq!(caster.minimum_failure_percent, 5);
+        assert_eq!(caster.max_encumbrance_weight, 430);
+        assert_eq!(caster.options, ["allow-dec-mana", "glove-encumbrance"]);
+        mage.caster_profile = Some(caster);
+
+        let magic_profiles = parse_m_info(M_INFO);
+        assert_eq!(magic_profiles.len(), 1);
+        assert_eq!(magic_profiles[0].extra_flags, 5);
+        assert_eq!(magic_profiles[0].realms.len(), 3);
+        assert!(magic_profiles[0].realms[0].readable);
+        assert_eq!(magic_profiles[0].realms[0].spells.len(), 2);
+        assert_eq!(magic_profiles[0].realms[0].spells[1].mana, 2);
+        assert!(!magic_profiles[0].realms[1].readable);
+        assert_eq!(magic_profiles[0].realms[2].spells.len(), 8);
+
+        let proficiency_profiles = parse_s_info(S_INFO);
+        assert_eq!(proficiency_profiles.len(), 1);
+        assert_eq!(proficiency_profiles[0].weapon_entries, 2);
+        assert_eq!(proficiency_profiles[0].skill_entries.len(), 3);
+
+        let characters = LegacyCharacterSources {
+            classes: vec![mage],
+            magic_profiles,
+            proficiency_profiles,
+            ..LegacyCharacterSources::default()
+        };
+        let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
+        assert_eq!(outcome.report.classes_imported, 1);
+        assert_eq!(outcome.report.magic_spell_profile_rows, 10);
+        assert_eq!(outcome.report.realm_readability["life"], 1);
+        assert_eq!(outcome.report.realm_readability["death"], 1);
+        assert_eq!(outcome.report.player_abilities_imported, 8);
+        assert_eq!(outcome.report.player_ability_books_imported, 1);
+        assert_eq!(outcome.report.classes_with_runtime_casting_profiles, 1);
+        assert_eq!(outcome.report.player_spell_parameter_overrides, 8);
+        assert_eq!(
+            outcome
+                .report
+                .player_spell_effect_gaps
+                .get("death")
+                .copied()
+                .unwrap_or_default(),
+            0
+        );
+        assert!(
+            !outcome
+                .report
+                .player_spell_behavior_gaps
+                .contains_key("player-level-effect-scaling")
+        );
+        assert!(
+            !outcome
+                .report
+                .player_spell_behavior_gaps
+                .contains_key("monster-status-power-resolution")
+        );
+        assert_eq!(
+            outcome.report.player_spell_behavior_gaps["random-resistance-duration"],
+            1
+        );
+        assert_eq!(
+            outcome.report.class_proficiency_gaps["weapon-proficiency"],
+            2
+        );
+        assert_eq!(outcome.class_files[0].1["modifiers"]["strength"], -4);
+        assert_eq!(
+            outcome.class_files[0].1["castingProfile"]["abilityOverrides"]
+                .as_array()
+                .map(Vec::len),
+            Some(8)
+        );
+        assert_eq!(outcome.ability_book_files.len(), 1);
+        let black_sleep = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-black-sleep.json")
+            .map(|(_, value)| value)
+            .expect("black sleep ability should be generated");
+        assert_eq!(black_sleep["effect"]["power"], 2);
+        assert_eq!(black_sleep["levelScaling"][0]["field"], "status-power");
+        let detect_unlife = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-detect-unlife.json")
+            .map(|(_, value)| value)
+            .expect("detect unlife ability should be generated");
+        assert_eq!(
+            detect_unlife["target"]["modes"],
+            serde_json::json!(["self"])
+        );
+        assert_eq!(detect_unlife["effect"]["subject"], "actor");
+        let resistance = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-necromantic-resistance.json")
+            .map(|(_, value)| value)
+            .expect("necromantic resistance ability should be generated");
+        assert_eq!(
+            resistance["effect"]["grantedResistances"]["poison"],
+            "resistant"
+        );
+        let control = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-enslave-undead.json")
+            .map(|(_, value)| value)
+            .expect("enslave undead ability should be generated");
+        assert_eq!(control["effect"]["type"], "control");
+        assert_eq!(control["levelScaling"][0]["field"], "control-power");
+        assert_eq!(
+            outcome.magic_profile_files[0].1["realms"][0]["realmId"],
+            "life"
+        );
+        assert!(outcome.realm_readability.is_some());
     }
 
     #[test]
@@ -4012,7 +5600,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         // Type flags become category tags alongside the shared import tag.
         assert_eq!(
             caller["tags"],
-            serde_json::json!(["legacy-import", "dragon", "undead"])
+            serde_json::json!(["legacy-import", "dragon", "undead", "nonliving"])
         );
         let ability_ids: Vec<&str> = caller["monsterCasting"]["abilities"]
             .as_array()
@@ -4241,6 +5829,7 @@ S:ANY:Slot
                 ..LegacyCharacterEntry::default()
             }],
             personalities: Vec::new(),
+            ..LegacyCharacterSources::default()
         };
         let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
         assert_eq!(outcome.report.bodies_total, 2);
@@ -4386,6 +5975,7 @@ race_t *test_beast_get_race(void)
             bodies: Vec::new(),
             races: vec![folk, beast],
             personalities: Vec::new(),
+            ..LegacyCharacterSources::default()
         };
         let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
         assert_eq!(outcome.report.races_total, 2);
@@ -4443,6 +6033,7 @@ static personality_ptr _get_test_calm_personality(void)
             bodies: Vec::new(),
             races: Vec::new(),
             personalities: vec![calm],
+            ..LegacyCharacterSources::default()
         };
         let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
         assert_eq!(outcome.report.personalities_imported, 1);

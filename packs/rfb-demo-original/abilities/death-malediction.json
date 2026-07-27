@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-malediction",
+  "nameKey": "ability-demo-death-malediction-name",
+  "descriptionKey": "ability-demo-death-malediction-description",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 1,
+  "baseFailurePercent": 5,
+  "target": {
+    "modes": ["position", "entity"],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "damage",
+    "damageDice": 3,
+    "damageSides": 4,
+    "damageType": "hell-fire"
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-dice",
+      "levelOffset": 1,
+      "multiplier": 1,
+      "divisor": 5
+    }
+  ],
+  "tags": ["curse", "death", "spell"]
+}

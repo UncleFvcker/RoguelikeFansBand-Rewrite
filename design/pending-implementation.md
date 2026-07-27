@@ -60,7 +60,19 @@
 | P49 | 装备/内在旗标系统·防御面（T2 前半） | 已由 contract-v101 完成 | 装备/词条/种族三处统一 resistances/statusImmunities/modifiers.speed 声明表面；有效抗性确定性合并（immune 胜、正档遇 vulnerable 降档）、免疫查表跳过、装备速度进派生管线；协议 1.101（物品 DTO 知识门控暴露）、包 1.92.0（御火指环/疾行靴/镇静吊坠）、fixtures 321-323 共 323 exact、Schema 保持 v41。回灌收割：ego 105/160（+17）、神器 392/392、35 词条/33 种族/321 物品带防御表面，RES_*/IM_*/SPEED/FREE_ACT 清零。进攻面（SLAY_/BRAND_）留 T2 后半 |
 | P50 | 进攻面旗标（T2 后半） | 已由 contract-v102 完成 | Item/Affix 统一 slays（11 类目标，slay/kill 两档）+ brands（酸电火冷毒）；玩家持武器近战按原版 tier 只放大武器骰、多项取最高、元素 immune 压制对应 brand，零额外 RNG；协议 1.102、包 1.93.0、Schema 保持 v41、fixtures 324-326 共 326 exact。回灌：ego 107/160、神器 392/392，12 词条/130 物品带 slay，5 词条/90 物品带基础 brand |
 | P51 | 动态 affix 实例 + 装备被动属性 | 已由 contract-v103 完成 | Item/Affix 统一 equipmentBonuses/passives，Affix rollGroups 按深度过滤并加权抽取，物品实例保存 materialized rolledAffixes；旧档缺字段保持空且零 RNG。技能/额外攻击进入派生管线，regeneration 每 10 world ticks 恢复 1 HP；协议 1.103、包 1.94.0、Schema v42、fixtures 327-328 共 328 exact。真实导入 ego 128/160（+21），其余 32 个主要依赖反射、光环、诅咒、额外射击/威力与高级品牌 |
-| P52 | 候选：职业壳 + m_info 施法档案导入（T3） | 下一候选 | 54 职业 stats/skills/casting 壳与领域可读性表；备选插队：设备效果系统（缺口 231+激活 193）、法术清尾（S_ 字形 177/SHRIEK/TRAPS） |
+| P52 | 职业壳 + m_info 施法档案导入（T3） | 已完成（纯工具，见 [legacy-class-import-v1](legacy-class-import-v1.md)） | 固定 commit Git 对象读取；53 个当前注册职业 + m_info 遗留 Imitator = 54 个职业壳，54 个职业 skillSet；53 份 m_info 生成 636 领域行/144 可读行/4608 逐法术参数，另提取 46 个 C caster_info 壳（5 个动态）；s_info 的 16640 武器熟练 + 156 专项熟练进入缺口报告；本地包 54 classes/141 skillSets 通过内容编译 |
+| P53 | 玩家领域法术首批映射（T4） | 已完成（见 [legacy-player-spell-import-v1](legacy-player-spell-import-v1.md)） | Class castingProfile 新增逐 ability 的职业参数覆盖；Death 第一册生成 3 abilities、1 ability book、Mana 与实体书绑定，12 个静态职业共 36 行覆盖；学习/显示/失败率/耗魔/施放/读档统一读取覆盖。Rogue/Blood Mage/Skillmaster 显式排除；真实包 4157 文件通过编译，源文件预算 4096→32768 |
+| P54 | 玩家等级效果缩放 + Death 第一册收尾 | 已由 contract-v104 完成 | Ability `levelScaling` 覆盖 7 类标量；actor Detect、状态 power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部接入协议、存档和 Schema v43。Death 第一册 8/8 ability、12 个静态职业 96 条覆盖；协议 1.104、包 1.95.0、fixtures 329-334 共 334 exact。真实 Death 效果缺口 480→384，等级缩放与状态 power 缺口清零 |
+| P55 | Death 第二册系统盘点与纵切 | 下一候选 | 逐槽核对 Entropy Orb、Nether Bolt、Cloud Kill、Genocide One、Poison Branding、Vampiric Drain、Animate Dead、Genocide；优先复用 v104 缩放与现有 area/bolt/beam，分别设计活体限定、bolt-or-beam、自身中心 AoE、灭绝、临时武器品牌、吸血和尸体实体，不做无条件伤害近似。设备/消耗品效果系统仍可插队 |
+
+## contract-v104 明确遗留
+
+- Malediction 暂无原版 1/5 随机 rider（death ray / fear / confusion / stun）；先保持纯 hell-fire，等待通用随机效果分支；
+- Necromantic Resistance 固定 300 ticks，尚未复刻 `20+1d20` 回合；随机持续时间继续留在真实导入报告；
+- status power 采用稳定的 power/target 双有界骰中性公式，Control 采用 `power-10` 对目标等级的有界检定；两者不是原版所有 GF 的逐函数概率公式；
+- Control 保存 controller identity 并复用召唤物 AI，但没有解除控制时限、宠物维护上限、忠诚或主人死亡联动；
+- actor Detect 只返回瞬时位置与 entity ID，不写地图记忆；怪物回忆/长期知识仍是独立系统；
+- 玩家法术的 `spell_power`、`to_d_spell`、施法负重、精确 Mana 容量和学习容量公式仍未接入。
 
 ## contract-v103 明确遗留
 

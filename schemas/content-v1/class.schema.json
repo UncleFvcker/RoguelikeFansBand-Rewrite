@@ -1,5 +1,37 @@
 {
   "$defs": {
+    "AbilityCastingOverrideDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "baseFailurePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minimumLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resourceCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "abilityId",
+        "minimumLevel",
+        "resourceCost",
+        "baseFailurePercent"
+      ],
+      "type": "object"
+    },
     "CastingAttribute": {
       "enum": [
         "intelligence",
@@ -14,6 +46,12 @@
         "abilityBookIds": {
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        },
+        "abilityOverrides": {
+          "items": {
+            "$ref": "#/$defs/AbilityCastingOverrideDefinition"
           },
           "type": "array"
         },

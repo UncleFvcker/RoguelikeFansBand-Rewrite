@@ -229,11 +229,26 @@
         "targetCount"
       ]
     },
+    "AbilityControlOutcomeDto": {
+      "type": "string",
+      "enum": [
+        "ineligible",
+        "resisted",
+        "controlled",
+        "already-controlled"
+      ]
+    },
     "AbilityDetectResolutionDto": {
       "type": "object",
       "properties": {
         "category": {
           "type": "string"
+        },
+        "detectedEntityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "detectedPositions": {
           "type": "array",
@@ -251,6 +266,10 @@
           "format": "uint8",
           "maximum": 255,
           "minimum": 0
+        },
+        "subject": {
+          "$ref": "#/$defs/AbilityDetectSubjectDto",
+          "default": "terrain"
         }
       },
       "required": [
@@ -273,11 +292,22 @@
           "format": "uint8",
           "maximum": 255,
           "minimum": 0
+        },
+        "subject": {
+          "$ref": "#/$defs/AbilityDetectSubjectDto",
+          "default": "terrain"
         }
       },
       "required": [
         "category",
         "radius"
+      ]
+    },
+    "AbilityDetectSubjectDto": {
+      "type": "string",
+      "enum": [
+        "terrain",
+        "actor"
       ]
     },
     "AbilityDto": {
@@ -534,8 +564,32 @@
               "maximum": 255,
               "minimum": 0
             },
+            "grantedResistances": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ResistanceDto"
+              }
+            },
             "intensity": {
               "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "power": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "powerRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
@@ -570,6 +624,22 @@
             },
             "statusKindId": {
               "type": "string"
+            },
+            "targetLevel": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
+            "targetRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
             },
             "type": {
               "type": "string",
@@ -701,6 +771,63 @@
             "type",
             "effectIndex",
             "clearedCells"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "outcome": {
+              "$ref": "#/$defs/AbilityControlOutcomeDto"
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "roll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "targetKindId": {
+              "type": "string"
+            },
+            "targetLevel": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "control"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "category",
+            "power",
+            "targetEntityId",
+            "targetKindId",
+            "targetLevel",
+            "outcome"
           ]
         }
       ]
@@ -1118,6 +1245,10 @@
               "maximum": 255,
               "minimum": 0
             },
+            "subject": {
+              "$ref": "#/$defs/AbilityDetectSubjectDto",
+              "default": "terrain"
+            },
             "type": {
               "type": "string",
               "const": "detect"
@@ -1168,8 +1299,23 @@
               "format": "uint32",
               "minimum": 0
             },
+            "grantedResistances": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ResistanceDto"
+              }
+            },
             "intensity": {
               "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "power": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
@@ -1272,6 +1418,29 @@
         {
           "type": "object",
           "properties": {
+            "category": {
+              "type": "string"
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "control"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "amount": {
               "type": "integer",
               "format": "uint32",
@@ -1361,7 +1530,8 @@
         "extended",
         "strengthened",
         "unchanged",
-        "immune"
+        "immune",
+        "resisted"
       ]
     },
     "AbilityStatusStackingDto": {
@@ -1961,6 +2131,12 @@
           "default": 0,
           "maximum": 65535,
           "minimum": 0
+        },
+        "controllerId": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "defense": {
           "type": "integer",
@@ -4696,6 +4872,12 @@
     "StatusDto": {
       "type": "object",
       "properties": {
+        "grantedResistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
         "intensity": {
           "type": "integer",
           "format": "uint16",

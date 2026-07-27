@@ -24,6 +24,7 @@ pub(crate) struct Actor {
     pub(crate) statuses: Vec<StatusInstance>,
     pub(crate) resistances: ResistanceProfile,
     pub(crate) pack: Option<MonsterPackIdentity>,
+    pub(crate) controller_id: Option<String>,
     pub(crate) summon: Option<SummonIdentity>,
 }
 
