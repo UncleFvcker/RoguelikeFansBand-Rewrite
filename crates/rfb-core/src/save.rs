@@ -413,12 +413,27 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
                     ));
                 }
             }
+            if status
+                .granted_brands
+                .windows(2)
+                .any(|pair| pair[0] >= pair[1])
+            {
+                return Err(CoreError::InvalidSave(
+                    "actor status brand state is invalid",
+                ));
+            }
+            let granted_brands = status
+                .granted_brands
+                .into_iter()
+                .map(weapon_brand)
+                .collect();
             Ok(StatusInstance {
                 kind_id: status.kind_id,
                 intensity: status.intensity,
                 remaining_ticks: status.remaining_ticks,
                 source_id: status.source_id,
                 granted_resistances,
+                granted_brands,
             })
         })
         .collect()

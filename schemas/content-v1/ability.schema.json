@@ -101,6 +101,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "targetCategory": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "type": {
               "const": "area-damage",
               "type": "string"
@@ -149,6 +156,51 @@
             "type",
             "damageDice",
             "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "beamChancePercent": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "type": {
+              "const": "bolt-or-beam-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "beamChancePercent"
           ],
           "type": "object"
         },
@@ -555,6 +607,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "grantedBrands": {
+              "items": {
+                "$ref": "#/$defs/WeaponBrand"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
             "grantedResistances": {
               "additionalProperties": false,
               "properties": {
@@ -739,6 +798,107 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "targetCategory": {
+              "type": "string"
+            },
+            "type": {
+              "const": "drain-life",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "targetCategory"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "scope": {
+              "$ref": "#/$defs/AbilityGenocideScopeDefinition"
+            },
+            "type": {
+              "const": "genocide",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "scope",
+            "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actorKindId": {
+              "type": "string"
+            },
+            "corpseItemKindId": {
+              "type": "string"
+            },
+            "count": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "animate-dead",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "actorKindId",
+            "corpseItemKindId",
+            "radius",
+            "count"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,
@@ -777,6 +937,13 @@
         }
       ]
     },
+    "AbilityGenocideScopeDefinition": {
+      "enum": [
+        "single",
+        "glyph"
+      ],
+      "type": "string"
+    },
     "AbilityLevelScalingDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -801,6 +968,15 @@
           "minimum": 0,
           "type": "integer"
         },
+        "maximum": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "multiplier": {
           "format": "uint32",
           "minimum": 0,
@@ -818,12 +994,15 @@
     "AbilityLevelScalingField": {
       "enum": [
         "damage-dice",
+        "damage-sides",
         "damage-bonus",
         "radius",
+        "beam-chance-percent",
         "status-intensity",
         "status-duration-ticks",
         "status-power",
-        "control-power"
+        "control-power",
+        "genocide-power"
       ],
       "type": "string"
     },
@@ -945,6 +1124,16 @@
         "resistant",
         "strong",
         "immune"
+      ],
+      "type": "string"
+    },
+    "WeaponBrand": {
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison"
       ],
       "type": "string"
     }

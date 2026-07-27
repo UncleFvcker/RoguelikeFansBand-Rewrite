@@ -83,6 +83,7 @@ Malediction 随机 rider、随机抗性持续、施法负重、Mana 容量和学
 
 Malediction 的 1/5 随机 rider 仍未实现；Necromantic Resistance 暂用固定
 300 ticks，未复刻原版 `20+1d20` 回合。施法强度、装备 spell power 与职业
-负重公式继续保留为后续系统。P55 优先盘点并推进 Death 第二册；其中
-活体限定、bolt-or-beam、自身中心 AoE、灭绝、武器烙印、吸血和尸体复活
-必须按各自系统边界实现，不能降级成无条件伤害。
+负重公式继续保留为后续系统。原列为 P55 的 Death 第二册已由
+[Contract v105](contract-v105-death-second-book.md) 完成：活体限定、
+bolt-or-beam、自身中心 AoE、灭绝、临时品牌、吸血和尸体复活均按独立
+系统边界实现，没有降级成无条件伤害。

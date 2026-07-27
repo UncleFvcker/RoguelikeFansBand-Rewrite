@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.sepulchral-ways",
+  "nameKey": "ability-book-demo-sepulchral-ways-name",
+  "descriptionKey": "ability-book-demo-sepulchral-ways-description",
+  "abilityIds": [
+    "demo.ability.death-entropy-orb",
+    "demo.ability.death-nether-bolt",
+    "demo.ability.death-cloud-kill",
+    "demo.ability.death-genocide-one",
+    "demo.ability.death-poison-branding",
+    "demo.ability.death-vampiric-drain",
+    "demo.ability.death-animate-dead",
+    "demo.ability.death-genocide"
+  ],
+  "tags": ["death", "spellbook"]
+}

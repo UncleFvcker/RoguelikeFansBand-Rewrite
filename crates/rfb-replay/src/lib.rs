@@ -984,6 +984,7 @@ mod tests {
             remaining_ticks: 20,
             source_id: Some("test.slow".to_owned()),
             granted_resistances: Vec::new(),
+            granted_brands: Vec::new(),
         });
         let initial = Game::from_save(payload).expect("status replay fixture should load");
         let book_item_id = initial

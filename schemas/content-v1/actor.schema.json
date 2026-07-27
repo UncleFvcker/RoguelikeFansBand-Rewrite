@@ -226,6 +226,13 @@
       "minimum": 0,
       "type": "integer"
     },
+    "corpseItemKindId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "damageDice": {
       "format": "uint16",
       "maximum": 65535,

@@ -800,8 +800,14 @@ fn launcher_ammo_for(entry: &LegacyItemEntry, ammo: &LauncherAmmoIndex) -> Optio
 }
 
 fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
-    (entry.tval == DEATH_FIRST_BOOK_TVAL && entry.sval == DEATH_FIRST_BOOK_SVAL)
-        .then_some(DEATH_FIRST_BOOK_ID)
+    if entry.tval != DEATH_BOOK_TVAL {
+        return None;
+    }
+    match entry.sval {
+        DEATH_FIRST_BOOK_SVAL => Some(DEATH_FIRST_BOOK_ID),
+        DEATH_SECOND_BOOK_SVAL => Some(DEATH_SECOND_BOOK_ID),
+        _ => None,
+    }
 }
 
 fn item_json(
@@ -2836,6 +2842,21 @@ fn runtime_casting_attribute(entry: &LegacyClassEntry) -> Option<&'static str> {
     }
 }
 
+fn death_entropy_uses_three_halves(class_id: &str) -> bool {
+    matches!(
+        class_id,
+        "mage" | "blood-mage" | "high-mage" | "sorcerer" | "yellow-mage" | "gray-mage"
+    )
+}
+
+fn legacy_beam_chance_profile(class_id: &str) -> (u8, u8, i8) {
+    match class_id {
+        "mage" | "blood-mage" | "necromancer" | "yellow-mage" | "gray-mage" => (1, 1, 0),
+        "high-mage" | "sorcerer" => (1, 1, 10),
+        _ => (1, 2, 0),
+    }
+}
+
 fn death_realm(profile: &LegacyMagicProfile) -> Option<&LegacyRealmProfile> {
     profile
         .realms
@@ -2938,7 +2959,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
         ),
         5 => (
             "death-necromantic-resistance",
-            self_target,
+            self_target.clone(),
             serde_json::json!({
                 "type": "apply-status",
                 "statusKindId": "rfb.status.necromantic-resistance",
@@ -2995,7 +3016,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
         ),
         7 => (
             "death-enslave-undead",
-            directional_target,
+            directional_target.clone(),
             serde_json::json!({
                 "type": "control",
                 "category": "undead",
@@ -3009,6 +3030,170 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "divisor": 1,
             })],
             vec!["control", "death", "spell", "undead"],
+        ),
+        8 => (
+            "death-entropy-orb",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "area-damage",
+                "damageDice": 3,
+                "damageSides": 6,
+                "damageType": "physical",
+                "radius": 2,
+                "targetCategory": "living",
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "damage-bonus",
+                    "multiplier": 3,
+                    "divisor": 2,
+                }),
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "radius",
+                    "multiplier": 1,
+                    "divisor": 30,
+                    "maximum": 3,
+                }),
+            ],
+            vec!["area", "death", "drain", "living", "spell"],
+        ),
+        9 => (
+            "death-nether-bolt",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "bolt-or-beam-damage",
+                "damageDice": 8,
+                "damageSides": 8,
+                "damageType": "nether",
+                "beamChancePercent": 0,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "damage-dice",
+                "levelOffset": 5,
+                "multiplier": 1,
+                "divisor": 4,
+            })],
+            vec!["beam", "bolt", "death", "nether", "spell"],
+        ),
+        10 => (
+            "death-cloud-kill",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "area-damage",
+                "damageDice": 1,
+                "damageSides": 1,
+                "damageBonus": 59,
+                "damageType": "poison",
+                "radius": 2,
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "damage-bonus",
+                    "multiplier": 2,
+                    "divisor": 1,
+                }),
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "radius",
+                    "multiplier": 1,
+                    "divisor": 10,
+                }),
+            ],
+            vec!["area", "death", "poison", "spell"],
+        ),
+        11 => (
+            "death-genocide-one",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "genocide",
+                "scope": "single",
+                "power": 3,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "genocide-power",
+                "levelOffset": 1,
+                "multiplier": 3,
+                "divisor": 1,
+            })],
+            vec!["death", "genocide", "spell"],
+        ),
+        12 => (
+            "death-poison-branding",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.poison-branding",
+                "intensity": 1,
+                "durationTicks": 500,
+                "stacking": "replace",
+                "grantedBrands": ["poison"],
+            }),
+            Vec::new(),
+            vec!["brand", "death", "poison", "spell"],
+        ),
+        13 => (
+            "death-vampiric-drain",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "drain-life",
+                "damageDice": 1,
+                "damageSides": 2,
+                "damageBonus": 2,
+                "damageType": "physical",
+                "targetCategory": "living",
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "damage-sides",
+                    "levelOffset": 1,
+                    "multiplier": 2,
+                    "divisor": 1,
+                }),
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "damage-bonus",
+                    "levelOffset": 1,
+                    "multiplier": 2,
+                    "divisor": 1,
+                }),
+            ],
+            vec!["death", "drain", "living", "spell"],
+        ),
+        14 => (
+            "death-animate-dead",
+            self_target,
+            serde_json::json!({
+                "type": "animate-dead",
+                "actorKindId": "rfb-legacy.actor.skeleton-human",
+                "corpseItemKindId": LEGACY_CORPSE_ITEM_ID,
+                "radius": 8,
+                "count": 8,
+            }),
+            Vec::new(),
+            vec!["death", "spell", "summon", "undead"],
+        ),
+        15 => (
+            "death-genocide",
+            directional_target,
+            serde_json::json!({
+                "type": "genocide",
+                "scope": "glyph",
+                "power": 3,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "genocide-power",
+                "levelOffset": 1,
+                "multiplier": 3,
+                "divisor": 1,
+            })],
+            vec!["death", "genocide", "spell"],
         ),
         _ => return None,
     };
@@ -3040,6 +3225,18 @@ fn death_first_book_json(ability_ids: &[String]) -> serde_json::Value {
         "id": DEATH_FIRST_BOOK_ID,
         "nameKey": "ability-book-legacy-death-stench-of-death-name",
         "descriptionKey": "ability-book-legacy-death-stench-of-death-description",
+        "abilityIds": ability_ids,
+        "tags": ["death", "legacy-import", "spellbook"],
+    })
+}
+
+fn death_second_book_json(ability_ids: &[String]) -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
+        "formatVersion": 1,
+        "id": DEATH_SECOND_BOOK_ID,
+        "nameKey": "ability-book-legacy-death-sepulchral-ways-name",
+        "descriptionKey": "ability-book-legacy-death-sepulchral-ways-description",
         "abilityIds": ability_ids,
         "tags": ["death", "legacy-import", "spellbook"],
     })
@@ -3504,6 +3701,13 @@ fn monster_json(
     {
         tags.push("nonliving".to_owned());
     }
+    if entry.flags.iter().any(|flag| flag == "UNIQUE") {
+        tags.push("unique".to_owned());
+    }
+    let living = !tags.iter().any(|tag| tag == "nonliving");
+    if living {
+        tags.push("living".to_owned());
+    }
     let mut value = serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/actor.schema.json"),
         "formatVersion": 1,
@@ -3533,6 +3737,9 @@ fn monster_json(
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
     }
+    if living {
+        value["corpseItemKindId"] = serde_json::json!(LEGACY_CORPSE_ITEM_ID);
+    }
     value
 }
 
@@ -3560,9 +3767,12 @@ pub struct ContentImportOutcome {
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
 const LEGACY_MANA_RESOURCE_ID: &str = "rfb-legacy.resource.mana";
 const DEATH_REALM_INDEX: u8 = 4;
-const DEATH_FIRST_BOOK_TVAL: u16 = 100;
+const DEATH_BOOK_TVAL: u16 = 100;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
+const DEATH_SECOND_BOOK_SVAL: u16 = 1;
 const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-stench-of-death";
+const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-sepulchral-ways";
+const LEGACY_CORPSE_ITEM_ID: &str = "rfb-legacy.item.corpse-remains";
 
 fn status_ability(id: &str, status: &str, self_target: bool) -> serde_json::Value {
     let target = if self_target {
@@ -4406,6 +4616,21 @@ pub fn convert_content(
         ));
         report.items_imported += 1;
     }
+    item_files.push((
+        "corpse-remains.json".to_owned(),
+        serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/item.schema.json"),
+            "formatVersion": 1,
+            "id": LEGACY_CORPSE_ITEM_ID,
+            "nameKey": "item-legacy-corpse-remains-name",
+            "descriptionKey": "item-legacy-corpse-remains-description",
+            "glyph": "%",
+            "weightTenthsPound": 100,
+            "maxStack": 1,
+            "tags": ["corpse", "legacy-import"],
+        }),
+    ));
+    report.items_imported += 1;
 
     let mut affix_files = Vec::new();
     let mut seen_affix_ids = BTreeMap::new();
@@ -4576,7 +4801,8 @@ pub fn convert_content(
         .collect::<BTreeMap<_, _>>();
     let mut runtime_casting_profiles = BTreeMap::new();
     let mut mapped_player_spell_rows = BTreeSet::new();
-    let mut death_ability_ids = BTreeSet::new();
+    let mut death_first_ability_ids = BTreeSet::new();
+    let mut death_second_ability_ids = BTreeSet::new();
     for entry in &characters.classes {
         let Some(magic_profile) = magic_profiles_by_class
             .get(&entry.registration.index)
@@ -4594,13 +4820,21 @@ pub fn convert_content(
                 .or_default() += 1;
             continue;
         };
+        let mut has_first_book = false;
+        let mut has_second_book = false;
         let overrides = realm
             .spells
             .iter()
             .filter_map(|spell| {
                 let (ability_id, ability) = death_spell_ability(spell)?;
                 shared_abilities.entry(ability_id.clone()).or_insert(ability);
-                death_ability_ids.insert(ability_id.clone());
+                if spell.index < 8 {
+                    has_first_book = true;
+                    death_first_ability_ids.insert(ability_id.clone());
+                } else {
+                    has_second_book = true;
+                    death_second_ability_ids.insert(ability_id.clone());
+                }
                 mapped_player_spell_rows.insert((
                     magic_profile.class_index,
                     realm.index,
@@ -4619,12 +4853,30 @@ pub fn convert_content(
                         .entry("random-resistance-duration".to_owned())
                         .or_default() += 1;
                 }
-                Some(serde_json::json!({
+                let mut override_ = serde_json::json!({
                     "abilityId": ability_id,
                     "minimumLevel": spell.level.max(entry.caster_profile.as_ref()?.minimum_level).max(1),
                     "resourceCost": u32::from(spell.mana.max(1)),
                     "baseFailurePercent": spell.failure_percent.min(95),
-                }))
+                });
+                if spell.index == 8 && !death_entropy_uses_three_halves(&entry.registration.id) {
+                    override_["levelScaling"] = serde_json::json!([
+                        {
+                            "effectIndex": 0,
+                            "field": "damage-bonus",
+                            "multiplier": 5,
+                            "divisor": 4,
+                        },
+                        {
+                            "effectIndex": 0,
+                            "field": "radius",
+                            "multiplier": 1,
+                            "divisor": 30,
+                            "maximum": 3,
+                        },
+                    ]);
+                }
+                Some(override_)
             })
             .collect::<Vec<_>>();
         if overrides.is_empty() {
@@ -4634,6 +4886,15 @@ pub fn convert_content(
             .caster_profile
             .as_ref()
             .expect("runtime casting attribute requires a caster profile");
+        let (beam_chance_level_multiplier, beam_chance_level_divisor, beam_chance_bonus) =
+            legacy_beam_chance_profile(&entry.registration.id);
+        let mut ability_book_ids = Vec::new();
+        if has_first_book {
+            ability_book_ids.push(DEATH_FIRST_BOOK_ID);
+        }
+        if has_second_book {
+            ability_book_ids.push(DEATH_SECOND_BOOK_ID);
+        }
         runtime_casting_profiles.insert(
             entry.registration.index,
             serde_json::json!({
@@ -4647,7 +4908,10 @@ pub fn convert_content(
                 "learningCapacityPerAttributeIndex": 0,
                 "learningCapacityCap": 32,
                 "minimumFailurePercent": caster.minimum_failure_percent,
-                "abilityBookIds": [DEATH_FIRST_BOOK_ID],
+                "beamChanceLevelMultiplier": beam_chance_level_multiplier,
+                "beamChanceLevelDivisor": beam_chance_level_divisor,
+                "beamChanceBonus": beam_chance_bonus,
+                "abilityBookIds": ability_book_ids,
                 "abilityOverrides": overrides,
             }),
         );
@@ -4664,13 +4928,22 @@ pub fn convert_content(
         }
     }
     let mut ability_book_files = Vec::new();
-    if !death_ability_ids.is_empty() {
-        let ability_ids = death_ability_ids.into_iter().collect::<Vec<_>>();
-        report.player_abilities_imported = ability_ids.len();
-        report.player_ability_books_imported = 1;
+    if !death_first_ability_ids.is_empty() {
+        let ability_ids = death_first_ability_ids.into_iter().collect::<Vec<_>>();
+        report.player_abilities_imported += ability_ids.len();
+        report.player_ability_books_imported += 1;
         ability_book_files.push((
             "death-stench-of-death.json".to_owned(),
             death_first_book_json(&ability_ids),
+        ));
+    }
+    if !death_second_ability_ids.is_empty() {
+        let ability_ids = death_second_ability_ids.into_iter().collect::<Vec<_>>();
+        report.player_abilities_imported += ability_ids.len();
+        report.player_ability_books_imported += 1;
+        ability_book_files.push((
+            "death-sepulchral-ways.json".to_owned(),
+            death_second_book_json(&ability_ids),
         ));
     }
     for entry in &characters.classes {
@@ -5268,6 +5541,14 @@ T:5:5:30:4
 T:7:10:75:4
 T:9:9:30:4
 T:11:12:40:4
+T:12:12:40:5
+T:13:12:30:4
+T:18:15:50:10
+T:24:21:60:30
+T:30:75:80:30
+T:32:30:60:16
+T:36:35:80:70
+T:39:30:95:25
 ";
         const S_INFO: &str = "\
 N:1
@@ -5316,7 +5597,7 @@ S:2:0:6000
         assert_eq!(magic_profiles[0].realms[0].spells.len(), 2);
         assert_eq!(magic_profiles[0].realms[0].spells[1].mana, 2);
         assert!(!magic_profiles[0].realms[1].readable);
-        assert_eq!(magic_profiles[0].realms[2].spells.len(), 8);
+        assert_eq!(magic_profiles[0].realms[2].spells.len(), 16);
 
         let proficiency_profiles = parse_s_info(S_INFO);
         assert_eq!(proficiency_profiles.len(), 1);
@@ -5331,13 +5612,13 @@ S:2:0:6000
         };
         let outcome = convert_content(&[], &[], &[], &[], &[], &characters);
         assert_eq!(outcome.report.classes_imported, 1);
-        assert_eq!(outcome.report.magic_spell_profile_rows, 10);
+        assert_eq!(outcome.report.magic_spell_profile_rows, 18);
         assert_eq!(outcome.report.realm_readability["life"], 1);
         assert_eq!(outcome.report.realm_readability["death"], 1);
-        assert_eq!(outcome.report.player_abilities_imported, 8);
-        assert_eq!(outcome.report.player_ability_books_imported, 1);
+        assert_eq!(outcome.report.player_abilities_imported, 16);
+        assert_eq!(outcome.report.player_ability_books_imported, 2);
         assert_eq!(outcome.report.classes_with_runtime_casting_profiles, 1);
-        assert_eq!(outcome.report.player_spell_parameter_overrides, 8);
+        assert_eq!(outcome.report.player_spell_parameter_overrides, 16);
         assert_eq!(
             outcome
                 .report
@@ -5372,9 +5653,17 @@ S:2:0:6000
             outcome.class_files[0].1["castingProfile"]["abilityOverrides"]
                 .as_array()
                 .map(Vec::len),
-            Some(8)
+            Some(16)
         );
-        assert_eq!(outcome.ability_book_files.len(), 1);
+        assert_eq!(outcome.ability_book_files.len(), 2);
+        assert_eq!(
+            outcome.class_files[0].1["castingProfile"]["beamChanceLevelMultiplier"],
+            1
+        );
+        assert_eq!(
+            outcome.class_files[0].1["castingProfile"]["beamChanceLevelDivisor"],
+            1
+        );
         let black_sleep = outcome
             .ability_files
             .iter()
@@ -5412,6 +5701,25 @@ S:2:0:6000
             .expect("enslave undead ability should be generated");
         assert_eq!(control["effect"]["type"], "control");
         assert_eq!(control["levelScaling"][0]["field"], "control-power");
+        let entropy = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-entropy-orb.json")
+            .map(|(_, value)| value)
+            .expect("entropy orb ability should be generated");
+        assert_eq!(entropy["effect"]["targetCategory"], "living");
+        assert_eq!(entropy["levelScaling"][1]["maximum"], 3);
+        let animate_dead = outcome
+            .ability_files
+            .iter()
+            .find(|(name, _)| name == "death-animate-dead.json")
+            .map(|(_, value)| value)
+            .expect("animate dead ability should be generated");
+        assert_eq!(animate_dead["effect"]["type"], "animate-dead");
+        assert_eq!(
+            animate_dead["effect"]["corpseItemKindId"],
+            LEGACY_CORPSE_ITEM_ID
+        );
         assert_eq!(
             outcome.magic_profile_files[0].1["realms"][0]["realmId"],
             "life"
@@ -5715,7 +6023,7 @@ W:5:0:0:150:80
             &LegacyCharacterSources::default(),
         );
         assert_eq!(outcome.report.items_total, 9);
-        assert_eq!(outcome.report.items_imported, 8);
+        assert_eq!(outcome.report.items_imported, 9);
         assert_eq!(outcome.report.items_skipped, 1);
 
         let get = |name: &str| {
@@ -5760,6 +6068,9 @@ W:5:0:0:150:80
         // via egos or fixed artifacts, mirroring the legacy generation model.
         let ring = get("test-ring.json");
         assert_eq!(ring["equipmentSlot"], "ring");
+        let corpse = get("corpse-remains.json");
+        assert_eq!(corpse["id"], LEGACY_CORPSE_ITEM_ID);
+        assert_eq!(corpse["maxStack"], 1);
         assert!(ring.get("modifiers").is_none());
         assert_eq!(outcome.report.not_applicable_item_flags["HIDE_TYPE"], 1);
         assert_eq!(outcome.report.item_behavior_gaps["effect-jewelry"], 1);

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-entropy-orb",
+  "nameKey": "ability-demo-death-entropy-orb-name",
+  "descriptionKey": "ability-demo-death-entropy-orb-description",
+  "minimumLevel": 12,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 12,
+  "baseFailurePercent": 40,
+  "target": {
+    "modes": ["position", "entity"],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "area-damage",
+    "damageDice": 3,
+    "damageSides": 6,
+    "damageType": "physical",
+    "radius": 2,
+    "targetCategory": "living"
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 3,
+      "divisor": 2
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1,
+      "divisor": 30,
+      "maximum": 3
+    }
+  ],
+  "tags": ["area", "death", "drain", "living", "spell"]
+}

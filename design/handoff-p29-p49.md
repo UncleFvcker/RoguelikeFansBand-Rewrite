@@ -77,7 +77,8 @@
 - **P52 已完成（纯工具）**：54 个职业壳与职业 skillSet；53 份 m_info 共 636 个领域行、144 个可读行和 4608 条逐法术参数；C caster_info 壳与领域可读性表；s_info 的 16640 条武器熟练和 156 条专项熟练进入报告。详见 `design/legacy-class-import-v1.md`。
 - **P53 已完成（首批运行时纵切）**：`CastingProfileDefinition.abilityOverrides` 保留同一法术的职业级等级/耗魔/失败率；Death 第一册 `[Stench of Death]` 映射 Malediction、Stinking Cloud、Horrify，12 个静态职业生成真实 castingProfile，共 3 abilities / 1 ability book / 36 行职业参数。敏捷、生命与动态档案继续显式排除。大型源包文件预算 4096→32768，16 MiB 源字节预算不变。详见 `design/legacy-player-spell-import-v1.md`。
 - **P54 已完成（contract-v104）**：七类 `levelScaling` 在能力投影/施放统一物化；actor Detect、status power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部入协议、存档和 Schema v43。Death 第一册达到 8 abilities / 1 ability book / 12 casting profiles / 96 行覆盖；协议 1.104、包 1.95.0、334 exact fixtures、零 waiver。真实 Death 效果缺口 480→384，详见 `design/contract-v104-death-first-book.md`。
-- **P55 首选：Death 第二册系统盘点与纵切**——优先复用 v104 缩放与既有 area/bolt/beam；活体限定、bolt-or-beam、自身中心 AoE、灭绝、临时武器品牌、吸血和尸体实体必须分别建模，不能伪装成普通伤害。
+- **P55 已完成（contract-v105）**：Death 第二册 8/8 槽位落地；活体限定、bolt-or-beam、职业 beam 概率、自身中心 AoE、single/glyph Genocide、临时 poison 品牌、Drain Life、尸体与永久 Animate Dead 全部进入协议/存档/回放。两册合计 16 abilities、2 books、12 casting profiles、192 行覆盖；协议 1.105、包 1.96.0、Schema v44、343 exact fixtures、零 waiver，Death 效果缺口 480→288。详见 `design/contract-v105-death-second-book.md`。
+- **P56 候选**：先读取 Death 第三册八个实际槽位并按系统族聚类；设备/消耗品效果系统仍是并列高收益候选，不以法术名或物品名做行为近似。
 - 备选：**设备与消耗品效果系统**（行为缺口 231 + 激活 193，解锁卷轴/魔杖/药水实际效果）；**法术清尾**（S_ 特殊/字形 177、SHRIEK、TRAPS、DARKNESS 房间光照、ANIM_DEAD、ANTI_MAGIC）。
 - 导入优先级路线（design/legacy-import-priority-v1.md）：T1✅ T2 防御面✅ T2 进攻面✅ T2 动态实例/passive✅ T3 职业壳+m_info✅ T4 玩家领域法术首批✅（继续逐册）∥设备效果 → T5 d_info/v_info/任务/城镇荒野。
 - 能力性旗标已结构化入内容/实例/DTO，但除 REGEN 外仍需运行时消费者；另有种族 rank 动态（21 怪物种族）、双持/箭袋槽、非标准身体玩法待对应系统。
@@ -93,7 +94,7 @@ cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
 cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
 cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
 cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v104/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v105/baseline-policy.json
 # web（在 web/ 下）
 npm run check:protocol && npm test && npm run typecheck && npm run build:ui && npm run e2e
 # 导入器实跑

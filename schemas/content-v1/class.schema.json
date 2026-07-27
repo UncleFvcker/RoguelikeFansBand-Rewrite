@@ -12,6 +12,12 @@
           "minimum": 0,
           "type": "integer"
         },
+        "levelScaling": {
+          "items": {
+            "$ref": "#/$defs/AbilityLevelScalingDefinition"
+          },
+          "type": "array"
+        },
         "minimumLevel": {
           "format": "uint16",
           "maximum": 65535,
@@ -31,6 +37,68 @@
         "baseFailurePercent"
       ],
       "type": "object"
+    },
+    "AbilityLevelScalingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "divisor": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "effectIndex": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "field": {
+          "$ref": "#/$defs/AbilityLevelScalingField"
+        },
+        "levelOffset": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "multiplier": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "effectIndex",
+        "field",
+        "multiplier",
+        "divisor"
+      ],
+      "type": "object"
+    },
+    "AbilityLevelScalingField": {
+      "enum": [
+        "damage-dice",
+        "damage-sides",
+        "damage-bonus",
+        "radius",
+        "beam-chance-percent",
+        "status-intensity",
+        "status-duration-ticks",
+        "status-power",
+        "control-power",
+        "genocide-power"
+      ],
+      "type": "string"
     },
     "CastingAttribute": {
       "enum": [
@@ -63,6 +131,27 @@
         "baseLearningCapacity": {
           "format": "uint16",
           "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "beamChanceBonus": {
+          "default": 0,
+          "format": "int8",
+          "maximum": 127,
+          "minimum": -128,
+          "type": "integer"
+        },
+        "beamChanceLevelDivisor": {
+          "default": 1,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "beamChanceLevelMultiplier": {
+          "default": 0,
+          "format": "uint8",
+          "maximum": 255,
           "minimum": 0,
           "type": "integer"
         },

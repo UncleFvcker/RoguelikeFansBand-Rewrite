@@ -564,6 +564,12 @@
               "maximum": 255,
               "minimum": 0
             },
+            "grantedBrands": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/WeaponBrandDto"
+              }
+            },
             "grantedResistances": {
               "type": "array",
               "items": {
@@ -829,6 +835,132 @@
             "targetLevel",
             "outcome"
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "healing": {
+              "$ref": "#/$defs/HealingResolutionDto"
+            },
+            "resolution": {
+              "$ref": "#/$defs/DamageResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "drain-life"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "resolution",
+            "healing"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "fatigueDamage": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "glyph": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "removedEntityIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "resistedEntityIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scope": {
+              "$ref": "#/$defs/AbilityGenocideScopeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "genocide"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "scope",
+            "power",
+            "removedEntityIds",
+            "resistedEntityIds",
+            "fatigueDamage"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "actorKindId": {
+              "type": "string"
+            },
+            "consumedCorpseItemIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "entityIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "positions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Position"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "animate-dead"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "actorKindId",
+            "consumedCorpseItemIds",
+            "entityIds",
+            "positions"
+          ]
         }
       ]
     },
@@ -837,7 +969,8 @@
       "enum": [
         "no-target",
         "target-dead",
-        "saved"
+        "saved",
+        "ineligible"
       ]
     },
     "AbilityEffectSpecDto": {
@@ -910,6 +1043,12 @@
               "maximum": 255,
               "minimum": 0
             },
+            "targetCategory": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "type": {
               "type": "string",
               "const": "area-damage"
@@ -958,6 +1097,50 @@
             "damageDice",
             "damageSides",
             "damageType"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "beamChancePercent": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 0,
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "bolt-or-beam-damage"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType",
+            "beamChancePercent"
           ]
         },
         {
@@ -1299,6 +1482,12 @@
               "format": "uint32",
               "minimum": 0
             },
+            "grantedBrands": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/WeaponBrandDto"
+              }
+            },
             "grantedResistances": {
               "type": "array",
               "items": {
@@ -1441,6 +1630,104 @@
         {
           "type": "object",
           "properties": {
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 0,
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageType": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "targetCategory": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "drain-life"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageType",
+            "targetCategory"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "scope": {
+              "$ref": "#/$defs/AbilityGenocideScopeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "genocide"
+            }
+          },
+          "required": [
+            "type",
+            "scope",
+            "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "actorKindId": {
+              "type": "string"
+            },
+            "corpseItemKindId": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "animate-dead"
+            }
+          },
+          "required": [
+            "type",
+            "actorKindId",
+            "corpseItemKindId",
+            "radius",
+            "count"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "amount": {
               "type": "integer",
               "format": "uint32",
@@ -1482,6 +1769,13 @@
       },
       "required": [
         "effects"
+      ]
+    },
+    "AbilityGenocideScopeDto": {
+      "type": "string",
+      "enum": [
+        "single",
+        "glyph"
       ]
     },
     "AbilityLearningDto": {
@@ -4872,6 +5166,12 @@
     "StatusDto": {
       "type": "object",
       "properties": {
+        "grantedBrands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeaponBrandDto"
+          }
+        },
         "grantedResistances": {
           "type": "array",
           "items": {

@@ -267,6 +267,8 @@ pub struct ActorDefinition {
     pub loot_table_id: Option<String>,
     #[serde(default)]
     pub carried_loot_table_id: Option<String>,
+    #[serde(default)]
+    pub corpse_item_kind_id: Option<String>,
     pub tags: Vec<String>,
 }
 
@@ -512,6 +514,8 @@ pub struct AbilityCastingOverrideDefinition {
     pub minimum_level: u16,
     pub resource_cost: u32,
     pub base_failure_percent: u8,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_scaling: Vec<AbilityLevelScalingDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -528,9 +532,19 @@ pub struct CastingProfileDefinition {
     pub learning_capacity_per_attribute_index: u16,
     pub learning_capacity_cap: u16,
     pub minimum_failure_percent: u8,
+    #[serde(default)]
+    pub beam_chance_level_multiplier: u8,
+    #[serde(default = "default_beam_chance_level_divisor")]
+    pub beam_chance_level_divisor: u8,
+    #[serde(default)]
+    pub beam_chance_bonus: i8,
     pub ability_book_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ability_overrides: Vec<AbilityCastingOverrideDefinition>,
+}
+
+const fn default_beam_chance_level_divisor() -> u8 {
+    1
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -718,12 +732,23 @@ pub enum AbilityDetectSubjectDefinition {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilityLevelScalingField {
     DamageDice,
+    DamageSides,
     DamageBonus,
     Radius,
+    BeamChancePercent,
     StatusIntensity,
     StatusDurationTicks,
     StatusPower,
     ControlPower,
+    GenocidePower,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityGenocideScopeDefinition {
+    Single,
+    Glyph,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -736,6 +761,8 @@ pub struct AbilityLevelScalingDefinition {
     pub divisor: u32,
     #[serde(default)]
     pub level_offset: u16,
+    #[serde(default)]
+    pub maximum: Option<u64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -772,6 +799,8 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
         radius: u8,
+        #[serde(default)]
+        target_category: Option<String>,
     },
     BeamDamage {
         damage_dice: u16,
@@ -780,6 +809,15 @@ pub enum AbilityEffectDefinition {
         damage_bonus: u16,
         #[serde(default)]
         damage_type: ActorDamageType,
+    },
+    BoltOrBeamDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        beam_chance_percent: u8,
     },
     ConeDamage {
         damage_dice: u16,
@@ -858,6 +896,8 @@ pub enum AbilityEffectDefinition {
         power: Option<u16>,
         #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
         granted_resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+        #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+        granted_brands: BTreeSet<WeaponBrand>,
     },
     RemoveStatus {
         status_kind_id: String,
@@ -865,6 +905,25 @@ pub enum AbilityEffectDefinition {
     Control {
         category: String,
         power: u16,
+    },
+    DrainLife {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        target_category: String,
+    },
+    Genocide {
+        scope: AbilityGenocideScopeDefinition,
+        power: u16,
+    },
+    AnimateDead {
+        actor_kind_id: String,
+        corpse_item_kind_id: String,
+        radius: u8,
+        count: u8,
     },
     Heal {
         amount: u32,
@@ -893,16 +952,30 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::Damage { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
-            | AbilityEffectDefinition::CurseDamage { damage_dice, .. },
+            | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
+            | AbilityEffectDefinition::DrainLife { damage_dice, .. },
             AbilityLevelScalingField::DamageDice,
         ) => Some((u64::from(*damage_dice), 100)),
+        (
+            AbilityEffectDefinition::Damage { damage_sides, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
+            | AbilityEffectDefinition::CurseDamage { damage_sides, .. }
+            | AbilityEffectDefinition::DrainLife { damage_sides, .. },
+            AbilityLevelScalingField::DamageSides,
+        ) => Some((u64::from(*damage_sides), 10_000)),
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
-            | AbilityEffectDefinition::CurseDamage { damage_bonus, .. },
+            | AbilityEffectDefinition::CurseDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::DrainLife { damage_bonus, .. },
             AbilityLevelScalingField::DamageBonus,
         ) => Some((u64::from(*damage_bonus), 10_000)),
         (
@@ -910,7 +983,14 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::ConeDamage { radius, .. }
             | AbilityEffectDefinition::BreathDamage { radius, .. },
             AbilityLevelScalingField::Radius,
-        ) => Some((u64::from(*radius), 9)),
+        ) => Some((u64::from(*radius), 16)),
+        (
+            AbilityEffectDefinition::BoltOrBeamDamage {
+                beam_chance_percent,
+                ..
+            },
+            AbilityLevelScalingField::BeamChancePercent,
+        ) => Some((u64::from(*beam_chance_percent), 100)),
         (
             AbilityEffectDefinition::ApplyStatus { intensity, .. },
             AbilityLevelScalingField::StatusIntensity,
@@ -929,8 +1009,48 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::Control { power, .. },
             AbilityLevelScalingField::ControlPower,
         ) => Some((u64::from(*power), 1_000)),
+        (
+            AbilityEffectDefinition::Genocide { power, .. },
+            AbilityLevelScalingField::GenocidePower,
+        ) => Some((u64::from(*power), 1_000)),
         _ => None,
     }
+}
+
+fn valid_ability_level_scaling(
+    effect: &AbilityEffectDefinition,
+    level_scaling: &[AbilityLevelScalingDefinition],
+) -> bool {
+    let mut scaling_fields = BTreeSet::new();
+    level_scaling.len() <= 32
+        && level_scaling.iter().all(|scaling| {
+            let Some(effect) = effect
+                .ordered_effects()
+                .get(usize::from(scaling.effect_index))
+            else {
+                return false;
+            };
+            let Some((base, limit)) = ability_level_scaling_base_and_limit(effect, scaling.field)
+            else {
+                return false;
+            };
+            let level_delta = 100_u64.saturating_sub(u64::from(scaling.level_offset));
+            let scaled = level_delta
+                .saturating_mul(u64::from(scaling.multiplier))
+                .checked_div(u64::from(scaling.divisor))
+                .and_then(|addition| base.checked_add(addition))
+                .map(|value| scaling.maximum.map_or(value, |maximum| value.min(maximum)));
+            scaling.multiplier > 0
+                && scaling.multiplier <= 1_000_000
+                && scaling.divisor > 0
+                && scaling.divisor <= 1_000_000
+                && scaling.level_offset <= 100
+                && scaling
+                    .maximum
+                    .is_none_or(|maximum| (base..=limit).contains(&maximum))
+                && scaling_fields.insert((scaling.effect_index, scaling.field))
+                && scaled.is_some_and(|value| value <= limit)
+        })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2900,6 +3020,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
     let mut actor_levels = BTreeMap::new();
     let mut actor_loot_table_ids = Vec::new();
     let mut actor_monster_casting = Vec::new();
+    let mut actor_corpse_item_ids = Vec::new();
     for actor in &mut content.actors {
         require_schema(&actor.schema, ACTOR_SCHEMA, &actor.id)?;
         require_format_version(actor.format_version, &actor.id)?;
@@ -2991,6 +3112,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
             }
             actor_loot_table_ids.push((format!("{}#carried", actor.id), loot_table_id.clone()));
+        }
+        if let Some(corpse_item_kind_id) = &actor.corpse_item_kind_id {
+            if actor.role != ActorRole::Monster || validate_id(corpse_item_kind_id).is_err() {
+                return Err(ContentError::InvalidActorStats(actor.id.clone()));
+            }
+            actor_corpse_item_ids.push((actor.id.clone(), corpse_item_kind_id.clone()));
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
         for tag in &actor.tags {
@@ -3086,6 +3213,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
 
     let mut ability_resources = BTreeMap::new();
     let mut ability_ids = BTreeSet::new();
+    let mut ability_corpse_item_ids = Vec::new();
     for ability in &mut content.abilities {
         require_schema(&ability.schema, ABILITY_SCHEMA, &ability.id)?;
         require_format_version(ability.format_version, &ability.id)?;
@@ -3124,12 +3252,23 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 damage_sides,
                 damage_bonus,
                 radius,
+                target_category,
                 ..
             } => {
                 (1..=100).contains(damage_dice)
                     && (1..=10_000).contains(damage_sides)
                     && *damage_bonus <= 10_000
-                    && (1..=9).contains(radius)
+                    && (1..=16).contains(radius)
+                    && target_category.as_ref().is_none_or(|category| {
+                        !category.is_empty()
+                            && category.len() <= 64
+                            && category.bytes().all(|byte| {
+                                byte.is_ascii_lowercase()
+                                    || byte.is_ascii_digit()
+                                    || matches!(byte, b'-' | b'_')
+                            })
+                            && actor_tag_values.contains(category)
+                    })
             }
             AbilityEffectDefinition::BeamDamage {
                 damage_dice,
@@ -3141,6 +3280,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=10_000).contains(damage_sides)
                     && *damage_bonus <= 10_000
             }
+            AbilityEffectDefinition::BoltOrBeamDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                beam_chance_percent,
+                ..
+            } => {
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
+                    && *beam_chance_percent <= 100
+            }
             AbilityEffectDefinition::ConeDamage {
                 damage_dice,
                 damage_sides,
@@ -3151,7 +3302,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 (1..=100).contains(damage_dice)
                     && (1..=10_000).contains(damage_sides)
                     && *damage_bonus <= 10_000
-                    && (1..=9).contains(radius)
+                    && (1..=16).contains(radius)
             }
             AbilityEffectDefinition::BreathDamage {
                 hp_percent,
@@ -3161,7 +3312,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             } => {
                 (1..=100).contains(hp_percent)
                     && (1..=10_000).contains(max_damage)
-                    && (1..=9).contains(radius)
+                    && (1..=16).contains(radius)
             }
             AbilityEffectDefinition::CurseDamage {
                 damage_dice,
@@ -3262,6 +3413,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 duration_ticks,
                 power,
                 granted_resistances,
+                granted_brands,
                 ..
             } => {
                 validate_id(status_kind_id).is_ok()
@@ -3269,6 +3421,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && (1..=1_000_000).contains(duration_ticks)
                     && power.is_none_or(|power| (1..=1_000).contains(&power))
                     && granted_resistances.len() <= 29
+                    && granted_brands.len() <= 5
             }
             AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                 validate_id(status_kind_id).is_ok()
@@ -3284,6 +3437,37 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && actor_tag_values.contains(category)
                     && (1..=1_000).contains(power)
             }
+            AbilityEffectDefinition::DrainLife {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                target_category,
+                ..
+            } => {
+                (1..=100).contains(damage_dice)
+                    && (1..=10_000).contains(damage_sides)
+                    && *damage_bonus <= 10_000
+                    && !target_category.is_empty()
+                    && target_category.len() <= 64
+                    && target_category.bytes().all(|byte| {
+                        byte.is_ascii_lowercase()
+                            || byte.is_ascii_digit()
+                            || matches!(byte, b'-' | b'_')
+                    })
+                    && actor_tag_values.contains(target_category)
+            }
+            AbilityEffectDefinition::Genocide { power, .. } => (1..=1_000).contains(power),
+            AbilityEffectDefinition::AnimateDead {
+                actor_kind_id,
+                corpse_item_kind_id,
+                radius,
+                count,
+            } => {
+                validate_id(actor_kind_id).is_ok()
+                    && validate_id(corpse_item_kind_id).is_ok()
+                    && (1..=8).contains(radius)
+                    && (1..=8).contains(count)
+            }
             AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
             AbilityEffectDefinition::Sequence { .. } => false,
         };
@@ -3293,34 +3477,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             }
             effect => valid_single_effect(effect),
         };
-        let mut scaling_fields = BTreeSet::new();
-        let valid_level_scaling = ability.level_scaling.len() <= 32
-            && ability.level_scaling.iter().all(|scaling| {
-                let Some(effect) = ability
-                    .effect
-                    .ordered_effects()
-                    .get(usize::from(scaling.effect_index))
-                else {
-                    return false;
-                };
-                let Some((base, limit)) =
-                    ability_level_scaling_base_and_limit(effect, scaling.field)
-                else {
-                    return false;
-                };
-                let level_delta = 100_u64.saturating_sub(u64::from(scaling.level_offset));
-                let scaled = level_delta
-                    .saturating_mul(u64::from(scaling.multiplier))
-                    .checked_div(u64::from(scaling.divisor))
-                    .and_then(|addition| base.checked_add(addition));
-                scaling.multiplier > 0
-                    && scaling.multiplier <= 1_000_000
-                    && scaling.divisor > 0
-                    && scaling.divisor <= 1_000_000
-                    && scaling.level_offset <= 100
-                    && scaling_fields.insert((scaling.effect_index, scaling.field))
-                    && scaled.is_some_and(|value| value <= limit)
-            });
+        let valid_level_scaling =
+            valid_ability_level_scaling(&ability.effect, &ability.level_scaling);
         let self_targeted = ability
             .target
             .modes
@@ -3339,13 +3497,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             && ability.target.requires_line_of_effect;
         let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
-            | AbilityEffectDefinition::AreaDamage { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::DrainResource { .. }
-            | AbilityEffectDefinition::Amnesia => projectile_target_rule,
+            | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::DrainLife { .. }
+            | AbilityEffectDefinition::Genocide { .. } => projectile_target_rule,
+            AbilityEffectDefinition::AreaDamage { .. } => {
+                self_target_rule || projectile_target_rule
+            }
             AbilityEffectDefinition::Control { .. } => projectile_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
@@ -3355,7 +3518,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     && ability.target.requires_line_of_effect
             }
             AbilityEffectDefinition::Summon { .. }
-            | AbilityEffectDefinition::SummonCategory { .. } => {
+            | AbilityEffectDefinition::SummonCategory { .. }
+            | AbilityEffectDefinition::AnimateDead { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
                     && !ability.target.requires_line_of_effect
@@ -3434,6 +3598,15 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         if let AbilityEffectDefinition::Summon { actor_kind_id, .. } = &ability.effect {
             require_actor_role(&actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
         }
+        if let AbilityEffectDefinition::AnimateDead {
+            actor_kind_id,
+            corpse_item_kind_id,
+            ..
+        } = &ability.effect
+        {
+            require_actor_role(&actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
+            ability_corpse_item_ids.push((ability.id.clone(), corpse_item_kind_id.clone()));
+        }
         if let AbilityEffectDefinition::TransformTerrain {
             source_terrain_ids,
             target_terrain_id,
@@ -3479,6 +3652,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 AbilityEffectDefinition::Damage { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
                 | AbilityEffectDefinition::BeamDamage { .. }
+                | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::DrainResource { .. }
@@ -3496,6 +3670,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 AbilityEffectDefinition::BlinkSelf { .. }
                 | AbilityEffectDefinition::TeleportSelf { .. } => self_target,
                 AbilityEffectDefinition::TeleportTarget => projectile_target,
+                AbilityEffectDefinition::DrainLife { .. }
+                | AbilityEffectDefinition::Genocide { .. } => projectile_target,
+                AbilityEffectDefinition::AnimateDead { .. } => self_target,
                 AbilityEffectDefinition::Sequence { effects } => {
                     (self_target
                         && effects.iter().all(|effect| {
@@ -3674,6 +3851,29 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             item.id.clone(),
             (item.max_stack, item.equipment_slot.is_some()),
         );
+    }
+
+    for (owner, corpse_item_kind_id) in actor_corpse_item_ids
+        .into_iter()
+        .chain(ability_corpse_item_ids)
+    {
+        if !item_limits.contains_key(&corpse_item_kind_id) {
+            return Err(ContentError::DanglingReference {
+                owner,
+                target: corpse_item_kind_id,
+            });
+        }
+        let corpse_item = content
+            .items
+            .iter()
+            .find(|item| item.id == corpse_item_kind_id)
+            .expect("validated corpse item must remain available");
+        if corpse_item.equipment_slot.is_some()
+            || corpse_item.max_stack != 1
+            || !corpse_item.tags.iter().any(|tag| tag == "corpse")
+        {
+            return Err(ContentError::InvalidItemModifiers(corpse_item.id.clone()));
+        }
     }
 
     for item in &content.items {
@@ -3863,6 +4063,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     u64::from(profile.learning_capacity_per_attribute_index).saturating_mul(100),
                 );
             if profile.minimum_failure_percent > 95
+                || profile.beam_chance_level_divisor == 0
+                || profile.beam_chance_level_multiplier > 4
+                || !(-100..=100).contains(&profile.beam_chance_bonus)
                 || profile.ability_book_ids.is_empty()
                 || profile.ability_book_ids.len() > 16
                 || profile
@@ -3904,6 +4107,19 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 .any(|override_| !supported_ability_ids.contains(&override_.ability_id))
             {
                 return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+            }
+            for override_ in &profile.ability_overrides {
+                if override_.level_scaling.is_empty() {
+                    continue;
+                }
+                let ability = content
+                    .abilities
+                    .iter()
+                    .find(|ability| ability.id == override_.ability_id)
+                    .expect("supported casting ability must remain available");
+                if !valid_ability_level_scaling(&ability.effect, &override_.level_scaling) {
+                    return Err(ContentError::InvalidCastingProfile(class.id.clone()));
+                }
             }
         }
         let mut technique_resource_ids = class
@@ -7389,12 +7605,12 @@ mod tests {
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
         assert_eq!(first.content.terrain.len(), 47);
-        assert_eq!(first.content.actors.len(), 25);
+        assert_eq!(first.content.actors.len(), 26);
         assert_eq!(first.content.affixes.len(), 3);
-        assert_eq!(first.content.items.len(), 15);
+        assert_eq!(first.content.items.len(), 17);
         assert_eq!(first.content.resources.len(), 2);
-        assert_eq!(first.content.abilities.len(), 44);
-        assert_eq!(first.content.ability_books.len(), 2);
+        assert_eq!(first.content.abilities.len(), 52);
+        assert_eq!(first.content.ability_books.len(), 3);
         assert_eq!(first.content.skills.len(), 10);
         assert_eq!(first.content.skill_sets.len(), 12);
         assert_eq!(first.content.races.len(), 3);
@@ -7417,7 +7633,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.95.0");
+        assert_eq!(catalog.pack_version(), "1.96.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -7493,6 +7709,7 @@ mod tests {
                 5,
                 [
                     "demo.ability-book.echo-primer".to_owned(),
+                    "demo.ability-book.sepulchral-ways".to_owned(),
                     "demo.ability-book.stillwater-notes".to_owned(),
                 ]
                 .as_slice(),
@@ -9284,7 +9501,7 @@ mod tests {
         else {
             panic!("echo burst should use area damage");
         };
-        *radius = 10;
+        *radius = 17;
         assert!(matches!(
             validate_and_normalize(&mut invalid_area_radius),
             Err(ContentError::InvalidAbility(_))
@@ -9313,7 +9530,7 @@ mod tests {
         else {
             panic!("echo fan should use cone damage");
         };
-        *radius = 10;
+        *radius = 17;
         assert!(matches!(
             validate_and_normalize(&mut invalid_cone_radius),
             Err(ContentError::InvalidAbility(_))
@@ -9608,6 +9825,7 @@ mod tests {
                 minimum_level: 7,
                 resource_cost: 11,
                 base_failure_percent: 42,
+                level_scaling: Vec::new(),
             });
         validate_and_normalize(&mut overridden).expect("valid override should compile");
 
@@ -9624,6 +9842,7 @@ mod tests {
                 minimum_level: 8,
                 resource_cost: 12,
                 base_failure_percent: 43,
+                level_scaling: Vec::new(),
             });
         assert!(matches!(
             validate_and_normalize(&mut duplicate),

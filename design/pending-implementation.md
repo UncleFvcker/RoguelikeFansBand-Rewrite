@@ -63,7 +63,17 @@
 | P52 | 职业壳 + m_info 施法档案导入（T3） | 已完成（纯工具，见 [legacy-class-import-v1](legacy-class-import-v1.md)） | 固定 commit Git 对象读取；53 个当前注册职业 + m_info 遗留 Imitator = 54 个职业壳，54 个职业 skillSet；53 份 m_info 生成 636 领域行/144 可读行/4608 逐法术参数，另提取 46 个 C caster_info 壳（5 个动态）；s_info 的 16640 武器熟练 + 156 专项熟练进入缺口报告；本地包 54 classes/141 skillSets 通过内容编译 |
 | P53 | 玩家领域法术首批映射（T4） | 已完成（见 [legacy-player-spell-import-v1](legacy-player-spell-import-v1.md)） | Class castingProfile 新增逐 ability 的职业参数覆盖；Death 第一册生成 3 abilities、1 ability book、Mana 与实体书绑定，12 个静态职业共 36 行覆盖；学习/显示/失败率/耗魔/施放/读档统一读取覆盖。Rogue/Blood Mage/Skillmaster 显式排除；真实包 4157 文件通过编译，源文件预算 4096→32768 |
 | P54 | 玩家等级效果缩放 + Death 第一册收尾 | 已由 contract-v104 完成 | Ability `levelScaling` 覆盖 7 类标量；actor Detect、状态 power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部接入协议、存档和 Schema v43。Death 第一册 8/8 ability、12 个静态职业 96 条覆盖；协议 1.104、包 1.95.0、fixtures 329-334 共 334 exact。真实 Death 效果缺口 480→384，等级缩放与状态 power 缺口清零 |
-| P55 | Death 第二册系统盘点与纵切 | 下一候选 | 逐槽核对 Entropy Orb、Nether Bolt、Cloud Kill、Genocide One、Poison Branding、Vampiric Drain、Animate Dead、Genocide；优先复用 v104 缩放与现有 area/bolt/beam，分别设计活体限定、bolt-or-beam、自身中心 AoE、灭绝、临时武器品牌、吸血和尸体实体，不做无条件伤害近似。设备/消耗品效果系统仍可插队 |
+| P55 | Death 第二册系统盘点与纵切 | 已由 contract-v105 完成 | 第二册 8/8 ability、两本实体书总计 16 个 Death ability、12 个静态职业 192 条覆盖；新增活体限定、bolt-or-beam、职业 beam 档案、自身中心 AoE、单体/字形 Genocide、临时品牌、Drain Life、尸体与永久 Animate Dead。协议 1.105、包 1.96.0、Schema v44、fixtures 335-343 共 343 exact；真实 Death 效果缺口 384→288 |
+| P56 | Death 第三册系统盘点或设备/消耗品效果纵切 | 下一候选 | 优先读取第三册 8 个实际槽位并按新系统聚类；若设备收益更高，则先建立卷轴/魔杖/药水的内容驱动使用与充能/识别边界。两条路线都必须先以真实缺口报告排序，不做名称近似 |
+
+## contract-v105 明确遗留
+
+- Poison Branding 按路线要求实现为临时状态品牌，不永久改写当前武器；原版永久品牌物品的事务与保存边界留给后续物品强化系统；
+- Animate Dead 生成永久受控亡灵，但仍复用现有友方 AI；宠物维护上限、忠诚、解除控制和主人死亡联动尚未建立；
+- corpse 首版是不可堆叠通用物品，不保存死者个体属性、装备、腐烂时间或复活原身身份；
+- Genocide 直接移除且不触发普通死亡事务；独立的怪物知识、唯一生态和跨层种群记忆仍未建立；
+- Rogue（Dexterity）、Blood Mage（HP）与 Skillmaster（dynamic caster）继续显式排除，等待通用施法资源与动态档案表面；
+- P56 候选为 Death 第三册逐槽盘点；设备/消耗品效果系统和怪物法术清尾仍可按真实覆盖收益插队。
 
 ## contract-v104 明确遗留
 

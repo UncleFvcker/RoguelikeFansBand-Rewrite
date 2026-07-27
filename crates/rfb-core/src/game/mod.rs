@@ -50,10 +50,10 @@ use crate::{
 };
 use rfb_content::{
     AbilityDefinition, AbilityDetectSubjectDefinition, AbilityEffectDefinition,
-    AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityStatusStackingDefinition,
-    AbilityTargetModeDefinition, ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition,
-    CampaignDefinition, CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition,
-    ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
+    AbilityGenocideScopeDefinition, AbilityLevelScalingDefinition, AbilityLevelScalingField,
+    AbilityStatusStackingDefinition, AbilityTargetModeDefinition, ActorResistanceLevel, ActorRole,
+    AffixPropertyBundleDefinition, CampaignDefinition, CastingAttribute, CastingProfileDefinition,
+    CharacterBuildDefinition, ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
     DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
     EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
     EquipmentPassive, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
@@ -70,9 +70,9 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityControlOutcomeDto, AbilityDetectResolutionDto,
     AbilityDetectSpecDto, AbilityDetectSubjectDto, AbilityDto, AbilityEffectResolutionDto,
     AbilityEffectSkipReasonDto, AbilityEffectSpecDto, AbilityEffectsResolutionDto,
-    AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto, AbilityStatusChangeDto,
-    AbilityStatusStackingDto, AbilitySummonResolutionDto, AbilitySummonSpecDto,
-    AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
+    AbilityGenocideScopeDto, AbilityLearningDto, AbilityProficiencyRankDto, AbilityProgressSaveDto,
+    AbilityStatusChangeDto, AbilityStatusStackingDto, AbilitySummonResolutionDto,
+    AbilitySummonSpecDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     AbilityTerrainTransformSpecDto, ActorSaveDto, AttackProfileDto, AttributeSetDto,
     AttributeValueDto, BodySlotDto, BodySlotSaveDto, CampaignStateDto, CampaignStateSaveDto,
     CampaignStatusDto, CarriedItemSaveDto, CellDto, CellLightDto, CellVisualDto, ContentVisualDto,
@@ -100,7 +100,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 96] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 97] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -197,13 +197,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 96] = [
     "83dc1e5a58f408b9945d627e469d2b53c1731963fb19752dcbc5c9c91359b188",
     "66842fb3b3291494aed23368a30374e93a8bceea2b397382ff89f08ecac180aa",
     "271fcf3f85ca347791150dbc8eec0040b9dd70e8315bdb3874bc2fc628d637bd",
+    "c0708c7866d93bdbb6601d349300cd5ef5e95a7ebd754de60d62e27d6c4071c6",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "c0708c7866d93bdbb6601d349300cd5ef5e95a7ebd754de60d62e27d6c4071c6";
+    "26fdeb15063fa5ccc5a672cd8d2376f7ea66e7dc487fef6f1a4d5640a1050cf9";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 43;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 44;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -2884,6 +2885,9 @@ impl Game {
             effective.minimum_level = override_.minimum_level;
             effective.resource_cost = override_.resource_cost;
             effective.base_failure_percent = override_.base_failure_percent;
+            if !override_.level_scaling.is_empty() {
+                effective.level_scaling.clone_from(&override_.level_scaling);
+            }
         }
         effective
     }
@@ -2901,6 +2905,30 @@ impl Game {
             };
             apply_ability_level_scaling(effect, &scaling, level);
         }
+    }
+
+    fn apply_casting_profile_effect_scaling(
+        profile: &CastingProfileDefinition,
+        ability: &mut AbilityDefinition,
+        level: u16,
+    ) {
+        let AbilityEffectDefinition::BoltOrBeamDamage {
+            beam_chance_percent,
+            ..
+        } = &mut ability.effect
+        else {
+            return;
+        };
+        if profile.beam_chance_level_multiplier == 0 {
+            return;
+        }
+        let chance = i32::from(level)
+            .saturating_mul(i32::from(profile.beam_chance_level_multiplier))
+            .saturating_div(i32::from(profile.beam_chance_level_divisor))
+            .saturating_add(i32::from(profile.beam_chance_bonus))
+            .clamp(0, 100);
+        *beam_chance_percent =
+            u8::try_from(chance).expect("clamped casting beam chance must fit u8");
     }
 
     fn profile_resource_maximum(&self, attribute: AttributeKind, params: (u32, u32, u32)) -> u32 {
@@ -3621,6 +3649,15 @@ impl Game {
                     )
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
+                if let Some(profile) = casting_profile
+                    && !innate
+                {
+                    Self::apply_casting_profile_effect_scaling(
+                        profile,
+                        &mut effective_ability,
+                        self.progress.level,
+                    );
+                }
                 let ability = &effective_ability;
                 let progress = self.ability_progress_value(ability);
                 let resource_cost = self.ability_effective_resource_cost(ability, progress);
@@ -5321,6 +5358,13 @@ impl Game {
                 apply(&rolled.properties.slays, &rolled.properties.brands);
             }
         }
+        for status in &self.player.statuses {
+            for brand in &status.granted_brands {
+                if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
+                    multiplier = multiplier.max(24);
+                }
+            }
+        }
         multiplier
     }
 
@@ -5976,6 +6020,11 @@ impl Game {
             _ => ability,
         };
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
+        if let Some(profile) = &casting_profile
+            && technique_profile.is_none()
+        {
+            Self::apply_casting_profile_effect_scaling(profile, &mut ability, self.progress.level);
+        }
         // Innate technique abilities skip the study/book pipeline: they are
         // granted by the class technique profile and only gate on level,
         // cooldown, and resource availability.
@@ -6263,6 +6312,7 @@ impl Game {
                     damage_bonus,
                     damage_type,
                     radius,
+                    target_category,
                 },
                 AbilityTargetPlan::Projectile {
                     path,
@@ -6271,7 +6321,8 @@ impl Game {
             ) => {
                 let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
                 let center = trace.landing;
-                let (affected_positions, targets) = self.area_damage_targets(center, radius);
+                let (affected_positions, targets) =
+                    self.area_damage_targets(center, radius, target_category.as_deref());
                 changed.extend(affected_positions.iter().copied());
                 let base_raw_damage = self
                     .roll_damage(damage_dice, damage_sides)
@@ -6358,6 +6409,29 @@ impl Game {
                 }
             }
             (
+                AbilityEffectDefinition::BoltOrBeamDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    damage_type,
+                    beam_chance_percent,
+                },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_ability_bolt_or_beam(
+                    &ability.id,
+                    path,
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    DamageType::from(damage_type),
+                    beam_chance_percent,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
                 AbilityEffectDefinition::ConeDamage {
                     damage_dice,
                     damage_sides,
@@ -6432,8 +6506,473 @@ impl Game {
                     resolution: HealingResolutionDto { requested, applied },
                 });
             }
+            (
+                AbilityEffectDefinition::DrainLife {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    damage_type,
+                    target_category,
+                },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_ability_drain_life(
+                    &ability.id,
+                    path,
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    DamageType::from(damage_type),
+                    &target_category,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::Genocide { scope, power },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_ability_genocide(
+                    &ability.id,
+                    path,
+                    scope,
+                    power,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (
+                AbilityEffectDefinition::AnimateDead {
+                    actor_kind_id,
+                    corpse_item_kind_id,
+                    radius,
+                    count,
+                },
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                self.resolve_ability_animate_dead(
+                    &ability.id,
+                    &actor_kind_id,
+                    &corpse_item_kind_id,
+                    radius,
+                    count,
+                    events,
+                    changed,
+                )?;
+            }
             _ => unreachable!("validated ability target plan must match its effect"),
         }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_bolt_or_beam(
+        &mut self,
+        ability_id: &str,
+        path: Vec<Position>,
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_bonus: u16,
+        damage_type: DamageType,
+        beam_chance_percent: u8,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let beam = self.rng.bounded(100) < u64::from(beam_chance_percent);
+        let base_raw_damage = self
+            .roll_damage(damage_dice, damage_sides)
+            .saturating_add(i32::from(damage_bonus))
+            .max(0);
+        if beam {
+            let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+            let affected_positions = trace.traversed.clone();
+            let targets = self.beam_damage_targets(&affected_positions);
+            changed.extend(affected_positions.iter().copied());
+            events.push(DomainEvent::AbilityBeamDamage {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityBeamDamageResolutionDto {
+                    base_raw_damage,
+                    damage_type: damage_type.into(),
+                    affected_positions,
+                    target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+                },
+                trace: trace.clone(),
+            });
+            for entity_id in targets {
+                let Some(index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == entity_id && entity.hp > 0)
+                else {
+                    continue;
+                };
+                self.resolve_ability_damage_to_entity(
+                    index,
+                    ability_id,
+                    damage_type,
+                    base_raw_damage,
+                    trace.clone(),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+        } else {
+            let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
+            let Some(index) = target_index else {
+                events.push(DomainEvent::AbilityLanded {
+                    ability_id: ability_id.to_owned(),
+                    trace,
+                });
+                return Ok(());
+            };
+            self.resolve_ability_damage_to_entity(
+                index,
+                ability_id,
+                damage_type,
+                base_raw_damage,
+                trace,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_drain_life(
+        &mut self,
+        ability_id: &str,
+        path: Vec<Position>,
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_bonus: u16,
+        damage_type: DamageType,
+        target_category: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability_id.to_owned(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return Ok(());
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let eligible = self
+            .content
+            .actor(&target_kind_id)
+            .is_some_and(|definition| actor_matches_category(definition, target_category));
+        if !eligible {
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(target_entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::Ineligible,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return Ok(());
+        }
+        let hp_before = self.entities[target_index].hp.max(0);
+        let raw_damage = self
+            .roll_damage(damage_dice, damage_sides)
+            .saturating_add(i32::from(damage_bonus))
+            .max(0);
+        let damage = self.resolve_ability_damage_to_entity(
+            target_index,
+            ability_id,
+            damage_type,
+            raw_damage,
+            trace.clone(),
+            events,
+            changed,
+            removed_entities,
+        )?;
+        let requested = damage.applied.min(hp_before);
+        let max_hp = self.effective_player_max_hp();
+        let EffectOutcome::Healed { requested, applied } = apply_effect(
+            &mut EffectTarget {
+                hp: &mut self.player.hp,
+                max_hp,
+                resistances: &self.player.resistances,
+                statuses: &mut self.player.statuses,
+            },
+            EffectSpec::Heal { amount: requested },
+        ) else {
+            unreachable!("drain life healing must produce a healing outcome");
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![AbilityEffectResolutionDto::DrainLife {
+                    effect_index: 0,
+                    resolution: damage.into(),
+                    healing: HealingResolutionDto { requested, applied },
+                }],
+            },
+            trace: Some(trace),
+        });
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_genocide(
+        &mut self,
+        ability_id: &str,
+        path: Vec<Position>,
+        scope: AbilityGenocideScopeDefinition,
+        power: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability_id.to_owned(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return;
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let glyph = self
+            .content
+            .actor(&target_kind_id)
+            .map(|definition| definition.glyph.clone());
+        let mut candidate_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && match scope {
+                        AbilityGenocideScopeDefinition::Single => entity.id == target_entity_id,
+                        AbilityGenocideScopeDefinition::Glyph => self
+                            .content
+                            .actor(&entity.kind_id)
+                            .zip(glyph.as_ref())
+                            .is_some_and(|(definition, glyph)| &definition.glyph == glyph),
+                    }
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        candidate_ids.sort();
+        let mut erased = Vec::new();
+        let mut resisted = Vec::new();
+        let mut fatigue_damage = 0_i32;
+        for entity_id in candidate_ids {
+            let Some(entity) = self.entities.iter().find(|entity| entity.id == entity_id) else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&entity.kind_id)
+                .expect("genocide target definition must remain available");
+            let target_level = definition.level;
+            let unique = definition.tags.iter().any(|tag| tag == "unique");
+            let fatigue_sides = match scope {
+                AbilityGenocideScopeDefinition::Single => target_level.div_ceil(2),
+                AbilityGenocideScopeDefinition::Glyph => 4,
+            }
+            .max(1);
+            fatigue_damage = fatigue_damage.saturating_add(
+                i32::try_from(self.rng.bounded(u64::from(fatigue_sides)) + 1)
+                    .expect("genocide fatigue roll must fit i32"),
+            );
+            if unique {
+                resisted.push(entity_id);
+                continue;
+            }
+            let roll = u32::try_from(self.rng.bounded(u64::from(power)))
+                .expect("validated genocide power roll must fit u32");
+            if target_level > roll {
+                resisted.push(entity_id);
+            } else {
+                erased.push(entity_id);
+            }
+        }
+        for entity_id in &erased {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| &entity.id == entity_id)
+            else {
+                continue;
+            };
+            let removed = self.entities.remove(index);
+            if let Some(pack_id) = removed
+                .pack
+                .as_ref()
+                .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
+            {
+                for entity in &mut self.entities {
+                    if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                        entity.pack = None;
+                    }
+                }
+            }
+            let carried_item_ids = self
+                .items
+                .iter()
+                .filter_map(|item| match &item.location {
+                    ItemLocation::CarriedBy { actor_id } if actor_id == entity_id => {
+                        Some(item.id.clone())
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            self.items.retain(|item| {
+                !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == entity_id)
+            });
+            for item_id in carried_item_ids {
+                self.item_property_knowledge.remove(&item_id);
+            }
+            changed.insert(removed.position);
+            removed_entities.push(removed.id);
+        }
+        self.player.hp = self.player.hp.saturating_sub(fatigue_damage);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![AbilityEffectResolutionDto::Genocide {
+                    effect_index: 0,
+                    scope: ability_genocide_scope_dto(scope),
+                    power,
+                    glyph: matches!(scope, AbilityGenocideScopeDefinition::Glyph)
+                        .then_some(glyph)
+                        .flatten(),
+                    removed_entity_ids: erased,
+                    resisted_entity_ids: resisted,
+                    fatigue_damage,
+                }],
+            },
+            trace: Some(trace),
+        });
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_ability_animate_dead(
+        &mut self,
+        ability_id: &str,
+        actor_kind_id: &str,
+        corpse_item_kind_id: &str,
+        radius: u8,
+        count: u8,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let origin = self.player.position;
+        let mut corpses = self
+            .items
+            .iter()
+            .filter_map(|item| match item.location {
+                ItemLocation::Ground(position)
+                    if item.kind_id == corpse_item_kind_id
+                        && chebyshev_distance(origin, position) <= u32::from(radius) =>
+                {
+                    Some((
+                        chebyshev_distance(origin, position),
+                        position.y,
+                        position.x,
+                        item.id.clone(),
+                        position,
+                    ))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        corpses.sort();
+        corpses.truncate(usize::from(count));
+        let consumed_corpse_item_ids = corpses
+            .iter()
+            .map(|corpse| corpse.3.clone())
+            .collect::<Vec<_>>();
+        self.items
+            .retain(|item| !consumed_corpse_item_ids.contains(&item.id));
+        for item_id in &consumed_corpse_item_ids {
+            self.item_property_knowledge.remove(item_id);
+        }
+        let definition = self
+            .content
+            .actor(actor_kind_id)
+            .expect("validated animated actor must remain available")
+            .clone();
+        let mut entity_ids = Vec::with_capacity(corpses.len());
+        let mut positions = Vec::with_capacity(corpses.len());
+        for (ordinal, (_, _, _, _, position)) in corpses.into_iter().enumerate() {
+            let id = self.summon_entity_id(ability_id, ordinal);
+            let mut entity = actor_from_runtime_spawn(
+                &id,
+                actor_kind_id,
+                position,
+                definition.max_hp,
+                definition.speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            entity.resistances = definition_resistance_profile(&definition);
+            entity.controller_id = Some(self.player.id.clone());
+            self.entities.push(entity);
+            changed.insert(position);
+            entity_ids.push(id);
+            positions.push(position);
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::AnimateDead {
+                    effect_index: 0,
+                    actor_kind_id: actor_kind_id.to_owned(),
+                    consumed_corpse_item_ids,
+                    entity_ids,
+                    positions,
+                }],
+            },
+            trace: None,
+        });
         Ok(())
     }
 
@@ -6486,6 +7025,7 @@ impl Game {
                             resistance_type,
                             power,
                             granted_resistances,
+                            granted_brands,
                         } => apply_ability_status_effect(
                             &mut self.player,
                             ability_id,
@@ -6497,6 +7037,7 @@ impl Game {
                             *resistance_type,
                             *power,
                             granted_resistances,
+                            granted_brands,
                             None,
                             None,
                             &mut self.rng,
@@ -6603,6 +7144,7 @@ impl Game {
                             resistance_type,
                             power,
                             granted_resistances,
+                            granted_brands,
                         } => {
                             let target_level = self
                                 .content
@@ -6621,6 +7163,7 @@ impl Game {
                                 *resistance_type,
                                 *power,
                                 granted_resistances,
+                                granted_brands,
                                 target_level,
                                 None,
                                 &mut self.rng,
@@ -6761,6 +7304,14 @@ impl Game {
                 .flatten()
                 .map(|positions| AbilityTargetPlan::Summon { positions })
             }
+            AbilityEffectDefinition::AnimateDead { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
+            }
             AbilityEffectDefinition::Detect { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
@@ -6822,11 +7373,23 @@ impl Game {
                     })
             }
             AbilityEffectDefinition::AreaDamage { .. } => {
-                self.ability_path(ability, target)
-                    .map(|path| AbilityTargetPlan::Projectile {
-                        path,
-                        stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                if matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                {
+                    Some(AbilityTargetPlan::Projectile {
+                        path: Vec::new(),
+                        stop_at_actor: false,
                     })
+                } else {
+                    self.ability_path(ability, target)
+                        .map(|path| AbilityTargetPlan::Projectile {
+                            path,
+                            stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                        })
+                }
             }
             AbilityEffectDefinition::BeamDamage { .. } => self
                 .beam_ability_path(ability, target)
@@ -6834,6 +7397,20 @@ impl Game {
                     path,
                     stop_at_actor: false,
                 }),
+            AbilityEffectDefinition::BoltOrBeamDamage { .. } => self
+                .beam_ability_path(ability, target)
+                .map(|path| AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor: false,
+                }),
+            AbilityEffectDefinition::DrainLife { .. }
+            | AbilityEffectDefinition::Genocide { .. } => {
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Projectile {
+                        path,
+                        stop_at_actor: true,
+                    })
+            }
             AbilityEffectDefinition::ConeDamage { radius, .. } => {
                 let TargetSelection::Direction { direction } = target else {
                     return None;
@@ -7359,6 +7936,7 @@ impl Game {
         &self,
         center: Position,
         radius: u8,
+        target_category: Option<&str>,
     ) -> (Vec<Position>, Vec<(String, u32)>) {
         let cells = self.area_damage_cells(center, radius);
         let affected_positions = cells.iter().map(|(_, position)| *position).collect();
@@ -7367,7 +7945,17 @@ impl Game {
             .flat_map(|(distance, position)| {
                 self.entities
                     .iter()
-                    .filter(move |entity| entity.hp > 0 && entity.position == *position)
+                    .filter(move |entity| {
+                        entity.hp > 0
+                            && entity.position == *position
+                            && target_category.is_none_or(|category| {
+                                self.content
+                                    .actor(&entity.kind_id)
+                                    .is_some_and(|definition| {
+                                        actor_matches_category(definition, category)
+                                    })
+                            })
+                    })
                     .map(move |entity| (entity.id.clone(), *distance))
             })
             .collect();
@@ -10314,6 +10902,7 @@ impl Game {
                     resistance_type,
                     power,
                     granted_resistances,
+                    granted_brands,
                 } => apply_ability_status_effect(
                     &mut self.entities[source_index],
                     &ability.id,
@@ -10325,6 +10914,7 @@ impl Game {
                     *resistance_type,
                     *power,
                     granted_resistances,
+                    granted_brands,
                     None,
                     None,
                     &mut self.rng,
@@ -10461,6 +11051,7 @@ impl Game {
                     resistance_type,
                     power,
                     granted_resistances,
+                    granted_brands,
                 } => {
                     let target_level = self
                         .content
@@ -10477,6 +11068,7 @@ impl Game {
                         *resistance_type,
                         *power,
                         granted_resistances,
+                        granted_brands,
                         target_level,
                         None,
                         &mut self.rng,
@@ -10741,6 +11333,7 @@ impl Game {
                     resistance_type,
                     power,
                     granted_resistances,
+                    granted_brands,
                 } => {
                     let effective = self.effective_player_resistances();
                     let immunities = self.player_status_immunities();
@@ -10756,6 +11349,7 @@ impl Game {
                         *resistance_type,
                         *power,
                         granted_resistances,
+                        granted_brands,
                         Some(target_level),
                         Some((&effective, &immunities)),
                         &mut self.rng,
@@ -11429,6 +12023,23 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let actor = self.entities[index].clone();
+        let corpse_kind_id = self
+            .content
+            .actor(&actor.kind_id)
+            .and_then(|definition| definition.corpse_item_kind_id.clone());
+        let corpse = if let Some(kind_id) = corpse_kind_id {
+            Some(ItemInstance {
+                id: self.allocate_item_instance_id()?,
+                kind_id,
+                quantity: 1,
+                quality: ItemQualityDto::Ordinary,
+                affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
+                location: ItemLocation::Ground(actor.position),
+            })
+        } else {
+            None
+        };
         let generated = self.generate_death_loot(&actor)?;
         let mut carried = self
             .items
@@ -11441,7 +12052,7 @@ impl Game {
             })
             .collect::<Vec<_>>();
         carried.sort_by(|left, right| left.0.cmp(&right.0));
-        let has_drops = !carried.is_empty() || !generated.is_empty();
+        let has_drops = !carried.is_empty() || !generated.is_empty() || corpse.is_some();
         let dissolved_pack_id = actor
             .pack
             .as_ref()
@@ -11569,6 +12180,9 @@ impl Game {
                 quantity: item.quantity,
             });
             self.items.push(item);
+        }
+        if let Some(corpse) = corpse {
+            self.items.push(corpse);
         }
         if has_drops {
             changed.insert(removed.position);
@@ -16770,6 +17384,16 @@ fn slay_target_matches(target: SlayTarget, definition: &rfb_content::ActorDefini
     }
 }
 
+fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &str) -> bool {
+    if category == "living" {
+        return !definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "demon" | "undead" | "nonliving"));
+    }
+    definition.tags.iter().any(|tag| tag == category)
+}
+
 /// FrogComposband's melee `slay_tiers`, expressed in tenths. Integer
 /// truncation is preserved (the mid-tier kill multiplier is 46, not 46.25).
 const fn slay_multiplier(target: SlayTarget, level: SlayLevel) -> i32 {
@@ -16810,6 +17434,15 @@ const fn ability_detect_subject_dto(
     match subject {
         AbilityDetectSubjectDefinition::Terrain => AbilityDetectSubjectDto::Terrain,
         AbilityDetectSubjectDefinition::Actor => AbilityDetectSubjectDto::Actor,
+    }
+}
+
+const fn ability_genocide_scope_dto(
+    scope: AbilityGenocideScopeDefinition,
+) -> AbilityGenocideScopeDto {
+    match scope {
+        AbilityGenocideScopeDefinition::Single => AbilityGenocideScopeDto::Single,
+        AbilityGenocideScopeDefinition::Glyph => AbilityGenocideScopeDto::Glyph,
     }
 }
 
@@ -16860,11 +17493,14 @@ fn scaled_ability_level_value(
     scaling: &AbilityLevelScalingDefinition,
     level: u16,
 ) -> u64 {
-    base.saturating_add(
+    let scaled = base.saturating_add(
         u64::from(level.saturating_sub(scaling.level_offset))
             .saturating_mul(u64::from(scaling.multiplier))
             / u64::from(scaling.divisor),
-    )
+    );
+    scaling
+        .maximum
+        .map_or(scaled, |maximum| scaled.min(maximum))
 }
 
 fn apply_ability_level_scaling(
@@ -16877,8 +17513,10 @@ fn apply_ability_level_scaling(
             AbilityEffectDefinition::Damage { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
-            | AbilityEffectDefinition::CurseDamage { damage_dice, .. },
+            | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
+            | AbilityEffectDefinition::DrainLife { damage_dice, .. },
             AbilityLevelScalingField::DamageDice,
         ) => {
             *damage_dice = u16::try_from(scaled_ability_level_value(
@@ -16889,11 +17527,30 @@ fn apply_ability_level_scaling(
             .expect("validated level-scaled damage dice must fit u16");
         }
         (
+            AbilityEffectDefinition::Damage { damage_sides, .. }
+            | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
+            | AbilityEffectDefinition::CurseDamage { damage_sides, .. }
+            | AbilityEffectDefinition::DrainLife { damage_sides, .. },
+            AbilityLevelScalingField::DamageSides,
+        ) => {
+            *damage_sides = u16::try_from(scaled_ability_level_value(
+                u64::from(*damage_sides),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled damage sides must fit u16");
+        }
+        (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
-            | AbilityEffectDefinition::CurseDamage { damage_bonus, .. },
+            | AbilityEffectDefinition::CurseDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::DrainLife { damage_bonus, .. },
             AbilityLevelScalingField::DamageBonus,
         ) => {
             *damage_bonus = u16::try_from(scaled_ability_level_value(
@@ -16902,6 +17559,20 @@ fn apply_ability_level_scaling(
                 level,
             ))
             .expect("validated level-scaled damage bonus must fit u16");
+        }
+        (
+            AbilityEffectDefinition::BoltOrBeamDamage {
+                beam_chance_percent,
+                ..
+            },
+            AbilityLevelScalingField::BeamChancePercent,
+        ) => {
+            *beam_chance_percent = u8::try_from(scaled_ability_level_value(
+                u64::from(*beam_chance_percent),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled beam chance must fit u8");
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
@@ -16947,6 +17618,10 @@ fn apply_ability_level_scaling(
         | (
             AbilityEffectDefinition::Control { power, .. },
             AbilityLevelScalingField::ControlPower,
+        )
+        | (
+            AbilityEffectDefinition::Genocide { power, .. },
+            AbilityLevelScalingField::GenocidePower,
         ) => {
             *power = u16::try_from(scaled_ability_level_value(
                 u64::from(*power),
@@ -16971,6 +17646,7 @@ fn apply_ability_status_effect(
     resistance_type: Option<rfb_content::ActorDamageType>,
     power: Option<u16>,
     granted_resistances: &BTreeMap<rfb_content::ActorDamageType, rfb_content::ActorResistanceLevel>,
+    granted_brands: &BTreeSet<WeaponBrand>,
     target_level: Option<u32>,
     defenses: Option<(&ResistanceProfile, &BTreeSet<String>)>,
     rng: &mut RfbRng,
@@ -16981,6 +17657,11 @@ fn apply_ability_status_effect(
             damage_type: DamageType::from(*damage_type).into(),
             level: ResistanceLevel::from(*level).into(),
         })
+        .collect::<Vec<_>>();
+    let granted_brands_dto = granted_brands
+        .iter()
+        .copied()
+        .map(weapon_brand_dto)
         .collect::<Vec<_>>();
     // Gear- or race-granted immunity blocks the status outright before any
     // resistance scaling; the resolution reuses the immune shape.
@@ -16999,6 +17680,7 @@ fn apply_ability_status_effect(
             power_roll: None,
             target_roll: None,
             granted_resistances: granted_resistances_dto,
+            granted_brands: granted_brands_dto,
             change: AbilityStatusChangeDto::Immune,
         };
     }
@@ -17030,6 +17712,7 @@ fn apply_ability_status_effect(
             power_roll,
             target_roll,
             granted_resistances: granted_resistances_dto,
+            granted_brands: granted_brands_dto,
             change: AbilityStatusChangeDto::Resisted,
         };
     }
@@ -17057,6 +17740,7 @@ fn apply_ability_status_effect(
             power_roll,
             target_roll,
             granted_resistances: granted_resistances_dto,
+            granted_brands: granted_brands_dto,
             change: AbilityStatusChangeDto::Immune,
         };
     }
@@ -17082,6 +17766,7 @@ fn apply_ability_status_effect(
                         )
                     })
                     .collect(),
+                granted_brands: granted_brands.clone(),
             },
             stacking: ability_status_stacking(stacking),
         }),
@@ -17103,6 +17788,7 @@ fn apply_ability_status_effect(
         power_roll,
         target_roll,
         granted_resistances: granted_resistances_dto,
+        granted_brands: granted_brands_dto,
         change: ability_status_change_dto(change),
     }
 }
@@ -17161,12 +17847,14 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus,
             damage_type,
             radius,
+            target_category,
         } => AbilityEffectSpecDto::AreaDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             radius: *radius,
+            target_category: target_category.clone(),
         },
         AbilityEffectDefinition::BeamDamage {
             damage_dice,
@@ -17178,6 +17866,19 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
+        },
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+            beam_chance_percent,
+        } => AbilityEffectSpecDto::BoltOrBeamDamage {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
+            damage_type: DamageType::from(*damage_type).into(),
+            beam_chance_percent: *beam_chance_percent,
         },
         AbilityEffectDefinition::ConeDamage {
             damage_dice,
@@ -17278,6 +17979,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             resistance_type,
             power,
             granted_resistances,
+            granted_brands,
         } => AbilityEffectSpecDto::ApplyStatus {
             status_kind_id: status_kind_id.clone(),
             intensity: *intensity,
@@ -17292,6 +17994,11 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                     level: ResistanceLevel::from(*level).into(),
                 })
                 .collect(),
+            granted_brands: granted_brands
+                .iter()
+                .copied()
+                .map(weapon_brand_dto)
+                .collect(),
         },
         AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
             AbilityEffectSpecDto::RemoveStatus {
@@ -17301,6 +18008,34 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::Control { category, power } => AbilityEffectSpecDto::Control {
             category: category.clone(),
             power: *power,
+        },
+        AbilityEffectDefinition::DrainLife {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+            target_category,
+        } => AbilityEffectSpecDto::DrainLife {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
+            damage_type: DamageType::from(*damage_type).into(),
+            target_category: target_category.clone(),
+        },
+        AbilityEffectDefinition::Genocide { scope, power } => AbilityEffectSpecDto::Genocide {
+            scope: ability_genocide_scope_dto(*scope),
+            power: *power,
+        },
+        AbilityEffectDefinition::AnimateDead {
+            actor_kind_id,
+            corpse_item_kind_id,
+            radius,
+            count,
+        } => AbilityEffectSpecDto::AnimateDead {
+            actor_kind_id: actor_kind_id.clone(),
+            corpse_item_kind_id: corpse_item_kind_id.clone(),
+            radius: *radius,
+            count: *count,
         },
         AbilityEffectDefinition::Heal { amount } => AbilityEffectSpecDto::Heal { amount: *amount },
         AbilityEffectDefinition::Sequence { .. } => {

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-cloud-kill",
+  "nameKey": "ability-demo-death-cloud-kill-name",
+  "descriptionKey": "ability-demo-death-cloud-kill-description",
+  "minimumLevel": 18,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 15,
+  "baseFailurePercent": 50,
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "effect": {
+    "type": "area-damage",
+    "damageDice": 1,
+    "damageSides": 1,
+    "damageBonus": 59,
+    "damageType": "poison",
+    "radius": 2
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 2,
+      "divisor": 1
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1,
+      "divisor": 10
+    }
+  ],
+  "tags": ["area", "death", "poison", "spell"]
+}

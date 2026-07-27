@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.corpse-remains",
+  "nameKey": "item-demo-corpse-remains-name",
+  "descriptionKey": "item-demo-corpse-remains-description",
+  "glyph": "%",
+  "weightTenthsPound": 100,
+  "maxStack": 1,
+  "tags": ["corpse"]
+}

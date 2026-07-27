@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.104";
+pub const PROTOCOL_VERSION: &str = "1.105";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -482,6 +482,14 @@ pub enum AbilityControlOutcomeDto {
     AlreadyControlled,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityGenocideScopeDto {
+    Single,
+    Glyph,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -504,6 +512,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_category: Option<String>,
     },
     BeamDamage {
         damage_dice: u16,
@@ -511,6 +521,14 @@ pub enum AbilityEffectSpecDto {
         #[serde(default)]
         damage_bonus: u16,
         damage_type: DamageTypeDto,
+    },
+    BoltOrBeamDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        damage_type: DamageTypeDto,
+        beam_chance_percent: u8,
     },
     ConeDamage {
         damage_dice: u16,
@@ -577,6 +595,8 @@ pub enum AbilityEffectSpecDto {
         power: Option<u16>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         granted_resistances: Vec<ResistanceDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        granted_brands: Vec<WeaponBrandDto>,
     },
     BlinkSelf {
         radius: u8,
@@ -591,6 +611,24 @@ pub enum AbilityEffectSpecDto {
     Control {
         category: String,
         power: u16,
+    },
+    DrainLife {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        damage_type: DamageTypeDto,
+        target_category: String,
+    },
+    Genocide {
+        scope: AbilityGenocideScopeDto,
+        power: u16,
+    },
+    AnimateDead {
+        actor_kind_id: String,
+        corpse_item_kind_id: String,
+        radius: u8,
+        count: u8,
     },
     Heal {
         amount: u32,
@@ -1167,6 +1205,7 @@ pub enum AbilityEffectSkipReasonDto {
     NoTarget,
     TargetDead,
     Saved,
+    Ineligible,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1206,6 +1245,8 @@ pub enum AbilityEffectResolutionDto {
         target_roll: Option<u32>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         granted_resistances: Vec<ResistanceDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        granted_brands: Vec<WeaponBrandDto>,
         change: AbilityStatusChangeDto,
     },
     RemoveStatus {
@@ -1238,6 +1279,28 @@ pub enum AbilityEffectResolutionDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         roll: Option<u16>,
         outcome: AbilityControlOutcomeDto,
+    },
+    DrainLife {
+        effect_index: u8,
+        resolution: DamageResolutionDto,
+        healing: HealingResolutionDto,
+    },
+    Genocide {
+        effect_index: u8,
+        scope: AbilityGenocideScopeDto,
+        power: u16,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        glyph: Option<String>,
+        removed_entity_ids: Vec<String>,
+        resisted_entity_ids: Vec<String>,
+        fatigue_damage: i32,
+    },
+    AnimateDead {
+        effect_index: u8,
+        actor_kind_id: String,
+        consumed_corpse_item_ids: Vec<String>,
+        entity_ids: Vec<String>,
+        positions: Vec<Position>,
     },
 }
 
@@ -1489,6 +1552,8 @@ pub struct StatusDto {
     pub remaining_ticks: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_resistances: Vec<ResistanceDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_brands: Vec<WeaponBrandDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1924,6 +1989,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityStatusStackingDto);
     push_declaration!(AbilityDetectSubjectDto);
     push_declaration!(AbilityControlOutcomeDto);
+    push_declaration!(AbilityGenocideScopeDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);
@@ -2206,6 +2272,8 @@ pub struct StatusSaveDto {
     pub source_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_resistances: Vec<ResistanceSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_brands: Vec<WeaponBrandDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

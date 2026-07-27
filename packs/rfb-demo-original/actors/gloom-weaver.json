@@ -15,6 +15,7 @@
   "damageDice": 1,
   "damageSides": 3,
   "damageType": "physical",
+  "corpseItemKindId": "demo.item.corpse-remains",
   "monsterCasting": {
     "frequencyPercent": 50,
     "abilities": [
@@ -32,5 +33,5 @@
       }
     ]
   },
-  "tags": ["aberration", "evil"]
+  "tags": ["aberration", "evil", "living"]
 }

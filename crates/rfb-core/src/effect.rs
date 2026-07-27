@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
+use rfb_content::WeaponBrand;
 use rfb_protocol::{
-    DamageResolutionDto, ResistanceDto, ResistanceSaveDto, StatusDto, StatusSaveDto,
+    DamageResolutionDto, ResistanceDto, ResistanceSaveDto, StatusDto, StatusSaveDto, WeaponBrandDto,
 };
 
 pub const STATUS_HASTE: &str = "rfb.status.haste";
@@ -79,6 +80,7 @@ pub struct StatusInstance {
     pub remaining_ticks: u32,
     pub source_id: Option<String>,
     pub granted_resistances: BTreeMap<DamageType, ResistanceLevel>,
+    pub granted_brands: BTreeSet<WeaponBrand>,
 }
 
 impl StatusInstance {
@@ -95,6 +97,12 @@ impl StatusInstance {
                     damage_type: (*damage_type).into(),
                     level: (*level).into(),
                 })
+                .collect(),
+            granted_brands: self
+                .granted_brands
+                .iter()
+                .copied()
+                .map(weapon_brand_dto)
                 .collect(),
         }
     }
@@ -113,6 +121,12 @@ impl StatusInstance {
                     damage_type: (*damage_type).into(),
                     level: (*level).into(),
                 })
+                .collect(),
+            granted_brands: self
+                .granted_brands
+                .iter()
+                .copied()
+                .map(weapon_brand_dto)
                 .collect(),
         }
     }
@@ -257,6 +271,7 @@ pub fn apply_status(
                 existing.intensity = application.status.intensity;
                 existing.source_id = application.status.source_id;
                 existing.granted_resistances = application.status.granted_resistances;
+                existing.granted_brands = application.status.granted_brands;
             }
             StatusChange::Extended
         }
@@ -267,6 +282,7 @@ pub fn apply_status(
                 existing.intensity = application.status.intensity;
                 existing.source_id = application.status.source_id.clone();
                 existing.granted_resistances = application.status.granted_resistances.clone();
+                existing.granted_brands = application.status.granted_brands.clone();
             }
             if longer {
                 existing.remaining_ticks = application.status.remaining_ticks;
@@ -279,6 +295,16 @@ pub fn apply_status(
                 StatusChange::Unchanged
             }
         }
+    }
+}
+
+const fn weapon_brand_dto(brand: WeaponBrand) -> WeaponBrandDto {
+    match brand {
+        WeaponBrand::Acid => WeaponBrandDto::Acid,
+        WeaponBrand::Electricity => WeaponBrandDto::Electricity,
+        WeaponBrand::Fire => WeaponBrandDto::Fire,
+        WeaponBrand::Cold => WeaponBrandDto::Cold,
+        WeaponBrand::Poison => WeaponBrandDto::Poison,
     }
 }
 
@@ -311,6 +337,7 @@ mod tests {
             remaining_ticks,
             source_id: Some("actor.source".to_owned()),
             granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
         }
     }
 

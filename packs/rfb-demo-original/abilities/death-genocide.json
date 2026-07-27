@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-genocide",
+  "nameKey": "ability-demo-death-genocide-name",
+  "descriptionKey": "ability-demo-death-genocide-description",
+  "minimumLevel": 39,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 30,
+  "baseFailurePercent": 95,
+  "target": {
+    "modes": ["direction"],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "effect": {
+    "type": "genocide",
+    "scope": "glyph",
+    "power": 3
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "genocide-power",
+      "levelOffset": 1,
+      "multiplier": 3,
+      "divisor": 1
+    }
+  ],
+  "tags": ["death", "genocide", "spell"]
+}

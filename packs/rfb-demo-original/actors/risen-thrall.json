@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.risen-thrall",
+  "role": "monster",
+  "nameKey": "actor-demo-risen-thrall-name",
+  "descriptionKey": "actor-demo-risen-thrall-description",
+  "glyph": "z",
+  "level": 8,
+  "experienceValue": 0,
+  "maxHp": 12,
+  "speed": 100,
+  "attack": 3,
+  "defense": 2,
+  "damageDice": 1,
+  "damageSides": 5,
+  "damageType": "physical",
+  "tags": ["companion", "nonliving", "summon", "undead"]
+}
