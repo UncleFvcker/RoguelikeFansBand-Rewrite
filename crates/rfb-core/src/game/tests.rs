@@ -2213,6 +2213,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            activation: None,
             charges: None,
             location: ItemLocation::Inventory,
         });
@@ -5528,6 +5529,7 @@ fn observable_item_use_consumes_one_heals_and_marks_the_kind_aware() {
             0,
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
+                target: None,
             },
         ))
         .expect("using a healing item should execute");
@@ -5573,6 +5575,7 @@ fn unobservable_item_use_consumes_one_but_only_marks_the_kind_tried() {
             0,
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
+                target: None,
             },
         ))
         .expect("using an item at full health should execute");
@@ -5615,6 +5618,7 @@ fn unusable_inventory_item_is_not_consumed_or_added_to_knowledge() {
             0,
             GameCommand::UseItem {
                 item_id: "demo.item.echo-charm.1".to_owned(),
+                target: None,
             },
         ))
         .expect("an unavailable use attempt should remain a valid action");
@@ -5722,6 +5726,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        activation: None,
         charges: None,
         location: ItemLocation::Inventory,
     });
@@ -8981,6 +8986,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            activation: None,
             charges: None,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
@@ -9067,6 +9073,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 .into_iter()
                 .collect(),
             rolled_affixes: Vec::new(),
+            activation: None,
             charges: None,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
@@ -9080,6 +9087,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 quality: ItemQualityDto::Fine,
                 affix_ids: vec!["demo.affix.vampiric".to_owned()],
                 rolled_affixes: Vec::new(),
+                activation: None,
                 charges: None,
                 location: ItemLocation::Equipped {
                     slot_id: "charm".to_owned(),
@@ -9553,6 +9561,7 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        activation: None,
         charges: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
@@ -10826,12 +10835,14 @@ fn device_skill_check_distinguishes_builds_without_consuming_on_failure() {
         &mut tinkerer,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
+            target: None,
         },
     );
     let vanguard_update = dispatch_next(
         &mut vanguard,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
+            target: None,
         },
     );
     let success = check_resolution(&tinkerer_update, "skill.device-success");
@@ -10880,6 +10891,7 @@ fn charged_device_spends_instance_charges_only_after_a_successful_check_and_roun
         &mut tinkerer,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
+            target: None,
         },
     );
     assert!(
@@ -10955,6 +10967,7 @@ fn failed_and_depleted_device_attempts_preserve_charges() {
         &mut vanguard,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
+            target: None,
         },
     );
     assert!(
@@ -11000,6 +11013,7 @@ fn failed_and_depleted_device_attempts_preserve_charges() {
         &mut vanguard,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
+            target: None,
         },
     );
     assert_eq!(depleted.events[0].kind, "item.use-unavailable");
@@ -11023,6 +11037,126 @@ fn failed_and_depleted_device_attempts_preserve_charges() {
             current: 0,
             maximum: 3,
         })
+    );
+}
+
+#[test]
+fn dynamic_device_generation_filters_by_depth_is_weighted_and_round_trips() {
+    const WAND_ID: &str = "demo.item.resonance-wand";
+    let content = load_built_in_content().expect("built-in content should load");
+    let mut shallow_rng = RfbRng::seeded(11);
+    let (shallow_activation, shallow_charges) =
+        initial_item_runtime_state(&content, &mut shallow_rng, WAND_ID, 1);
+    let shallow_activation = shallow_activation.expect("wand should materialize an activation");
+    assert_eq!(
+        shallow_activation.profile_id,
+        "demo.device-activation.spark-bolt"
+    );
+    let shallow_charges = shallow_charges.expect("wand should materialize charges");
+    assert!((12..=24).contains(&shallow_charges.maximum));
+    assert!((shallow_activation.cost..=shallow_charges.maximum).contains(&shallow_charges.current));
+
+    let mut selected = BTreeSet::new();
+    for seed in 0..64 {
+        let mut left = RfbRng::seeded(seed);
+        let mut right = RfbRng::seeded(seed);
+        let left_state = initial_item_runtime_state(&content, &mut left, WAND_ID, 20);
+        let right_state = initial_item_runtime_state(&content, &mut right, WAND_ID, 20);
+        assert_eq!(left_state, right_state);
+        selected.insert(
+            left_state
+                .0
+                .expect("deep wand should materialize an activation")
+                .profile_id,
+        );
+    }
+    assert_eq!(
+        selected,
+        BTreeSet::from([
+            "demo.device-activation.frost-bolt".to_owned(),
+            "demo.device-activation.spark-bolt".to_owned(),
+        ])
+    );
+
+    let mut game = skill_check_game(11, "demo.build.tinkerer");
+    give_inventory_item(&mut game, "test.item.dynamic-wand", WAND_ID);
+    let restored = Game::from_save(game.to_save()).expect("dynamic device should round-trip");
+    let restored_item = restored
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.dynamic-wand")
+        .expect("dynamic device should remain in inventory");
+    assert_eq!(
+        restored_item
+            .activation
+            .as_ref()
+            .map(|activation| activation.profile_id.as_str()),
+        Some("demo.device-activation.spark-bolt")
+    );
+}
+
+#[test]
+fn dynamic_wand_validates_target_before_check_and_spends_only_on_success() {
+    const ITEM_ID: &str = "test.item.dynamic-wand";
+    let mut game = Game::new_with_build(0, "demo.build.tinkerer")
+        .expect("device specialist build should create");
+    game.player.position = Position { x: 7, y: 5 };
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.resonance-wand");
+    let charges_before = game
+        .items
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .and_then(|item| item.charges)
+        .expect("dynamic wand should carry charges");
+    let draws_before = game.rng.draw_counter;
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        ITEM_ID,
+        Some(&TargetSelection::SelfTarget),
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("invalid target should be handled");
+    assert_eq!(events, vec![DomainEvent::ItemUseUnavailable]);
+    assert_eq!(game.rng.draw_counter, draws_before);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == ITEM_ID)
+            .and_then(|item| item.charges),
+        Some(charges_before)
+    );
+
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        ITEM_ID,
+        Some(&TargetSelection::Direction {
+            direction: Direction::East,
+        }),
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("valid wand activation should resolve");
+    assert!(events.iter().any(|event| {
+        matches!(
+            event,
+            DomainEvent::ItemActivationHit { .. } | DomainEvent::ItemActivationSlew { .. }
+        )
+    }));
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .expect("charged wand should remain in inventory");
+    let activation = item
+        .activation
+        .as_ref()
+        .expect("wand activation should remain materialized");
+    assert_eq!(
+        item.charges.expect("wand charges should remain").current,
+        charges_before.current - activation.cost
     );
 }
 
@@ -11194,6 +11328,8 @@ fn skill_check_game(seed: u64, build_id: &str) -> Game {
 }
 
 fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
+    let (activation, charges) =
+        initial_item_runtime_state(&game.content, &mut game.rng, kind_id, 1);
     game.items.push(ItemInstance {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
@@ -11201,7 +11337,8 @@ fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
-        charges: initial_item_charges(&game.content, kind_id),
+        activation,
+        charges,
         location: ItemLocation::Inventory,
     });
 }
@@ -12368,6 +12505,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        activation: None,
         charges: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
@@ -12416,6 +12554,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.frost-hunter".to_owned()],
         rolled_affixes: Vec::new(),
+        activation: None,
         charges: None,
         location: ItemLocation::Inventory,
     });
@@ -12499,6 +12638,7 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: rolled.clone(),
+        activation: None,
         charges: None,
         location: ItemLocation::Inventory,
     });
@@ -12557,6 +12697,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
             affix_id: "demo.affix.adaptive-echo".to_owned(),
             properties,
         }],
+        activation: None,
         charges: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
@@ -12882,6 +13023,7 @@ fn esoteria_validates_item_targets_before_cost_and_persists_knowledge() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.vampiric".to_owned()],
         rolled_affixes: Vec::new(),
+        activation: None,
         charges: None,
         location: ItemLocation::Ground(Position { x: 10, y: 10 }),
     };

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.resonance-wand",
+  "nameKey": "item-demo-resonance-wand-name",
+  "appearanceNameKey": "item-demo-unfamiliar-wand-name",
+  "descriptionKey": "item-demo-resonance-wand-description",
+  "glyph": "-",
+  "weightTenthsPound": 10,
+  "maxStack": 1,
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.device-activation.frost-bolt",
+        "nameKey": "device-activation-demo-frost-bolt-name",
+        "weight": 1,
+        "minDepth": 20,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 30,
+        "charges": { "minimum": 12, "maximum": 24, "cost": 4 },
+        "target": {
+          "modes": ["direction", "position", "entity"],
+          "range": 8,
+          "requiresLineOfEffect": true
+        },
+        "effect": {
+          "type": "damage",
+          "damageDice": 3,
+          "damageSides": 6,
+          "damageType": "cold"
+        }
+      },
+      {
+        "id": "demo.device-activation.spark-bolt",
+        "nameKey": "device-activation-demo-spark-bolt-name",
+        "weight": 3,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 15,
+        "charges": { "minimum": 12, "maximum": 24, "cost": 3 },
+        "target": {
+          "modes": ["direction", "position", "entity"],
+          "range": 8,
+          "requiresLineOfEffect": true
+        },
+        "effect": {
+          "type": "damage",
+          "damageDice": 2,
+          "damageSides": 6,
+          "damageType": "physical"
+        }
+      }
+    ]
+  },
+  "tags": ["device", "prototype", "wand"]
+}

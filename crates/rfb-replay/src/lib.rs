@@ -566,6 +566,7 @@ mod tests {
             GameCommand::PickUp,
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
+                target: None,
             },
         ] {
             recorder.dispatch(command).expect("command should execute");
@@ -575,6 +576,33 @@ mod tests {
         assert_eq!(final_game.snapshot().inventory[0].quantity, 4);
         let verification = verify(&replay, initial).expect("item use replay should verify");
         assert_eq!(verification.commands_verified, 3);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn dynamic_device_target_round_trips_through_replay() {
+        let mut initial =
+            Game::new_with_build(0, "demo.build.tinkerer").expect("build should create");
+        initial
+            .debug_add_generated_inventory_item(
+                "test.item.replay-wand.1",
+                "demo.item.resonance-wand",
+                1,
+            )
+            .expect("dynamic wand should generate");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::UseItem {
+                item_id: "test.item.replay-wand.1".to_owned(),
+                target: Some(rfb_protocol::TargetSelection::Entity {
+                    entity_id: "demo.monster.ember-mote.1".to_owned(),
+                }),
+            })
+            .expect("device command should execute");
+        let (final_game, replay) = recorder.finish();
+
+        let verification = verify(&replay, initial).expect("device replay should verify");
+        assert_eq!(verification.commands_verified, 1);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }
 

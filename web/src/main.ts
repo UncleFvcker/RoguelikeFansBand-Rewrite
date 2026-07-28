@@ -154,7 +154,8 @@ type TilesetPreset = "ascii" | "image";
 type ConnectionState = "starting" | "ready" | "error";
 type TargetingIntent =
   | { type: "projectile" }
-  | { type: "ability"; abilityId: string };
+  | { type: "ability"; abilityId: string }
+  | { type: "item"; itemId: string };
 type MessageRecord =
   | {
       source: "key";
@@ -1352,6 +1353,16 @@ function renderInventory(
         });
         details.append(charges);
       }
+      if (item.activation) {
+        const activation = document.createElement("span");
+        activation.className = "inventory-activation";
+        activation.textContent = localization.format("inventory-activation", {
+          activation: localization.format(item.activation.nameKey as MessageKey),
+          power: item.activation.power,
+          cost: item.activation.cost,
+        });
+        details.append(activation);
+      }
       appendItemModifiers(details, item.modifiers);
       appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
@@ -1462,7 +1473,23 @@ async function appraiseSelectedInventoryItem(): Promise<void> {
 async function useSelectedInventoryItem(): Promise<void> {
   const selected = selectedInventoryItems();
   if (busy || selected.length !== 1 || !selected[0]?.usable) return;
-  await dispatch({ type: "use-item", itemId: selected[0].id });
+  const item = selected[0];
+  if (item.useTargetSpec?.modes.includes("self")) {
+    await dispatch({
+      type: "use-item",
+      itemId: item.id,
+      target: { type: "self" },
+    });
+    return;
+  }
+  if (item.useTargetSpec) {
+    startTargetingWithSpec(item.useTargetSpec, {
+      type: "item",
+      itemId: item.id,
+    });
+    return;
+  }
+  await dispatch({ type: "use-item", itemId: item.id });
 }
 
 async function dropSelectedInventoryItems(): Promise<void> {
@@ -2256,6 +2283,26 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-use-unavailable":
       return localization.format("message-item-use-unavailable");
+    case "item-activation-landed":
+      return localization.format("message-item-activation-landed", {
+        source: visibleItemNameForKind(event.args.source),
+      });
+    case "item-activation-hit":
+      return localization.format("message-item-activation-hit", {
+        source: visibleItemNameForKind(event.args.source),
+        target: contentName(event.args.target),
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
+    case "item-activation-slay":
+      return localization.format("message-item-activation-slay", {
+        source: visibleItemNameForKind(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "item-activation-detected":
+      return localization.format("message-item-activation-detected", {
+        source: visibleItemNameForKind(event.args.source),
+        count: event.args.count ?? "0",
+      });
     case "item-thrown":
       return localization.format("message-item-thrown", {
         target: visibleItemNameForKind(event.args.target),
@@ -2746,7 +2793,9 @@ async function confirmTargeting(): Promise<void> {
   await dispatch(
     intent.type === "ability"
       ? { type: "cast-ability", abilityId: intent.abilityId, target }
-      : { type: "fire-target", target },
+      : intent.type === "item"
+        ? { type: "use-item", itemId: intent.itemId, target }
+        : { type: "fire-target", target },
   );
 }
 
@@ -2755,6 +2804,11 @@ function targetSpecForIntent(
   intent: TargetingIntent,
 ): TargetSpecDto | null | undefined {
   if (intent.type === "projectile") return state.player.projectileProfile?.targetSpec;
+  if (intent.type === "item") {
+    return state.inventory.find(
+      (item) => item.id === intent.itemId && item.usable,
+    )?.useTargetSpec;
+  }
   return (state.player.abilities ?? []).find(
     (ability) => ability.id === intent.abilityId && ability.canCast,
   )?.targetSpec;

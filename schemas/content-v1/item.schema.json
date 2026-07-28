@@ -1,5 +1,48 @@
 {
   "$defs": {
+    "AbilityDetectSubjectDefinition": {
+      "enum": [
+        "terrain",
+        "actor"
+      ],
+      "type": "string"
+    },
+    "AbilityTargetDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "modes": {
+          "items": {
+            "$ref": "#/$defs/AbilityTargetModeDefinition"
+          },
+          "type": "array"
+        },
+        "range": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requiresLineOfEffect": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "modes",
+        "range",
+        "requiresLineOfEffect"
+      ],
+      "type": "object"
+    },
+    "AbilityTargetModeDefinition": {
+      "enum": [
+        "direction",
+        "position",
+        "entity",
+        "item",
+        "self"
+      ],
+      "type": "string"
+    },
     "ActorDamageType": {
       "enum": [
         "physical",
@@ -209,6 +252,100 @@
       ],
       "type": "object"
     },
+    "ItemDeviceActivationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "charges": {
+          "$ref": "#/$defs/ItemDeviceChargeRangeDefinition"
+        },
+        "deviceCheckDifficulty": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effect": {
+          "$ref": "#/$defs/ItemUseEffectDefinition"
+        },
+        "id": {
+          "type": "string"
+        },
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/AbilityTargetDefinition"
+        },
+        "weight": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "weight",
+        "minDepth",
+        "maxDepth",
+        "deviceCheckDifficulty",
+        "charges",
+        "target",
+        "effect"
+      ],
+      "type": "object"
+    },
+    "ItemDeviceChargeRangeDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minimum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum",
+        "cost"
+      ],
+      "type": "object"
+    },
+    "ItemDeviceGenerationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "activations": {
+          "items": {
+            "$ref": "#/$defs/ItemDeviceActivationDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "activations"
+      ],
+      "type": "object"
+    },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -285,6 +422,76 @@
             "type",
             "dice",
             "sides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "type": {
+              "const": "damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "persistent": {
+              "default": false,
+              "type": "boolean"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "subject": {
+              "$ref": "#/$defs/AbilityDetectSubjectDefinition",
+              "default": "terrain"
+            },
+            "type": {
+              "const": "detect",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "radius"
           ],
           "type": "object"
         }
@@ -486,6 +693,17 @@
     },
     "descriptionKey": {
       "type": "string"
+    },
+    "deviceGeneration": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ItemDeviceGenerationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "equipmentBonuses": {
       "$ref": "#/$defs/EquipmentBonuses",

@@ -3,7 +3,7 @@
 
 export type Direction = "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
 
-export type GameCommand = { "type": "abandon-task" } | { "type": "abandon-paused-task", taskId: string, } | { "type": "increase-attribute", attribute: AttributeKindDto, } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "cast-ability", abilityId: string, target: TargetSelection, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "retire" } | { "type": "rest", turns: number, } | { "type": "search" } | { "type": "set-summon-command", mode: SummonCommandModeDto, } | { "type": "forget-ability", abilityId: string, } | { "type": "study-ability", bookItemId: string, abilityId: string, } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
+export type GameCommand = { "type": "abandon-task" } | { "type": "abandon-paused-task", taskId: string, } | { "type": "increase-attribute", attribute: AttributeKindDto, } | { "type": "appraise", itemId: string, } | { "type": "bash-door", direction: Direction, } | { "type": "cast-ability", abilityId: string, target: TargetSelection, } | { "type": "close-door", direction: Direction, } | { "type": "disarm-trap", direction: Direction, } | { "type": "dig-terrain", direction: Direction, } | { "type": "drop", itemIds: Array<string>, } | { "type": "drop-quantity", itemId: string, quantity: number, } | { "type": "equip", itemId: string, } | { "type": "fire", direction: Direction, } | { "type": "fire-target", target: TargetSelection, } | { "type": "move", direction: Direction, } | { "type": "open-door", direction: Direction, } | { "type": "pick-up" } | { "type": "retire" } | { "type": "rest", turns: number, } | { "type": "search" } | { "type": "set-summon-command", mode: SummonCommandModeDto, } | { "type": "forget-ability", abilityId: string, } | { "type": "study-ability", bookItemId: string, abilityId: string, } | { "type": "throw", itemId: string, direction: Direction, } | { "type": "traverse-stairs" } | { "type": "use-item", itemId: string, target?: TargetSelection | null, } | { "type": "unequip", slotId: string, } | { "type": "wait" };
 
 export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number, command: GameCommand, };
 
@@ -194,13 +194,15 @@ export type ItemKnowledgeDto = "unknown" | "tried" | "aware";
 
 export type ItemChargesDto = { current: number, maximum: number, };
 
+export type ItemActivationDto = { profileId: string, nameKey: string, power: number, cost: number, deviceCheckDifficulty: number, targetSpec: TargetSpecDto, };
+
 export type ItemQualityDto = "ordinary" | "fine" | "exceptional";
 
 export type ItemIdentificationDto = "unexamined" | "appraised" | "identified";
 
 export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, passives?: Array<EquipmentPassiveDto>, };
 
-export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, charges?: ItemChargesDto | null, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, useTargetSpec?: TargetSpecDto | null, quantity: number, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type BodySlotDto = { id: string, slotType: string, };
 

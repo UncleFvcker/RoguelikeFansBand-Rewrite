@@ -1466,8 +1466,29 @@ pub struct ThrowProfileDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
-    Heal { amount: u32 },
-    HealDice { dice: u16, sides: u16 },
+    Heal {
+        amount: u32,
+    },
+    HealDice {
+        dice: u16,
+        sides: u16,
+    },
+    Damage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+    },
+    Detect {
+        #[serde(default)]
+        subject: AbilityDetectSubjectDefinition,
+        category: String,
+        radius: u8,
+        #[serde(default)]
+        persistent: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1488,6 +1509,37 @@ pub struct ItemUseActionDefinition {
     #[serde(default)]
     pub charges: Option<ItemChargeDefinition>,
     pub effect: ItemUseEffectDefinition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemDeviceChargeRangeDefinition {
+    pub minimum: u32,
+    pub maximum: u32,
+    pub cost: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemDeviceActivationDefinition {
+    pub id: String,
+    pub name_key: String,
+    pub weight: u32,
+    pub min_depth: u16,
+    pub max_depth: u16,
+    pub device_check_difficulty: i32,
+    pub charges: ItemDeviceChargeRangeDefinition,
+    pub target: AbilityTargetDefinition,
+    pub effect: ItemUseEffectDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemDeviceGenerationDefinition {
+    pub activations: Vec<ItemDeviceActivationDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1519,6 +1571,8 @@ pub struct ItemDefinition {
     pub throw_profile: Option<ThrowProfileDefinition>,
     #[serde(default)]
     pub use_action: Option<ItemUseActionDefinition>,
+    #[serde(default)]
+    pub device_generation: Option<ItemDeviceGenerationDefinition>,
     #[serde(default)]
     pub ability_book_id: Option<String>,
     #[serde(default)]
@@ -4152,6 +4206,75 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         ability_books_by_id.insert(book.id.clone(), book.clone());
     }
 
+    let valid_item_effect = |effect: &ItemUseEffectDefinition| match effect {
+        ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
+        ItemUseEffectDefinition::HealDice { dice, sides } => {
+            (1..=100).contains(dice) && (1..=10_000).contains(sides)
+        }
+        ItemUseEffectDefinition::Damage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            ..
+        } => {
+            (1..=100).contains(damage_dice)
+                && (1..=10_000).contains(damage_sides)
+                && *damage_bonus <= 10_000
+        }
+        ItemUseEffectDefinition::Detect {
+            subject,
+            category,
+            radius,
+            persistent,
+        } => {
+            !category.is_empty()
+                && category.len() <= 64
+                && category.bytes().all(|byte| {
+                    byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'-' | b'_')
+                })
+                && (1..=8).contains(radius)
+                && match subject {
+                    AbilityDetectSubjectDefinition::Terrain => {
+                        terrain_tags.values().any(|tags| tags.contains(category))
+                    }
+                    AbilityDetectSubjectDefinition::Actor => {
+                        !persistent && actor_tag_values.contains(category)
+                    }
+                }
+        }
+    };
+    let valid_item_effect_target =
+        |effect: &ItemUseEffectDefinition, target: &AbilityTargetDefinition| {
+            let mut modes = BTreeSet::new();
+            let modes_are_unique =
+                target.modes.iter().all(|mode| modes.insert(*mode)) && !target.modes.is_empty();
+            let self_target = target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
+                && target.range == 0
+                && !target.requires_line_of_effect;
+            let projectile_target = !target
+                .modes
+                .contains(&AbilityTargetModeDefinition::SelfTarget)
+                && target.modes.iter().all(|mode| {
+                    matches!(
+                        mode,
+                        AbilityTargetModeDefinition::Direction
+                            | AbilityTargetModeDefinition::Position
+                            | AbilityTargetModeDefinition::Entity
+                    )
+                })
+                && (1..=64).contains(&target.range)
+                && target.requires_line_of_effect;
+            modes_are_unique
+                && match effect {
+                    ItemUseEffectDefinition::Heal { .. }
+                    | ItemUseEffectDefinition::HealDice { .. }
+                    | ItemUseEffectDefinition::Detect { .. } => self_target,
+                    ItemUseEffectDefinition::Damage { .. } => projectile_target,
+                }
+        };
+
     let mut item_limits = BTreeMap::new();
     for item in &mut content.items {
         require_schema(&item.schema, ITEM_SCHEMA, &item.id)?;
@@ -4254,6 +4377,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 ItemUseEffectDefinition::HealDice { dice, sides } => {
                     (1..=100).contains(&dice) && (1..=10_000).contains(&sides)
                 }
+                ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::Detect { .. } => {
+                    false
+                }
             };
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
@@ -4278,8 +4404,48 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 return Err(ContentError::InvalidItemUseAction(item.id.clone()));
             }
         }
+        if let Some(generation) = &mut item.device_generation {
+            generation
+                .activations
+                .sort_by(|left, right| left.id.cmp(&right.id));
+            let mut activation_ids = BTreeSet::new();
+            let valid_activations = (1..=256).contains(&generation.activations.len())
+                && generation.activations.iter().all(|activation| {
+                    activation_ids.insert(activation.id.clone())
+                        && validate_id(&activation.id).is_ok()
+                        && validate_message_key(&activation.name_key).is_ok()
+                        && (1..=1_000_000).contains(&activation.weight)
+                        && (1..=100).contains(&activation.min_depth)
+                        && activation.min_depth <= activation.max_depth
+                        && activation.max_depth <= 100
+                        && (1..=1_000_000).contains(&activation.device_check_difficulty)
+                        && (1..=1_000_000).contains(&activation.charges.minimum)
+                        && activation.charges.minimum <= activation.charges.maximum
+                        && activation.charges.maximum <= 1_000_000
+                        && (1..=activation.charges.minimum).contains(&activation.charges.cost)
+                        && valid_item_effect(&activation.effect)
+                        && valid_item_effect_target(&activation.effect, &activation.target)
+                })
+                && (1..=100).all(|depth| {
+                    generation.activations.iter().any(|activation| {
+                        activation.min_depth <= depth && depth <= activation.max_depth
+                    })
+                });
+            if item.use_action.is_some()
+                || item.equipment_slot.is_some()
+                || item.max_stack != 1
+                || !item.tags.iter().any(|tag| tag == "device")
+                || !valid_activations
+            {
+                return Err(ContentError::InvalidItemUseAction(item.id.clone()));
+            }
+        }
         if let Some(ability_book_id) = &item.ability_book_id {
-            if item.max_stack != 1 || item.equipment_slot.is_some() || item.use_action.is_some() {
+            if item.max_stack != 1
+                || item.equipment_slot.is_some()
+                || item.use_action.is_some()
+                || item.device_generation.is_some()
+            {
                 return Err(ContentError::InvalidAbilityBookItem(item.id.clone()));
             }
             require_reference(&ability_book_ids, ability_book_id, &item.id)?;
@@ -8050,7 +8216,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 20);
+        assert_eq!(first.content.items.len(), 23);
         assert_eq!(first.content.resources.len(), 2);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8076,7 +8242,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.99.0");
+        assert_eq!(catalog.pack_version(), "1.100.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -9976,6 +10142,82 @@ mod tests {
             .as_mut()
             .expect("charged action should exist")
             .device_check_difficulty = None;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+    }
+
+    #[test]
+    fn dynamic_devices_require_stable_profiles_depth_coverage_and_capacity() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let wand = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == "demo.item.resonance-wand")
+            .and_then(|item| item.device_generation.as_ref())
+            .expect("fixture should contain dynamic wand profiles");
+        assert_eq!(
+            wand.activations
+                .iter()
+                .map(|activation| activation.id.as_str())
+                .collect::<Vec<_>>(),
+            vec![
+                "demo.device-activation.frost-bolt",
+                "demo.device-activation.spark-bolt",
+            ]
+        );
+
+        let mut invalid = artifact.content.clone();
+        let profiles = &mut invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-wand")
+            .expect("fixture should contain the dynamic wand")
+            .device_generation
+            .as_mut()
+            .expect("dynamic generation should exist")
+            .activations;
+        profiles
+            .iter_mut()
+            .find(|profile| profile.id == "demo.device-activation.spark-bolt")
+            .expect("shallow profile should exist")
+            .min_depth = 2;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let wand = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-wand")
+            .expect("fixture should contain the dynamic wand");
+        wand.device_generation
+            .as_mut()
+            .expect("dynamic generation should exist")
+            .activations[0]
+            .charges
+            .cost = 1_000_001;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let wand = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-wand")
+            .expect("fixture should contain the dynamic wand");
+        wand.use_action = Some(ItemUseActionDefinition {
+            device_check_difficulty: None,
+            charges: None,
+            effect: ItemUseEffectDefinition::Heal { amount: 1 },
+        });
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemUseAction(_))

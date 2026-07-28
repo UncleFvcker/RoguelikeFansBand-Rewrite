@@ -13,18 +13,18 @@ use crate::{
     stats::{CharacterBuildIdentity, CharacterProgress},
 };
 use rfb_content::{
-    ActorDamageType, ActorResistanceLevel, AffixPropertyBundleDefinition, ContentCatalog,
-    ContentPosition, EquipmentBonuses, EquipmentPassive, SlayLevel, SlayTarget, StatModifiers,
-    WeaponBrand,
+    AbilityTargetModeDefinition, ActorDamageType, ActorResistanceLevel,
+    AffixPropertyBundleDefinition, ContentCatalog, ContentPosition, EquipmentBonuses,
+    EquipmentPassive, SlayLevel, SlayTarget, StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
     EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
-    InventoryItemSaveDto, ItemChargesDto, ItemSaveDto, MonsterPackSaveDto,
+    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemSaveDto, MonsterPackSaveDto,
     NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
     ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
     SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TerrainSaveDto, WeaponBrandDto,
+    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -201,7 +201,7 @@ pub(crate) fn item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    validate_item_charges(definition, item.charges)?;
+    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -210,6 +210,7 @@ pub(crate) fn item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        activation: item.activation,
         charges: item.charges,
         location: ItemLocation::Ground(item.position),
     })
@@ -222,7 +223,7 @@ pub(crate) fn inventory_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    validate_item_charges(definition, item.charges)?;
+    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -231,6 +232,7 @@ pub(crate) fn inventory_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        activation: item.activation,
         charges: item.charges,
         location: ItemLocation::Inventory,
     })
@@ -248,7 +250,7 @@ pub(crate) fn equipment_item_from_dto(
     if definition.equipment_slot.is_none() {
         return Err(CoreError::InvalidSave("equipment metadata is invalid"));
     }
-    validate_item_charges(definition, item.charges)?;
+    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -257,6 +259,7 @@ pub(crate) fn equipment_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        activation: item.activation,
         charges: item.charges,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
@@ -271,7 +274,7 @@ pub(crate) fn carried_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    validate_item_charges(definition, item.charges)?;
+    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -280,6 +283,7 @@ pub(crate) fn carried_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        activation: item.activation,
         charges: item.charges,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
@@ -287,20 +291,60 @@ pub(crate) fn carried_item_from_dto(
     })
 }
 
-fn validate_item_charges(
+fn validate_item_runtime_state(
     definition: &rfb_content::ItemDefinition,
+    activation: Option<&ItemActivationDto>,
     charges: Option<ItemChargesDto>,
 ) -> Result<(), CoreError> {
     let configured = definition
         .use_action
         .as_ref()
         .and_then(|action| action.charges);
-    let valid = match (configured, charges) {
-        (None, None) => true,
-        (Some(configured), Some(charges)) => {
-            charges.maximum == configured.maximum && charges.current <= charges.maximum
+    let valid = if let Some(generation) = &definition.device_generation {
+        match (activation, charges) {
+            (Some(activation), Some(charges)) => generation
+                .activations
+                .iter()
+                .find(|profile| profile.id == activation.profile_id)
+                .is_some_and(|profile| {
+                    let target_spec = TargetSpecDto {
+                        modes: profile
+                            .target
+                            .modes
+                            .iter()
+                            .map(|mode| match mode {
+                                AbilityTargetModeDefinition::Direction => TargetModeDto::Direction,
+                                AbilityTargetModeDefinition::Position => TargetModeDto::Position,
+                                AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
+                                AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                                AbilityTargetModeDefinition::SelfTarget => {
+                                    TargetModeDto::SelfTarget
+                                }
+                            })
+                            .collect(),
+                        range: profile.target.range,
+                        requires_line_of_effect: profile.target.requires_line_of_effect,
+                    };
+                    activation.name_key == profile.name_key
+                        && activation.cost == profile.charges.cost
+                        && activation.device_check_difficulty == profile.device_check_difficulty
+                        && activation.target_spec == target_spec
+                        && profile.min_depth <= activation.power
+                        && activation.power <= profile.max_depth
+                        && (profile.charges.minimum..=profile.charges.maximum)
+                            .contains(&charges.maximum)
+                        && charges.current <= charges.maximum
+                }),
+            _ => false,
         }
-        _ => false,
+    } else {
+        match (configured, activation, charges) {
+            (None, None, None) => true,
+            (Some(configured), None, Some(charges)) => {
+                charges.maximum == configured.maximum && charges.current <= charges.maximum
+            }
+            _ => false,
+        }
     };
     if valid {
         Ok(())
@@ -966,6 +1010,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                activation: item.activation.clone(),
                 charges: item.charges,
             })
         })
@@ -988,6 +1033,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                activation: item.activation.clone(),
                 charges: item.charges,
             })
         })
@@ -1011,6 +1057,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                activation: item.activation.clone(),
                 charges: item.charges,
             })
         })
@@ -1038,6 +1085,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                activation: item.activation.clone(),
                 charges: item.charges,
             })
         })

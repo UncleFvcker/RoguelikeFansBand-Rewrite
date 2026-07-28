@@ -52,19 +52,20 @@ use rfb_content::{
     AbilityDefinition, AbilityDetectSubjectDefinition, AbilityEffectDefinition,
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
-    AbilityStatusStackingDefinition, AbilityTargetModeDefinition, ActorResistanceLevel, ActorRole,
-    AffixPropertyBundleDefinition, CampaignDefinition, CastingAttribute, CastingProfileDefinition,
-    CharacterBuildDefinition, ClassDefinition, ContentCatalog, ContentPosition, DungeonDefinition,
-    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
-    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
-    EquipmentPassive, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
-    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
-    SkillKind, SkillSetDefinition, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers,
-    TaskObjectiveDefinition, TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
-    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
-    VaultDefinition, VaultTransform, WeaponBrand,
+    AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
+    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CampaignDefinition,
+    CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition, ClassDefinition,
+    ContentCatalog, ContentPosition, DungeonDefinition, DungeonEntryRequirementDefinition,
+    DungeonEntryTaskStatus, DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterFormation,
+    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
+    ItemUseEffectDefinition, MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition,
+    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
+    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
+    RaceDefinition, RetakeFloorPolicy, SkillKind, SkillSetDefinition, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveDefinition, TaskObjectiveKind,
+    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
+    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -82,17 +83,17 @@ use rfb_protocol::{
     EntityDto, EntityFactionDto, EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto,
     EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope,
     GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto,
-    ItemChargesDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
-    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
-    MeleeRoutineDto, MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
-    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto,
-    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto,
-    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    ItemActivationDto, ItemChargesDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
+    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION,
+    PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto,
+    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
     SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
     TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
     TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
@@ -102,7 +103,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 100] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 101] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -203,13 +204,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 100] = [
     "26fdeb15063fa5ccc5a672cd8d2376f7ea66e7dc487fef6f1a4d5640a1050cf9",
     "5e6e5f4ee9b83eb8d80e05c8aa893bd8d19c1db1bdd18c97fe3e120fd823a88c",
     "d8bdbdd4d4e85862a97229c279a874668b9b1d3ce9035aa6f17a11cff7b3af80",
+    "4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8";
+    "8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 47;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 48;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -291,6 +293,13 @@ enum AbilityTargetPlan {
     Item {
         item_id: String,
     },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ItemUsePlan {
+    SelfTarget,
+    Projectile { path: Vec<Position> },
+    Detect,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1283,6 +1292,7 @@ fn append_starting_items(
     body_slots: &[BodySlot],
     items: &mut Vec<ItemInstance>,
     next_serial: &mut u64,
+    rng: &mut RfbRng,
 ) -> Result<(), CoreError> {
     let Some(identity) = identity else {
         return Ok(());
@@ -1295,7 +1305,7 @@ fn append_starting_items(
         .chain(personality.starting_items.iter())
         .chain(build.starting_items.iter())
     {
-        append_starting_item(content, starting_item, body_slots, items, next_serial)?;
+        append_starting_item(content, starting_item, body_slots, items, next_serial, rng)?;
     }
     Ok(())
 }
@@ -1306,6 +1316,7 @@ fn append_starting_item(
     body_slots: &[BodySlot],
     items: &mut Vec<ItemInstance>,
     next_serial: &mut u64,
+    rng: &mut RfbRng,
 ) -> Result<(), CoreError> {
     let definition = content
         .item(&starting_item.item_kind_id)
@@ -1335,6 +1346,8 @@ fn append_starting_item(
     *next_serial = next_serial
         .checked_add(1)
         .ok_or(CoreError::ItemIdExhausted)?;
+    let (activation, charges) =
+        initial_item_runtime_state(content, rng, &starting_item.item_kind_id, 1);
     items.push(ItemInstance {
         id,
         kind_id: starting_item.item_kind_id.clone(),
@@ -1342,7 +1355,8 @@ fn append_starting_item(
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
-        charges: initial_item_charges(content, &starting_item.item_kind_id),
+        activation,
+        charges,
         location,
     });
     Ok(())
@@ -1357,6 +1371,70 @@ fn initial_item_charges(content: &ContentCatalog, kind_id: &str) -> Option<ItemC
             current: charges.initial,
             maximum: charges.maximum,
         })
+}
+
+fn initial_item_runtime_state(
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    kind_id: &str,
+    depth: u16,
+) -> (Option<ItemActivationDto>, Option<ItemChargesDto>) {
+    let Some(definition) = content.item(kind_id) else {
+        return (None, None);
+    };
+    let Some(generation) = &definition.device_generation else {
+        return (None, initial_item_charges(content, kind_id));
+    };
+    let power = depth.clamp(1, 100);
+    let eligible = generation
+        .activations
+        .iter()
+        .filter(|activation| activation.min_depth <= power && power <= activation.max_depth)
+        .collect::<Vec<_>>();
+    debug_assert!(
+        !eligible.is_empty(),
+        "validated device generation must cover every supported depth"
+    );
+    let total_weight = eligible
+        .iter()
+        .map(|activation| u64::from(activation.weight))
+        .sum::<u64>();
+    let mut selection_roll = rng.bounded(total_weight);
+    let selected = eligible
+        .into_iter()
+        .find(|activation| {
+            if selection_roll < u64::from(activation.weight) {
+                true
+            } else {
+                selection_roll -= u64::from(activation.weight);
+                false
+            }
+        })
+        .expect("validated weighted device activation must select a candidate");
+    let capacity_span = u64::from(
+        selected
+            .charges
+            .maximum
+            .saturating_sub(selected.charges.minimum),
+    ) + 1;
+    let maximum = selected.charges.minimum.saturating_add(
+        u32::try_from(rng.bounded(capacity_span)).expect("bounded capacity roll must fit u32"),
+    );
+    let current_span = u64::from(maximum.saturating_sub(selected.charges.cost)) + 1;
+    let current = selected.charges.cost.saturating_add(
+        u32::try_from(rng.bounded(current_span)).expect("bounded current charge roll must fit u32"),
+    );
+    (
+        Some(ItemActivationDto {
+            profile_id: selected.id.clone(),
+            name_key: selected.name_key.clone(),
+            power,
+            cost: selected.charges.cost,
+            device_check_difficulty: selected.device_check_difficulty,
+            target_spec: target_spec_dto(&selected.target),
+        }),
+        Some(ItemChargesDto { current, maximum }),
+    )
 }
 
 fn combine_percentages(percentages: [u16; 3]) -> u16 {
@@ -1579,18 +1657,24 @@ impl Game {
             });
             entities.push(actor);
         }
+        let mut rng = RfbRng::seeded(seed);
         let mut items = world
             .items
             .iter()
-            .map(|spawn| ItemInstance {
-                id: spawn.instance_id.clone(),
-                kind_id: spawn.kind_id.clone(),
-                quantity: spawn.quantity,
-                quality: item_quality_dto(spawn.quality),
-                affix_ids: spawn.affix_ids.clone(),
-                rolled_affixes: Vec::new(),
-                charges: initial_item_charges(&content, &spawn.kind_id),
-                location: ItemLocation::Ground(position_from_content(spawn.position)),
+            .map(|spawn| {
+                let (activation, charges) =
+                    initial_item_runtime_state(&content, &mut rng, &spawn.kind_id, 1);
+                ItemInstance {
+                    id: spawn.instance_id.clone(),
+                    kind_id: spawn.kind_id.clone(),
+                    quantity: spawn.quantity,
+                    quality: item_quality_dto(spawn.quality),
+                    affix_ids: spawn.affix_ids.clone(),
+                    rolled_affixes: Vec::new(),
+                    activation,
+                    charges,
+                    location: ItemLocation::Ground(position_from_content(spawn.position)),
+                }
             })
             .collect::<Vec<_>>();
         let body_slots = resolve_body_slots(&content, build.as_ref())?;
@@ -1602,6 +1686,7 @@ impl Game {
             &body_slots,
             &mut items,
             &mut next_item_instance_serial,
+            &mut rng,
         )?;
         let initial_floor_id = world.initial_floor_id.clone();
         let task_states = initial_task_states(world);
@@ -1637,7 +1722,7 @@ impl Game {
             revealed_terrain: BTreeSet::new(),
             floor_connections: Vec::new(),
             floor_regions: Vec::new(),
-            rng: RfbRng::seeded(seed),
+            rng,
             revision: 0,
             turn: 0,
             world_tick: 0,
@@ -2222,7 +2307,7 @@ impl Game {
         let mut action = GameAction::from(envelope.command);
         let depleted_device_use = matches!(
             &action,
-            GameAction::UseItem { item_id } if self.item_charge_is_insufficient(item_id)
+            GameAction::UseItem { item_id, .. } if self.item_charge_is_insufficient(item_id)
         );
         let advances_world = !depleted_device_use
             && !matches!(
@@ -2458,8 +2543,14 @@ impl Game {
                     events.push(DomainEvent::FloorTransitionUnavailable);
                 }
             }
-            GameAction::UseItem { item_id } => {
-                self.use_inventory_item(&item_id, &mut events);
+            GameAction::UseItem { item_id, target } => {
+                self.use_inventory_item(
+                    &item_id,
+                    target.as_ref(),
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
             }
             GameAction::ForgetAbility { ability_id } => {
                 match self.forget_player_ability(&ability_id) {
@@ -2783,6 +2874,35 @@ impl Game {
     #[doc(hidden)]
     pub fn debug_set_ability_casts_succeed(&mut self, enabled: bool) {
         self.debug_ability_casts_succeed = enabled;
+    }
+
+    #[doc(hidden)]
+    pub fn debug_add_generated_inventory_item(
+        &mut self,
+        id: &str,
+        kind_id: &str,
+        depth: u16,
+    ) -> Result<(), CoreError> {
+        if self.items.iter().any(|item| item.id == id) {
+            return Err(CoreError::InvalidSave("duplicate item instance ID"));
+        }
+        if self.content.item(kind_id).is_none() {
+            return Err(CoreError::UnknownItem(kind_id.to_owned()));
+        }
+        let (activation, charges) =
+            initial_item_runtime_state(&self.content, &mut self.rng, kind_id, depth);
+        self.items.push(ItemInstance {
+            id: id.to_owned(),
+            kind_id: kind_id.to_owned(),
+            quantity: 1,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            activation,
+            charges,
+            location: ItemLocation::Inventory,
+        });
+        Ok(())
     }
 
     #[must_use]
@@ -3947,11 +4067,21 @@ impl Game {
                                 item.charges
                                     .is_some_and(|state| state.current >= charges.cost)
                             })
+                        }) || item.activation.as_ref().is_some_and(|activation| {
+                            item.charges
+                                .is_some_and(|state| state.current >= activation.cost)
                         })
                     }),
                     charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then_some(item.charges)
                         .flatten(),
+                    activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                        .then(|| item.activation.clone())
+                        .flatten(),
+                    use_target_spec: item
+                        .activation
+                        .as_ref()
+                        .map(|activation| activation.target_spec.clone()),
                     quantity: item.quantity,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
@@ -4081,6 +4211,7 @@ impl Game {
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),
+                activation: None,
                 charges: None,
                 location: ItemLocation::Ground(self.player.position),
             });
@@ -9110,6 +9241,7 @@ impl Game {
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),
+                activation: self.items[index].activation.clone(),
                 charges: self.items[index].charges,
                 location: ItemLocation::Inventory,
             }))
@@ -9279,39 +9411,108 @@ impl Game {
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),
+                activation: self.items[index].activation.clone(),
                 charges: self.items[index].charges,
                 location: ItemLocation::Inventory,
             }))
         }
     }
 
-    fn use_inventory_item(&mut self, item_id: &str, events: &mut Vec<DomainEvent>) {
+    fn use_inventory_item(
+        &mut self,
+        item_id: &str,
+        target: Option<&TargetSelection>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let Some(index) = self.items.iter().position(|item| {
             item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
         }) else {
             events.push(DomainEvent::ItemUseUnavailable);
-            return;
+            return Ok(());
         };
         let kind_id = self.items[index].kind_id.clone();
-        let Some(action) = self
-            .content
-            .item(&kind_id)
-            .and_then(|definition| definition.use_action.clone())
-        else {
+        let Some(definition) = self.content.item(&kind_id).cloned() else {
             events.push(DomainEvent::ItemUseUnavailable);
-            return;
+            return Ok(());
         };
-        if action.charges.is_some_and(|charges| {
+        let activation = self.items[index].activation.clone();
+        let (profile_id, difficulty, cost, effect, plan) = if let Some(activation) =
+            activation.as_ref()
+        {
+            let Some(profile) = definition
+                .device_generation
+                .as_ref()
+                .and_then(|generation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|candidate| candidate.id == activation.profile_id)
+                })
+            else {
+                events.push(DomainEvent::ItemUseUnavailable);
+                return Ok(());
+            };
+            let plan = match &profile.effect {
+                ItemUseEffectDefinition::Heal { .. } | ItemUseEffectDefinition::HealDice { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::SelfTarget
+                }
+                ItemUseEffectDefinition::Damage { .. } => {
+                    let Some(path) =
+                        target.and_then(|target| self.item_effect_path(&profile.target, target))
+                    else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    ItemUsePlan::Projectile { path }
+                }
+                ItemUseEffectDefinition::Detect { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::Detect
+                }
+            };
+            (
+                Some(activation.profile_id.clone()),
+                Some(activation.device_check_difficulty),
+                Some(activation.cost),
+                profile.effect.clone(),
+                plan,
+            )
+        } else if let Some(action) = definition.use_action {
+            if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                events.push(DomainEvent::ItemUseUnavailable);
+                return Ok(());
+            }
+            (
+                None,
+                action.device_check_difficulty,
+                action.charges.map(|charges| charges.cost),
+                action.effect,
+                ItemUsePlan::SelfTarget,
+            )
+        } else {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return Ok(());
+        };
+        if cost.is_some_and(|cost| {
             self.items[index]
                 .charges
-                .is_none_or(|state| state.current < charges.cost)
+                .is_none_or(|state| state.current < cost)
         }) {
             events.push(DomainEvent::ItemUseUnavailable);
-            return;
+            return Ok(());
         }
 
         self.mark_item_tried(&kind_id);
-        if let Some(difficulty) = action.device_check_difficulty {
+        if let Some(difficulty) = difficulty {
             let ability = self.player_derived_stats().device_skill;
             let mut difficulty_pipeline = DerivedStatsPipeline::new();
             difficulty_pipeline.add(
@@ -9344,24 +9545,24 @@ impl Game {
                 resolution: check.to_dto(skill_id),
             });
             if !succeeded {
-                return;
+                return Ok(());
             }
         }
 
-        if let Some(charges) = action.charges {
+        if let Some(cost) = cost {
             self.items[index]
                 .charges
                 .as_mut()
                 .expect("validated charged item must carry charge state")
-                .current -= charges.cost;
+                .current -= cost;
         } else if self.items[index].quantity == 1 {
             let removed = self.items.remove(index);
             self.item_property_knowledge.remove(&removed.id);
         } else {
             self.items[index].quantity -= 1;
         }
-        let (requested, applied) = match action.effect {
-            ItemUseEffectDefinition::Heal { amount } => {
+        match (effect, plan) {
+            (ItemUseEffectDefinition::Heal { amount }, ItemUsePlan::SelfTarget) => {
                 let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
                 let max_hp = self.effective_player_max_hp();
                 let player = &mut self.player;
@@ -9377,9 +9578,17 @@ impl Game {
                 let EffectOutcome::Healed { requested, applied } = outcome else {
                     unreachable!("healing effects must produce healing outcomes");
                 };
-                (requested, applied)
+                if applied > 0 {
+                    self.mark_item_aware(&kind_id);
+                }
+                events.push(DomainEvent::ItemUsed {
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    source_kind_id: kind_id,
+                    requested,
+                    applied,
+                });
             }
-            ItemUseEffectDefinition::HealDice { dice, sides } => {
+            (ItemUseEffectDefinition::HealDice { dice, sides }, ItemUsePlan::SelfTarget) => {
                 let amount = self.roll_damage(dice, sides);
                 let max_hp = self.effective_player_max_hp();
                 let player = &mut self.player;
@@ -9395,18 +9604,127 @@ impl Game {
                 let EffectOutcome::Healed { requested, applied } = outcome else {
                     unreachable!("healing effects must produce healing outcomes");
                 };
-                (requested, applied)
+                if applied > 0 {
+                    self.mark_item_aware(&kind_id);
+                }
+                events.push(DomainEvent::ItemUsed {
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    source_kind_id: kind_id,
+                    requested,
+                    applied,
+                });
             }
-        };
-        if applied > 0 {
-            self.mark_item_aware(&kind_id);
+            (
+                ItemUseEffectDefinition::Damage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    damage_type,
+                },
+                ItemUsePlan::Projectile { path },
+            ) => {
+                let profile_id =
+                    profile_id.expect("dynamic damage activation must carry a profile ID");
+                let (trace, target_index) = self.trace_projectile_path(path);
+                self.mark_item_aware(&kind_id);
+                let Some(target_index) = target_index else {
+                    events.push(DomainEvent::ItemActivationLanded {
+                        source_kind_id: kind_id,
+                        profile_id,
+                        trace,
+                    });
+                    return Ok(());
+                };
+                let target_kind_id = self.entities[target_index].kind_id.clone();
+                let target_position = self.entities[target_index].position;
+                let definition = self
+                    .content
+                    .actor(&target_kind_id)
+                    .expect("activation target definition must remain available")
+                    .clone();
+                let target_stats =
+                    self.actor_derived_stats(&self.entities[target_index], &definition, false);
+                let raw_damage = self
+                    .roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0);
+                let damage_type = DamageType::from(damage_type);
+                let resistance = self.entities[target_index].resistances.level(damage_type);
+                let damage = resolve_armored_damage(
+                    raw_damage,
+                    damage_type,
+                    target_stats.armor_class.value,
+                    resistance,
+                );
+                self.entities[target_index].alerted = true;
+                self.entities[target_index].hp = self.entities[target_index]
+                    .hp
+                    .saturating_sub(damage.applied);
+                changed.insert(target_position);
+                self.wake_entity_after_damage(target_index, damage.applied, events);
+                if self.entities[target_index].hp <= 0 {
+                    self.resolve_actor_death(
+                        target_index,
+                        DomainEvent::ItemActivationSlew {
+                            source_kind_id: kind_id,
+                            profile_id,
+                            target_kind_id,
+                            damage,
+                            trace,
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                } else {
+                    events.push(DomainEvent::ItemActivationHit {
+                        source_kind_id: kind_id,
+                        profile_id,
+                        target_kind_id,
+                        damage,
+                        trace,
+                    });
+                }
+            }
+            (
+                ItemUseEffectDefinition::Detect {
+                    subject,
+                    category,
+                    radius,
+                    persistent,
+                },
+                ItemUsePlan::Detect,
+            ) => {
+                let (detected_positions, detected_entity_ids) = match subject {
+                    AbilityDetectSubjectDefinition::Terrain => (
+                        self.detect_terrain_positions(&category, radius, persistent),
+                        Vec::new(),
+                    ),
+                    AbilityDetectSubjectDefinition::Actor => {
+                        self.detect_actor_positions(&category, radius)
+                    }
+                };
+                if persistent {
+                    changed.extend(detected_positions.iter().copied());
+                }
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemActivationDetected {
+                    source_kind_id: kind_id,
+                    profile_id: profile_id
+                        .expect("dynamic detect activation must carry a profile ID"),
+                    resolution: AbilityDetectResolutionDto {
+                        subject: ability_detect_subject_dto(subject),
+                        category,
+                        radius,
+                        persistent,
+                        detected_positions,
+                        detected_entity_ids,
+                    },
+                });
+            }
+            _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
-        events.push(DomainEvent::ItemUsed {
-            display_name_key: self.item_display_name_key(&kind_id),
-            source_kind_id: kind_id,
-            requested,
-            applied,
-        });
+        Ok(())
     }
 
     fn item_charge_is_insufficient(&self, item_id: &str) -> bool {
@@ -9415,16 +9733,40 @@ impl Game {
         }) else {
             return false;
         };
-        let Some(charges) = self
-            .content
-            .item(&item.kind_id)
-            .and_then(|definition| definition.use_action.as_ref())
-            .and_then(|action| action.charges)
-        else {
+        let cost = item
+            .activation
+            .as_ref()
+            .map(|activation| activation.cost)
+            .or_else(|| {
+                self.content
+                    .item(&item.kind_id)
+                    .and_then(|definition| definition.use_action.as_ref())
+                    .and_then(|action| action.charges)
+                    .map(|charges| charges.cost)
+            });
+        let Some(cost) = cost else {
             return false;
         };
-        item.charges
-            .is_none_or(|state| state.current < charges.cost)
+        item.charges.is_none_or(|state| state.current < cost)
+    }
+
+    fn item_effect_path(
+        &self,
+        target_definition: &AbilityTargetDefinition,
+        target: &TargetSelection,
+    ) -> Option<Vec<Position>> {
+        let mode = match target {
+            TargetSelection::Direction { .. } => AbilityTargetModeDefinition::Direction,
+            TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
+            TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
+            TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
+        };
+        target_definition
+            .modes
+            .contains(&mode)
+            .then(|| self.projectile_path(target, target_definition.range))
+            .flatten()
     }
 
     fn player_is_dead(&self) -> bool {
@@ -13185,9 +13527,12 @@ impl Game {
             .actor(&actor.kind_id)
             .and_then(|definition| definition.corpse_item_kind_id.clone());
         let corpse = if let Some(kind_id) = corpse_kind_id {
+            let (activation, charges) =
+                initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, 1);
             Some(ItemInstance {
                 id: self.allocate_item_instance_id()?,
-                charges: initial_item_charges(&self.content, &kind_id),
+                activation,
+                charges,
                 kind_id,
                 quantity: 1,
                 quality: ItemQualityDto::Ordinary,
@@ -13503,6 +13848,12 @@ impl Game {
                     .collect()
             };
             let rolled_affixes = self.roll_affix_properties(&affix_ids, context.depth);
+            let (activation, charges) = initial_item_runtime_state(
+                &self.content,
+                &mut self.rng,
+                &entry.item_kind_id,
+                context.depth,
+            );
             let item = ItemInstance {
                 id: self.allocate_item_instance_id()?,
                 kind_id: entry.item_kind_id.clone(),
@@ -13510,7 +13861,8 @@ impl Game {
                 quality,
                 affix_ids,
                 rolled_affixes,
-                charges: initial_item_charges(&self.content, &entry.item_kind_id),
+                activation,
+                charges,
                 location: location.clone(),
             };
             generated.push(item);
@@ -14305,6 +14657,12 @@ impl Game {
                     .iter()
                     .find_map(|definition| definition.task_reward.as_ref())
             {
+                let (activation, charges) = initial_item_runtime_state(
+                    &self.content,
+                    &mut self.rng,
+                    &reward.item_kind_id,
+                    1,
+                );
                 destination.items.push(ItemInstance {
                     id: reward.item_instance_id.clone(),
                     kind_id: reward.item_kind_id.clone(),
@@ -14312,7 +14670,8 @@ impl Game {
                     quality: ItemQualityDto::Ordinary,
                     affix_ids: Vec::new(),
                     rolled_affixes: Vec::new(),
-                    charges: initial_item_charges(&self.content, &reward.item_kind_id),
+                    activation,
+                    charges,
                     location: ItemLocation::Ground(destination.player_position),
                 });
             }
@@ -15564,28 +15923,32 @@ impl Game {
         }
         for objective in &task_objectives {
             match objective.kind {
-                TaskObjectiveKind::CollectItem => items.push(ItemInstance {
-                    id: objective
-                        .item_instance_id
-                        .clone()
-                        .expect("validated item objective must have an instance ID"),
-                    kind_id: objective
+                TaskObjectiveKind::CollectItem => {
+                    let kind_id = objective
                         .item_kind_id
                         .clone()
-                        .expect("validated item objective must have a kind ID"),
-                    quantity: 1,
-                    quality: ItemQualityDto::Ordinary,
-                    affix_ids: Vec::new(),
-                    rolled_affixes: Vec::new(),
-                    charges: initial_item_charges(
+                        .expect("validated item objective must have a kind ID");
+                    let (activation, charges) = initial_item_runtime_state(
                         &self.content,
-                        objective
-                            .item_kind_id
-                            .as_deref()
-                            .expect("validated item objective must have a kind ID"),
-                    ),
-                    location: ItemLocation::Ground(first_center),
-                }),
+                        &mut self.rng,
+                        &kind_id,
+                        definition.depth,
+                    );
+                    items.push(ItemInstance {
+                        id: objective
+                            .item_instance_id
+                            .clone()
+                            .expect("validated item objective must have an instance ID"),
+                        kind_id,
+                        quantity: 1,
+                        quality: ItemQualityDto::Ordinary,
+                        affix_ids: Vec::new(),
+                        rolled_affixes: Vec::new(),
+                        activation,
+                        charges,
+                        location: ItemLocation::Ground(first_center),
+                    });
+                }
                 TaskObjectiveKind::KillActor => {
                     let kind_id = objective
                         .actor_kind_id
@@ -19462,9 +19825,12 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
 }
 
 fn ability_target_spec_dto(ability: &AbilityDefinition) -> TargetSpecDto {
+    target_spec_dto(&ability.target)
+}
+
+fn target_spec_dto(target: &AbilityTargetDefinition) -> TargetSpecDto {
     TargetSpecDto {
-        modes: ability
-            .target
+        modes: target
             .modes
             .iter()
             .map(|mode| match mode {
@@ -19475,8 +19841,8 @@ fn ability_target_spec_dto(ability: &AbilityDefinition) -> TargetSpecDto {
                 AbilityTargetModeDefinition::SelfTarget => TargetModeDto::SelfTarget,
             })
             .collect(),
-        range: ability.target.range,
-        requires_line_of_effect: ability.target.requires_line_of_effect,
+        range: target.range,
+        requires_line_of_effect: target.requires_line_of_effect,
     }
 }
 

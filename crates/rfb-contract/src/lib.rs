@@ -6,11 +6,12 @@ use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
     CharacterSummary, EntityFactionDto, EquipmentItemDto, GameCommand, GameCommandEnvelope,
-    GameEventDto, InventoryItemDto, InventoryItemSaveDto, ItemChargesDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
-    PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
-    ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto,
-    SummonCommandDto, SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
+    GameEventDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
+    ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto,
+    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto,
+    ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION,
+    SaveHeaderV1, StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
+    TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -19,7 +20,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v108";
+pub const ACTIVE_BASELINE: &str = "contract-v109";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -142,7 +143,11 @@ pub struct InventoryItemPrecondition {
     #[serde(default = "default_precondition_quantity")]
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generation_depth: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
 }
 
 const fn default_precondition_quantity() -> u32 {
@@ -387,7 +392,12 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
-    for item in &fixture.preconditions.inventory_items {
+    for item in fixture
+        .preconditions
+        .inventory_items
+        .iter()
+        .filter(|item| item.generation_depth.is_none())
+    {
         payload.inventory.push(InventoryItemSaveDto {
             id: item.id.clone(),
             kind_id: item.kind_id.clone(),
@@ -395,6 +405,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            activation: item.activation.clone(),
             charges: item.charges,
         });
     }
@@ -478,6 +489,14 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
     }
     let mut game = Game::from_save(payload)?;
+    for (item, depth) in fixture
+        .preconditions
+        .inventory_items
+        .iter()
+        .filter_map(|item| item.generation_depth.map(|depth| (item, depth)))
+    {
+        game.debug_add_generated_inventory_item(&item.id, &item.kind_id, depth)?;
+    }
     game.debug_set_ability_casts_succeed(fixture.preconditions.debug_ability_casts_succeed);
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
@@ -636,6 +655,18 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     if fixture.id.trim().is_empty() {
         return Err(ContractError::EmptyId);
     }
+    for item in &fixture.preconditions.inventory_items {
+        if let Some(depth) = item.generation_depth
+            && (item.quantity != 1
+                || item.activation.is_some()
+                || item.charges.is_some()
+                || !(1..=100).contains(&depth))
+        {
+            return Err(ContractError::InvalidGeneratedItemPrecondition(
+                item.id.clone(),
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -705,6 +736,8 @@ pub enum ContractError {
     MissingProgressPrecondition,
     #[error("terrain precondition position is outside the active floor: {0:?}")]
     InvalidTerrainPrecondition(Position),
+    #[error("generated item precondition is invalid for {0}")]
+    InvalidGeneratedItemPrecondition(String),
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

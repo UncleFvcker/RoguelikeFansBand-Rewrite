@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v107、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v109、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -67,16 +67,17 @@
 | P56 | Death 第三册系统盘点与纵切 | 已由 contract-v106 完成 | 第三册 8/8 ability、三本实体书总计 24 个 Death ability、12 个静态职业 288 条覆盖；新增随机状态时长、状态派生加值/免疫、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰及 linear/prorated 曲线。协议 1.106、包 1.97.0、Schema v45、fixtures 344-353 共 353 exact；真实 Death 效果缺口 288→192 |
 | P57 | Death 第四册系统盘点与纵切 | 已由 contract-v107 完成 | 第四册 8/8 ability、四本实体书总计 32 个 Death ability、12 个静态职业 384 条覆盖；新增物品目标/鉴定、Death Ray、升级类别与敌友群体召唤、临时 Race、历史最高经验/生命力、邻域灭绝、穿墙与入伤比例。协议 1.107、包 1.98.0、Schema v46、fixtures 354-365 共 365 exact；真实 Death 效果缺口 192→96 |
 | P58 | 充能物品实例与首批治疗消耗品 | 已由 contract-v108 完成 | `heal-dice`、实例级 initial/maximum/cost 充能、成功扣费/失败保留/耗尽零世界时间、知识门控 DTO 和严格回档；demo Resonance Mender；六种原版治疗药水接入，`consumable-effect` 95→89。协议 1.108、包 1.99.0、Schema v47、fixtures 366-368 共 368 exact |
-| P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 下一候选 | 将原版通用设备壳的效果、容量和成本在生成时物化到实例；复用 P58 使用事务，优先消化 `device-effect` 64。随后扩展充能恢复、artifact/ego activation 与其余 89 个消耗品 |
+| P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 已由 contract-v109 完成 | `deviceGeneration.activations` 深度过滤/稳定加权、profile/power/目标/成本/随机容量实例化、错误目标零 RNG、成功扣费、damage/detect/heal、知识门控和严格回档；demo Wand/Staff/Rod；原版通用壳接入后 `device-effect` 64→61。协议 1.109、包 1.100.0、Schema v48、fixtures 369-373 共 373 exact |
+| P60 | 设备充能恢复与激活族扩展 | 下一候选 | 对照原版区分 staff/wand/rod 的恢复与失败语义，先建立通用 recharge 事务，再按覆盖收益扩展 `artifact-activation` 180、`ego-activation` 13、`device-effect` 61 或 `consumable-effect` 89 |
 
-## contract-v108 明确遗留
+## contract-v109 明确遗留
 
-- 当前充能容量和余量已是实例权威状态，但使用效果仍来自 item kind；原版 staff/wand/rod 的动态效果身份和随机容量尚未物化；
-- 首版没有充能恢复、强行使用、desperation、按设备等级变化的成本或取消目标事务；
+- 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，但只接入首批 bolt、自疗和陷阱侦测；
+- 首版没有充能恢复、强行使用、desperation、rod 独立充能时间、按设备等级变化的成本或取消目标后的完整 UI 事务；
 - 固定治疗药水只接入六种纯治疗效果；状态恢复、资源恢复、属性变化、食物和卷轴仍在 `consumable-effect` 89 条缺口中；
-- `device-effect` 64、`artifact-activation` 180、`ego-activation` 13 仍保留；不能把某个激活硬写到通用设备壳；
-- 未鉴定 charged item 不公开精确充能，但 `usable=false` 会暴露“当前无法使用”的必要操作边界；
-- P59 优先完成动态设备实例效果，再按真实缺口扩展激活族。
+- `device-effect` 仍有 61 条，`artifact-activation` 180、`ego-activation` 13 仍保留；新增激活必须复用实例事务，不能回退为把单一效果硬写到通用设备壳；
+- 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
+- P60 先核对原版 recharge/rod 时间模型，再按真实缺口覆盖收益选择下一批激活或消耗品。
 
 ## contract-v107 明确遗留
 

@@ -216,6 +216,8 @@ contract-v107 增加 `item` 目标、`death-ray`、`identify-item`、`restore-vi
 
 contract-v108 为物品 `useAction` 增加 `heal-dice` 和可选 `charges { initial, maximum, cost }`。治疗骰限制为 1–100 骰、1–10000 面；充能容量限制为 1–1000000，initial 不得超过 maximum，cost 必须为正且不超过 maximum。带充能动作的物品必须 `maxStack: 1`、带 `device` 标签并声明合法设备检定难度。demo 包 1.99.0 含 68 abilities、5 ability books、20 items、4 affixes、28 actors、4 races 和 13 skill sets，当前 state hash 为 Schema v47。完整边界见 [Contract v108](contract-v108-charged-items.md)。
 
+contract-v109 为物品增加互斥于 `useAction` 的 `deviceGeneration.activations`。每个候选声明稳定 ID、名称键、权重、1–100 深度范围、设备难度、随机容量区间/成本、目标规格和 heal/damage/detect 效果；编译器验证 ID 唯一、全深度覆盖、容量与成本、效果目标匹配以及 detect category 在内容 tag 中存在。demo 包 1.100.0 含 68 abilities、5 ability books、23 items、4 affixes、28 actors、4 races 和 13 skill sets，当前 state hash 为 Schema v48。完整边界见 [Contract v109](contract-v109-dynamic-devices.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。
@@ -240,7 +242,7 @@ contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord
 
 contract-v88 以 1.80.0 增加 `smart`、`preferredDistance` 和 `fleeHpPercent`，并让 Echo Cantor 使用 3 格偏好距离、25% 受伤撤退和已观察抗性记忆；阵营目标、敌我计数和实际多目标结算由核心定义。contract-v89 只增加玩家级召唤物命令、行动与跨层规则，不修改内容 schema 或 demo 数据，因此内容版本/hash 保持不变。contract-v90 以 1.81.0 为 `ResourceDefinition` 增加 `initialFillPercent`、`meleeHitGainAmount`、`meleeKillGainAmount` 和 `turnDecayAmount`，为 `ClassDefinition` 增加多条目 `techniqueProfiles`（资源、主宰属性、上限公式、最低失败率与先天能力），并加入节奏资源、决斗家职业/构筑/技能集与弦月斩、涌动节奏两个技法能力；Mana 与既有职业数据不变。contract-v91 以 1.82.0 为能力效果增加 `blink-self`、`teleport-self` 与 `teleport-target` 三种怪物位移形态（怪物施法白名单准入），并加入裂隙潜行者与三个位移能力。
 
-当前原创包的 active 编译版本为 1.80.0，content hash 为 `29116f924e1ef4ddf6b0aa43f3b1b1bd0b4d28245ac086bce30d7a008e8e9e8e`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果和固定治疗，并由怪物 caster 复用 actor 与多格目标子集。
+当前原创包的 active 编译版本为 1.100.0，content hash 为 `8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab`；其能力效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态添加/移除、有序多效果、治疗、Death 四册高级效果和动态设备激活，并由怪物 caster 与物品实例复用既有 actor、地形和知识管线。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
@@ -312,7 +314,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含 47 种地形、12 种 actor、8 种原创物品、1 种资源、6 个能力、2 本能力书、10 个 skill、11 个 skill set、3 个 Race、5 个 Class、3 个 Personality、5 个 build、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；
+- 已完成：`packs/rfb-demo-original`，包含 47 种地形、28 种 actor、23 种原创物品、2 种资源、68 个能力、5 本能力书、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -320,4 +322,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v62 建立最终守护者、Vault/encounter/theme/region/terrain feature 表、预算、群体和分阶段地貌；contract-v63–v69 建立树状地牢、多入口 Vault、实例身份、动态探索树、入口守卫、campaign 和可配置实例生命周期；contract-v70–v72 建立角色成长、构筑和可观察技能检定；contract-v73–v85 依次建立玩家资源、能力书、恢复、熟练度/冷却、学习容量、范围/射线/锥形/位移/召唤/侦测/地形/状态及有序效果；contract-v86–v88 建立怪物施法、效用、阵营目标、战术移动与有限抗性记忆；contract-v89 建立友方召唤物行动与全局命令；contract-v90 建立多职业资源底子与首个技法资源；contract-v91 建立怪物位移法术族。当前 state hash 为 Schema v40。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v109 建立实例充能与动态设备身份。当前 state hash 为 Schema v48。

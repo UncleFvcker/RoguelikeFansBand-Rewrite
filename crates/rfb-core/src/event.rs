@@ -416,6 +416,30 @@ pub(crate) enum DomainEvent {
         requested: i32,
         applied: i32,
     },
+    ItemActivationLanded {
+        source_kind_id: String,
+        profile_id: String,
+        trace: ProjectileTrace,
+    },
+    ItemActivationHit {
+        source_kind_id: String,
+        profile_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    ItemActivationSlew {
+        source_kind_id: String,
+        profile_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+    },
+    ItemActivationDetected {
+        source_kind_id: String,
+        profile_id: String,
+        resolution: AbilityDetectResolutionDto,
+    },
     ItemUseUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
@@ -1492,6 +1516,74 @@ impl DomainEvent {
                 GameEventOutcomeDto::Heal {
                     resolution: HealingResolutionDto { requested, applied },
                 },
+            ),
+            Self::ItemActivationLanded {
+                source_kind_id,
+                profile_id,
+                trace,
+            } => with_trace(
+                dto(
+                    "item.activation-landed",
+                    "item-activation-landed",
+                    [("source", source_kind_id), ("profile", profile_id)],
+                ),
+                trace,
+            ),
+            Self::ItemActivationHit {
+                source_kind_id,
+                profile_id,
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "item.activation-hit",
+                    "item-activation-hit",
+                    [
+                        ("source", source_kind_id),
+                        ("profile", profile_id),
+                        ("target", target_kind_id),
+                    ],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
+            Self::ItemActivationSlew {
+                source_kind_id,
+                profile_id,
+                target_kind_id,
+                damage,
+                trace,
+            } => with_trace(
+                dto_with_outcome(
+                    "item.activation-slay",
+                    "item-activation-slay",
+                    [
+                        ("source", source_kind_id),
+                        ("profile", profile_id),
+                        ("target", target_kind_id),
+                    ],
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    },
+                ),
+                trace,
+            ),
+            Self::ItemActivationDetected {
+                source_kind_id,
+                profile_id,
+                resolution,
+            } => dto_with_outcome(
+                "item.activation-detected",
+                "item-activation-detected",
+                [
+                    ("source", source_kind_id),
+                    ("profile", profile_id),
+                    ("count", resolution.detected_positions.len().to_string()),
+                ],
+                GameEventOutcomeDto::AbilityDetect { resolution },
             ),
             Self::ItemUseUnavailable => {
                 dto_without_args("item.use-unavailable", "item-use-unavailable")

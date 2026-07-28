@@ -3919,6 +3919,16 @@
             "itemId": {
               "type": "string"
             },
+            "target": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TargetSelection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "type": {
               "type": "string",
               "const": "use-item"
@@ -4666,6 +4676,16 @@
     "InventoryItemDto": {
       "type": "object",
       "properties": {
+        "activation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemActivationDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "brands": {
           "type": "array",
           "items": {
@@ -4804,6 +4824,16 @@
           "type": "boolean",
           "default": false
         },
+        "useTargetSpec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetSpecDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "weightTenthsPound": {
           "type": "integer",
           "format": "uint16",
@@ -4816,6 +4846,43 @@
         "id",
         "kindId",
         "quantity"
+      ]
+    },
+    "ItemActivationDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "deviceCheckDifficulty": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "power": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "targetSpec": {
+          "$ref": "#/$defs/TargetSpecDto"
+        }
+      },
+      "required": [
+        "profileId",
+        "nameKey",
+        "power",
+        "cost",
+        "deviceCheckDifficulty",
+        "targetSpec"
       ]
     },
     "ItemChargesDto": {

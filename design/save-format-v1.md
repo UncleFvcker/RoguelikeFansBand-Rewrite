@@ -173,6 +173,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.108 为地面、背包、装备和怪物携带四类物品 save DTO 增加可选 `charges { current, maximum }`，与同一个 `ItemInstance` 一起跨位置和楼层移动。当前内容声明 charged action 时，存档必须携带充能且 maximum 必须等于内容容量、current 不得超限；非充能种类携带充能或 charged kind 缺失充能均拒绝。历史内容没有 charged kind，旧档既有物品继续以无充能状态载入且不补抽 RNG。save 容器保持 v1，实例充能使 state hash 升至 Schema v47。完整边界见 [Contract v108](contract-v108-charged-items.md)。
 
+协议 1.109 为地面、背包、装备和怪物携带四类物品 save DTO 增加可选 `activation`。动态设备必须同时保存 profile ID/名称键、生成 power、设备难度、实例成本、完整目标规格和充能；载入时逐项对照当前 `deviceGeneration` 候选，并验证 power 深度范围、maximum 容量范围及 current 上限。缺任一动态字段、静态 kind 携带 activation、profile 被替换或目标/成本/难度被篡改均拒绝。历史 built-in hash 迁移时不为已有物品补抽 activation，P58 静态 charged item 继续按固定容量规则读取。save 容器保持 v1，动态设备身份使 state hash 升至 Schema v48。完整边界见 [Contract v109](contract-v109-dynamic-devices.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

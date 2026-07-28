@@ -497,7 +497,8 @@ h1 {
   font-size: 0.7rem;
 }
 
-.inventory-charges {
+.inventory-charges,
+.inventory-activation {
   color: #6ec8da;
   font-family: "Cascadia Mono", Consolas, monospace;
   font-size: 0.7rem;

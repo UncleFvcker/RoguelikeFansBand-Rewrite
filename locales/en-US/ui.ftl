@@ -119,6 +119,7 @@ inventory-weight-summary = { $stacks } · { $weight } / { $capacity } lb
 inventory-empty = Your inventory is empty. Stand on an item and press G to pick it up.
 inventory-quantity = ×{ $quantity }
 inventory-charges = Charges: { $current }/{ $maximum }
+inventory-activation = { $activation } · Power { $power } · Cost { $cost }
 inventory-selected-count = { $count } selected
 inventory-equippable = Equippable: { $slot }
 inventory-drop-quantity-label = Quantity

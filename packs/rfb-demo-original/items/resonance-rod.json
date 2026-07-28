@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.resonance-rod",
+  "nameKey": "item-demo-resonance-rod-name",
+  "appearanceNameKey": "item-demo-unfamiliar-rod-name",
+  "descriptionKey": "item-demo-resonance-rod-description",
+  "glyph": "-",
+  "weightTenthsPound": 14,
+  "maxStack": 1,
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.device-activation.trap-sense",
+        "nameKey": "device-activation-demo-trap-sense-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 20,
+        "charges": { "minimum": 18, "maximum": 32, "cost": 5 },
+        "target": {
+          "modes": ["self"],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effect": {
+          "type": "detect",
+          "subject": "terrain",
+          "category": "trap",
+          "radius": 8,
+          "persistent": true
+        }
+      }
+    ]
+  },
+  "tags": ["device", "prototype", "rod"]
+}

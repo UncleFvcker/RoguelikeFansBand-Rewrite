@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.108";
+pub const PROTOCOL_VERSION: &str = "1.109";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -143,6 +143,8 @@ pub enum GameCommand {
     TraverseStairs,
     UseItem {
         item_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target: Option<TargetSelection>,
     },
     Unequip {
         slot_id: String,
@@ -1916,6 +1918,18 @@ pub struct ItemChargesDto {
     pub maximum: u32,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemActivationDto {
+    pub profile_id: String,
+    pub name_key: String,
+    pub power: u16,
+    pub cost: u32,
+    pub device_check_difficulty: i32,
+    pub target_spec: TargetSpecDto,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -1964,6 +1978,10 @@ pub struct InventoryItemDto {
     pub usable: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_target_spec: Option<TargetSpecDto>,
     pub quantity: u32,
     #[serde(default)]
     pub weight_tenths_pound: u16,
@@ -2280,6 +2298,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemDto);
     push_declaration!(ItemKnowledgeDto);
     push_declaration!(ItemChargesDto);
+    push_declaration!(ItemActivationDto);
     push_declaration!(ItemQualityDto);
     push_declaration!(ItemIdentificationDto);
     push_declaration!(ItemPropertyDto);
@@ -2539,6 +2558,8 @@ pub struct ItemSaveDto {
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2555,6 +2576,8 @@ pub struct InventoryItemSaveDto {
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2572,6 +2595,8 @@ pub struct EquipmentItemSaveDto {
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2589,6 +2614,8 @@ pub struct CarriedItemSaveDto {
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2897,6 +2924,7 @@ mod tests {
             GameCommand::Search,
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
+                target: None,
             },
             GameCommand::CastAbility {
                 ability_id: "demo.ability.mending-echo".to_owned(),
@@ -3037,6 +3065,8 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
                 charges: None,
+                activation: None,
+                use_target_spec: None,
                 quantity: 1,
                 weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),

@@ -828,6 +828,114 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
     Some(serde_json::json!({"effect": effect}))
 }
 
+fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
+    let activation = |id: &str,
+                      name_key: &str,
+                      difficulty: i32,
+                      minimum: u32,
+                      maximum: u32,
+                      cost: u32,
+                      target: serde_json::Value,
+                      effect: serde_json::Value| {
+        serde_json::json!({
+            "id": id,
+            "nameKey": name_key,
+            "weight": 1,
+            "minDepth": 1,
+            "maxDepth": 100,
+            "deviceCheckDifficulty": difficulty,
+            "charges": {
+                "minimum": minimum,
+                "maximum": maximum,
+                "cost": cost
+            },
+            "target": target,
+            "effect": effect
+        })
+    };
+    let activations = match entry.tval {
+        65 => vec![
+            activation(
+                "rfb-legacy.device-activation.frost-bolt",
+                "device-activation-legacy-frost-bolt-name",
+                30,
+                12,
+                24,
+                7,
+                serde_json::json!({
+                    "modes": ["direction", "position", "entity"],
+                    "range": 8,
+                    "requiresLineOfEffect": true
+                }),
+                serde_json::json!({
+                    "type": "damage",
+                    "damageDice": 3,
+                    "damageSides": 6,
+                    "damageType": "cold"
+                }),
+            ),
+            activation(
+                "rfb-legacy.device-activation.magic-missile",
+                "device-activation-legacy-magic-missile-name",
+                10,
+                12,
+                24,
+                3,
+                serde_json::json!({
+                    "modes": ["direction", "position", "entity"],
+                    "range": 8,
+                    "requiresLineOfEffect": true
+                }),
+                serde_json::json!({
+                    "type": "damage",
+                    "damageDice": 2,
+                    "damageSides": 6,
+                    "damageType": "physical"
+                }),
+            ),
+        ],
+        66 => vec![activation(
+            "rfb-legacy.device-activation.detect-traps",
+            "device-activation-legacy-detect-traps-name",
+            10,
+            18,
+            32,
+            9,
+            serde_json::json!({
+                "modes": ["self"],
+                "range": 0,
+                "requiresLineOfEffect": false
+            }),
+            serde_json::json!({
+                "type": "detect",
+                "subject": "terrain",
+                "category": "trap",
+                "radius": 8,
+                "persistent": true
+            }),
+        )],
+        55 => vec![activation(
+            "rfb-legacy.device-activation.heal",
+            "device-activation-legacy-heal-name",
+            20,
+            24,
+            48,
+            10,
+            serde_json::json!({
+                "modes": ["self"],
+                "range": 0,
+                "requiresLineOfEffect": false
+            }),
+            serde_json::json!({
+                "type": "heal",
+                "amount": 50
+            }),
+        )],
+        _ => return None,
+    };
+    Some(serde_json::json!({ "activations": activations }))
+}
+
 fn item_json(
     entry: &LegacyItemEntry,
     id: &str,
@@ -837,9 +945,11 @@ fn item_json(
 ) -> serde_json::Value {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
     let use_action = fixed_consumable_use_action(entry);
+    let device_generation = legacy_device_generation(entry);
     if let Some(gap) = shape.behavior_gap
         && ability_book_id.is_none()
         && use_action.is_none()
+        && device_generation.is_none()
     {
         *report.item_behavior_gaps.entry(gap.to_owned()).or_default() += 1;
     }
@@ -860,6 +970,10 @@ fn item_json(
     }
     if let Some(use_action) = use_action {
         value["useAction"] = use_action;
+    }
+    if let Some(device_generation) = device_generation {
+        value["maxStack"] = serde_json::json!(1);
+        value["deviceGeneration"] = device_generation;
     }
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
@@ -3733,6 +3847,10 @@ fn legacy_skill_files() -> Vec<(String, serde_json::Value)> {
 fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
     let walkable = entry.flags.iter().any(|flag| flag == "MOVE");
     let blocks_sight = !entry.flags.iter().any(|flag| flag == "LOS");
+    let mut tags = vec!["legacy-import"];
+    if entry.flags.iter().any(|flag| flag == "TRAP") {
+        tags.push("trap");
+    }
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/terrain.schema.json"),
         "formatVersion": 1,
@@ -3742,7 +3860,7 @@ fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
         "glyph": entry.glyph.map_or_else(|| "?".to_owned(), |glyph| glyph.to_string()),
         "walkable": walkable,
         "blocksSight": blocks_sight,
-        "tags": ["legacy-import"],
+        "tags": tags,
     })
 }
 
@@ -7157,6 +7275,59 @@ F:BRAND_VAMP | HOLD_LIFE
             &mut report,
         );
         assert_eq!(report.item_behavior_gaps["consumable-effect"], 1);
+    }
+
+    #[test]
+    fn generic_legacy_devices_gain_dynamic_activation_tables() {
+        let expected = [(55, "heal"), (65, "damage"), (66, "detect")];
+        let mut report = ContentImportReport::default();
+        for (tval, effect_type) in expected {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("device-{tval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(value["maxStack"], 1);
+            let activations = value["deviceGeneration"]["activations"]
+                .as_array()
+                .expect("device shell should contain activation candidates");
+            assert!(
+                activations
+                    .iter()
+                    .any(|activation| activation["effect"]["type"] == effect_type)
+            );
+        }
+        assert!(!report.item_behavior_gaps.contains_key("device-effect"));
+
+        let _ = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                ..LegacyItemEntry::default()
+            },
+            "scroll-shell",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(report.item_behavior_gaps["device-effect"], 1);
+
+        let trap = terrain_json(
+            &LegacyTerrainEntry {
+                flags: vec!["LOS".to_owned(), "MOVE".to_owned(), "TRAP".to_owned()],
+                ..LegacyTerrainEntry::default()
+            },
+            "test-trap",
+        );
+        assert!(
+            trap["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "trap") })
+        );
     }
 
     #[test]

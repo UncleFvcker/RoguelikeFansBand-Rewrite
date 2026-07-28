@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.92、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.109、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -233,6 +233,8 @@ interface GameCoreV1 {
 协议 1.107 为 Death 第四册增加 `item` 目标模式及稳定 `itemId` 选择，并扩展 `AbilityEffectSpecDto`/逐效果结果：新增 `death-ray`、`identify-item`、`restore-vitality`，`genocide` 增加 `nearby` 与半径，`summon-category` 增加升级类别、敌友/群体概率和敌对 unique 开关，`apply-status` 增加临时 Race、穿墙和入伤比例。`PlayerProgressDto` 增加历史最高经验与生命力，状态 DTO 保存形态/穿墙/入伤字段；这些权威状态进入 save/replay/state hash Schema v46。完整边界见 [Contract v107](contract-v107-death-fourth-book.md)。
 
 协议 1.108 增加 `ItemChargesDto { current, maximum }` 和 `InventoryItemDto.charges`。精确充能只在种类知识为 aware 时出现；`usable` 同时考虑使用动作和当前充能是否足够，因此耗尽设备即使未鉴定也不能发送有效使用操作。成功/失败继续复用设备检定事件，效果继续复用 healing resolution；扣费后的充能由同一 update 背包投影返回，不引入第二套显示状态。实例充能进入 save/replay/state hash Schema v47。完整边界见 [Contract v108](contract-v108-charged-items.md)。
+
+协议 1.109 为 `UseItem` 增加可选 `target`，增加 `ItemActivationDto { profileId, nameKey, power, cost, deviceCheckDifficulty, targetSpec }`，并为背包 DTO 增加可选 `activation` / `useTargetSpec`。activation 与精确充能只在种类 aware 时出现；目标规格始终投影，以便未知设备进入既有 direction/position/entity/self 选择器。错误目标在设备检定前零 RNG 拒绝，成功伤害/击杀/落空/侦测使用结构化设备事件；静态 P58 `useAction` 保持兼容。动态实例状态进入 save/replay/state hash Schema v48。完整边界见 [Contract v109](contract-v109-dynamic-devices.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`，已知充能不足的设备使用按原版语义不消耗能量或推进 world tick。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
