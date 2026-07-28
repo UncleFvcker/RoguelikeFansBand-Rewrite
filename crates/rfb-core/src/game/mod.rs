@@ -2412,20 +2412,10 @@ impl Game {
             &action,
             GameAction::UseItem { item_id, .. } if self.item_charge_is_insufficient(item_id)
         );
-        let invalid_identify_item_use = matches!(
+        let zero_time_unavailable_item_use = matches!(
             &action,
             GameAction::UseItem { item_id, target }
-                if self.identify_item_use_target_is_invalid(item_id, target.as_ref())
-        );
-        let invalid_enchant_item_use = matches!(
-            &action,
-            GameAction::UseItem { item_id, target }
-                if self.enchant_item_use_target_is_invalid(item_id, target.as_ref())
-        );
-        let invalid_travel_item_use = matches!(
-            &action,
-            GameAction::UseItem { item_id, target }
-                if self.travel_item_use_is_invalid(item_id, target.as_ref())
+                if self.item_use_is_zero_time_unavailable(item_id, target.as_ref())
         );
         let cursed_unequip = matches!(
             &action,
@@ -2446,9 +2436,7 @@ impl Game {
                 .is_some()
         );
         let advances_world = !depleted_device_use
-            && !invalid_identify_item_use
-            && !invalid_enchant_item_use
-            && !invalid_travel_item_use
+            && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
             && !unavailable_recharge
@@ -10166,262 +10154,50 @@ impl Game {
             return Ok(());
         };
         let activation = self.items[index].activation.clone();
-        let (profile_id, difficulty, cost, effect, plan) = if let Some(activation) =
-            activation.as_ref()
-        {
-            let Some(profile) = definition
-                .device_generation
-                .as_ref()
-                .and_then(|generation| {
-                    generation
-                        .activations
-                        .iter()
-                        .find(|candidate| candidate.id == activation.profile_id)
-                })
-            else {
+        let (profile_id, difficulty, cost, effect, plan) =
+            if let Some(activation) = activation.as_ref() {
+                let Some(profile) = definition
+                    .device_generation
+                    .as_ref()
+                    .and_then(|generation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|candidate| candidate.id == activation.profile_id)
+                    })
+                else {
+                    events.push(DomainEvent::ItemUseUnavailable);
+                    return Ok(());
+                };
+                let Some(plan) =
+                    self.item_use_plan(item_id, &profile.effect, Some(&profile.target), target)
+                else {
+                    events.push(DomainEvent::ItemUseUnavailable);
+                    return Ok(());
+                };
+                (
+                    Some(activation.profile_id.clone()),
+                    Some(activation.device_check_difficulty),
+                    Some(activation.cost),
+                    profile.effect.clone(),
+                    plan,
+                )
+            } else if let Some(action) = definition.use_action {
+                let Some(plan) = self.item_use_plan(item_id, &action.effect, None, target) else {
+                    events.push(DomainEvent::ItemUseUnavailable);
+                    return Ok(());
+                };
+                (
+                    None,
+                    action.device_check_difficulty,
+                    action.charges.map(|charges| charges.cost),
+                    action.effect,
+                    plan,
+                )
+            } else {
                 events.push(DomainEvent::ItemUseUnavailable);
                 return Ok(());
             };
-            let plan = match &profile.effect {
-                ItemUseEffectDefinition::Heal { .. }
-                | ItemUseEffectDefinition::HealDice { .. }
-                | ItemUseEffectDefinition::RemoveStatus { .. }
-                | ItemUseEffectDefinition::RestoreResource { .. }
-                | ItemUseEffectDefinition::RestoreResourceDice { .. }
-                | ItemUseEffectDefinition::RestoreResourceFull { .. }
-                | ItemUseEffectDefinition::Sequence { .. }
-                | ItemUseEffectDefinition::CurseEquippedItem { .. }
-                | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::SelfTarget
-                }
-                ItemUseEffectDefinition::Damage { .. } => {
-                    let Some(path) =
-                        target.and_then(|target| self.item_effect_path(&profile.target, target))
-                    else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    ItemUsePlan::Projectile { path }
-                }
-                ItemUseEffectDefinition::Detect { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::Detect
-                }
-                effect @ ItemUseEffectDefinition::SummonCategory { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    self.item_category_summon_plan(effect)
-                }
-                ItemUseEffectDefinition::IdentifyItem { .. } => {
-                    let Some(TargetSelection::Item {
-                        item_id: target_item_id,
-                    }) = target
-                    else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    if !self.item_is_valid_identify_target(item_id, target_item_id) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    }
-                }
-                effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
-                    let Some(TargetSelection::Item {
-                        item_id: target_item_id,
-                    }) = target
-                    else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    if !self.item_is_valid_enchant_target(item_id, target_item_id, effect) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    }
-                }
-                ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    let candidates = self.random_teleport_candidates(*maximum_distance);
-                    if candidates.is_empty() {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::RandomTeleport { candidates }
-                }
-                ItemUseEffectDefinition::TeleportLevel => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    let (upward_targets, downward_targets) = self.teleport_level_targets();
-                    if upward_targets.is_empty() && downward_targets.is_empty() {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::TeleportLevel {
-                        upward_targets,
-                        downward_targets,
-                    }
-                }
-                ItemUseEffectDefinition::Recall { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    let Some(cancel) = self.recall_use_plan() else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    ItemUsePlan::Recall { cancel }
-                }
-                ItemUseEffectDefinition::ResetRecall => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget))
-                        || !self.can_reset_recall()
-                    {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::ResetRecall
-                }
-            };
-            (
-                Some(activation.profile_id.clone()),
-                Some(activation.device_check_difficulty),
-                Some(activation.cost),
-                profile.effect.clone(),
-                plan,
-            )
-        } else if let Some(action) = definition.use_action {
-            let plan = match &action.effect {
-                ItemUseEffectDefinition::IdentifyItem { .. } => {
-                    let Some(TargetSelection::Item {
-                        item_id: target_item_id,
-                    }) = target
-                    else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    if !self.item_is_valid_identify_target(item_id, target_item_id) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    }
-                }
-                effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
-                    let Some(TargetSelection::Item {
-                        item_id: target_item_id,
-                    }) = target
-                    else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    if !self.item_is_valid_enchant_target(item_id, target_item_id, effect) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    }
-                }
-                ItemUseEffectDefinition::Detect { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::Detect
-                }
-                effect @ ItemUseEffectDefinition::SummonCategory { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    self.item_category_summon_plan(effect)
-                }
-                ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    let candidates = self.random_teleport_candidates(*maximum_distance);
-                    if candidates.is_empty() {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::RandomTeleport { candidates }
-                }
-                ItemUseEffectDefinition::TeleportLevel => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    let (upward_targets, downward_targets) = self.teleport_level_targets();
-                    if upward_targets.is_empty() && downward_targets.is_empty() {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::TeleportLevel {
-                        upward_targets,
-                        downward_targets,
-                    }
-                }
-                ItemUseEffectDefinition::Recall { .. } => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    let Some(cancel) = self.recall_use_plan() else {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    };
-                    ItemUsePlan::Recall { cancel }
-                }
-                ItemUseEffectDefinition::ResetRecall => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget))
-                        || !self.can_reset_recall()
-                    {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::ResetRecall
-                }
-                _ => {
-                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                        events.push(DomainEvent::ItemUseUnavailable);
-                        return Ok(());
-                    }
-                    ItemUsePlan::SelfTarget
-                }
-            };
-            (
-                None,
-                action.device_check_difficulty,
-                action.charges.map(|charges| charges.cost),
-                action.effect,
-                plan,
-            )
-        } else {
-            events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
-        };
         if cost.is_some_and(|cost| {
             self.items[index]
                 .charges
@@ -10828,6 +10604,89 @@ impl Game {
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(())
+    }
+
+    fn item_use_plan(
+        &self,
+        source_item_id: &str,
+        effect: &ItemUseEffectDefinition,
+        target_definition: Option<&AbilityTargetDefinition>,
+        target: Option<&TargetSelection>,
+    ) -> Option<ItemUsePlan> {
+        let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
+        match effect {
+            ItemUseEffectDefinition::Heal { .. }
+            | ItemUseEffectDefinition::HealDice { .. }
+            | ItemUseEffectDefinition::RemoveStatus { .. }
+            | ItemUseEffectDefinition::RestoreResource { .. }
+            | ItemUseEffectDefinition::RestoreResourceDice { .. }
+            | ItemUseEffectDefinition::RestoreResourceFull { .. }
+            | ItemUseEffectDefinition::Sequence { .. }
+            | ItemUseEffectDefinition::CurseEquippedItem { .. }
+            | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
+                self_target.then_some(ItemUsePlan::SelfTarget)
+            }
+            ItemUseEffectDefinition::Damage { .. } => {
+                let path = target_definition.and_then(|definition| {
+                    target.and_then(|target| self.item_effect_path(definition, target))
+                })?;
+                Some(ItemUsePlan::Projectile { path })
+            }
+            ItemUseEffectDefinition::Detect { .. } => self_target.then_some(ItemUsePlan::Detect),
+            effect @ ItemUseEffectDefinition::SummonCategory { .. } => {
+                self_target.then(|| self.item_category_summon_plan(effect))
+            }
+            ItemUseEffectDefinition::IdentifyItem { .. } => {
+                let TargetSelection::Item {
+                    item_id: target_item_id,
+                } = target?
+                else {
+                    return None;
+                };
+                self.item_is_valid_identify_target(source_item_id, target_item_id)
+                    .then(|| ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    })
+            }
+            effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
+                let TargetSelection::Item {
+                    item_id: target_item_id,
+                } = target?
+                else {
+                    return None;
+                };
+                self.item_is_valid_enchant_target(source_item_id, target_item_id, effect)
+                    .then(|| ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    })
+            }
+            ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
+                if !self_target {
+                    return None;
+                }
+                let candidates = self.random_teleport_candidates(*maximum_distance);
+                (!candidates.is_empty()).then_some(ItemUsePlan::RandomTeleport { candidates })
+            }
+            ItemUseEffectDefinition::TeleportLevel => {
+                if !self_target {
+                    return None;
+                }
+                let (upward_targets, downward_targets) = self.teleport_level_targets();
+                (!upward_targets.is_empty() || !downward_targets.is_empty()).then_some(
+                    ItemUsePlan::TeleportLevel {
+                        upward_targets,
+                        downward_targets,
+                    },
+                )
+            }
+            ItemUseEffectDefinition::Recall { .. } => self_target
+                .then(|| self.recall_use_plan())
+                .flatten()
+                .map(|cancel| ItemUsePlan::Recall { cancel }),
+            ItemUseEffectDefinition::ResetRecall => {
+                (self_target && self.can_reset_recall()).then_some(ItemUsePlan::ResetRecall)
+            }
+        }
     }
 
     fn item_category_summon_plan(&self, effect: &ItemUseEffectDefinition) -> ItemUsePlan {
@@ -11400,149 +11259,52 @@ impl Game {
         item.charges.is_none_or(|state| state.current < cost)
     }
 
-    fn identify_item_use_target_is_invalid(
+    fn inventory_item_use_effect(
         &self,
         source_item_id: &str,
-        target: Option<&TargetSelection>,
-    ) -> bool {
-        let Some(item) = self.items.iter().find(|item| {
+    ) -> Option<(&ItemUseEffectDefinition, Option<&AbilityTargetDefinition>)> {
+        let item = self.items.iter().find(|item| {
             item.id == source_item_id
                 && item.location == ItemLocation::Inventory
                 && item.quantity > 0
-        }) else {
-            return false;
-        };
-        let Some(definition) = self.content.item(&item.kind_id) else {
-            return false;
-        };
-        let is_identify = item
-            .activation
-            .as_ref()
-            .and_then(|activation| {
-                definition
-                    .device_generation
-                    .as_ref()
-                    .and_then(|generation| {
-                        generation
-                            .activations
-                            .iter()
-                            .find(|candidate| candidate.id == activation.profile_id)
-                    })
-            })
-            .is_some_and(|profile| {
-                matches!(profile.effect, ItemUseEffectDefinition::IdentifyItem { .. })
-            })
-            || definition.use_action.as_ref().is_some_and(|action| {
-                matches!(action.effect, ItemUseEffectDefinition::IdentifyItem { .. })
-            });
-        if !is_identify {
-            return false;
+        })?;
+        let definition = self.content.item(&item.kind_id)?;
+        if let Some(activation) = &item.activation {
+            let profile = definition
+                .device_generation
+                .as_ref()?
+                .activations
+                .iter()
+                .find(|candidate| candidate.id == activation.profile_id)?;
+            Some((&profile.effect, Some(&profile.target)))
+        } else {
+            definition
+                .use_action
+                .as_ref()
+                .map(|action| (&action.effect, None))
         }
-        let Some(TargetSelection::Item {
-            item_id: target_item_id,
-        }) = target
-        else {
-            return true;
-        };
-        !self.item_is_valid_identify_target(source_item_id, target_item_id)
     }
 
-    fn enchant_item_use_target_is_invalid(
+    fn item_use_is_zero_time_unavailable(
         &self,
         source_item_id: &str,
         target: Option<&TargetSelection>,
     ) -> bool {
-        let Some(item) = self.items.iter().find(|item| {
-            item.id == source_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        }) else {
-            return false;
-        };
-        let Some(definition) = self.content.item(&item.kind_id) else {
-            return false;
-        };
-        let effect = item
-            .activation
-            .as_ref()
-            .and_then(|activation| {
-                definition
-                    .device_generation
-                    .as_ref()
-                    .and_then(|generation| {
-                        generation
-                            .activations
-                            .iter()
-                            .find(|candidate| candidate.id == activation.profile_id)
-                    })
-            })
-            .map(|profile| &profile.effect)
-            .or_else(|| definition.use_action.as_ref().map(|action| &action.effect));
-        let Some(effect @ ItemUseEffectDefinition::EnchantItem { .. }) = effect else {
-            return false;
-        };
-        let Some(TargetSelection::Item {
-            item_id: target_item_id,
-        }) = target
+        let Some((effect, target_definition)) = self.inventory_item_use_effect(source_item_id)
         else {
-            return true;
-        };
-        !self.item_is_valid_enchant_target(source_item_id, target_item_id, effect)
-    }
-
-    fn travel_item_use_is_invalid(
-        &self,
-        source_item_id: &str,
-        target: Option<&TargetSelection>,
-    ) -> bool {
-        let Some(item) = self.items.iter().find(|item| {
-            item.id == source_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        }) else {
             return false;
         };
-        let Some(definition) = self.content.item(&item.kind_id) else {
-            return false;
-        };
-        let effect = item
-            .activation
-            .as_ref()
-            .and_then(|activation| {
-                definition
-                    .device_generation
-                    .as_ref()
-                    .and_then(|generation| {
-                        generation
-                            .activations
-                            .iter()
-                            .find(|candidate| candidate.id == activation.profile_id)
-                    })
-            })
-            .map(|profile| &profile.effect)
-            .or_else(|| definition.use_action.as_ref().map(|action| &action.effect));
-        let Some(effect) = effect else {
-            return false;
-        };
-        let wrong_target =
-            target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget));
-        match effect {
-            ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
-                wrong_target
-                    || self
-                        .random_teleport_candidates(*maximum_distance)
-                        .is_empty()
-            }
-            ItemUseEffectDefinition::TeleportLevel => {
-                let (upward, downward) = self.teleport_level_targets();
-                wrong_target || (upward.is_empty() && downward.is_empty())
-            }
-            ItemUseEffectDefinition::Recall { .. } => {
-                wrong_target || self.recall_use_plan().is_none()
-            }
-            ItemUseEffectDefinition::ResetRecall => wrong_target || !self.can_reset_recall(),
-            _ => false,
-        }
+        matches!(
+            effect,
+            ItemUseEffectDefinition::IdentifyItem { .. }
+                | ItemUseEffectDefinition::EnchantItem { .. }
+                | ItemUseEffectDefinition::RandomTeleport { .. }
+                | ItemUseEffectDefinition::TeleportLevel
+                | ItemUseEffectDefinition::Recall { .. }
+                | ItemUseEffectDefinition::ResetRecall
+        ) && self
+            .item_use_plan(source_item_id, effect, target_definition, target)
+            .is_none()
     }
 
     fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
