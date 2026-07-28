@@ -7,24 +7,7 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.duelist",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
     "playerResources": [
       {
         "id": "demo.resource.tempo",
@@ -32,7 +15,6 @@
         "maximum": 23
       }
     ],
-    "playerLearnedAbilityIds": null,
     "playerAbilityProgress": [
       {
         "id": "demo.ability.crescent-cut",
@@ -50,24 +32,13 @@
         "failCount": 0,
         "cooldownRemaining": 0
       }
-    ],
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -79,7 +50,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -92,8 +62,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 30,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -250,7 +218,6 @@
           "turnDecayAmount": 1
         }
       ],
-      "playerAbilityLearning": null,
       "playerAbilities": [
         {
           "id": "demo.ability.crescent-cut",
@@ -361,16 +328,9 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
-      "inventoryStackCount": 0,
       "equipmentCount": 1,
-      "inventory": [],
       "equipment": [
         {
           "id": "generated.item.1",
@@ -407,7 +367,6 @@
           }
         }
       ],
-      "itemKnowledge": [],
       "itemPropertyKnowledge": [
         {
           "itemId": "generated.item.1",
@@ -483,7 +442,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "f056fa0a48a5586b42c83b8a63005e31b808bf10de6a35c0bc532752f4cf6644"
     },
     "events": [
@@ -493,9 +451,6 @@
         "args": {}
       }
     ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "f056fa0a48a5586b42c83b8a63005e31b808bf10de6a35c0bc532752f4cf6644"
   }
 }

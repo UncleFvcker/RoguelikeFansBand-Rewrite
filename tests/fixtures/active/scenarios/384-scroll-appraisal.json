@@ -7,47 +7,16 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "test.item.appraisal-scroll.1",
-        "kindId": "demo.item.appraisal-scroll",
-        "quantity": 1
+        "kindId": "demo.item.appraisal-scroll"
       },
       {
         "id": "test.item.appraisal-target.1",
-        "kindId": "demo.item.adaptive-glaive",
-        "quantity": 1
+        "kindId": "demo.item.adaptive-glaive"
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -58,12 +27,9 @@
           "type": "item",
           "itemId": "test.item.appraisal-target.1"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
-  "saveRoundTrip": false,
   "assertions": {
     "finalState": {
       "revision": 1,
@@ -72,7 +38,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -85,8 +50,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 25,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -230,18 +193,9 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 1,
-      "equipmentCount": 0,
       "inventory": [
         {
           "id": "test.item.appraisal-target.1",
@@ -281,7 +235,6 @@
           }
         }
       ],
-      "equipment": [],
       "itemKnowledge": [
         {
           "kindId": "demo.item.appraisal-scroll",
@@ -363,7 +316,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "bda3532570c592a0bbb9156aef962d71b4de297b45140117dec15b67c4726335"
     },
     "events": [
@@ -386,10 +338,6 @@
           }
         }
       }
-    ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
-    "saveRoundTripStateHash": null
+    ]
   }
 }

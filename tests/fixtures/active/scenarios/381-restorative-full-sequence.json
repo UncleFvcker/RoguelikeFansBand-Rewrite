@@ -7,24 +7,7 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
     "playerResources": [
       {
         "id": "demo.resource.mana",
@@ -32,9 +15,6 @@
         "maximum": 21
       }
     ],
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
     "playerStatuses": [
       {
         "kindId": "rfb.status.berserk",
@@ -75,19 +55,12 @@
         "incomingDamagePercent": 100
       }
     ],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "test.item.perfect-focus-elixir.1",
-        "kindId": "demo.item.perfect-focus-elixir",
-        "quantity": 1
+        "kindId": "demo.item.perfect-focus-elixir"
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -97,12 +70,9 @@
         "target": {
           "type": "self"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
-  "saveRoundTrip": false,
   "assertions": {
     "finalState": {
       "revision": 1,
@@ -111,7 +81,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -124,8 +93,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -2946,12 +2913,7 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 6,
       "equipmentCount": 1,
@@ -3230,7 +3192,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "184b05ef102b75f802a6ae568918da0214a9ca20f0f865854c1d167cb64b0d02"
     },
     "events": [
@@ -3262,10 +3223,6 @@
           "target": "demo.item.perfect-focus-elixir"
         }
       }
-    ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
-    "saveRoundTripStateHash": null
+    ]
   }
 }

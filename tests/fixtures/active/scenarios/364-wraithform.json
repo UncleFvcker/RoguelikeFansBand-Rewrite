@@ -7,24 +7,9 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
     "debugAbilityCastsSucceed": true,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
-    "playerHp": null,
     "playerLevel": 47,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
     "playerResources": [
       {
         "id": "demo.resource.mana",
@@ -45,11 +30,6 @@
         "cooldownRemaining": 0
       }
     ],
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
-    "inventoryItems": [],
     "terrainOverrides": [
       {
         "position": {
@@ -58,10 +38,7 @@
         },
         "terrainId": "demo.terrain.wall"
       }
-    ],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -71,17 +48,13 @@
         "target": {
           "type": "self"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "west"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -93,7 +66,6 @@
       "lastCommandSeq": 2,
       "rngDrawCounter": 5,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 2,
         "y": 3
@@ -143,7 +115,6 @@
           "incomingDamagePercent": 50
         }
       ],
-      "playerResistances": [],
       "playerLevel": 47,
       "playerExperience": 0,
       "playerMaxLevel": 47,
@@ -2964,12 +2935,7 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 6,
       "equipmentCount": 1,
@@ -3243,7 +3209,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "37eda89afc4e002dc8b4afd407c80c2bb2a170b4c51c55eb37a5e1a01eeeadfc"
     },
     "events": [
@@ -3315,8 +3280,6 @@
         "y": 3
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "37eda89afc4e002dc8b4afd407c80c2bb2a170b4c51c55eb37a5e1a01eeeadfc"
   }
 }

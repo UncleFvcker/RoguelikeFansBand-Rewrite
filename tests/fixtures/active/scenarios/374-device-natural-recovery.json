@@ -7,36 +7,11 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.tinkerer",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "test.item.recovery.rod",
         "kindId": "demo.item.resonance-rod",
-        "quantity": 1,
         "charges": {
           "current": 0,
           "maximum": 20
@@ -59,7 +34,6 @@
       {
         "id": "test.item.recovery.wand",
         "kindId": "demo.item.resonance-wand",
-        "quantity": 1,
         "charges": {
           "current": 0,
           "maximum": 20
@@ -81,50 +55,35 @@
           }
         }
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
-  "saveRoundTrip": false,
   "assertions": {
     "finalState": {
       "revision": 5,
@@ -133,7 +92,6 @@
       "lastCommandSeq": 5,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -146,8 +104,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 67,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -301,14 +257,7 @@
           "restRecoveryAmount": 3
         }
       ],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 4,
       "equipmentCount": 1,
@@ -553,7 +502,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "7fb67c15206af928faae02e3c0dfbb981d19a12885a63f437fc495bd6b6ccfb5"
     },
     "events": [
@@ -703,10 +651,6 @@
           "targetItem": "test.item.recovery.wand"
         }
       }
-    ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
-    "saveRoundTripStateHash": null
+    ]
   }
 }

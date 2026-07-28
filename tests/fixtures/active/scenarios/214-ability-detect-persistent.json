@@ -7,34 +7,10 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
     "playerLearnedAbilityIds": [
       "demo.ability.echo-sight"
     ],
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
-    "inventoryItems": [],
     "terrainOverrides": [
       {
         "position": {
@@ -64,10 +40,7 @@
         },
         "terrainId": "demo.terrain.echo-rune-hidden"
       }
-    ],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -77,9 +50,7 @@
         "target": {
           "type": "self"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -91,7 +62,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 4,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -104,8 +74,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -2926,12 +2894,7 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 6,
       "equipmentCount": 1,
@@ -3307,8 +3270,6 @@
         "y": 4
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "3fd48a2922e81624e36183e1ffe579ae7e1e318185a2be11bcce91bc78f658d9"
   }
 }

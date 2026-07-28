@@ -5,76 +5,35 @@
   "determinism": "exact",
   "seed": "27",
   "preconditions": {
-    "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    "world": "demo.world.original-v1"
   },
   "commands": [
     {
       "command": {
         "type": "move",
         "direction": "south"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "traverse-stairs"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "search"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "search"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "disarm-trap",
         "direction": "south"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -99,8 +58,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -244,12 +201,6 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
       "playerRecall": {
         "dungeonId": "demo.dungeon.echo-depths",
         "floorId": "demo.floor.echo-depth-1"
@@ -264,10 +215,7 @@
           },
           "hp": 3,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "demo.floor.echo-depth-1.nest.1",
@@ -277,10 +225,7 @@
           },
           "hp": 3,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "demo.floor.echo-depth-1.nest.2",
@@ -290,10 +235,7 @@
           },
           "hp": 3,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "demo.floor.echo-depth-1.nest.3",
@@ -303,21 +245,11 @@
           },
           "hp": 3,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         }
       ],
       "groundItemCount": 1,
-      "inventoryStackCount": 0,
-      "equipmentCount": 0,
-      "inventory": [],
-      "equipment": [],
-      "itemKnowledge": [],
-      "itemPropertyKnowledge": [],
       "nextItemInstanceSerial": 3,
-      "terrainInteractions": [],
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -372,7 +304,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "95c95c2724d02b22a5ddcff69770010c18fa5a055e32cc567057ef7654881b8a"
     },
     "events": [
@@ -2032,8 +1963,6 @@
         "y": 5
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "95c95c2724d02b22a5ddcff69770010c18fa5a055e32cc567057ef7654881b8a"
   }
 }

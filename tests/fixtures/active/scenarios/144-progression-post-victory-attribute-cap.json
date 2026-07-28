@@ -6,21 +6,8 @@
   "seed": "42",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
     "playerLevel": 51,
     "playerExperience": 5000000,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
     "playerMaxLevel": 51,
     "playerPendingAttributeIncreases": 1,
     "playerAttributes": {
@@ -31,17 +18,6 @@
       "constitution": 13,
       "charisma": 13
     },
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
     "campaignConqueredDungeons": [
       "demo.dungeon.resonance-descent"
     ],
@@ -55,9 +31,7 @@
       "command": {
         "type": "increase-attribute",
         "attribute": "strength"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -65,11 +39,9 @@
     "finalState": {
       "revision": 1,
       "turn": 1,
-      "worldTick": 0,
       "lastCommandSeq": 1,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -82,8 +54,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 51,
       "playerExperience": 5000000,
       "playerMaxLevel": 51,
@@ -227,13 +197,6 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 2,
       "entities": [
         {
@@ -244,10 +207,7 @@
           },
           "hp": 3,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
@@ -258,9 +218,6 @@
           "hp": 6,
           "speed": 110,
           "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": [],
           "pack": {
             "id": "demo.z-entrance-guardian.resonance-descent.1",
             "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
@@ -270,12 +227,6 @@
         }
       ],
       "groundItemCount": 5,
-      "inventoryStackCount": 0,
-      "equipmentCount": 0,
-      "inventory": [],
-      "equipment": [],
-      "itemKnowledge": [],
-      "itemPropertyKnowledge": [],
       "nextItemInstanceSerial": 2,
       "terrainInteractions": [
         {
@@ -345,7 +296,6 @@
         "completedTasks": 0,
         "victoryTurn": 0
       },
-      "revealedTerrain": [],
       "stateHash": "e70ccf2cd1fb7943e6ca4483cd2864b6eb8a8bfe9936f02531eb516a96ca877e"
     },
     "events": [
@@ -361,9 +311,6 @@
         }
       }
     ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "e70ccf2cd1fb7943e6ca4483cd2864b6eb8a8bfe9936f02531eb516a96ca877e"
   }
 }

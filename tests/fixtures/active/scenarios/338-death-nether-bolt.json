@@ -6,25 +6,8 @@
   "seed": "1",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
-    "playerHp": null,
     "playerLevel": 50,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
     "playerResources": [
       {
         "id": "demo.resource.mana",
@@ -35,10 +18,6 @@
     "playerLearnedAbilityIds": [
       "demo.ability.death-nether-bolt"
     ],
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
@@ -50,13 +29,7 @@
         "hp": 7,
         "maxHp": 7,
         "baseSpeed": 100,
-        "energyNeed": 100,
-        "alerted": null,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": false,
-        "statuses": [],
-        "resistances": []
+        "energyNeed": 100
       },
       {
         "id": "demo.z-entrance-guardian.resonance-descent.1",
@@ -69,15 +42,9 @@
         "maxHp": 7,
         "baseSpeed": 100,
         "energyNeed": 100,
-        "alerted": null,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": true,
-        "statuses": [],
-        "resistances": []
+        "clearPack": true
       }
     ],
-    "inventoryItems": [],
     "terrainOverrides": [
       {
         "position": {
@@ -93,10 +60,7 @@
         },
         "terrainId": "demo.terrain.floor"
       }
-    ],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -107,9 +71,7 @@
           "type": "direction",
           "direction": "east"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -121,7 +83,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 24,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -134,8 +95,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 50,
       "playerExperience": 34,
       "playerMaxLevel": 50,
@@ -2955,10 +2914,6 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 1,
       "entities": [
         {
@@ -2969,10 +2924,7 @@
           },
           "hp": 7,
           "speed": 100,
-          "energyNeed": 50,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 50
         }
       ],
       "groundItemCount": 7,
@@ -3248,7 +3200,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "cc674a07dbff0b6cd20dbb7e4115bcf7133e8eecb53501dae2dc81d696d7e7e0"
     },
     "events": [
@@ -3386,7 +3337,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "errors": [],
     "saveRoundTripStateHash": "cc674a07dbff0b6cd20dbb7e4115bcf7133e8eecb53501dae2dc81d696d7e7e0"
   }
 }

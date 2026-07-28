@@ -6,143 +6,87 @@
   "seed": "27",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
     "playerResistances": [
       {
         "damageType": "fire",
         "level": "immune"
       }
-    ],
-    "entityEffects": [],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "move",
         "direction": "south-east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "traverse-stairs"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "traverse-stairs"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "south"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "south"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "traverse-stairs"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "traverse-stairs"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -154,7 +98,6 @@
       "lastCommandSeq": 13,
       "rngDrawCounter": 55,
       "floorId": "demo.floor.echo-bounty-annex-rift",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 6,
         "y": 5
@@ -167,7 +110,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
       "playerResistances": [
         {
           "damageType": "fire",
@@ -317,24 +259,9 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 1,
-      "inventoryStackCount": 0,
-      "equipmentCount": 0,
-      "inventory": [],
-      "equipment": [],
-      "itemKnowledge": [],
-      "itemPropertyKnowledge": [],
       "nextItemInstanceSerial": 4,
-      "terrainInteractions": [],
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -389,7 +316,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "9fade3f3a19d99f2d5bab2e9e213b9b2bbdffc46c4b54237e0018d25651bf6c1"
     },
     "events": [
@@ -5632,7 +5558,6 @@
       "demo.floor.echo-bounty-rift.task-target.1",
       "demo.floor.echo-bounty-annex-rift.task-target.1"
     ],
-    "errors": [],
     "saveRoundTripStateHash": "9fade3f3a19d99f2d5bab2e9e213b9b2bbdffc46c4b54237e0018d25651bf6c1"
   }
 }

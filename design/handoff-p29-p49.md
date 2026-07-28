@@ -29,14 +29,14 @@
 
 依赖方向：protocol 是汇聚点；core→(content,protocol)；replay→(core,protocol)；contract→(core,protocol,save)；tauri→(core,protocol,replay,save)。
 
-**web/src**（~32 个 ts）：`main.ts` 2700 行上帝模块（全部 UI 编排）；`protocol.ts` 是生成物勿手改；`localization.ts` 的 MESSAGE_KEYS 是手工白名单（新 Fluent 键必须登记，有全量对齐测试）；npm test 的测试文件列表也是手工列举。CoreTransport 唯一实现是 Tauri 原生传输——纯 `npm run dev:ui` 连不上核心。
+**web/src**（~32 个 ts）：`main.ts` 2700 行上帝模块（全部 UI 编排）；`protocol.ts` 是生成物勿手改；英中 Fluent 资源由测试直接核对键与变量集合，无需维护第三份键白名单；npm test 的测试文件列表仍是手工列举。CoreTransport 唯一实现是 Tauri 原生传输——纯 `npm run dev:ui` 连不上核心。
 
 ## 2. 铁律约定（违反必炸）
 
 1. **每迭代五件套**：`PROTOCOL_VERSION`、state hash `STATE_HASH_SCHEMA_VERSION`（改 hash 输入结构才 bump）、`pack.json` 版本、`content.lock.json`、`BUILT_IN_CONTENT_HASH`（旧 hash 追加进 `PREVIOUS_BUILT_IN_CONTENT_HASHES` 数组）。内容结构体加字段（即使 serde default）会改内容 hash——lock 不匹配时 rfb-core build.rs 直接 panic，**必须先走五件套再编核心**。内容 hash 用 `rfb-contentc inspect-source` 取新值手写 lock。
 2. **fixture active-only**：不再创建或迁移全量版本目录。新 contract 只更新逻辑版本、active policy、新增场景和真正变化的 assertions；新场景 `refresh` 录制前要塞完整占位 assertions 才能解析，录制后人工审阅。`active/waivers/` 只保留 `.gitkeep`，出现任何 waiver 条目均使 policy 验证失败。
 3. **显示状态**（镜头/缩放/tileset/语言/准星）永不进存档/回放/state hash。
-4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；其内钉死 `contentVisualCount` 等值，**加带字形的内容必改**（P56 第三本实体法书后为 91）。本地 `cd web && npm run e2e` 约 35s。
+4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；覆盖桌面启动、渲染、存档、语言切换和交互工作流，不再把内容字形总数当作行为契约。本地 `cd web && npm run e2e` 约 35s。
 5. 新法术/效果形态**永远放新怪物**，别动既有加权池（P34 教训）；clippy 退出码别被管道吞掉，单独跑验证。
 6. 全套验证：`cargo fmt --check` / `cargo test --workspace --exclude rfb-tauri` / `cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings` / bindings `--check` / schemas `--check` / `rfb-contentc verify-source` / `validate-policy` / web `check:protocol`+`test`+`typecheck`+`build:ui`（+必要时 e2e）。
 

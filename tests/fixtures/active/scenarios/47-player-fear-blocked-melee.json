@@ -6,29 +6,6 @@
   "seed": "0",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
     "playerStatuses": [
       {
         "kindId": "rfb.status.fear",
@@ -67,7 +44,6 @@
         "incomingDamagePercent": 100
       }
     ],
-    "playerResistances": [],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
@@ -75,14 +51,6 @@
           "x": 4,
           "y": 3
         },
-        "hp": null,
-        "maxHp": null,
-        "baseSpeed": null,
-        "energyNeed": null,
-        "alerted": null,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": false,
         "statuses": [
           {
             "kindId": "rfb.status.slow",
@@ -119,24 +87,16 @@
             "grantsWallPassage": false,
             "incomingDamagePercent": 100
           }
-        ],
-        "resistances": []
+        ]
       }
-    ],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -148,7 +108,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 5,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -198,7 +157,6 @@
           "incomingDamagePercent": 100
         }
       ],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -342,13 +300,6 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 2,
       "entities": [
         {
@@ -360,8 +311,6 @@
           "hp": 3,
           "speed": 10,
           "energyNeed": 90,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
           "statuses": [
             {
               "kindId": "rfb.status.slow",
@@ -409,9 +358,6 @@
           "hp": 6,
           "speed": 110,
           "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": [],
           "pack": {
             "id": "demo.z-entrance-guardian.resonance-descent.1",
             "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
@@ -421,12 +367,6 @@
         }
       ],
       "groundItemCount": 5,
-      "inventoryStackCount": 0,
-      "equipmentCount": 0,
-      "inventory": [],
-      "equipment": [],
-      "itemKnowledge": [],
-      "itemPropertyKnowledge": [],
       "nextItemInstanceSerial": 2,
       "terrainInteractions": [
         {
@@ -495,7 +435,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "31abfa5861669a2e602fe8f6742811b7b4c8f997e83f8cbabe7e3f8a935e0007"
     },
     "events": [
@@ -513,8 +452,6 @@
         "y": 3
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "31abfa5861669a2e602fe8f6742811b7b4c8f997e83f8cbabe7e3f8a935e0007"
   }
 }

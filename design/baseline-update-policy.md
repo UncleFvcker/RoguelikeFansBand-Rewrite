@@ -24,6 +24,7 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 - contract 逻辑版本由 `rfb_contract::ACTIVE_BASELINE` 和 policy 的 `baseline` 字段共同声明。
 - 升级 contract 时不复制或重命名 active 目录。
 - 只新增新场景，或更新语义确实变化的 assertions。
+- JSON 可以省略由 contract Schema 明确定义的默认值；反序列化后的完整对象才是 exact 比较边界。
 - 历史结果从对应 Git 提交恢复，不在当前工作树重复保存。
 - `active/waivers/` 只保留 `.gitkeep`。当前不接受 waiver 文件。
 
@@ -37,7 +38,7 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 6. 新场景加入 active 目录，并相应提高 policy 的 `minimumFixtureCount`。
 7. 更新 `ACTIVE_BASELINE` 和 policy 的 `baseline`，执行 policy 与全部 exact fixture 验证。
 
-禁止批量 refresh 未受影响场景，也禁止为了“让测试通过”降低最低 fixture 数量。
+禁止批量 refresh 未受影响场景，也禁止为了“让测试通过”降低最低 fixture 数量。仅改变默认字段是否落盘的全量重写属于表示迁移，必须在不调用 `observe` 的情况下完成，并证明重写前后的反序列化对象完全相等。
 
 ## 4. Policy v2
 

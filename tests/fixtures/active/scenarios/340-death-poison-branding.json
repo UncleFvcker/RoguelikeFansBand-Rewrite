@@ -6,25 +6,8 @@
   "seed": "0",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
-    "playerHp": null,
     "playerLevel": 50,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
     "playerResources": [
       {
         "id": "demo.resource.mana",
@@ -35,10 +18,6 @@
     "playerLearnedAbilityIds": [
       "demo.ability.death-poison-branding"
     ],
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
@@ -50,13 +29,7 @@
         "hp": 7,
         "maxHp": 7,
         "baseSpeed": 100,
-        "energyNeed": 100,
-        "alerted": null,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": false,
-        "statuses": [],
-        "resistances": []
+        "energyNeed": 100
       },
       {
         "id": "demo.z-entrance-guardian.resonance-descent.1",
@@ -64,23 +37,14 @@
           "x": 15,
           "y": 15
         },
-        "hp": null,
-        "maxHp": null,
-        "baseSpeed": null,
         "energyNeed": 100,
-        "alerted": null,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": true,
-        "statuses": [],
-        "resistances": []
+        "clearPack": true
       }
     ],
     "inventoryItems": [
       {
         "id": "test.item.poison-blade",
-        "kindId": "demo.item.echo-blade",
-        "quantity": 1
+        "kindId": "demo.item.echo-blade"
       }
     ],
     "terrainOverrides": [
@@ -98,19 +62,14 @@
         },
         "terrainId": "demo.terrain.floor"
       }
-    ],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "equip",
         "itemId": "test.item.poison-blade"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
@@ -119,17 +78,13 @@
         "target": {
           "type": "self"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -141,7 +96,6 @@
       "lastCommandSeq": 3,
       "rngDrawCounter": 12,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -229,7 +183,6 @@
           "incomingDamagePercent": 100
         }
       ],
-      "playerResistances": [],
       "playerLevel": 50,
       "playerExperience": 34,
       "playerMaxLevel": 50,
@@ -3049,10 +3002,6 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 1,
       "entities": [
         {
@@ -3063,10 +3012,7 @@
           },
           "hp": 6,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         }
       ],
       "groundItemCount": 7,
@@ -3381,7 +3327,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "ed1c93cdc320854177f68a39eea7159a0f4f6402d17eaee311714632667ec384"
     },
     "events": [
@@ -3733,7 +3678,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "errors": [],
     "saveRoundTripStateHash": "ed1c93cdc320854177f68a39eea7159a0f4f6402d17eaee311714632667ec384"
   }
 }

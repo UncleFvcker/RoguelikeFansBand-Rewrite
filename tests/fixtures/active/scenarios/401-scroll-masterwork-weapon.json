@@ -7,52 +7,21 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "test.item.masterwork-weapon-scroll.1",
-        "kindId": "demo.item.masterwork-weapon-scroll",
-        "quantity": 1
+        "kindId": "demo.item.masterwork-weapon-scroll"
       },
       {
         "id": "test.item.masterwork-weapon.1",
         "kindId": "demo.item.adaptive-glaive",
-        "quantity": 1,
         "enchantments": {
           "toHit": 5,
           "toDamage": 7,
           "toArmor": 0
         }
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -63,12 +32,9 @@
           "type": "item",
           "itemId": "test.item.masterwork-weapon.1"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
-  "saveRoundTrip": false,
   "assertions": {
     "finalState": {
       "revision": 1,
@@ -77,7 +43,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 29,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -90,8 +55,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 25,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -235,18 +198,9 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 1,
-      "equipmentCount": 0,
       "inventory": [
         {
           "id": "test.item.masterwork-weapon.1",
@@ -290,7 +244,6 @@
           }
         }
       ],
-      "equipment": [],
       "itemKnowledge": [
         {
           "kindId": "demo.item.masterwork-weapon-scroll",
@@ -298,7 +251,6 @@
           "aware": true
         }
       ],
-      "itemPropertyKnowledge": [],
       "nextItemInstanceSerial": 2,
       "terrainInteractions": [
         {
@@ -367,7 +319,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "1911adafb3abcd1cdf3b4ebe847e417ac5330c4ebd787bda05a189e245a9c617"
     },
     "events": [
@@ -407,10 +358,6 @@
           }
         }
       }
-    ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
-    "saveRoundTripStateHash": null
+    ]
   }
 }

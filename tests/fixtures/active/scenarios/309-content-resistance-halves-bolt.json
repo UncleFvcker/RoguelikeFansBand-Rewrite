@@ -6,33 +6,11 @@
   "seed": "0",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
     "debugClearCarriedItems": true,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
     "playerLearnedAbilityIds": [
       "demo.ability.resonant-bolt"
     ],
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
@@ -46,33 +24,20 @@
         "baseSpeed": 100,
         "energyNeed": 100,
         "alerted": true,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": true,
-        "statuses": [],
-        "resistances": []
+        "clearPack": true
       }
-    ],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
@@ -82,9 +47,7 @@
           "type": "entity",
           "entityId": "summon.demo.ability.slag-call.2.0"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -96,7 +59,6 @@
       "lastCommandSeq": 3,
       "rngDrawCounter": 8,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -109,8 +71,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -2931,10 +2891,6 @@
           "canCast": true
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 3,
       "entities": [
         {
@@ -2946,9 +2902,7 @@
           "hp": 10,
           "speed": 100,
           "energyNeed": 50,
-          "alerted": true,
-          "castingCooldownRemaining": 2,
-          "statuses": []
+          "castingCooldownRemaining": 2
         },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
@@ -2959,9 +2913,6 @@
           "hp": 6,
           "speed": 110,
           "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": [],
           "pack": {
             "id": "demo.z-entrance-guardian.resonance-descent.1",
             "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
@@ -2978,9 +2929,6 @@
           "hp": 7,
           "speed": 100,
           "energyNeed": 50,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": [],
           "summon": {
             "ownerId": "demo.monster.ember-mote.1",
             "sourceAbilityId": "demo.ability.slag-call",
@@ -3261,7 +3209,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "9914811de88b19cbb45f2a6ab6bdc64443cc13bc5c14fc43dbd5f01315ccb5ed"
     },
     "events": [
@@ -3446,8 +3393,6 @@
         "y": 2
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "9914811de88b19cbb45f2a6ab6bdc64443cc13bc5c14fc43dbd5f01315ccb5ed"
   }
 }

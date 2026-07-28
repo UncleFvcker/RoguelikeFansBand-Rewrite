@@ -6,31 +6,6 @@
   "seed": "42",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
@@ -38,14 +13,7 @@
           "x": 18,
           "y": 18
         },
-        "hp": null,
-        "maxHp": null,
-        "baseSpeed": null,
         "energyNeed": 100,
-        "alerted": null,
-        "castingCooldownRemaining": null,
-        "observedPlayerResistances": [],
-        "clearPack": false,
         "statuses": [
           {
             "kindId": "rfb.status.slow",
@@ -82,54 +50,38 @@
             "grantsWallPassage": false,
             "incomingDamagePercent": 100
           }
-        ],
-        "resistances": []
+        ]
       }
-    ],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "pick-up"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "move",
         "direction": "east"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "pick-up"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "appraise",
         "itemId": "demo.item.echo-charm.1"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -141,7 +93,6 @@
       "lastCommandSeq": 5,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 5,
         "y": 3
@@ -154,8 +105,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 55,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -299,13 +248,6 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 2,
       "entities": [
         {
@@ -317,8 +259,6 @@
           "hp": 3,
           "speed": 10,
           "energyNeed": 50,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
           "statuses": [
             {
               "kindId": "rfb.status.slow",
@@ -366,9 +306,6 @@
           "hp": 6,
           "speed": 110,
           "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": [],
           "pack": {
             "id": "demo.z-entrance-guardian.resonance-descent.1",
             "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
@@ -379,7 +316,6 @@
       ],
       "groundItemCount": 3,
       "inventoryStackCount": 2,
-      "equipmentCount": 0,
       "inventory": [
         {
           "id": "demo.item.echo-charm.1",
@@ -433,8 +369,6 @@
           "identification": "unexamined"
         }
       ],
-      "equipment": [],
-      "itemKnowledge": [],
       "itemPropertyKnowledge": [
         {
           "itemId": "demo.item.echo-charm.1",
@@ -442,7 +376,6 @@
         }
       ],
       "nextItemInstanceSerial": 2,
-      "terrainInteractions": [],
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -497,7 +430,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "c77556c0660f118249b362f64e842125443cdf4cb608529d34205680e1159008"
     },
     "events": [
@@ -552,8 +484,6 @@
         "y": 3
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "c77556c0660f118249b362f64e842125443cdf4cb608529d34205680e1159008"
   }
 }

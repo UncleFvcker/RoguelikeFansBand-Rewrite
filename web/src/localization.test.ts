@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 
-import { Localization, MESSAGE_KEYS } from "./localization.ts";
+import { Localization } from "./localization.ts";
 
 const sources = {
   "en-US": readLocale("en-US"),
@@ -16,9 +16,8 @@ test("English and Simplified Chinese resources contain matching keys and variabl
   const english = extractMessages(sources["en-US"]);
   const chinese = extractMessages(sources["zh-CN"]);
 
-  assert.deepEqual([...english.keys()].sort(), [...MESSAGE_KEYS].sort());
-  assert.deepEqual([...chinese.keys()].sort(), [...MESSAGE_KEYS].sort());
-  for (const key of MESSAGE_KEYS) {
+  assert.deepEqual([...chinese.keys()].sort(), [...english.keys()].sort());
+  for (const key of english.keys()) {
     assert.deepEqual(
       [...(chinese.get(key) ?? [])].sort(),
       [...(english.get(key) ?? [])].sort(),

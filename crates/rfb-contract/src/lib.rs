@@ -36,8 +36,9 @@ pub struct ContractFixture {
     pub seed: String,
     pub preconditions: Preconditions,
     pub commands: Vec<ContractCommand>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub save_round_trip: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assertions: Option<ContractAssertions>,
 }
 
@@ -52,67 +53,67 @@ pub enum Determinism {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Preconditions {
     pub world: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_clear_entities: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_clear_carried_items: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_ability_casts_succeed: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_recharge_attempts_succeed: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_recharge_attempts_fail: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_recharge_sources_survive: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub debug_recall_delay_turns: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_item_curses_land: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub debug_item_curses_resisted: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_build_id: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_level: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_experience: Option<u64>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_maximum_experience: Option<u64>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_life_force: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_max_level: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_pending_attribute_increases: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attributes: Option<NaturalAttributeSetSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub legacy_player_progress: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_resources: Option<Vec<ResourcePoolSaveDto>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_learned_ability_ids: Option<Vec<String>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_ability_progress: Option<Vec<AbilityProgressSaveDto>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub legacy_player_ability_state: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_statuses: Vec<StatusSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_resistances: Vec<ResistanceSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entity_effects: Vec<EntityEffectsPrecondition>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory_items: Vec<InventoryItemPrecondition>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terrain_overrides: Vec<TerrainOverridePrecondition>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub revealed_terrain: Vec<Position>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub campaign_conquered_dungeons: Vec<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign_state: Option<CampaignStateSaveDto>,
 }
 
@@ -122,27 +123,27 @@ pub struct EntityEffectsPrecondition {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind_id: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub position: Option<Position>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hp: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_hp: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_speed: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub energy_need: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alerted: Option<bool>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub casting_cooldown_remaining: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub observed_player_resistances: Vec<ResistanceSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub clear_pack: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summon: Option<SummonSaveDto>,
@@ -153,7 +154,10 @@ pub struct EntityEffectsPrecondition {
 pub struct InventoryItemPrecondition {
     pub id: String,
     pub kind_id: String,
-    #[serde(default = "default_precondition_quantity")]
+    #[serde(
+        default = "default_precondition_quantity",
+        skip_serializing_if = "is_default_precondition_quantity"
+    )]
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generation_depth: Option<u16>,
@@ -173,8 +177,36 @@ const fn default_precondition_quantity() -> u32 {
     1
 }
 
+const fn is_default_precondition_quantity(value: &u32) -> bool {
+    *value == default_precondition_quantity()
+}
+
+const fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+const fn is_true(value: &bool) -> bool {
+    *value
+}
+
 const fn is_zero_u16(value: &u16) -> bool {
     *value == 0
+}
+
+const fn is_zero_u32(value: &u32) -> bool {
+    *value == 0
+}
+
+const fn is_zero_u64(value: &u64) -> bool {
+    *value == 0
+}
+
+const fn is_zero_usize(value: &usize) -> bool {
+    *value == 0
+}
+
+fn summon_command_is_default(value: &SummonCommandDto) -> bool {
+    value == &SummonCommandDto::default()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -188,7 +220,9 @@ pub struct TerrainOverridePrecondition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ContractCommand {
     pub command: GameCommand,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub command_seq: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected_revision: Option<u32>,
 }
 
@@ -196,10 +230,15 @@ pub struct ContractCommand {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ContractAssertions {
     pub final_state: FinalStateAssertion,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<GameEventDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub changed_cells: Vec<Position>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removed_entities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub errors: Vec<CommandErrorAssertion>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub save_round_trip_state_hash: Option<String>,
 }
 
@@ -208,84 +247,84 @@ pub struct ContractAssertions {
 pub struct FinalStateAssertion {
     pub revision: u32,
     pub turn: u32,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub world_tick: u32,
     pub last_command_seq: u32,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_zero_u64")]
     pub rng_draw_counter: u64,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub floor_id: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
     pub player_position: Position,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_max_hp: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attack: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_defense: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_speed: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_energy_need: Option<i32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_carried_weight_tenths_pound: Option<u32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_carry_capacity_tenths_pound: Option<u32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_statuses: Vec<StatusDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_resistances: Vec<ResistanceDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_level: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_experience: Option<u64>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_max_level: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_pending_attribute_increases: Option<u16>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attributes: Option<rfb_protocol::PlayerProgressDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_build: Option<PlayerBuildDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_resources: Vec<ResourcePoolDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_ability_learning: Option<AbilityLearningDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_abilities: Vec<AbilityDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "summon_command_is_default")]
     pub player_summon_command: SummonCommandDto,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_recall: Option<RecallStateDto>,
     pub entity_count: usize,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entities: Vec<ActorStateAssertion>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub ground_item_count: usize,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub inventory_stack_count: usize,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub equipment_count: usize,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory: Vec<InventoryItemDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub equipment: Vec<EquipmentItemDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_item_instance_serial: Option<u64>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tasks: Vec<TaskStatusDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign: Option<CampaignStateDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub revealed_terrain: Vec<Position>,
     pub state_hash: String,
 }
@@ -298,13 +337,13 @@ pub struct ActorStateAssertion {
     pub hp: i32,
     pub speed: u16,
     pub energy_need: i32,
-    #[serde(default = "default_assertion_alerted")]
+    #[serde(default = "default_assertion_alerted", skip_serializing_if = "is_true")]
     pub alerted: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub observed_player_resistances: Vec<ResistanceDto>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pack: Option<MonsterPackSaveDto>,

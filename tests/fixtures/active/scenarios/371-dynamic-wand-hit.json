@@ -6,37 +6,11 @@
   "seed": "0",
   "preconditions": {
     "world": "demo.world.original-v1",
-    "debugClearEntities": false,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.tinkerer",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "test.item.wand-hit.1",
         "kindId": "demo.item.resonance-wand",
-        "quantity": 1,
         "charges": {
           "current": 12,
           "maximum": 12
@@ -58,11 +32,7 @@
           }
         }
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -73,9 +43,7 @@
           "type": "entity",
           "entityId": "demo.monster.ember-mote.1"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -87,7 +55,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 10,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -100,8 +67,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 53,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 2,
       "playerExperience": 14,
       "playerMaxLevel": 2,
@@ -255,12 +220,6 @@
           "restRecoveryAmount": 3
         }
       ],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 1,
       "entities": [
         {
@@ -272,9 +231,6 @@
           "hp": 6,
           "speed": 110,
           "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": [],
           "pack": {
             "id": "demo.z-entrance-guardian.resonance-descent.1",
             "leaderId": "demo.z-entrance-guardian.resonance-descent.1",
@@ -520,7 +476,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "9fb188788a7758e383d47d5cdc04784617072239c19f5436e1c9fdf0c210b54f"
     },
     "events": [
@@ -644,7 +599,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "errors": [],
     "saveRoundTripStateHash": "9fb188788a7758e383d47d5cdc04784617072239c19f5436e1c9fdf0c210b54f"
   }
 }

@@ -7,84 +7,44 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
-    "playerBuildId": null,
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "fixture.item.band.1",
-        "kindId": "demo.item.resonant-band",
-        "quantity": 1
+        "kindId": "demo.item.resonant-band"
       },
       {
         "id": "fixture.item.band.2",
-        "kindId": "demo.item.resonant-band",
-        "quantity": 1
+        "kindId": "demo.item.resonant-band"
       },
       {
         "id": "fixture.item.band.3",
-        "kindId": "demo.item.resonant-band",
-        "quantity": 1
+        "kindId": "demo.item.resonant-band"
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "equip",
         "itemId": "fixture.item.band.1"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "equip",
         "itemId": "fixture.item.band.2"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "equip",
         "itemId": "fixture.item.band.3"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
         "type": "wait"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -96,7 +56,6 @@
       "lastCommandSeq": 4,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -109,8 +68,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 3,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -254,15 +211,7 @@
         "lifePercent": 100,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 1,
       "equipmentCount": 2,
@@ -342,7 +291,6 @@
           "quality": "ordinary"
         }
       ],
-      "itemKnowledge": [],
       "itemPropertyKnowledge": [
         {
           "itemId": "fixture.item.band.1",
@@ -428,7 +376,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "6f15b92ddc707841c64617bbab2abbb16fb42c5bd0aa01aab776db13e65e4116"
     },
     "events": [
@@ -463,9 +410,6 @@
         "args": {}
       }
     ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "6f15b92ddc707841c64617bbab2abbb16fb42c5bd0aa01aab776db13e65e4116"
   }
 }

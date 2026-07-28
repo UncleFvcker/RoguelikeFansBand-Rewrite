@@ -8,55 +8,25 @@
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
     "debugClearCarriedItems": true,
-    "debugAbilityCastsSucceed": false,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
     "debugItemCursesLand": true,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.vanguard",
-    "playerHp": null,
-    "playerLevel": null,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
-    "playerResources": null,
-    "playerLearnedAbilityIds": null,
-    "playerAbilityProgress": null,
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
     "inventoryItems": [
       {
         "id": "test.item.armor-blight-scroll.1",
-        "kindId": "demo.item.armor-blight-scroll",
-        "quantity": 1
+        "kindId": "demo.item.armor-blight-scroll"
       },
       {
         "id": "test.item.resonance-mail.1",
-        "kindId": "demo.item.resonance-mail",
-        "quantity": 1
+        "kindId": "demo.item.resonance-mail"
       }
-    ],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
       "command": {
         "type": "equip",
         "itemId": "test.item.resonance-mail.1"
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     },
     {
       "command": {
@@ -65,9 +35,7 @@
         "target": {
           "type": "self"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -79,7 +47,6 @@
       "lastCommandSeq": 2,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -92,8 +59,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 189,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -237,15 +202,7 @@
         "lifePercent": 115,
         "experiencePercent": 100
       },
-      "playerResources": [],
-      "playerAbilityLearning": null,
-      "playerAbilities": [],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 0,
-      "entities": [],
       "groundItemCount": 5,
       "inventoryStackCount": 2,
       "equipmentCount": 2,
@@ -469,7 +426,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "d9c1c0cb9761d882733b91c3ecb1bf052dad98272fdd93d085a6a743c7eecb32"
     },
     "events": [
@@ -499,9 +455,6 @@
         }
       }
     ],
-    "changedCells": [],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "d9c1c0cb9761d882733b91c3ecb1bf052dad98272fdd93d085a6a743c7eecb32"
   }
 }

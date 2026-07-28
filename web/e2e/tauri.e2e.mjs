@@ -206,7 +206,6 @@ async function runScenario(driver) {
   assert.equal(state.contentId, expected.contentId);
   assert.equal(state.contentHash, expected.contentHash);
   assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.contentVisualCount, "127");
   assert.equal(state.itemCount, "5");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");
@@ -782,7 +781,6 @@ async function readState(driver) {
       contentId: host?.dataset.contentId,
       contentHash: host?.dataset.contentHash,
       worldId: host?.dataset.worldId,
-      contentVisualCount: host?.dataset.contentVisualCount,
       itemCount: host?.dataset.itemCount,
       inventoryStackCount: host?.dataset.inventoryStackCount,
       equipmentCount: host?.dataset.equipmentCount,

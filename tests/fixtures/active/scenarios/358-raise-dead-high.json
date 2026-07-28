@@ -7,24 +7,10 @@
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
-    "debugClearCarriedItems": false,
     "debugAbilityCastsSucceed": true,
-    "debugRechargeAttemptsSucceed": false,
-    "debugRechargeAttemptsFail": false,
-    "debugRechargeSourcesSurvive": false,
-    "debugRecallDelayTurns": null,
-    "debugItemCursesLand": false,
-    "debugItemCursesResisted": false,
     "playerBuildId": "demo.build.scholar",
     "playerHp": 200,
     "playerLevel": 48,
-    "playerExperience": null,
-    "playerMaximumExperience": null,
-    "playerLifeForce": null,
-    "playerMaxLevel": null,
-    "playerPendingAttributeIncreases": null,
-    "playerAttributes": null,
-    "legacyPlayerProgress": false,
     "playerResources": [
       {
         "id": "demo.resource.mana",
@@ -44,16 +30,7 @@
         "failCount": 0,
         "cooldownRemaining": 0
       }
-    ],
-    "legacyPlayerAbilityState": false,
-    "playerStatuses": [],
-    "playerResistances": [],
-    "entityEffects": [],
-    "inventoryItems": [],
-    "terrainOverrides": [],
-    "revealedTerrain": [],
-    "campaignConqueredDungeons": [],
-    "campaignState": null
+    ]
   },
   "commands": [
     {
@@ -63,9 +40,7 @@
         "target": {
           "type": "self"
         }
-      },
-      "commandSeq": null,
-      "expectedRevision": null
+      }
     }
   ],
   "saveRoundTrip": true,
@@ -77,7 +52,6 @@
       "lastCommandSeq": 1,
       "rngDrawCounter": 29,
       "floorId": "demo.floor.surface",
-      "dungeonInstanceId": null,
       "playerPosition": {
         "x": 3,
         "y": 3
@@ -90,8 +64,6 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
-      "playerStatuses": [],
-      "playerResistances": [],
       "playerLevel": 48,
       "playerExperience": 0,
       "playerMaxLevel": 48,
@@ -2912,10 +2884,6 @@
           "canCast": false
         }
       ],
-      "playerSummonCommand": {
-        "mode": "follow"
-      },
-      "playerRecall": null,
       "entityCount": 4,
       "entities": [
         {
@@ -2926,10 +2894,7 @@
           },
           "hp": 160,
           "speed": 120,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "summon.demo.ability.death-raise-dead.1.1",
@@ -2939,10 +2904,7 @@
           },
           "hp": 84,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "summon.demo.ability.death-raise-dead.1.2",
@@ -2952,10 +2914,7 @@
           },
           "hp": 84,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         },
         {
           "id": "summon.demo.ability.death-raise-dead.1.3",
@@ -2965,10 +2924,7 @@
           },
           "hp": 84,
           "speed": 110,
-          "energyNeed": 100,
-          "alerted": true,
-          "castingCooldownRemaining": 0,
-          "statuses": []
+          "energyNeed": 100
         }
       ],
       "groundItemCount": 5,
@@ -3244,7 +3200,6 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "revealedTerrain": [],
       "stateHash": "91cf3008adf1eecb683ddae6ce9dd9579f2e6db356339d8e26bb6891e8aee5ca"
     },
     "events": [
@@ -3427,8 +3382,6 @@
         "y": 2
       }
     ],
-    "removedEntities": [],
-    "errors": [],
     "saveRoundTripStateHash": "91cf3008adf1eecb683ddae6ce9dd9579f2e6db356339d8e26bb6891e8aee5ca"
   }
 }
