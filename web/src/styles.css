@@ -735,6 +735,41 @@ h1 {
   font-size: 0.76rem;
 }
 
+.item-target-dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  border: 1px solid #53677b;
+  border-radius: 6px;
+  padding: 1rem;
+  color: #dbe6f2;
+  background: #17212b;
+}
+
+.item-target-dialog::backdrop {
+  background: rgb(5 10 15 / 70%);
+}
+
+.item-target-dialog form,
+.item-target-dialog label {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.item-target-dialog h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+}
+
+.item-target-dialog select {
+  width: 100%;
+}
+
+.item-target-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
 @media (max-width: 1000px) {
   .game-layout {
     grid-template-columns: 1fr;

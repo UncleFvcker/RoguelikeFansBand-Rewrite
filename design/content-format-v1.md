@@ -222,6 +222,8 @@ contract-v110 为 `deviceGeneration` 增加可选 `recovery { intervalTicks, ene
 
 contract-v111 为物品效果增加 `remove-status`、`restore-resource`、`restore-resource-dice`、`restore-resource-full` 和 `sequence`。序列限制为 2–8 个非嵌套、自目标恢复步骤；编译器验证资源引用、状态 ID、固定值/骰值边界，并拒绝 damage/detect 或嵌套 sequence。demo 包 1.102.0 新增两种恢复药水，现含 68 abilities、5 ability books、25 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets，state hash 保持 Schema v49。完整边界见 [Contract v111](contract-v111-restorative-items.md)。
 
+contract-v112 为物品效果增加 `identify-item { full }`。固定 `useAction` 和动态 activation 都必须声明 item-only 目标；恢复型 sequence 拒绝嵌套鉴定。demo 包 1.103.0 新增普通/完全鉴定卷轴，现含 68 abilities、5 ability books、27 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets，state hash 保持 Schema v49。完整边界见 [Contract v112](contract-v112-scroll-identification.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

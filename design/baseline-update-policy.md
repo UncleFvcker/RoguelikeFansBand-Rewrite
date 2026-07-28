@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v111/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v110` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v112/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v111` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v111/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v112/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v111/baseli
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v111`：有序恢复型物品效果、状态清除、资源恢复、物品知识、结构化事件、save/replay、state hash Schema v49 和 383 个 exact fixtures 由 [Contract v111](contract-v111-restorative-items.md) 定义；`contract-v1` 至 `contract-v110` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v112`：卷轴重分类、普通/完全鉴定事务、物品目标前置拒绝、结构化鉴定事件、save/replay、state hash Schema v49 和 386 个 exact fixtures 由 [Contract v112](contract-v112-scroll-identification.md) 定义；`contract-v1` 至 `contract-v111` 继续作为历史基准保留。

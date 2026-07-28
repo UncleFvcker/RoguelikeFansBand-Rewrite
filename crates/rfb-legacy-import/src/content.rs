@@ -751,7 +751,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             tags: vec!["consumable", "legacy-import", "scroll"],
             melee: false,
             launcher: false,
-            behavior_gap: Some("device-effect"),
+            behavior_gap: Some("scroll-effect"),
         },
         55 | 65 | 66 => ItemShape {
             slot: None,
@@ -816,6 +816,8 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
     let remove_status = |status_kind_id: &str| serde_json::json!({"type": "remove-status", "statusKindId": status_kind_id});
     let sequence = |effects: Vec<serde_json::Value>| serde_json::json!({"type": "sequence", "effects": effects});
     let effect = match (entry.tval, entry.sval) {
+        (70, 12) => serde_json::json!({"type": "identify-item", "full": false}),
+        (70, 13) => serde_json::json!({"type": "identify-item", "full": true}),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -7452,7 +7454,7 @@ F:BRAND_VAMP | HOLD_LIFE
             None,
             &mut report,
         );
-        assert_eq!(report.item_behavior_gaps["device-effect"], 1);
+        assert_eq!(report.item_behavior_gaps["scroll-effect"], 1);
 
         let trap = terrain_json(
             &LegacyTerrainEntry {
@@ -7466,6 +7468,40 @@ F:BRAND_VAMP | HOLD_LIFE
                 .as_array()
                 .is_some_and(|tags| { tags.iter().any(|tag| tag == "trap") })
         );
+    }
+
+    #[test]
+    fn identify_scrolls_map_to_item_targeted_knowledge_effects() {
+        let mut report = ContentImportReport::default();
+        for (sval, full) in [(12, false), (13, true)] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("identify-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(value["useAction"]["effect"]["type"], "identify-item");
+            assert_eq!(value["useAction"]["effect"]["full"], full);
+        }
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let _ = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 14,
+                ..LegacyItemEntry::default()
+            },
+            "remove-curse-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(report.item_behavior_gaps["scroll-effect"], 1);
     }
 
     #[test]

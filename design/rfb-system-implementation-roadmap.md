@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.111 / contract-v111（P31–P61 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.112 / contract-v112（P31–P62 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v109 阶段性里程碑
+## 8. contract-v75–v112 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.111、内容包 1.102.0、contract-v111、save v1 和 state hash Schema v49；内容 hash 为 `12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7`。active baseline 包含 383 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能事务；v109 建立动态设备 profile、深度加权、随机容量、目标事务和首批 wand/staff/rod；v110 建立设备自然恢复、持久余数和职业资源/设备来源主动充能；v111 建立状态清除、资源恢复和有序恢复型物品效果。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.112、内容包 1.103.0、contract-v112、save v1 和 state hash Schema v49；内容 hash 为 `c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25`。active baseline 包含 386 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能事务；v109 建立动态设备 profile、深度加权、随机容量、目标事务和首批 wand/staff/rod；v110 建立设备自然恢复、持久余数和职业资源/设备来源主动充能；v111 建立状态清除、资源恢复和有序恢复型物品效果；v112 完成卷轴重分类与普通/完全鉴定事务。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、25 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、27 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -476,7 +476,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 | 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围、守卫、施法效用、多格法术、敌对召唤、玩家召唤物目标/命令、保持距离/逃跑和有限智能学习；仍缺繁殖、unique 生态、永久宠物和回忆 |
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
-| 法术、能力与设备 | 玩家/怪物施法及首批动态设备纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、物品鉴定、临时形态、生命恢复、动态设备 profile/容量与首批 wand/staff/rod；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度、recharge 和完整激活族 |
+| 法术、能力与设备 | 玩家/怪物施法、动态设备与首批卷轴纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、普通/完整物品鉴定、临时形态、生命恢复、动态设备 profile/容量、首批 wand/staff/rod 与主动充能；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整卷轴/激活族 |
 | 荒野、城镇与经济 | 未建立 | 多城镇旅行、商店、家、建筑服务、交易、声望和长期经济循环尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
@@ -522,6 +522,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P60 进展（2026-07）**：contract-v110 已完成设备恢复与主动充能纵切。`deviceGeneration.recovery` 以 interval/per-mille 声明 rod 每 tick、wand/staff 每 10 tick 的 1% 最大能量恢复，实例余数持久化且零 RNG；首版只处理背包设备。Artificer recharge profile 使用 Resonance 资源或另一件有能量的设备，资源失败清空目标，设备来源失败保留目标并承担 `1 in 3` 损毁率，artifact 来源免毁。Web、结构化事件、三项 contract 调试选项与 fixtures 374–379 已固定事务、回档和十倍速率差；本地 legacy 包严格编译 hash 为 `21b00c14f10f6feff7e87f0a37e7974c78ab683e4995190eae040a4c84601137`。
 
 **P61 进展（2026-07）**：contract-v111 已完成有序恢复型消耗品纵切。内容新增 `remove-status`、三种资源恢复与 2–8 步非嵌套 sequence，运行时固定顺序、RNG、缺池消费和物品知识边界；demo 两种恢复药水及 fixtures 380–383 固定骰值/回满、异常清除、no-effect 和存档回读。legacy importer 接入四种恢复食物、Boldness、Vigor、Restore Mana、Clarity，并扩展六种治疗药水，`consumable-effect` 89→81；真实包 hash 为 `b6913ec229580a8decd6816fbebc4af6554bb55cd222fc7e11e9ceec1a353eac`。`device-effect` 61 经审计全部来自 tval 70/71 卷轴，P62 应先完成卷轴效果重分类，再选择知识、传送、侦测或附魔事务族。
+
+**P62 进展（2026-07）**：contract-v112 已完成卷轴重分类与首批鉴定事务。物品效果新增 item-only `identify-item { full }`，普通鉴定写 appraised、完全鉴定写 identified 与完整 affix 知识；缺失/错误/自身目标在消耗、RNG 和 world tick 前拒绝，来源卷轴成功后 aware。Web 增加背包/装备通用物品选择器，Death Esoteria 复用同一实例知识 helper；demo 两种卷轴及 fixtures 384–386 固定普通/完整鉴定、剩余堆叠、存档回读与原子拒绝。legacy importer 把 tval 70/71 统一为 `scroll-effect` 并映射 sval 12/13，缺口 61→59，`device-effect` 退出报告；真实包严格编译 hash 为 `143ed91ebd453dd22628548663dac0483c28d2f20625b749844a5419c61cac44`。P63 应先量化剩余卷轴的传送、侦测/地图、附魔/强化等事务族，再选择覆盖收益最高的一族。
 
 ## 9. 内容迁移策略
 

@@ -1274,6 +1274,16 @@ function renderAbilities(
         });
         return;
       }
+      if (ability.targetSpec.modes.includes("item")) {
+        selectItemTarget(undefined, (itemId) =>
+          dispatch({
+            type: "cast-ability",
+            abilityId: ability.id,
+            target: { type: "item", itemId },
+          }),
+        );
+        return;
+      }
       startAbilityTargeting(ability);
     });
     actions.append(study, forget, cast);
@@ -1500,6 +1510,16 @@ async function useSelectedInventoryItem(): Promise<void> {
     });
     return;
   }
+  if (item.useTargetSpec?.modes.includes("item")) {
+    selectItemTarget(item.id, (itemId) =>
+      dispatch({
+        type: "use-item",
+        itemId: item.id,
+        target: { type: "item", itemId },
+      }),
+    );
+    return;
+  }
   if (item.useTargetSpec) {
     startTargetingWithSpec(item.useTargetSpec, {
       type: "item",
@@ -1508,6 +1528,68 @@ async function useSelectedInventoryItem(): Promise<void> {
     return;
   }
   await dispatch({ type: "use-item", itemId: item.id });
+}
+
+function selectItemTarget(
+  excludedItemId: string | undefined,
+  onSelect: (itemId: string) => Promise<void>,
+): void {
+  const candidates = [
+    ...currentInventory
+      .filter((item) => item.id !== excludedItemId)
+      .map((item) => ({
+        id: item.id,
+        label: visibleItemName(item.displayNameKey, item.kindId),
+      })),
+    ...currentEquipment.map((item) => ({
+      id: item.id,
+      label: visibleItemName(item.displayNameKey, item.kindId),
+    })),
+  ];
+  if (candidates.length === 0) {
+    addLocalizedMessage("message-target-mode-unavailable", undefined, "system");
+    return;
+  }
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "item-target-dialog";
+  const form = document.createElement("form");
+  form.method = "dialog";
+  const title = document.createElement("h2");
+  title.textContent = localization.format("item-target-title");
+  const label = document.createElement("label");
+  const labelText = document.createElement("span");
+  labelText.textContent = localization.format("item-target-label");
+  const select = document.createElement("select");
+  for (const candidate of candidates) {
+    const option = document.createElement("option");
+    option.value = candidate.id;
+    option.textContent = candidate.label;
+    select.append(option);
+  }
+  label.append(labelText, select);
+  const actions = document.createElement("div");
+  actions.className = "item-target-actions";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = localization.format("action-dialog-cancel");
+  cancel.addEventListener("click", () => dialog.close());
+  const confirm = document.createElement("button");
+  confirm.type = "submit";
+  confirm.textContent = localization.format("action-item-target-confirm");
+  actions.append(cancel, confirm);
+  form.append(title, label, actions);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const itemId = select.value;
+    dialog.close();
+    void onSelect(itemId);
+  });
+  dialog.addEventListener("close", () => dialog.remove(), { once: true });
+  dialog.append(form);
+  document.body.append(dialog);
+  dialog.showModal();
+  select.focus();
 }
 
 async function dropSelectedInventoryItems(): Promise<void> {
@@ -2346,6 +2428,16 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-resource-no-effect", {
         target: visibleItemName(event.args.nameKey, event.args.target),
         resource: contentName(event.args.resource),
+      });
+    case "item-use-identified":
+      return localization.format("message-item-use-identified", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "item-use-fully-identified":
+      return localization.format("message-item-use-fully-identified", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        target: visibleItemNameForKind(event.args.target),
       });
     case "item-use-unavailable":
       return localization.format("message-item-use-unavailable");

@@ -4414,6 +4414,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/ItemIdentifyResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "item-identify"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/MonsterDisplacementResolutionDto"
             },
             "type": {
@@ -5021,6 +5037,29 @@
         "unexamined",
         "appraised",
         "identified"
+      ]
+    },
+    "ItemIdentifyResolutionDto": {
+      "type": "object",
+      "properties": {
+        "changed": {
+          "type": "boolean"
+        },
+        "full": {
+          "type": "boolean"
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "itemKindId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "itemId",
+        "itemKindId",
+        "full",
+        "changed"
       ]
     },
     "ItemKnowledgeDto": {

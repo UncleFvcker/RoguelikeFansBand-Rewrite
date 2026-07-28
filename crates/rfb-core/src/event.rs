@@ -7,11 +7,11 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
-    ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SummonCommandModeDto,
-    SummonCommandResolutionDto,
+    GameEventOutcomeDto, HealingResolutionDto, ItemIdentifyResolutionDto, ItemQualityDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceGainResolutionDto,
+    ResourceGainSourceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
+    SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -450,6 +450,11 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         display_name_key: String,
         resolution: ResourceRecoveryResolutionDto,
+    },
+    ItemIdentified {
+        source_kind_id: String,
+        display_name_key: String,
+        resolution: ItemIdentifyResolutionDto,
     },
     ItemActivationLanded {
         source_kind_id: String,
@@ -1664,6 +1669,29 @@ impl DomainEvent {
                     ("amount", resolution.recovered.to_string()),
                 ],
                 GameEventOutcomeDto::ResourceRecovery { resolution },
+            ),
+            Self::ItemIdentified {
+                source_kind_id,
+                display_name_key,
+                resolution,
+            } => dto_with_outcome(
+                if resolution.full {
+                    "item.use-fully-identified"
+                } else {
+                    "item.use-identified"
+                },
+                if resolution.full {
+                    "item-use-fully-identified"
+                } else {
+                    "item-use-identified"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("target", resolution.item_kind_id.clone()),
+                    ("changed", resolution.changed.to_string()),
+                ],
+                GameEventOutcomeDto::ItemIdentify { resolution },
             ),
             Self::ItemActivationLanded {
                 source_kind_id,

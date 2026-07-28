@@ -1505,6 +1505,10 @@ pub enum ItemUseEffectDefinition {
     RestoreResourceFull {
         resource_id: String,
     },
+    IdentifyItem {
+        #[serde(default)]
+        full: bool,
+    },
     Sequence {
         effects: Vec<Self>,
     },
@@ -3099,6 +3103,7 @@ fn valid_item_effect(
         ItemUseEffectDefinition::RestoreResourceFull { resource_id } => {
             resource_ids.contains(resource_id)
         }
+        ItemUseEffectDefinition::IdentifyItem { .. } => true,
         ItemUseEffectDefinition::Sequence { effects } => {
             (2..=8).contains(&effects.len())
                 && effects.iter().all(|effect| {
@@ -3151,7 +3156,9 @@ fn valid_item_effect(
 
 fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
-        ItemUseEffectDefinition::Damage { .. } => false,
+        ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::IdentifyItem { .. } => {
+            false
+        }
         ItemUseEffectDefinition::Sequence { effects } => {
             effects.iter().all(item_effect_is_self_targeted)
         }
@@ -4375,6 +4382,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::Sequence { .. }
                     | ItemUseEffectDefinition::Detect { .. } => self_target,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
+                    ItemUseEffectDefinition::IdentifyItem { .. } => {
+                        target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
+                            && target.range == 0
+                            && !target.requires_line_of_effect
+                    }
                 }
         };
 
@@ -4480,7 +4492,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 &terrain_tags,
                 &actor_tag_values,
                 &resource_ids,
-            ) && item_effect_is_self_targeted(&action.effect)
+            ) && (item_effect_is_self_targeted(&action.effect)
+                || matches!(action.effect, ItemUseEffectDefinition::IdentifyItem { .. }))
                 && !matches!(action.effect, ItemUseEffectDefinition::Detect { .. });
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
@@ -8344,7 +8357,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 25);
+        assert_eq!(first.content.items.len(), 27);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8370,7 +8383,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.102.0");
+        assert_eq!(catalog.pack_version(), "1.103.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

@@ -179,6 +179,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.111 的恢复型物品不增加存档字段。资源恢复写入既有 `PlayerSaveDto.resources`，状态清除写入既有 statuses，消耗后的数量使用现有四类物品实例，`tried`/`aware` 继续由 `itemKnowledge` 保存；缺少资源池不会在存档中创建新池。save 容器保持 v1，state hash Schema 保持 v49。完整边界见 [Contract v111](contract-v111-restorative-items.md)。
 
+协议 1.112 的鉴定卷轴不增加存档字段。来源卷轴种类的 `aware` 写入既有 `itemKnowledge`；目标实例的 `appraised`、`identified` 与 `knownAffixIds` 写入既有 `itemPropertyKnowledge`，剩余卷轴堆叠使用原物品实例数量。旧内容 hash 迁移不补发卷轴、不补鉴定、不抽 RNG。save 容器保持 v1，state hash Schema 保持 v49。完整边界见 [Contract v112](contract-v112-scroll-identification.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

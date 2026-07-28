@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.111、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.112、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -239,6 +239,8 @@ interface GameCoreV1 {
 协议 1.110 增加 `RechargeItem { targetItemId, source }`，其中来源为职业 `resource` 或另一件 `item`；`PlayerDto.deviceRecharge` 投影资源 ID/power，背包 DTO 增加 `canReceiveRecharge` / `canSupplyRecharge`。合法充能消耗普通行动并返回结构化成功/失败事件；无 profile、目标/来源非法或资源为空时返回不可用事件，不推进 world tick、不抽 RNG。自然恢复只通过能量恢复事件投影，确定性余数不进入运行时背包 DTO。恢复余数及充能结果进入 save/replay/state hash Schema v49。完整边界见 [Contract v110](contract-v110-device-recharge.md)。
 
 协议 1.111 固定恢复型物品的结构化事件：状态清除按成功与 no-effect 区分 kind/message key，资源恢复沿用 `GameEventOutcomeDto::ResourceRecovery` 并携带 before/after/recovered；有序序列保持事件声明顺序。协议 DTO 没有新增变体，版本升级用于锁定事件词汇、内容行为和 active baseline；state hash Schema 保持 v49。完整边界见 [Contract v111](contract-v111-restorative-items.md)。
+
+协议 1.112 新增 `ItemIdentifyResolutionDto { itemId, itemKindId, full, changed }` 与 `GameEventOutcomeDto::ItemIdentify`，固定卷轴普通/完整鉴定的结构化结果。`UseItem.target` 继续复用既有 `TargetSelection.item`；背包 DTO 的 `useTargetSpec` 对鉴定卷轴投影 item-only 目标。错误、缺失和自身目标在消耗、RNG 与 world tick 前返回不可用事件。鉴定结果继续使用既有物品知识 DTO，state hash Schema 保持 v49。完整边界见 [Contract v112](contract-v112-scroll-identification.md)。
 
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`，已知充能不足的设备使用按原版语义不消耗能量或推进 world tick。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 

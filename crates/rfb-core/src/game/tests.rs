@@ -11207,6 +11207,153 @@ fn missing_player_resource_consumes_restorative_without_claiming_awareness() {
 }
 
 #[test]
+fn appraisal_scroll_targets_an_item_without_drawing_rng() {
+    const SCROLL_ID: &str = "test.item.appraisal-scroll.1";
+    const TARGET_ID: &str = "test.item.appraisal-target.1";
+    let mut game = skill_check_game(31, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.appraisal-scroll");
+    give_inventory_item(&mut game, TARGET_ID, "demo.item.adaptive-glaive");
+    let before = game.snapshot();
+    let scroll = before
+        .inventory
+        .iter()
+        .find(|item| item.id == SCROLL_ID)
+        .expect("appraisal scroll should be carried");
+    assert_eq!(scroll.knowledge, ItemKnowledgeDto::Unknown);
+    assert_eq!(scroll.use_target_spec, Some(item_target_spec()));
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: SCROLL_ID.to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: TARGET_ID.to_owned(),
+            }),
+        },
+    );
+
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(!game.items.iter().any(|item| item.id == SCROLL_ID));
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.appraisal-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+    let target = update
+        .inventory
+        .iter()
+        .find(|item| item.id == TARGET_ID)
+        .expect("identified target should remain carried");
+    assert_eq!(target.knowledge, ItemKnowledgeDto::Aware);
+    assert_eq!(target.identification, ItemIdentificationDto::Appraised);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-identified"
+            && matches!(
+                &event.outcome,
+                Some(GameEventOutcomeDto::ItemIdentify { resolution })
+                    if resolution.item_id == TARGET_ID
+                        && !resolution.full
+                        && resolution.changed
+            )
+    }));
+}
+
+#[test]
+fn revelation_scroll_fully_identifies_affixes_and_round_trips() {
+    const SCROLL_ID: &str = "test.item.revelation-scroll.1";
+    const TARGET_ID: &str = "test.item.revelation-target.1";
+    let mut game = skill_check_game(37, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.revelation-scroll");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == SCROLL_ID)
+        .expect("revelation scroll should be carried")
+        .quantity = 2;
+    game.items.push(ItemInstance {
+        id: TARGET_ID.to_owned(),
+        kind_id: "demo.item.adaptive-glaive".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Exceptional,
+        affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
+        rolled_affixes: Vec::new(),
+        activation: None,
+        charges: None,
+        device_recovery_progress: 0,
+        location: ItemLocation::Inventory,
+    });
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: SCROLL_ID.to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: TARGET_ID.to_owned(),
+            }),
+        },
+    );
+
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == SCROLL_ID)
+            .expect("one scroll should remain")
+            .quantity,
+        1
+    );
+    let target = update
+        .inventory
+        .iter()
+        .find(|item| item.id == TARGET_ID)
+        .expect("fully identified target should remain carried");
+    assert_eq!(target.identification, ItemIdentificationDto::Identified);
+    assert_eq!(target.quality, Some(ItemQualityDto::Exceptional));
+    assert_eq!(target.known_properties.len(), 1);
+    assert_eq!(
+        target.known_properties[0].affix_id,
+        "demo.affix.adaptive-echo"
+    );
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-fully-identified"
+            && matches!(
+                &event.outcome,
+                Some(GameEventOutcomeDto::ItemIdentify { resolution })
+                    if resolution.item_id == TARGET_ID && resolution.full
+            )
+    }));
+    let restored = Game::from_save(game.to_save()).expect("item knowledge should reload");
+    assert_eq!(restored.snapshot(), game.snapshot());
+}
+
+#[test]
+fn identify_scroll_rejects_missing_and_self_targets_before_consumption() {
+    const SCROLL_ID: &str = "test.item.invalid-identify-scroll.1";
+    let mut game = skill_check_game(41, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.appraisal-scroll");
+
+    for target_item_id in ["missing.item", SCROLL_ID] {
+        let draws_before = game.rng_draw_counter();
+        let tick_before = game.world_tick;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: SCROLL_ID.to_owned(),
+                target: Some(TargetSelection::Item {
+                    item_id: target_item_id.to_owned(),
+                }),
+            },
+        );
+        assert_eq!(update.events[0].kind, "item.use-unavailable");
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert_eq!(game.world_tick, tick_before);
+        assert!(game.items.iter().any(|item| item.id == SCROLL_ID));
+        assert_eq!(
+            game.item_knowledge_dto("demo.item.appraisal-scroll"),
+            ItemKnowledgeDto::Unknown
+        );
+    }
+}
+
+#[test]
 fn dynamic_device_generation_filters_by_depth_is_weighted_and_round_trips() {
     const WAND_ID: &str = "demo.item.resonance-wand";
     let content = load_built_in_content().expect("built-in content should load");

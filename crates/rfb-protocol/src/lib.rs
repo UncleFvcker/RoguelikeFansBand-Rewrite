@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.111";
+pub const PROTOCOL_VERSION: &str = "1.112";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1741,6 +1741,9 @@ pub enum GameEventOutcomeDto {
     ResourceGain {
         resolution: ResourceGainResolutionDto,
     },
+    ItemIdentify {
+        resolution: ItemIdentifyResolutionDto,
+    },
     MonsterDisplacement {
         resolution: MonsterDisplacementResolutionDto,
     },
@@ -1974,6 +1977,16 @@ pub enum ItemIdentificationDto {
     Unexamined,
     Appraised,
     Identified,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemIdentifyResolutionDto {
+    pub item_id: String,
+    pub item_kind_id: String,
+    pub full: bool,
+    pub changed: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2333,6 +2346,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemActivationDto);
     push_declaration!(ItemQualityDto);
     push_declaration!(ItemIdentificationDto);
+    push_declaration!(ItemIdentifyResolutionDto);
     push_declaration!(ItemPropertyDto);
     push_declaration!(InventoryItemDto);
     push_declaration!(BodySlotDto);

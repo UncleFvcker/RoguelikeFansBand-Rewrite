@@ -84,17 +84,17 @@ use rfb_protocol::{
     EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto, EquipmentPassiveDto,
     FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
     HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto,
-    ItemChargesDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
-    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
-    MeleeRoutineDto, MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
-    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
-    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto,
-    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto,
-    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    ItemChargesDto, ItemDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
+    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
+    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION,
+    PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto,
+    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
     SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
     TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
     TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
@@ -104,7 +104,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 103] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 104] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -208,10 +208,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 103] = [
     "4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8",
     "8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab",
     "f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9",
+    "12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7";
+    "c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 49;
@@ -303,6 +304,7 @@ enum ItemUsePlan {
     SelfTarget,
     Projectile { path: Vec<Position> },
     Detect,
+    Item { item_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2323,6 +2325,11 @@ impl Game {
             &action,
             GameAction::UseItem { item_id, .. } if self.item_charge_is_insufficient(item_id)
         );
+        let invalid_identify_item_use = matches!(
+            &action,
+            GameAction::UseItem { item_id, target }
+                if self.identify_item_use_target_is_invalid(item_id, target.as_ref())
+        );
         let unavailable_recharge = matches!(
             &action,
             GameAction::RechargeItem {
@@ -2333,6 +2340,7 @@ impl Game {
                 .is_some()
         );
         let advances_world = !depleted_device_use
+            && !invalid_identify_item_use
             && !unavailable_recharge
             && !matches!(
                 &action,
@@ -4155,7 +4163,18 @@ impl Game {
                     use_target_spec: item
                         .activation
                         .as_ref()
-                        .map(|activation| activation.target_spec.clone()),
+                        .map(|activation| activation.target_spec.clone())
+                        .or_else(|| {
+                            self.content
+                                .item(&item.kind_id)
+                                .and_then(|definition| definition.use_action.as_ref())
+                                .and_then(|action| match &action.effect {
+                                    ItemUseEffectDefinition::IdentifyItem { .. } => {
+                                        Some(item_target_spec())
+                                    }
+                                    _ => None,
+                                })
+                        }),
                     can_receive_recharge: self.item_can_receive_recharge(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
@@ -7086,30 +7105,10 @@ impl Game {
                 },
                 AbilityTargetPlan::Item { item_id },
             ) => {
-                let item = self
-                    .items
-                    .iter()
-                    .find(|item| item.id == item_id)
-                    .expect("planned identify target must remain available");
-                let item_kind_id = item.kind_id.clone();
-                let affix_ids = item.affix_ids.clone();
-                let awareness_before = self.item_knowledge_dto(&item_kind_id);
-                let property_before = self.item_property_knowledge.get(&item_id).cloned();
                 let roll = u16::try_from(self.rng.bounded(u64::from(full_identify_roll_sides)) + 1)
                     .expect("validated identify roll must fit u16");
                 let full = roll <= full_identify_power;
-                self.mark_item_aware(&item_kind_id);
-                let knowledge = self
-                    .item_property_knowledge
-                    .entry(item_id.clone())
-                    .or_default();
-                knowledge.appraised = true;
-                if full {
-                    knowledge.identified = true;
-                    knowledge.known_affix_ids.extend(affix_ids);
-                }
-                let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
-                    || property_before.as_ref() != self.item_property_knowledge.get(&item_id);
+                let identification = self.identify_item_instance(&item_id, full);
                 events.push(DomainEvent::AbilityEffectsResolved {
                     ability_id: ability.id,
                     resolution: AbilityEffectsResolutionDto {
@@ -7117,13 +7116,13 @@ impl Game {
                         target_kind_id: None,
                         effects: vec![AbilityEffectResolutionDto::IdentifyItem {
                             effect_index: 0,
-                            item_id,
-                            item_kind_id,
+                            item_id: identification.item_id,
+                            item_kind_id: identification.item_kind_id,
                             full_identify_power,
                             full_identify_roll_sides,
                             roll,
                             full,
-                            changed,
+                            changed: identification.changed,
                         }],
                     },
                     trace: None,
@@ -9752,6 +9751,22 @@ impl Game {
                     }
                     ItemUsePlan::Detect
                 }
+                ItemUseEffectDefinition::IdentifyItem { .. } => {
+                    let Some(TargetSelection::Item {
+                        item_id: target_item_id,
+                    }) = target
+                    else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    if !self.item_is_valid_identify_target(item_id, target_item_id) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    }
+                }
             };
             (
                 Some(activation.profile_id.clone()),
@@ -9761,16 +9776,37 @@ impl Game {
                 plan,
             )
         } else if let Some(action) = definition.use_action {
-            if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
-                events.push(DomainEvent::ItemUseUnavailable);
-                return Ok(());
-            }
+            let plan = match &action.effect {
+                ItemUseEffectDefinition::IdentifyItem { .. } => {
+                    let Some(TargetSelection::Item {
+                        item_id: target_item_id,
+                    }) = target
+                    else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    if !self.item_is_valid_identify_target(item_id, target_item_id) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    }
+                }
+                _ => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::SelfTarget
+                }
+            };
             (
                 None,
                 action.device_check_difficulty,
                 action.charges.map(|charges| charges.cost),
                 action.effect,
-                ItemUsePlan::SelfTarget,
+                plan,
             )
         } else {
             events.push(DomainEvent::ItemUseUnavailable);
@@ -9956,9 +9992,70 @@ impl Game {
                     },
                 });
             }
+            (ItemUseEffectDefinition::IdentifyItem { full }, ItemUsePlan::Item { item_id }) => {
+                self.mark_item_aware(&kind_id);
+                let resolution = self.identify_item_instance(&item_id, full);
+                events.push(DomainEvent::ItemIdentified {
+                    source_kind_id: kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    resolution,
+                });
+            }
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(())
+    }
+
+    fn item_is_valid_identify_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+        source_item_id != target_item_id
+            && self.items.iter().any(|item| {
+                item.id == target_item_id
+                    && item.quantity > 0
+                    && match &item.location {
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
+                        ItemLocation::Ground(position) => *position == self.player.position,
+                        ItemLocation::CarriedBy { .. } => false,
+                    }
+            })
+    }
+
+    fn identify_item_instance(&mut self, item_id: &str, full: bool) -> ItemIdentifyResolutionDto {
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned identify target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let affix_ids = item
+            .affix_ids
+            .iter()
+            .cloned()
+            .chain(
+                item.rolled_affixes
+                    .iter()
+                    .map(|rolled| rolled.affix_id.clone()),
+            )
+            .collect::<BTreeSet<_>>();
+        let awareness_before = self.item_knowledge_dto(&item_kind_id);
+        let property_before = self.item_property_knowledge.get(item_id).cloned();
+        self.mark_item_aware(&item_kind_id);
+        let knowledge = self
+            .item_property_knowledge
+            .entry(item_id.to_owned())
+            .or_default();
+        knowledge.appraised = true;
+        if full {
+            knowledge.identified = true;
+            knowledge.known_affix_ids.extend(affix_ids);
+        }
+        let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
+            || property_before.as_ref() != self.item_property_knowledge.get(item_id);
+        ItemIdentifyResolutionDto {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            full,
+            changed,
+        }
     }
 
     fn resolve_item_self_effect(
@@ -10042,7 +10139,9 @@ impl Game {
                 }
                 noticed
             }
-            ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::Detect { .. } => {
+            ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::Detect { .. }
+            | ItemUseEffectDefinition::IdentifyItem { .. } => {
                 unreachable!("projected item effects cannot resolve as self restoration")
             }
         }
@@ -10138,6 +10237,53 @@ impl Game {
             return false;
         };
         item.charges.is_none_or(|state| state.current < cost)
+    }
+
+    fn identify_item_use_target_is_invalid(
+        &self,
+        source_item_id: &str,
+        target: Option<&TargetSelection>,
+    ) -> bool {
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == source_item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+        }) else {
+            return false;
+        };
+        let Some(definition) = self.content.item(&item.kind_id) else {
+            return false;
+        };
+        let is_identify = item
+            .activation
+            .as_ref()
+            .and_then(|activation| {
+                definition
+                    .device_generation
+                    .as_ref()
+                    .and_then(|generation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|candidate| candidate.id == activation.profile_id)
+                    })
+            })
+            .is_some_and(|profile| {
+                matches!(profile.effect, ItemUseEffectDefinition::IdentifyItem { .. })
+            })
+            || definition.use_action.as_ref().is_some_and(|action| {
+                matches!(action.effect, ItemUseEffectDefinition::IdentifyItem { .. })
+            });
+        if !is_identify {
+            return false;
+        }
+        let Some(TargetSelection::Item {
+            item_id: target_item_id,
+        }) = target
+        else {
+            return true;
+        };
+        !self.item_is_valid_identify_target(source_item_id, target_item_id)
     }
 
     fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
@@ -19334,6 +19480,14 @@ enum PickUpOutcome {
 
 fn throw_range(weight_tenths_pound: u16) -> u16 {
     (BASE_THROW_RANGE_BUDGET / weight_tenths_pound.max(1)).clamp(MIN_THROW_RANGE, MAX_THROW_RANGE)
+}
+
+fn item_target_spec() -> TargetSpecDto {
+    TargetSpecDto {
+        modes: vec![TargetModeDto::Item],
+        range: 0,
+        requires_line_of_effect: false,
+    }
 }
 
 fn projectile_target_spec(range: u16) -> TargetSpecDto {

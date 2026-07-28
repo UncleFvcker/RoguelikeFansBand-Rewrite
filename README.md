@@ -131,6 +131,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v109：动态设备身份与首批 staff/wand/rod 激活](design/contract-v109-dynamic-devices.md)
 - [Contract v110：设备自然恢复与主动充能](design/contract-v110-device-recharge.md)
 - [Contract v111：有序恢复型消耗品效果](design/contract-v111-restorative-items.md)
+- [Contract v112：卷轴效果重分类与首批鉴定事务](design/contract-v112-scroll-identification.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -154,7 +155,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v111/scenarios`](tests/fixtures/contract-v111/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v110` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v112/scenarios`](tests/fixtures/contract-v112/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v111` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -279,6 +280,8 @@ P60 / contract-v110 建立动态设备自然恢复与主动充能。rod 每个 w
 
 P61 / contract-v111 建立有序恢复型消耗品效果。内容层新增状态清除、固定/骰值/回满资源及 2–8 步非嵌套恢复序列；运行时按声明顺序投影事件，骰值使用正式 RNG，回满零 RNG，缺少资源池时仍消费但不错误识别。demo 新增 Clarity Draught 与 Perfect Focus Elixir；legacy importer 接入四种恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种既有治疗药水补齐可表达的异常清除，`consumable-effect` 89→81。协议 1.111、demo 1.102.0、state hash Schema v49、active baseline 383 条 exact、零 waiver，内置 content hash 为 `12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7`。详见[Contract v111](design/contract-v111-restorative-items.md)。
 
+P62 / contract-v112 完成卷轴效果重分类与首批鉴定事务。内容层新增物品效果 `identify-item { full }`，普通鉴定写入 appraised，完全鉴定写入 identified 与完整 affix 知识；固定物品与动态 activation 都校验 item-only 目标，缺失/错误/自身目标在消耗、RNG 与 world tick 前拒绝。Web 增加背包/装备通用物品目标对话框，Death 鉴定法术复用同一实例知识 helper。demo 新增 Appraisal Scroll 与 Revelation Scroll；legacy importer 把 tval 70/71 缺口统一改为 `scroll-effect` 并映射 sval 12/13，使缺口 61→59，报告不再出现 `device-effect`。协议 1.112、demo 1.103.0、state hash Schema v49、active baseline 386 条 exact、零 waiver，内置 content hash 为 `c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25`。详见[Contract v112](design/contract-v112-scroll-identification.md)。
+
 ### 本地验证
 
 ```powershell
@@ -348,10 +351,10 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v111/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v112/baseline-policy.json
 ```
 
-当前 383 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 386 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

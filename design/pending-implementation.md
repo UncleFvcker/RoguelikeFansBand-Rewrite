@@ -70,17 +70,19 @@
 | P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 已由 contract-v109 完成 | `deviceGeneration.activations` 深度过滤/稳定加权、profile/power/目标/成本/随机容量实例化、错误目标零 RNG、成功扣费、damage/detect/heal、知识门控和严格回档；demo Wand/Staff/Rod；原版通用壳接入后 `device-effect` 64→61。协议 1.109、包 1.100.0、Schema v48、fixtures 369-373 共 373 exact |
 | P60 | 设备自然恢复与主动充能 | 已由 contract-v110 完成 | `deviceGeneration.recovery` interval/per-mille 与确定性余数、背包自然恢复、四类物品严格回档；职业 recharge profile、资源/设备来源、资源失败清空、设备来源损毁与 artifact 免毁；Web/事件/调试开关。协议 1.110、包 1.101.0、Schema v49、fixtures 374-379 共 379 exact |
 | P61 | 有序恢复型消耗品效果 | 已由 contract-v111 完成 | `remove-status`、固定/骰值/回满资源及 2–8 步非嵌套恢复序列；顺序事件、正式 RNG、缺池消费与物品知识边界；demo 两种恢复药水，legacy 四种食物 + Boldness/Vigor/Restore Mana/Clarity 及六种治疗药水异常清除，`consumable-effect` 89→81。协议 1.111、包 1.102.0、Schema v49、fixtures 380-383 共 383 exact |
-| P62 | 卷轴效果重分类与首批通用事务 | 下一候选 | `device-effect` 61 经审计全部是 tval 70/71 卷轴，不是剩余 wand/staff/rod；先盘点知识、传送、侦测、附魔等效果与现有能力的复用边界，再选择覆盖收益最高的事务族 |
+| P62 | 卷轴效果重分类与首批鉴定事务 | 已由 contract-v112 完成 | tval 70/71 缺口统一为 `scroll-effect`；sval 12/13 映射普通/完全鉴定；固定/动态 item-only 目标校验、消费/RNG/world tick 前原子拒绝、appraised/identified/affix 知识、来源 aware、结构化事件、Death helper 复用与 Web 物品选择器。`scroll-effect` 61→59，`device-effect` 退出报告。协议 1.112、包 1.103.0、Schema v49、fixtures 384-386 共 386 exact |
+| P63 | 剩余卷轴事务族 | 下一候选 | 以 `scroll-effect` 59 的真实 sval 分布重排；优先选择能复用现有 teleport/detect/terrain knowledge 或物品强化管线、且能一次覆盖多个卷轴的事务族 |
 
-## contract-v111 明确遗留
+## contract-v112 明确遗留
 
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- `device-effect` 61 经审计全部来自卷轴，后续应重命名或拆分报告；`artifact-activation` 180、`ego-activation` 13 仍保留，新增激活必须复用实例事务；
+- 卷轴缺口已经独立为 `scroll-effect` 59；传送/回城、侦测/地图、附魔/强化、诅咒与召唤等事务仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
-- P62 优先核对原版卷轴效果与知识、传送、侦测、附魔事务，避免把卷轴错误建模为动态设备。
+- 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
+- P63 应先量化剩余 59 条卷轴的事务族分布，再选择复用收益最高的一族，避免按单个名称硬编码。
 
 ## contract-v107 明确遗留
 
