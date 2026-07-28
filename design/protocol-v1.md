@@ -248,6 +248,10 @@ interface GameCoreV1 {
 
 协议 1.115 新增 `ItemEnchantmentsDto { toHit, toDamage, toArmor }`，并投影到地面、背包、装备及四类 item save DTO。`GameEventOutcomeDto::ItemEnchantment` 返回三个 `ItemEnchantmentComponentResolutionDto`，分别记录 attempts、successes、before、after；成功与全失败事件为 `item.use-enchanted` / `item.use-enchantment-failed`。错误目标在消费、RNG 与 world tick 前返回 `item.use-unavailable`。新增权威实例状态使 state hash 升至 Schema v51；save 容器仍为 v1。完整边界见 [Contract v115](contract-v115-scroll-enchantment.md)。
 
+协议 1.116 新增 `ItemCurseSeverityDto`，并将可选 `curse` 投影到地面、背包、装备和四类 item save DTO。`GameEventOutcomeDto::ItemCurse` 返回目标、before/after 与 artifact resisted；`ItemCurseRemoval` 返回 includeHeavy、已解除 ID 和保留 permanent ID。卸下或替换诅咒装备返回 `item.unequip.cursed`，且不推进 RNG/world tick。新增权威实例状态使 state hash 升至 Schema v52；save 容器仍为 v1。完整边界见 [Contract v116](contract-v116-scroll-curses.md)。
+
+协议 1.117 新增 `GameEventOutcomeDto::ItemSummon`，复用 `AbilitySummonResolutionDto` 返回 owner、解析后的 category、敌友/群体结果、实体 ID、落位和实际 actor kind ID。静态使用与设备激活分别区分成功及零结果事件；只有实际生成实体才让来源种类 Aware。永久 Pet/Kin 继续通过既有 entity save 的 `controllerId` 持久化，不增加新存档字段；save v1 与 state hash Schema v52 均不变。完整边界见 [Contract v117](contract-v117-scroll-summoning.md)。
+
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`，已知充能不足的设备使用按原版语义不消耗能量或推进 world tick。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。

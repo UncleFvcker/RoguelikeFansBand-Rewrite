@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.sealed-amulet",
+  "nameKey": "item-demo-sealed-amulet-name",
+  "descriptionKey": "item-demo-sealed-amulet-description",
+  "glyph": "\"",
+  "weightTenthsPound": 2,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "initialCurse": "permanent",
+  "modifiers": { "charisma": -1 },
+  "tags": ["equipment"]
+}

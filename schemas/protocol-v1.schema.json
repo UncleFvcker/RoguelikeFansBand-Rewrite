@@ -3409,6 +3409,16 @@
             "$ref": "#/$defs/WeaponBrandDto"
           }
         },
+        "curse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
@@ -4450,6 +4460,54 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/ItemCurseResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "item-curse"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/ItemCurseRemovalResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "item-curse-removal"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "$ref": "#/$defs/AbilitySummonResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "item-summon"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/MonsterDisplacementResolutionDto"
             },
             "type": {
@@ -4816,6 +4874,16 @@
             }
           ]
         },
+        "curse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
@@ -5021,9 +5089,95 @@
         "maximum"
       ]
     },
+    "ItemCurseRemovalResolutionDto": {
+      "type": "object",
+      "properties": {
+        "includeHeavy": {
+          "type": "boolean"
+        },
+        "removedItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "retainedPermanentItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "includeHeavy",
+        "removedItemIds",
+        "retainedPermanentItemIds"
+      ]
+    },
+    "ItemCurseResolutionDto": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "before": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "itemId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "itemKindId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resisted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "resisted"
+      ]
+    },
+    "ItemCurseSeverityDto": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "heavy",
+        "permanent"
+      ]
+    },
     "ItemDto": {
       "type": "object",
       "properties": {
+        "curse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""

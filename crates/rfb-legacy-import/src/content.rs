@@ -825,7 +825,63 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "throughWalls": true
         })
     };
+    let summon = |selector: serde_json::Value,
+                  maximum_level_source: &str,
+                  hostile: bool,
+                  count_sides: u8,
+                  group_chance_percent: u8,
+                  group_count_sides: u8,
+                  group_count_bonus: u8,
+                  allow_unique: bool| {
+        serde_json::json!({
+            "type": "summon-category",
+            "selector": selector,
+            "maximumLevelSource": maximum_level_source,
+            "countDice": 1,
+            "countSides": count_sides,
+            "hostile": hostile,
+            "groupChancePercent": group_chance_percent,
+            "groupCountDice": 1,
+            "groupCountSides": group_count_sides,
+            "groupCountBonus": group_count_bonus,
+            "allowUnique": allow_unique,
+            "radius": 2,
+            "durationTurns": 0
+        })
+    };
     let effect = match (entry.tval, entry.sval) {
+        (70, 2) => serde_json::json!({"type": "curse-equipped-item", "target": "armor"}),
+        (70, 3) => serde_json::json!({"type": "curse-equipped-item", "target": "weapon"}),
+        (70, 4) => summon(
+            serde_json::json!({"type": "any-monster"}),
+            "dungeon-depth",
+            true,
+            3,
+            100,
+            3,
+            0,
+            true,
+        ),
+        (70, 5) => summon(
+            serde_json::json!({"type": "category", "category": "undead"}),
+            "dungeon-depth",
+            true,
+            3,
+            100,
+            3,
+            0,
+            true,
+        ),
+        (70, 6) => summon(
+            serde_json::json!({"type": "any-monster"}),
+            "dungeon-depth",
+            false,
+            1,
+            50,
+            3,
+            1,
+            false,
+        ),
         (70, 8) => serde_json::json!({"type": "random-teleport", "maximumDistance": 10}),
         (70, 9) => serde_json::json!({"type": "random-teleport", "maximumDistance": 100}),
         (70, 10) => serde_json::json!({"type": "teleport-level"}),
@@ -837,6 +893,12 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         }),
         (70, 12) => serde_json::json!({"type": "identify-item", "full": false}),
         (70, 13) => serde_json::json!({"type": "identify-item", "full": true}),
+        (70, 14) => {
+            serde_json::json!({"type": "remove-equipped-curses", "includeHeavy": false})
+        }
+        (70, 15) => {
+            serde_json::json!({"type": "remove-equipped-curses", "includeHeavy": true})
+        }
         (70, 16) => serde_json::json!({
             "type": "enchant-item",
             "toArmor": {"dice": 0, "sides": 0, "bonus": 1}
@@ -866,6 +928,16 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         (70, 30) => detect("actor", "invisible", false),
         (70, 57) => detect("actor", "legacy-import", false),
         (70, 53) => serde_json::json!({"type": "reset-recall"}),
+        (70, 54) => summon(
+            serde_json::json!({"type": "player-kin"}),
+            "player-level",
+            false,
+            1,
+            50,
+            3,
+            1,
+            false,
+        ),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -2851,6 +2923,40 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
     }
 }
 
+fn legacy_race_kin_glyph(id: &str) -> char {
+    match id {
+        "human" | "amberite" | "barbarian" | "beastman" | "dunadan" | "demigod" | "einheri"
+        | "beorning" | "igor" | "centaur" | "maia" | "mangy-leper" | "doppelganger"
+        | "mon-mimic" | "mon-possessor" => 'p',
+        "tonberry" | "hobbit" | "gnome" | "dwarf" | "high-elf" | "nibelung" | "dark-elf"
+        | "mindflayer" | "kutar" | "shadow-fairy" | "tomte" | "wood-elf" => 'h',
+        "snotling" | "half-orc" | "mon-orc" => 'o',
+        "half-troll" => 'T',
+        "ogre" => 'O',
+        "half-giant" | "half-titan" | "cyclops" | "mon-giant" => 'P',
+        "boit" | "yeek" => 'y',
+        "klackon" => 'K',
+        "kobold" | "small-kobold" => 'k',
+        "imp" | "demon" | "mon-demon" => 'u',
+        "demon-lord" | "balrog" => 'U',
+        "draconian" | "mon-dragon" => 'd',
+        "golem" | "android" | "clay-golem" | "iron-golem" | "mithril-golem" | "colossus" => 'g',
+        "skeleton" => 's',
+        "zombie" => 'z',
+        "vampire" | "vampire-lord" | "vampire-lord-form" => 'V',
+        "spectre" => 'G',
+        "sprite" => 'I',
+        "ent" => '#',
+        "werewolf" => 'C',
+        "archon" | "mon-angel" => 'A',
+        "mon-elemental" => 'E',
+        "mon-jelly" => 'j',
+        "mon-lich" => 'L',
+        "mon-spider" => 'S',
+        _ => 'p',
+    }
+}
+
 fn race_json(
     entry: &LegacyCharacterEntry,
     body_slots: &[(String, String)],
@@ -2866,6 +2972,7 @@ fn race_json(
         "experiencePercent": entry.exp.clamp(25, 500),
         "baseHp": entry.base_hp.clamp(-1_000, 1_000),
         "skillSetId": format!("rfb-legacy.skill-set.race-{}", entry.id),
+        "kinCategory": format!("kin-glyph-{}", u32::from(legacy_race_kin_glyph(&entry.id))),
         "bodySlots": body_slots
             .iter()
             .map(|(id, slot_type)| serde_json::json!({"id": id, "slotType": slot_type}))
@@ -3933,6 +4040,7 @@ fn vampire_lord_race_json() -> serde_json::Value {
         "experiencePercent": 300,
         "baseHp": 22,
         "skillSetId": LEGACY_VAMPIRE_LORD_SKILL_SET_ID,
+        "kinCategory": "kin-glyph-86",
         "resistances": {
             "cold": "resistant",
             "dark": "immune",
@@ -4389,6 +4497,9 @@ fn monster_json(
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
     let mut tags = vec!["legacy-import".to_owned()];
+    if let Some(glyph) = entry.glyph {
+        tags.push(format!("kin-glyph-{}", u32::from(glyph)));
+    }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
         ("EVIL", "evil"),
@@ -6749,6 +6860,7 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
             caller["tags"],
             serde_json::json!([
                 "legacy-import",
+                "kin-glyph-76",
                 "dragon",
                 "undead",
                 "nonliving",
@@ -7000,6 +7112,7 @@ S:ANY:Slot
         assert_eq!(race["lifePercent"], 98);
         assert_eq!(race["experiencePercent"], 120);
         assert_eq!(race["baseHp"], 22);
+        assert_eq!(race["kinCategory"], "kin-glyph-112");
         assert_eq!(race["modifiers"]["strength"], 1);
         assert_eq!(race["modifiers"]["dexterity"], -1);
         let slots = race["bodySlots"].as_array().expect("race body slots");
@@ -7148,6 +7261,7 @@ race_t *test_beast_get_race(void)
         assert_eq!(race["resistances"]["light"], "vulnerable");
         assert_eq!(race["statusImmunities"][0], "rfb.status.paralysis");
         assert_eq!(race["modifiers"]["speed"], 3);
+        assert_eq!(race["kinCategory"], "kin-glyph-112");
     }
 
     #[test]
@@ -7533,8 +7647,131 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn scrolls_map_to_teleport_knowledge_enchantment_and_detection_effects() {
+    fn scrolls_map_to_curse_teleport_knowledge_enchantment_and_detection_effects() {
         let mut report = ContentImportReport::default();
+        for (
+            sval,
+            selector,
+            maximum_level_source,
+            hostile,
+            count_sides,
+            group_chance_percent,
+            group_count_sides,
+            group_count_bonus,
+            allow_unique,
+        ) in [
+            (
+                4,
+                serde_json::json!({"type": "any-monster"}),
+                "dungeon-depth",
+                true,
+                3,
+                100,
+                3,
+                0,
+                true,
+            ),
+            (
+                5,
+                serde_json::json!({"type": "category", "category": "undead"}),
+                "dungeon-depth",
+                true,
+                3,
+                100,
+                3,
+                0,
+                true,
+            ),
+            (
+                6,
+                serde_json::json!({"type": "any-monster"}),
+                "dungeon-depth",
+                false,
+                1,
+                50,
+                3,
+                1,
+                false,
+            ),
+            (
+                54,
+                serde_json::json!({"type": "player-kin"}),
+                "player-level",
+                false,
+                1,
+                50,
+                3,
+                1,
+                false,
+            ),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("summoning-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], "summon-category");
+            assert_eq!(effect["selector"], selector);
+            assert_eq!(effect["maximumLevelSource"], maximum_level_source);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], count_sides);
+            assert_eq!(effect["hostile"], hostile);
+            assert_eq!(effect["groupChancePercent"], group_chance_percent);
+            assert_eq!(effect["groupCountDice"], 1);
+            assert_eq!(effect["groupCountSides"], group_count_sides);
+            assert_eq!(effect["groupCountBonus"], group_count_bonus);
+            assert_eq!(effect["allowUnique"], allow_unique);
+            assert_eq!(effect["radius"], 2);
+            assert_eq!(effect["durationTurns"], 0);
+        }
+        for (sval, effect_type, field, expected) in [
+            (
+                2,
+                "curse-equipped-item",
+                "target",
+                serde_json::json!("armor"),
+            ),
+            (
+                3,
+                "curse-equipped-item",
+                "target",
+                serde_json::json!("weapon"),
+            ),
+            (
+                14,
+                "remove-equipped-curses",
+                "includeHeavy",
+                serde_json::json!(false),
+            ),
+            (
+                15,
+                "remove-equipped-curses",
+                "includeHeavy",
+                serde_json::json!(true),
+            ),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("curse-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], effect_type);
+            assert_eq!(effect[field], expected);
+        }
         for (sval, effect_type) in [
             (8, "random-teleport"),
             (9, "random-teleport"),
@@ -7637,10 +7874,10 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 70,
-                sval: 14,
+                sval: 1,
                 ..LegacyItemEntry::default()
             },
-            "remove-curse-scroll",
+            "unsupported-scroll",
             &LauncherAmmoIndex::default(),
             None,
             &mut report,

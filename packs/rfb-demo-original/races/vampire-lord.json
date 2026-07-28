@@ -18,6 +18,7 @@
   "experiencePercent": 300,
   "baseHp": 22,
   "skillSetId": "demo.skill-set.vampire-lord",
+  "kinCategory": "kin-glyph-86",
   "resistances": {
     "cold": "resistant",
     "dark": "immune",

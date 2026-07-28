@@ -16,6 +16,7 @@
   "experiencePercent": 120,
   "baseHp": -1,
   "skillSetId": "demo.skill-set.elf",
+  "kinCategory": "kin-glyph-104",
   "bodySlots": [
     { "id": "weapon", "slotType": "weapon" },
     { "id": "launcher", "slotType": "launcher" },

@@ -37,6 +37,7 @@ import type {
   GameSnapshot,
   GameUpdate,
   InventoryItemDto,
+  ItemCurseSeverityDto,
   ItemEnchantmentsDto,
   ItemPropertyDto,
   PlayerBuildDto,
@@ -1377,6 +1378,7 @@ function renderInventory(
       }
       appendItemModifiers(details, item.modifiers);
       appendItemEnchantments(details, item.enchantments);
+      appendItemCurse(details, item.curse);
       appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
       appendItemOffense(details, item.slays, item.brands);
@@ -1460,6 +1462,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
       details.append(name, slotTag);
       appendItemModifiers(details, item.modifiers);
       appendItemEnchantments(details, item.enchantments);
+      appendItemCurse(details, item.curse);
       appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
       appendItemOffense(details, item.slays, item.brands);
@@ -1751,6 +1754,30 @@ function appendItemEnchantments(
     label.className = "item-modifier";
     label.textContent = localization.format(key, { value: signedModifier(value) });
     container.append(label);
+  }
+}
+
+function appendItemCurse(
+  container: HTMLElement,
+  curse: ItemCurseSeverityDto | null | undefined,
+): void {
+  if (!curse) return;
+  const label = document.createElement("span");
+  label.className = "item-modifier";
+  label.textContent = itemCurseSeverityName(curse);
+  container.append(label);
+}
+
+function itemCurseSeverityName(curse: ItemCurseSeverityDto | string | undefined): string {
+  switch (curse) {
+    case "normal":
+      return localization.format("item-curse-normal");
+    case "heavy":
+      return localization.format("item-curse-heavy");
+    case "permanent":
+      return localization.format("item-curse-permanent");
+    default:
+      return curse ?? "?";
   }
 }
 
@@ -2416,6 +2443,12 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-unequip-none", {
         slot: equipmentSlotName(event.args.slot),
       });
+    case "item-unequip-cursed":
+      return localization.format("message-item-unequip-cursed", {
+        target: visibleItemNameForKind(event.args.target),
+        slot: equipmentSlotName(event.args.slot),
+        severity: itemCurseSeverityName(event.args.severity),
+      });
     case "item-drop-success":
       return localization.format("message-item-drop-success", {
         stacks: event.args.stacks ?? "?",
@@ -2470,6 +2503,29 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-enchantment-failed", {
         source: visibleItemNameForKind(event.args.source),
         target: visibleItemNameForKind(event.args.target),
+      });
+    case "item-use-cursed":
+      return localization.format("message-item-use-cursed", {
+        source: visibleItemNameForKind(event.args.source),
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "item-use-curse-resisted":
+      return localization.format("message-item-use-curse-resisted", {
+        source: visibleItemNameForKind(event.args.source),
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "item-use-curse-no-target":
+      return localization.format("message-item-use-curse-no-target", {
+        source: visibleItemNameForKind(event.args.source),
+      });
+    case "item-use-curses-removed":
+      return localization.format("message-item-use-curses-removed", {
+        source: visibleItemNameForKind(event.args.source),
+        count: event.args.count ?? "0",
+      });
+    case "item-use-curse-removal-no-effect":
+      return localization.format("message-item-use-curse-removal-no-effect", {
+        source: visibleItemNameForKind(event.args.source),
       });
     case "item-use-unavailable":
       return localization.format("message-item-use-unavailable");

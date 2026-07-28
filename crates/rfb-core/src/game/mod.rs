@@ -58,14 +58,16 @@ use rfb_content::{
     ContentCatalog, ContentPosition, DeviceRechargeProfileDefinition, DungeonDefinition,
     DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
     EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
-    EquipmentPassive, FloorLifecycle, ItemEnchantmentRollDefinition, ItemUseEffectDefinition,
-    MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
-    SkillKind, SkillSetDefinition, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers,
-    TaskObjectiveDefinition, TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
-    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
-    VaultDefinition, VaultTransform, WeaponBrand,
+    EquipmentPassive, FloorLifecycle, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
+    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition,
+    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
+    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
+    RaceDefinition, RetakeFloorPolicy, SkillKind, SkillSetDefinition, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveDefinition, TaskObjectiveKind,
+    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
+    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
+    WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -84,7 +86,8 @@ use rfb_protocol::{
     EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto, EquipmentPassiveDto,
     FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
     HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto,
-    ItemChargesDto, ItemDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
+    ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
+    ItemDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
     ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
     ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
     ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
@@ -105,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 107] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 109] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -213,13 +216,15 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 107] = [
     "c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25",
     "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653",
     "36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86",
+    "9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459",
+    "9d1c6c1e01fb4533aa5a9868f0adfcbe876148d98585412783d0da93f4019dff",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459";
+    "0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 51;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -310,6 +315,11 @@ enum ItemUsePlan {
         path: Vec<Position>,
     },
     Detect,
+    SummonCategory {
+        category: String,
+        candidate_kind_ids: Vec<String>,
+        positions: Vec<Position>,
+    },
     Item {
         item_id: String,
     },
@@ -324,6 +334,22 @@ enum ItemUsePlan {
         cancel: bool,
     },
     ResetRecall,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct CategorySummonSpec<'a> {
+    source_id: &'a str,
+    owner_id: &'a str,
+    category: &'a str,
+    count_dice: u8,
+    count_sides: u8,
+    count_bonus: u8,
+    hostile: bool,
+    group_chance_percent: u8,
+    group_count_dice: u8,
+    group_count_sides: u8,
+    group_count_bonus: u8,
+    duration_turns: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -1387,6 +1413,7 @@ fn append_starting_item(
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
         enchantments: ItemEnchantmentsDto::default(),
+        curse: initial_item_curse(content, &starting_item.item_kind_id),
         activation,
         charges,
         device_recovery_progress: 0,
@@ -1404,6 +1431,21 @@ fn initial_item_charges(content: &ContentCatalog, kind_id: &str) -> Option<ItemC
             current: charges.initial,
             maximum: charges.maximum,
         })
+}
+
+fn item_curse_severity_dto(value: ItemCurseSeverityDefinition) -> ItemCurseSeverityDto {
+    match value {
+        ItemCurseSeverityDefinition::Normal => ItemCurseSeverityDto::Normal,
+        ItemCurseSeverityDefinition::Heavy => ItemCurseSeverityDto::Heavy,
+        ItemCurseSeverityDefinition::Permanent => ItemCurseSeverityDto::Permanent,
+    }
+}
+
+fn initial_item_curse(content: &ContentCatalog, kind_id: &str) -> Option<ItemCurseSeverityDto> {
+    content
+        .item(kind_id)
+        .and_then(|definition| definition.initial_curse)
+        .map(item_curse_severity_dto)
 }
 
 fn initial_item_runtime_state(
@@ -1550,6 +1592,8 @@ pub struct Game {
     debug_recharge_attempts_fail: bool,
     debug_recharge_sources_survive: bool,
     debug_recall_delay_turns: Option<u16>,
+    debug_item_curses_land: bool,
+    debug_item_curses_resisted: bool,
 }
 
 impl Game {
@@ -1710,6 +1754,7 @@ impl Game {
                     affix_ids: spawn.affix_ids.clone(),
                     rolled_affixes: Vec::new(),
                     enchantments: ItemEnchantmentsDto::default(),
+                    curse: initial_item_curse(&content, &spawn.kind_id),
                     activation,
                     charges,
                     device_recovery_progress: 0,
@@ -1773,6 +1818,8 @@ impl Game {
             debug_recharge_attempts_fail: false,
             debug_recharge_sources_survive: false,
             debug_recall_delay_turns: None,
+            debug_item_curses_land: false,
+            debug_item_curses_resisted: false,
         };
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
@@ -2162,6 +2209,8 @@ impl Game {
             debug_recharge_attempts_fail: false,
             debug_recharge_sources_survive: false,
             debug_recall_delay_turns: None,
+            debug_item_curses_land: false,
+            debug_item_curses_resisted: false,
         };
         game.restore_player_ability_state(
             saved_resources,
@@ -2378,6 +2427,15 @@ impl Game {
             GameAction::UseItem { item_id, target }
                 if self.travel_item_use_is_invalid(item_id, target.as_ref())
         );
+        let cursed_unequip = matches!(
+            &action,
+            GameAction::Unequip { slot_id } if self.cursed_equipment_in_slot(slot_id).is_some()
+        );
+        let cursed_equip_replacement = matches!(
+            &action,
+            GameAction::Equip { item_id }
+                if self.cursed_equipment_replaced_by(item_id).is_some()
+        );
         let unavailable_recharge = matches!(
             &action,
             GameAction::RechargeItem {
@@ -2391,6 +2449,8 @@ impl Game {
             && !invalid_identify_item_use
             && !invalid_enchant_item_use
             && !invalid_travel_item_use
+            && !cursed_unequip
+            && !cursed_equip_replacement
             && !unavailable_recharge
             && !matches!(
                 &action,
@@ -2489,7 +2549,15 @@ impl Game {
                 }
             }
             GameAction::Equip { item_id } => {
-                if let Some(outcome) = self.equip_inventory_item(&item_id) {
+                if let Some((target_kind_id, slot_id, severity)) =
+                    self.cursed_equipment_replaced_by(&item_id)
+                {
+                    events.push(DomainEvent::ItemUnequipCursed {
+                        target_kind_id,
+                        slot_id,
+                        severity,
+                    });
+                } else if let Some(outcome) = self.equip_inventory_item(&item_id) {
                     self.refresh_player_resource_maxima();
                     let discovered_affix_ids = outcome.discovered_affix_ids.clone();
                     let equipped_kind_id = outcome.kind_id.clone();
@@ -2645,7 +2713,13 @@ impl Game {
                 PickUpOutcome::Nothing => events.push(DomainEvent::NothingToPickUp),
             },
             GameAction::Unequip { slot_id } => {
-                if let Some(kind_id) = self.unequip_slot(&slot_id) {
+                if let Some((target_kind_id, severity)) = self.cursed_equipment_in_slot(&slot_id) {
+                    events.push(DomainEvent::ItemUnequipCursed {
+                        target_kind_id,
+                        slot_id,
+                        severity,
+                    });
+                } else if let Some(kind_id) = self.unequip_slot(&slot_id) {
                     self.refresh_player_resource_maxima();
                     events.push(DomainEvent::ItemUnequipped {
                         target_kind_id: kind_id,
@@ -2912,6 +2986,16 @@ impl Game {
     }
 
     #[doc(hidden)]
+    pub fn debug_set_item_curses_land(&mut self, enabled: bool) {
+        self.debug_item_curses_land = enabled;
+    }
+
+    #[doc(hidden)]
+    pub fn debug_set_item_curses_resisted(&mut self, enabled: bool) {
+        self.debug_item_curses_resisted = enabled;
+    }
+
+    #[doc(hidden)]
     pub fn debug_add_generated_inventory_item(
         &mut self,
         id: &str,
@@ -2934,6 +3018,7 @@ impl Game {
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
+            curse: initial_item_curse(&self.content, kind_id),
             activation,
             charges,
             device_recovery_progress: 0,
@@ -4109,6 +4194,7 @@ impl Game {
                     position: *position,
                     quantity: item.quantity,
                     enchantments: item.enchantments,
+                    curse: self.visible_item_curse(item),
                 })
             })
             .collect::<Vec<_>>();
@@ -4166,6 +4252,7 @@ impl Game {
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
                     enchantments: item.enchantments,
+                    curse: self.visible_item_curse(item),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
                         .content
@@ -4206,6 +4293,7 @@ impl Game {
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     quantity: item.quantity,
                     enchantments: item.enchantments,
+                    curse: self.visible_item_curse(item),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),
@@ -4327,20 +4415,20 @@ impl Game {
         if carried.quantity != 1 {
             return None;
         }
-        let replaced_kind_id = self
-            .items
-            .iter()
-            .position(|equipped| {
-                matches!(
-                    &equipped.location,
-                    ItemLocation::Equipped { slot_id: equipped_slot } if equipped_slot == &slot_id
-                )
-            })
-            .map(|index| {
-                let kind_id = self.items[index].kind_id.clone();
-                self.items[index].location = ItemLocation::Inventory;
-                kind_id
-            });
+        let replaced_index = self.items.iter().position(|equipped| {
+            matches!(
+                &equipped.location,
+                ItemLocation::Equipped { slot_id: equipped_slot } if equipped_slot == &slot_id
+            )
+        });
+        if replaced_index.is_some_and(|index| self.items[index].curse.is_some()) {
+            return None;
+        }
+        let replaced_kind_id = replaced_index.map(|index| {
+            let kind_id = self.items[index].kind_id.clone();
+            self.items[index].location = ItemLocation::Inventory;
+            kind_id
+        });
         let kind_id = self.items[inventory_index].kind_id.clone();
         let item_instance_id = self.items[inventory_index].id.clone();
         let affix_ids = self.items[inventory_index].affix_ids.clone();
@@ -4366,6 +4454,36 @@ impl Game {
         })
     }
 
+    fn cursed_equipment_replaced_by(
+        &self,
+        item_id: &str,
+    ) -> Option<(String, String, ItemCurseSeverityDto)> {
+        let carried = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id && item.location == ItemLocation::Inventory)?;
+        if carried.quantity != 1 {
+            return None;
+        }
+        let slot_type = self
+            .content
+            .item(&carried.kind_id)?
+            .equipment_slot
+            .as_ref()?;
+        let slot_id = body_slot_instance_for_type(&self.body_slots, slot_type, |slot_id| {
+            self.items.iter().any(|item| {
+                matches!(
+                    &item.location,
+                    ItemLocation::Equipped { slot_id: equipped } if equipped == slot_id
+                )
+            })
+        })?
+        .id
+        .clone();
+        let (kind_id, severity) = self.cursed_equipment_in_slot(&slot_id)?;
+        Some((kind_id, slot_id, severity))
+    }
+
     fn unequip_slot(&mut self, slot_id: &str) -> Option<String> {
         let index = self.items.iter().position(|item| {
             matches!(
@@ -4373,10 +4491,25 @@ impl Game {
                 ItemLocation::Equipped { slot_id: equipped_slot } if equipped_slot == slot_id
             )
         })?;
+        if self.items[index].curse.is_some() {
+            return None;
+        }
         let kind_id = self.items[index].kind_id.clone();
         self.items[index].location = ItemLocation::Inventory;
         self.clamp_player_hp_to_effective_max();
         Some(kind_id)
+    }
+
+    fn cursed_equipment_in_slot(&self, slot_id: &str) -> Option<(String, ItemCurseSeverityDto)> {
+        self.items.iter().find_map(|item| {
+            let ItemLocation::Equipped {
+                slot_id: equipped_slot,
+            } = &item.location
+            else {
+                return None;
+            };
+            (equipped_slot == slot_id).then_some((item.kind_id.clone(), item.curse?))
+        })
     }
 
     fn pick_up_at_player(&mut self) -> Result<PickUpOutcome, CoreError> {
@@ -4884,6 +5017,12 @@ impl Game {
     fn visible_item_quality(&self, item: &ItemInstance) -> Option<ItemQualityDto> {
         (self.item_identification(item) != ItemIdentificationDto::Unexamined)
             .then_some(item.quality)
+    }
+
+    fn visible_item_curse(&self, item: &ItemInstance) -> Option<ItemCurseSeverityDto> {
+        (self.item_identification(item) != ItemIdentificationDto::Unexamined)
+            .then_some(item.curse)
+            .flatten()
     }
 
     fn visible_item_melee_profile(&self, item: &ItemInstance) -> Option<AttackProfileDto> {
@@ -6718,91 +6857,38 @@ impl Game {
                 } else {
                     friendly_group_chance_percent
                 };
-                let group = match group_chance {
-                    0 => false,
-                    100 => true,
-                    chance => self.rng.bounded(100) < u64::from(chance),
-                };
-                let (dice, sides, bonus) = if group {
-                    (group_count_dice, group_count_sides, group_count_bonus)
-                } else {
-                    (count_dice, count_sides, count_bonus)
-                };
-                let rolled = self
-                    .roll_damage(u16::from(dice), u16::from(sides))
-                    .saturating_add(i32::from(bonus))
-                    .max(1);
-                let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
-                let mut candidates = if hostile {
+                let candidates = if hostile {
                     hostile_candidate_kind_ids
                 } else {
                     friendly_candidate_kind_ids
                 };
-                let mut entity_ids = Vec::with_capacity(count);
-                let mut summoned_kind_ids = Vec::with_capacity(count);
-                let mut used_positions = Vec::with_capacity(count);
-                for (ordinal, position) in positions.into_iter().take(count).enumerate() {
-                    if candidates.is_empty() {
-                        break;
-                    }
-                    let choice =
-                        usize::try_from(self.rng.bounded(
-                            u64::try_from(candidates.len()).expect("candidate count fits"),
-                        ))
-                        .expect("bounded summon choice must fit usize");
-                    let kind_id = candidates[choice].clone();
-                    let definition = self
-                        .content
-                        .actor(&kind_id)
-                        .expect("planned summon candidate must remain available")
-                        .clone();
-                    if definition.tags.iter().any(|tag| tag == "unique") {
-                        candidates.remove(choice);
-                    }
-                    let id = self.summon_entity_id(&ability.id, ordinal);
-                    let mut entity = actor_from_runtime_spawn(
-                        &id,
-                        &kind_id,
-                        position,
-                        definition.max_hp,
-                        definition.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        true,
-                    );
-                    entity.resistances = definition_resistance_profile(&definition);
-                    if !hostile {
-                        if duration_turns == 0 {
-                            entity.controller_id = Some(self.player.id.clone());
-                        } else {
-                            entity.summon = Some(SummonIdentity {
-                                owner_id: self.player.id.clone(),
-                                source_ability_id: ability.id.clone(),
-                                remaining_turns: duration_turns,
-                            });
-                        }
-                    }
-                    changed.insert(position);
-                    entity_ids.push(id);
-                    summoned_kind_ids.push(kind_id);
-                    used_positions.push(position);
-                    self.entities.push(entity);
-                }
                 let selected_category = upgraded_category
                     .zip(upgrade_at_level)
                     .filter(|(_, level)| self.progress.level >= *level)
                     .map_or(category, |(category, _)| category);
+                let owner_id = self.player.id.clone();
+                let resolution = self.resolve_category_summon(
+                    CategorySummonSpec {
+                        source_id: &ability.id,
+                        owner_id: &owner_id,
+                        category: &selected_category,
+                        count_dice,
+                        count_sides,
+                        count_bonus,
+                        hostile,
+                        group_chance_percent: group_chance,
+                        group_count_dice,
+                        group_count_sides,
+                        group_count_bonus,
+                        duration_turns,
+                    },
+                    candidates,
+                    positions,
+                    changed,
+                );
                 events.push(DomainEvent::AbilitySummoned {
                     ability_id: ability.id,
-                    resolution: AbilitySummonResolutionDto {
-                        owner_id: self.player.id.clone(),
-                        actor_kind_id: selected_category,
-                        entity_ids,
-                        positions: used_positions,
-                        duration_turns,
-                        hostile,
-                        group,
-                        summoned_kind_ids,
-                    },
+                    resolution,
                 });
             }
             (
@@ -8433,45 +8519,18 @@ impl Game {
                 let excluded_upgrade_category = upgraded_category
                     .as_deref()
                     .filter(|category| *category != selected_category);
-                let is_available_unique = |definition: &rfb_content::ActorDefinition| {
-                    !definition.tags.iter().any(|tag| tag == "unique")
-                        || !self
-                            .entities
-                            .iter()
-                            .any(|entity| entity.kind_id == definition.id && entity.hp > 0)
-                };
-                let friendly_candidate_kind_ids = self
-                    .content
-                    .actor_definitions()
-                    .filter(|definition| {
-                        definition.role == ActorRole::Monster
-                            && definition.level <= u32::from(maximum_level)
-                            && actor_matches_category(definition, selected_category)
-                            && excluded_upgrade_category.is_none_or(|category| {
-                                !actor_matches_category(definition, category)
-                            })
-                            && !definition.tags.iter().any(|tag| tag == "guardian")
-                            && !definition.tags.iter().any(|tag| tag == "unique")
-                    })
-                    .map(|definition| definition.id.clone())
-                    .collect::<Vec<_>>();
-                let hostile_candidate_kind_ids = self
-                    .content
-                    .actor_definitions()
-                    .filter(|definition| {
-                        definition.role == ActorRole::Monster
-                            && definition.level <= u32::from(maximum_level)
-                            && actor_matches_category(definition, selected_category)
-                            && excluded_upgrade_category.is_none_or(|category| {
-                                !actor_matches_category(definition, category)
-                            })
-                            && !definition.tags.iter().any(|tag| tag == "guardian")
-                            && (allow_unique_hostile
-                                || !definition.tags.iter().any(|tag| tag == "unique"))
-                            && is_available_unique(definition)
-                    })
-                    .map(|definition| definition.id.clone())
-                    .collect::<Vec<_>>();
+                let friendly_candidate_kind_ids = self.summon_category_candidate_kind_ids(
+                    selected_category,
+                    excluded_upgrade_category,
+                    maximum_level,
+                    false,
+                );
+                let hostile_candidate_kind_ids = self.summon_category_candidate_kind_ids(
+                    selected_category,
+                    excluded_upgrade_category,
+                    maximum_level,
+                    allow_unique_hostile,
+                );
                 if (hostile_chance_percent < 100 && friendly_candidate_kind_ids.is_empty())
                     || (hostile_chance_percent > 0 && hostile_candidate_kind_ids.is_empty())
                 {
@@ -8665,6 +8724,133 @@ impl Game {
                         radius,
                     })
             }
+        }
+    }
+
+    fn summon_category_candidate_kind_ids(
+        &self,
+        category: &str,
+        excluded_category: Option<&str>,
+        maximum_level: u16,
+        allow_unique: bool,
+    ) -> Vec<String> {
+        self.content
+            .actor_definitions()
+            .filter(|definition| {
+                let unique = definition.tags.iter().any(|tag| tag == "unique");
+                definition.role == ActorRole::Monster
+                    && definition.level <= u32::from(maximum_level)
+                    && (category == "any-monster" || actor_matches_category(definition, category))
+                    && excluded_category
+                        .is_none_or(|category| !actor_matches_category(definition, category))
+                    && !definition.tags.iter().any(|tag| tag == "guardian")
+                    && (allow_unique || !unique)
+                    && (!unique
+                        || !self
+                            .entities
+                            .iter()
+                            .any(|entity| entity.kind_id == definition.id && entity.hp > 0))
+            })
+            .map(|definition| definition.id.clone())
+            .collect()
+    }
+
+    fn resolve_category_summon(
+        &mut self,
+        spec: CategorySummonSpec<'_>,
+        mut candidates: Vec<String>,
+        positions: Vec<Position>,
+        changed: &mut BTreeSet<Position>,
+    ) -> AbilitySummonResolutionDto {
+        if candidates.is_empty() || positions.is_empty() {
+            return AbilitySummonResolutionDto {
+                owner_id: spec.owner_id.to_owned(),
+                actor_kind_id: spec.category.to_owned(),
+                entity_ids: Vec::new(),
+                positions: Vec::new(),
+                duration_turns: spec.duration_turns,
+                hostile: spec.hostile,
+                group: false,
+                summoned_kind_ids: Vec::new(),
+            };
+        }
+        let group = match spec.group_chance_percent {
+            0 => false,
+            100 => true,
+            chance => self.rng.bounded(100) < u64::from(chance),
+        };
+        let (dice, sides, bonus) = if group {
+            (
+                spec.group_count_dice,
+                spec.group_count_sides,
+                spec.group_count_bonus,
+            )
+        } else {
+            (spec.count_dice, spec.count_sides, spec.count_bonus)
+        };
+        let rolled = self
+            .roll_damage(u16::from(dice), u16::from(sides))
+            .saturating_add(i32::from(bonus))
+            .max(1);
+        let count = usize::try_from(rolled).unwrap_or(1).min(positions.len());
+        let mut entity_ids = Vec::with_capacity(count);
+        let mut summoned_kind_ids = Vec::with_capacity(count);
+        let mut used_positions = Vec::with_capacity(count);
+        for (ordinal, position) in positions.into_iter().take(count).enumerate() {
+            if candidates.is_empty() {
+                break;
+            }
+            let choice = usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(candidates.len()).expect("candidate count fits")),
+            )
+            .expect("bounded summon choice must fit usize");
+            let kind_id = candidates[choice].clone();
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("planned summon candidate must remain available")
+                .clone();
+            if definition.tags.iter().any(|tag| tag == "unique") {
+                candidates.remove(choice);
+            }
+            let id = self.summon_entity_id(spec.source_id, ordinal);
+            let mut entity = actor_from_runtime_spawn(
+                &id,
+                &kind_id,
+                position,
+                definition.max_hp,
+                definition.speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            entity.resistances = definition_resistance_profile(&definition);
+            if !spec.hostile {
+                if spec.duration_turns == 0 {
+                    entity.controller_id = Some(spec.owner_id.to_owned());
+                } else {
+                    entity.summon = Some(SummonIdentity {
+                        owner_id: spec.owner_id.to_owned(),
+                        source_ability_id: spec.source_id.to_owned(),
+                        remaining_turns: spec.duration_turns,
+                    });
+                }
+            }
+            changed.insert(position);
+            entity_ids.push(id);
+            summoned_kind_ids.push(kind_id);
+            used_positions.push(position);
+            self.entities.push(entity);
+        }
+        AbilitySummonResolutionDto {
+            owner_id: spec.owner_id.to_owned(),
+            actor_kind_id: spec.category.to_owned(),
+            entity_ids,
+            positions: used_positions,
+            duration_turns: spec.duration_turns,
+            hostile: spec.hostile,
+            group,
+            summoned_kind_ids,
         }
     }
 
@@ -10003,7 +10189,9 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
                 | ItemUseEffectDefinition::RestoreResourceFull { .. }
-                | ItemUseEffectDefinition::Sequence { .. } => {
+                | ItemUseEffectDefinition::Sequence { .. }
+                | ItemUseEffectDefinition::CurseEquippedItem { .. }
+                | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                     if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
                         events.push(DomainEvent::ItemUseUnavailable);
                         return Ok(());
@@ -10025,6 +10213,13 @@ impl Game {
                         return Ok(());
                     }
                     ItemUsePlan::Detect
+                }
+                effect @ ItemUseEffectDefinition::SummonCategory { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    self.item_category_summon_plan(effect)
                 }
                 ItemUseEffectDefinition::IdentifyItem { .. } => {
                     let Some(TargetSelection::Item {
@@ -10153,6 +10348,13 @@ impl Game {
                         return Ok(());
                     }
                     ItemUsePlan::Detect
+                }
+                effect @ ItemUseEffectDefinition::SummonCategory { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    self.item_category_summon_plan(effect)
                 }
                 ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
                     if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
@@ -10411,6 +10613,54 @@ impl Game {
                     });
                 }
             }
+            (
+                ItemUseEffectDefinition::SummonCategory {
+                    count_dice,
+                    count_sides,
+                    count_bonus,
+                    hostile,
+                    group_chance_percent,
+                    group_count_dice,
+                    group_count_sides,
+                    group_count_bonus,
+                    duration_turns,
+                    ..
+                },
+                ItemUsePlan::SummonCategory {
+                    category,
+                    candidate_kind_ids,
+                    positions,
+                },
+            ) => {
+                let owner_id = self.player.id.clone();
+                let resolution = self.resolve_category_summon(
+                    CategorySummonSpec {
+                        source_id: &kind_id,
+                        owner_id: &owner_id,
+                        category: &category,
+                        count_dice,
+                        count_sides,
+                        count_bonus,
+                        hostile,
+                        group_chance_percent,
+                        group_count_dice,
+                        group_count_sides,
+                        group_count_bonus,
+                        duration_turns,
+                    },
+                    candidate_kind_ids,
+                    positions,
+                    changed,
+                );
+                if !resolution.entity_ids.is_empty() {
+                    self.mark_item_aware(&kind_id);
+                }
+                events.push(DomainEvent::ItemSummoned {
+                    source_kind_id: kind_id,
+                    profile_id,
+                    resolution,
+                });
+            }
             (ItemUseEffectDefinition::IdentifyItem { full }, ItemUsePlan::Item { item_id }) => {
                 self.mark_item_aware(&kind_id);
                 let resolution = self.identify_item_instance(&item_id, full);
@@ -10431,6 +10681,29 @@ impl Game {
                 self.mark_item_aware(&kind_id);
                 let resolution = self.enchant_item_instance(&item_id, to_hit, to_damage, to_armor);
                 events.push(DomainEvent::ItemEnchanted {
+                    source_kind_id: kind_id,
+                    resolution,
+                });
+            }
+            (ItemUseEffectDefinition::CurseEquippedItem { target }, ItemUsePlan::SelfTarget) => {
+                let resolution = self.curse_equipped_item(target);
+                if resolution.item_id.is_some() {
+                    self.mark_item_aware(&kind_id);
+                }
+                events.push(DomainEvent::ItemCursed {
+                    source_kind_id: kind_id,
+                    resolution,
+                });
+            }
+            (
+                ItemUseEffectDefinition::RemoveEquippedCurses { include_heavy },
+                ItemUsePlan::SelfTarget,
+            ) => {
+                let resolution = self.remove_equipped_curses(include_heavy);
+                if include_heavy || !resolution.removed_item_ids.is_empty() {
+                    self.mark_item_aware(&kind_id);
+                }
+                events.push(DomainEvent::ItemCursesRemoved {
                     source_kind_id: kind_id,
                     resolution,
                 });
@@ -10555,6 +10828,65 @@ impl Game {
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(())
+    }
+
+    fn item_category_summon_plan(&self, effect: &ItemUseEffectDefinition) -> ItemUsePlan {
+        let ItemUseEffectDefinition::SummonCategory {
+            selector,
+            maximum_level_source,
+            count_dice,
+            count_sides,
+            count_bonus,
+            group_chance_percent,
+            group_count_dice,
+            group_count_sides,
+            group_count_bonus,
+            allow_unique,
+            radius,
+            ..
+        } = effect
+        else {
+            unreachable!("item summon planning requires a category summon effect");
+        };
+        let resolved_kin_category = self
+            .character_definitions()
+            .and_then(|(_, race, _, _)| race.kin_category.as_deref());
+        let category = match selector {
+            ItemSummonSelectorDefinition::AnyMonster => "any-monster",
+            ItemSummonSelectorDefinition::Category { category } => category,
+            ItemSummonSelectorDefinition::PlayerKin => {
+                resolved_kin_category.unwrap_or("player-kin")
+            }
+        };
+        let maximum_level = match maximum_level_source {
+            ItemSummonLevelSourceDefinition::DungeonDepth => {
+                self.floor_depth(&self.current_floor_id).max(1)
+            }
+            ItemSummonLevelSourceDefinition::PlayerLevel => self.progress.level.max(1),
+        };
+        let candidate_kind_ids = if category == "player-kin" {
+            Vec::new()
+        } else {
+            self.summon_category_candidate_kind_ids(category, None, maximum_level, *allow_unique)
+        };
+        let normal_maximum =
+            usize::from(*count_dice) * usize::from(*count_sides) + usize::from(*count_bonus);
+        let group_maximum = if *group_chance_percent == 0 {
+            0
+        } else {
+            usize::from(*group_count_dice) * usize::from(*group_count_sides)
+                + usize::from(*group_count_bonus)
+        };
+        let positions = self
+            .open_positions_around(self.player.position, *radius)
+            .into_iter()
+            .take(normal_maximum.max(group_maximum))
+            .collect();
+        ItemUsePlan::SummonCategory {
+            category: category.to_owned(),
+            candidate_kind_ids,
+            positions,
+        }
     }
 
     fn item_is_valid_identify_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
@@ -10722,6 +11054,105 @@ impl Game {
         }
     }
 
+    fn curse_equipped_item(&mut self, target: ItemCurseTargetDefinition) -> ItemCurseResolutionDto {
+        let mut candidates = self
+            .items
+            .iter()
+            .enumerate()
+            .filter_map(|(index, item)| {
+                let ItemLocation::Equipped { slot_id } = &item.location else {
+                    return None;
+                };
+                let definition = self.content.item(&item.kind_id)?;
+                let matches_target = match target {
+                    ItemCurseTargetDefinition::Weapon => {
+                        definition.tags.iter().any(|tag| tag == "weapon")
+                    }
+                    ItemCurseTargetDefinition::Armor => {
+                        definition.tags.iter().any(|tag| tag == "armor")
+                    }
+                };
+                matches_target.then(|| (slot_id.clone(), item.id.clone(), index))
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| left.0.cmp(&right.0).then_with(|| left.1.cmp(&right.1)));
+        if candidates.is_empty() {
+            return ItemCurseResolutionDto {
+                item_id: None,
+                item_kind_id: None,
+                before: None,
+                after: None,
+                resisted: false,
+            };
+        }
+        let candidate_index = if candidates.len() == 1 {
+            0
+        } else {
+            usize::try_from(self.rng.bounded(candidates.len() as u64))
+                .expect("curse target index must fit usize")
+        };
+        let item_index = candidates[candidate_index].2;
+        let item_id = self.items[item_index].id.clone();
+        let item_kind_id = self.items[item_index].kind_id.clone();
+        let artifact = self
+            .content
+            .item(&item_kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let resisted = artifact
+            && if self.debug_item_curses_land {
+                false
+            } else if self.debug_item_curses_resisted {
+                true
+            } else {
+                self.rng.bounded(100) < 50
+            };
+        let before = self.items[item_index].curse;
+        if !resisted {
+            self.items[item_index].curse =
+                Some(before.map_or(ItemCurseSeverityDto::Normal, |severity| {
+                    severity.max(ItemCurseSeverityDto::Normal)
+                }));
+        }
+        ItemCurseResolutionDto {
+            item_id: Some(item_id),
+            item_kind_id: Some(item_kind_id),
+            before,
+            after: self.items[item_index].curse,
+            resisted,
+        }
+    }
+
+    fn remove_equipped_curses(&mut self, include_heavy: bool) -> ItemCurseRemovalResolutionDto {
+        let mut removed_item_ids = Vec::new();
+        let mut retained_permanent_item_ids = Vec::new();
+        for item in &mut self.items {
+            if !matches!(item.location, ItemLocation::Equipped { .. }) {
+                continue;
+            }
+            match item.curse {
+                Some(ItemCurseSeverityDto::Normal) => {
+                    item.curse = None;
+                    removed_item_ids.push(item.id.clone());
+                }
+                Some(ItemCurseSeverityDto::Heavy) if include_heavy => {
+                    item.curse = None;
+                    removed_item_ids.push(item.id.clone());
+                }
+                Some(ItemCurseSeverityDto::Permanent) => {
+                    retained_permanent_item_ids.push(item.id.clone());
+                }
+                Some(ItemCurseSeverityDto::Heavy) | None => {}
+            }
+        }
+        removed_item_ids.sort();
+        retained_permanent_item_ids.sort();
+        ItemCurseRemovalResolutionDto {
+            include_heavy,
+            removed_item_ids,
+            retained_permanent_item_ids,
+        }
+    }
+
     fn roll_item_enchantment_attempts(
         &mut self,
         roll: Option<ItemEnchantmentRollDefinition>,
@@ -10865,6 +11296,9 @@ impl Game {
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }
             | ItemUseEffectDefinition::EnchantItem { .. }
+            | ItemUseEffectDefinition::CurseEquippedItem { .. }
+            | ItemUseEffectDefinition::RemoveEquippedCurses { .. }
+            | ItemUseEffectDefinition::SummonCategory { .. }
             | ItemUseEffectDefinition::RandomTeleport { .. }
             | ItemUseEffectDefinition::TeleportLevel
             | ItemUseEffectDefinition::Recall { .. }
@@ -15021,6 +15455,7 @@ impl Game {
                 activation,
                 charges,
                 device_recovery_progress: 0,
+                curse: initial_item_curse(&self.content, &kind_id),
                 kind_id,
                 quantity: 1,
                 quality: ItemQualityDto::Ordinary,
@@ -15351,6 +15786,7 @@ impl Game {
                 affix_ids,
                 rolled_affixes,
                 enchantments: ItemEnchantmentsDto::default(),
+                curse: initial_item_curse(&self.content, &entry.item_kind_id),
                 activation,
                 charges,
                 device_recovery_progress: 0,
@@ -16265,6 +16701,7 @@ impl Game {
                     affix_ids: Vec::new(),
                     rolled_affixes: Vec::new(),
                     enchantments: ItemEnchantmentsDto::default(),
+                    curse: initial_item_curse(&self.content, &reward.item_kind_id),
                     activation,
                     charges,
                     device_recovery_progress: 0,
@@ -17574,6 +18011,7 @@ impl Game {
                             .item_instance_id
                             .clone()
                             .expect("validated item objective must have an instance ID"),
+                        curse: initial_item_curse(&self.content, &kind_id),
                         kind_id,
                         quantity: 1,
                         quality: ItemQualityDto::Ordinary,
@@ -20360,6 +20798,7 @@ fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) ->
         && left.affix_ids == right.affix_ids
         && left.rolled_affixes == right.rolled_affixes
         && left.enchantments == right.enchantments
+        && left.curse == right.curse
         && left.activation == right.activation
         && left.charges == right.charges
         && left.device_recovery_progress == right.device_recovery_progress

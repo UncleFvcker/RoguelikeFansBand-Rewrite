@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v114、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v117、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -74,13 +74,29 @@
 | P63 | 卷轴地图与侦测事务 | 已由 contract-v113 完成 | 新增 item detect 主体与显式 `throughWalls`；Mapping 写 explored，隐藏地形写 revealedTerrain，actor/item 保持瞬时；静态卷轴事件、Web 文案与 Legacy gold/passage/invisible 标签贯通。sval 25–30/57 共七条使 `scroll-effect` 59→52。协议 1.113、包 1.104.0、Schema v49、fixtures 387-389 共 389 exact |
 | P64 | 卷轴传送与回城事务 | 已由 contract-v114 完成 | `random-teleport`、`teleport-level`、`recall`、`reset-recall`；最远半数合法格、上下方向/树连接、稳定 dungeon+floor 目的地、延迟/取消/重设、实例生命周期、原子拒绝与 v113 存档迁移。sval 8–11/53 使 `scroll-effect` 52→47；协议 1.114、包 1.105.0、Schema v50、fixtures 390-398 共 398 exact |
 | P65 | 装备附魔卷轴与实例强化 | 已由 contract-v115 完成 | `enchant-item` 的 to-hit/to-damage/to-AC 尝试骰、原版千分递减表、+15 上限、神器 50% 门、普通/弹药堆门、实例/save/战斗派生、原子拒绝和 Web 投影。sval 16/17/18/20/21 使 `scroll-effect` 47→42；协议 1.115、包 1.106.0、Schema v51、fixtures 399-405 共 405 exact |
+| P66 | 装备诅咒与解除卷轴 | 已由 contract-v116 完成 | normal/heavy/permanent 实例诅咒、武器/护甲施咒、神器 50% 抵抗、普通/强力解除、永久诅咒保留、卸装/替换零时间拒绝、四类 save 与 Web 投影。sval 2/3/14/15 使 `scroll-effect` 42→38；协议 1.116、包 1.107.0、Schema v52、fixtures 406-413 共 413 exact |
+| P67 | 怪物、亡灵、宠物与同族召唤卷轴 | 已由 contract-v117 完成 | 物品召唤 selector、地牢深度/玩家等级来源、Race `kinCategory`、敌对 unique/guardian 过滤、永久玩家控制、零候选/零空间消费与知识/RNG 边界。sval 4/5/6/54 使 `scroll-effect` 38→34；协议 1.117、包 1.108.0、Schema v52、fixtures 414-420 共 420 exact |
+
+## contract-v117 明确遗留
+
+- Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
+- 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
+- 永久宠物复用首版召唤物 AI 与全局指令；维护费、忠诚、解除控制、宠物容量和独立成长尚未建立；
+- 剩余 `scroll-effect` 34 应先按世界效果、状态效果和物品事务重新分组，再选择 P68 纵切。
+
+## contract-v116 明确遗留
+
+- 原版施咒的 `blast_object` 还会抹除 ego/artifact、基础骰与加值；当前 immutable kind ID 不承担物品损坏，去词条、负强化和重铸需独立事务；
+- permanent 只能由内容/生成期盖章，卷轴解除永远保留；解除永久诅咒的能力、服务或剧情规则尚未建立；
+- 诅咒只约束卸装/替换，没有额外属性惩罚、随机诅咒副作用、诅咒知识鉴定或批量目标 UI；
+- 四种召唤卷轴已由 contract-v117 完成；剩余 `scroll-effect` 34 转入世界/状态/物品效果分组。
 
 ## contract-v115 明确遗留
 
-- 附魔只增加正向 to-hit/to-damage/to-AC，不包含装备诅咒、解除诅咒、负强化或按职业/服务调整概率；
+- 附魔只增加正向 to-hit/to-damage/to-AC；装备诅咒与解除已由 contract-v116 独立完成，负强化和按职业/服务调整概率仍未建立；
 - 神器二次门、普通堆叠和弹药堆叠已按原版固定；神器保护目前由 item `artifact` tag 判定，随机神器与重铸尚未建立；
 - 地面目标只允许玩家脚下，Web 当前通用物品选择器主要覆盖背包/装备；批量选择、自动选装和商店强化服务尚未建立；
-- 剩余 `scroll-effect` 42 中，召唤四条和解除/施加诅咒四条是下一批高覆盖候选，其后再处理世界效果。
+- 四种召唤卷轴已由 contract-v117 完成；剩余 `scroll-effect` 34 转入世界效果候选。
 
 ## contract-v114 明确遗留
 
@@ -88,14 +104,14 @@
 - 倒计时按完成的玩家行动周期推进，再次使用可取消；受伤中断、反召回区域和怪物干扰尚未建立；
 - Teleport Level 使用当前实例的树连接和方向边界回退；地表向下要求已有召回目的地并继续遵守地牢进入条件，不绕过入口规则；
 - 普通 `reset-on-surface` 地牢召回地表会清旧实例，地表召回创建新实例；persistent/TTL 仍沿用各自内容生命周期；
-- 装备附魔/强化五条已由 contract-v115 完成；召唤四条和解除/施加诅咒四条进入下一候选集。
+- 装备附魔、施咒/解除和召唤卷轴已由 contract-v115–v117 完成；剩余 34 条进入世界/状态/物品效果重分组。
 
 ## contract-v113 明确遗留
 
 - Mapping 只写当前层 explored，不揭露隐藏 terrain 真值；persistent terrain detect 只把 concealed 命中写入 revealedTerrain；actor/item detect 不建立长期实体知识或怪物回忆；
 - item 的 `detectedEntityIds` 复用通用侦测结果字段承载物品实例 ID；自动拾取、地图标记与侦测结果列表 UI 未建立；
 - `throughWalls` 只绕过 FOV/LOS，不绕过当前楼层和半径；P83 法术与既有动态设备缺省 false，语义不回归；
-- 传送/回城五条已由 contract-v114 完成，装备附魔五条已由 contract-v115 完成；地图结果列表 UI、自动拾取和怪物回忆仍保留，召唤和诅咒卷轴进入下一候选集。
+- 传送/回城、装备附魔、施咒/解除和召唤卷轴已由 contract-v114–v117 完成；地图结果列表 UI、自动拾取和怪物回忆仍保留。
 
 ## contract-v112 明确遗留
 
@@ -103,10 +119,10 @@
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城和附魔完成后剩余 42 条，诅咒、召唤与世界效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒和召唤完成后剩余 34 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
-- 地图/侦测七条已由 contract-v113 完成，传送/回城五条已由 contract-v114 完成，附魔五条已由 contract-v115 完成；剩余 42 条按诅咒、召唤和世界效果继续推进。
+- 地图/侦测、传送/回城、附魔、施咒/解除和召唤卷轴已由 contract-v113–v117 完成；剩余 34 条按世界/状态/物品效果继续推进。
 
 ## contract-v107 明确遗留
 
@@ -163,7 +179,7 @@
 ## contract-v98 明确遗留
 
 - 豁免公式为 v72 中性检定（技能 vs 3/4 难度阈值 + 5%/5% 自动窗口），非原版连续概率（sav×100/(100+rlev/2+dam/5)）；dam/5 难度加成未纳入；
-- 装备诅咒副作用（curse_equipment）无对应系统；HAND_DOOM（当前 HP 百分比 + 豁免，30 实例）留缺口；
+- P66 已建立装备实例诅咒，但 curse-damage 的 `curse_equipment` 副作用尚未挂接该事务；HAND_DOOM（当前 HP 百分比 + 豁免，30 实例）留缺口；
 - 玩家召唤物作为诅咒目标时无豁免（无豁免技能概念），直接全额；
 - 心灵族（MIND_BLAST dam/5、BRAIN_SMASH dam/3）的豁免门回补待排期——机制已就位，只差在 Sequence 骑手前插入豁免检定的形态设计。
 

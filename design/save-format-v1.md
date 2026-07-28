@@ -187,6 +187,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.115 为 `ItemSaveDto`、`InventoryItemSaveDto`、`EquipmentItemSaveDto` 和 `CarriedItemSaveDto` 增加可选 `enchantments { toHit, toDamage, toArmor }`。缺失字段迁移为全零，不读取内容表、不补抽 RNG；任一单项超过 +15 时以 `item enchantment state is invalid` 拒绝载入。拆分、掉落、射击弹药结算和楼层仓库必须保留强化值，堆叠只合并强化及其他运行时属性兼容的实例。save 容器保持 v1，权威实例字段使 state hash 升至 Schema v51。完整边界见 [Contract v115](contract-v115-scroll-enchantment.md)。
 
+协议 1.116 为四类 item save DTO 增加可选 `curse`，值为 normal/heavy/permanent。缺失字段迁移为无诅咒，不读取 `initialCurse`、不补抽 RNG；载入后实例值保持权威。拆分、掉落、射击弹药结算和楼层仓库保留严重度，堆叠只合并诅咒及其他运行时属性兼容的实例。save 容器保持 v1，权威实例字段使 state hash 升至 Schema v52。完整边界见 [Contract v116](contract-v116-scroll-curses.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

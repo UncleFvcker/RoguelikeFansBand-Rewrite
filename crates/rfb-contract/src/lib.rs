@@ -7,11 +7,11 @@ use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
     CharacterSummary, EntityFactionDto, EquipmentItemDto, GameCommand, GameCommandEnvelope,
     GameEventDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
-    ItemEnchantmentsDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
-    MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position,
-    RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
-    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto, SummonCommandDto,
-    SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
+    ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
+    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
+    PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
+    ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto,
+    SummonCommandDto, SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -20,7 +20,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v115";
+pub const ACTIVE_BASELINE: &str = "contract-v117";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -65,6 +65,10 @@ pub struct Preconditions {
     pub debug_recharge_sources_survive: bool,
     #[serde(default)]
     pub debug_recall_delay_turns: Option<u16>,
+    #[serde(default)]
+    pub debug_item_curses_land: bool,
+    #[serde(default)]
+    pub debug_item_curses_resisted: bool,
     #[serde(default)]
     pub player_build_id: Option<String>,
     #[serde(default)]
@@ -158,6 +162,8 @@ pub struct InventoryItemPrecondition {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub curse: Option<ItemCurseSeverityDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
 }
@@ -426,6 +432,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             activation: item.activation.clone(),
             charges: item.charges,
             enchantments: item.enchantments,
+            curse: item.curse,
             device_recovery_progress: item.device_recovery_progress,
         });
     }
@@ -522,6 +529,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     game.debug_set_recharge_attempts_fail(fixture.preconditions.debug_recharge_attempts_fail);
     game.debug_set_recharge_sources_survive(fixture.preconditions.debug_recharge_sources_survive);
     game.debug_set_recall_delay_turns(fixture.preconditions.debug_recall_delay_turns);
+    game.debug_set_item_curses_land(fixture.preconditions.debug_item_curses_land);
+    game.debug_set_item_curses_resisted(fixture.preconditions.debug_item_curses_resisted);
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
     let mut removed_entities = Vec::new();
@@ -686,12 +695,18 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
                 || item.activation.is_some()
                 || item.charges.is_some()
                 || !item.enchantments.is_empty()
+                || item.curse.is_some()
                 || !(1..=100).contains(&depth))
         {
             return Err(ContractError::InvalidGeneratedItemPrecondition(
                 item.id.clone(),
             ));
         }
+    }
+    if fixture.preconditions.debug_item_curses_land
+        && fixture.preconditions.debug_item_curses_resisted
+    {
+        return Err(ContractError::ConflictingItemCurseDebugPreconditions);
     }
     Ok(())
 }
@@ -764,6 +779,8 @@ pub enum ContractError {
     InvalidTerrainPrecondition(Position),
     #[error("generated item precondition is invalid for {0}")]
     InvalidGeneratedItemPrecondition(String),
+    #[error("item curse debug preconditions cannot force both landing and resistance")]
+    ConflictingItemCurseDebugPreconditions,
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

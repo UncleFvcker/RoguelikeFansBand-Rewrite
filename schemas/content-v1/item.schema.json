@@ -253,6 +253,21 @@
       ],
       "type": "object"
     },
+    "ItemCurseSeverityDefinition": {
+      "enum": [
+        "normal",
+        "heavy",
+        "permanent"
+      ],
+      "type": "string"
+    },
+    "ItemCurseTargetDefinition": {
+      "enum": [
+        "weapon",
+        "armor"
+      ],
+      "type": "string"
+    },
     "ItemDeviceActivationDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -408,6 +423,60 @@
         "sides"
       ],
       "type": "object"
+    },
+    "ItemSummonLevelSourceDefinition": {
+      "enum": [
+        "dungeon-depth",
+        "player-level"
+      ],
+      "type": "string"
+    },
+    "ItemSummonSelectorDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "any-monster",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "type": {
+              "const": "category",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "category"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "player-kin",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
@@ -639,6 +708,133 @@
           },
           "required": [
             "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "target": {
+              "$ref": "#/$defs/ItemCurseTargetDefinition"
+            },
+            "type": {
+              "const": "curse-equipped-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "target"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "includeHeavy": {
+              "default": false,
+              "type": "boolean"
+            },
+            "type": {
+              "const": "remove-equipped-curses",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "allowUnique": {
+              "default": false,
+              "type": "boolean"
+            },
+            "countBonus": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "countDice": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "countSides": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationTurns": {
+              "description": "Item summons are permanent in v117; this field is fixed at zero\nso the shared resolver cannot create an invalid ability identity.",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupChancePercent": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupCountBonus": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupCountDice": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupCountSides": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "hostile": {
+              "default": false,
+              "type": "boolean"
+            },
+            "maximumLevelSource": {
+              "$ref": "#/$defs/ItemSummonLevelSourceDefinition"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "selector": {
+              "$ref": "#/$defs/ItemSummonSelectorDefinition"
+            },
+            "type": {
+              "const": "summon-category",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "selector",
+            "maximumLevelSource",
+            "countDice",
+            "countSides",
+            "radius",
+            "durationTurns"
           ],
           "type": "object"
         },
@@ -1063,6 +1259,18 @@
     },
     "id": {
       "type": "string"
+    },
+    "initialCurse": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ItemCurseSeverityDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Curse stamped onto newly generated instances. Save data remains\nauthoritative after generation and never re-derives this field."
     },
     "maxStack": {
       "format": "uint32",

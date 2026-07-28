@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.pet-summoning-scroll",
+  "nameKey": "item-demo-pet-summoning-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-pet-summoning-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "summon-category",
+      "selector": { "type": "any-monster" },
+      "maximumLevelSource": "dungeon-depth",
+      "countDice": 1,
+      "countSides": 1,
+      "groupChancePercent": 50,
+      "groupCountDice": 1,
+      "groupCountSides": 3,
+      "groupCountBonus": 1,
+      "radius": 2,
+      "durationTurns": 0
+    }
+  },
+  "tags": ["consumable", "pet", "scroll", "summon"]
+}

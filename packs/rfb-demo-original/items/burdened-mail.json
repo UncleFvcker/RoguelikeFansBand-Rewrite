@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.burdened-mail",
+  "nameKey": "item-demo-burdened-mail-name",
+  "descriptionKey": "item-demo-burdened-mail-description",
+  "glyph": "[",
+  "weightTenthsPound": 140,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "initialCurse": "heavy",
+  "modifiers": { "defense": 5 },
+  "tags": ["armor", "equipment"]
+}

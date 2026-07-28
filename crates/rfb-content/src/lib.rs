@@ -457,6 +457,10 @@ pub struct RaceDefinition {
     /// Status kind ids members of this race are innately immune to.
     #[serde(default)]
     pub status_immunities: Vec<String>,
+    /// Actor category used by player-kin summons. Omission makes that race
+    /// produce an observed zero-result summon instead of guessing ancestry.
+    #[serde(default)]
+    pub kin_category: Option<String>,
     pub tags: Vec<String>,
 }
 
@@ -1473,6 +1477,45 @@ pub struct ThrowProfileDefinition {
     pub damage_type: ActorDamageType,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemCurseSeverityDefinition {
+    Normal,
+    Heavy,
+    Permanent,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemCurseTargetDefinition {
+    Weapon,
+    Armor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemSummonLevelSourceDefinition {
+    DungeonDepth,
+    PlayerLevel,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum ItemSummonSelectorDefinition {
+    AnyMonster,
+    Category { category: String },
+    PlayerKin,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(
@@ -1517,6 +1560,37 @@ pub enum ItemUseEffectDefinition {
         to_damage: Option<ItemEnchantmentRollDefinition>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         to_armor: Option<ItemEnchantmentRollDefinition>,
+    },
+    CurseEquippedItem {
+        target: ItemCurseTargetDefinition,
+    },
+    RemoveEquippedCurses {
+        #[serde(default)]
+        include_heavy: bool,
+    },
+    SummonCategory {
+        selector: ItemSummonSelectorDefinition,
+        maximum_level_source: ItemSummonLevelSourceDefinition,
+        count_dice: u8,
+        count_sides: u8,
+        #[serde(default)]
+        count_bonus: u8,
+        #[serde(default)]
+        hostile: bool,
+        #[serde(default)]
+        group_chance_percent: u8,
+        #[serde(default)]
+        group_count_dice: u8,
+        #[serde(default)]
+        group_count_sides: u8,
+        #[serde(default)]
+        group_count_bonus: u8,
+        #[serde(default)]
+        allow_unique: bool,
+        radius: u8,
+        /// Item summons are permanent in v117; this field is fixed at zero
+        /// so the shared resolver cannot create an invalid ability identity.
+        duration_turns: u16,
     },
     Sequence {
         effects: Vec<Self>,
@@ -1640,6 +1714,10 @@ pub struct ItemDefinition {
     pub max_stack: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
+    /// Curse stamped onto newly generated instances. Save data remains
+    /// authoritative after generation and never re-derives this field.
+    #[serde(default)]
+    pub initial_curse: Option<ItemCurseSeverityDefinition>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     #[serde(default)]
@@ -3157,6 +3235,48 @@ fn valid_item_effect(
                     .chain(to_armor)
                     .all(valid_roll)
         }
+        ItemUseEffectDefinition::CurseEquippedItem { .. }
+        | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => true,
+        ItemUseEffectDefinition::SummonCategory {
+            selector,
+            count_dice,
+            count_sides,
+            count_bonus,
+            hostile,
+            group_chance_percent,
+            group_count_dice,
+            group_count_sides,
+            group_count_bonus,
+            allow_unique,
+            radius,
+            duration_turns,
+            ..
+        } => {
+            let selector_is_valid = match selector {
+                ItemSummonSelectorDefinition::AnyMonster
+                | ItemSummonSelectorDefinition::PlayerKin => true,
+                ItemSummonSelectorDefinition::Category { category } => {
+                    actor_tag_values.contains(category)
+                }
+            };
+            selector_is_valid
+                && (1..=8).contains(count_dice)
+                && (1..=8).contains(count_sides)
+                && u16::from(*count_dice) * u16::from(*count_sides) + u16::from(*count_bonus) <= 8
+                && *group_chance_percent <= 100
+                && if *group_chance_percent == 0 {
+                    *group_count_dice == 0 && *group_count_sides == 0 && *group_count_bonus == 0
+                } else {
+                    (1..=8).contains(group_count_dice)
+                        && (1..=8).contains(group_count_sides)
+                        && u16::from(*group_count_dice) * u16::from(*group_count_sides)
+                            + u16::from(*group_count_bonus)
+                            <= 8
+                }
+                && (!*allow_unique || *hostile)
+                && (1..=8).contains(radius)
+                && *duration_turns == 0
+        }
         ItemUseEffectDefinition::Sequence { effects } => {
             (2..=8).contains(&effects.len())
                 && effects.iter().all(|effect| {
@@ -4474,7 +4594,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
                     | ItemUseEffectDefinition::Recall { .. }
-                    | ItemUseEffectDefinition::ResetRecall => self_target,
+                    | ItemUseEffectDefinition::ResetRecall
+                    | ItemUseEffectDefinition::CurseEquippedItem { .. }
+                    | ItemUseEffectDefinition::RemoveEquippedCurses { .. }
+                    | ItemUseEffectDefinition::SummonCategory { .. } => self_target,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                     ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. } => {
@@ -4521,6 +4644,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || !(-100..=100).contains(&item.modifiers.speed)
             || attribute_modifiers_out_of_range(&item.modifiers)
             || equipment_bonuses_out_of_range(&item.equipment_bonuses)
+            || (item.initial_curse.is_some() && item.equipment_slot.is_none())
             || (item.equipment_slot.is_none()
                 && (item.modifiers != StatModifiers::default()
                     || item.equipment_bonuses != EquipmentBonuses::default()))
@@ -4840,6 +4964,18 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             return Err(ContentError::InvalidBodySlots(race.id.clone()));
         }
         validate_status_immunities(&race.id, &mut race.status_immunities)?;
+        if let Some(category) = &race.kin_category
+            && (category.is_empty()
+                || category.len() > 64
+                || !category.bytes().all(|byte| {
+                    byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'-' | b'_')
+                })
+                || !actor_tag_values.contains(category))
+        {
+            return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+        }
         let mut body_slot_ids = BTreeSet::new();
         for slot in &race.body_slots {
             if validate_equipment_slot(&slot.id).is_err()
@@ -8457,7 +8593,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 41);
+        assert_eq!(first.content.items.len(), 52);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8483,7 +8619,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.106.0");
+        assert_eq!(catalog.pack_version(), "1.108.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

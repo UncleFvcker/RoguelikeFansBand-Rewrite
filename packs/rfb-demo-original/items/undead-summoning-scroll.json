@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.undead-summoning-scroll",
+  "nameKey": "item-demo-undead-summoning-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-undead-summoning-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "summon-category",
+      "selector": { "type": "category", "category": "undead" },
+      "maximumLevelSource": "dungeon-depth",
+      "countDice": 1,
+      "countSides": 3,
+      "hostile": true,
+      "groupChancePercent": 100,
+      "groupCountDice": 1,
+      "groupCountSides": 3,
+      "allowUnique": true,
+      "radius": 2,
+      "durationTurns": 0
+    }
+  },
+  "tags": ["consumable", "scroll", "summon", "undead"]
+}

@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳 + P60 设备自然恢复 + P61 有序恢复消耗品 + P62 卷轴重分类/鉴定 + P63 卷轴地图/侦测）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备、恢复/主动充能、恢复型物品、鉴定与侦测卷轴运行时分别由 Contract v108–v113 定义。
+状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58–P66 设备/消耗品与卷轴纵切）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备、恢复物品以及鉴定/侦测/传送/附魔/诅咒卷轴运行时由 Contract v108–v116 定义。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 
@@ -19,7 +19,7 @@
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |
 | 75/80（药水/食物） | 堆叠消耗品；P58 接入六种治疗药水；P61 增加四种状态恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种治疗药水补充当前可表达的异常清除序列，其余保留行为缺口 |
-| 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | P62 为卷轴 sval 12/13 接入普通/完全鉴定；P63 映射 25–30/57 的地图、gold/item、trap/passage、invisible/monster 侦测；P64 映射 8–11/53 的同层传送、跨层、召回与重设；P65 映射 16/17/18/20/21 的装备附魔，剩余 42 条计 `scroll-effect`；P59 为通用 wand/staff/rod 壳生成首批动态候选，效果 identity、power、成本与随机容量在实例生成时物化，不直接写成单一 kind 效果 |
+| 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | P62 为 sval 12/13 接入鉴定；P63 映射 25–30/57 的地图/侦测；P64 映射 8–11/53 的传送/召回；P65 映射 16/17/18/20/21 的装备附魔；P66 映射 2/3/14/15 的施咒/解除，剩余 38 条计 `scroll-effect`；P59 为通用 wand/staff/rod 壳生成动态候选，效果 identity、power、成本与随机容量在实例生成时物化 |
 | 90+ 魔典族 | 壳 + `book` 标签（旧版法术书系统未映射） |
 | 其余（箱子/尖刺/瓶罐/雕像/尸骸等） | 通用壳（identity/重量/堆叠/字形恒可表达） |
 
@@ -55,9 +55,13 @@ P64 接入传送/回城五条：8 Phase Door、9 Teleport、10 Teleport Level、
 
 P65 接入五种装备附魔卷轴：16 Armor、17 Weapon To-Hit、18 Weapon To-Dam、20 *Armor*、21 *Weapon*。普通卷轴各作一次尝试，强力卷轴作 `1d3+3` 次；实例强化沿用原版千分递减表、+15 上限、神器 50% 二次门及普通/弹药堆叠门。真实包保持 937 items、128 affixes、1260 abilities、4 ability books，严格源校验、编译和产物回读 hash 均为 `a727f0ef817eefe5d790699da84e88f942a23246b4fd0b4af23b96385649dc57`；`scroll-effect` 47→42。
 
+P66 接入四种装备诅咒卷轴：2 Curse Armor、3 Curse Weapon、14 Remove Curse、15 *Remove Curse*。实例诅咒分 normal/heavy/permanent，施咒具有神器 50% 抵抗；普通解除只移除 normal，强力解除可移除 heavy，永久诅咒保留。真实包保持 937 items、128 affixes、1260 abilities、4 ability books，严格源校验、编译和产物回读 hash 均为 `b517b3dc48395c91b3c9864028cce2f4ae5f97d94dc41264c1afe1ac9af9fb70`；`scroll-effect` 42→38。
+
+P67 接入四种召唤卷轴：4 Summon Monster、5 Summon Undead、6 Summon Pet、54 Summon Kin。Monster/Undead 使用地牢深度并生成敌对结果，Pet 使用地牢深度并永久控制，Kin 使用玩家等级与 Race `kinCategory`；actor/Race 同步导入 glyph 式 category。真实包保持 937 items、128 affixes、1260 abilities、4 ability books，并新增 1332 actor glyph tag 与 68 个 Race kin 映射；严格源校验、编译和产物回读 hash 均为 `fbe1a9682d464e28ade0bd5df8fe8fbdda4fd1030413dd78965a4a4c983834d0`；`scroll-effect` 38→34。
+
 ## 7. 遗留
 
-- 其余药水/食物按源码 sval 精选接入；剩余 `scroll-effect` 42 优先比较召唤四条和解除/施加诅咒四条，其后再处理世界效果；
+- 其余药水/食物按源码 sval 精选接入；剩余 `scroll-effect` 34 按世界/状态/物品效果重新分组后继续接入；
 - 装备旗标系统（抗性/免疫/速度/斩杀支路）落地后重跑导入，可解锁 72 条 ego-inexpressible 词条与神器旗标主体；
 - E:/D: 中文名与描述导出为本地 Fluent 片段（v2 方向未变）；
 - 词条与基础物品的运行时挂接（生成期 affix 抽取）属于战利品生成线，另行排期。

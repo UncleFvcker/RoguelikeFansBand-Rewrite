@@ -193,6 +193,7 @@ message-item-property-discovered = Equipping { $target } reveals its { $property
 message-loot-drop = { $source } drops { $target } ×{ $quantity }.
 message-item-unequip-success = You unequip { $target } from the { $slot } slot.
 message-item-unequip-none = There is nothing to unequip from the { $slot } slot.
+message-item-unequip-cursed = { $target } is { $severity } and cannot be removed from the { $slot } slot.
 message-item-drop-success =
     { $stacks ->
         [one] You drop 1 stack containing { $quantity } items.
@@ -209,6 +210,15 @@ message-item-use-identified = You use { $source } to appraise { $target }.
 message-item-use-fully-identified = You use { $source } to reveal every property of { $target }.
 message-item-use-enchanted = You use { $source }; { $target } shines with a stronger enchantment.
 message-item-use-enchantment-failed = You use { $source }, but the enchantment on { $target } does not improve.
+message-item-use-cursed = You use { $source }; a curse settles on { $target }.
+message-item-use-curse-resisted = You use { $source }, but { $target } resists the curse.
+message-item-use-curse-no-target = You use { $source }, but there is no matching equipped item to curse.
+message-item-use-curses-removed = You use { $source } and remove curses from { $count } equipped item(s).
+message-item-use-curse-removal-no-effect = You use { $source }, but no removable equipped curse is affected.
+message-item-use-summoned = You use { $source } and call { $count } { $actor } into nearby open spaces.
+message-item-use-summon-no-effect = You use { $source }, but nothing answers the call.
+message-item-activation-summoned = { $source } calls { $count } { $actor } into nearby open spaces.
+message-item-activation-summon-no-effect = { $source } calls out, but nothing answers.
 message-item-use-unavailable = The selected item cannot be used right now.
 message-device-energy-recovered = { $target } recovers { $amount } energy ({ $current }/{ $maximum }).
 message-device-recharge-unavailable = The selected device cannot be recharged from that source.

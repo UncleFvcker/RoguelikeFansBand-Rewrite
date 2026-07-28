@@ -16,5 +16,5 @@
   "damageSides": 7,
   "damageType": "nether",
   "resistances": { "cold": "resistant", "dark": "immune", "nether": "immune", "poison": "immune" },
-  "tags": ["evil", "high-undead", "nonliving", "undead", "unique", "vampire"]
+  "tags": ["evil", "high-undead", "kin-glyph-86", "nonliving", "undead", "unique", "vampire"]
 }

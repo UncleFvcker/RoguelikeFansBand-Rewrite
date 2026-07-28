@@ -14,5 +14,6 @@
   "experiencePercent": 115,
   "baseHp": -2,
   "skillSetId": "demo.skill-set.gnome",
+  "kinCategory": "kin-glyph-104",
   "tags": ["device-affinity", "humanoid"]
 }

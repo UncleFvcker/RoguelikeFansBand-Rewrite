@@ -135,6 +135,8 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v113：地图与侦测卷轴](design/contract-v113-scroll-detection.md)
 - [Contract v114：卷轴传送、跨层与召回](design/contract-v114-scroll-travel-recall.md)
 - [Contract v115：装备附魔卷轴与实例强化](design/contract-v115-scroll-enchantment.md)
+- [Contract v116：装备诅咒与解除卷轴](design/contract-v116-scroll-curses.md)
+- [Contract v117：怪物、亡灵、宠物与同族召唤卷轴](design/contract-v117-scroll-summoning.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -158,7 +160,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v115/scenarios`](tests/fixtures/contract-v115/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v114` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v117/scenarios`](tests/fixtures/contract-v117/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v116` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -291,6 +293,10 @@ P64 / contract-v114 完成卷轴传送、跨层与召回族。内容层新增 `r
 
 P65 / contract-v115 完成五种装备附魔卷轴与实例强化。内容层新增 `enchant-item` 的 to-hit/to-damage/to-AC 尝试骰；运行时按原版千分递减表、+15 上限、神器 50% 二次门和普通/弹药堆门结算，合法目标即使全失败也消费。强化值进入四类物品存档、拆分/堆叠、近战/发射器/弹药/投掷与护甲派生；旧档缺字段全零迁移，非法目标保持零 RNG/零 world tick。demo 新增五种卷轴与 Resonance Mail；legacy importer 映射 sval 16/17/18/20/21，使 `scroll-effect` 47→42。协议 1.115、demo 1.106.0、state hash Schema v51、active baseline 405 条 exact、零 waiver，内置 content hash 为 `9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459`。详见[Contract v115](design/contract-v115-scroll-enchantment.md)。
 
+P66 / contract-v116 完成装备诅咒与解除卷轴。内容层新增武器/护甲施咒、普通/强力解除和 normal/heavy/permanent 三档实例诅咒；神器拥有 50% 抵抗，永久诅咒不可由卷轴解除，任意诅咒装备都不能卸下或通过替换绕过。诅咒状态进入四类物品存档、拆分/堆叠与 Web 投影，旧档缺字段迁移为无诅咒；无目标施咒仍消费但只记 Tried。demo 新增四种卷轴和三件边界装备；legacy importer 映射 sval 2/3/14/15，使 `scroll-effect` 42→38。协议 1.116、demo 1.107.0、state hash Schema v52、active baseline 413 条 exact、零 waiver，内置 content hash 为 `9d1c6c1e01fb4533aa5a9868f0adfcbe876148d98585412783d0da93f4019dff`。详见[Contract v116](design/contract-v116-scroll-curses.md)。
+
+P67 / contract-v117 完成怪物、亡灵、宠物与同族四种召唤卷轴。内容层新增物品类别召唤的 selector、地牢深度/玩家等级来源和 Race `kinCategory`；运行时复用能力召唤的候选、unique、落位和群体管线，敌对结果允许可用 unique 但排除 guardian，Pet/Kin 只保存永久 `controllerId`。零候选或零空间仍消费并推进行动，只记 Tried 且不抽召唤 RNG；成功才 Aware。demo 新增四种卷轴并为 Race/actor 补 glyph 式 kin tag；legacy importer 映射 sval 4/5/6/54，使 `scroll-effect` 38→34。协议 1.117、demo 1.108.0、state hash Schema v52、active baseline 420 条 exact、零 waiver，内置 content hash 为 `0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210`。详见[Contract v117](design/contract-v117-scroll-summoning.md)。
+
 ### 本地验证
 
 ```powershell
@@ -360,10 +366,10 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v115/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v117/baseline-policy.json
 ```
 
-当前 405 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 420 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

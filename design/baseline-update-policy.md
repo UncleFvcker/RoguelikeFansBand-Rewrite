@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v115/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v114` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v117/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v116` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v115/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v117/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v115/baseli
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v115`：装备/弹药实例强化、原版递减概率、神器/堆叠门、战斗派生、save/replay、state hash Schema v51 和 405 个 exact fixtures 由 [Contract v115](contract-v115-scroll-enchantment.md) 定义；`contract-v1` 至 `contract-v114` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v117`：四种物品类别召唤、深度/玩家等级过滤、Race kin、永久玩家控制、零结果知识/RNG、save/replay、state hash Schema v52 和 420 个 exact fixtures 由 [Contract v117](contract-v117-scroll-summoning.md) 定义；`contract-v1` 至 `contract-v116` 继续作为历史基准保留。

@@ -145,6 +145,14 @@
     "id": {
       "type": "string"
     },
+    "kinCategory": {
+      "default": null,
+      "description": "Actor category used by player-kin summons. Omission makes that race\nproduce an observed zero-result summon instead of guessing ancestry.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "lifePercent": {
       "default": 100,
       "format": "uint16",

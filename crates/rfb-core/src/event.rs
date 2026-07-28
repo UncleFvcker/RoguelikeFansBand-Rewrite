@@ -7,7 +7,8 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemEnchantmentResolutionDto,
+    GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
+    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
     ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
     ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
@@ -384,6 +385,11 @@ pub(crate) enum DomainEvent {
     ItemUnequipUnavailable {
         slot_id: String,
     },
+    ItemUnequipCursed {
+        target_kind_id: String,
+        slot_id: String,
+        severity: ItemCurseSeverityDto,
+    },
     MoveBlocked,
     ProjectileUnavailable,
     ProjectileAmmoUnavailable {
@@ -461,6 +467,14 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: ItemEnchantmentResolutionDto,
     },
+    ItemCursed {
+        source_kind_id: String,
+        resolution: ItemCurseResolutionDto,
+    },
+    ItemCursesRemoved {
+        source_kind_id: String,
+        resolution: ItemCurseRemovalResolutionDto,
+    },
     ItemActivationLanded {
         source_kind_id: String,
         profile_id: String,
@@ -488,6 +502,11 @@ pub(crate) enum DomainEvent {
     ItemDetected {
         source_kind_id: String,
         resolution: AbilityDetectResolutionDto,
+    },
+    ItemSummoned {
+        source_kind_id: String,
+        profile_id: Option<String>,
+        resolution: AbilitySummonResolutionDto,
     },
     ItemTeleported {
         source_kind_id: String,
@@ -1508,6 +1527,19 @@ impl DomainEvent {
                 "item-unequip-none",
                 [("slot", slot_id)],
             ),
+            Self::ItemUnequipCursed {
+                target_kind_id,
+                slot_id,
+                severity,
+            } => dto(
+                "item.unequip.cursed",
+                "item-unequip-cursed",
+                [
+                    ("target", target_kind_id),
+                    ("slot", slot_id),
+                    ("severity", curse_severity_arg(severity).to_owned()),
+                ],
+            ),
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
             Self::ProjectileUnavailable => {
                 dto_without_args("combat.projectile-unavailable", "projectile-unavailable")
@@ -1759,6 +1791,50 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::ItemEnchantment { resolution },
             ),
+            Self::ItemCursed {
+                source_kind_id,
+                resolution,
+            } => {
+                let (kind, message_key) = if resolution.item_id.is_none() {
+                    ("item.use-curse-no-target", "item-use-curse-no-target")
+                } else if resolution.resisted {
+                    ("item.use-curse-resisted", "item-use-curse-resisted")
+                } else {
+                    ("item.use-cursed", "item-use-cursed")
+                };
+                dto_with_outcome(
+                    kind,
+                    message_key,
+                    [
+                        ("source", source_kind_id),
+                        (
+                            "target",
+                            resolution.item_kind_id.clone().unwrap_or_default(),
+                        ),
+                    ],
+                    GameEventOutcomeDto::ItemCurse { resolution },
+                )
+            }
+            Self::ItemCursesRemoved {
+                source_kind_id,
+                resolution,
+            } => {
+                let removed = resolution.removed_item_ids.len();
+                dto_with_outcome(
+                    if removed == 0 {
+                        "item.use-curse-removal-no-effect"
+                    } else {
+                        "item.use-curses-removed"
+                    },
+                    if removed == 0 {
+                        "item-use-curse-removal-no-effect"
+                    } else {
+                        "item-use-curses-removed"
+                    },
+                    [("source", source_kind_id), ("count", removed.to_string())],
+                    GameEventOutcomeDto::ItemCurseRemoval { resolution },
+                )
+            }
             Self::ItemActivationLanded {
                 source_kind_id,
                 profile_id,
@@ -1839,6 +1915,34 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::AbilityDetect { resolution },
             ),
+            Self::ItemSummoned {
+                source_kind_id,
+                profile_id,
+                resolution,
+            } => {
+                let summoned = resolution.entity_ids.len();
+                let activation = profile_id.is_some();
+                dto_with_outcome(
+                    match (activation, summoned == 0) {
+                        (false, false) => "item.use-summoned",
+                        (false, true) => "item.use-summon-no-effect",
+                        (true, false) => "item.activation-summoned",
+                        (true, true) => "item.activation-summon-no-effect",
+                    },
+                    match (activation, summoned == 0) {
+                        (false, false) => "item-use-summoned",
+                        (false, true) => "item-use-summon-no-effect",
+                        (true, false) => "item-activation-summoned",
+                        (true, true) => "item-activation-summon-no-effect",
+                    },
+                    [
+                        ("source", source_kind_id),
+                        ("actor", resolution.actor_kind_id.clone()),
+                        ("count", summoned.to_string()),
+                    ],
+                    GameEventOutcomeDto::ItemSummon { resolution },
+                )
+            }
             Self::ItemTeleported {
                 source_kind_id,
                 profile_id,
@@ -2309,6 +2413,14 @@ fn with_method(mut event: GameEventDto, method_id: Option<String>) -> GameEventD
 fn with_trace(mut event: GameEventDto, trace: ProjectileTrace) -> GameEventDto {
     event.trace = Some(trace.into());
     event
+}
+
+const fn curse_severity_arg(severity: ItemCurseSeverityDto) -> &'static str {
+    match severity {
+        ItemCurseSeverityDto::Normal => "normal",
+        ItemCurseSeverityDto::Heavy => "heavy",
+        ItemCurseSeverityDto::Permanent => "permanent",
+    }
 }
 
 #[cfg(test)]

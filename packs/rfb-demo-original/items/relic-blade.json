@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.relic-blade",
+  "nameKey": "item-demo-relic-blade-name",
+  "descriptionKey": "item-demo-relic-blade-description",
+  "glyph": "/",
+  "weightTenthsPound": 35,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 2,
+    "toHit": 12,
+    "toDamage": 3,
+    "damageDice": 1,
+    "damageSides": 3,
+    "damageType": "physical"
+  },
+  "tags": ["artifact", "equipment", "weapon"]
+}

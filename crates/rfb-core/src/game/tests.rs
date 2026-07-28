@@ -2214,6 +2214,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
             enchantments: Default::default(),
+            curse: None,
             activation: None,
             charges: None,
             device_recovery_progress: 0,
@@ -5729,6 +5730,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -8991,6 +8993,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
             enchantments: Default::default(),
+            curse: None,
             activation: None,
             charges: None,
             device_recovery_progress: 0,
@@ -9080,6 +9083,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 .collect(),
             rolled_affixes: Vec::new(),
             enchantments: Default::default(),
+            curse: None,
             activation: None,
             charges: None,
             device_recovery_progress: 0,
@@ -9096,6 +9100,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 affix_ids: vec!["demo.affix.vampiric".to_owned()],
                 rolled_affixes: Vec::new(),
                 enchantments: Default::default(),
+                curse: None,
                 activation: None,
                 charges: None,
                 device_recovery_progress: 0,
@@ -9572,6 +9577,7 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -11283,6 +11289,7 @@ fn revelation_scroll_fully_identifies_affixes_and_round_trips() {
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -11727,6 +11734,437 @@ fn enchantments_feed_combat_armor_and_legacy_save_projection() {
 }
 
 #[test]
+fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
+    fn run(resisted: bool) -> (Game, GameUpdate, u64) {
+        const SCROLL_ID: &str = "test.item.weapon-blight-scroll.1";
+        const WEAPON_ID: &str = "test.item.relic-blade.1";
+        let mut game = skill_check_game(61, "demo.build.scholar");
+        for item in game
+            .items
+            .iter_mut()
+            .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        {
+            item.location = ItemLocation::Inventory;
+        }
+        give_inventory_item(&mut game, SCROLL_ID, "demo.item.weapon-blight-scroll");
+        give_inventory_item(&mut game, WEAPON_ID, "demo.item.relic-blade");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == WEAPON_ID)
+            .expect("relic blade should exist")
+            .location = ItemLocation::Equipped {
+            slot_id: "weapon".to_owned(),
+        };
+        game.debug_set_item_curses_land(!resisted);
+        game.debug_set_item_curses_resisted(resisted);
+        let draws_before = game.rng_draw_counter();
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: SCROLL_ID.to_owned(),
+                target: Some(TargetSelection::SelfTarget),
+            },
+        );
+        (game, update, draws_before)
+    }
+
+    let (landed, update, draws_before) = run(false);
+    assert_eq!(landed.rng_draw_counter(), draws_before);
+    assert_eq!(update.events[0].kind, "item.use-cursed");
+    assert_eq!(
+        landed
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.relic-blade.1")
+            .expect("relic blade should remain equipped")
+            .curse,
+        Some(ItemCurseSeverityDto::Normal)
+    );
+    assert_eq!(
+        landed.item_knowledge_dto("demo.item.weapon-blight-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+    assert!(update.events.iter().any(|event| {
+        matches!(
+            &event.outcome,
+            Some(GameEventOutcomeDto::ItemCurse { resolution })
+                if resolution.item_id.as_deref() == Some("test.item.relic-blade.1")
+                    && resolution.before.is_none()
+                    && resolution.after == Some(ItemCurseSeverityDto::Normal)
+                    && !resolution.resisted
+        )
+    }));
+
+    let (resisted, update, draws_before) = run(true);
+    assert_eq!(resisted.rng_draw_counter(), draws_before);
+    assert_eq!(update.events[0].kind, "item.use-curse-resisted");
+    assert_eq!(
+        resisted
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.relic-blade.1")
+            .expect("relic blade should remain equipped")
+            .curse,
+        None
+    );
+    assert_eq!(
+        resisted.item_knowledge_dto("demo.item.weapon-blight-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+}
+
+#[test]
+fn curse_scroll_without_a_matching_equipped_item_consumes_without_rng_or_awareness() {
+    const SCROLL_ID: &str = "test.item.weapon-blight-scroll.no-target";
+    let mut game = skill_check_game(67, "demo.build.scholar");
+    for item in game
+        .items
+        .iter_mut()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+    {
+        item.location = ItemLocation::Inventory;
+    }
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.weapon-blight-scroll");
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: SCROLL_ID.to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(!game.items.iter().any(|item| item.id == SCROLL_ID));
+    assert_eq!(update.events[0].kind, "item.use-curse-no-target");
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.weapon-blight-scroll"),
+        ItemKnowledgeDto::Tried
+    );
+}
+
+#[test]
+fn cleansing_scrolls_respect_heavy_and_permanent_curse_boundaries() {
+    const NORMAL_ID: &str = "test.item.normal-curse";
+    const HEAVY_ID: &str = "test.item.heavy-curse";
+    const PERMANENT_ID: &str = "test.item.permanent-curse";
+    let mut game = skill_check_game(71, "demo.build.vanguard");
+    for item in game
+        .items
+        .iter_mut()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+    {
+        item.location = ItemLocation::Inventory;
+    }
+    for (id, kind_id, slot_id, curse) in [
+        (
+            NORMAL_ID,
+            "demo.item.relic-blade",
+            "weapon",
+            ItemCurseSeverityDto::Normal,
+        ),
+        (
+            HEAVY_ID,
+            "demo.item.burdened-mail",
+            "body",
+            ItemCurseSeverityDto::Heavy,
+        ),
+        (
+            PERMANENT_ID,
+            "demo.item.sealed-amulet",
+            "amulet",
+            ItemCurseSeverityDto::Permanent,
+        ),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+        let item = game
+            .items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .expect("curse test item should exist");
+        item.location = ItemLocation::Equipped {
+            slot_id: slot_id.to_owned(),
+        };
+        item.curse = Some(curse);
+    }
+    give_inventory_item(
+        &mut game,
+        "test.item.cleansing-scroll.1",
+        "demo.item.cleansing-scroll",
+    );
+    let ordinary = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.cleansing-scroll.1".to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert_eq!(ordinary.events[0].kind, "item.use-curses-removed");
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == NORMAL_ID)
+            .unwrap()
+            .curse,
+        None
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == HEAVY_ID)
+            .unwrap()
+            .curse,
+        Some(ItemCurseSeverityDto::Heavy)
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == PERMANENT_ID)
+            .unwrap()
+            .curse,
+        Some(ItemCurseSeverityDto::Permanent)
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.item.greater-cleansing-scroll.1",
+        "demo.item.greater-cleansing-scroll",
+    );
+    let greater = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.greater-cleansing-scroll.1".to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert_eq!(greater.events[0].kind, "item.use-curses-removed");
+    let resolution = greater
+        .events
+        .iter()
+        .find_map(|event| match &event.outcome {
+            Some(GameEventOutcomeDto::ItemCurseRemoval { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .expect("greater cleansing should emit a structured resolution");
+    assert_eq!(resolution.removed_item_ids, [HEAVY_ID]);
+    assert_eq!(resolution.retained_permanent_item_ids, [PERMANENT_ID]);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == HEAVY_ID)
+            .unwrap()
+            .curse,
+        None
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == PERMANENT_ID)
+            .unwrap()
+            .curse,
+        Some(ItemCurseSeverityDto::Permanent)
+    );
+    let saved = game.to_save();
+    let restored = Game::from_save(saved.clone()).expect("curse severities should round-trip");
+    for (item_id, expected) in [
+        (HEAVY_ID, None),
+        (PERMANENT_ID, Some(ItemCurseSeverityDto::Permanent)),
+    ] {
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == item_id)
+                .unwrap()
+                .curse,
+            expected
+        );
+    }
+}
+
+#[test]
+fn cursed_equipment_cannot_be_unequipped_or_replaced_and_rejection_is_zero_time() {
+    const CURSED_ID: &str = "test.item.cursed-mail";
+    const REPLACEMENT_ID: &str = "test.item.replacement-mail";
+    let mut game = skill_check_game(73, "demo.build.vanguard");
+    for item in game
+        .items
+        .iter_mut()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+    {
+        item.location = ItemLocation::Inventory;
+    }
+    give_inventory_item(&mut game, CURSED_ID, "demo.item.burdened-mail");
+    let cursed = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == CURSED_ID)
+        .unwrap();
+    cursed.location = ItemLocation::Equipped {
+        slot_id: "body".to_owned(),
+    };
+    cursed.curse = Some(ItemCurseSeverityDto::Heavy);
+    give_inventory_item(&mut game, REPLACEMENT_ID, "demo.item.resonance-mail");
+
+    let tick_before = game.world_tick;
+    let draws_before = game.rng_draw_counter();
+    let unequip = dispatch_next(
+        &mut game,
+        GameCommand::Unequip {
+            slot_id: "body".to_owned(),
+        },
+    );
+    assert_eq!(unequip.events[0].kind, "item.unequip.cursed");
+    assert_eq!(game.world_tick, tick_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+
+    let replace = dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: REPLACEMENT_ID.to_owned(),
+        },
+    );
+    assert_eq!(replace.events[0].kind, "item.unequip.cursed");
+    assert_eq!(game.world_tick, tick_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        game.items
+            .iter()
+            .find(|item| item.id == CURSED_ID)
+            .unwrap()
+            .location,
+        ItemLocation::Equipped { .. }
+    ));
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == REPLACEMENT_ID)
+            .unwrap()
+            .location,
+        ItemLocation::Inventory
+    );
+}
+
+#[test]
+fn curse_state_round_trips_all_item_locations_migrates_and_prevents_stacking() {
+    let mut game = Game::new(79);
+    let carrier_id = game.entities[0].id.clone();
+    for (id, kind_id, location, curse) in [
+        (
+            "test.item.curse-ground",
+            "demo.item.resonance-mail",
+            ItemLocation::Ground(game.player.position),
+            ItemCurseSeverityDto::Normal,
+        ),
+        (
+            "test.item.curse-inventory",
+            "demo.item.burdened-mail",
+            ItemLocation::Inventory,
+            ItemCurseSeverityDto::Heavy,
+        ),
+        (
+            "test.item.curse-equipment",
+            "demo.item.sealed-amulet",
+            ItemLocation::Equipped {
+                slot_id: "amulet".to_owned(),
+            },
+            ItemCurseSeverityDto::Permanent,
+        ),
+        (
+            "test.item.curse-carried",
+            "demo.item.relic-blade",
+            ItemLocation::CarriedBy {
+                actor_id: carrier_id.clone(),
+            },
+            ItemCurseSeverityDto::Normal,
+        ),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+        let item = game.items.iter_mut().find(|item| item.id == id).unwrap();
+        item.location = location;
+        item.curse = Some(curse);
+    }
+    let saved = game.to_save();
+    assert_eq!(
+        saved.items.last().unwrap().curse,
+        Some(ItemCurseSeverityDto::Normal)
+    );
+    assert_eq!(
+        saved.inventory.last().unwrap().curse,
+        Some(ItemCurseSeverityDto::Heavy)
+    );
+    assert_eq!(
+        saved.equipment.last().unwrap().curse,
+        Some(ItemCurseSeverityDto::Permanent)
+    );
+    assert_eq!(
+        saved.carried_items.last().unwrap().curse,
+        Some(ItemCurseSeverityDto::Normal)
+    );
+    let restored = Game::from_save(saved.clone()).expect("all curse locations should reload");
+    for (item_id, expected) in [
+        ("test.item.curse-ground", ItemCurseSeverityDto::Normal),
+        ("test.item.curse-inventory", ItemCurseSeverityDto::Heavy),
+        ("test.item.curse-equipment", ItemCurseSeverityDto::Permanent),
+        ("test.item.curse-carried", ItemCurseSeverityDto::Normal),
+    ] {
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == item_id)
+                .unwrap()
+                .curse,
+            Some(expected)
+        );
+    }
+
+    let mut legacy_json = serde_json::to_value(game.to_save()).expect("save should serialize");
+    for field in ["items", "inventory", "equipment", "carriedItems"] {
+        for item in legacy_json[field]
+            .as_array_mut()
+            .expect("item save field should be an array")
+        {
+            item.as_object_mut()
+                .expect("saved item should be an object")
+                .remove("curse");
+        }
+    }
+    let legacy: SavePayloadV1 =
+        serde_json::from_value(legacy_json).expect("missing curse should default");
+    let migrated = Game::from_save(legacy).expect("legacy curse state should load");
+    assert!(migrated.items.iter().all(|item| item.curse.is_none()));
+
+    let mut stack_game = skill_check_game(83, "demo.build.vanguard");
+    give_inventory_item(
+        &mut stack_game,
+        "test.item.stack-clean",
+        "demo.item.resonance-mail",
+    );
+    give_inventory_item(
+        &mut stack_game,
+        "test.item.stack-cursed",
+        "demo.item.resonance-mail",
+    );
+    let cursed = stack_game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.stack-cursed")
+        .unwrap();
+    cursed.curse = Some(ItemCurseSeverityDto::Normal);
+    cursed.location = ItemLocation::Ground(stack_game.player.position);
+    dispatch_next(&mut stack_game, GameCommand::PickUp);
+    assert_eq!(
+        stack_game
+            .items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.resonance-mail")
+            .count(),
+        2
+    );
+}
+
+#[test]
 fn dynamic_device_generation_filters_by_depth_is_weighted_and_round_trips() {
     const WAND_ID: &str = "demo.item.resonance-wand";
     let content = load_built_in_content().expect("built-in content should load");
@@ -12024,6 +12462,7 @@ fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation,
         charges,
         device_recovery_progress: 0,
@@ -13194,6 +13633,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -13245,6 +13685,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         affix_ids: vec!["demo.affix.frost-hunter".to_owned()],
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -13331,6 +13772,7 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: rolled.clone(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -13392,6 +13834,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
             properties,
         }],
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -13720,6 +14163,7 @@ fn esoteria_validates_item_targets_before_cost_and_persists_knowledge() {
         affix_ids: vec!["demo.affix.vampiric".to_owned()],
         rolled_affixes: Vec::new(),
         enchantments: Default::default(),
+        curse: None,
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -14530,6 +14974,247 @@ fn clear_monsters(game: &mut Game) {
         .entrance_guardian_defeated = true;
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+}
+
+#[test]
+fn item_summon_candidates_follow_depth_player_level_kin_and_unique_rules() {
+    let mut human = skill_check_game(67, "demo.build.vanguard");
+    human.current_floor_id = "demo.floor.resonance-depth-10".to_owned();
+    let general_effect = human
+        .content
+        .item("demo.item.summoning-scroll")
+        .and_then(|definition| definition.use_action.as_ref())
+        .expect("summoning scroll should have a use action")
+        .effect
+        .clone();
+    let ItemUsePlan::SummonCategory {
+        category,
+        candidate_kind_ids,
+        ..
+    } = human.item_category_summon_plan(&general_effect)
+    else {
+        panic!("general summoning scroll should produce a summon plan");
+    };
+    assert_eq!(category, "any-monster");
+    assert!(candidate_kind_ids.contains(&"demo.actor.risen-thrall".to_owned()));
+    assert!(!candidate_kind_ids.contains(&"demo.actor.grave-wight".to_owned()));
+    assert!(candidate_kind_ids.iter().all(|kind_id| {
+        let definition = human.content.actor(kind_id).expect("candidate actor");
+        definition.level <= 10 && !definition.tags.iter().any(|tag| tag == "guardian")
+    }));
+    assert_eq!(
+        human.summon_category_candidate_kind_ids("undead", None, 8, true),
+        ["demo.actor.risen-thrall"]
+    );
+    assert_eq!(
+        human.summon_category_candidate_kind_ids("undead", None, 32, true),
+        [
+            "demo.actor.grave-wight".to_owned(),
+            "demo.actor.risen-thrall".to_owned(),
+        ]
+    );
+
+    let kin_effect = human
+        .content
+        .item("demo.item.kin-summoning-scroll")
+        .and_then(|definition| definition.use_action.as_ref())
+        .expect("kin summoning scroll should have a use action")
+        .effect
+        .clone();
+    human.progress.level = 3;
+    let ItemUsePlan::SummonCategory {
+        category,
+        candidate_kind_ids,
+        ..
+    } = human.item_category_summon_plan(&kin_effect)
+    else {
+        panic!("kin summoning scroll should produce a summon plan");
+    };
+    assert_eq!(category, "kin-glyph-112");
+    assert_eq!(
+        candidate_kind_ids,
+        [
+            "demo.actor.cinder-adept".to_owned(),
+            "demo.actor.mote-binder".to_owned(),
+        ]
+    );
+    human.progress.level = 4;
+    let ItemUsePlan::SummonCategory {
+        candidate_kind_ids, ..
+    } = human.item_category_summon_plan(&kin_effect)
+    else {
+        unreachable!();
+    };
+    assert!(candidate_kind_ids.contains(&"demo.actor.hex-chanter".to_owned()));
+
+    let mut gnome = skill_check_game(67, "demo.build.tinkerer");
+    let gnome_effect = gnome
+        .content
+        .item("demo.item.kin-summoning-scroll")
+        .and_then(|definition| definition.use_action.as_ref())
+        .expect("kin summoning scroll should have a use action")
+        .effect
+        .clone();
+    gnome.progress.level = 1;
+    let ItemUsePlan::SummonCategory {
+        category,
+        candidate_kind_ids,
+        ..
+    } = gnome.item_category_summon_plan(&gnome_effect)
+    else {
+        unreachable!();
+    };
+    assert_eq!(category, "kin-glyph-104");
+    assert_eq!(candidate_kind_ids, ["demo.actor.echo-hound"]);
+
+    let high_undead = human.summon_category_candidate_kind_ids("high-undead", None, 48, true);
+    assert!(high_undead.contains(&"demo.actor.dread-vampire".to_owned()));
+    assert!(
+        !human
+            .summon_category_candidate_kind_ids("high-undead", None, 48, false)
+            .contains(&"demo.actor.dread-vampire".to_owned())
+    );
+    let vampire = human
+        .content
+        .actor("demo.actor.dread-vampire")
+        .expect("demo unique")
+        .clone();
+    human.entities.push(actor_from_runtime_spawn(
+        "test.actor.existing-dread-vampire",
+        &vampire.id,
+        Position { x: 4, y: 3 },
+        vampire.max_hp,
+        vampire.speed,
+        100,
+        true,
+    ));
+    assert!(
+        !human
+            .summon_category_candidate_kind_ids("high-undead", None, 48, true)
+            .contains(&"demo.actor.dread-vampire".to_owned())
+    );
+}
+
+#[test]
+fn friendly_item_summons_are_permanent_controlled_and_round_trip() {
+    let mut game = skill_check_game(68, "demo.build.vanguard");
+    give_inventory_item(
+        &mut game,
+        "test.item.pet-summoning-scroll.1",
+        "demo.item.pet-summoning-scroll",
+    );
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.pet-summoning-scroll.1".to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    let resolution = update
+        .events
+        .iter()
+        .find_map(|event| match event.outcome.as_ref() {
+            Some(GameEventOutcomeDto::ItemSummon { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .expect("pet scroll should emit a summon resolution");
+    assert!(!resolution.entity_ids.is_empty());
+    assert!(!resolution.hostile);
+    assert_eq!(resolution.duration_turns, 0);
+    let summoned_ids = resolution.entity_ids.clone();
+    assert!(summoned_ids.iter().all(|entity_id| {
+        game.entities
+            .iter()
+            .find(|entity| entity.id == *entity_id)
+            .is_some_and(|entity| {
+                entity.controller_id.as_deref() == Some(game.player.id.as_str())
+                    && entity.summon.is_none()
+            })
+    }));
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.pet-summoning-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+    assert!(
+        !game
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.pet-summoning-scroll.1")
+    );
+
+    let saved = game.to_save();
+    let restored = Game::from_save(saved).expect("controlled item summons should reload");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(summoned_ids.iter().all(|entity_id| {
+        restored
+            .entities
+            .iter()
+            .find(|entity| entity.id == *entity_id)
+            .is_some_and(|entity| {
+                entity.controller_id.as_deref() == Some(restored.player.id.as_str())
+                    && entity.summon.is_none()
+            })
+    }));
+}
+
+#[test]
+fn item_summon_zero_candidate_and_zero_space_consume_without_awareness_or_rng() {
+    let use_and_assert_zero = |game: &mut Game, item_id: &str, kind_id: &str| {
+        give_inventory_item(game, item_id, kind_id);
+        let draws_before = game.rng.draw_counter;
+        let update = dispatch_next(
+            game,
+            GameCommand::UseItem {
+                item_id: item_id.to_owned(),
+                target: Some(TargetSelection::SelfTarget),
+            },
+        );
+        let resolution = update
+            .events
+            .iter()
+            .find_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::ItemSummon { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .expect("summon attempt should emit a resolution");
+        assert!(resolution.entity_ids.is_empty());
+        assert_eq!(game.rng.draw_counter, draws_before);
+        assert_eq!(game.item_knowledge_dto(kind_id), ItemKnowledgeDto::Tried);
+        assert!(!game.items.iter().any(|item| item.id == item_id));
+    };
+
+    let mut no_candidate = skill_check_game(69, "demo.build.vanguard");
+    no_candidate.progress.level = 1;
+    use_and_assert_zero(
+        &mut no_candidate,
+        "test.item.kin-summoning-scroll.1",
+        "demo.item.kin-summoning-scroll",
+    );
+
+    let mut no_space = skill_check_game(70, "demo.build.vanguard");
+    let positions = no_space.open_positions_around(no_space.player.position, 2);
+    assert!(!positions.is_empty());
+    for (ordinal, position) in positions.into_iter().enumerate() {
+        no_space.items.push(ItemInstance {
+            id: format!("test.item.summon-blocker.{ordinal}"),
+            kind_id: "demo.item.luminous-shard".to_owned(),
+            quantity: 1,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            enchantments: Default::default(),
+            curse: None,
+            activation: None,
+            charges: None,
+            device_recovery_progress: 0,
+            location: ItemLocation::Ground(position),
+        });
+    }
+    use_and_assert_zero(
+        &mut no_space,
+        "test.item.pet-summoning-scroll.1",
+        "demo.item.pet-summoning-scroll",
+    );
 }
 
 #[test]
