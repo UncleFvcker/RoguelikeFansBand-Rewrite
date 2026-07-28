@@ -7,8 +7,9 @@
 
 用 Rust + Tauri + Web 前端确定性重写 FrogComposband（原版 C 源钉在
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
-每轮 P## 迭代对应（通常）一个 `contract-vN` 基线，行为由 `tests/fixtures/contract-vN/scenarios`
-下的 exact fixtures 锁死。当前基线 **contract-v106，353 个 fixtures，零 waiver**。
+每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
+`tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
+不再复制到新的版本目录。本文后续 P54-P56 数值是历史交接快照。
 
 ## 1. 架构速查
 
@@ -19,7 +20,7 @@
 | rfb-core | 权威核心（纯 lib）。`game/mod.rs` 26k+ 行是主体；build.rs 编译期烧入 demo 内容包并校验 lock |
 | rfb-protocol | 唯一 DTO 契约层。`PROTOCOL_VERSION` 在 lib.rs 顶部；bindings feature 生成 `web/src/protocol.ts` + `schemas/protocol-v1.schema.json` |
 | rfb-content | 内容编译器：20 类 JSON → MessagePack + SHA-256 锁；bin `rfb-contentc`、`generate-content-schemas`（需 `--features schemas`） |
-| rfb-contract | 契约工具：observe/verify/refresh/migrate-baseline/validate-policy |
+| rfb-contract | 契约工具：observe/verify/refresh/validate-policy |
 | rfb-replay | 回放录制/校验；STATE_HASH_SCHEMA_VERSION 引用 core 常量（单一来源） |
 | rfb-save | 极薄存档容器，只依赖 protocol |
 | rfb-legacy-probe / rfb-legacy-import | 零兄弟依赖的隔离工具，只读访问原版仓库；import 产物在 `.local/packs/rfb-legacy/`（gitignore，重跑无痛） |
@@ -33,7 +34,7 @@
 ## 2. 铁律约定（违反必炸）
 
 1. **每迭代五件套**：`PROTOCOL_VERSION`、state hash `STATE_HASH_SCHEMA_VERSION`（改 hash 输入结构才 bump）、`pack.json` 版本、`content.lock.json`、`BUILT_IN_CONTENT_HASH`（旧 hash 追加进 `PREVIOUS_BUILT_IN_CONTENT_HASHES` 数组）。内容结构体加字段（即使 serde default）会改内容 hash——lock 不匹配时 rfb-core build.rs 直接 panic，**必须先走五件套再编核心**。内容 hash 用 `rfb-contentc inspect-source` 取新值手写 lock。
-2. **fixture 跨基线**：`rfb-contract migrate-baseline <旧>/scenarios <新>/scenarios`；新场景 `refresh` 录制前要塞完整占位 assertions 才能解析，录制后人工审阅；怪物场景种子狩猎=批量改 seed 重 refresh。每个 `contract-vN/waivers/` 必须有 `.gitkeep`。
+2. **fixture active-only**：不再创建或迁移全量版本目录。新 contract 只更新逻辑版本、active policy、新增场景和真正变化的 assertions；新场景 `refresh` 录制前要塞完整占位 assertions 才能解析，录制后人工审阅。`active/waivers/` 只保留 `.gitkeep`，出现任何 waiver 条目均使 policy 验证失败。
 3. **显示状态**（镜头/缩放/tileset/语言/准星）永不进存档/回放/state hash。
 4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；其内钉死 `contentVisualCount` 等值，**加带字形的内容必改**（P56 第三本实体法书后为 91）。本地 `cd web && npm run e2e` 约 35s。
 5. 新法术/效果形态**永远放新怪物**，别动既有加权池（P34 教训）；clippy 退出码别被管道吞掉，单独跑验证。
@@ -95,7 +96,7 @@ cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings
 cargo run -p rfb-protocol --features bindings --bin generate-bindings -- --check
 cargo run -p rfb-content --features schemas --bin generate-content-schemas -- --check
 cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v106/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 # web（在 web/ 下）
 npm run check:protocol && npm test && npm run typecheck && npm run build:ui && npm run e2e
 # 导入器实跑

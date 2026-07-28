@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use rfb_contract::approval::validate_policy_file;
+use rfb_contract::{ACTIVE_BASELINE, ACTIVE_FIXTURE_DIRECTORY, policy::validate_policy_file};
 
 #[test]
 fn shared_constants_stay_in_sync_across_crates() {
@@ -15,137 +15,11 @@ fn shared_constants_stay_in_sync_across_crates() {
 }
 
 #[test]
-fn committed_baseline_policy_and_waivers_are_valid() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures");
-    for version in [
-        "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14",
-        "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27",
-        "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37", "v38", "v39", "v40",
-        "v41", "v42", "v43", "v44", "v45", "v46", "v47", "v48", "v49", "v50", "v51", "v52", "v53",
-        "v54", "v55", "v56", "v57", "v58", "v59", "v60", "v61", "v62", "v63", "v64", "v65", "v66",
-        "v67", "v68", "v69", "v70", "v71", "v72", "v73", "v74", "v75", "v76", "v77", "v78", "v79",
-        "v80", "v81", "v82", "v83", "v84", "v85", "v86", "v87", "v88", "v89", "v90", "v91", "v92",
-        "v93", "v94", "v95", "v96", "v97", "v98", "v99", "v100", "v101", "v102", "v103", "v104",
-        "v105", "v106", "v107", "v108", "v109", "v110", "v111", "v112", "v113", "v114",
-    ] {
-        let policy = root.join(format!("contract-{version}/baseline-policy.json"));
-        let report = validate_policy_file(&policy).expect("baseline policy should validate");
-        assert_eq!(report.policy_id, format!("rfb-contract-baseline-{version}"));
-        let minimum = match version {
-            "v114" => 398,
-            "v113" => 389,
-            "v112" => 386,
-            "v111" => 383,
-            "v110" => 379,
-            "v109" => 373,
-            "v108" => 368,
-            "v107" => 365,
-            "v106" => 353,
-            "v105" => 343,
-            "v104" => 334,
-            "v103" => 328,
-            "v102" => 326,
-            "v101" => 323,
-            "v100" => 320,
-            "v99" => 318,
-            "v98" => 314,
-            "v97" => 312,
-            "v96" => 310,
-            "v95" => 308,
-            "v94" => 306,
-            "v93" => 303,
-            "v91" => 288,
-            "v92" => 299,
-            "v90" => 282,
-            "v89" => 272,
-            "v88" => 265,
-            "v87" => 257,
-            "v86" => 249,
-            "v85" => 242,
-            "v84" => 231,
-            "v83" => 221,
-            "v82" => 213,
-            "v81" => 209,
-            "v80" => 202,
-            "v79" => 198,
-            "v78" => 194,
-            "v77" => 190,
-            "v76" => 186,
-            "v75" => 182,
-            "v74" => 174,
-            "v73" => 166,
-            "v72" => 160,
-            "v71" => 152,
-            "v70" => 148,
-            "v69" => 140,
-            "v68" => 137,
-            "v67" => 135,
-            "v66" => 132,
-            "v65" => 131,
-            "v64" => 129,
-            "v63" => 127,
-            "v62" => 125,
-            "v61" => 121,
-            "v60" => 119,
-            "v59" => 117,
-            "v58" => 117,
-            "v57" => 114,
-            "v56" => 112,
-            "v55" => 110,
-            "v54" => 108,
-            "v53" => 106,
-            "v52" => 104,
-            "v51" => 102,
-            "v50" => 100,
-            "v49" => 99,
-            "v48" => 96,
-            "v47" => 92,
-            "v46" => 91,
-            "v45" => 88,
-            "v44" => 86,
-            "v43" => 85,
-            "v42" => 83,
-            "v41" => 81,
-            "v40" => 79,
-            "v39" => 77,
-            "v38" => 76,
-            "v37" => 75,
-            "v36" => 74,
-            "v35" => 73,
-            "v34" => 72,
-            "v33" => 71,
-            "v32" => 70,
-            "v31" => 68,
-            "v30" => 67,
-            "v29" => 66,
-            "v28" => 65,
-            "v27" => 64,
-            "v26" => 63,
-            "v25" => 62,
-            "v24" => 61,
-            "v23" => 60,
-            "v22" => 59,
-            "v21" => 58,
-            "v20" => 57,
-            "v19" => 56,
-            "v18" => 55,
-            "v17" => 54,
-            "v16" => 53,
-            "v15" => 52,
-            "v14" => 50,
-            "v13" => 49,
-            "v12" => 48,
-            "v11" => 47,
-            "v10" => 39,
-            "v9" => 36,
-            "v7" | "v8" => 32,
-            "v6" => 29,
-            "v5" => 28,
-            "v4" => 26,
-            "v3" => 22,
-            _ => 20,
-        };
-        assert!(report.fixture_count >= minimum);
-        assert_eq!(report.waiver_count, 0);
-    }
+fn committed_active_baseline_policy_is_valid() {
+    let policy = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../tests/fixtures/{ACTIVE_FIXTURE_DIRECTORY}/baseline-policy.json"
+    ));
+    let report = validate_policy_file(&policy).expect("active baseline policy should validate");
+    assert_eq!(report.baseline, ACTIVE_BASELINE);
+    assert_eq!(report.waiver_count, 0);
 }

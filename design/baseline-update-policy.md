@@ -1,103 +1,60 @@
-# Contract 基准更新与差异豁免政策
+# Contract 基准更新政策
 
-状态：Policy v1 已实现并由 `rfb-contract`/CI 强制验证
+状态：active-only Policy v2 已由 `rfb-contract` 和 CI 强制验证
 
 ## 1. 目的
 
-contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。本政策用于区分：
+contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-- 实现错误或无意回归；
-- 规范化器或测试工具错误；
-- 已讨论并批准的规则修正；
-- 新核心明确不复刻的旧版行为；
-- contract Schema 或 state hash Schema 的正式迁移。
+当前逻辑基线是 `contract-v117`，机器可读政策固定在：
 
-`tests/fixtures/contract-v117/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v116` 保留为历史基准。公共 CI 每次运行：
-
-```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v117/baseline-policy.json
+```text
+tests/fixtures/active/baseline-policy.json
 ```
 
-## 2. 禁止操作
+工作树只保留这一份 active fixture 集。历史基线由 Git 提交、tag 或 release artifact 保存，不再复制为 `contract-vN` 目录。
 
-- 禁止批量覆盖所有 fixture assertions；
-- 禁止使用 `*`、`all` 或目录级范围绕过单个场景审查；
-- 禁止只填写“更新测试”“适配新代码”等无法解释规则变化的原因；
-- 禁止旧、新规范化 hash 相同的空豁免；
-- 禁止没有 issue、批准人或批准日期的豁免；
-- 禁止直接替换固定旧版 commit；更换基准必须新增 policy/fixture 版本；
-- 禁止把本地旧存档、旧文本或旧素材附加到豁免文件。
+```powershell
+cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
+```
+
+## 2. 存储规则
+
+- `tests/fixtures/active/scenarios/` 是唯一提交到主分支的场景目录。
+- contract 逻辑版本由 `rfb_contract::ACTIVE_BASELINE` 和 policy 的 `baseline` 字段共同声明。
+- 升级 contract 时不复制或重命名 active 目录。
+- 只新增新场景，或更新语义确实变化的 assertions。
+- 历史结果从对应 Git 提交恢复，不在当前工作树重复保存。
+- `active/waivers/` 只保留 `.gitkeep`。当前不接受 waiver 文件。
 
 ## 3. 更新流程
 
-1. 运行失败的 fixture，保留原 assertions；
-2. 使用 `observe` 查看实际结果；
-3. 使用快照规范化器分别计算旧、新结果 hash；
-4. 判断差异属于 bug、工具问题还是预期规则变化；
-5. bug 或工具问题必须修复实现，不能创建豁免；
-6. 预期变化必须建立 GitHub issue，说明玩家可见影响和兼容性；
-7. 在 `waivers/` 新增一个只针对单个 fixture 的 JSON；
-8. 获得政策要求数量的明确批准；
-9. 先提交豁免，再更新对应 fixture；
-10. CI 同时验证 policy、waiver 和全部 fixture。
+1. 运行失败的 fixture，保留原 assertions。
+2. 使用 `observe` 查看实际结果并定位实现、工具或规则变化。
+3. 实现错误和工具错误必须修复，不能刷新 fixture 掩盖。
+4. 预期规则变化必须在对应 contract 文档中记录原因、事务顺序和玩家可见影响。
+5. 只对受影响的 fixture 执行 `refresh`，然后人工审阅完整 diff。
+6. 新场景加入 active 目录，并相应提高 policy 的 `minimumFixtureCount`。
+7. 更新 `ACTIVE_BASELINE` 和 policy 的 `baseline`，执行 policy 与全部 exact fixture 验证。
 
-## 4. 差异豁免 v1
+禁止批量 refresh 未受影响场景，也禁止为了“让测试通过”降低最低 fixture 数量。
 
-文件名必须与小写 `id` 完全一致，例如 `waiver-2026-001.json`：
+## 4. Policy v2
 
-```json
-{
-  "schemaVersion": 1,
-  "id": "waiver-2026-001",
-  "status": "approved",
-  "fixtureId": "combat.melee.basic-hit",
-  "changeKind": "intentional-rule-change",
-  "affectedAssertions": [
-    "events",
-    "finalState.stateHash"
-  ],
-  "oldNormalizedHash": "0000000000000000000000000000000000000000000000000000000000000000",
-  "newNormalizedHash": "1111111111111111111111111111111111111111111111111111111111111111",
-  "reason": "Describe the exact rule correction and player-visible effect here.",
-  "issue": "https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/issues/123",
-  "approvedBy": ["maintainer-github-login"],
-  "approvedAt": "2026-07-15",
-  "expiresAt": null
-}
-```
+机器可读 policy 包含：
 
-`changeKind` 只允许：
+- `schemaVersion`：当前为 2；
+- `baseline`：当前逻辑 contract 版本；
+- `legacyCommit`：固定旧版参考 commit；
+- `contractSchemaVersion`；
+- `normalizationSchemaVersion`；
+- `minimumFixtureCount`；
+- `fixtureDirectory` 和 `waiverDirectory`：仅允许 policy 目录下的安全相对路径。
 
-- `intentional-rule-change`：主动修正规则；
-- `legacy-divergence`：明确决定不复刻旧版行为；
-- `normalization-change`：规范化语义发生版本内修正。
+验证器会解析完整 fixture 集、检查最小数量和场景集合不变量，并拒绝 `waivers/` 中除 `.gitkeep` 外的任何条目。
 
-## 5. 机器验证规则
+如果将来出现无法通过普通规则修正处理的真实 waiver 需求，应以独立设计重新引入最小审批模型；不预先维护 issue、批准人、双 hash、过期日期等未被使用的公共格式。
 
-- policy Schema、contract Schema、normalization Schema 必须匹配代码常量；
-- 旧版 commit 必须是固定的 `191f48c3fd1cdbc81a3d3395a88cd6758402b4d9`；
-- fixture 数量不得低于 20；
-- policy 中的目录只能是 policy 文件下的安全相对路径；
-- waiver ID 必须是小写字母、数字和连字符，并与文件名一致；
-- waiver 必须引用现存 fixture；
-- 每个 fixture 最多存在一个活动豁免；
-- assertion scope 必须逐项列出，禁止通配符；
-- old/new hash 必须是不同的小写 SHA-256；
-- 原因至少 20 个字符；
-- issue 必须是 GitHub issue URL；
-- 批准人必须去重且不能是空值或 `TODO`；
-- 日期必须使用 `YYYY-MM-DD`，到期日不能早于批准日。
+## 5. 当前边界
 
-## 6. Schema 或基准升级
-
-以下变化不能使用普通 waiver 处理：
-
-- 更换旧版基准 commit；
-- contract Schema major 变化；
-- normalization Schema 变化导致大范围 hash 变化；
-- state hash Schema 变化；
-- 删除一个已发布 fixture 集合。
-
-这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
-
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v117`：四种物品类别召唤、深度/玩家等级过滤、Race kin、永久玩家控制、零结果知识/RNG、save/replay、state hash Schema v52 和 420 个 exact fixtures 由 [Contract v117](contract-v117-scroll-summoning.md) 定义；`contract-v1` 至 `contract-v116` 继续作为历史基准保留。
+`contract-v117` 的四种物品类别召唤、深度或玩家等级过滤、Race kin、永久玩家控制、零结果知识/RNG、save/replay 和 state hash Schema v52 由 [Contract v117](contract-v117-scroll-summoning.md) 定义。active 集包含 420 个 exact fixtures，零 waiver。

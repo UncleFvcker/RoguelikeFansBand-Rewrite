@@ -52,10 +52,10 @@
 │  └─ saves/
 └─ screenshots/
 
-tests/fixtures/contract-v13/
+tests/fixtures/active/
 ├─ baseline-policy.json
 ├─ waivers/
-│  └─ README.md
+│  └─ .gitkeep
 └─ scenarios/
    ├─ 01-move-north.json
    ├─ ...
@@ -98,7 +98,7 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 
 ## 4. 场景格式
 
-每个场景使用稳定 ID。当前 active `contract-v13` 的输入部分包含：
+每个场景使用稳定 ID。active 目录的输入部分包含：
 
 ```json
 {
@@ -117,8 +117,8 @@ cargo run -p rfb-legacy-import -- verify-catalog .local/legacy-baseline/save-sam
 `rfb-contract` 执行命令后精确比较最终 revision、turn、command sequence、玩家位置、生命/最大生命、攻击、防御、实体数量、地面物品数、背包堆数、装备数、下一物品实例序号、事件顺序、changed cells、删除实体、结构化错误、state hash 和可选存档回环 hash。提交的 fixture 必须包含断言；`observe` 命令只输出实际观察结果，不会自动改写或批量刷新 golden：
 
 ```powershell
-cargo run -p rfb-contract -- observe tests/fixtures/contract-v31/scenarios/01-move-north.json
-cargo run -p rfb-contract -- verify tests/fixtures/contract-v31/scenarios/01-move-north.json
+cargo run -p rfb-contract -- observe tests/fixtures/active/scenarios/01-move-north.json
+cargo run -p rfb-contract -- verify tests/fixtures/active/scenarios/01-move-north.json
 ```
 
 场景不能依赖屏幕坐标、数组下标或本地化后的名称定位对象。对象使用稳定测试 ID；显示文本单独由本地化测试验证。
@@ -153,11 +153,11 @@ cargo run -p rfb-contract -- verify tests/fixtures/contract-v31/scenarios/01-mov
 - 快照比较前先移除时间戳、窗口尺寸、平台路径等非确定字段；
 - 无序集合按稳定 ID 排序后比较；
 - 浮点视觉参数不进入规则基准；
-- 任何预期规则变化必须增加带原因的差异豁免；
-- 差异豁免必须包含旧结果、新结果、批准日期和关联 issue；
+- 任何预期规则变化必须在对应 contract 说明中记录原因和玩家可见影响；
+- 当前不接受差异豁免；出现真实豁免需求时再单独设计并评审；
 - 不允许通过更新全部 golden 文件来隐藏无法解释的变化。
 
-完整审批流程、机器验证规则和 waiver v1 格式见[Contract 基准更新与差异豁免政策](baseline-update-policy.md)。当前没有已批准差异。
+active-only 更新流程和机器验证规则见[Contract 基准更新政策](baseline-update-policy.md)。
 
 `rfb-contract` 的快照规范化 Schema v1：
 
@@ -195,7 +195,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 - 已完成：基准 manifest 探针、20 个原创 exact contract fixtures、所有原生目标可共用的 `rfb-contract` 测试入口；
 - 已完成：回放文件 v1、每 100 命令和最终状态检查点、10,000 回合无漂移测试、存档重载续播测试；
 - 已完成：3 个本地旧存档样本及 SHA-256/版本头清单、快照规范化 Schema v1 和 CLI；
-- 已完成：baseline policy v1、diff waiver v1 格式和 CI 验证；
+- 已完成：active-only baseline policy v2、零 waiver 和 CI 验证；
 - 已完成：旧存档链式 XOR 解码、409 字节稳定前缀解析及 3 个本地样本的字段级断言；
 - 待完成：从稳定前缀继续扩展隔离的完整旧存档导入和结构化转换报告；
 - 当前 fixture 只固定已经实现的原创垂直切片行为，不代表物品、状态、法术、AI 等旧 RFB 模块已经迁移。

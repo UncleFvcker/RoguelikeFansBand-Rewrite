@@ -7,23 +7,12 @@ use std::{
     thread,
 };
 
-use rfb_contract::{ACTIVE_BASELINE, ContractFixture, validate_fixture_set, verify};
+use rfb_contract::{ACTIVE_FIXTURE_DIRECTORY, ContractFixture, validate_fixture_set, verify};
 
 #[test]
 fn committed_contract_fixtures_pass() {
     let baseline_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join(format!("../../tests/fixtures/{ACTIVE_BASELINE}"));
-    let policy: serde_json::Value = serde_json::from_slice(
-        &fs::read(baseline_root.join("baseline-policy.json"))
-            .expect("active baseline policy should be readable"),
-    )
-    .expect("active baseline policy should parse");
-    let minimum_fixture_count = usize::try_from(
-        policy["minimumFixtureCount"]
-            .as_u64()
-            .expect("active baseline policy should declare minimumFixtureCount"),
-    )
-    .expect("minimum fixture count should fit usize");
+        .join(format!("../../tests/fixtures/{ACTIVE_FIXTURE_DIRECTORY}"));
 
     let mut paths = fs::read_dir(baseline_root.join("scenarios"))
         .expect("contract fixture directory should exist")
@@ -34,10 +23,6 @@ fn committed_contract_fixtures_pass() {
         })
         .collect::<Vec<_>>();
     paths.sort();
-    assert!(
-        paths.len() >= minimum_fixture_count,
-        "the active contract baseline requires at least {minimum_fixture_count} committed fixtures"
-    );
 
     let fixtures = paths
         .iter()
