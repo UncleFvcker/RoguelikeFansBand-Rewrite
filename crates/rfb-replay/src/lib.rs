@@ -988,6 +988,9 @@ mod tests {
             granted_modifiers: rfb_protocol::StatModifiersDto::default(),
             granted_equipment_bonuses: rfb_protocol::EquipmentBonusesDto::default(),
             granted_status_immunities: Vec::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
         });
         let initial = Game::from_save(payload).expect("status replay fixture should load");
         let book_item_id = initial

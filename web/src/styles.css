@@ -497,6 +497,12 @@ h1 {
   font-size: 0.7rem;
 }
 
+.inventory-charges {
+  color: #6ec8da;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.7rem;
+}
+
 .item-modifier {
   color: #d6b56f;
   font-size: 0.7rem;

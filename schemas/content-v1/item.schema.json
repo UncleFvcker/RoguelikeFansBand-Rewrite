@@ -183,9 +183,46 @@
       ],
       "type": "string"
     },
+    "ItemChargeDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "initial": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "initial",
+        "maximum",
+        "cost"
+      ],
+      "type": "object"
+    },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
+        "charges": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemChargeDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "deviceCheckDifficulty": {
           "default": null,
           "format": "int32",
@@ -221,6 +258,33 @@
           "required": [
             "type",
             "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "dice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "heal-dice",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "dice",
+            "sides"
           ],
           "type": "object"
         }

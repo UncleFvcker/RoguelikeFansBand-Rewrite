@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-esoteria",
+  "nameKey": "ability-demo-death-esoteria-name",
+  "descriptionKey": "ability-demo-death-esoteria-description",
+  "minimumLevel": 30,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 40,
+  "baseFailurePercent": 95,
+  "target": { "modes": ["item"], "range": 0, "requiresLineOfEffect": false },
+  "effect": { "type": "identify-item", "fullIdentifyPower": 0, "fullIdentifyRollSides": 50 },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "identify-power", "multiplier": 50, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+  ],
+  "tags": ["death", "identify", "spell"]
+}

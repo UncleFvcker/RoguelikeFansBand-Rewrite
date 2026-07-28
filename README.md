@@ -126,11 +126,13 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v104：玩家等级效果缩放与 Death 第一册](design/contract-v104-death-first-book.md)
 - [Contract v105：Death 第二册与尸体/灭绝系统](design/contract-v105-death-second-book.md)
 - [Contract v106：Death 第三册与随机效果/吸血武器](design/contract-v106-death-third-book.md)
+- [Contract v107：Death 第四册与生命/形态高级效果](design/contract-v107-death-fourth-book.md)
+- [Contract v108：充能物品实例与首批治疗消耗品](design/contract-v108-charged-items.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
 - [旧版职业与施法档案导入 v1（class / m_info / s_info）](design/legacy-class-import-v1.md)
-- [旧版玩家领域法术导入 v1（Death 第一册）](design/legacy-player-spell-import-v1.md)
+- [旧版玩家领域法术导入 v1（Death 四册）](design/legacy-player-spell-import-v1.md)
 - [旧版内容导入管线 v1](design/legacy-content-import-v1.md)
 - [前端目标模式 v1](design/frontend-targeting-v1.md)
 - [RFB 全系统梳理与重构实现路线](design/rfb-system-implementation-roadmap.md)
@@ -149,7 +151,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v106/scenarios`](tests/fixtures/contract-v106/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v105` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v108/scenarios`](tests/fixtures/contract-v108/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v107` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -264,6 +266,10 @@ P55 / contract-v105 完成 Death 第二册 `[Sepulchral Ways]`：活体限定范
 
 P56 / contract-v106 完成 Death 第三册 `[Black Channels]`：随机状态时长及状态派生加值、23 分支 Invoke Spirits、敌对固定召唤、重复追踪 Drain Life、全可见目标共享伤害骰、永久武器 affix、Vampiric 近战吸血和 prorated 等级曲线均进入内容协议、存档和回放。真实导入达到三本书、24 个 Death abilities、12 个静态职业和 288 行参数覆盖，Death 效果缺口 288→192；Invoke Spirits 尚未具备的 actor polymorph、line light、earthquake、destroy area 明确保留为 `NoOp`。协议 1.106、demo 1.97.0、state hash Schema v45、active baseline 353 条 exact、零 waiver，内置 content hash 为 `5e6e5f4ee9b83eb8d80e05c8aa893bd8d19c1db1bdd18c97fe3e120fd823a88c`。详见[Contract v106](design/contract-v106-death-third-book.md)。
 
+P57 / contract-v107 完成 Death 第四册 `[Necronomicon]`：物品实例目标与鉴定、living-only Death Ray、分级类别召唤及敌友群体、临时 Race 投影、历史最高经验/生命力恢复、邻域灭绝、prorated Hellfire 和 Wraithform 穿墙/入伤减半均进入内容协议、存档和回放。真实导入达到四本书、32 个 Death abilities、12 个静态职业和 384 行参数覆盖，Death 效果缺口 192→96。协议 1.107、demo 1.98.0、state hash Schema v46、active baseline 365 条 exact、零 waiver，内置 content hash 为 `d8bdbdd4d4e85862a97229c279a874668b9b1d3ce9035aa6f17a11cff7b3af80`。详见[Contract v107](design/contract-v107-death-fourth-book.md)。
+
+P58 / contract-v108 按真实缺口转入物品主动效果线：`heal-dice` 与实例级 `initial/maximum/cost` 充能进入内容、存档、回放和背包投影；设备成功才扣充能且不消耗本体，失败不扣，耗尽时不抽 RNG、不推进世界时间，未鉴定种类不公开精确余量。demo 新增 3 充能的 Resonance Mender；legacy importer 按原版 sval 接入 Cure Light/Serious/Critical、Healing、*Healing*、Life 六种药水，使 `consumable-effect` 缺口 95→89。协议 1.108、demo 1.99.0、state hash Schema v47、active baseline 368 条 exact、零 waiver，内置 content hash 为 `4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8`。详见[Contract v108](design/contract-v108-charged-items.md)。
+
 ### 本地验证
 
 ```powershell
@@ -333,10 +339,10 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v106/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v108/baseline-policy.json
 ```
 
-当前 353 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 368 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

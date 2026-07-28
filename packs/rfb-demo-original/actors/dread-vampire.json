@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.dread-vampire",
+  "role": "monster",
+  "nameKey": "actor-demo-dread-vampire-name",
+  "descriptionKey": "actor-demo-dread-vampire-description",
+  "glyph": "V",
+  "level": 48,
+  "experienceValue": 2400,
+  "maxHp": 160,
+  "speed": 120,
+  "attack": 10,
+  "defense": 8,
+  "damageDice": 3,
+  "damageSides": 7,
+  "damageType": "nether",
+  "resistances": { "cold": "resistant", "dark": "immune", "nether": "immune", "poison": "immune" },
+  "tags": ["evil", "high-undead", "nonliving", "undead", "unique", "vampire"]
+}

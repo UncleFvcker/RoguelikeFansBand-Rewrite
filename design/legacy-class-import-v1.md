@@ -36,6 +36,8 @@
 - 本地包：54 classes、141 skill sets（67 种族 + 20 性格 + 54 职业），通过 `rfb-contentc inspect-source`；
 - 合成 fixture 固定职业注册表连接、函数名后缀冲突、stats/skills/多行 flags、caster_info、m_info 可读/不可读领域、逐法术参数和 s_info 缺口计数。
 
-## 5. P53–P56 承接状态
+## 5. P53–P57 承接状态
 
-P53 选择 Death 第一册建立首个真实 ability、ability book、实体书、Mana 与职业 casting profile 纵切；P54–P56 已把第一至三册共 24 个槽位接入 12 个静态职业，逐职业等级/耗魔/失败率、职业效果缩放和 beam 几率通过 `abilityOverrides` 与 casting profile 保真，详见 [旧版玩家领域法术导入 v1](legacy-player-spell-import-v1.md)和 [Contract v106](contract-v106-death-third-book.md)。力量、敏捷、体质、生命施法以及职业专属 spells 继续保留在施法壳中，待对应通用 surface 覆盖后接入。
+P53 选择 Death 第一册建立首个真实 ability、ability book、实体书、Mana 与职业 casting profile 纵切；P54–P57 已把第一至四册共 32 个槽位接入 12 个静态职业，逐职业等级/耗魔/失败率、职业效果缩放和 beam 几率通过 `abilityOverrides` 与 casting profile 保真，详见 [旧版玩家领域法术导入 v1](legacy-player-spell-import-v1.md)和 [Contract v107](contract-v107-death-fourth-book.md)。力量、敏捷、体质、生命施法以及职业专属 spells 继续保留在施法壳中，待对应通用 surface 覆盖后接入。
+
+P58 转入物品主动效果线，不修改职业施法档案或 384 条 Death 覆盖；当前项目基线为协议 1.108、contract-v108、Schema v47 和 368 条 exact fixtures。后续设备效果不得借用职业 Mana 档案：设备检定继续消费独立 Device skill，动态效果与容量属于物品实例。

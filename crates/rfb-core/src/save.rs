@@ -20,11 +20,11 @@ use rfb_content::{
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
     EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
-    InventoryItemSaveDto, ItemSaveDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
-    PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceDto,
-    ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto, SlayDto,
-    SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto, TerrainSaveDto,
-    WeaponBrandDto,
+    InventoryItemSaveDto, ItemChargesDto, ItemSaveDto, MonsterPackSaveDto,
+    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
+    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
+    TerrainSaveDto, WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -198,9 +198,10 @@ pub(crate) fn item_from_dto(
     item: ItemSaveDto,
     content: &ContentCatalog,
 ) -> Result<ItemInstance, CoreError> {
-    content
+    let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    validate_item_charges(definition, item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -209,6 +210,7 @@ pub(crate) fn item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        charges: item.charges,
         location: ItemLocation::Ground(item.position),
     })
 }
@@ -217,9 +219,10 @@ pub(crate) fn inventory_item_from_dto(
     item: InventoryItemSaveDto,
     content: &ContentCatalog,
 ) -> Result<ItemInstance, CoreError> {
-    content
+    let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    validate_item_charges(definition, item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -228,6 +231,7 @@ pub(crate) fn inventory_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        charges: item.charges,
         location: ItemLocation::Inventory,
     })
 }
@@ -244,6 +248,7 @@ pub(crate) fn equipment_item_from_dto(
     if definition.equipment_slot.is_none() {
         return Err(CoreError::InvalidSave("equipment metadata is invalid"));
     }
+    validate_item_charges(definition, item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -252,6 +257,7 @@ pub(crate) fn equipment_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        charges: item.charges,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
         },
@@ -262,9 +268,10 @@ pub(crate) fn carried_item_from_dto(
     item: CarriedItemSaveDto,
     content: &ContentCatalog,
 ) -> Result<ItemInstance, CoreError> {
-    content
+    let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    validate_item_charges(definition, item.charges)?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -273,10 +280,33 @@ pub(crate) fn carried_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        charges: item.charges,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
         },
     })
+}
+
+fn validate_item_charges(
+    definition: &rfb_content::ItemDefinition,
+    charges: Option<ItemChargesDto>,
+) -> Result<(), CoreError> {
+    let configured = definition
+        .use_action
+        .as_ref()
+        .and_then(|action| action.charges);
+    let valid = match (configured, charges) {
+        (None, None) => true,
+        (Some(configured), Some(charges)) => {
+            charges.maximum == configured.maximum && charges.current <= charges.maximum
+        }
+        _ => false,
+    };
+    if valid {
+        Ok(())
+    } else {
+        Err(CoreError::InvalidSave("item charge state is invalid"))
+    }
 }
 
 pub(crate) fn player_to_save(
@@ -308,6 +338,8 @@ pub(crate) fn player_to_save(
                 charisma: progress.attributes.charisma,
             },
             experience: progress.experience,
+            maximum_experience: progress.maximum_experience,
+            life_force: progress.life_force,
             level: progress.level,
             max_level: progress.max_level,
             pending_attribute_increases: progress.pending_attribute_increases,
@@ -398,6 +430,7 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
                     .source_id
                     .as_deref()
                     .is_some_and(|source| source.is_empty() || source.len() > 128)
+                || !(1..=100).contains(&status.incoming_damage_percent)
             {
                 return Err(CoreError::InvalidSave("actor status state is invalid"));
             }
@@ -446,6 +479,9 @@ fn statuses_from_save(mut statuses: Vec<StatusSaveDto>) -> Result<Vec<StatusInst
                 granted_modifiers: status.granted_modifiers,
                 granted_equipment_bonuses: status.granted_equipment_bonuses,
                 granted_status_immunities: status.granted_status_immunities.into_iter().collect(),
+                granted_race_id: status.granted_race_id,
+                grants_wall_passage: status.grants_wall_passage,
+                incoming_damage_percent: status.incoming_damage_percent,
             })
         })
         .collect()
@@ -930,6 +966,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                charges: item.charges,
             })
         })
         .collect::<Vec<_>>();
@@ -951,6 +988,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                charges: item.charges,
             })
         })
         .collect::<Vec<_>>();
@@ -973,6 +1011,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                charges: item.charges,
             })
         })
         .collect::<Vec<_>>();
@@ -999,6 +1038,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                charges: item.charges,
             })
         })
         .collect::<Vec<_>>();

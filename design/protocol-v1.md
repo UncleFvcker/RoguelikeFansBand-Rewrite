@@ -230,7 +230,11 @@ interface GameCoreV1 {
 
 协议 1.106 为 Death 第三册增加随机效果与持久装备状态的通用表面：`AbilityEffectSpecDto` 新增 `random-choice`、`no-op`、`visible-damage` 和 `enchant-equipped-weapon`，`drain-life` 增加 `repeat`，固定 `summon` 增加 `hostile`；逐效果结果返回随机分支、明确空操作和永久附魔事务。`ApplyStatus`/`StatusDto`/`StatusSaveDto` 增加随机持续骰、属性修正、装备加值与状态免疫，装备 passive 新增 `vampiric`。永久 affix、状态授予字段与吸血结算进入 save/replay/state hash Schema v45；旧字段缺失时按空值迁移。完整边界见 [Contract v106](contract-v106-death-third-book.md)。
 
-当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
+协议 1.107 为 Death 第四册增加 `item` 目标模式及稳定 `itemId` 选择，并扩展 `AbilityEffectSpecDto`/逐效果结果：新增 `death-ray`、`identify-item`、`restore-vitality`，`genocide` 增加 `nearby` 与半径，`summon-category` 增加升级类别、敌友/群体概率和敌对 unique 开关，`apply-status` 增加临时 Race、穿墙和入伤比例。`PlayerProgressDto` 增加历史最高经验与生命力，状态 DTO 保存形态/穿墙/入伤字段；这些权威状态进入 save/replay/state hash Schema v46。完整边界见 [Contract v107](contract-v107-death-fourth-book.md)。
+
+协议 1.108 增加 `ItemChargesDto { current, maximum }` 和 `InventoryItemDto.charges`。精确充能只在种类知识为 aware 时出现；`usable` 同时考虑使用动作和当前充能是否足够，因此耗尽设备即使未鉴定也不能发送有效使用操作。成功/失败继续复用设备检定事件，效果继续复用 healing resolution；扣费后的充能由同一 update 背包投影返回，不引入第二套显示状态。实例充能进入 save/replay/state hash Schema v47。完整边界见 [Contract v108](contract-v108-charged-items.md)。
+
+当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`，已知充能不足的设备使用按原版语义不消耗能量或推进 world tick。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
 

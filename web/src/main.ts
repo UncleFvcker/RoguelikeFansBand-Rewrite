@@ -1343,6 +1343,15 @@ function renderInventory(
         });
         details.append(equippable);
       }
+      if (item.charges) {
+        const charges = document.createElement("span");
+        charges.className = "inventory-charges";
+        charges.textContent = localization.format("inventory-charges", {
+          current: item.charges.current,
+          maximum: item.charges.maximum,
+        });
+        details.append(charges);
+      }
       appendItemModifiers(details, item.modifiers);
       appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);

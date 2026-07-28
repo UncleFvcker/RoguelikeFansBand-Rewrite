@@ -459,24 +459,24 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v90 阶段性里程碑
+## 8. contract-v75–v107 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.90、内容包 1.81.0、contract-v90、save v1 和 state hash Schema v40；内容 hash 为 `43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252`。active baseline 包含 282 个 exact fixtures，零 waiver。v73–v85 已建立最小玩家施法循环及伤害、治疗、范围、射线、锥形、位移、召唤、侦测、地形、状态和有序效果；v86 在同一效果管线上增加 Monster 百分比施法频率、声明顺序权重、射程/墙体/友军 clean-shot 过滤、频率失败回退和按自身行动计数的逆频率冷却；v87 增加 HP/状态/距离有效权重、自身/多格目标、保守 footprint 风险和敌对召唤；v88 增加阵营目标、敌我计数、多目标结算、战术移动和 smart 抗性观察；v89 增加友方召唤物行动、全局命令、玩家击杀归属和附近跨层跟随；v90 增加资源行为字段、techniqueProfiles、节奏池、先天技法与获得/衰减边界。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.108、内容包 1.99.0、contract-v108、save v1 和 state hash Schema v47；内容 hash 为 `4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8`。active baseline 包含 368 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能设备事务，并接入六种原版固定治疗药水。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、最小玩家施法循环和怪物 caster 纵切已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包只有 47 种 terrain、15 种 actor、8 种 item、1 种 resource、15 个 ability、2 本 ability book、10 个 skill、11 个 skill set、3 个 Race、5 个 Class、3 个 Personality、5 个 build、6 张 encounter table、7 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、19 种 item、2 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
 | 核心模拟、存档与回放 | 已建立 | 新实现已具备强类型命令/事件、单一 RNG、迁移链、state hash 和长回放无漂移；工程边界比旧全局 C 状态更明确 |
-| 状态、抗性与基础战斗 | 基础纵切已建立 | 已覆盖近战、多 blow、射击、投掷和代表性状态/元素；仍缺暴击、品牌、克制、吸血、反击、姿态和骑乘等广度 |
+| 状态、抗性与基础战斗 | 基础纵切已建立 | 已覆盖近战、多 blow、射击、投掷、品牌、克制、吸血和代表性状态/元素；仍缺暴击、反击、姿态和骑乘等广度 |
 | 物品、装备与知识 | 基础闭环已建立 | 已覆盖背包、地面堆、装备、affix、质量、鉴别、携带物和掉落；仍缺完整神器、诅咒、激活、随机神器和锻造 |
 | 地图、地牢与探索 | 阶段 E 里程碑完成 | 已覆盖原版式房间外地貌、Vault、pit、maze-only、多区域、多楼梯、树状分支、共享守护者镜像和可配置实例生命周期 |
 | 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围、守卫、施法效用、多格法术、敌对召唤、玩家召唤物目标/命令、保持距离/逃跑和有限智能学习；仍缺繁殖、unique 生态、永久宠物和回忆 |
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
-| 法术、能力与设备 | 玩家/怪物基础施法纵切已建立 | 已有 Mana、实体能力书、学习容量、主动遗忘、熟练度、冷却、等级/属性失败率、目标伤害、自身治疗、精确短距位移、友方/敌对召唤、瞬时/持久 terrain 侦测、原版式 terrain 转换、状态能力、有序多效果、怪物效用选择、等待/休息恢复、Web 面板和存档迁移；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、多领域和完整怪物法术表 |
+| 法术、能力与设备 | 玩家/怪物基础施法纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、物品鉴定、临时形态和生命恢复；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整设备效果 |
 | 荒野、城镇与经济 | 未建立 | 多城镇旅行、商店、家、建筑服务、交易、声望和长期经济循环尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
@@ -498,7 +498,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 - 怪物施法效用已参考原版 wounded/direct/indirect 过滤层，把 HP、状态、距离和 footprint 转为无 RNG 有效权重；自身法术、范围/射线/锥形和敌对召唤复用既有效果、存档与回放边界。
 - 等待恢复与休息宏命令复用同一能量调度器；可见敌人、受伤与死亡按固定顺序中断，自身治疗复用既有 heal outcome。
 
-### 8.3 下一执行里程碑
+### 8.3 执行里程碑演进
 
 P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按近战命中/击杀获得、闲置衰减、等待/休息不恢复，决斗家通过 techniqueProfiles 获得独立上限与两个先天技法，UI、save/replay、旧存档子集迁移和 282 个 exact fixtures 已固定。下一执行里程碑建议为 P31“更多职业资源形态”：
 
@@ -512,6 +512,10 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **实际走向修订（2026-07）**：用户确认多职业资源"有通用接口即可"，后续内容改由旧版导入管线供给。P31 建立 f_info/r_info 只读导入管线（`.local/` 本地包 + 缺口报告），P32–P37 按缺口报告覆盖数依次落地规则族并回灌导入映射：多 blow 近战（P32）、状态/治疗法术（P33）、位移族（P34，contract-v91）、混乱/致盲/麻痹状态族（P35，contract-v92）、bolt/ball 直伤族与伤害平坦加值（P36，contract-v93）、吐息族与 HP 比例伤害（P37，contract-v94，同轮修复 FREQ_N 频率语法并把 `MST_POSSESSOR` 附身组 522 实例重分类为不适用）、按类别召唤与召唤族导入（P38，contract-v95，类型旗标折算标签、S_ 映射 493 实例）、伤害类型扩展（P39，协议 1.96，按 gf.h 原版元素表扩至 28 类，纯枚举+导入器迭代无契约迁移，异种元素全解锁 +778 实例）。抗性档导入已由 P40（contract-v96）完成：内容层 resistances 字段 + 生成盖章 + RES_/IM_/HURT_ 旗标导入（1023 只怪 3842 条）；心灵族已由 P41（contract-v97）完成：psi 伤害类型 + Sequence 骑手组合 + 首个导入 beam（248 实例全数）；诅咒族与首个法术豁免门已由 P42（contract-v98）完成（240 实例）；小型效果杂项包已由 P43（contract-v99）完成：推离/吸取/失忆/驱散四式（264 实例，法术映射累计 4601、未映射 627——余量均为结构性缺口）。k_info 物品导入已由 P44 完成（544/545 落地，行为缺口按类入报告）；e_info/a_info 词条与固定神器导入已由 P45 完成（88/160 affix + 392/392 神器，普通首饰修正为无属性通用壳、属性只经词条/神器携带）；P46 修正 fake bow 映射（未配对竖琴/枪械保 launcher 槽为可装备属性件，对齐原版 `obj_is_fake_bow`）；身体/槽位模板已由 P47（contract-v100）完成；P48（T1）完成 b_info/种族/性格代码侧结构化提取；P49（contract-v101）完成装备/内在旗标防御面；P50（contract-v102）完成 slay/kill 与五元素 brand；P51（contract-v103）完成动态 affix 实例、装备技能/能力词表和 regeneration，真实 ego 导入达到 128/160；P52 完成 54 职业壳、53 份 m_info（636 领域行/4608 逐法术参数）、C caster_info 壳和 s_info 缺口量化；P53 增加职业逐法术参数覆盖并接入 Death 第一册首批 3 个能力；P54（contract-v104）新增七类玩家等级缩放、actor Detect、status power、sleep、临时抗性与持久 Control，把同册扩展到 8/8 abilities、12 个静态职业和 96 行参数，真实 Death 效果缺口降至 384；P55（contract-v105）完成 Death 第二册 8/8 槽位，新增活体限定、职业 bolt/beam、灭绝、临时品牌、吸血和尸体/复活，两册合计 16 abilities、192 行覆盖，Death 效果缺口降至 288。下一执行里程碑候选为 P56 Death 第三册逐槽盘点；设备与消耗品效果系统或怪物法术清尾仍可按覆盖收益插队。滚动缺口清单见[待实现内容清单](pending-implementation.md)与 [legacy-import-priority-v1](legacy-import-priority-v1.md)。
 
 **P56 进展（2026-07）**：contract-v106 已完成 Death 第三册 8/8 槽位。随机状态时长与状态派生加值、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰和 linear/prorated 曲线均进入通用协议；三册合计 24 abilities、3 books、12 个静态职业和 288 行参数覆盖，Death 效果缺口降至 192。Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 以明确 `NoOp` 保留。下一执行里程碑候选为 P57 Death 第四册逐槽盘点，设备与消耗品效果系统仍可并行插队。
+
+**P57 进展（2026-07）**：contract-v107 已完成 Death 第四册 8/8 槽位。物品目标/鉴定、living-only Death Ray、升级类别与敌友群体召唤、临时 Race、历史最高经验/生命力、邻域灭绝、穿墙和入伤比例进入通用协议；四册合计 32 abilities、4 books、12 个静态职业和 384 行参数覆盖，Death 效果缺口降至 96。下一执行里程碑 P58 应按全领域法术效果缺口与设备/消耗品行为缺口的实际覆盖收益重新排序。
+
+**P58 进展（2026-07）**：contract-v108 已完成充能物品首个纵切。`heal-dice`、实例级当前/最大充能、内容初始值/成本、设备成功扣费、失败保留、耗尽零 RNG/零世界时间、知识门控和严格存档验证均已落地；demo Resonance Mender 和 fixtures 366–368 固定成功、失败与耗尽。legacy importer 按原版 sval 接入六种治疗药水，`consumable-effect` 95→89；真实 staff/wand/rod 仍是通用壳，P59 应把效果身份和随机容量物化到实例后再消化 `device-effect` 64。
 
 ## 9. 内容迁移策略
 

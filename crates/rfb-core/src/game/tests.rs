@@ -2,9 +2,9 @@
 use crate::effect::StatusInstance;
 use crate::resistance::ResistanceLevel;
 use rfb_protocol::{
-    CheckOutcomeDto, CheckResolutionDto, DamageTypeDto, Direction, GameCommand,
-    GameCommandEnvelope, GameEventOutcomeDto, ResistanceLevelDto, ResistanceSaveDto, StatusSaveDto,
-    VisibilityState,
+    CheckOutcomeDto, CheckResolutionDto, DamageResolutionDto, DamageTypeDto, Direction,
+    GameCommand, GameCommandEnvelope, GameEventOutcomeDto, ResistanceLevelDto, ResistanceSaveDto,
+    StatusSaveDto, VisibilityState,
 };
 
 use super::*;
@@ -1334,6 +1334,9 @@ fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: Vec::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     let mut haste = Game::from_save(haste_payload).expect("haste setup should load");
     assert_eq!(haste.snapshot().player.speed, 120);
@@ -1356,6 +1359,9 @@ fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: Vec::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     let mut slow = Game::from_save(slow_payload).expect("slow setup should load");
     let slow_update = slow
@@ -1379,6 +1385,9 @@ fn poison_uses_resistance_then_expires_and_round_trips() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: Vec::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     payload.player.resistances = vec![ResistanceSaveDto {
         damage_type: DamageTypeDto::Poison,
@@ -1424,6 +1433,9 @@ fn bleeding_ticks_as_physical_damage_in_stable_status_order() {
             granted_modifiers: StatModifiersDto::default(),
             granted_equipment_bonuses: EquipmentBonusesDto::default(),
             granted_status_immunities: Vec::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
         },
         StatusSaveDto {
             kind_id: STATUS_BLEEDING.to_owned(),
@@ -1435,6 +1447,9 @@ fn bleeding_ticks_as_physical_damage_in_stable_status_order() {
             granted_modifiers: StatModifiersDto::default(),
             granted_equipment_bonuses: EquipmentBonusesDto::default(),
             granted_status_immunities: Vec::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
         },
     ];
     let mut game = Game::from_save(payload).expect("bleeding setup should load");
@@ -1525,6 +1540,9 @@ fn lethal_monster_status_removes_the_entity_before_energy_actions() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: Vec::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     let mut game = Game::from_save(payload).expect("monster poison setup should load");
     let update = game
@@ -1560,6 +1578,9 @@ fn leader_death_dissolves_pack_before_remaining_members_act() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: Vec::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     payload.entities[0].pack = Some(rfb_protocol::MonsterPackSaveDto {
         id: pack_id.clone(),
@@ -1616,6 +1637,9 @@ fn content_driven_loot_generation_is_deterministic_and_persistent() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     let mut right = left.clone();
     let death_position = left.entities[0].position;
@@ -2189,6 +2213,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            charges: None,
             location: ItemLocation::Inventory,
         });
     }
@@ -4785,6 +4810,9 @@ fn player_derived_stats_retain_equipment_and_status_sources() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     });
     game.player.statuses.push(StatusInstance {
         kind_id: STATUS_STUN.to_owned(),
@@ -4796,6 +4824,9 @@ fn player_derived_stats_retain_equipment_and_status_sources() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     });
     game.player
         .statuses
@@ -4840,6 +4871,9 @@ fn fear_check_can_consume_a_melee_action_without_attacking() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     });
     game.player.statuses.push(StatusInstance {
         kind_id: STATUS_FEAR.to_owned(),
@@ -4851,6 +4885,9 @@ fn fear_check_can_consume_a_melee_action_without_attacking() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     });
 
     let update = game
@@ -5685,6 +5722,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        charges: None,
         location: ItemLocation::Inventory,
     });
     game.player.position = Position { x: 6, y: 4 };
@@ -7952,6 +7990,9 @@ fn self_status_sequence_applies_in_order_and_round_trips() {
             granted_modifiers: StatModifiersDto::default(),
             granted_equipment_bonuses: EquipmentBonusesDto::default(),
             granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
         });
         let update = dispatch_next(
             &mut candidate,
@@ -8306,7 +8347,7 @@ fn learning_capacity_forget_and_relearn_preserve_ability_progress() {
             remaining_slots: 2,
         })
     );
-    assert_eq!(initial.player.abilities.len(), 38);
+    assert_eq!(initial.player.abilities.len(), 46);
     assert_eq!(
         initial
             .player
@@ -8668,6 +8709,7 @@ fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
         [AbilityEffectSpecDto::Genocide {
             scope: AbilityGenocideScopeDto::Single,
             power: 90,
+            radius: 0,
         }]
     ));
     assert!(matches!(
@@ -8939,6 +8981,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            charges: None,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
             },
@@ -9024,6 +9067,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 .into_iter()
                 .collect(),
             rolled_affixes: Vec::new(),
+            charges: None,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
             },
@@ -9036,6 +9080,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 quality: ItemQualityDto::Fine,
                 affix_ids: vec!["demo.affix.vampiric".to_owned()],
                 rolled_affixes: Vec::new(),
+                charges: None,
                 location: ItemLocation::Equipped {
                     slot_id: "charm".to_owned(),
                 },
@@ -9055,6 +9100,9 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 ..EquipmentBonusesDto::default()
             },
             granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
         });
         let definition = game
             .content
@@ -9505,6 +9553,7 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        charges: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -9546,6 +9595,9 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         &StatModifiers::default(),
         &EquipmentBonuses::default(),
         &BTreeSet::new(),
+        None,
+        false,
+        100,
         None,
         None,
         &mut game.rng,
@@ -9642,9 +9694,10 @@ fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
     let mut removed_entities = Vec::new();
     game.resolve_ability_genocide(
         "test.ability.genocide",
-        vec![Position { x: 4, y: 3 }],
+        Some(vec![Position { x: 4, y: 3 }]),
         AbilityGenocideScopeDefinition::Glyph,
         1_000,
+        0,
         &mut events,
         &mut BTreeSet::new(),
         &mut removed_entities,
@@ -9878,6 +9931,9 @@ fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
             &StatModifiers::default(),
             &EquipmentBonuses::default(),
             &BTreeSet::new(),
+            None,
+            false,
+            100,
             Some(10),
             None,
             &mut rng,
@@ -9919,6 +9975,9 @@ fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     });
     let position = game.entities[0].position;
     let snapshot = game.snapshot();
@@ -9983,6 +10042,9 @@ fn temporary_status_resistances_apply_expire_and_round_trip() {
         &StatModifiers::default(),
         &EquipmentBonuses::default(),
         &BTreeSet::new(),
+        None,
+        false,
+        100,
         None,
         None,
         &mut game.rng,
@@ -10637,6 +10699,9 @@ fn rest_interrupts_for_visible_enemies_and_damage_before_recovery() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: Vec::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     }];
     let mut damaged = Game::from_save(payload).expect("bleeding rest fixture should load");
     let interrupted = dispatch_next(&mut damaged, GameCommand::Rest { turns: 10 });
@@ -10791,6 +10856,173 @@ fn device_skill_check_distinguishes_builds_without_consuming_on_failure() {
             .item_knowledge
             .get("demo.item.resonance-stabilizer")
             .is_some_and(|knowledge| knowledge.tried && !knowledge.aware)
+    );
+}
+
+#[test]
+fn charged_device_spends_instance_charges_only_after_a_successful_check_and_round_trips() {
+    const ITEM_ID: &str = "test.item.resonance-mender.1";
+    let mut tinkerer = skill_check_game(0, "demo.build.tinkerer");
+    tinkerer.player.hp = 1;
+    give_inventory_item(&mut tinkerer, ITEM_ID, "demo.item.resonance-mender");
+
+    let before = tinkerer.snapshot();
+    let mender = before
+        .inventory
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .expect("charged device should be carried");
+    assert_eq!(mender.knowledge, ItemKnowledgeDto::Unknown);
+    assert_eq!(mender.charges, None);
+    assert!(mender.usable);
+
+    let update = dispatch_next(
+        &mut tinkerer,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+        },
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "skill.device-success")
+    );
+    let used = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-heal")
+        .expect("successful device should apply its healing dice");
+    assert!(matches!(
+        used.outcome,
+        Some(GameEventOutcomeDto::Heal { resolution })
+            if (2..=8).contains(&resolution.requested)
+                && resolution.applied == resolution.requested
+    ));
+    let mender = update
+        .inventory
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .expect("charged device should not be consumed");
+    assert_eq!(mender.quantity, 1);
+    assert_eq!(
+        mender.charges,
+        Some(ItemChargesDto {
+            current: 2,
+            maximum: 3,
+        })
+    );
+    let restored =
+        Game::from_save(tinkerer.to_save()).expect("charged item state should survive reload");
+    assert_eq!(restored.snapshot(), tinkerer.snapshot());
+
+    let mut invalid = tinkerer.to_save();
+    invalid
+        .inventory
+        .iter_mut()
+        .find(|item| item.id == ITEM_ID)
+        .expect("charged item should be saved")
+        .charges = Some(ItemChargesDto {
+        current: 4,
+        maximum: 3,
+    });
+    assert!(matches!(
+        Game::from_save(invalid),
+        Err(CoreError::InvalidSave("item charge state is invalid"))
+    ));
+
+    let mut missing = tinkerer.to_save();
+    missing
+        .inventory
+        .iter_mut()
+        .find(|item| item.id == ITEM_ID)
+        .expect("charged item should be saved")
+        .charges = None;
+    assert!(matches!(
+        Game::from_save(missing),
+        Err(CoreError::InvalidSave("item charge state is invalid"))
+    ));
+}
+
+#[test]
+fn failed_and_depleted_device_attempts_preserve_charges() {
+    const ITEM_ID: &str = "test.item.resonance-mender.1";
+    let mut vanguard = skill_check_game(0, "demo.build.vanguard");
+    vanguard.player.hp = 1;
+    give_inventory_item(&mut vanguard, ITEM_ID, "demo.item.resonance-mender");
+
+    let failed = dispatch_next(
+        &mut vanguard,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+        },
+    );
+    assert!(
+        failed
+            .events
+            .iter()
+            .any(|event| event.kind == "skill.device-failure")
+    );
+    assert_eq!(
+        failed
+            .inventory
+            .iter()
+            .find(|item| item.id == ITEM_ID)
+            .expect("failed device should remain carried")
+            .charges,
+        None
+    );
+    assert_eq!(
+        vanguard
+            .items
+            .iter()
+            .find(|item| item.id == ITEM_ID)
+            .expect("failed device should retain its instance state")
+            .charges,
+        Some(ItemChargesDto {
+            current: 3,
+            maximum: 3,
+        })
+    );
+
+    vanguard
+        .items
+        .iter_mut()
+        .find(|item| item.id == ITEM_ID)
+        .expect("device should remain after failure")
+        .charges = Some(ItemChargesDto {
+        current: 0,
+        maximum: 3,
+    });
+    let draws = vanguard.rng_draw_counter();
+    let world_tick = vanguard.world_tick;
+    let depleted = dispatch_next(
+        &mut vanguard,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+        },
+    );
+    assert_eq!(depleted.events[0].kind, "item.use-unavailable");
+    assert_eq!(vanguard.rng_draw_counter(), draws);
+    assert_eq!(vanguard.world_tick, world_tick);
+    let depleted_device = depleted
+        .inventory
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .expect("depleted device should remain carried");
+    assert!(!depleted_device.usable);
+    assert_eq!(depleted_device.charges, None);
+    assert_eq!(
+        vanguard
+            .items
+            .iter()
+            .find(|item| item.id == ITEM_ID)
+            .expect("depleted device should retain its instance state")
+            .charges,
+        Some(ItemChargesDto {
+            current: 0,
+            maximum: 3,
+        })
     );
 }
 
@@ -10969,6 +11201,7 @@ fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        charges: initial_item_charges(&game.content, kind_id),
         location: ItemLocation::Inventory,
     });
 }
@@ -11286,6 +11519,9 @@ fn monster_casting_utility_uses_wounds_status_and_distance_without_rng() {
         granted_modifiers: StatModifiersDto::default(),
         granted_equipment_bonuses: EquipmentBonusesDto::default(),
         granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
     });
     assert_eq!(
         game.monster_ability_plan(0, quickening, 2)
@@ -12132,6 +12368,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        charges: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -12179,6 +12416,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.frost-hunter".to_owned()],
         rolled_affixes: Vec::new(),
+        charges: None,
         location: ItemLocation::Inventory,
     });
 
@@ -12261,6 +12499,7 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: rolled.clone(),
+        charges: None,
         location: ItemLocation::Inventory,
     });
     let saved = game.to_save();
@@ -12318,6 +12557,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
             affix_id: "demo.affix.adaptive-echo".to_owned(),
             properties,
         }],
+        charges: None,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -12354,6 +12594,650 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
             .iter()
             .any(|event| event.kind == "equipment.regenerated")
     );
+}
+
+#[test]
+fn death_fourth_book_materializes_original_level_curves() {
+    let projected = |level| {
+        let mut game =
+            Game::new_with_build(0, "demo.build.scholar").expect("scholar build should create");
+        game.progress.level = level;
+        game.snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>()
+    };
+
+    let level_40 = projected(40);
+    assert!(matches!(
+        level_40["demo.ability.death-death-ray"].effects.as_slice(),
+        [AbilityEffectSpecDto::DeathRay { power: 80 }]
+    ));
+    assert!(matches!(
+        level_40["demo.ability.death-raise-dead"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::SummonCategory {
+            maximum_level: 60,
+            upgraded_category: Some(category),
+            upgrade_at_level: Some(48),
+            ..
+        }] if category == "high-undead"
+    ));
+    let [
+        AbilityEffectSpecDto::IdentifyItem {
+            full_identify_power,
+            full_identify_roll_sides,
+        },
+    ] = level_40["demo.ability.death-esoteria"].effects.as_slice()
+    else {
+        panic!("Esoteria should project one identify effect");
+    };
+    assert_eq!((*full_identify_power, *full_identify_roll_sides), (30, 50));
+    assert!(matches!(
+        level_40["demo.ability.death-vampiric-transformation"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 25,
+            duration_sides: 25,
+            granted_race_id: Some(race_id),
+            ..
+        }] if race_id == "demo.race.vampire-lord"
+    ));
+    assert!(matches!(
+        level_40["demo.ability.death-mass-genocide"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Genocide {
+            scope: AbilityGenocideScopeDto::Nearby,
+            power: 92,
+            radius: 20,
+        }]
+    ));
+    assert!(matches!(
+        level_40["demo.ability.death-hellfire"].effects.as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 373,
+            radius: 5,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        level_40["demo.ability.death-wraithform"].effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 14,
+            duration_sides: 14,
+            grants_wall_passage: true,
+            incoming_damage_percent: 50,
+            ..
+        }]
+    ));
+
+    let level_50 = projected(50);
+    assert!(matches!(
+        level_50["demo.ability.death-hellfire"].effects.as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 604,
+            radius: 10,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        level_50["demo.ability.death-wraithform"].effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 25,
+            duration_sides: 25,
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn death_ray_enforces_living_unique_and_level_gates() {
+    let resolve = |seed: u64, kind_id: &str| {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        game.progress.level = 50;
+        game.rng = RfbRng::seeded(seed);
+        let definition = game.content.actor(kind_id).expect("demo target").clone();
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.death-ray-target",
+            kind_id,
+            Position { x: 4, y: 3 },
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+        let mut events = Vec::new();
+        let mut removed = Vec::new();
+        game.resolve_ability_death_ray(
+            "demo.ability.death-death-ray",
+            vec![Position { x: 4, y: 3 }],
+            100,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut removed,
+        )
+        .expect("Death Ray should resolve");
+        let resolution = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    resolution.effects.first().cloned()
+                }
+                _ => None,
+            })
+            .expect("Death Ray should emit a resolution");
+        (game, resolution, removed)
+    };
+
+    let (nonliving, resolution, removed) = resolve(0, "demo.actor.resonant-warden");
+    assert!(matches!(
+        resolution,
+        AbilityEffectResolutionDto::DeathRay {
+            living: false,
+            resisted: true,
+            unique_roll: None,
+            target_level_roll: None,
+            caster_level_roll: None,
+            ..
+        }
+    ));
+    assert!(removed.is_empty());
+    assert_eq!(nonliving.rng.draw_counter, 0);
+
+    let (_, resolution, removed) = resolve(0, "demo.actor.serpent-of-chaos");
+    assert!(matches!(
+        resolution,
+        AbilityEffectResolutionDto::DeathRay {
+            living: true,
+            unique: true,
+            resisted: true,
+            unique_roll: Some(roll),
+            ..
+        } if roll != 666
+    ));
+    assert!(removed.is_empty());
+
+    let mut saw_resist = false;
+    let mut saw_kill = false;
+    for seed in 0..256 {
+        let (_, resolution, removed) = resolve(seed, "demo.actor.gloom-weaver");
+        let AbilityEffectResolutionDto::DeathRay {
+            target_level,
+            target_level_roll: Some(target_roll),
+            caster_level_roll: Some(caster_roll),
+            resisted,
+            ..
+        } = resolution
+        else {
+            panic!("living Death Ray should roll its level contest");
+        };
+        assert_eq!(
+            resisted,
+            target_level + u32::from(target_roll) > caster_roll
+        );
+        saw_resist |= resisted && removed.is_empty();
+        saw_kill |= !resisted && removed == ["test.actor.death-ray-target"];
+        if saw_resist && saw_kill {
+            break;
+        }
+    }
+    assert!(saw_resist && saw_kill);
+}
+
+#[test]
+fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
+    let cast = |seed: u64, level: u16| {
+        let mut game = prepare_death_caster(seed, level, "demo.ability.death-raise-dead");
+        game.debug_set_ability_casts_succeed(true);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.death-raise-dead",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Raise Dead should resolve");
+        let resolution = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilitySummoned { resolution, .. } => Some(resolution.clone()),
+                _ => None,
+            })
+            .expect("Raise Dead should summon");
+        (game, resolution)
+    };
+
+    let (shallow, shallow_resolution) = cast(0, 25);
+    assert_eq!(shallow_resolution.actor_kind_id, "undead");
+    assert!(
+        shallow_resolution
+            .summoned_kind_ids
+            .iter()
+            .all(|kind_id| kind_id == "demo.actor.risen-thrall")
+    );
+    assert_eq!(shallow.state_hash(), cast(0, 25).0.state_hash());
+
+    let mut saw_friendly = false;
+    let mut saw_hostile = false;
+    let mut saw_group = false;
+    let mut saw_unique = false;
+    for seed in 0..512 {
+        let (game, resolution) = cast(seed, 48);
+        assert_eq!(resolution.actor_kind_id, "high-undead");
+        assert!(resolution.summoned_kind_ids.iter().all(|kind_id| matches!(
+            kind_id.as_str(),
+            "demo.actor.grave-wight" | "demo.actor.dread-vampire"
+        )));
+        let summoned = game
+            .entities
+            .iter()
+            .filter(|entity| resolution.entity_ids.contains(&entity.id))
+            .collect::<Vec<_>>();
+        if resolution.hostile {
+            saw_hostile = true;
+            assert!(summoned.iter().all(|entity| entity.controller_id.is_none()));
+        } else {
+            saw_friendly = true;
+            assert!(
+                summoned
+                    .iter()
+                    .all(|entity| entity.controller_id.as_deref() == Some(game.player.id.as_str()))
+            );
+            assert!(
+                resolution
+                    .summoned_kind_ids
+                    .iter()
+                    .all(|kind_id| kind_id != "demo.actor.dread-vampire")
+            );
+        }
+        saw_group |= resolution.group && resolution.entity_ids.len() > 1;
+        if resolution
+            .summoned_kind_ids
+            .iter()
+            .any(|kind_id| kind_id == "demo.actor.dread-vampire")
+        {
+            assert!(resolution.hostile);
+            saw_unique = true;
+        }
+        if saw_friendly && saw_hostile && saw_group && saw_unique {
+            break;
+        }
+    }
+    assert!(saw_friendly && saw_hostile && saw_group && saw_unique);
+}
+
+#[test]
+fn esoteria_validates_item_targets_before_cost_and_persists_knowledge() {
+    let item = || ItemInstance {
+        id: "test.item.esoteria".to_owned(),
+        kind_id: "demo.item.echo-blade".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Fine,
+        affix_ids: vec!["demo.affix.vampiric".to_owned()],
+        rolled_affixes: Vec::new(),
+        charges: None,
+        location: ItemLocation::Ground(Position { x: 10, y: 10 }),
+    };
+    let mut invalid = prepare_death_caster(0, 30, "demo.ability.death-esoteria");
+    invalid.items.push(item());
+    invalid.debug_set_ability_casts_succeed(true);
+    let mana_before = invalid.resources["demo.resource.mana"].current;
+    let draws_before = invalid.rng.draw_counter;
+    let mut events = Vec::new();
+    invalid
+        .resolve_player_ability(
+            "demo.ability.death-esoteria",
+            TargetSelection::Item {
+                item_id: "test.item.esoteria".to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("invalid Esoteria target should resolve as unavailable");
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityTargetUnavailable { .. }]
+    ));
+    assert_eq!(invalid.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(invalid.rng.draw_counter, draws_before);
+
+    let mut ordinary = None;
+    let mut full = None;
+    for seed in 0..128 {
+        let mut game = prepare_death_caster(seed, 30, "demo.ability.death-esoteria");
+        let mut target = item();
+        target.location = ItemLocation::Inventory;
+        game.items.push(target);
+        game.debug_set_ability_casts_succeed(true);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.death-esoteria",
+            TargetSelection::Item {
+                item_id: "test.item.esoteria".to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Esoteria should resolve");
+        let is_full = events.iter().any(|event| {
+            matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::IdentifyItem { full: true, .. }]
+                    )
+            )
+        });
+        if is_full {
+            full.get_or_insert(game);
+        } else {
+            ordinary.get_or_insert(game);
+        }
+        if ordinary.is_some() && full.is_some() {
+            break;
+        }
+    }
+    let ordinary = ordinary.expect("an ordinary identification seed should exist");
+    let ordinary_knowledge = &ordinary.item_property_knowledge["test.item.esoteria"];
+    assert!(ordinary_knowledge.appraised);
+    assert!(!ordinary_knowledge.identified);
+    assert!(ordinary_knowledge.known_affix_ids.is_empty());
+
+    let mut full = full.expect("a full identification seed should exist");
+    let full_knowledge = &full.item_property_knowledge["test.item.esoteria"];
+    assert!(full_knowledge.appraised && full_knowledge.identified);
+    assert!(
+        full_knowledge
+            .known_affix_ids
+            .contains("demo.affix.vampiric")
+    );
+    full.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.esoteria")
+        .expect("identified item should remain")
+        .location = ItemLocation::Ground(Position { x: 10, y: 10 });
+    full.refresh_character_skills();
+    full.refresh_player_resource_maxima();
+    let restored = Game::from_save(full.to_save()).expect("item knowledge should reload");
+    assert_eq!(restored.state_hash(), full.state_hash());
+    assert!(restored.item_property_knowledge["test.item.esoteria"].identified);
+}
+
+#[test]
+fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
+    let mut game = prepare_death_caster(17, 35, "demo.ability.death-vampiric-transformation");
+    game.refresh_character_skills();
+    game.refresh_player_resource_maxima();
+    let body_slots = game.body_slots.clone();
+    let base = game.snapshot().player;
+    let mut ability = game
+        .content
+        .ability("demo.ability.death-vampiric-transformation")
+        .expect("Vampiric Transformation should exist")
+        .clone();
+    Game::apply_player_level_scaling(&mut ability, 35);
+    game.resolve_ability_actor_effects(
+        &ability.id,
+        &ability.effect,
+        AbilityTargetPlan::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Vampiric Transformation should resolve");
+
+    let transformed = game.snapshot().player;
+    assert_eq!(game.body_slots, body_slots);
+    assert_eq!(
+        transformed
+            .build
+            .as_ref()
+            .map(|build| build.race_id.as_str()),
+        Some("demo.race.vampire-lord")
+    );
+    assert!(
+        transformed.progress.attributes.strength.effective
+            > base.progress.attributes.strength.effective
+    );
+    assert!(
+        transformed
+            .resistances
+            .iter()
+            .any(|entry| entry.damage_type == DamageTypeDto::Dark
+                && entry.level == ResistanceLevelDto::Immune)
+    );
+    let transformed_melee = transformed
+        .progress
+        .skills
+        .iter()
+        .find(|skill| skill.id == "demo.skill.melee")
+        .expect("transformed melee skill should be projected");
+    let base_melee = base
+        .progress
+        .skills
+        .iter()
+        .find(|skill| skill.id == "demo.skill.melee")
+        .expect("base melee skill should be projected");
+    assert!(transformed_melee.base > base_melee.base);
+    let restored = Game::from_save(game.to_save()).expect("temporary race should reload");
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(restored.body_slots, body_slots);
+}
+
+#[test]
+fn restore_life_uses_historical_experience_and_migrates_old_saves() {
+    let mut game = prepare_death_caster(0, 42, "demo.ability.death-restore-life");
+    game.progress.experience = 500;
+    game.progress.maximum_experience = 900;
+    game.progress.life_force = 125;
+    game.debug_set_ability_casts_succeed(true);
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.death-restore-life",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Restore Life should resolve");
+    assert_eq!(game.progress.experience, 900);
+    assert_eq!(game.progress.maximum_experience, 900);
+    assert_eq!(game.progress.life_force, 1_000);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::RestoreVitality {
+                    experience_before: 500,
+                    experience_after: 900,
+                    life_force_before: 125,
+                    life_force_after: 1_000,
+                    ..
+                }]
+            )
+    )));
+
+    let mut legacy = Game::new(0);
+    legacy.apply_player_experience(10, &mut Vec::new());
+    let expected = legacy.progress.experience;
+    let mut payload = legacy.to_save();
+    payload
+        .player
+        .progress
+        .as_mut()
+        .expect("player progress should be saved")
+        .maximum_experience = 0;
+    let migrated = Game::from_save(payload).expect("old progress should migrate");
+    assert_eq!(migrated.progress.maximum_experience, expected);
+}
+
+#[test]
+fn nearby_genocide_filters_radius_resists_unique_and_is_deterministic() {
+    let prepare = || {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        for (id, kind_id, position) in [
+            (
+                "test.actor.nearby",
+                "demo.actor.ember-mote",
+                Position { x: 4, y: 3 },
+            ),
+            (
+                "test.actor.unique",
+                "demo.actor.serpent-of-chaos",
+                Position { x: 5, y: 3 },
+            ),
+            (
+                "test.actor.distant",
+                "demo.actor.ember-mote",
+                Position { x: 19, y: 19 },
+            ),
+        ] {
+            let definition = game.content.actor(kind_id).expect("demo target").clone();
+            game.entities.push(actor_from_runtime_spawn(
+                id,
+                kind_id,
+                position,
+                definition.max_hp,
+                definition.speed,
+                100,
+                true,
+            ));
+        }
+        game
+    };
+    let mut left = prepare();
+    let mut right = left.clone();
+    let resolve = |game: &mut Game| {
+        let mut events = Vec::new();
+        let mut removed = Vec::new();
+        game.resolve_ability_genocide(
+            "demo.ability.death-mass-genocide",
+            None,
+            AbilityGenocideScopeDefinition::Nearby,
+            1_000,
+            2,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut removed,
+        );
+        (events, removed)
+    };
+    let (events, removed) = resolve(&mut left);
+    let (_, right_removed) = resolve(&mut right);
+    assert_eq!(left.state_hash(), right.state_hash());
+    assert_eq!(removed, right_removed);
+    assert_eq!(removed, ["test.actor.nearby"]);
+    assert!(
+        left.entities
+            .iter()
+            .any(|entity| entity.id == "test.actor.unique")
+    );
+    assert!(
+        left.entities
+            .iter()
+            .any(|entity| entity.id == "test.actor.distant")
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::Genocide {
+                    radius: 2,
+                    removed_entity_ids,
+                    resisted_entity_ids,
+                    ..
+                }] if removed_entity_ids == &["test.actor.nearby".to_owned()]
+                    && resisted_entity_ids == &["test.actor.unique".to_owned()]
+            )
+    )));
+}
+
+#[test]
+fn wraithform_passes_walls_halves_spell_damage_and_expires_in_place() {
+    let mut game = prepare_death_caster(31, 47, "demo.ability.death-wraithform");
+    game.refresh_character_skills();
+    game.refresh_player_resource_maxima();
+    let wall = Position { x: 4, y: 3 };
+    game.items.retain(
+        |item| !matches!(item.location, ItemLocation::Ground(position) if position == wall),
+    );
+    replace_terrain(&mut game, wall, "demo.terrain.wall");
+    let mut ability = game
+        .content
+        .ability("demo.ability.death-wraithform")
+        .expect("Wraithform should exist")
+        .clone();
+    Game::apply_player_level_scaling(&mut ability, 47);
+    game.resolve_ability_actor_effects(
+        &ability.id,
+        &ability.effect,
+        AbilityTargetPlan::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Wraithform should resolve");
+    assert!(game.player_can_pass_walls());
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, wall);
+    assert_eq!(game.terrain_at(wall), "demo.terrain.wall");
+
+    let hp_before = game.player.hp;
+    let damage = game.resolve_monster_damage_to_player(
+        "test.actor.caster",
+        "demo.actor.gloom-weaver",
+        "demo.ability.resonant-bolt",
+        0,
+        9,
+        9,
+        DamageType::Fire,
+        &mut Vec::new(),
+    );
+    assert!(matches!(
+        damage,
+        AbilityEffectResolutionDto::Damage {
+            resolution: DamageResolutionDto {
+                final_damage: 5,
+                ..
+            },
+            ..
+        }
+    ));
+    assert_eq!(game.player.hp, hp_before - 5);
+
+    let mut restored = Game::from_save(game.to_save()).expect("wall-bound Wraithform should load");
+    assert_eq!(restored.snapshot(), game.snapshot());
+    restored
+        .player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == "rfb.status.wraithform")
+        .expect("Wraithform should remain active")
+        .remaining_ticks = 1;
+    restored
+        .process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("Wraithform expiry should resolve");
+    assert!(!restored.player_can_pass_walls());
+    assert_eq!(restored.player.position, wall);
+    assert_eq!(restored.terrain_at(wall), "demo.terrain.wall");
 }
 
 fn clear_monsters(game: &mut Game) {

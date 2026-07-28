@@ -32,6 +32,10 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
   assert.equal(localization.format("inventory-stack-count", { count: 1 }), "1 stack");
   assert.equal(localization.format("inventory-stack-count", { count: 2 }), "2 stacks");
   assert.equal(
+    localization.format("inventory-charges", { current: 2, maximum: 3 }),
+    "Charges: 2/3",
+  );
+  assert.equal(
     localization.format("inventory-weight-summary", {
       stacks: "2 stacks",
       weight: "9.7",
@@ -63,6 +67,10 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
 
   localization.setLocale("zh-CN");
   assert.equal(localization.format("inventory-stack-count", { count: 2 }), "2 堆");
+  assert.equal(
+    localization.format("inventory-charges", { current: 2, maximum: 3 }),
+    "充能：2/3",
+  );
   assert.equal(
     localization.format("inventory-weight-summary", {
       stacks: "2 堆",

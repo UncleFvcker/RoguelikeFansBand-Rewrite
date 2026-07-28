@@ -199,7 +199,7 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 当前已完成第 1、2、3、7、8 项的单包版本，包括：
 
 - `deny_unknown_fields` 严格 JSON 解析；
-- 单文件 1 MiB、单包 16 MiB、最多 2048 文件的输入上限；
+- 单文件 1 MiB、单包 16 MiB、最多 32768 文件的输入上限；
 - 禁止内容目录和文件符号链接；
 - 稳定 ID、语义版本、消息 key、glyph、tag 和数值范围检查；
 - 世界中的地形、角色与物品悬空引用检查；
@@ -211,6 +211,10 @@ contract-v43 新增可选 `taskId`。相同 task ID 的任务层组成一个结�
 角色定义使用必需的基础战斗字段；玩家可声明携带容量与门/搜索技能，怪物可声明 melee routine、出生携带与死亡掉落、awareness，以及 `monsterCasting` 的百分比频率、加权能力集合、smart、偏好距离和撤退阈值。物品、资源、能力、能力书、affix、encounter/loot/theme/region/terrain-feature 表、Vault 和 world 使用独立稳定 ID 与交叉引用；编译器验证目标存在、角色类别、范围、数量、权重和互斥旧字段。原创包 1.80.0 覆盖角色成长与构筑、玩家能力循环、怪物 caster 效用/阵营目标/多格结算/战术移动/有限记忆、固定词条与鉴别，以及楼层/任务/树状地牢/Vault/区域主题/群体/分阶段地貌等现有纵切。
 
 contract-v106 扩展能力内容词汇：`apply-status` 可声明基础时长加骰时长、属性修正、装备加值和状态免疫；`random-choice` 使用有序 `maximumRoll` 阈值、等级加值除数和分支目标；`visible-damage` 对当前可见目标共享伤害骰；`enchant-equipped-weapon` 引用稳定 affix；`drain-life.repeat` 声明重复追踪次数；`summon.hostile` 区分敌对固定召唤；`no-op.reason` 为尚无通用系统的具名分支保留可观察缺口。等级缩放增加 `linear`/`prorated` 曲线以及状态/装备加值字段。编译器验证阈值覆盖、目标语义、引用、骰值和边界；demo 包 1.97.0 含 60 abilities、4 ability books、18 items 和 4 affixes，当前 state hash 为 Schema v45。完整边界见 [Contract v106](contract-v106-death-third-book.md)。
+
+contract-v107 增加 `item` 目标、`death-ray`、`identify-item`、`restore-vitality` 与 nearby `genocide`；`summon-category` 可声明升级类别、等级门、敌友/群体概率、群体骰和敌对 unique，`apply-status` 可引用临时 Race 并授予穿墙/入伤比例。编译器验证 Race/类别引用、概率组合、等级门、power/radius 和入伤范围，并要求零基础的新增缩放字段存在匹配 `levelScaling`。demo 包 1.98.0 含 68 abilities、5 ability books、19 items、4 affixes、28 actors、4 races 和 13 skill sets，当前 state hash 为 Schema v46。完整边界见 [Contract v107](contract-v107-death-fourth-book.md)。
+
+contract-v108 为物品 `useAction` 增加 `heal-dice` 和可选 `charges { initial, maximum, cost }`。治疗骰限制为 1–100 骰、1–10000 面；充能容量限制为 1–1000000，initial 不得超过 maximum，cost 必须为正且不超过 maximum。带充能动作的物品必须 `maxStack: 1`、带 `device` 标签并声明合法设备检定难度。demo 包 1.99.0 含 68 abilities、5 ability books、20 items、4 affixes、28 actors、4 races 和 13 skill sets，当前 state hash 为 Schema v47。完整边界见 [Contract v108](contract-v108-charged-items.md)。
 
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 

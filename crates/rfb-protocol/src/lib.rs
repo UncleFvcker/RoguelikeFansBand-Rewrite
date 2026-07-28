@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.106";
+pub const PROTOCOL_VERSION: &str = "1.108";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -318,6 +318,7 @@ pub enum TargetModeDto {
     Direction,
     Position,
     Entity,
+    Item,
     #[serde(rename = "self")]
     SelfTarget,
 }
@@ -347,6 +348,9 @@ pub enum TargetSelection {
     },
     Entity {
         entity_id: String,
+    },
+    Item {
+        item_id: String,
     },
     #[serde(rename = "self")]
     SelfTarget,
@@ -491,6 +495,7 @@ pub enum AbilityControlOutcomeDto {
 pub enum AbilityGenocideScopeDto {
     Single,
     Glyph,
+    Nearby,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -570,6 +575,9 @@ pub enum AbilityEffectSpecDto {
         damage_sides: u16,
         damage_bonus: u16,
     },
+    DeathRay {
+        power: u32,
+    },
     TeleportAway {
         minimum_distance: u8,
     },
@@ -588,10 +596,28 @@ pub enum AbilityEffectSpecDto {
     },
     SummonCategory {
         category: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        upgraded_category: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        upgrade_at_level: Option<u16>,
         maximum_level: u16,
         count_dice: u8,
         count_sides: u8,
         count_bonus: u8,
+        #[serde(default)]
+        hostile_chance_percent: u8,
+        #[serde(default)]
+        friendly_group_chance_percent: u8,
+        #[serde(default)]
+        hostile_group_chance_percent: u8,
+        #[serde(default)]
+        group_count_dice: u8,
+        #[serde(default)]
+        group_count_sides: u8,
+        #[serde(default)]
+        group_count_bonus: u8,
+        #[serde(default)]
+        allow_unique_hostile: bool,
         radius: u8,
         duration_turns: u16,
     },
@@ -630,6 +656,12 @@ pub enum AbilityEffectSpecDto {
         granted_equipment_bonuses: EquipmentBonusesDto,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         granted_status_immunities: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        granted_race_id: Option<String>,
+        #[serde(default)]
+        grants_wall_passage: bool,
+        #[serde(default = "default_incoming_damage_percent")]
+        incoming_damage_percent: u8,
     },
     BlinkSelf {
         radius: u8,
@@ -658,6 +690,15 @@ pub enum AbilityEffectSpecDto {
     Genocide {
         scope: AbilityGenocideScopeDto,
         power: u16,
+        #[serde(default)]
+        radius: u8,
+    },
+    IdentifyItem {
+        full_identify_power: u16,
+        full_identify_roll_sides: u16,
+    },
+    RestoreVitality {
+        life_force: u16,
     },
     AnimateDead {
         actor_kind_id: String,
@@ -699,6 +740,14 @@ pub enum AbilityEffectSpecDto {
 
 const fn default_ability_effect_repeat() -> u8 {
     1
+}
+
+const fn default_incoming_damage_percent() -> u8 {
+    100
+}
+
+const fn default_life_force() -> u16 {
+    1_000
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -831,6 +880,10 @@ pub struct PlayerProgressDto {
     pub level: u16,
     pub max_level: u16,
     pub experience: u64,
+    #[serde(default)]
+    pub maximum_experience: u64,
+    #[serde(default = "default_life_force")]
+    pub life_force: u16,
     pub level_cap: u16,
     #[serde(default)]
     pub attribute_cap: u16,
@@ -1231,6 +1284,8 @@ pub struct AbilitySummonResolutionDto {
     pub duration_turns: u16,
     #[serde(default)]
     pub hostile: bool,
+    #[serde(default)]
+    pub group: bool,
     /// Per-entity kinds for category summons; empty for fixed-kind summons,
     /// where `actor_kind_id` already names the summoned definition.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1306,6 +1361,22 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         resolution: DamageResolutionDto,
     },
+    DeathRay {
+        effect_index: u8,
+        power: u32,
+        target_level: u32,
+        living: bool,
+        unique: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        unique_roll: Option<u16>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_level_roll: Option<u16>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        caster_level_roll: Option<u32>,
+        resisted: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resolution: Option<DamageResolutionDto>,
+    },
     Heal {
         effect_index: u8,
         resolution: HealingResolutionDto,
@@ -1333,6 +1404,12 @@ pub enum AbilityEffectResolutionDto {
         granted_resistances: Vec<ResistanceDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         granted_brands: Vec<WeaponBrandDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        granted_race_id: Option<String>,
+        #[serde(default)]
+        grants_wall_passage: bool,
+        #[serde(default = "default_incoming_damage_percent")]
+        incoming_damage_percent: u8,
         change: AbilityStatusChangeDto,
     },
     RemoveStatus {
@@ -1375,11 +1452,30 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         scope: AbilityGenocideScopeDto,
         power: u16,
+        #[serde(default)]
+        radius: u8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         glyph: Option<String>,
         removed_entity_ids: Vec<String>,
         resisted_entity_ids: Vec<String>,
         fatigue_damage: i32,
+    },
+    IdentifyItem {
+        effect_index: u8,
+        item_id: String,
+        item_kind_id: String,
+        full_identify_power: u16,
+        full_identify_roll_sides: u16,
+        roll: u16,
+        full: bool,
+        changed: bool,
+    },
+    RestoreVitality {
+        effect_index: u8,
+        experience_before: u64,
+        experience_after: u64,
+        life_force_before: u16,
+        life_force_after: u16,
     },
     AnimateDead {
         effect_index: u8,
@@ -1660,6 +1756,12 @@ pub struct StatusDto {
     pub granted_equipment_bonuses: EquipmentBonusesDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_status_immunities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub granted_race_id: Option<String>,
+    #[serde(default)]
+    pub grants_wall_passage: bool,
+    #[serde(default = "default_incoming_damage_percent")]
+    pub incoming_damage_percent: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1806,6 +1908,14 @@ pub enum ItemKnowledgeDto {
     Aware,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemChargesDto {
+    pub current: u32,
+    pub maximum: u32,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -1852,6 +1962,8 @@ pub struct InventoryItemDto {
     pub knowledge: ItemKnowledgeDto,
     #[serde(default)]
     pub usable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
     pub quantity: u32,
     #[serde(default)]
     pub weight_tenths_pound: u16,
@@ -2167,6 +2279,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
     push_declaration!(ItemKnowledgeDto);
+    push_declaration!(ItemChargesDto);
     push_declaration!(ItemQualityDto);
     push_declaration!(ItemIdentificationDto);
     push_declaration!(ItemPropertyDto);
@@ -2292,6 +2405,10 @@ pub struct NaturalAttributeSetSaveDto {
 pub struct PlayerProgressSaveDto {
     pub attributes: NaturalAttributeSetSaveDto,
     pub experience: u64,
+    #[serde(default)]
+    pub maximum_experience: u64,
+    #[serde(default = "default_life_force")]
+    pub life_force: u16,
     pub level: u16,
     pub max_level: u16,
     pub pending_attribute_increases: u16,
@@ -2392,6 +2509,12 @@ pub struct StatusSaveDto {
     pub granted_equipment_bonuses: EquipmentBonusesDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_status_immunities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub granted_race_id: Option<String>,
+    #[serde(default)]
+    pub grants_wall_passage: bool,
+    #[serde(default = "default_incoming_damage_percent")]
+    pub incoming_damage_percent: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2414,6 +2537,8 @@ pub struct ItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2428,6 +2553,8 @@ pub struct InventoryItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2443,6 +2570,8 @@ pub struct EquipmentItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2458,6 +2587,8 @@ pub struct CarriedItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2905,6 +3036,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
+                charges: None,
                 quantity: 1,
                 weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),

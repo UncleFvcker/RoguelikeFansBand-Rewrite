@@ -1,6 +1,6 @@
-# 旧版玩家领域法术导入 v1（Death 第一至三册）
+# 旧版玩家领域法术导入 v1（Death 第一至四册）
 
-状态：已实现（P53–P56，导入优先级规划 T4 前三册）。P53 建立职业参数覆盖与首批纵切；P54 以 contract-v104 完成第一册；P55 以 contract-v105 完成第二册；P56 以 contract-v106 完成第三册。当前协议 1.106、demo 内容包 1.97.0、demo content hash `5e6e5f4ee9b83eb8d80e05c8aa893bd8d19c1db1bdd18c97fe3e120fd823a88c`、state hash Schema v45 和 353 条 active exact fixtures。
+状态：已实现（P53–P57，导入优先级规划 T4 的 Death 四册）。P53 建立职业参数覆盖与首批纵切；P54–P57 以 contract-v104–v107 依次完成四册。当前项目已推进到协议 1.108、demo 内容包 1.99.0、demo content hash `4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8`、state hash Schema v47 和 368 条 active exact fixtures；P58 不改变 Death 法术语义。
 
 ## 1. 同一本法书的职业参数
 
@@ -58,23 +58,38 @@
 | 22 Nether Wave | `death-nether-wave` | 全部可见活体共享 `1d(3*level)` nether 伤害掷骰 | 可见性使用当前 FOV |
 | 23 Darkness Storm | `death-darkness-storm` | 半径 4 dark ball，使用原版形状的 prorated 等级曲线 | `to_d_spell` |
 
-## 5. 职业接入与容量近似
+## 5. Death 第四册映射
+
+`k_info` 的 `tval=100/sval=3`（`[Necronomicon]`）绑定第四本实体法书。P57 新增物品目标/鉴定、Death Ray、升级类别与敌友群体召唤、临时 Race、历史最高经验/生命力、邻域灭绝、穿墙和入伤比例，八个槽位全部映射：
+
+| 原版槽位 | Ability | 当前行为 | 保留差异 |
+| --- | --- | --- | --- |
+| 24 Death Ray | `death-death-ray` | 仅活体；普通目标等级对抗，unique 先过 1/666 门 | 复用统一死亡事务，不建立独立即死抗性表 |
+| 25 Raise Dead | `death-raise-dead` | 48 级切换 high-undead；敌友、群体与敌对 unique 按确定性概率结算 | 复用现有召唤物 AI，无宠物维护/忠诚 |
+| 26 Esoteria | `death-esoteria` | 携带物品普通鉴定或 power 检定完整鉴定 | 无批量/自动选择 UI |
+| 27 Vampiric Transformation | `death-vampiric-transformation` | 临时投影 Vampire Lord Race 的属性、技能与抗性 | 不改变身体槽或持久构筑 Race |
+| 28 Restore Life | `death-restore-life` | 经验恢复到历史最高值，生命力恢复为 1000 | 生命力尚无其他消费/损伤入口 |
+| 29 Mass Genocide | `death-mass-genocide` | 半径 20 nearby Genocide，unique 抵抗 | 不维护跨层种群记忆 |
+| 30 Hellfire | `death-hellfire` | prorated nether ball，伤害与半径随等级增长 | 复用现有范围伤害与抗性 |
+| 31 Wraithform | `death-wraithform` | 随机时长穿墙并承受 50% 入伤 | 到期不把墙内玩家传送或改图 |
+
+## 6. 职业接入与容量近似
 
 Death 可读的 15 个职业中，12 个静态档案生成运行时 casting profile：Mage、Priest、Ranger、Paladin、Warrior-Mage、High-Mage、Sorcerer、Monk、ForceTrainer、Red-Mage、Yellow-Mage、Gray-Mage。
 
 刻意排除 Rogue（C 侧为 Dexterity 施法，当前枚举不支持）、Blood Mage（`CASTER_USE_HP`）和 Skillmaster（动态 caster_info）。Mana 容量暂按 `level + casting attribute index`，学习容量按 `min(32, 4 + level)`；负重、原版容量与学习公式都进入 `playerSpellBehaviorGaps`，不宣称精确复刻。
 
-## 6. 固定基线结果
+## 7. 固定基线结果
 
-- 24 abilities、3 ability books、1 个 Mana resource、三本实体书绑定；
-- 12 个运行时 casting profile、288 条职业参数覆盖与 288 条映射行；
-- Death 效果缺口 480→192；
+- 32 abilities、4 ability books、1 个 Mana resource、四本实体书绑定；
+- 12 个运行时 casting profile、384 条职业参数覆盖与 384 条映射行；
+- Death 效果缺口 480→96；
 - 等级效果缩放与怪物状态 power 缺口清零；Malediction rider、随机抗性持续、Mana 容量、学习公式、caster encumbrance 各保留 12 条；
 - Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 各保留 12 条行为缺口；
 - 普通活体 legacy actor 获得 `living` 和通用尸体引用，`UNIQUE` 映射为 `unique`，Animate Dead 使用稳定 skeleton actor；
 - 源文件数预算保持 32768，单文件 1 MiB、源包总计 16 MiB、编译产物 32 MiB 的独立守卫保持不变；
-- 本地包 content hash：`4c433616d3223d6a290ab0bce23f2e9d6b21578c4769eb963a2bf3d2b5d83146`。
+- P58 加入六种治疗药水后，本地包 content hash：`ed9534de7976be4668a8238deae3d207794d862e7a4ab41e888fde8c7e7b479c`。
 
-## 7. 下一步
+## 8. 下一步
 
-P57 可继续逐槽盘点 Death 第四册，并按真实效果聚类新增系统；设备/消耗品效果系统仍可按覆盖收益插队。Dexterity/HP/dynamic caster 仍应在相应资源与施法属性系统完成后接入，不能把这些职业强行改成 Mana 档案。
+P58 已比较全领域与物品缺口并转入充能/治疗消耗品纵切。P59 优先物化动态设备效果身份与容量；Dexterity/HP/dynamic caster 仍应在相应资源与施法属性系统完成后接入，不能把这些职业强行改成 Mana 档案；Invoke Spirits 四项 `NoOp` 随对应通用系统逐项清零。

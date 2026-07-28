@@ -807,8 +807,25 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         DEATH_FIRST_BOOK_SVAL => Some(DEATH_FIRST_BOOK_ID),
         DEATH_SECOND_BOOK_SVAL => Some(DEATH_SECOND_BOOK_ID),
         DEATH_THIRD_BOOK_SVAL => Some(DEATH_THIRD_BOOK_ID),
+        DEATH_FOURTH_BOOK_SVAL => Some(DEATH_FOURTH_BOOK_ID),
         _ => None,
     }
+}
+
+fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
+    if entry.tval != 75 {
+        return None;
+    }
+    let effect = match entry.sval {
+        34 => serde_json::json!({"type": "heal-dice", "dice": 4, "sides": 8}),
+        35 => serde_json::json!({"type": "heal-dice", "dice": 8, "sides": 8}),
+        36 => serde_json::json!({"type": "heal-dice", "dice": 12, "sides": 8}),
+        37 => serde_json::json!({"type": "heal", "amount": 300}),
+        38 => serde_json::json!({"type": "heal", "amount": 1000}),
+        39 => serde_json::json!({"type": "heal", "amount": 5000}),
+        _ => return None,
+    };
+    Some(serde_json::json!({"effect": effect}))
 }
 
 fn item_json(
@@ -819,8 +836,10 @@ fn item_json(
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
+    let use_action = fixed_consumable_use_action(entry);
     if let Some(gap) = shape.behavior_gap
         && ability_book_id.is_none()
+        && use_action.is_none()
     {
         *report.item_behavior_gaps.entry(gap.to_owned()).or_default() += 1;
     }
@@ -838,6 +857,9 @@ fn item_json(
     if let Some(ability_book_id) = ability_book_id {
         value["maxStack"] = serde_json::json!(1);
         value["abilityBookId"] = serde_json::json!(ability_book_id);
+    }
+    if let Some(use_action) = use_action {
+        value["useAction"] = use_action;
     }
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
@@ -3352,7 +3374,7 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
         ),
         23 => (
             "death-darkness-storm",
-            directional_target,
+            directional_target.clone(),
             serde_json::json!({
                 "type": "area-damage",
                 "damageDice": 1,
@@ -3371,6 +3393,201 @@ fn death_spell_ability(spell: &LegacySpellProfile) -> Option<(String, serde_json
                 "cubicWeight": 2,
             })],
             vec!["area", "dark", "death", "prorated", "spell"],
+        ),
+        24 => (
+            "death-death-ray",
+            directional_target.clone(),
+            serde_json::json!({"type": "death-ray", "power": 0}),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "death-ray-power",
+                "multiplier": 2,
+                "divisor": 1,
+            })],
+            vec!["death", "death-ray", "living", "spell"],
+        ),
+        25 => (
+            "death-raise-dead",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "summon-category",
+                "category": "undead",
+                "upgradedCategory": "high-undead",
+                "upgradeAtLevel": 48,
+                "maximumLevel": 0,
+                "countDice": 1,
+                "countSides": 1,
+                "hostileChancePercent": 67,
+                "friendlyGroupChancePercent": 33,
+                "hostileGroupChancePercent": 100,
+                "groupCountDice": 1,
+                "groupCountSides": 3,
+                "groupCountBonus": 1,
+                "allowUniqueHostile": true,
+                "radius": 2,
+                "durationTurns": 0,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "summon-maximum-level",
+                "multiplier": 3,
+                "divisor": 2,
+            })],
+            vec!["death", "spell", "summon", "undead"],
+        ),
+        26 => (
+            "death-esoteria",
+            serde_json::json!({
+                "modes": ["item"],
+                "range": 0,
+                "requiresLineOfEffect": false,
+            }),
+            serde_json::json!({
+                "type": "identify-item",
+                "fullIdentifyPower": 0,
+                "fullIdentifyRollSides": 50,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "identify-power",
+                "multiplier": 50,
+                "divisor": 1,
+                "curve": "prorated",
+                "quadraticWeight": 1,
+                "cubicWeight": 2,
+            })],
+            vec!["death", "identify", "spell"],
+        ),
+        27 => (
+            "death-vampiric-transformation",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.vampiric-transformation",
+                "intensity": 1,
+                "durationTicks": 10,
+                "durationDice": 1,
+                "durationSides": 10,
+                "stacking": "replace",
+                "grantedRaceId": LEGACY_VAMPIRE_LORD_RACE_ID,
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "status-duration-ticks",
+                    "multiplier": 25,
+                    "divisor": 1,
+                    "curve": "prorated",
+                    "quadraticWeight": 1,
+                    "cubicWeight": 2,
+                }),
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "status-duration-sides",
+                    "multiplier": 25,
+                    "divisor": 1,
+                    "curve": "prorated",
+                    "quadraticWeight": 1,
+                    "cubicWeight": 2,
+                }),
+            ],
+            vec!["death", "race", "spell", "status", "vampire"],
+        ),
+        28 => (
+            "death-restore-life",
+            self_target.clone(),
+            serde_json::json!({"type": "restore-vitality", "lifeForce": 1000}),
+            Vec::new(),
+            vec!["death", "experience", "restoration", "spell"],
+        ),
+        29 => (
+            "death-mass-genocide",
+            self_target.clone(),
+            serde_json::json!({
+                "type": "genocide",
+                "scope": "nearby",
+                "power": 0,
+                "radius": 20,
+            }),
+            vec![serde_json::json!({
+                "effectIndex": 0,
+                "field": "genocide-power",
+                "multiplier": 150,
+                "divisor": 1,
+                "curve": "prorated",
+                "quadraticWeight": 1,
+                "cubicWeight": 2,
+            })],
+            vec!["death", "genocide", "spell"],
+        ),
+        30 => (
+            "death-hellfire",
+            directional_target.clone(),
+            serde_json::json!({
+                "type": "area-damage",
+                "damageDice": 1,
+                "damageSides": 1,
+                "damageBonus": 4,
+                "damageType": "nether",
+                "radius": 1,
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "damage-bonus",
+                    "multiplier": 600,
+                    "divisor": 1,
+                    "curve": "prorated",
+                    "quadraticWeight": 1,
+                    "cubicWeight": 2,
+                }),
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "radius",
+                    "multiplier": 9,
+                    "divisor": 1,
+                    "curve": "prorated",
+                    "quadraticWeight": 1,
+                    "cubicWeight": 2,
+                }),
+            ],
+            vec!["area", "death", "nether", "spell"],
+        ),
+        31 => (
+            "death-wraithform",
+            self_target,
+            serde_json::json!({
+                "type": "apply-status",
+                "statusKindId": "rfb.status.wraithform",
+                "intensity": 1,
+                "durationTicks": 1,
+                "durationDice": 1,
+                "durationSides": 1,
+                "stacking": "replace",
+                "grantsWallPassage": true,
+                "incomingDamagePercent": 50,
+            }),
+            vec![
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "status-duration-ticks",
+                    "multiplier": 24,
+                    "divisor": 1,
+                    "curve": "prorated",
+                    "quadraticWeight": 1,
+                    "cubicWeight": 2,
+                }),
+                serde_json::json!({
+                    "effectIndex": 0,
+                    "field": "status-duration-sides",
+                    "multiplier": 24,
+                    "divisor": 1,
+                    "curve": "prorated",
+                    "quadraticWeight": 1,
+                    "cubicWeight": 2,
+                }),
+            ],
+            vec!["death", "spell", "status", "wall-passage", "wraith"],
         ),
         _ => return None,
     };
@@ -3428,6 +3645,67 @@ fn death_third_book_json(ability_ids: &[String]) -> serde_json::Value {
         "descriptionKey": "ability-book-legacy-death-black-channels-description",
         "abilityIds": ability_ids,
         "tags": ["death", "legacy-import", "spellbook"],
+    })
+}
+
+fn death_fourth_book_json(ability_ids: &[String]) -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/ability-book.schema.json"),
+        "formatVersion": 1,
+        "id": DEATH_FOURTH_BOOK_ID,
+        "nameKey": "ability-book-legacy-death-necronomicon-name",
+        "descriptionKey": "ability-book-legacy-death-necronomicon-description",
+        "abilityIds": ability_ids,
+        "tags": ["death", "legacy-import", "spellbook"],
+    })
+}
+
+fn vampire_lord_skill_set_json() -> serde_json::Value {
+    let bases = [6, 12, 8, 6, 2, 12, 30, 10];
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/skill-set.schema.json"),
+        "formatVersion": 1,
+        "id": LEGACY_VAMPIRE_LORD_SKILL_SET_ID,
+        "entries": LEGACY_SKILL_ROSTER
+            .iter()
+            .zip(bases)
+            .map(|((suffix, _), base)| serde_json::json!({
+                "skillId": format!("rfb-legacy.skill.{suffix}"),
+                "base": base,
+            }))
+            .collect::<Vec<_>>(),
+    })
+}
+
+fn vampire_lord_race_json() -> serde_json::Value {
+    serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/race.schema.json"),
+        "formatVersion": 1,
+        "id": LEGACY_VAMPIRE_LORD_RACE_ID,
+        "nameKey": "race-legacy-vampire-lord-form-name",
+        "descriptionKey": "race-legacy-vampire-lord-form-description",
+        "modifiers": {
+            "strength": 4,
+            "intelligence": 4,
+            "wisdom": 1,
+            "dexterity": 1,
+            "constitution": 2,
+            "charisma": 3,
+            "defense": 1,
+            "speed": 30,
+        },
+        "lifePercent": 103,
+        "experiencePercent": 300,
+        "baseHp": 22,
+        "skillSetId": LEGACY_VAMPIRE_LORD_SKILL_SET_ID,
+        "resistances": {
+            "cold": "resistant",
+            "dark": "immune",
+            "light": "vulnerable",
+            "nether": "resistant",
+            "poison": "resistant",
+        },
+        "tags": ["legacy-import", "nonliving", "undead", "vampire"],
     })
 }
 
@@ -3893,6 +4171,12 @@ fn monster_json(
     if entry.flags.iter().any(|flag| flag == "UNIQUE") {
         tags.push("unique".to_owned());
     }
+    if entry
+        .glyph
+        .is_some_and(|glyph| matches!(glyph, 'L' | 'V' | 'W'))
+    {
+        tags.push("high-undead".to_owned());
+    }
     let living = !tags.iter().any(|tag| tag == "nonliving");
     if living {
         tags.push("living".to_owned());
@@ -3960,9 +4244,13 @@ const DEATH_BOOK_TVAL: u16 = 100;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
 const DEATH_SECOND_BOOK_SVAL: u16 = 1;
 const DEATH_THIRD_BOOK_SVAL: u16 = 2;
+const DEATH_FOURTH_BOOK_SVAL: u16 = 3;
 const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-stench-of-death";
 const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-sepulchral-ways";
 const DEATH_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-channels";
+const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
+const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
+const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
 const LEGACY_DEATH_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.death";
 const LEGACY_CORPSE_ITEM_ID: &str = "rfb-legacy.item.corpse-remains";
 
@@ -4996,6 +5284,7 @@ pub fn convert_content(
     let mut death_first_ability_ids = BTreeMap::new();
     let mut death_second_ability_ids = BTreeMap::new();
     let mut death_third_ability_ids = BTreeMap::new();
+    let mut death_fourth_ability_ids = BTreeMap::new();
     for entry in &characters.classes {
         let Some(magic_profile) = magic_profiles_by_class
             .get(&entry.registration.index)
@@ -5016,6 +5305,7 @@ pub fn convert_content(
         let mut has_first_book = false;
         let mut has_second_book = false;
         let mut has_third_book = false;
+        let mut has_fourth_book = false;
         let overrides = realm
             .spells
             .iter()
@@ -5028,9 +5318,12 @@ pub fn convert_content(
                 } else if spell.index < 16 {
                     has_second_book = true;
                     death_second_ability_ids.insert(spell.index, ability_id.clone());
-                } else {
+                } else if spell.index < 24 {
                     has_third_book = true;
                     death_third_ability_ids.insert(spell.index, ability_id.clone());
+                } else {
+                    has_fourth_book = true;
+                    death_fourth_ability_ids.insert(spell.index, ability_id.clone());
                 }
                 mapped_player_spell_rows.insert((
                     magic_profile.class_index,
@@ -5107,6 +5400,9 @@ pub fn convert_content(
         if has_third_book {
             ability_book_ids.push(DEATH_THIRD_BOOK_ID);
         }
+        if has_fourth_book {
+            ability_book_ids.push(DEATH_FOURTH_BOOK_ID);
+        }
         runtime_casting_profiles.insert(
             entry.registration.index,
             serde_json::json!({
@@ -5165,6 +5461,23 @@ pub fn convert_content(
         ability_book_files.push((
             "death-black-channels.json".to_owned(),
             death_third_book_json(&ability_ids),
+        ));
+    }
+    if !death_fourth_ability_ids.is_empty() {
+        let ability_ids = death_fourth_ability_ids.into_values().collect::<Vec<_>>();
+        report.player_abilities_imported += ability_ids.len();
+        report.player_ability_books_imported += 1;
+        ability_book_files.push((
+            "death-necronomicon.json".to_owned(),
+            death_fourth_book_json(&ability_ids),
+        ));
+        race_files.push((
+            "vampire-lord-form.json".to_owned(),
+            vampire_lord_race_json(),
+        ));
+        skill_set_files.push((
+            "race-vampire-lord-form.json".to_owned(),
+            vampire_lord_skill_set_json(),
         ));
     }
     for entry in &characters.classes {
@@ -6185,7 +6498,13 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         // Type flags become category tags alongside the shared import tag.
         assert_eq!(
             caller["tags"],
-            serde_json::json!(["legacy-import", "dragon", "undead", "nonliving"])
+            serde_json::json!([
+                "legacy-import",
+                "dragon",
+                "undead",
+                "nonliving",
+                "high-undead"
+            ])
         );
         let ability_ids: Vec<&str> = caller["monsterCasting"]["abilities"]
             .as_array()
@@ -6775,6 +7094,69 @@ F:BRAND_VAMP | HOLD_LIFE
             player_ability_book_for_item(&item),
             Some(DEATH_THIRD_BOOK_ID)
         );
+    }
+
+    #[test]
+    fn death_fourth_physical_book_maps_to_necronomicon() {
+        let item = LegacyItemEntry {
+            tval: DEATH_BOOK_TVAL,
+            sval: DEATH_FOURTH_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&item),
+            Some(DEATH_FOURTH_BOOK_ID)
+        );
+    }
+
+    #[test]
+    fn fixed_healing_potions_map_to_deterministic_use_actions_and_leave_no_gap() {
+        let expected = [
+            (
+                34,
+                serde_json::json!({"type": "heal-dice", "dice": 4, "sides": 8}),
+            ),
+            (
+                35,
+                serde_json::json!({"type": "heal-dice", "dice": 8, "sides": 8}),
+            ),
+            (
+                36,
+                serde_json::json!({"type": "heal-dice", "dice": 12, "sides": 8}),
+            ),
+            (37, serde_json::json!({"type": "heal", "amount": 300})),
+            (38, serde_json::json!({"type": "heal", "amount": 1000})),
+            (39, serde_json::json!({"type": "heal", "amount": 5000})),
+        ];
+        let mut report = ContentImportReport::default();
+        for (sval, effect) in expected {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 75,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("healing-potion-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(value["useAction"]["effect"], effect);
+        }
+        assert!(!report.item_behavior_gaps.contains_key("consumable-effect"));
+
+        let _ = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 30,
+                ..LegacyItemEntry::default()
+            },
+            "speed-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(report.item_behavior_gaps["consumable-effect"], 1);
     }
 
     #[test]

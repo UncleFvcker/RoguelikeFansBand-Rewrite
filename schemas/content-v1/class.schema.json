@@ -115,6 +115,8 @@
         "damage-dice",
         "damage-sides",
         "damage-bonus",
+        "death-ray-power",
+        "identify-power",
         "radius",
         "beam-chance-percent",
         "status-intensity",
@@ -123,7 +125,8 @@
         "status-power",
         "status-melee-damage",
         "control-power",
-        "genocide-power"
+        "genocide-power",
+        "summon-maximum-level"
       ],
       "type": "string"
     },

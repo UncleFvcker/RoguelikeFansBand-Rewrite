@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v99、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v107、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -65,7 +65,28 @@
 | P54 | 玩家等级效果缩放 + Death 第一册收尾 | 已由 contract-v104 完成 | Ability `levelScaling` 覆盖 7 类标量；actor Detect、状态 power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部接入协议、存档和 Schema v43。Death 第一册 8/8 ability、12 个静态职业 96 条覆盖；协议 1.104、包 1.95.0、fixtures 329-334 共 334 exact。真实 Death 效果缺口 480→384，等级缩放与状态 power 缺口清零 |
 | P55 | Death 第二册系统盘点与纵切 | 已由 contract-v105 完成 | 第二册 8/8 ability、两本实体书总计 16 个 Death ability、12 个静态职业 192 条覆盖；新增活体限定、bolt-or-beam、职业 beam 档案、自身中心 AoE、单体/字形 Genocide、临时品牌、Drain Life、尸体与永久 Animate Dead。协议 1.105、包 1.96.0、Schema v44、fixtures 335-343 共 343 exact；真实 Death 效果缺口 384→288 |
 | P56 | Death 第三册系统盘点与纵切 | 已由 contract-v106 完成 | 第三册 8/8 ability、三本实体书总计 24 个 Death ability、12 个静态职业 288 条覆盖；新增随机状态时长、状态派生加值/免疫、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰及 linear/prorated 曲线。协议 1.106、包 1.97.0、Schema v45、fixtures 344-353 共 353 exact；真实 Death 效果缺口 288→192 |
-| P57 | Death 第四册系统盘点或设备/消耗品效果纵切 | 下一候选 | 优先读取第四册 8 个实际槽位并按新系统聚类；设备路线则建立卷轴/魔杖/药水的内容驱动使用与充能/识别边界。Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 继续按通用系统清零，不做名称近似 |
+| P57 | Death 第四册系统盘点与纵切 | 已由 contract-v107 完成 | 第四册 8/8 ability、四本实体书总计 32 个 Death ability、12 个静态职业 384 条覆盖；新增物品目标/鉴定、Death Ray、升级类别与敌友群体召唤、临时 Race、历史最高经验/生命力、邻域灭绝、穿墙与入伤比例。协议 1.107、包 1.98.0、Schema v46、fixtures 354-365 共 365 exact；真实 Death 效果缺口 192→96 |
+| P58 | 充能物品实例与首批治疗消耗品 | 已由 contract-v108 完成 | `heal-dice`、实例级 initial/maximum/cost 充能、成功扣费/失败保留/耗尽零世界时间、知识门控 DTO 和严格回档；demo Resonance Mender；六种原版治疗药水接入，`consumable-effect` 95→89。协议 1.108、包 1.99.0、Schema v47、fixtures 366-368 共 368 exact |
+| P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 下一候选 | 将原版通用设备壳的效果、容量和成本在生成时物化到实例；复用 P58 使用事务，优先消化 `device-effect` 64。随后扩展充能恢复、artifact/ego activation 与其余 89 个消耗品 |
+
+## contract-v108 明确遗留
+
+- 当前充能容量和余量已是实例权威状态，但使用效果仍来自 item kind；原版 staff/wand/rod 的动态效果身份和随机容量尚未物化；
+- 首版没有充能恢复、强行使用、desperation、按设备等级变化的成本或取消目标事务；
+- 固定治疗药水只接入六种纯治疗效果；状态恢复、资源恢复、属性变化、食物和卷轴仍在 `consumable-effect` 89 条缺口中；
+- `device-effect` 64、`artifact-activation` 180、`ego-activation` 13 仍保留；不能把某个激活硬写到通用设备壳；
+- 未鉴定 charged item 不公开精确充能，但 `usable=false` 会暴露“当前无法使用”的必要操作边界；
+- P59 优先完成动态设备实例效果，再按真实缺口扩展激活族。
+
+## contract-v107 明确遗留
+
+- Death Ray 首版按活体、unique 门和等级对抗决定即死；尚无更一般的即死抗性、怪物知识或跨效果统一死亡抗性表；
+- Raise Dead 已覆盖升级类别、敌友、群体和敌对 unique，但仍复用首版召唤物 AI；宠物维护、忠诚、解除控制和召唤种群上限尚未建立；
+- Esoteria 的物品目标必须在玩家背包/装备中；当前仅复用普通鉴定/完整鉴定知识，不包含批量选择或自动选择 UI；
+- 临时 Race 只覆盖 RaceDefinition 的派生表面，不改身体槽、不写持久技能；叠加多个形态时仍按状态的稳定顺序选择一个有效覆盖；
+- Wraithform 到期时不搬移玩家、不修地图，即使玩家仍位于墙格；后续移动按当时 terrain 与状态规则处理；
+- Rogue（Dexterity）、Blood Mage（HP）和 Skillmaster（动态 caster_info）仍等待对应施法资源/属性表面；
+- P58 已转入设备/消耗品线并由 contract-v108 完成首个纵切；本节其余差异继续保留。
 
 ## contract-v106 明确遗留
 
@@ -74,7 +95,7 @@
 - 永久 Vampiric Branding 直接写入当前武器实例，不包含附魔失败、词条容量、冲突或费用系统；重复施放同一 affix 是可观察但无重复实例的成功；
 - VisibleDamage 只按当前权威 FOV 选择目标，不建立跨层感知或怪物回忆；
 - Rogue（Dexterity）、Blood Mage（HP）和 Skillmaster（动态 caster_info）仍等待对应施法资源/属性表面；
-- P57 候选为 Death 第四册逐槽盘点；设备/消耗品效果系统和怪物法术清尾仍可按真实覆盖收益插队。
+- Death 第四册已由 contract-v107 完成；本节其余差异继续保留。
 
 ## contract-v105 明确遗留
 

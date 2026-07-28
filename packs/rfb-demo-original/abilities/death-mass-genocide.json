@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-mass-genocide",
+  "nameKey": "ability-demo-death-mass-genocide-name",
+  "descriptionKey": "ability-demo-death-mass-genocide-description",
+  "minimumLevel": 43,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 75,
+  "baseFailurePercent": 80,
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "effect": { "type": "genocide", "scope": "nearby", "power": 0, "radius": 20 },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "genocide-power", "multiplier": 150, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+  ],
+  "tags": ["death", "genocide", "spell"]
+}

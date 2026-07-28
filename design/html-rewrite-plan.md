@@ -675,12 +675,13 @@ interface SaveGame {
 - 协议 1.90 和 contract-v90 已建立；资源定义新增初始填充、近战命中/击杀获得与闲置衰减行为字段，Class `techniqueProfiles` 提供独立上限公式、主宰属性与先天技法。节奏/决斗家纵切复用既有 cast/熟练度/冷却管线，等待/休息不恢复节奏，旧存档资源池放宽为子集匹配且零 RNG。Web 资源面板显示获得/衰减提示并按可休息恢复门控休息按钮。内容包升至 1.81.0，content hash 为 `43da90740e88ba63d9839c992a90b0fcc9c008a379919e2bc624a208978e6252`，active baseline 共 282 个 exact fixtures、零 waiver，save v1/state hash 升至 Schema v40。
 - 协议 1.91 和 contract-v91 已建立；怪物获得 blink-self/teleport-self/teleport-target 三种位移法术形态：闪现与脱离在规划期零 RNG 收集候选、执行期一次有界抽取，拖拽按八邻规范序零 RNG 落位并复用玩家到达管线。裂隙潜行者承载三效果 demo，历史基线迁移零语义漂移。内容包 1.82.0，content hash 为 `81e4e9d5f14d5a6e9990db8a6b1a60623eba81279c288b266d3274cfee523916`，active baseline 共 288 个 exact fixtures、零 waiver，save v1/state hash 沿用 Schema v40。
 - 协议 1.92 和 contract-v92 已建立；新增混乱/致盲/麻痹三个状态种类与玩家侧效果：混乱移动 25% 保持原方向否则规范序八向重定向、混乱完全禁施法（零 RNG 拒绝）；致盲把玩家 FOV 压缩到自身格（侦测过滤、休息不再因敌可见打断）；麻痹把推进世界时间的行动替换为浪费回合（无等待恢复，怪物照常行动）。阴霾织者承载三种施加能力 demo，导入器映射 CONFUSE 223/BLIND 215/PARALYZE 110（casting 怪物 586）。内容包 1.83.0，content hash 为 `3ed414503866baf22dd248b5a6e8bab6836ddfb0b288812a9a4bfd9cbd7eeecc`，active baseline 共 299 个 exact fixtures、零 waiver，state hash 沿用 Schema v40。
+- 协议 1.108 和 contract-v108 已建立；P58 增加治疗骰、实例级充能设备、成功扣费/失败保留/耗尽零世界时间、知识门控与严格回档，并用 Resonance Mender 覆盖背包显示和使用事务。legacy importer 接入六种固定治疗药水，`consumable-effect` 95→89；四本 Death 法书的 32 abilities、12 个静态职业和 384 行覆盖继续保持。内容包 1.99.0，content hash 为 `4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8`，active baseline 共 368 个 exact fixtures、零 waiver，state hash 为 Schema v47。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. 按旧版内容导入缺口报告排期下一个规则族（状态法术、怪物自愈、位移、多 blow routine 均以数百怪物计），职业资源形态等 RFB 导入接入时再定；
+1. P59 把通用 staff/wand/rod 的效果身份与容量物化到实例，接入首批实际设备激活并开始消化 `device-effect` 64；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

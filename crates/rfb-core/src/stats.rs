@@ -182,6 +182,8 @@ pub fn experience_required_for_level(level: u16) -> u64 {
 pub struct CharacterProgress {
     pub attributes: AttributeSet,
     pub experience: u64,
+    pub maximum_experience: u64,
+    pub life_force: u16,
     pub level: u16,
     pub max_level: u16,
     pub pending_attribute_increases: u16,
@@ -236,6 +238,8 @@ impl CharacterProgress {
         Self {
             attributes: AttributeSet::default(),
             experience: 0,
+            maximum_experience: 0,
+            life_force: 1_000,
             level: 1,
             max_level: 1,
             pending_attribute_increases: 0,
@@ -301,6 +305,7 @@ impl CharacterProgress {
 
     pub fn gain_experience(&mut self, amount: u64, victorious: bool) -> Vec<u16> {
         self.experience = self.experience.saturating_add(amount).min(MAX_EXPERIENCE);
+        self.maximum_experience = self.maximum_experience.max(self.experience);
         let cap = Self::level_cap(victorious);
         let mut gained = Vec::new();
         while self.level < cap
@@ -360,6 +365,9 @@ impl CharacterProgress {
             && self.max_level >= self.level
             && self.max_level <= MAX_LEVEL
             && self.experience <= MAX_EXPERIENCE
+            && self.maximum_experience >= self.experience
+            && self.maximum_experience <= MAX_EXPERIENCE
+            && self.life_force <= 1_000
             && self.hp_progression.len() == usize::from(MAX_LEVEL)
             && self.hp_progression.iter().all(|hp| *hp > 0)
             && [

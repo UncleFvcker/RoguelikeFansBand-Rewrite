@@ -324,6 +324,25 @@
         {
           "additionalProperties": false,
           "properties": {
+            "power": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "death-ray",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "minimumDistance": {
               "format": "uint8",
               "maximum": 255,
@@ -484,6 +503,10 @@
         {
           "additionalProperties": false,
           "properties": {
+            "allowUniqueHostile": {
+              "default": false,
+              "type": "boolean"
+            },
             "category": {
               "type": "string"
             },
@@ -512,6 +535,48 @@
               "minimum": 0,
               "type": "integer"
             },
+            "friendlyGroupChancePercent": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupCountBonus": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupCountDice": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "groupCountSides": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "hostileChancePercent": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "hostileGroupChancePercent": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
             "maximumLevel": {
               "format": "uint16",
               "maximum": 65535,
@@ -527,6 +592,23 @@
             "type": {
               "const": "summon-category",
               "type": "string"
+            },
+            "upgradeAtLevel": {
+              "default": null,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "upgradedCategory": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -665,6 +747,13 @@
                 "wisdom": 0
               }
             },
+            "grantedRaceId": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "grantedResistances": {
               "additionalProperties": false,
               "properties": {
@@ -764,6 +853,17 @@
               },
               "type": "array",
               "uniqueItems": true
+            },
+            "grantsWallPassage": {
+              "default": false,
+              "type": "boolean"
+            },
+            "incomingDamagePercent": {
+              "default": 100,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
             },
             "intensity": {
               "format": "uint16",
@@ -911,6 +1011,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "radius": {
+              "default": 0,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
             "scope": {
               "$ref": "#/$defs/AbilityGenocideScopeDefinition"
             },
@@ -923,6 +1030,53 @@
             "type",
             "scope",
             "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "fullIdentifyPower": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "fullIdentifyRollSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "identify-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "fullIdentifyPower",
+            "fullIdentifyRollSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "lifeForce": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "restore-vitality",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "lifeForce"
           ],
           "type": "object"
         },
@@ -1159,7 +1313,8 @@
     "AbilityGenocideScopeDefinition": {
       "enum": [
         "single",
-        "glyph"
+        "glyph",
+        "nearby"
       ],
       "type": "string"
     },
@@ -1240,6 +1395,8 @@
         "damage-dice",
         "damage-sides",
         "damage-bonus",
+        "death-ray-power",
+        "identify-power",
         "radius",
         "beam-chance-percent",
         "status-intensity",
@@ -1248,7 +1405,8 @@
         "status-power",
         "status-melee-damage",
         "control-power",
-        "genocide-power"
+        "genocide-power",
+        "summon-maximum-level"
       ],
       "type": "string"
     },
@@ -1355,6 +1513,7 @@
         "direction",
         "position",
         "entity",
+        "item",
         "self"
       ],
       "type": "string"

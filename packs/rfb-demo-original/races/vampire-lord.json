@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "formatVersion": 1,
+  "id": "demo.race.vampire-lord",
+  "nameKey": "race-demo-vampire-lord-name",
+  "descriptionKey": "race-demo-vampire-lord-description",
+  "modifiers": {
+    "strength": 4,
+    "intelligence": 4,
+    "wisdom": 1,
+    "dexterity": 1,
+    "constitution": 2,
+    "charisma": 3,
+    "defense": 1,
+    "speed": 30
+  },
+  "lifePercent": 103,
+  "experiencePercent": 300,
+  "baseHp": 22,
+  "skillSetId": "demo.skill-set.vampire-lord",
+  "resistances": {
+    "cold": "resistant",
+    "dark": "immune",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "tags": ["nonliving", "undead", "vampire"]
+}

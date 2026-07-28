@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.necronomicon",
+  "nameKey": "ability-book-demo-necronomicon-name",
+  "descriptionKey": "ability-book-demo-necronomicon-description",
+  "abilityIds": [
+    "demo.ability.death-death-ray",
+    "demo.ability.death-raise-dead",
+    "demo.ability.death-esoteria",
+    "demo.ability.death-vampiric-transformation",
+    "demo.ability.death-restore-life",
+    "demo.ability.death-mass-genocide",
+    "demo.ability.death-hellfire",
+    "demo.ability.death-wraithform"
+  ],
+  "tags": ["death", "spellbook"]
+}

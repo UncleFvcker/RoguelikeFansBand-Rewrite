@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正，均为纯工具迭代——协议/契约/演示包零变更）；产物只进 `.local/packs/rfb-legacy/{items,affixes}/`，仓库继续只含原创内容。
+状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水）；legacy 产物只进 `.local/packs/rfb-legacy/{items,affixes}/`，仓库继续只含原创内容。P58 的通用充能运行时由 [Contract v108](contract-v108-charged-items.md) 定义。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 
@@ -18,8 +18,8 @@
 | 45（戒指） | `ring` 槽通用壳——**普通首饰无任何属性**（原版属性与 pval 全部由 ego 生成期赋予或固定神器携带，P45 修正）；AC 直接入 defense；效果留壳+缺口 |
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |
-| 75/80（药水/食物） | 堆叠消耗品壳；效果按 sval 藏于原版代码而非数据，**行为缺口**（治疗类未来以精选表接 use_action Heal） |
-| 70/65/55/66（卷轴/魔杖/法杖/权杖） | 壳 + 行为缺口（设备系统未建立） |
+| 75/80（药水/食物） | 堆叠消耗品；P58 按源码 sval 精选接入 Cure Light 4d8、Cure Serious 8d8、Cure Critical 12d8、Healing 300、*Healing* 1000、Life 5000，其余保留行为缺口 |
+| 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | 壳 + 行为缺口；P58 已建立实例充能，但这些种类的实际效果/容量由生成期实例决定，不能直接写到通用 kind |
 | 90+ 魔典族 | 壳 + `book` 标签（旧版法术书系统未映射） |
 | 其余（箱子/尖刺/瓶罐/雕像/尸骸等） | 通用壳（identity/重量/堆叠/字形恒可表达） |
 
@@ -41,9 +41,11 @@
 
 k_info 545 条中 544 条导入（跳过占位）；e_info 160 条词条 88 条成为 affix（72 条 ego-inexpressible——力量全在抗性/免疫/速度类旗标）；a_info 392 条神器全数导入。产物（936 items + 88 affixes）过 `rfb-contentc inspect-source` 全部校验（items/affixes root 动态加入 pack.json）。fake bow 修正后 12 件未配对发射器（基础 5 + 神器 7）全部可装备，阿波罗竖琴等取回固定六维（力量/智力/魅力 +5）；契约验证依据：`launcher` 槽不带射击档合法（物品规则均为单向），运行时射击路径查无射击档仅拒绝开火。主要旗标缺口：IGNORE_*/RES_*/SEE_INVIS/FREE_ACT/SPEED/SLAY_* 等待装备旗标系统。
 
+P58 在后续装备旗标/法书回灌结果上重跑真实包：937 items、128 affixes、1260 abilities、4 ability books 全部严格编译，content hash 为 `ed9534de7976be4668a8238deae3d207794d862e7a4ab41e888fde8c7e7b479c`。六种治疗药水退出缺口后，`consumable-effect` 由 95 降至 89；`device-effect` 仍为 64，`artifact-activation` 180、`ego-activation` 13。
+
 ## 7. 遗留
 
-- 药水/卷轴/设备的主动效果等设备与消耗品效果系统扩展后按 sval 精选表接入；
+- 其余药水/食物/卷轴按源码 sval 精选接入；动态 staff/wand/rod 先把效果身份与容量物化到实例，再复用 contract-v108 的充能事务；
 - 装备旗标系统（抗性/免疫/速度/斩杀支路）落地后重跑导入，可解锁 72 条 ego-inexpressible 词条与神器旗标主体；
 - E:/D: 中文名与描述导出为本地 Fluent 片段（v2 方向未变）；
 - 词条与基础物品的运行时挂接（生成期 affix 抽取）属于战利品生成线，另行排期。

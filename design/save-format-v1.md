@@ -169,6 +169,10 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.106 为 `StatusSaveDto` 增加带默认值的 `grantedModifiers`、`grantedEquipmentBonuses` 与 `grantedStatusImmunities`；持续时间骰只在施放时消费，存档继续保存最终 `remainingTicks`，读档不重掷。Vampiric Branding 生成的 affix 通过既有物品实例 `affixIds` 保存，吸血 passive 由该权威实例派生；RandomChoice、VisibleDamage、重复 Drain Life 的分支/目标/逐击结果只属于事件和回放，不重复保存。旧档缺失新增字段时按空值迁移，不补 affix、不重抽 RNG；状态授予字段与永久 affix 使 state hash 升至 Schema v45。完整边界见 [Contract v106](contract-v106-death-third-book.md)。
 
+协议 1.107 为 `PlayerProgressSaveDto` 增加 `maximumExperience` 与 `lifeForce`，为 `StatusSaveDto` 增加 `grantedRaceId`、`grantsWallPassage` 与 `incomingDamagePercent`。旧进度缺失/为零的历史最高经验按当前经验迁移，生命力默认 1000；旧状态默认无 Race 覆盖、不可穿墙且承受 100% 伤害。Esoteria 继续把鉴定结果写入既有 `itemPropertyKnowledge`，临时 Race 只保存状态引用，不复制派生技能或属性；Wraithform 到期时不重定位玩家。save 容器保持 v1，新增权威进度与状态字段使 state hash 升至 Schema v46。完整边界见 [Contract v107](contract-v107-death-fourth-book.md)。
+
+协议 1.108 为地面、背包、装备和怪物携带四类物品 save DTO 增加可选 `charges { current, maximum }`，与同一个 `ItemInstance` 一起跨位置和楼层移动。当前内容声明 charged action 时，存档必须携带充能且 maximum 必须等于内容容量、current 不得超限；非充能种类携带充能或 charged kind 缺失充能均拒绝。历史内容没有 charged kind，旧档既有物品继续以无充能状态载入且不补抽 RNG。save 容器保持 v1，实例充能使 state hash 升至 Schema v47。完整边界见 [Contract v108](contract-v108-charged-items.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

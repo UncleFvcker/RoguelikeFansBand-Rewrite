@@ -567,6 +567,85 @@
         {
           "type": "object",
           "properties": {
+            "casterLevelRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "living": {
+              "type": "boolean"
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "resisted": {
+              "type": "boolean"
+            },
+            "resolution": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DamageResolutionDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "targetLevel": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "targetLevelRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "death-ray"
+            },
+            "unique": {
+              "type": "boolean"
+            },
+            "uniqueRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "power",
+            "targetLevel",
+            "living",
+            "unique",
+            "resisted"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -610,11 +689,28 @@
                 "$ref": "#/$defs/WeaponBrandDto"
               }
             },
+            "grantedRaceId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "grantedResistances": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ResistanceDto"
               }
+            },
+            "grantsWallPassage": {
+              "type": "boolean",
+              "default": false
+            },
+            "incomingDamagePercent": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 100,
+              "maximum": 255,
+              "minimum": 0
             },
             "intensity": {
               "type": "integer",
@@ -928,6 +1024,13 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
             "removedEntityIds": {
               "type": "array",
               "items": {
@@ -956,6 +1059,107 @@
             "removedEntityIds",
             "resistedEntityIds",
             "fatigueDamage"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "changed": {
+              "type": "boolean"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "full": {
+              "type": "boolean"
+            },
+            "fullIdentifyPower": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "fullIdentifyRollSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "itemKindId": {
+              "type": "string"
+            },
+            "roll": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "identify-item"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemId",
+            "itemKindId",
+            "fullIdentifyPower",
+            "fullIdentifyRollSides",
+            "roll",
+            "full",
+            "changed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "experienceAfter": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "experienceBefore": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "lifeForceAfter": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "lifeForceBefore": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "restore-vitality"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "experienceBefore",
+            "experienceAfter",
+            "lifeForceBefore",
+            "lifeForceAfter"
           ]
         },
         {
@@ -1358,6 +1562,24 @@
         {
           "type": "object",
           "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "death-ray"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "minimumDistance": {
               "type": "integer",
               "format": "uint8",
@@ -1460,6 +1682,10 @@
         {
           "type": "object",
           "properties": {
+            "allowUniqueHostile": {
+              "type": "boolean",
+              "default": false
+            },
             "category": {
               "type": "string"
             },
@@ -1487,6 +1713,48 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "friendlyGroupChancePercent": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
+            "groupCountBonus": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
+            "groupCountDice": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
+            "groupCountSides": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
+            "hostileChancePercent": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
+            "hostileGroupChancePercent": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
             "maximumLevel": {
               "type": "integer",
               "format": "uint16",
@@ -1502,6 +1770,21 @@
             "type": {
               "type": "string",
               "const": "summon-category"
+            },
+            "upgradeAtLevel": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "upgradedCategory": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -1637,6 +1920,12 @@
                 "wisdom": 0
               }
             },
+            "grantedRaceId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "grantedResistances": {
               "type": "array",
               "items": {
@@ -1648,6 +1937,17 @@
               "items": {
                 "type": "string"
               }
+            },
+            "grantsWallPassage": {
+              "type": "boolean",
+              "default": false
+            },
+            "incomingDamagePercent": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 100,
+              "maximum": 255,
+              "minimum": 0
             },
             "intensity": {
               "type": "integer",
@@ -1839,6 +2139,13 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "default": 0,
+              "maximum": 255,
+              "minimum": 0
+            },
             "scope": {
               "$ref": "#/$defs/AbilityGenocideScopeDto"
             },
@@ -1851,6 +2158,51 @@
             "type",
             "scope",
             "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "fullIdentifyPower": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "fullIdentifyRollSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "identify-item"
+            }
+          },
+          "required": [
+            "type",
+            "fullIdentifyPower",
+            "fullIdentifyRollSides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "lifeForce": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "restore-vitality"
+            }
+          },
+          "required": [
+            "type",
+            "lifeForce"
           ]
         },
         {
@@ -2084,7 +2436,8 @@
       "type": "string",
       "enum": [
         "single",
-        "glyph"
+        "glyph",
+        "nearby"
       ]
     },
     "AbilityLearningDto": {
@@ -2191,6 +2544,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "group": {
+          "type": "boolean",
+          "default": false
         },
         "hostile": {
           "type": "boolean",
@@ -4315,6 +4672,16 @@
             "$ref": "#/$defs/WeaponBrandDto"
           }
         },
+        "charges": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemChargesDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
@@ -4449,6 +4816,25 @@
         "id",
         "kindId",
         "quantity"
+      ]
+    },
+    "ItemChargesDto": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "current",
+        "maximum"
       ]
     },
     "ItemDto": {
@@ -5118,10 +5504,23 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "lifeForce": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 1000,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "maxLevel": {
           "type": "integer",
           "format": "uint16",
           "maximum": 65535,
+          "minimum": 0
+        },
+        "maximumExperience": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 0,
           "minimum": 0
         },
         "pendingAttributeIncreases": {
@@ -5604,6 +6003,12 @@
             "wisdom": 0
           }
         },
+        "grantedRaceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "grantedResistances": {
           "type": "array",
           "items": {
@@ -5615,6 +6020,17 @@
           "items": {
             "type": "string"
           }
+        },
+        "grantsWallPassage": {
+          "type": "boolean",
+          "default": false
+        },
+        "incomingDamagePercent": {
+          "type": "integer",
+          "format": "uint8",
+          "default": 100,
+          "maximum": 255,
+          "minimum": 0
         },
         "intensity": {
           "type": "integer",
@@ -5713,6 +6129,7 @@
         "direction",
         "position",
         "entity",
+        "item",
         "self"
       ]
     },
@@ -5764,6 +6181,22 @@
           "required": [
             "type",
             "entityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
           ]
         },
         {

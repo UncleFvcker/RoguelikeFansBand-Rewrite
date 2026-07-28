@@ -85,6 +85,9 @@ pub struct StatusInstance {
     pub granted_modifiers: StatModifiersDto,
     pub granted_equipment_bonuses: EquipmentBonusesDto,
     pub granted_status_immunities: BTreeSet<String>,
+    pub granted_race_id: Option<String>,
+    pub grants_wall_passage: bool,
+    pub incoming_damage_percent: u8,
 }
 
 impl StatusInstance {
@@ -111,6 +114,9 @@ impl StatusInstance {
             granted_modifiers: self.granted_modifiers,
             granted_equipment_bonuses: self.granted_equipment_bonuses,
             granted_status_immunities: self.granted_status_immunities.iter().cloned().collect(),
+            granted_race_id: self.granted_race_id.clone(),
+            grants_wall_passage: self.grants_wall_passage,
+            incoming_damage_percent: self.incoming_damage_percent,
         }
     }
 
@@ -138,6 +144,9 @@ impl StatusInstance {
             granted_modifiers: self.granted_modifiers,
             granted_equipment_bonuses: self.granted_equipment_bonuses,
             granted_status_immunities: self.granted_status_immunities.iter().cloned().collect(),
+            granted_race_id: self.granted_race_id.clone(),
+            grants_wall_passage: self.grants_wall_passage,
+            incoming_damage_percent: self.incoming_damage_percent,
         }
     }
 }
@@ -351,6 +360,9 @@ mod tests {
             granted_modifiers: StatModifiersDto::default(),
             granted_equipment_bonuses: EquipmentBonusesDto::default(),
             granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
         }
     }
 

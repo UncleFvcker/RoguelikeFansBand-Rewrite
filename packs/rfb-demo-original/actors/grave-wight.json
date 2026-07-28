@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.grave-wight",
+  "role": "monster",
+  "nameKey": "actor-demo-grave-wight-name",
+  "descriptionKey": "actor-demo-grave-wight-description",
+  "glyph": "W",
+  "level": 32,
+  "experienceValue": 900,
+  "maxHp": 84,
+  "speed": 110,
+  "attack": 7,
+  "defense": 6,
+  "damageDice": 2,
+  "damageSides": 6,
+  "damageType": "nether",
+  "resistances": { "cold": "resistant", "nether": "immune", "poison": "immune" },
+  "tags": ["evil", "high-undead", "nonliving", "undead"]
+}

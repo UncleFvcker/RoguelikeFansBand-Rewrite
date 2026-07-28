@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.death-restore-life",
+  "nameKey": "ability-demo-death-restore-life-name",
+  "descriptionKey": "ability-demo-death-restore-life-description",
+  "minimumLevel": 42,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 50,
+  "baseFailurePercent": 75,
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "effect": { "type": "restore-vitality", "lifeForce": 1000 },
+  "tags": ["death", "experience", "restoration", "spell"]
+}

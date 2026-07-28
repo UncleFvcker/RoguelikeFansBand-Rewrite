@@ -114,6 +114,7 @@ inventory-stack-count = { $count } 堆
 inventory-weight-summary = { $stacks } · { $weight } / { $capacity } 磅
 inventory-empty = 背包是空的。站在物品上按 G 拾取。
 inventory-quantity = ×{ $quantity }
+inventory-charges = 充能：{ $current }/{ $maximum }
 inventory-selected-count = 已选择 { $count } 堆
 inventory-equippable = 可装备：{ $slot }
 inventory-drop-quantity-label = 数量
