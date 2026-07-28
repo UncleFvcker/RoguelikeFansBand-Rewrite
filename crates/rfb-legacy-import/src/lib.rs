@@ -413,6 +413,18 @@ pub enum LegacyImportError {
     BaselineMismatch { expected: String, actual: String },
     #[error("legacy git access failed: {0}")]
     LegacyGit(String),
+    #[error(
+        "legacy content parse error in {content_source}:{line} field {field}: {reason} (value {value:?})"
+    )]
+    ContentParse {
+        content_source: &'static str,
+        line: usize,
+        field: &'static str,
+        value: String,
+        reason: String,
+    },
+    #[error("legacy content object {path} is not valid UTF-8: {error}")]
+    ContentEncoding { path: String, error: String },
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("JSON error: {0}")]

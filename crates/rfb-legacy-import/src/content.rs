@@ -8,9 +8,11 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
+    fmt::Display,
     fs,
     path::{Path, PathBuf},
     process::Command,
+    str::FromStr,
 };
 
 use serde::Serialize;
@@ -19,6 +21,139 @@ use crate::{LEGACY_BASELINE_COMMIT, LegacyImportError};
 
 pub const CONTENT_IMPORT_SCHEMA_VERSION: u16 = 2;
 const SCHEMA_BASE: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1";
+const F_INFO_SOURCE: &str = "lib/edit/f_info.txt";
+const R_INFO_SOURCE: &str = "lib/edit/r_info.txt";
+const K_INFO_SOURCE: &str = "lib/edit/k_info.txt";
+const E_INFO_SOURCE: &str = "lib/edit/e_info.txt";
+const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
+const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
+const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
+const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
+
+fn content_parse_error(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: impl Into<String>,
+    reason: impl Into<String>,
+) -> LegacyImportError {
+    LegacyImportError::ContentParse {
+        content_source: source,
+        line,
+        field,
+        value: value.into(),
+        reason: reason.into(),
+    }
+}
+
+fn required_field<'a>(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&'a str>,
+) -> Result<&'a str, LegacyImportError> {
+    let value = value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| content_parse_error(source, line, field, "", "field is required"))?;
+    Ok(value)
+}
+
+fn parse_number<T>(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&str>,
+) -> Result<T, LegacyImportError>
+where
+    T: FromStr,
+    T::Err: Display,
+{
+    let value = required_field(source, line, field, value)?;
+    value.parse::<T>().map_err(|error| {
+        content_parse_error(
+            source,
+            line,
+            field,
+            value,
+            format!("invalid number: {error}"),
+        )
+    })
+}
+
+fn parse_fields<'a>(
+    source: &'static str,
+    line: usize,
+    record: &'static str,
+    value: &'a str,
+    expected: usize,
+) -> Result<Vec<&'a str>, LegacyImportError> {
+    let fields = value.split(':').map(str::trim).collect::<Vec<_>>();
+    if fields.len() != expected {
+        return Err(content_parse_error(
+            source,
+            line,
+            record,
+            value,
+            format!("expected {expected} fields, found {}", fields.len()),
+        ));
+    }
+    Ok(fields)
+}
+
+fn parse_dice<T>(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&str>,
+) -> Result<(T, T), LegacyImportError>
+where
+    T: FromStr,
+    T::Err: Display,
+{
+    let value = required_field(source, line, field, value)?;
+    let (count, sides) = value.split_once('d').ok_or_else(|| {
+        content_parse_error(
+            source,
+            line,
+            field,
+            value,
+            "expected dice in <count>d<sides> form",
+        )
+    })?;
+    Ok((
+        parse_number(source, line, field, Some(count))?,
+        parse_number(source, line, field, Some(sides))?,
+    ))
+}
+
+fn parse_damage_or_multiplier<T>(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&str>,
+) -> Result<Option<(T, T)>, LegacyImportError>
+where
+    T: FromStr,
+    T::Err: Display,
+{
+    let value = required_field(source, line, field, value)?;
+    if let Some(multiplier) = value.strip_prefix('x') {
+        let (whole, fraction) = multiplier.split_once('.').ok_or_else(|| {
+            content_parse_error(
+                source,
+                line,
+                field,
+                value,
+                "expected multiplier in x<whole>.<fraction> form",
+            )
+        })?;
+        let _: u32 = parse_number(source, line, field, Some(whole))?;
+        let _: u32 = parse_number(source, line, field, Some(fraction))?;
+        return Ok(None);
+    }
+    Ok(Some(parse_dice(source, line, field, Some(value))?))
+}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyTerrainEntry {
@@ -366,7 +501,10 @@ pub fn read_legacy_object(source: &Path, path: &str) -> Result<String, LegacyImp
             String::from_utf8_lossy(&output.stderr).trim().to_owned(),
         ));
     }
-    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+    String::from_utf8(output.stdout).map_err(|error| LegacyImportError::ContentEncoding {
+        path: path.to_owned(),
+        error: error.to_string(),
+    })
 }
 
 fn list_legacy_c_sources(source: &Path) -> Result<Vec<String>, LegacyImportError> {
@@ -397,18 +535,19 @@ fn list_legacy_c_sources(source: &Path) -> Result<Vec<String>, LegacyImportError
     Ok(paths)
 }
 
-pub fn parse_f_info(text: &str) -> Vec<LegacyTerrainEntry> {
+pub fn parse_f_info(text: &str) -> Result<Vec<LegacyTerrainEntry>, LegacyImportError> {
     let mut entries = Vec::new();
     let mut current: Option<LegacyTerrainEntry> = None;
-    for line in text.lines() {
+    for (line_index, line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = line.trim_end();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(entry) = current.take() {
                 entries.push(entry);
             }
             let mut parts = rest.splitn(2, ':');
-            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            let tag = parts.next().unwrap_or_default().trim().to_owned();
+            let index = parse_number(F_INFO_SOURCE, line_number, "N.index", parts.next())?;
+            let tag = required_field(F_INFO_SOURCE, line_number, "N.tag", parts.next())?.to_owned();
             current = Some(LegacyTerrainEntry {
                 index,
                 tag,
@@ -416,13 +555,33 @@ pub fn parse_f_info(text: &str) -> Vec<LegacyTerrainEntry> {
             });
             continue;
         }
-        let Some(entry) = current.as_mut() else {
-            continue;
+        let recognized = ["E:", "G:", "F:"]
+            .iter()
+            .any(|prefix| line.starts_with(prefix));
+        let entry = match current.as_mut() {
+            Some(entry) => entry,
+            None if recognized => {
+                return Err(content_parse_error(
+                    F_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                ));
+            }
+            None => continue,
         };
         if let Some(rest) = line.strip_prefix("E:") {
-            entry.display_name = Some(rest.trim().to_owned());
+            entry.display_name = Some(
+                required_field(F_INFO_SOURCE, line_number, "E.displayName", Some(rest))?.to_owned(),
+            );
         } else if let Some(rest) = line.strip_prefix("G:") {
-            entry.glyph = rest.chars().next();
+            entry.glyph = Some(
+                required_field(F_INFO_SOURCE, line_number, "G.glyph", Some(rest))?
+                    .chars()
+                    .next()
+                    .expect("required glyph must contain a character"),
+            );
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -435,14 +594,15 @@ pub fn parse_f_info(text: &str) -> Vec<LegacyTerrainEntry> {
     if let Some(entry) = current.take() {
         entries.push(entry);
     }
-    entries
+    Ok(entries)
 }
 
-fn parse_blow(rest: &str) -> LegacyBlow {
+fn parse_blow(rest: &str, line_number: usize) -> Result<LegacyBlow, LegacyImportError> {
     let mut blow = LegacyBlow::default();
     for (ordinal, part) in rest.split(':').map(str::trim).enumerate() {
         if ordinal == 0 {
-            blow.method = part.to_owned();
+            blow.method =
+                required_field(R_INFO_SOURCE, line_number, "B.method", Some(part))?.to_owned();
             continue;
         }
         if part.is_empty() {
@@ -450,14 +610,25 @@ fn parse_blow(rest: &str) -> LegacyBlow {
         }
         // Effects mostly carry their dice inline: HURT(2d6), POISON(1d4),
         // DAM(3d8)... the first diced effect provides the melee damage.
-        if let Some((token, dice)) = part
-            .split_once('(')
-            .and_then(|(token, rest)| rest.strip_suffix(')').map(|dice| (token, dice)))
-        {
+        if let Some((token, parameters)) = part.split_once('(') {
+            let dice = parameters.strip_suffix(')').ok_or_else(|| {
+                content_parse_error(
+                    R_INFO_SOURCE,
+                    line_number,
+                    "B.effect",
+                    part,
+                    "effect parameters are missing a closing parenthesis",
+                )
+            })?;
+            let token = required_field(R_INFO_SOURCE, line_number, "B.effect", Some(token))?;
             if blow.damage_dice.is_none()
                 && let Some((dice_count, sides)) = dice.split_once('d')
-                && let (Ok(dice_count), Ok(sides)) = (dice_count.parse(), sides.parse())
+                && dice_count.bytes().all(|byte| byte.is_ascii_digit())
+                && sides.bytes().all(|byte| byte.is_ascii_digit())
             {
+                let dice_count =
+                    parse_number(R_INFO_SOURCE, line_number, "B.damageDice", Some(dice_count))?;
+                let sides = parse_number(R_INFO_SOURCE, line_number, "B.damageSides", Some(sides))?;
                 blow.damage_dice = Some((dice_count, sides));
                 blow.effects.insert(0, token.to_owned());
                 continue;
@@ -467,21 +638,32 @@ fn parse_blow(rest: &str) -> LegacyBlow {
             blow.effects.push(part.to_owned());
         }
     }
-    blow
+    if blow.method.is_empty() {
+        return Err(content_parse_error(
+            R_INFO_SOURCE,
+            line_number,
+            "B.method",
+            "",
+            "field is required",
+        ));
+    }
+    Ok(blow)
 }
 
-pub fn parse_r_info(text: &str) -> Vec<LegacyMonsterEntry> {
+pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportError> {
     let mut entries = Vec::new();
     let mut current: Option<LegacyMonsterEntry> = None;
-    for line in text.lines() {
+    for (line_index, line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = line.trim_end();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(entry) = current.take() {
                 entries.push(entry);
             }
             let mut parts = rest.splitn(2, ':');
-            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            let name = parts.next().unwrap_or_default().trim().to_owned();
+            let index = parse_number(R_INFO_SOURCE, line_number, "N.index", parts.next())?;
+            let name =
+                required_field(R_INFO_SOURCE, line_number, "N.name", parts.next())?.to_owned();
             current = Some(LegacyMonsterEntry {
                 index,
                 name,
@@ -489,30 +671,88 @@ pub fn parse_r_info(text: &str) -> Vec<LegacyMonsterEntry> {
             });
             continue;
         }
-        let Some(entry) = current.as_mut() else {
-            continue;
+        let recognized = ["G:", "I:", "W:", "B:", "F:", "S:"]
+            .iter()
+            .any(|prefix| line.starts_with(prefix));
+        let entry = match current.as_mut() {
+            Some(entry) => entry,
+            None if recognized => {
+                return Err(content_parse_error(
+                    R_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                ));
+            }
+            None => continue,
         };
         if let Some(rest) = line.strip_prefix("G:") {
-            entry.glyph = rest.chars().next();
+            entry.glyph = Some(
+                required_field(R_INFO_SOURCE, line_number, "G.glyph", Some(rest))?
+                    .chars()
+                    .next()
+                    .expect("required glyph must contain a character"),
+            );
         } else if let Some(rest) = line.strip_prefix("I:") {
             // I:speed:HDdHS:aaf:ac:sleep:weight (init1.c sscanf order).
-            let parts: Vec<&str> = rest.split(':').collect();
-            entry.speed = parts.first().and_then(|raw| raw.parse().ok());
-            if let Some(dice) = parts.get(1) {
-                let mut split = dice.splitn(2, 'd');
-                let dice_count = split.next().and_then(|raw| raw.parse().ok());
-                let sides = split.next().and_then(|raw| raw.parse().ok());
-                if let (Some(dice_count), Some(sides)) = (dice_count, sides) {
-                    entry.hp_dice = Some((dice_count, sides));
-                }
-            }
-            entry.armor_class = parts.get(3).and_then(|raw| raw.parse().ok());
+            let parts = parse_fields(R_INFO_SOURCE, line_number, "I", rest, 6)?;
+            entry.speed = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "I.speed",
+                parts.first().copied(),
+            )?);
+            entry.hp_dice = Some(parse_dice(
+                R_INFO_SOURCE,
+                line_number,
+                "I.hitPoints",
+                parts.get(1).copied(),
+            )?);
+            let _: i64 = parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "I.awareness",
+                parts.get(2).copied(),
+            )?;
+            entry.armor_class = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "I.armorClass",
+                parts.get(3).copied(),
+            )?);
+            let _: i64 =
+                parse_number(R_INFO_SOURCE, line_number, "I.sleep", parts.get(4).copied())?;
+            let _: i64 = parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "I.weight",
+                parts.get(5).copied(),
+            )?;
         } else if let Some(rest) = line.strip_prefix("W:") {
-            let parts: Vec<&str> = rest.split(':').collect();
-            entry.level = parts.first().and_then(|raw| raw.parse().ok());
-            entry.rarity = parts.get(1).and_then(|raw| raw.parse().ok());
+            let parts = parse_fields(R_INFO_SOURCE, line_number, "W", rest, 6)?;
+            entry.level = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "W.level",
+                parts.first().copied(),
+            )?);
+            entry.rarity = Some(parse_number(
+                R_INFO_SOURCE,
+                line_number,
+                "W.rarity",
+                parts.get(1).copied(),
+            )?);
+            for (field, value) in [
+                ("W.extra", parts.get(2).copied()),
+                ("W.experience", parts.get(3).copied()),
+                ("W.evolution", parts.get(4).copied()),
+                ("W.nextEvolution", parts.get(5).copied()),
+            ] {
+                let _: i64 = parse_number(R_INFO_SOURCE, line_number, field, value)?;
+            }
         } else if let Some(rest) = line.strip_prefix("B:") {
-            entry.blows.push(parse_blow(rest));
+            entry.blows.push(parse_blow(rest, line_number)?);
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -532,34 +772,41 @@ pub fn parse_r_info(text: &str) -> Vec<LegacyMonsterEntry> {
     if let Some(entry) = current.take() {
         entries.push(entry);
     }
-    entries
+    Ok(entries)
 }
 
 const MAPPED_TERRAIN_FLAGS: [&str; 4] = ["MOVE", "LOS", "PROJECT", "PERMANENT"];
 
 /// Parses k_info entries; `&` article and `~` plural markers strip out of
 /// names, and the `N:*:` auto-index form continues the running counter.
-pub fn parse_k_info(text: &str) -> Vec<LegacyItemEntry> {
+pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportError> {
     let mut entries = Vec::new();
     let mut current: Option<LegacyItemEntry> = None;
     let mut next_index = 0_u32;
-    for line in text.lines() {
+    for (line_index, line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = line.trim_end();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(entry) = current.take() {
                 entries.push(entry);
             }
             let mut parts = rest.splitn(2, ':');
-            let raw_index = parts.next().unwrap_or_default();
+            let raw_index = required_field(K_INFO_SOURCE, line_number, "N.index", parts.next())?;
             let index = if raw_index == "*" {
                 next_index
             } else {
-                raw_index.parse().unwrap_or(next_index)
+                parse_number(K_INFO_SOURCE, line_number, "N.index", Some(raw_index))?
             };
-            next_index = index + 1;
-            let name = parts
-                .next()
-                .unwrap_or_default()
+            next_index = index.checked_add(1).ok_or_else(|| {
+                content_parse_error(
+                    K_INFO_SOURCE,
+                    line_number,
+                    "N.index",
+                    raw_index,
+                    "item index cannot be incremented",
+                )
+            })?;
+            let name = required_field(K_INFO_SOURCE, line_number, "N.name", parts.next())?
                 .replace(['&', '~'], " ")
                 .split_whitespace()
                 .collect::<Vec<_>>()
@@ -571,37 +818,87 @@ pub fn parse_k_info(text: &str) -> Vec<LegacyItemEntry> {
             });
             continue;
         }
-        let Some(entry) = current.as_mut() else {
-            continue;
+        let recognized = ["G:", "I:", "W:", "P:", "F:"]
+            .iter()
+            .any(|prefix| line.starts_with(prefix));
+        let entry = match current.as_mut() {
+            Some(entry) => entry,
+            None if recognized => {
+                return Err(content_parse_error(
+                    K_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                ));
+            }
+            None => continue,
         };
         if let Some(rest) = line.strip_prefix("G:") {
-            entry.glyph = rest.chars().next();
+            entry.glyph = Some(
+                required_field(K_INFO_SOURCE, line_number, "G.glyph", Some(rest))?
+                    .chars()
+                    .next()
+                    .expect("required glyph must contain a character"),
+            );
         } else if let Some(rest) = line.strip_prefix("I:") {
-            let mut parts = rest.split(':');
-            entry.tval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.sval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.pval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            let parts = parse_fields(K_INFO_SOURCE, line_number, "I", rest, 3)?;
+            entry.tval =
+                parse_number(K_INFO_SOURCE, line_number, "I.tval", parts.first().copied())?;
+            entry.sval = parse_number(K_INFO_SOURCE, line_number, "I.sval", parts.get(1).copied())?;
+            entry.pval = parse_number(K_INFO_SOURCE, line_number, "I.pval", parts.get(2).copied())?;
         } else if let Some(rest) = line.strip_prefix("W:") {
             // level:extra:max_level:weight:cost per the pinned init1.c.
-            let values: Vec<i64> = rest
-                .split(':')
-                .map(|raw| raw.parse().unwrap_or(0))
-                .collect();
-            entry.level = u16::try_from(values.first().copied().unwrap_or(0).max(0)).unwrap_or(0);
-            entry.weight_tenths_pound =
-                u16::try_from(values.get(3).copied().unwrap_or(0).clamp(0, 10_000)).unwrap_or(0);
+            let parts = parse_fields(K_INFO_SOURCE, line_number, "W", rest, 5)?;
+            entry.level = parse_number(
+                K_INFO_SOURCE,
+                line_number,
+                "W.level",
+                parts.first().copied(),
+            )?;
+            let _: i64 =
+                parse_number(K_INFO_SOURCE, line_number, "W.extra", parts.get(1).copied())?;
+            let _: i64 = parse_number(
+                K_INFO_SOURCE,
+                line_number,
+                "W.maximumLevel",
+                parts.get(2).copied(),
+            )?;
+            entry.weight_tenths_pound = parse_number(
+                K_INFO_SOURCE,
+                line_number,
+                "W.weight",
+                parts.get(3).copied(),
+            )?;
+            let _: i64 = parse_number(K_INFO_SOURCE, line_number, "W.cost", parts.get(4).copied())?;
         } else if let Some(rest) = line.strip_prefix("P:") {
-            let mut parts = rest.split(':');
-            entry.armor_class = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            if let Some(dice) = parts.next()
-                && let Some((count, sides)) = dice.split_once('d')
-                && let (Ok(count), Ok(sides)) = (count.parse(), sides.parse())
-            {
-                entry.damage_dice = Some((count, sides));
-            }
-            entry.to_hit = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.to_damage = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.to_armor = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            let parts = parse_fields(K_INFO_SOURCE, line_number, "P", rest, 5)?;
+            entry.armor_class = parse_number(
+                K_INFO_SOURCE,
+                line_number,
+                "P.armorClass",
+                parts.first().copied(),
+            )?;
+            entry.damage_dice = parse_damage_or_multiplier(
+                K_INFO_SOURCE,
+                line_number,
+                "P.damage",
+                parts.get(1).copied(),
+            )?;
+            entry.to_hit =
+                parse_number(K_INFO_SOURCE, line_number, "P.toHit", parts.get(2).copied())?;
+            entry.to_damage = parse_number(
+                K_INFO_SOURCE,
+                line_number,
+                "P.toDamage",
+                parts.get(3).copied(),
+            )?;
+            entry.to_armor = parse_number(
+                K_INFO_SOURCE,
+                line_number,
+                "P.toArmor",
+                parts.get(4).copied(),
+            )?;
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -614,7 +911,7 @@ pub fn parse_k_info(text: &str) -> Vec<LegacyItemEntry> {
     if let Some(entry) = current.take() {
         entries.push(entry);
     }
-    entries
+    Ok(entries)
 }
 
 /// Attribute flags carry their bonus in pval; everything else stays in the
@@ -1259,18 +1556,20 @@ impl ItemShape {
 
 /// Parses e_info ego templates: `C:` carries generation-time maximum
 /// bonuses, `T:` accumulates the applicable slot classes.
-pub fn parse_e_info(text: &str) -> Vec<LegacyEgoEntry> {
+pub fn parse_e_info(text: &str) -> Result<Vec<LegacyEgoEntry>, LegacyImportError> {
     let mut entries = Vec::new();
     let mut current: Option<LegacyEgoEntry> = None;
-    for line in text.lines() {
+    for (line_index, line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = line.trim_end();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(entry) = current.take() {
                 entries.push(entry);
             }
             let mut parts = rest.splitn(2, ':');
-            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            let name = parts.next().unwrap_or_default().trim().to_owned();
+            let index = parse_number(E_INFO_SOURCE, line_number, "N.index", parts.next())?;
+            let name =
+                required_field(E_INFO_SOURCE, line_number, "N.name", parts.next())?.to_owned();
             current = Some(LegacyEgoEntry {
                 index,
                 name,
@@ -1278,10 +1577,24 @@ pub fn parse_e_info(text: &str) -> Vec<LegacyEgoEntry> {
             });
             continue;
         }
-        let Some(entry) = current.as_mut() else {
-            continue;
+        let recognized = ["T:", "W:", "C:", "F:", "E:"]
+            .iter()
+            .any(|prefix| line.starts_with(prefix));
+        let entry = match current.as_mut() {
+            Some(entry) => entry,
+            None if recognized => {
+                return Err(content_parse_error(
+                    E_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                ));
+            }
+            None => continue,
         };
         if let Some(rest) = line.strip_prefix("T:") {
+            required_field(E_INFO_SOURCE, line_number, "T.slots", Some(rest))?;
             entry.slots.extend(
                 rest.split('|')
                     .map(str::trim)
@@ -1289,20 +1602,53 @@ pub fn parse_e_info(text: &str) -> Vec<LegacyEgoEntry> {
                     .map(str::to_owned),
             );
         } else if let Some(rest) = line.strip_prefix("W:") {
-            entry.level = rest
-                .split(':')
-                .next()
-                .and_then(|raw| raw.parse().ok())
-                .unwrap_or(0);
+            let parts = parse_fields(E_INFO_SOURCE, line_number, "W", rest, 3)?;
+            entry.level = parse_number(
+                E_INFO_SOURCE,
+                line_number,
+                "W.level",
+                parts.first().copied(),
+            )?;
+            if parts[1] != "*" {
+                let _: i64 = parse_number(
+                    E_INFO_SOURCE,
+                    line_number,
+                    "W.rarity",
+                    parts.get(1).copied(),
+                )?;
+            }
+            let _: i64 = parse_number(
+                E_INFO_SOURCE,
+                line_number,
+                "W.rating",
+                parts.get(2).copied(),
+            )?;
         } else if let Some(rest) = line.strip_prefix("C:") {
-            let values: Vec<i32> = rest
-                .split(':')
-                .map(|raw| raw.parse().unwrap_or(0))
-                .collect();
-            entry.max_to_hit = values.first().copied().unwrap_or(0);
-            entry.max_to_damage = values.get(1).copied().unwrap_or(0);
-            entry.max_to_armor = values.get(2).copied().unwrap_or(0);
-            entry.max_pval = values.get(3).copied().unwrap_or(0);
+            let parts = parse_fields(E_INFO_SOURCE, line_number, "C", rest, 4)?;
+            entry.max_to_hit = parse_number(
+                E_INFO_SOURCE,
+                line_number,
+                "C.maximumToHit",
+                parts.first().copied(),
+            )?;
+            entry.max_to_damage = parse_number(
+                E_INFO_SOURCE,
+                line_number,
+                "C.maximumToDamage",
+                parts.get(1).copied(),
+            )?;
+            entry.max_to_armor = parse_number(
+                E_INFO_SOURCE,
+                line_number,
+                "C.maximumToArmor",
+                parts.get(2).copied(),
+            )?;
+            entry.max_pval = parse_number(
+                E_INFO_SOURCE,
+                line_number,
+                "C.maximumPval",
+                parts.get(3).copied(),
+            )?;
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -1317,24 +1663,26 @@ pub fn parse_e_info(text: &str) -> Vec<LegacyEgoEntry> {
     if let Some(entry) = current.take() {
         entries.push(entry);
     }
-    entries
+    Ok(entries)
 }
 
 /// Parses a_info fixed artifacts; unlike egos their pval and combat bonuses
 /// are fixed values. `E:` activation lines (ASCII token form) mark the
 /// activation gap; localized text lines are skipped outright.
-pub fn parse_a_info(text: &str) -> Vec<LegacyArtifactEntry> {
+pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImportError> {
     let mut entries = Vec::new();
     let mut current: Option<LegacyArtifactEntry> = None;
-    for line in text.lines() {
+    for (line_index, line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = line.trim_end();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(entry) = current.take() {
                 entries.push(entry);
             }
             let mut parts = rest.splitn(2, ':');
-            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            let name = parts.next().unwrap_or_default().trim().to_owned();
+            let index = parse_number(A_INFO_SOURCE, line_number, "N.index", parts.next())?;
+            let name =
+                required_field(A_INFO_SOURCE, line_number, "N.name", parts.next())?.to_owned();
             current = Some(LegacyArtifactEntry {
                 index,
                 name,
@@ -1342,35 +1690,89 @@ pub fn parse_a_info(text: &str) -> Vec<LegacyArtifactEntry> {
             });
             continue;
         }
-        let Some(entry) = current.as_mut() else {
-            continue;
+        let recognized = ["I:", "W:", "P:", "F:", "E:"]
+            .iter()
+            .any(|prefix| line.starts_with(prefix));
+        let entry = match current.as_mut() {
+            Some(entry) => entry,
+            None if recognized => {
+                return Err(content_parse_error(
+                    A_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                ));
+            }
+            None => continue,
         };
         if let Some(rest) = line.strip_prefix("I:") {
-            let mut parts = rest.split(':');
-            entry.tval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.sval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.pval = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            let parts = parse_fields(A_INFO_SOURCE, line_number, "I", rest, 3)?;
+            entry.tval =
+                parse_number(A_INFO_SOURCE, line_number, "I.tval", parts.first().copied())?;
+            entry.sval = parse_number(A_INFO_SOURCE, line_number, "I.sval", parts.get(1).copied())?;
+            entry.pval = parse_number(A_INFO_SOURCE, line_number, "I.pval", parts.get(2).copied())?;
         } else if let Some(rest) = line.strip_prefix("W:") {
             // level:rarity:weight:cost for artifacts.
-            let values: Vec<i64> = rest
-                .split(':')
-                .map(|raw| raw.parse().unwrap_or(0))
-                .collect();
-            entry.level = u16::try_from(values.first().copied().unwrap_or(0).max(0)).unwrap_or(0);
-            entry.weight_tenths_pound =
-                u16::try_from(values.get(2).copied().unwrap_or(0).clamp(0, 10_000)).unwrap_or(0);
-        } else if let Some(rest) = line.strip_prefix("P:") {
-            let mut parts = rest.split(':');
-            entry.armor_class = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            if let Some(dice) = parts.next()
-                && let Some((count, sides)) = dice.split_once('d')
-                && let (Ok(count), Ok(sides)) = (count.parse(), sides.parse())
-            {
-                entry.damage_dice = Some((count, sides));
+            // The pinned parser reads the first four fields with sscanf and
+            // ignores one known trailing value in the legacy source.
+            let parts = rest.split(':').map(str::trim).collect::<Vec<_>>();
+            if parts.len() < 4 {
+                return Err(content_parse_error(
+                    A_INFO_SOURCE,
+                    line_number,
+                    "W",
+                    rest,
+                    format!("expected at least 4 fields, found {}", parts.len()),
+                ));
             }
-            entry.to_hit = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.to_damage = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            entry.to_armor = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
+            entry.level = parse_number(
+                A_INFO_SOURCE,
+                line_number,
+                "W.level",
+                parts.first().copied(),
+            )?;
+            let _: i64 = parse_number(
+                A_INFO_SOURCE,
+                line_number,
+                "W.rarity",
+                parts.get(1).copied(),
+            )?;
+            entry.weight_tenths_pound = parse_number(
+                A_INFO_SOURCE,
+                line_number,
+                "W.weight",
+                parts.get(2).copied(),
+            )?;
+            let _: i64 = parse_number(A_INFO_SOURCE, line_number, "W.cost", parts.get(3).copied())?;
+        } else if let Some(rest) = line.strip_prefix("P:") {
+            let parts = parse_fields(A_INFO_SOURCE, line_number, "P", rest, 5)?;
+            entry.armor_class = parse_number(
+                A_INFO_SOURCE,
+                line_number,
+                "P.armorClass",
+                parts.first().copied(),
+            )?;
+            entry.damage_dice = parse_damage_or_multiplier(
+                A_INFO_SOURCE,
+                line_number,
+                "P.damage",
+                parts.get(1).copied(),
+            )?;
+            entry.to_hit =
+                parse_number(A_INFO_SOURCE, line_number, "P.toHit", parts.get(2).copied())?;
+            entry.to_damage = parse_number(
+                A_INFO_SOURCE,
+                line_number,
+                "P.toDamage",
+                parts.get(3).copied(),
+            )?;
+            entry.to_armor = parse_number(
+                A_INFO_SOURCE,
+                line_number,
+                "P.toArmor",
+                parts.get(4).copied(),
+            )?;
         } else if let Some(rest) = line.strip_prefix("F:") {
             entry.flags.extend(
                 rest.split('|')
@@ -1390,7 +1792,7 @@ pub fn parse_a_info(text: &str) -> Vec<LegacyArtifactEntry> {
     if let Some(entry) = current.take() {
         entries.push(entry);
     }
-    entries
+    Ok(entries)
 }
 
 /// Folds attribute flags (STR..CHR and their DEC_ inverses) around a pval
@@ -2000,37 +2402,67 @@ fn artifact_json(
 
 /// Parses b_info body templates: `N:index:Name` then `S:TYPE:Label`
 /// slot lines in template order.
-pub fn parse_b_info(text: &str) -> Vec<LegacyBodyTemplate> {
+pub fn parse_b_info(text: &str) -> Result<Vec<LegacyBodyTemplate>, LegacyImportError> {
     let mut entries = Vec::new();
     let mut current: Option<LegacyBodyTemplate> = None;
-    for line in text.lines() {
+    for (line_index, line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = line.trim_end();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(entry) = current.take() {
                 entries.push(entry);
             }
             let mut parts = rest.splitn(2, ':');
-            let index = parts.next().and_then(|raw| raw.parse().ok()).unwrap_or(0);
-            let name = parts.next().unwrap_or_default().trim().to_owned();
+            let index = parse_number(B_INFO_SOURCE, line_number, "N.index", parts.next())?;
+            let name =
+                required_field(B_INFO_SOURCE, line_number, "N.name", parts.next())?.to_owned();
             current = Some(LegacyBodyTemplate {
                 index,
                 name,
                 ..LegacyBodyTemplate::default()
             });
-        } else if let Some(rest) = line.strip_prefix("S:")
-            && let Some(entry) = current.as_mut()
-            && let Some(token) = rest.split(':').next()
-        {
-            let token = token.trim();
-            if !token.is_empty() {
-                entry.slots.push(token.to_owned());
+        } else if let Some(rest) = line.strip_prefix("S:") {
+            let entry = current.as_mut().ok_or_else(|| {
+                content_parse_error(
+                    B_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                )
+            })?;
+            let parts = rest.split(':').map(str::trim).collect::<Vec<_>>();
+            if !(2..=3).contains(&parts.len()) {
+                return Err(content_parse_error(
+                    B_INFO_SOURCE,
+                    line_number,
+                    "S",
+                    rest,
+                    format!("expected 2 or 3 fields, found {}", parts.len()),
+                ));
             }
+            let token = required_field(
+                B_INFO_SOURCE,
+                line_number,
+                "S.token",
+                parts.first().copied(),
+            )?;
+            required_field(B_INFO_SOURCE, line_number, "S.label", parts.get(1).copied())?;
+            if parts.len() == 3 {
+                let _: u16 = parse_number(
+                    B_INFO_SOURCE,
+                    line_number,
+                    "S.ordinal",
+                    parts.get(2).copied(),
+                )?;
+            }
+            entry.slots.push(token.to_owned());
         }
     }
     if let Some(entry) = current.take() {
         entries.push(entry);
     }
-    entries
+    Ok(entries)
 }
 
 /// Extracts the body of the function that starts at `header_pos` by brace
@@ -2641,21 +3073,36 @@ const LEGACY_REALM_IDS: [&str; 12] = [
     "armageddon",
 ];
 
-fn parse_prefixed_u32(value: &str) -> Option<u32> {
-    value
-        .strip_prefix("0x")
-        .and_then(|value| u32::from_str_radix(value, 16).ok())
-        .or_else(|| value.parse().ok())
+fn parse_prefixed_u32(
+    source: &'static str,
+    line: usize,
+    field: &'static str,
+    value: Option<&str>,
+) -> Result<u32, LegacyImportError> {
+    let value = required_field(source, line, field, value)?;
+    if let Some(hex) = value.strip_prefix("0x") {
+        return u32::from_str_radix(hex, 16).map_err(|error| {
+            content_parse_error(
+                source,
+                line,
+                field,
+                value,
+                format!("invalid number: {error}"),
+            )
+        });
+    }
+    parse_number(source, line, field, Some(value))
 }
 
 /// Parses the complete per-class realm readability and spell parameter
 /// matrix from `m_info.txt`.
-pub fn parse_m_info(text: &str) -> Vec<LegacyMagicProfile> {
+pub fn parse_m_info(text: &str) -> Result<Vec<LegacyMagicProfile>, LegacyImportError> {
     let mut profiles = Vec::new();
     let mut current: Option<LegacyMagicProfile> = None;
     let mut current_realm: Option<usize> = None;
     let mut pending_name = String::new();
-    for raw_line in text.lines() {
+    for (line_index, raw_line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
         let line = raw_line.trim();
         if let Some(name) = line
             .strip_prefix("### ")
@@ -2668,119 +3115,231 @@ pub fn parse_m_info(text: &str) -> Vec<LegacyMagicProfile> {
             if let Some(profile) = current.take() {
                 profiles.push(profile);
             }
-            current = rest
-                .trim()
-                .parse::<u16>()
-                .ok()
-                .map(|class_index| LegacyMagicProfile {
-                    class_index,
-                    name_hint: std::mem::take(&mut pending_name),
-                    ..LegacyMagicProfile::default()
-                });
+            let class_index = parse_number(M_INFO_SOURCE, line_number, "N.classIndex", Some(rest))?;
+            current = Some(LegacyMagicProfile {
+                class_index,
+                name_hint: std::mem::take(&mut pending_name),
+                ..LegacyMagicProfile::default()
+            });
             current_realm = None;
             continue;
         }
-        let Some(profile) = current.as_mut() else {
-            continue;
+        let recognized = ["I:", "R:", "T:"]
+            .iter()
+            .any(|prefix| line.starts_with(prefix));
+        let profile = match current.as_mut() {
+            Some(profile) => profile,
+            None if recognized => {
+                return Err(content_parse_error(
+                    M_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                ));
+            }
+            None => continue,
         };
         if let Some(rest) = line.strip_prefix("I:") {
-            let parts = rest.split(':').map(str::trim).collect::<Vec<_>>();
-            if parts.len() == 6 {
-                profile.book_type = parts[0].to_ascii_lowercase();
-                profile.casting_attribute = parts[1].to_ascii_lowercase();
-                profile.extra_flags = parse_prefixed_u32(parts[2]).unwrap_or(0);
-                profile.spell_type = parts[3].parse().unwrap_or(0);
-                profile.first_spell_level = parts[4].parse().unwrap_or(0);
-                profile.spell_weight = parts[5].parse().unwrap_or(0);
-            }
+            let parts = parse_fields(M_INFO_SOURCE, line_number, "I", rest, 6)?;
+            profile.book_type = required_field(
+                M_INFO_SOURCE,
+                line_number,
+                "I.bookType",
+                parts.first().copied(),
+            )?
+            .to_ascii_lowercase();
+            profile.casting_attribute = required_field(
+                M_INFO_SOURCE,
+                line_number,
+                "I.castingAttribute",
+                parts.get(1).copied(),
+            )?
+            .to_ascii_lowercase();
+            profile.extra_flags = parse_prefixed_u32(
+                M_INFO_SOURCE,
+                line_number,
+                "I.extraFlags",
+                parts.get(2).copied(),
+            )?;
+            profile.spell_type = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "I.spellType",
+                parts.get(3).copied(),
+            )?;
+            profile.first_spell_level = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "I.firstSpellLevel",
+                parts.get(4).copied(),
+            )?;
+            profile.spell_weight = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "I.spellWeight",
+                parts.get(5).copied(),
+            )?;
         } else if let Some(rest) = line.strip_prefix("R:") {
-            let values = rest
-                .split(':')
-                .map(str::trim)
-                .map(str::parse::<u16>)
-                .collect::<Result<Vec<_>, _>>();
-            if let Ok(values) = values
-                && values.len() == 2
-                && values[0] < LEGACY_REALM_IDS.len() as u16
-            {
-                profile.realms.push(LegacyRealmProfile {
-                    index: values[0] as u8,
-                    readable: values[1] != 0,
-                    spells: Vec::new(),
-                });
-                current_realm = Some(profile.realms.len() - 1);
+            let parts = parse_fields(M_INFO_SOURCE, line_number, "R", rest, 2)?;
+            let realm_index: u8 = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "R.realmIndex",
+                parts.first().copied(),
+            )?;
+            if usize::from(realm_index) >= LEGACY_REALM_IDS.len() {
+                return Err(content_parse_error(
+                    M_INFO_SOURCE,
+                    line_number,
+                    "R.realmIndex",
+                    parts[0],
+                    format!("realm index must be less than {}", LEGACY_REALM_IDS.len()),
+                ));
             }
-        } else if let Some(rest) = line.strip_prefix("T:")
-            && let Some(realm_index) = current_realm
-        {
-            let values = rest
-                .split('#')
-                .next()
-                .unwrap_or(rest)
-                .split(':')
-                .map(str::trim)
-                .map(str::parse::<u16>)
-                .collect::<Result<Vec<_>, _>>();
-            if let Ok(values) = values
-                && values.len() == 4
-                && profile.realms[realm_index].readable
-            {
-                let spell_index = profile.realms[realm_index].spells.len();
-                if let Ok(spell_index) = u8::try_from(spell_index) {
-                    profile.realms[realm_index].spells.push(LegacySpellProfile {
-                        index: spell_index,
-                        level: values[0],
-                        mana: values[1],
-                        failure_percent: u8::try_from(values[2]).unwrap_or(u8::MAX),
-                        experience: values[3],
-                    });
-                }
+            let readable: u16 = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "R.readable",
+                parts.get(1).copied(),
+            )?;
+            profile.realms.push(LegacyRealmProfile {
+                index: realm_index,
+                readable: readable != 0,
+                spells: Vec::new(),
+            });
+            current_realm = Some(profile.realms.len() - 1);
+        } else if let Some(rest) = line.strip_prefix("T:") {
+            let realm_index = current_realm.ok_or_else(|| {
+                content_parse_error(
+                    M_INFO_SOURCE,
+                    line_number,
+                    "T.realm",
+                    rest,
+                    "spell entry appears before the first R record",
+                )
+            })?;
+            let values = rest.split('#').next().unwrap_or(rest).trim_end();
+            let parts = parse_fields(M_INFO_SOURCE, line_number, "T", values, 4)?;
+            let level = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "T.level",
+                parts.first().copied(),
+            )?;
+            let mana = parse_number(M_INFO_SOURCE, line_number, "T.mana", parts.get(1).copied())?;
+            let failure_percent = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "T.failurePercent",
+                parts.get(2).copied(),
+            )?;
+            let experience = parse_number(
+                M_INFO_SOURCE,
+                line_number,
+                "T.experience",
+                parts.get(3).copied(),
+            )?;
+            if profile.realms[realm_index].readable {
+                let spell_index =
+                    u8::try_from(profile.realms[realm_index].spells.len()).map_err(|_| {
+                        content_parse_error(
+                            M_INFO_SOURCE,
+                            line_number,
+                            "T.index",
+                            profile.realms[realm_index].spells.len().to_string(),
+                            "realm has more than 256 spell entries",
+                        )
+                    })?;
+                profile.realms[realm_index].spells.push(LegacySpellProfile {
+                    index: spell_index,
+                    level,
+                    mana,
+                    failure_percent,
+                    experience,
+                });
             }
         }
     }
     if let Some(profile) = current.take() {
         profiles.push(profile);
     }
-    profiles
+    Ok(profiles)
 }
 
 /// Parses `s_info.txt` only far enough to quantify the proficiency systems
 /// that the current content model cannot yet represent.
-pub fn parse_s_info(text: &str) -> Vec<LegacyProficiencyProfile> {
+pub fn parse_s_info(text: &str) -> Result<Vec<LegacyProficiencyProfile>, LegacyImportError> {
     let mut profiles = Vec::new();
     let mut current: Option<LegacyProficiencyProfile> = None;
-    for raw_line in text.lines() {
-        let line = raw_line.trim();
+    for (line_index, raw_line) in text.lines().enumerate() {
+        let line_number = line_index + 1;
+        let line = raw_line.split('#').next().unwrap_or(raw_line).trim();
         if let Some(rest) = line.strip_prefix("N:") {
             if let Some(profile) = current.take() {
                 profiles.push(profile);
             }
-            current = rest
-                .trim()
-                .parse::<u16>()
-                .ok()
-                .map(|class_index| LegacyProficiencyProfile {
-                    class_index,
-                    ..LegacyProficiencyProfile::default()
-                });
-        } else if line.starts_with("W:") {
-            if let Some(profile) = current.as_mut() {
-                profile.weapon_entries += 1;
+            let class_index = parse_number(S_INFO_SOURCE, line_number, "N.classIndex", Some(rest))?;
+            current = Some(LegacyProficiencyProfile {
+                class_index,
+                ..LegacyProficiencyProfile::default()
+            });
+        } else if let Some(rest) = line.strip_prefix("W:") {
+            let profile = current.as_mut().ok_or_else(|| {
+                content_parse_error(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                )
+            })?;
+            let parts = parse_fields(S_INFO_SOURCE, line_number, "W", rest, 4)?;
+            for (field, value) in [
+                ("W.weaponType", parts.first().copied()),
+                ("W.weaponSubtype", parts.get(1).copied()),
+                ("W.minimum", parts.get(2).copied()),
+                ("W.maximum", parts.get(3).copied()),
+            ] {
+                let _: i64 = parse_number(S_INFO_SOURCE, line_number, field, value)?;
             }
-        } else if let Some(rest) = line.strip_prefix("S:")
-            && let Some(profile) = current.as_mut()
-            && let Some(skill_index) = rest
-                .split(':')
-                .next()
-                .and_then(|value| value.parse::<u16>().ok())
-        {
+            profile.weapon_entries += 1;
+        } else if let Some(rest) = line.strip_prefix("S:") {
+            let profile = current.as_mut().ok_or_else(|| {
+                content_parse_error(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "record",
+                    line,
+                    "structured field appears before the first N record",
+                )
+            })?;
+            let parts = parse_fields(S_INFO_SOURCE, line_number, "S", rest, 3)?;
+            let skill_index = parse_number(
+                S_INFO_SOURCE,
+                line_number,
+                "S.skillIndex",
+                parts.first().copied(),
+            )?;
+            let _: i64 = parse_number(
+                S_INFO_SOURCE,
+                line_number,
+                "S.minimum",
+                parts.get(1).copied(),
+            )?;
+            let _: i64 = parse_number(
+                S_INFO_SOURCE,
+                line_number,
+                "S.maximum",
+                parts.get(2).copied(),
+            )?;
             *profile.skill_entries.entry(skill_index).or_default() += 1;
         }
     }
     if let Some(profile) = current.take() {
         profiles.push(profile);
     }
-    profiles
+    Ok(profiles)
 }
 
 /// Legacy skill roster: (id suffix, kind, index into the skills array,
@@ -6034,7 +6593,14 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let s_info = read_legacy_object(source, "lib/edit/s_info.txt")?;
     let defines = read_legacy_object(source, "src/defines.h")?;
     let classes_source = read_legacy_object(source, "src/classes.c")?;
-    let magic_profiles = parse_m_info(&m_info);
+    let terrain = parse_f_info(&f_info)?;
+    let monsters = parse_r_info(&r_info)?;
+    let items = parse_k_info(&k_info)?;
+    let egos = parse_e_info(&e_info)?;
+    let artifacts = parse_a_info(&a_info)?;
+    let bodies = parse_b_info(&b_info)?;
+    let magic_profiles = parse_m_info(&m_info)?;
+    let proficiency_profiles = parse_s_info(&s_info)?;
     let mut class_registrations = parse_class_registrations(&defines, &classes_source);
     let mut registered_indices = class_registrations
         .iter()
@@ -6053,9 +6619,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     }
     class_registrations.sort_by_key(|entry| entry.index);
     let mut characters = LegacyCharacterSources {
-        bodies: parse_b_info(&b_info),
+        bodies,
         magic_profiles,
-        proficiency_profiles: parse_s_info(&s_info),
+        proficiency_profiles,
         ..LegacyCharacterSources::default()
     };
     let source_objects = list_legacy_c_sources(source)?
@@ -6125,14 +6691,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
             }
         }));
     }
-    let outcome = convert_content(
-        &parse_f_info(&f_info),
-        &parse_r_info(&r_info),
-        &parse_k_info(&k_info),
-        &parse_e_info(&e_info),
-        &parse_a_info(&a_info),
-        &characters,
-    );
+    let outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
 
     let terrain_dir = output.join("terrain");
     let actor_dir = output.join("actors");
@@ -6255,6 +6814,92 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
 mod tests {
     use super::*;
 
+    fn assert_content_parse_error<T>(
+        result: Result<T, LegacyImportError>,
+        expected_source: &'static str,
+        expected_line: usize,
+        expected_field: &'static str,
+    ) {
+        match result {
+            Err(LegacyImportError::ContentParse {
+                content_source,
+                line,
+                field,
+                ..
+            }) => {
+                assert_eq!(content_source, expected_source);
+                assert_eq!(line, expected_line);
+                assert_eq!(field, expected_field);
+            }
+            Err(error) => panic!("expected content parse error, got {error}"),
+            Ok(_) => panic!("expected content parse error"),
+        }
+    }
+
+    #[test]
+    fn structured_content_parsers_reject_malformed_fields() {
+        assert_content_parse_error(
+            parse_f_info("N:not-an-index:WALL\n"),
+            F_INFO_SOURCE,
+            1,
+            "N.index",
+        );
+        assert_content_parse_error(
+            parse_r_info("N:1:test monster\nI:fast:1d2:0:0:0:0\n"),
+            R_INFO_SOURCE,
+            2,
+            "I.speed",
+        );
+        assert_content_parse_error(
+            parse_k_info("N:7:valid item\nN:not-an-index:broken item\n"),
+            K_INFO_SOURCE,
+            2,
+            "N.index",
+        );
+        assert_content_parse_error(
+            parse_k_info("N:1:test item\nI:not-a-tval:0:0\n"),
+            K_INFO_SOURCE,
+            2,
+            "I.tval",
+        );
+        assert_content_parse_error(
+            parse_k_info("N:1:test item\nP:0:not-dice:0:0:0\n"),
+            K_INFO_SOURCE,
+            2,
+            "P.damage",
+        );
+        assert_content_parse_error(
+            parse_e_info("N:1:test ego\nC:0:not-a-number:0:0\n"),
+            E_INFO_SOURCE,
+            2,
+            "C.maximumToDamage",
+        );
+        assert_content_parse_error(
+            parse_a_info("N:1:test artifact\nP:0:not-dice:0:0:0\n"),
+            A_INFO_SOURCE,
+            2,
+            "P.damage",
+        );
+        assert_content_parse_error(
+            parse_m_info("N:1\nR:12:1\n"),
+            M_INFO_SOURCE,
+            2,
+            "R.realmIndex",
+        );
+        assert_content_parse_error(
+            parse_m_info("N:1\nR:0:1\nT:1:1:256:4\n"),
+            M_INFO_SOURCE,
+            3,
+            "T.failurePercent",
+        );
+        assert_content_parse_error(
+            parse_s_info("N:1\nS:not-a-skill:0:4000\n"),
+            S_INFO_SOURCE,
+            2,
+            "S.skillIndex",
+        );
+    }
+
     // Synthetic samples in the legacy line format; no legacy content.
     const SYNTHETIC_F_INFO: &str = "\
 N:0:NONE\n\
@@ -6284,13 +6929,13 @@ B:GAZE:TERRIFY\n";
 
     #[test]
     fn synthetic_entries_parse_and_convert_with_gap_accounting() {
-        let terrain = parse_f_info(SYNTHETIC_F_INFO);
+        let terrain = parse_f_info(SYNTHETIC_F_INFO).expect("synthetic terrain should parse");
         assert_eq!(terrain.len(), 3);
         assert_eq!(terrain[1].tag, "TEST_ARCH");
         assert_eq!(terrain[1].glyph, Some('\''));
         assert_eq!(terrain[1].flags.len(), 6);
 
-        let monsters = parse_r_info(SYNTHETIC_R_INFO);
+        let monsters = parse_r_info(SYNTHETIC_R_INFO).expect("synthetic monsters should parse");
         assert_eq!(monsters.len(), 2);
         assert_eq!(monsters[0].speed, Some(120));
         assert_eq!(monsters[0].hp_dice, Some((3, 5)));
@@ -6491,7 +7136,7 @@ S:2:0:6000
         assert_eq!(caster.options, ["allow-dec-mana", "glove-encumbrance"]);
         mage.caster_profile = Some(caster);
 
-        let magic_profiles = parse_m_info(M_INFO);
+        let magic_profiles = parse_m_info(M_INFO).expect("synthetic magic profiles should parse");
         assert_eq!(magic_profiles.len(), 1);
         assert_eq!(magic_profiles[0].extra_flags, 5);
         assert_eq!(magic_profiles[0].realms.len(), 3);
@@ -6501,7 +7146,8 @@ S:2:0:6000
         assert!(!magic_profiles[0].realms[1].readable);
         assert_eq!(magic_profiles[0].realms[2].spells.len(), 24);
 
-        let proficiency_profiles = parse_s_info(S_INFO);
+        let proficiency_profiles =
+            parse_s_info(S_INFO).expect("synthetic proficiency profiles should parse");
         assert_eq!(proficiency_profiles.len(), 1);
         assert_eq!(proficiency_profiles[0].weapon_entries, 2);
         assert_eq!(proficiency_profiles[0].skill_entries.len(), 3);
@@ -6696,7 +7342,7 @@ I:110:4d6:10:10:10:10\n\
 W:30:3:20:9:10:40\n\
 B:HIT:HURT(1d4)\n\
 S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
-        let monsters = parse_r_info(CASTER_R_INFO);
+        let monsters = parse_r_info(CASTER_R_INFO).expect("synthetic caster should parse");
         assert_eq!(monsters.len(), 1);
         assert_eq!(monsters[0].level, Some(30));
 
@@ -6786,7 +7432,7 @@ I:110:10d10:20:30:10:10\n\
 W:20:2:20:9:10:40\n\
 B:BITE:HURT(2d6)\n\
 S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
-        let monsters = parse_r_info(DRAGON_R_INFO);
+        let monsters = parse_r_info(DRAGON_R_INFO).expect("synthetic dragon should parse");
         assert_eq!(monsters.len(), 1);
 
         let outcome = convert_content(
@@ -6843,7 +7489,7 @@ W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON\n\
 S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
-        let monsters = parse_r_info(SUMMONER_R_INFO);
+        let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
         let outcome = convert_content(
@@ -6938,7 +7584,7 @@ N:*:& Test Short Bow~
 G:}:u
 I:19:12:0
 W:3:0:0:30:50
-P:0:0d0:0:0:0
+P:0:x2.00:0:0:0
 N:*:Test Arrow~
 G:{:U
 I:17:1:0
@@ -6968,7 +7614,7 @@ G:}:y
 I:19:70:0
 W:5:0:0:150:80
 ";
-        let items = parse_k_info(SYNTHETIC_K_INFO);
+        let items = parse_k_info(SYNTHETIC_K_INFO).expect("synthetic items should parse");
         assert_eq!(items.len(), 9);
 
         let outcome = convert_content(
@@ -7081,7 +7727,7 @@ S:RING:Ring
 S:AMULET:Amulet
 S:ANY:Slot
 ";
-        let bodies = parse_b_info(SYNTHETIC_B_INFO);
+        let bodies = parse_b_info(SYNTHETIC_B_INFO).expect("synthetic bodies should parse");
         assert_eq!(bodies.len(), 2);
         assert_eq!(bodies[0].slots.len(), 13);
 
@@ -7350,7 +7996,7 @@ T:WEAPON | DIGGER
 W:20:*:4
 F:BRAND_VAMP | HOLD_LIFE
 ";
-        let egos = parse_e_info(SYNTHETIC_E_INFO);
+        let egos = parse_e_info(SYNTHETIC_E_INFO).expect("synthetic egos should parse");
         assert_eq!(egos.len(), 6);
         let outcome = convert_content(
             &[],
@@ -7929,7 +8575,7 @@ W:30:5:60:50000
 P:0:0d0:5:5:0
 F:CHR
 ";
-        let artifacts = parse_a_info(SYNTHETIC_A_INFO);
+        let artifacts = parse_a_info(SYNTHETIC_A_INFO).expect("synthetic artifacts should parse");
         assert_eq!(artifacts.len(), 4);
         let outcome = convert_content(
             &[],
@@ -8043,7 +8689,7 @@ W:20:2:20:9:10:40
 B:HIT:HURT(1d4)
 S:1_IN_3 | TELE_OTHER | DRAIN_MANA | AMNESIA | DISPEL_MAGIC | DARKNESS
 ";
-        let monsters = parse_r_info(WARDEN_R_INFO);
+        let monsters = parse_r_info(WARDEN_R_INFO).expect("synthetic warden should parse");
         let outcome = convert_content(
             &[],
             &monsters,
@@ -8097,7 +8743,7 @@ W:25:2:20:9:10:40
 B:HIT:HURT(1d4)
 S:1_IN_3 | CAUSE_1 | CAUSE_4 | HAND_DOOM
 ";
-        let monsters = parse_r_info(CURSER_R_INFO);
+        let monsters = parse_r_info(CURSER_R_INFO).expect("synthetic curser should parse");
         let outcome = convert_content(
             &[],
             &monsters,
@@ -8142,7 +8788,7 @@ W:30:2:20:9:10:40
 B:HIT:HURT(1d5)
 S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
 ";
-        let monsters = parse_r_info(PSION_R_INFO);
+        let monsters = parse_r_info(PSION_R_INFO).expect("synthetic psion should parse");
         assert_eq!(monsters.len(), 1);
 
         let outcome = convert_content(
