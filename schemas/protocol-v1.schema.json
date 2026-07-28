@@ -5616,6 +5616,16 @@
             }
           ]
         },
+        "recall": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecallStateDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "resistances": {
           "type": "array",
           "default": [],
@@ -5834,6 +5844,31 @@
         "origin",
         "impact",
         "traversed"
+      ]
+    },
+    "RecallStateDto": {
+      "type": "object",
+      "properties": {
+        "dungeonId": {
+          "type": "string"
+        },
+        "floorId": {
+          "type": "string"
+        },
+        "remainingTurns": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dungeonId",
+        "floorId"
       ]
     },
     "ResistanceDto": {

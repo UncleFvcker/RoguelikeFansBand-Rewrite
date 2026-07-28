@@ -8,10 +8,10 @@ use rfb_protocol::{
     CharacterSummary, EntityFactionDto, EquipmentItemDto, GameCommand, GameCommandEnvelope,
     GameEventDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
     ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position, ResistanceDto,
-    ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION,
-    SaveHeaderV1, StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
-    TerrainInteractionDto,
+    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position, RecallStateDto,
+    ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
+    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto, SummonCommandDto,
+    SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -20,7 +20,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v113";
+pub const ACTIVE_BASELINE: &str = "contract-v114";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -63,6 +63,8 @@ pub struct Preconditions {
     pub debug_recharge_attempts_fail: bool,
     #[serde(default)]
     pub debug_recharge_sources_survive: bool,
+    #[serde(default)]
+    pub debug_recall_delay_turns: Option<u16>,
     #[serde(default)]
     pub player_build_id: Option<String>,
     #[serde(default)]
@@ -247,6 +249,8 @@ pub struct FinalStateAssertion {
     pub player_abilities: Vec<AbilityDto>,
     #[serde(default)]
     pub player_summon_command: SummonCommandDto,
+    #[serde(default)]
+    pub player_recall: Option<RecallStateDto>,
     pub entity_count: usize,
     #[serde(default)]
     pub entities: Vec<ActorStateAssertion>,
@@ -514,6 +518,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     game.debug_set_recharge_attempts_succeed(fixture.preconditions.debug_recharge_attempts_succeed);
     game.debug_set_recharge_attempts_fail(fixture.preconditions.debug_recharge_attempts_fail);
     game.debug_set_recharge_sources_survive(fixture.preconditions.debug_recharge_sources_survive);
+    game.debug_set_recall_delay_turns(fixture.preconditions.debug_recall_delay_turns);
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
     let mut removed_entities = Vec::new();
@@ -582,6 +587,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_ability_learning: snapshot.player.ability_learning,
             player_abilities: snapshot.player.abilities.clone(),
             player_summon_command: snapshot.player.summon_command,
+            player_recall: snapshot.player.recall,
             entity_count: snapshot.entities.len(),
             entities: snapshot
                 .entities

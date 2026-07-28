@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.113 / contract-v113（P31–P63 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.114 / contract-v114（P31–P64 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v112 阶段性里程碑
+## 8. contract-v75–v114 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.113、内容包 1.104.0、contract-v113、save v1 和 state hash Schema v49；内容 hash 为 `10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653`。active baseline 包含 389 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能事务；v109 建立动态设备 profile、深度加权、随机容量、目标事务和首批 wand/staff/rod；v110 建立设备自然恢复、持久余数和职业资源/设备来源主动充能；v111 建立状态清除、资源恢复和有序恢复型物品效果；v112 完成卷轴重分类与普通/完全鉴定事务；v113 完成地图、隐藏地形、actor 与地面 item 三类卷轴侦测。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.114、内容包 1.105.0、contract-v114、save v1 和 state hash Schema v50；内容 hash 为 `36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86`。active baseline 包含 398 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能事务；v109 建立动态设备 profile、深度加权、随机容量、目标事务和首批 wand/staff/rod；v110 建立设备自然恢复、持久余数和职业资源/设备来源主动充能；v111 建立状态清除、资源恢复和有序恢复型物品效果；v112 完成卷轴重分类与普通/完全鉴定事务；v113 完成地图、隐藏地形、actor 与地面 item 三类卷轴侦测；v114 完成同层随机传送、树状跨层、稳定召回目的地、延迟触发和实例生命周期衔接。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、27 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、35 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -526,6 +526,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P62 进展（2026-07）**：contract-v112 已完成卷轴重分类与首批鉴定事务。物品效果新增 item-only `identify-item { full }`，普通鉴定写 appraised、完全鉴定写 identified 与完整 affix 知识；缺失/错误/自身目标在消耗、RNG 和 world tick 前拒绝，来源卷轴成功后 aware。Web 增加背包/装备通用物品选择器，Death Esoteria 复用同一实例知识 helper；demo 两种卷轴及 fixtures 384–386 固定普通/完整鉴定、剩余堆叠、存档回读与原子拒绝。legacy importer 把 tval 70/71 统一为 `scroll-effect` 并映射 sval 12/13，缺口 61→59，`device-effect` 退出报告；真实包严格编译 hash 为 `143ed91ebd453dd22628548663dac0483c28d2f20625b749844a5419c61cac44`。P63 应先量化剩余卷轴的传送、侦测/地图、附魔/强化等事务族，再选择覆盖收益最高的一族。
 
 **P63 进展（2026-07）**：contract-v113 按剩余 59 个真实 sval 选择覆盖最高的地图/侦测族。detect 新增 item 主体和显式 through-walls；Mapping 写 explored，陷阱/门类写 revealedTerrain，actor/item 返回瞬时稳定 ID。demo 三种卷轴与 fixtures 387–389 固定地图记忆、FOV 外隐藏陷阱和五件地面物品排序/回档；Web 增加静态侦测事件。legacy importer 映射 sval 25–30/57，并为 gold、DOOR/STAIRS、INVISIBLE 补语义标签，`scroll-effect` 59→52；真实包严格编译 hash 为 `43b02c9e94aaa8b962d54f3e9b55cf31ab16a3c1a6573e677b2d23df32636abe`。P64 优先传送/回城五条，再处理装备附魔、召唤和诅咒族。
+
+**P64 进展（2026-07）**：contract-v114 接入 Phase Door、Teleport、Teleport Level、Word of Recall 与 Reset Recall。随机传送从最远半数合法格中一次正式抽取并复用普通到达管线；跨层先作上下 50% 判定，使用实例树连接并在方向边界回退。稳定 `dungeonId + floorId` 召回目的地、延迟骰/取消/重设、深层自动更新、普通地牢回地表清实例与地表召回新实例均进入 save/replay/Schema v50；fixtures 390–398 共 398 exact。demo 五种卷轴使包升至 1.105.0；legacy importer 映射 sval 8–11/53，`scroll-effect` 52→47，真实包严格编译 hash 为 `7d194979fdc047e93f60325f8d3d3b068d75a0f9e0b38eb5be0ecfd0ce77beba`。下一轮优先比较装备附魔/强化五条、召唤四条和诅咒四条。
 
 ## 9. 内容迁移策略
 

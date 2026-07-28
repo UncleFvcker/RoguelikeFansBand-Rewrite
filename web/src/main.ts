@@ -2501,6 +2501,46 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemNameForKind(event.args.source),
         count: event.args.count ?? "0",
       });
+    case "item-use-teleported":
+    case "item-activation-teleported":
+      return localization.format(
+        event.messageKey === "item-activation-teleported"
+          ? "message-item-activation-teleported"
+          : "message-item-use-teleported",
+        {
+          source: visibleItemNameForKind(event.args.source),
+          fromX: event.args.fromX ?? "?",
+          fromY: event.args.fromY ?? "?",
+          toX: event.args.toX ?? "?",
+          toY: event.args.toY ?? "?",
+        },
+      );
+    case "item-use-teleported-level":
+      return localization.format("message-item-use-teleported-level", {
+        source: visibleItemNameForKind(event.args.source),
+        from: floorName(event.args.from),
+        to: floorName(event.args.to),
+      });
+    case "item-recall-started":
+      return localization.format("message-item-recall-started", {
+        source: visibleItemNameForKind(event.args.source),
+        floor: floorName(event.args.floor),
+        turns: event.args.turns ?? "?",
+      });
+    case "item-recall-cancelled":
+      return localization.format("message-item-recall-cancelled", {
+        source: visibleItemNameForKind(event.args.source),
+      });
+    case "item-recall-reset":
+      return localization.format("message-item-recall-reset", {
+        source: visibleItemNameForKind(event.args.source),
+        floor: floorName(event.args.floor),
+      });
+    case "item-recall-triggered":
+      return localization.format("message-item-recall-triggered", {
+        from: floorName(event.args.from),
+        to: floorName(event.args.to),
+      });
     case "item-thrown":
       return localization.format("message-item-thrown", {
         target: visibleItemNameForKind(event.args.target),

@@ -1531,6 +1531,17 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         through_walls: bool,
     },
+    RandomTeleport {
+        maximum_distance: u16,
+    },
+    TeleportLevel,
+    Recall {
+        delay_dice: u16,
+        delay_sides: u16,
+        #[serde(default)]
+        delay_bonus: u16,
+    },
+    ResetRecall,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3169,6 +3180,19 @@ fn valid_item_effect(
                     }
                 }
         }
+        ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
+            (1..=200).contains(maximum_distance)
+        }
+        ItemUseEffectDefinition::TeleportLevel | ItemUseEffectDefinition::ResetRecall => true,
+        ItemUseEffectDefinition::Recall {
+            delay_dice,
+            delay_sides,
+            delay_bonus,
+        } => {
+            (1..=10).contains(delay_dice)
+                && (1..=100).contains(delay_sides)
+                && *delay_bonus <= 1_000
+        }
     }
 }
 
@@ -4408,7 +4432,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::RestoreResourceDice { .. }
                     | ItemUseEffectDefinition::RestoreResourceFull { .. }
                     | ItemUseEffectDefinition::Sequence { .. }
-                    | ItemUseEffectDefinition::Detect { .. } => self_target,
+                    | ItemUseEffectDefinition::Detect { .. }
+                    | ItemUseEffectDefinition::RandomTeleport { .. }
+                    | ItemUseEffectDefinition::TeleportLevel
+                    | ItemUseEffectDefinition::Recall { .. }
+                    | ItemUseEffectDefinition::ResetRecall => self_target,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                     ItemUseEffectDefinition::IdentifyItem { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
@@ -8386,7 +8414,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 30);
+        assert_eq!(first.content.items.len(), 35);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8412,7 +8440,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.104.0");
+        assert_eq!(catalog.pack_version(), "1.105.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

@@ -91,12 +91,12 @@ use rfb_protocol::{
     MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
     MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION,
     PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
-    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto,
-    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
-    SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
-    TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
+    ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourceGainResolutionDto,
+    ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto,
+    RestResolutionDto, RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1,
+    SkillProgressDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto,
+    SummonCommandModeDto, SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection,
+    TargetSpecDto, TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
     TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
     ThrowProfileDto, VisibilityState, WeaponBrandDto,
 };
@@ -104,7 +104,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 105] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 106] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -210,13 +210,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 105] = [
     "f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9",
     "12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7",
     "c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25",
+    "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653";
+    "36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 49;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 50;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -303,9 +304,31 @@ enum AbilityTargetPlan {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ItemUsePlan {
     SelfTarget,
-    Projectile { path: Vec<Position> },
+    Projectile {
+        path: Vec<Position>,
+    },
     Detect,
-    Item { item_id: String },
+    Item {
+        item_id: String,
+    },
+    RandomTeleport {
+        candidates: Vec<Position>,
+    },
+    TeleportLevel {
+        upward_targets: Vec<FloorTransitionTarget>,
+        downward_targets: Vec<FloorTransitionTarget>,
+    },
+    Recall {
+        cancel: bool,
+    },
+    ResetRecall,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct FloorTransitionTarget {
+    floor_id: String,
+    arrival_connection_id: Option<String>,
+    departure_connection_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1508,6 +1531,7 @@ pub struct Game {
     dungeon_states: BTreeMap<String, DungeonState>,
     campaign_state: CampaignState,
     summon_command: SummonCommandDto,
+    recall: Option<RecallStateDto>,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
@@ -1522,6 +1546,7 @@ pub struct Game {
     debug_recharge_attempts_succeed: bool,
     debug_recharge_attempts_fail: bool,
     debug_recharge_sources_survive: bool,
+    debug_recall_delay_turns: Option<u16>,
 }
 
 impl Game {
@@ -1728,6 +1753,7 @@ impl Game {
             dungeon_states,
             campaign_state: CampaignState::default(),
             summon_command: SummonCommandDto::default(),
+            recall: None,
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
@@ -1742,6 +1768,7 @@ impl Game {
             debug_recharge_attempts_succeed: false,
             debug_recharge_attempts_fail: false,
             debug_recharge_sources_survive: false,
+            debug_recall_delay_turns: None,
         };
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
@@ -1889,6 +1916,7 @@ impl Game {
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
+        let recall = payload.player.recall.clone();
         // Body slots are save-authoritative once present; pre-template saves
         // derive them from the build's race (or the standard body) with no
         // RNG involvement.
@@ -2114,6 +2142,7 @@ impl Game {
             dungeon_states,
             campaign_state,
             summon_command,
+            recall,
             next_item_instance_serial,
             explored,
             revealed_terrain,
@@ -2128,6 +2157,7 @@ impl Game {
             debug_recharge_attempts_succeed: false,
             debug_recharge_attempts_fail: false,
             debug_recharge_sources_survive: false,
+            debug_recall_delay_turns: None,
         };
         game.restore_player_ability_state(
             saved_resources,
@@ -2190,6 +2220,9 @@ impl Game {
                     floor.connections.clear();
                 }
             }
+        }
+        if migrating_previous_content && game.recall.is_none() {
+            game.update_recall_destination_for_current_floor();
         }
         // A victorious/retired v70 save may contain experience banked at the
         // pre-victory cap. Reconcile the newly unlocked cap during load so
@@ -2331,6 +2364,11 @@ impl Game {
             GameAction::UseItem { item_id, target }
                 if self.identify_item_use_target_is_invalid(item_id, target.as_ref())
         );
+        let invalid_travel_item_use = matches!(
+            &action,
+            GameAction::UseItem { item_id, target }
+                if self.travel_item_use_is_invalid(item_id, target.as_ref())
+        );
         let unavailable_recharge = matches!(
             &action,
             GameAction::RechargeItem {
@@ -2342,6 +2380,7 @@ impl Game {
         );
         let advances_world = !depleted_device_use
             && !invalid_identify_item_use
+            && !invalid_travel_item_use
             && !unavailable_recharge
             && !matches!(
                 &action,
@@ -2498,80 +2537,7 @@ impl Game {
             action @ (GameAction::TraverseStairs | GameAction::AbandonTask) => {
                 let abandon_task = matches!(action, GameAction::AbandonTask);
                 if let Some(transition) = self.traverse_stairs(abandon_task)? {
-                    for y in 0..self.height {
-                        for x in 0..self.width {
-                            changed.insert(Position {
-                                x: i32::from(x),
-                                y: i32::from(y),
-                            });
-                        }
-                    }
-                    events.push(DomainEvent::FloorTransitioned {
-                        from_floor_id: transition.from_floor_id,
-                        to_floor_id: transition.to_floor_id,
-                    });
-                    for (entity_id, target_kind_id) in transition.summons_followed {
-                        events.push(DomainEvent::SummonFollowedFloor {
-                            entity_id,
-                            target_kind_id,
-                        });
-                    }
-                    for (entity_id, target_kind_id) in transition.summons_could_not_follow {
-                        events.push(DomainEvent::SummonCouldNotFollow {
-                            entity_id,
-                            target_kind_id,
-                        });
-                    }
-                    if transition.expedition_ended {
-                        events.push(DomainEvent::DungeonExpeditionEnded);
-                    }
-                    if let Some(floor_id) = transition.task_resumed {
-                        events.push(DomainEvent::TaskResumed { floor_id });
-                    }
-                    if let Some(floor_id) = transition.task_paused {
-                        events.push(DomainEvent::TaskPaused { floor_id });
-                    }
-                    if let Some((floor_id, resolution)) = transition.one_shot_closed {
-                        events.push(match resolution {
-                            TaskResolution::Completed => DomainEvent::TaskCompleted {
-                                floor_id: floor_id.clone(),
-                            },
-                            TaskResolution::Failed => DomainEvent::TaskFailed {
-                                floor_id: floor_id.clone(),
-                            },
-                            TaskResolution::Abandoned => DomainEvent::TaskAbandoned {
-                                floor_id: floor_id.clone(),
-                            },
-                        });
-                        if resolution == TaskResolution::Completed
-                            && let Some(reward) = self
-                                .content
-                                .world(&self.world_id)
-                                .and_then(|world| {
-                                    world
-                                        .procedural_floors
-                                        .iter()
-                                        .find(|floor| floor_task_id(floor) == floor_id)
-                                })
-                                .and_then(|floor| {
-                                    self.content.world(&self.world_id).and_then(|world| {
-                                        world
-                                            .procedural_floors
-                                            .iter()
-                                            .filter(|member| {
-                                                floor_task_id(member) == floor_task_id(floor)
-                                            })
-                                            .find_map(|member| member.task_reward.as_ref())
-                                    })
-                                })
-                        {
-                            events.push(DomainEvent::TaskRewarded {
-                                item_kind_id: reward.item_kind_id.clone(),
-                                quantity: reward.quantity,
-                            });
-                        }
-                        events.push(DomainEvent::OneShotFloorClosed { floor_id });
-                    }
+                    self.record_floor_transition(transition, &mut events, &mut changed);
                 } else {
                     events.push(DomainEvent::FloorTransitionUnavailable);
                 }
@@ -2931,6 +2897,11 @@ impl Game {
     }
 
     #[doc(hidden)]
+    pub fn debug_set_recall_delay_turns(&mut self, turns: Option<u16>) {
+        self.debug_recall_delay_turns = turns;
+    }
+
+    #[doc(hidden)]
     pub fn debug_add_generated_inventory_item(
         &mut self,
         id: &str,
@@ -3056,6 +3027,7 @@ impl Game {
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
             summon_command: self.summon_command.clone(),
+            recall: self.recall.clone(),
         }
     }
 
@@ -3084,6 +3056,7 @@ impl Game {
             })
             .collect();
         player.summon_command = self.summon_command.clone();
+        player.recall = self.recall.clone();
         player.body_slots = self
             .body_slots
             .iter()
@@ -8716,6 +8689,181 @@ impl Game {
         candidates.into_iter().map(|entry| entry.3).collect()
     }
 
+    fn random_teleport_candidates(&self, maximum_distance: u16) -> Vec<Position> {
+        let origin = self.player.position;
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .collect::<BTreeSet<_>>();
+        let mut candidates = Vec::new();
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                let distance = chebyshev_distance(origin, position);
+                if distance > 0
+                    && distance <= u32::from(maximum_distance)
+                    && self.is_walkable(position)
+                    && !occupied.contains(&position)
+                {
+                    candidates.push((
+                        std::cmp::Reverse(distance),
+                        position.y,
+                        position.x,
+                        position,
+                    ));
+                }
+            }
+        }
+        candidates.sort_unstable();
+        candidates.truncate(candidates.len().div_ceil(2));
+        candidates.into_iter().map(|entry| entry.3).collect()
+    }
+
+    fn teleport_level_targets(&self) -> (Vec<FloorTransitionTarget>, Vec<FloorTransitionTarget>) {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        if self.current_floor_id == world.initial_floor_id {
+            let downward = self
+                .recall
+                .as_ref()
+                .filter(|recall| recall.remaining_turns.is_none())
+                .and_then(|recall| {
+                    let floor = world.procedural_floors.iter().find(|floor| {
+                        floor.id == recall.floor_id
+                            && floor.lifecycle == FloorLifecycle::Dungeon
+                            && floor.dungeon_id.as_deref() == Some(recall.dungeon_id.as_str())
+                    })?;
+                    let dungeon = world
+                        .dungeons
+                        .iter()
+                        .find(|dungeon| dungeon.id == recall.dungeon_id)?;
+                    self.dungeon_entry_requirements_met(dungeon)
+                        .then_some(FloorTransitionTarget {
+                            floor_id: floor.id.clone(),
+                            arrival_connection_id: None,
+                            departure_connection_id: None,
+                        })
+                })
+                .into_iter()
+                .collect();
+            return (Vec::new(), downward);
+        }
+
+        let Some(current) = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)
+            .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
+        else {
+            return (Vec::new(), Vec::new());
+        };
+        let current_dungeon_id = current.dungeon_id.as_deref();
+        let mut upward = Vec::new();
+        let mut downward = Vec::new();
+        for state in &self.floor_connections {
+            let Some(connection) = current
+                .connections
+                .iter()
+                .find(|connection| connection.id == state.id)
+            else {
+                continue;
+            };
+            let target_floor_id = state
+                .target_floor_id
+                .as_ref()
+                .unwrap_or(&connection.target_floor_id);
+            let target_depth = if target_floor_id == &world.initial_floor_id {
+                Some(0)
+            } else {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| {
+                        floor.id == *target_floor_id
+                            && floor.lifecycle == FloorLifecycle::Dungeon
+                            && floor.dungeon_id.as_deref() == current_dungeon_id
+                    })
+                    .map(|floor| floor.depth)
+            };
+            let Some(target_depth) = target_depth else {
+                continue;
+            };
+            let target = FloorTransitionTarget {
+                floor_id: target_floor_id.clone(),
+                arrival_connection_id: state
+                    .target_connection_id
+                    .clone()
+                    .or_else(|| connection.target_connection_id.clone()),
+                departure_connection_id: Some(state.id.clone()),
+            };
+            if target_depth < current.depth {
+                upward.push(target);
+            } else if target_depth > current.depth {
+                downward.push(target);
+            }
+        }
+        if upward.is_empty() {
+            upward.push(FloorTransitionTarget {
+                floor_id: current.return_floor_id.clone(),
+                arrival_connection_id: None,
+                departure_connection_id: None,
+            });
+        }
+        if downward.is_empty()
+            && let Some(next_floor_id) = &current.next_floor_id
+        {
+            downward.push(FloorTransitionTarget {
+                floor_id: next_floor_id.clone(),
+                arrival_connection_id: None,
+                departure_connection_id: None,
+            });
+        }
+        upward.sort();
+        upward.dedup();
+        downward.sort();
+        downward.dedup();
+        (upward, downward)
+    }
+
+    fn recall_use_plan(&self) -> Option<bool> {
+        let recall = self.recall.as_ref()?;
+        if recall.remaining_turns.is_some() {
+            return Some(true);
+        }
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        if self.current_floor_id == world.initial_floor_id {
+            let dungeon = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == recall.dungeon_id)?;
+            return self
+                .dungeon_entry_requirements_met(dungeon)
+                .then_some(false);
+        }
+        floor_dungeon_id(world, &self.current_floor_id).map(|_| false)
+    }
+
+    fn can_reset_recall(&self) -> bool {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        self.recall
+            .as_ref()
+            .is_none_or(|recall| recall.remaining_turns.is_none())
+            && floor_dungeon_id(world, &self.current_floor_id).is_some()
+    }
+
     fn detect_terrain_positions(
         &mut self,
         category: &str,
@@ -9837,6 +9985,53 @@ impl Game {
                         item_id: target_item_id.clone(),
                     }
                 }
+                ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    let candidates = self.random_teleport_candidates(*maximum_distance);
+                    if candidates.is_empty() {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::RandomTeleport { candidates }
+                }
+                ItemUseEffectDefinition::TeleportLevel => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    let (upward_targets, downward_targets) = self.teleport_level_targets();
+                    if upward_targets.is_empty() && downward_targets.is_empty() {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::TeleportLevel {
+                        upward_targets,
+                        downward_targets,
+                    }
+                }
+                ItemUseEffectDefinition::Recall { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    let Some(cancel) = self.recall_use_plan() else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    ItemUsePlan::Recall { cancel }
+                }
+                ItemUseEffectDefinition::ResetRecall => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget))
+                        || !self.can_reset_recall()
+                    {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::ResetRecall
+                }
             };
             (
                 Some(activation.profile_id.clone()),
@@ -9869,6 +10064,53 @@ impl Game {
                         return Ok(());
                     }
                     ItemUsePlan::Detect
+                }
+                ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    let candidates = self.random_teleport_candidates(*maximum_distance);
+                    if candidates.is_empty() {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::RandomTeleport { candidates }
+                }
+                ItemUseEffectDefinition::TeleportLevel => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    let (upward_targets, downward_targets) = self.teleport_level_targets();
+                    if upward_targets.is_empty() && downward_targets.is_empty() {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::TeleportLevel {
+                        upward_targets,
+                        downward_targets,
+                    }
+                }
+                ItemUseEffectDefinition::Recall { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    let Some(cancel) = self.recall_use_plan() else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    ItemUsePlan::Recall { cancel }
+                }
+                ItemUseEffectDefinition::ResetRecall => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget))
+                        || !self.can_reset_recall()
+                    {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::ResetRecall
                 }
                 _ => {
                     if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
@@ -10089,6 +10331,123 @@ impl Game {
                     resolution,
                 });
             }
+            (
+                ItemUseEffectDefinition::RandomTeleport { .. },
+                ItemUsePlan::RandomTeleport { candidates },
+            ) => {
+                let candidate_index = usize::try_from(self.rng.bounded(candidates.len() as u64))
+                    .expect("bounded teleport candidate index must fit usize");
+                let destination = candidates[candidate_index];
+                let origin = self.player.position;
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemTeleported {
+                    source_kind_id: kind_id,
+                    profile_id,
+                    resolution: AbilityTeleportResolutionDto {
+                        from: origin,
+                        to: destination,
+                    },
+                });
+                events.extend(self.relocate_player(destination, changed));
+            }
+            (
+                ItemUseEffectDefinition::TeleportLevel,
+                ItemUsePlan::TeleportLevel {
+                    upward_targets,
+                    downward_targets,
+                },
+            ) => {
+                let prefer_upward = self.rng.bounded(2) == 0;
+                let targets = if prefer_upward {
+                    if upward_targets.is_empty() {
+                        downward_targets
+                    } else {
+                        upward_targets
+                    }
+                } else if downward_targets.is_empty() {
+                    upward_targets
+                } else {
+                    downward_targets
+                };
+                let target_index = if targets.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(self.rng.bounded(targets.len() as u64))
+                        .expect("bounded floor target index must fit usize")
+                };
+                let target = targets[target_index].clone();
+                let from_floor_id = self.current_floor_id.clone();
+                let transition = self
+                    .transition_floor(
+                        target.floor_id,
+                        target.arrival_connection_id,
+                        target.departure_connection_id,
+                        false,
+                    )?
+                    .expect("planned floor teleport must remain available");
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemTeleportedLevel {
+                    source_kind_id: kind_id,
+                    from_floor_id,
+                    to_floor_id: transition.to_floor_id.clone(),
+                });
+                self.record_floor_transition(transition, events, changed);
+            }
+            (
+                ItemUseEffectDefinition::Recall {
+                    delay_dice,
+                    delay_sides,
+                    delay_bonus,
+                },
+                ItemUsePlan::Recall { cancel },
+            ) => {
+                self.mark_item_aware(&kind_id);
+                if cancel {
+                    self.recall
+                        .as_mut()
+                        .expect("planned recall cancellation must retain its destination")
+                        .remaining_turns = None;
+                    events.push(DomainEvent::ItemRecallCancelled {
+                        source_kind_id: kind_id,
+                    });
+                } else {
+                    let rolled_delay = u16::try_from(self.roll_damage(delay_dice, delay_sides))
+                        .expect("validated recall delay roll must fit u16")
+                        .saturating_add(delay_bonus);
+                    let delay = self.debug_recall_delay_turns.unwrap_or(rolled_delay).max(1);
+                    let recall = self
+                        .recall
+                        .as_mut()
+                        .expect("planned recall must retain its destination");
+                    recall.remaining_turns = Some(delay.saturating_add(1));
+                    events.push(DomainEvent::ItemRecallStarted {
+                        source_kind_id: kind_id,
+                        dungeon_id: recall.dungeon_id.clone(),
+                        floor_id: recall.floor_id.clone(),
+                        turns: delay,
+                    });
+                }
+            }
+            (ItemUseEffectDefinition::ResetRecall, ItemUsePlan::ResetRecall) => {
+                let world = self
+                    .content
+                    .world(&self.world_id)
+                    .expect("active world must remain available");
+                let dungeon_id = floor_dungeon_id(world, &self.current_floor_id)
+                    .expect("planned recall reset must be on a dungeon floor");
+                let floor_id = self.current_floor_id.clone();
+                self.recall = Some(RecallStateDto {
+                    dungeon_id: dungeon_id.clone(),
+                    floor_id: floor_id.clone(),
+                    remaining_turns: None,
+                });
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemRecallReset {
+                    source_kind_id: kind_id,
+                    dungeon_id,
+                    floor_id,
+                });
+            }
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(())
@@ -10229,7 +10588,11 @@ impl Game {
             }
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::Detect { .. }
-            | ItemUseEffectDefinition::IdentifyItem { .. } => {
+            | ItemUseEffectDefinition::IdentifyItem { .. }
+            | ItemUseEffectDefinition::RandomTeleport { .. }
+            | ItemUseEffectDefinition::TeleportLevel
+            | ItemUseEffectDefinition::Recall { .. }
+            | ItemUseEffectDefinition::ResetRecall => {
                 unreachable!("projected item effects cannot resolve as self restoration")
             }
         }
@@ -10372,6 +10735,61 @@ impl Game {
             return true;
         };
         !self.item_is_valid_identify_target(source_item_id, target_item_id)
+    }
+
+    fn travel_item_use_is_invalid(
+        &self,
+        source_item_id: &str,
+        target: Option<&TargetSelection>,
+    ) -> bool {
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == source_item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+        }) else {
+            return false;
+        };
+        let Some(definition) = self.content.item(&item.kind_id) else {
+            return false;
+        };
+        let effect = item
+            .activation
+            .as_ref()
+            .and_then(|activation| {
+                definition
+                    .device_generation
+                    .as_ref()
+                    .and_then(|generation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|candidate| candidate.id == activation.profile_id)
+                    })
+            })
+            .map(|profile| &profile.effect)
+            .or_else(|| definition.use_action.as_ref().map(|action| &action.effect));
+        let Some(effect) = effect else {
+            return false;
+        };
+        let wrong_target =
+            target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget));
+        match effect {
+            ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
+                wrong_target
+                    || self
+                        .random_teleport_candidates(*maximum_distance)
+                        .is_empty()
+            }
+            ItemUseEffectDefinition::TeleportLevel => {
+                let (upward, downward) = self.teleport_level_targets();
+                wrong_target || (upward.is_empty() && downward.is_empty())
+            }
+            ItemUseEffectDefinition::Recall { .. } => {
+                wrong_target || self.recall_use_plan().is_none()
+            }
+            ItemUseEffectDefinition::ResetRecall => wrong_target || !self.can_reset_recall(),
+            _ => false,
+        }
     }
 
     fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
@@ -10627,6 +11045,58 @@ impl Game {
             }
         }
         self.advance_summon_lifetimes(events, changed, removed_entities);
+        if !self.player_is_dead() {
+            self.advance_recall(events, changed)?;
+        }
+        Ok(())
+    }
+
+    fn advance_recall(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let Some(remaining_turns) = self
+            .recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns)
+        else {
+            return Ok(());
+        };
+        if remaining_turns > 1 {
+            self.recall
+                .as_mut()
+                .expect("pending recall must retain its destination")
+                .remaining_turns = Some(remaining_turns - 1);
+            return Ok(());
+        }
+
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let from_floor_id = self.current_floor_id.clone();
+        let target_floor_id = if self.current_floor_id == world.initial_floor_id {
+            self.recall
+                .as_ref()
+                .expect("pending recall must retain its destination")
+                .floor_id
+                .clone()
+        } else {
+            world.initial_floor_id.clone()
+        };
+        self.recall
+            .as_mut()
+            .expect("pending recall must retain its destination")
+            .remaining_turns = None;
+        let Some(transition) = self.transition_floor(target_floor_id, None, None, false)? else {
+            return Ok(());
+        };
+        events.push(DomainEvent::RecallTriggered {
+            from_floor_id,
+            to_floor_id: transition.to_floor_id.clone(),
+        });
+        self.record_floor_transition(transition, events, changed);
         Ok(())
     }
 
@@ -14967,6 +15437,86 @@ impl Game {
             })
     }
 
+    fn record_floor_transition(
+        &self,
+        transition: FloorTransitionOutcome,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                changed.insert(Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                });
+            }
+        }
+        events.push(DomainEvent::FloorTransitioned {
+            from_floor_id: transition.from_floor_id,
+            to_floor_id: transition.to_floor_id,
+        });
+        for (entity_id, target_kind_id) in transition.summons_followed {
+            events.push(DomainEvent::SummonFollowedFloor {
+                entity_id,
+                target_kind_id,
+            });
+        }
+        for (entity_id, target_kind_id) in transition.summons_could_not_follow {
+            events.push(DomainEvent::SummonCouldNotFollow {
+                entity_id,
+                target_kind_id,
+            });
+        }
+        if transition.expedition_ended {
+            events.push(DomainEvent::DungeonExpeditionEnded);
+        }
+        if let Some(floor_id) = transition.task_resumed {
+            events.push(DomainEvent::TaskResumed { floor_id });
+        }
+        if let Some(floor_id) = transition.task_paused {
+            events.push(DomainEvent::TaskPaused { floor_id });
+        }
+        if let Some((floor_id, resolution)) = transition.one_shot_closed {
+            events.push(match resolution {
+                TaskResolution::Completed => DomainEvent::TaskCompleted {
+                    floor_id: floor_id.clone(),
+                },
+                TaskResolution::Failed => DomainEvent::TaskFailed {
+                    floor_id: floor_id.clone(),
+                },
+                TaskResolution::Abandoned => DomainEvent::TaskAbandoned {
+                    floor_id: floor_id.clone(),
+                },
+            });
+            if resolution == TaskResolution::Completed
+                && let Some(reward) = self
+                    .content
+                    .world(&self.world_id)
+                    .and_then(|world| {
+                        world
+                            .procedural_floors
+                            .iter()
+                            .find(|floor| floor_task_id(floor) == floor_id)
+                    })
+                    .and_then(|floor| {
+                        self.content.world(&self.world_id).and_then(|world| {
+                            world
+                                .procedural_floors
+                                .iter()
+                                .filter(|member| floor_task_id(member) == floor_task_id(floor))
+                                .find_map(|member| member.task_reward.as_ref())
+                        })
+                    })
+            {
+                events.push(DomainEvent::TaskRewarded {
+                    item_kind_id: reward.item_kind_id.clone(),
+                    quantity: reward.quantity,
+                });
+            }
+            events.push(DomainEvent::OneShotFloorClosed { floor_id });
+        }
+    }
+
     fn traverse_stairs(
         &mut self,
         abandon_task: bool,
@@ -14983,7 +15533,6 @@ impl Game {
             .expect("active world must remain available");
         let initial_floor_id = world.initial_floor_id.clone();
         let procedural_floors = world.procedural_floors.clone();
-        let initial_task_states_by_id = initial_task_states(&world);
         if abandon_task
             && !procedural_floors.iter().any(|floor| {
                 floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::OneShot
@@ -15047,6 +15596,30 @@ impl Game {
         } else {
             return Ok(None);
         };
+
+        self.transition_floor(
+            target_floor_id,
+            arrival_connection_id,
+            departure_connection_id,
+            abandon_task,
+        )
+    }
+
+    fn transition_floor(
+        &mut self,
+        target_floor_id: String,
+        arrival_connection_id: Option<String>,
+        departure_connection_id: Option<String>,
+        abandon_task: bool,
+    ) -> Result<Option<FloorTransitionOutcome>, CoreError> {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .cloned()
+            .expect("active world must remain available");
+        let initial_floor_id = world.initial_floor_id.clone();
+        let procedural_floors = world.procedural_floors.clone();
+        let initial_task_states_by_id = initial_task_states(&world);
 
         if self.current_floor_id == initial_floor_id
             && let Some(target) = procedural_floors.iter().find(|floor| {
@@ -15493,7 +16066,46 @@ impl Game {
         self.revealed_terrain = floor.revealed_terrain;
         self.floor_connections = floor.connections;
         self.floor_regions = floor.regions;
+        self.update_recall_destination_for_current_floor();
         self.reveal_current_visibility();
+    }
+
+    fn update_recall_destination_for_current_floor(&mut self) {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let Some(current) = world.procedural_floors.iter().find(|floor| {
+            floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::Dungeon
+        }) else {
+            return;
+        };
+        let dungeon_id = current
+            .dungeon_id
+            .as_ref()
+            .expect("validated dungeon floor must retain its dungeon ID")
+            .clone();
+        let should_update = self.recall.as_ref().is_none_or(|recall| {
+            if recall.dungeon_id != dungeon_id {
+                return true;
+            }
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == recall.floor_id)
+                .is_none_or(|destination| current.depth >= destination.depth)
+        });
+        if should_update {
+            let remaining_turns = self
+                .recall
+                .as_ref()
+                .and_then(|recall| recall.remaining_turns);
+            self.recall = Some(RecallStateDto {
+                dungeon_id,
+                floor_id: current.id.clone(),
+                remaining_turns,
+            });
+        }
     }
 
     fn generate_procedural_floor(
@@ -18427,6 +19039,22 @@ impl Game {
                 return Err(CoreError::InvalidSave(
                     "active floor dungeon instance identity is invalid",
                 ));
+            }
+        }
+        if let Some(recall) = &self.recall {
+            let destination_is_valid = world.procedural_floors.iter().any(|floor| {
+                floor.id == recall.floor_id
+                    && floor.lifecycle == FloorLifecycle::Dungeon
+                    && floor.dungeon_id.as_deref() == Some(recall.dungeon_id.as_str())
+            });
+            let pending_is_valid = recall
+                .remaining_turns
+                .is_none_or(|turns| (1..=2_000).contains(&turns));
+            let current_location_allows_pending = recall.remaining_turns.is_none()
+                || self.current_floor_id == world.initial_floor_id
+                || current_dungeon_id.is_some();
+            if !destination_is_valid || !pending_is_valid || !current_location_allows_pending {
+                return Err(CoreError::InvalidSave("player recall state is invalid"));
             }
         }
         for floor in self.stored_floors.values() {

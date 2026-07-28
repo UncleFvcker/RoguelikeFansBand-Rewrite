@@ -184,7 +184,9 @@ export type StatusDto = { kindId: string, intensity: number, remainingTicks: num
 
 export type DeviceRechargeDto = { resourceId: string, power: number, };
 
-export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, deviceRecharge?: DeviceRechargeDto | null, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, };
+export type RecallStateDto = { dungeonId: string, floorId: string, remainingTurns?: number | null, };
+
+export type PlayerDto = { id: string, kindId: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, deviceRecharge?: DeviceRechargeDto | null, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, recall?: RecallStateDto | null, };
 
 export type EntityFactionDto = "hostile" | "player";
 

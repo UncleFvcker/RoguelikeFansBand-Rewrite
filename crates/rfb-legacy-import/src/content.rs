@@ -826,6 +826,15 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         })
     };
     let effect = match (entry.tval, entry.sval) {
+        (70, 8) => serde_json::json!({"type": "random-teleport", "maximumDistance": 10}),
+        (70, 9) => serde_json::json!({"type": "random-teleport", "maximumDistance": 100}),
+        (70, 10) => serde_json::json!({"type": "teleport-level"}),
+        (70, 11) => serde_json::json!({
+            "type": "recall",
+            "delayDice": 1,
+            "delaySides": 21,
+            "delayBonus": 14
+        }),
         (70, 12) => serde_json::json!({"type": "identify-item", "full": false}),
         (70, 13) => serde_json::json!({"type": "identify-item", "full": true}),
         (70, 25) => detect("terrain", "map", true),
@@ -835,6 +844,7 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         (70, 29) => detect("terrain", "passage", true),
         (70, 30) => detect("actor", "invisible", false),
         (70, 57) => detect("actor", "legacy-import", false),
+        (70, 53) => serde_json::json!({"type": "reset-recall"}),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -7502,8 +7512,38 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn scrolls_map_to_knowledge_and_detection_effects() {
+    fn scrolls_map_to_teleport_knowledge_and_detection_effects() {
         let mut report = ContentImportReport::default();
+        for (sval, effect_type) in [
+            (8, "random-teleport"),
+            (9, "random-teleport"),
+            (10, "teleport-level"),
+            (11, "recall"),
+            (53, "reset-recall"),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("travel-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], effect_type);
+            if sval == 8 {
+                assert_eq!(effect["maximumDistance"], 10);
+            } else if sval == 9 {
+                assert_eq!(effect["maximumDistance"], 100);
+            } else if sval == 11 {
+                assert_eq!(effect["delayDice"], 1);
+                assert_eq!(effect["delaySides"], 21);
+                assert_eq!(effect["delayBonus"], 14);
+            }
+        }
         for (sval, full) in [(12, false), (13, true)] {
             let value = item_json(
                 &LegacyItemEntry {

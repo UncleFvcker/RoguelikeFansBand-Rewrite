@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.113";
+pub const PROTOCOL_VERSION: &str = "1.114";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1845,6 +1845,18 @@ pub struct PlayerDto {
     pub abilities: Vec<AbilityDto>,
     #[serde(default, skip_serializing_if = "is_default_summon_command")]
     pub summon_command: SummonCommandDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recall: Option<RecallStateDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RecallStateDto {
+    pub dungeon_id: String,
+    pub floor_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remaining_turns: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2337,6 +2349,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
     push_declaration!(DeviceRechargeDto);
+    push_declaration!(RecallStateDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
@@ -2415,6 +2428,8 @@ pub struct PlayerSaveDto {
     pub summon_command: SummonCommandDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub body_slots: Vec<BodySlotSaveDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recall: Option<RecallStateDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3092,6 +3107,7 @@ mod tests {
                 ability_learning: None,
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
+                recall: None,
             },
             entities: vec![EntityDto {
                 id: "demo.monster.1".to_owned(),
@@ -3249,6 +3265,7 @@ mod tests {
             ability_progress: Vec::new(),
             summon_command: SummonCommandDto::default(),
             body_slots: Vec::new(),
+            recall: None,
         };
 
         let encoded = to_msgpack(&player).expect("player save should encode");

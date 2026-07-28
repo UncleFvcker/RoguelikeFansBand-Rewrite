@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.farstep-scroll",
+  "nameKey": "item-demo-farstep-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-farstep-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "random-teleport",
+      "maximumDistance": 100
+    }
+  },
+  "tags": ["consumable", "scroll", "teleport"]
+}

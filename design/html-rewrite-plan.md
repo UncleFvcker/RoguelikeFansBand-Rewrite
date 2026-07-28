@@ -681,12 +681,13 @@ interface SaveGame {
 - 协议 1.111 和 contract-v111 已建立；P61 增加状态清除、固定/骰值/回满资源和 2–8 步有序恢复序列，固定事件顺序、正式 RNG、缺池消费与物品知识边界。demo 新增 Clarity Draught/Perfect Focus Elixir；legacy importer 接入八种恢复消耗品映射并扩展六种治疗药水，`consumable-effect` 89→81。内容包 1.102.0，content hash 为 `12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7`，active baseline 共 383 个 exact fixtures、零 waiver，state hash 保持 Schema v49。
 - 协议 1.112 和 contract-v112 已建立；P62 增加普通/完整鉴定卷轴、item-only 目标前置事务、结构化鉴定事件与通用物品选择对话框，Death 鉴定法术复用相同实例知识 helper。legacy importer 把 tval 70/71 缺口重分类为 `scroll-effect` 并映射 sval 12/13，缺口 61→59，`device-effect` 退出报告。内容包 1.103.0，content hash 为 `c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25`，active baseline 共 386 个 exact fixtures、零 waiver，state hash 保持 Schema v49。
 - 协议 1.113 和 contract-v113 已建立；P63 为侦测增加 item 主体和显式 through-walls，Mapping 持久写 explored，陷阱/通道侦测持久写 revealedTerrain，actor/item 结果只进入瞬时事件。legacy importer 映射卷轴 sval 25–30/57，并为 gold、门/楼梯和隐形怪物补语义 tag，`scroll-effect` 缺口 59→52。内容包 1.104.0，content hash 为 `10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653`，active baseline 共 389 个 exact fixtures、零 waiver，state hash 保持 Schema v49。
+- 协议 1.114 和 contract-v114 已建立；P64 增加同层随机传送、树状跨层与延迟召回/取消/重设，稳定目的地只保存 dungeon/floor ID，普通地牢回地表清旧实例、从地表召回创建新实例。legacy importer 映射卷轴 sval 8–11/53，`scroll-effect` 缺口 52→47。内容包 1.105.0，content hash 为 `36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86`，active baseline 共 398 个 exact fixtures、零 waiver，state hash 升至 Schema v50。
 - 桌面崩溃诊断闭环 v1 已建立：活动会话标记、正常退出清理、Rust panic/未正常退出的下次启动恢复、前端未处理异常即时报告、256 KiB 脱敏日志尾部和最近 5 份 `.rfbdiagnostic` 自动轮换均已接入；不提供手动日志导出，也不自动上传。
 - 192×64 原创渲染压力场景和 profile Schema v1 已接入 Windows E2E/CI artifact；8/16/32 格对比后默认 chunk 调整为 16。`visible-chunk-reuse-v1` 已把 16 格玩家居中模式的动态 Pixi 对象从整图理论值 86,016 降到 7,168，初始化约从 133 ms 降到 30 ms；不可见格仍保留最新语义数据，整图滚动模式保持完整显示。
 
 下一步建议：
 
-1. P64 处理剩余 `scroll-effect` 52 中的传送/回城族：Phase Door、Teleport、Teleport Level、Word of Recall、Reset Recall；固定随机落点、跨层/回城事务、召回状态、存档回放和拒绝边界；
+1. P65 从剩余 `scroll-effect` 47 中优先比较装备附魔/强化五条、召唤四条和解除/施加诅咒四条，选择通用系统覆盖收益最高的一族；
 2. 补充 resize、最小化/恢复和 DPI 场景；整图滚动矩形虚拟化等到更大可玩地图需要整图模式时再实现；
 3. 根据真实硬崩溃报告决定是否增加 Windows minidump，不预先引入自动上传服务；
 5. 新功能继续同步增加 Fluent 文本，发现实际可见英文时按场景修正，不主动重扫旧 RFB 文本；Android 继续只保留编译 CI，真机、触屏和生命周期测试暂缓。

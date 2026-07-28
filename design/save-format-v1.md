@@ -181,6 +181,10 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.112 的鉴定卷轴不增加存档字段。来源卷轴种类的 `aware` 写入既有 `itemKnowledge`；目标实例的 `appraised`、`identified` 与 `knownAffixIds` 写入既有 `itemPropertyKnowledge`，剩余卷轴堆叠使用原物品实例数量。旧内容 hash 迁移不补发卷轴、不补鉴定、不抽 RNG。save 容器保持 v1，state hash Schema 保持 v49。完整边界见 [Contract v112](contract-v112-scroll-identification.md)。
 
+协议 1.113 的地图/侦测卷轴不增加存档字段。Mapping 复用当前层 `explored`，陷阱/通道侦测复用 `revealedTerrain`，actor/item 侦测结果只存在于命令事件；旧内容 hash 迁移不补地图知识、不侦测实体、不抽 RNG。save 容器保持 v1，state hash Schema 保持 v49。完整边界见 [Contract v113](contract-v113-scroll-detection.md)。
+
+协议 1.114 为 `PlayerSaveDto` 增加可选 `recall { dungeonId, floorId, remainingTurns? }`。目的地保存稳定内容 ID，不保存 dungeon instance ID；载入时要求 floor 是同一 dungeon 的有效 dungeon floor，待触发倒计时必须为 1–2000，且当前位置必须是地表或 dungeon floor。v113 built-in 地牢存档缺字段时从当前楼层无 RNG 派生目的地，地表旧档保持 `None`。倒计时写入最终剩余行动周期，读档不重掷；返回地表后 `reset-on-surface` 实例仍按既有生命周期清除，从地表触发召回会为稳定目标楼层建立新实例。save 容器保持 v1，新增权威 recall 状态使 state hash 升至 Schema v50。完整边界见 [Contract v114](contract-v114-scroll-travel-recall.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

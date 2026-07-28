@@ -195,6 +195,7 @@ mod tests {
                 ability_progress: Vec::new(),
                 summon_command: Default::default(),
                 body_slots: Vec::new(),
+                recall: None,
             },
             entities: Vec::<ActorSaveDto>::new(),
             items: Vec::<ItemSaveDto>::new(),

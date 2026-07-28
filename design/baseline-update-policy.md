@@ -12,10 +12,10 @@ contract fixture 是规则兼容边界，不能把测试失败简单处理为“
 - 新核心明确不复刻的旧版行为；
 - contract Schema 或 state hash Schema 的正式迁移。
 
-`tests/fixtures/contract-v113/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v112` 保留为历史基准。公共 CI 每次运行：
+`tests/fixtures/contract-v114/baseline-policy.json` 是当前 active 机器可读政策。`contract-v1` 至 `contract-v113` 保留为历史基准。公共 CI 每次运行：
 
 ```powershell
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v113/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v114/baseline-policy.json
 ```
 
 ## 2. 禁止操作
@@ -100,4 +100,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v113/baseli
 
 这类变化必须新增版本目录和 policy，例如 `contract-v2/`，保留 v1 作为历史回归入口，并提供明确迁移说明。
 
-真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v113`：地图记忆、穿墙隐藏地形侦测、瞬时 actor/item 侦测、结构化事件、save/replay、state hash Schema v49 和 389 个 exact fixtures 由 [Contract v113](contract-v113-scroll-detection.md) 定义；`contract-v1` 至 `contract-v112` 继续作为历史基准保留。
+真实 `.rfbcontent` 激活已经按此规则建立 `contract-v2`；后续每个协议/内容/state hash 迁移都保留独立历史目录。当前规则边界为 `contract-v114`：同层随机传送、树状跨层、延迟召回、目的地重设、实例生命周期、save/replay、state hash Schema v50 和 398 个 exact fixtures 由 [Contract v114](contract-v114-scroll-travel-recall.md) 定义；`contract-v1` 至 `contract-v113` 继续作为历史基准保留。

@@ -448,6 +448,7 @@ pub(crate) fn player_to_save(
         learned_ability_ids: Vec::new(),
         ability_progress: Vec::new(),
         summon_command: Default::default(),
+        recall: None,
         // Filled by the game's save path, which owns the body template.
         body_slots: Vec::new(),
     }

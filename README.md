@@ -133,6 +133,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v111：有序恢复型消耗品效果](design/contract-v111-restorative-items.md)
 - [Contract v112：卷轴效果重分类与首批鉴定事务](design/contract-v112-scroll-identification.md)
 - [Contract v113：地图与侦测卷轴](design/contract-v113-scroll-detection.md)
+- [Contract v114：卷轴传送、跨层与召回](design/contract-v114-scroll-travel-recall.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -156,7 +157,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于 [`tests/fixtures/contract-v113/scenarios`](tests/fixtures/contract-v113/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v112` 作为历史基准保留。
+当前原创规则契约位于 [`tests/fixtures/contract-v114/scenarios`](tests/fixtures/contract-v114/scenarios)，由 `rfb-contract` 在所有平台运行；`contract-v1` 至 `contract-v113` 作为历史基准保留。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -285,6 +286,8 @@ P62 / contract-v112 完成卷轴效果重分类与首批鉴定事务。内容层
 
 P63 / contract-v113 完成地图与侦测卷轴族。内容层为 `detect` 增加 item 主体和显式 `throughWalls`：Mapping 持久写入 `explored`，陷阱与通道侦测持久写入 `revealedTerrain`，actor/item 侦测仅在结构化事件中返回稳定实例 ID 与位置；既有法术和设备仍保持 FOV 过滤。demo 新增 Cartography Scroll、Trapfinding Scroll 与 Seeking Scroll；legacy importer 映射 sval 25–30/57，并为 gold、门/楼梯和隐形怪物补充语义 tag，使 `scroll-effect` 缺口 59→52。协议 1.113、demo 1.104.0、state hash Schema v49、active baseline 389 条 exact、零 waiver，内置 content hash 为 `10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653`。详见[Contract v113](design/contract-v113-scroll-detection.md)。
 
+P64 / contract-v114 完成卷轴传送、跨层与召回族。内容层新增 `random-teleport`、`teleport-level`、`recall` 和 `reset-recall`；同层传送从最远半数合法格中稳定随机，跨层传送先作上下 50% 判定并在方向边界回退，楼梯/跨层/召回共用楼层转换管线。召回以稳定 dungeon/floor ID 保存目的地和可选倒计时，进入同地牢更深/同深分支自动更新，Reset Recall 可降到当前浅层，再次使用 Recall 可取消；普通地牢回地表仍清旧实例，地表召回创建新实例。demo 新增五种原创卷轴；legacy importer 映射 sval 8–11/53，使 `scroll-effect` 52→47。协议 1.114、demo 1.105.0、state hash Schema v50、active baseline 398 条 exact、零 waiver，内置 content hash 为 `36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86`。详见[Contract v114](design/contract-v114-scroll-travel-recall.md)。
+
 ### 本地验证
 
 ```powershell
@@ -354,10 +357,10 @@ $env:RFB_LEGACY_SOURCE = "D:/codex/Frogcomposband/master"; cargo run -p rfb-lega
 ```powershell
 cargo run -p rfb-contract -- normalize-snapshot <snapshot.json>
 cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
-cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v113/baseline-policy.json
+cargo run -p rfb-contract -- validate-policy tests/fixtures/contract-v114/baseline-policy.json
 ```
 
-当前 389 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 398 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

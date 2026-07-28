@@ -484,6 +484,34 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: AbilityDetectResolutionDto,
     },
+    ItemTeleported {
+        source_kind_id: String,
+        profile_id: Option<String>,
+        resolution: AbilityTeleportResolutionDto,
+    },
+    ItemTeleportedLevel {
+        source_kind_id: String,
+        from_floor_id: String,
+        to_floor_id: String,
+    },
+    ItemRecallStarted {
+        source_kind_id: String,
+        dungeon_id: String,
+        floor_id: String,
+        turns: u16,
+    },
+    ItemRecallCancelled {
+        source_kind_id: String,
+    },
+    ItemRecallReset {
+        source_kind_id: String,
+        dungeon_id: String,
+        floor_id: String,
+    },
+    RecallTriggered {
+        from_floor_id: String,
+        to_floor_id: String,
+    },
     ItemUseUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
@@ -1776,6 +1804,84 @@ impl DomainEvent {
                     ("count", resolution.detected_positions.len().to_string()),
                 ],
                 GameEventOutcomeDto::AbilityDetect { resolution },
+            ),
+            Self::ItemTeleported {
+                source_kind_id,
+                profile_id,
+                resolution,
+            } => dto_with_outcome(
+                if profile_id.is_some() {
+                    "item.activation-teleported"
+                } else {
+                    "item.use-teleported"
+                },
+                if profile_id.is_some() {
+                    "item-activation-teleported"
+                } else {
+                    "item-use-teleported"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("fromX", resolution.from.x.to_string()),
+                    ("fromY", resolution.from.y.to_string()),
+                    ("toX", resolution.to.x.to_string()),
+                    ("toY", resolution.to.y.to_string()),
+                ],
+                GameEventOutcomeDto::AbilityTeleport { resolution },
+            ),
+            Self::ItemTeleportedLevel {
+                source_kind_id,
+                from_floor_id,
+                to_floor_id,
+            } => dto(
+                "item.use-teleported-level",
+                "item-use-teleported-level",
+                [
+                    ("source", source_kind_id),
+                    ("from", from_floor_id),
+                    ("to", to_floor_id),
+                ],
+            ),
+            Self::ItemRecallStarted {
+                source_kind_id,
+                dungeon_id,
+                floor_id,
+                turns,
+            } => dto(
+                "item.recall-started",
+                "item-recall-started",
+                [
+                    ("source", source_kind_id),
+                    ("dungeon", dungeon_id),
+                    ("floor", floor_id),
+                    ("turns", turns.to_string()),
+                ],
+            ),
+            Self::ItemRecallCancelled { source_kind_id } => dto(
+                "item.recall-cancelled",
+                "item-recall-cancelled",
+                [("source", source_kind_id)],
+            ),
+            Self::ItemRecallReset {
+                source_kind_id,
+                dungeon_id,
+                floor_id,
+            } => dto(
+                "item.recall-reset",
+                "item-recall-reset",
+                [
+                    ("source", source_kind_id),
+                    ("dungeon", dungeon_id),
+                    ("floor", floor_id),
+                ],
+            ),
+            Self::RecallTriggered {
+                from_floor_id,
+                to_floor_id,
+            } => dto(
+                "item.recall-triggered",
+                "item-recall-triggered",
+                [("from", from_floor_id), ("to", to_floor_id)],
             ),
             Self::ItemUseUnavailable => {
                 dto_without_args("item.use-unavailable", "item-use-unavailable")

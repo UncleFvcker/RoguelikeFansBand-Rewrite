@@ -14152,3 +14152,313 @@ fn clear_monsters(game: &mut Game) {
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
 }
+
+#[test]
+fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
+    let prepare = || {
+        let mut game = Game::new(64);
+        clear_monsters(&mut game);
+        give_inventory_item(
+            &mut game,
+            "test.item.flicker-scroll.1",
+            "demo.item.flicker-scroll",
+        );
+        game
+    };
+    let mut first = prepare();
+    let mut second = prepare();
+    let first_update = dispatch_next(
+        &mut first,
+        GameCommand::UseItem {
+            item_id: "test.item.flicker-scroll.1".to_owned(),
+            target: None,
+        },
+    );
+    let second_update = dispatch_next(
+        &mut second,
+        GameCommand::UseItem {
+            item_id: "test.item.flicker-scroll.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(first.snapshot(), second.snapshot());
+    assert_eq!(first_update.events, second_update.events);
+    assert_ne!(first.player.position, Position { x: 3, y: 3 });
+    assert!(first_update.events.iter().any(|event| {
+        event.kind == "item.use-teleported"
+            && matches!(
+                event.outcome,
+                Some(GameEventOutcomeDto::AbilityTeleport { .. })
+            )
+    }));
+
+    let mut blocked = prepare();
+    let player_index = blocked
+        .index(blocked.player.position)
+        .expect("player position should be in bounds");
+    blocked.terrain.fill("demo.terrain.wall".to_owned());
+    blocked.terrain[player_index] = "demo.terrain.floor".to_owned();
+    let before = blocked.snapshot();
+    let draw_counter = blocked.rng_draw_counter();
+    let update = dispatch_next(
+        &mut blocked,
+        GameCommand::UseItem {
+            item_id: "test.item.flicker-scroll.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(update.world_tick, before.world_tick);
+    assert_eq!(blocked.rng_draw_counter(), draw_counter);
+    assert!(
+        blocked
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.flicker-scroll.1")
+    );
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn teleport_level_rolls_direction_then_uses_tree_targets_and_boundary_fallback() {
+    let mut game = Game::new(2);
+    clear_monsters(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    give_inventory_item(
+        &mut game,
+        "test.item.depthshift-scroll.1",
+        "demo.item.depthshift-scroll",
+    );
+    let downward_seed = (0_u64..100)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(2) == 1
+        })
+        .expect("one seed should select downward travel");
+    game.rng = RfbRng::seeded(downward_seed);
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.depthshift-scroll.1".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.floor_depth(&game.current_floor_id) > 1);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-teleported-level"
+            && event.args.get("to") == Some(&game.current_floor_id)
+    }));
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "floor.transition")
+    );
+
+    game.transition_floor("demo.floor.echo-depth-3".to_owned(), None, None, false)
+        .expect("final floor transition should resolve")
+        .expect("final floor should be available");
+    game.entities.clear();
+    game.dungeon_states
+        .get_mut("demo.dungeon.echo-depths")
+        .expect("echo dungeon state")
+        .guardian_defeated = true;
+    give_inventory_item(
+        &mut game,
+        "test.item.depthshift-scroll.2",
+        "demo.item.depthshift-scroll",
+    );
+    let before_depth = game.floor_depth(&game.current_floor_id);
+    game.rng = RfbRng::seeded(downward_seed);
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.depthshift-scroll.2".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.floor_depth(&game.current_floor_id) < before_depth);
+}
+
+#[test]
+fn recall_round_trip_clears_the_old_instance_and_creates_a_new_one() {
+    let mut game = Game::new(2);
+    clear_monsters(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    let first_instance = game
+        .current_dungeon_instance_id
+        .clone()
+        .expect("dungeon should have an instance");
+    assert_eq!(
+        game.recall.as_ref().map(|recall| recall.floor_id.as_str()),
+        Some("demo.floor.echo-depth-1")
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.homeward-scroll.1",
+        "demo.item.homeward-scroll",
+    );
+    game.debug_set_recall_delay_turns(Some(1));
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.homeward-scroll.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(
+        game.recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns),
+        Some(1)
+    );
+    let restored = Game::from_save(game.to_save()).expect("pending recall should round trip");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.recall-triggered")
+    );
+    assert!(
+        game.stored_floors
+            .values()
+            .all(|floor| { floor.dungeon_instance_id.as_deref() != Some(first_instance.as_str()) })
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.item.homeward-scroll.2",
+        "demo.item.homeward-scroll",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.homeward-scroll.2".to_owned(),
+            target: None,
+        },
+    );
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, "demo.floor.echo-depth-1");
+    assert_ne!(
+        game.current_dungeon_instance_id.as_ref(),
+        Some(&first_instance)
+    );
+}
+
+#[test]
+fn recall_can_be_cancelled_and_reset_to_a_shallower_branch_floor() {
+    let mut game = Game::new(11);
+    clear_monsters(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.transition_floor("demo.floor.echo-depth-2".to_owned(), None, None, false)
+        .expect("deeper transition should resolve")
+        .expect("deeper floor should be available");
+    clear_monsters(&mut game);
+    assert_eq!(
+        game.recall.as_ref().map(|recall| recall.floor_id.as_str()),
+        Some("demo.floor.echo-depth-2")
+    );
+    game.transition_floor("demo.floor.echo-depth-1".to_owned(), None, None, false)
+        .expect("shallower transition should resolve")
+        .expect("shallower floor should be available");
+    assert_eq!(
+        game.recall.as_ref().map(|recall| recall.floor_id.as_str()),
+        Some("demo.floor.echo-depth-2")
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.item.recall-setting-scroll.1",
+        "demo.item.recall-setting-scroll",
+    );
+    let reset = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.recall-setting-scroll.1".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(
+        game.recall.as_ref().map(|recall| recall.floor_id.as_str()),
+        Some("demo.floor.echo-depth-1")
+    );
+    assert!(
+        reset
+            .events
+            .iter()
+            .any(|event| event.kind == "item.recall-reset")
+    );
+    let restored = Game::from_save(game.to_save()).expect("reset destination should round trip");
+    assert_eq!(restored.recall, game.recall);
+
+    give_inventory_item(
+        &mut game,
+        "test.item.homeward-scroll.3",
+        "demo.item.homeward-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.homeward-scroll.4",
+        "demo.item.homeward-scroll",
+    );
+    game.debug_set_recall_delay_turns(Some(3));
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.homeward-scroll.3".to_owned(),
+            target: None,
+        },
+    );
+    assert!(
+        game.recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns)
+            .is_some()
+    );
+    let cancelled = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.homeward-scroll.4".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(
+        game.recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns),
+        None
+    );
+    assert!(
+        cancelled
+            .events
+            .iter()
+            .any(|event| event.kind == "item.recall-cancelled")
+    );
+}
+
+#[test]
+fn v113_dungeon_save_without_recall_derives_a_stable_destination() {
+    let mut game = Game::new(2);
+    clear_monsters(&mut game);
+    descend_one_floor(&mut game);
+    let mut payload = game.to_save();
+    payload.content_hash =
+        "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653".to_owned();
+    payload.player.recall = None;
+
+    let restored = Game::from_save(payload).expect("v113 save should migrate");
+    assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
+    assert_eq!(
+        restored.recall,
+        Some(RecallStateDto {
+            dungeon_id: "demo.dungeon.echo-depths".to_owned(),
+            floor_id: "demo.floor.echo-depth-1".to_owned(),
+            remaining_turns: None,
+        })
+    );
+}

@@ -242,6 +242,10 @@ interface GameCoreV1 {
 
 协议 1.112 新增 `ItemIdentifyResolutionDto { itemId, itemKindId, full, changed }` 与 `GameEventOutcomeDto::ItemIdentify`，固定卷轴普通/完整鉴定的结构化结果。`UseItem.target` 继续复用既有 `TargetSelection.item`；背包 DTO 的 `useTargetSpec` 对鉴定卷轴投影 item-only 目标。错误、缺失和自身目标在消耗、RNG 与 world tick 前返回不可用事件。鉴定结果继续使用既有物品知识 DTO，state hash Schema 保持 v49。完整边界见 [Contract v112](contract-v112-scroll-identification.md)。
 
+协议 1.113 扩展既有侦测结果以承载静态物品效果：terrain Mapping/陷阱/通道继续通过 `changedCells` 与 `AbilityDetectResolutionDto.detectedPositions` 返回，actor/item 通过稳定 `detectedEntityIds` 和位置返回；item ID 与 actor ID 共用该通用字段但由事件来源和内容主体区分。`throughWalls` 只属于内容行为，不新增运行时 DTO 字段。没有新增存档字段，state hash Schema 保持 v49。完整边界见 [Contract v113](contract-v113-scroll-detection.md)。
+
+协议 1.114 新增 `RecallStateDto { dungeonId, floorId, remainingTurns? }`，并作为可选 `PlayerDto.recall` / `PlayerSaveDto.recall` 投影稳定目的地与倒计时。随机物品传送复用 `AbilityTeleportResolutionDto` 与 `GameEventOutcomeDto::AbilityTeleport`；跨层、启动/取消/重设/触发召回使用 `item.use-teleported-level`、`item.recall-started/cancelled/reset/triggered` 结构化事件，并和楼梯共用既有 floor transition 事件。错误目标、无合法落点、无跨层目标或地表无召回目的地均在消费、RNG 与 world tick 前返回 `item.use-unavailable`。新增权威 recall 状态使 state hash 升至 Schema v50；save 容器仍为 v1。完整边界见 [Contract v114](contract-v114-scroll-travel-recall.md)。
+
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`，已知充能不足的设备使用按原版语义不消耗能量或推进 world tick。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。
