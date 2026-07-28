@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.resonance-mail",
+  "nameKey": "item-demo-resonance-mail-name",
+  "descriptionKey": "item-demo-resonance-mail-description",
+  "glyph": "[",
+  "weightTenthsPound": 120,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "modifiers": { "defense": 4 },
+  "tags": ["armor", "equipment"]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.masterwork-armor-scroll",
+  "nameKey": "item-demo-masterwork-armor-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-masterwork-armor-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "enchant-item",
+      "toArmor": { "dice": 1, "sides": 3, "bonus": 3 }
+    }
+  },
+  "tags": ["consumable", "enchantment", "scroll"]
+}

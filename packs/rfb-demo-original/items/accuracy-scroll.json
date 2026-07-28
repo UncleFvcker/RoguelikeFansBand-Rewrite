@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.accuracy-scroll",
+  "nameKey": "item-demo-accuracy-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-accuracy-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "enchant-item",
+      "toHit": { "dice": 0, "sides": 0, "bonus": 1 }
+    }
+  },
+  "tags": ["consumable", "enchantment", "scroll"]
+}

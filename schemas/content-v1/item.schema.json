@@ -380,6 +380,35 @@
       ],
       "type": "object"
     },
+    "ItemEnchantmentRollDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "bonus": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "dice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dice",
+        "sides"
+      ],
+      "type": "object"
+    },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -562,6 +591,49 @@
             },
             "type": {
               "const": "identify-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "toArmor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ItemEnchantmentRollDefinition"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "toDamage": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ItemEnchantmentRollDefinition"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "toHit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ItemEnchantmentRollDefinition"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "const": "enchant-item",
               "type": "string"
             }
           },

@@ -837,6 +837,27 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         }),
         (70, 12) => serde_json::json!({"type": "identify-item", "full": false}),
         (70, 13) => serde_json::json!({"type": "identify-item", "full": true}),
+        (70, 16) => serde_json::json!({
+            "type": "enchant-item",
+            "toArmor": {"dice": 0, "sides": 0, "bonus": 1}
+        }),
+        (70, 17) => serde_json::json!({
+            "type": "enchant-item",
+            "toHit": {"dice": 0, "sides": 0, "bonus": 1}
+        }),
+        (70, 18) => serde_json::json!({
+            "type": "enchant-item",
+            "toDamage": {"dice": 0, "sides": 0, "bonus": 1}
+        }),
+        (70, 20) => serde_json::json!({
+            "type": "enchant-item",
+            "toArmor": {"dice": 1, "sides": 3, "bonus": 3}
+        }),
+        (70, 21) => serde_json::json!({
+            "type": "enchant-item",
+            "toHit": {"dice": 1, "sides": 3, "bonus": 3},
+            "toDamage": {"dice": 1, "sides": 3, "bonus": 3}
+        }),
         (70, 25) => detect("terrain", "map", true),
         (70, 26) => detect("item", "gold", false),
         (70, 27) => detect("item", "item", false),
@@ -7512,7 +7533,7 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn scrolls_map_to_teleport_knowledge_and_detection_effects() {
+    fn scrolls_map_to_teleport_knowledge_enchantment_and_detection_effects() {
         let mut report = ContentImportReport::default();
         for (sval, effect_type) in [
             (8, "random-teleport"),
@@ -7558,6 +7579,31 @@ F:BRAND_VAMP | HOLD_LIFE
             );
             assert_eq!(value["useAction"]["effect"]["type"], "identify-item");
             assert_eq!(value["useAction"]["effect"]["full"], full);
+        }
+        for (sval, component, dice, sides, bonus) in [
+            (16, "toArmor", 0, 0, 1),
+            (17, "toHit", 0, 0, 1),
+            (18, "toDamage", 0, 0, 1),
+            (20, "toArmor", 1, 3, 3),
+            (21, "toHit", 1, 3, 3),
+            (21, "toDamage", 1, 3, 3),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("enchantment-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], "enchant-item");
+            assert_eq!(effect[component]["dice"], dice);
+            assert_eq!(effect[component]["sides"], sides);
+            assert_eq!(effect[component]["bonus"], bonus);
         }
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),

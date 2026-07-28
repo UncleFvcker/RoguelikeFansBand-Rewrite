@@ -1510,6 +1510,14 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         full: bool,
     },
+    EnchantItem {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        to_hit: Option<ItemEnchantmentRollDefinition>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        to_damage: Option<ItemEnchantmentRollDefinition>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        to_armor: Option<ItemEnchantmentRollDefinition>,
+    },
     Sequence {
         effects: Vec<Self>,
     },
@@ -1542,6 +1550,16 @@ pub enum ItemUseEffectDefinition {
         delay_bonus: u16,
     },
     ResetRecall,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemEnchantmentRollDefinition {
+    pub dice: u16,
+    pub sides: u16,
+    #[serde(default)]
+    pub bonus: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3119,6 +3137,26 @@ fn valid_item_effect(
             resource_ids.contains(resource_id)
         }
         ItemUseEffectDefinition::IdentifyItem { .. } => true,
+        ItemUseEffectDefinition::EnchantItem {
+            to_hit,
+            to_damage,
+            to_armor,
+        } => {
+            let valid_roll = |roll: &ItemEnchantmentRollDefinition| {
+                (roll.dice == 0 && roll.sides == 0 && (1..=100).contains(&roll.bonus))
+                    || ((1..=10).contains(&roll.dice)
+                        && (1..=100).contains(&roll.sides)
+                        && roll.bonus <= 100)
+            };
+            let weapon_rolls = to_hit.iter().chain(to_damage).count();
+            let armor_rolls = usize::from(to_armor.is_some());
+            ((weapon_rolls > 0 && armor_rolls == 0) || (weapon_rolls == 0 && armor_rolls == 1))
+                && to_hit
+                    .iter()
+                    .chain(to_damage)
+                    .chain(to_armor)
+                    .all(valid_roll)
+        }
         ItemUseEffectDefinition::Sequence { effects } => {
             (2..=8).contains(&effects.len())
                 && effects.iter().all(|effect| {
@@ -3198,9 +3236,9 @@ fn valid_item_effect(
 
 fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
-        ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::IdentifyItem { .. } => {
-            false
-        }
+        ItemUseEffectDefinition::Damage { .. }
+        | ItemUseEffectDefinition::IdentifyItem { .. }
+        | ItemUseEffectDefinition::EnchantItem { .. } => false,
         ItemUseEffectDefinition::Sequence { effects } => {
             effects.iter().all(item_effect_is_self_targeted)
         }
@@ -4438,7 +4476,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::Recall { .. }
                     | ItemUseEffectDefinition::ResetRecall => self_target,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
-                    ItemUseEffectDefinition::IdentifyItem { .. } => {
+                    ItemUseEffectDefinition::IdentifyItem { .. }
+                    | ItemUseEffectDefinition::EnchantItem { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
                             && target.range == 0
                             && !target.requires_line_of_effect
@@ -4550,7 +4589,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 &item_tag_values,
                 &resource_ids,
             ) && (item_effect_is_self_targeted(&action.effect)
-                || matches!(action.effect, ItemUseEffectDefinition::IdentifyItem { .. }));
+                || matches!(
+                    action.effect,
+                    ItemUseEffectDefinition::IdentifyItem { .. }
+                        | ItemUseEffectDefinition::EnchantItem { .. }
+                ));
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
                     && charges.maximum <= 1_000_000
@@ -8414,7 +8457,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 35);
+        assert_eq!(first.content.items.len(), 41);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8440,7 +8483,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.105.0");
+        assert_eq!(catalog.pack_version(), "1.106.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

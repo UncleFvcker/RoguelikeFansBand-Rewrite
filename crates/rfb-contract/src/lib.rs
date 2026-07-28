@@ -7,9 +7,9 @@ use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
     CharacterSummary, EntityFactionDto, EquipmentItemDto, GameCommand, GameCommandEnvelope,
     GameEventDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
-    ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position, RecallStateDto,
-    ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
+    ItemEnchantmentsDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
+    MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION, PlayerBuildDto, Position,
+    RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto, ResourcePoolSaveDto,
     SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto, SummonCommandDto,
     SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
 };
@@ -20,7 +20,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v114";
+pub const ACTIVE_BASELINE: &str = "contract-v115";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -156,6 +156,8 @@ pub struct InventoryItemPrecondition {
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
 }
@@ -423,6 +425,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             rolled_affixes: Vec::new(),
             activation: item.activation.clone(),
             charges: item.charges,
+            enchantments: item.enchantments,
             device_recovery_progress: item.device_recovery_progress,
         });
     }
@@ -682,6 +685,7 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
             && (item.quantity != 1
                 || item.activation.is_some()
                 || item.charges.is_some()
+                || !item.enchantments.is_empty()
                 || !(1..=100).contains(&depth))
         {
             return Err(ContractError::InvalidGeneratedItemPrecondition(

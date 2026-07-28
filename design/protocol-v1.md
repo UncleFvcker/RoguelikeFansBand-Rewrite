@@ -246,6 +246,8 @@ interface GameCoreV1 {
 
 协议 1.114 新增 `RecallStateDto { dungeonId, floorId, remainingTurns? }`，并作为可选 `PlayerDto.recall` / `PlayerSaveDto.recall` 投影稳定目的地与倒计时。随机物品传送复用 `AbilityTeleportResolutionDto` 与 `GameEventOutcomeDto::AbilityTeleport`；跨层、启动/取消/重设/触发召回使用 `item.use-teleported-level`、`item.recall-started/cancelled/reset/triggered` 结构化事件，并和楼梯共用既有 floor transition 事件。错误目标、无合法落点、无跨层目标或地表无召回目的地均在消费、RNG 与 world tick 前返回 `item.use-unavailable`。新增权威 recall 状态使 state hash 升至 Schema v50；save 容器仍为 v1。完整边界见 [Contract v114](contract-v114-scroll-travel-recall.md)。
 
+协议 1.115 新增 `ItemEnchantmentsDto { toHit, toDamage, toArmor }`，并投影到地面、背包、装备及四类 item save DTO。`GameEventOutcomeDto::ItemEnchantment` 返回三个 `ItemEnchantmentComponentResolutionDto`，分别记录 attempts、successes、before、after；成功与全失败事件为 `item.use-enchanted` / `item.use-enchantment-failed`。错误目标在消费、RNG 与 world tick 前返回 `item.use-unavailable`。新增权威实例状态使 state hash 升至 Schema v51；save 容器仍为 v1。完整边界见 [Contract v115](contract-v115-scroll-enchantment.md)。
+
 当前命令集包括八向 `Move`、`Wait`、`Rest`、物品/装备操作、terrain 交互、楼层/任务/campaign 操作、`Fire`、`FireTarget`、`Throw`、`StudyAbility` 和 `CastAbility`。`StudyAbility` 以稳定书本实例和能力 ID 学习，不消耗书本；`CastAbility` 提交稳定 `TargetSelection`，通过前置检查后原子扣除资源并投影失败率结果。命令先转换为 `GameAction`；普通行动消耗 100 能量并增加一个玩家 `turn`，已知充能不足的设备使用按原版语义不消耗能量或推进 world tick。`Rest` 是确定性宏命令：revision 和命令序号只前进一次，`turn` 增加实际完成回合数且至少增加 1，每个完成回合都通过同一调度器推进世界脉冲。
 
 UI 本地操作，例如展开面板、滚动消息、移动相机和播放动画，不发送到核心。

@@ -2213,6 +2213,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            enchantments: Default::default(),
             activation: None,
             charges: None,
             device_recovery_progress: 0,
@@ -5727,6 +5728,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -8988,6 +8990,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            enchantments: Default::default(),
             activation: None,
             charges: None,
             device_recovery_progress: 0,
@@ -9076,6 +9079,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 .into_iter()
                 .collect(),
             rolled_affixes: Vec::new(),
+            enchantments: Default::default(),
             activation: None,
             charges: None,
             device_recovery_progress: 0,
@@ -9091,6 +9095,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 quality: ItemQualityDto::Fine,
                 affix_ids: vec!["demo.affix.vampiric".to_owned()],
                 rolled_affixes: Vec::new(),
+                enchantments: Default::default(),
                 activation: None,
                 charges: None,
                 device_recovery_progress: 0,
@@ -9566,6 +9571,7 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -11276,6 +11282,7 @@ fn revelation_scroll_fully_identifies_affixes_and_round_trips() {
         quality: ItemQualityDto::Exceptional,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -11351,6 +11358,372 @@ fn identify_scroll_rejects_missing_and_self_targets_before_consumption() {
             ItemKnowledgeDto::Unknown
         );
     }
+}
+
+#[test]
+fn enchantment_scroll_succeeds_consumes_on_failure_and_round_trips() {
+    const SCROLL_ID: &str = "test.item.accuracy-scroll.1";
+    const TARGET_ID: &str = "test.item.enchantment-target.1";
+    let mut game = skill_check_game(0, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.accuracy-scroll");
+    give_inventory_item(&mut game, TARGET_ID, "demo.item.adaptive-glaive");
+    game.rng = RfbRng::seeded(0);
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: SCROLL_ID.to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: TARGET_ID.to_owned(),
+            }),
+        },
+    );
+
+    assert!(!game.items.iter().any(|item| item.id == SCROLL_ID));
+    let resolution = update
+        .events
+        .iter()
+        .find_map(|event| match &event.outcome {
+            Some(GameEventOutcomeDto::ItemEnchantment { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .expect("enchantment should emit a structured resolution");
+    assert_eq!(update.events[0].kind, "item.use-enchanted");
+    assert_eq!(resolution.to_hit.attempts, 1);
+    assert_eq!(resolution.to_hit.successes, 1);
+    assert_eq!(resolution.to_hit.before, 0);
+    assert_eq!(resolution.to_hit.after, 1);
+    assert_eq!(resolution.to_damage.attempts, 0);
+    assert_eq!(resolution.to_armor.attempts, 0);
+
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.accuracy-scroll");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == TARGET_ID)
+        .expect("target should remain carried")
+        .enchantments
+        .to_hit = 15;
+    game.rng = RfbRng::seeded(0);
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: SCROLL_ID.to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: TARGET_ID.to_owned(),
+            }),
+        },
+    );
+    assert_eq!(update.events[0].kind, "item.use-enchantment-failed");
+    assert_eq!(game.rng_draw_counter() - draws_before, 2);
+    assert!(!game.items.iter().any(|item| item.id == SCROLL_ID));
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == TARGET_ID)
+            .expect("target should remain carried")
+            .enchantments
+            .to_hit,
+        15
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("enchantments should round-trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
+    let mut invalid = game.to_save();
+    invalid
+        .inventory
+        .iter_mut()
+        .find(|item| item.id == TARGET_ID)
+        .expect("target should be saved")
+        .enchantments
+        .to_hit = 16;
+    assert!(matches!(
+        Game::from_save(invalid),
+        Err(CoreError::InvalidSave("item enchantment state is invalid"))
+    ));
+}
+
+#[test]
+fn masterwork_weapon_scroll_rolls_both_components_deterministically() {
+    fn run(seed: u64) -> (ItemEnchantmentResolutionDto, u64) {
+        const SCROLL_ID: &str = "test.item.masterwork-weapon-scroll.1";
+        const TARGET_ID: &str = "test.item.masterwork-target.1";
+        let mut game = skill_check_game(seed, "demo.build.scholar");
+        give_inventory_item(&mut game, SCROLL_ID, "demo.item.masterwork-weapon-scroll");
+        give_inventory_item(&mut game, TARGET_ID, "demo.item.adaptive-glaive");
+        game.rng = RfbRng::seeded(seed);
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: SCROLL_ID.to_owned(),
+                target: Some(TargetSelection::Item {
+                    item_id: TARGET_ID.to_owned(),
+                }),
+            },
+        );
+        let resolution = update
+            .events
+            .iter()
+            .find_map(|event| match &event.outcome {
+                Some(GameEventOutcomeDto::ItemEnchantment { resolution }) => {
+                    Some(resolution.clone())
+                }
+                _ => None,
+            })
+            .expect("masterwork enchantment should emit a resolution");
+        (resolution, game.rng_draw_counter())
+    }
+
+    let left = run(37);
+    let right = run(37);
+    assert_eq!(left, right);
+    assert!((4..=6).contains(&left.0.to_hit.attempts));
+    assert!((4..=6).contains(&left.0.to_damage.attempts));
+    assert_eq!(left.0.to_armor.attempts, 0);
+    assert_eq!(left.0.to_hit.successes, left.0.to_hit.after);
+    assert_eq!(left.0.to_damage.successes, left.0.to_damage.after);
+}
+
+#[test]
+fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
+    let artifact_seed = (0..1_000).find(|seed| {
+        let mut ordinary = skill_check_game(*seed, "demo.build.scholar");
+        ordinary.rng = RfbRng::seeded(*seed);
+        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 1, false, false);
+        let mut artifact = skill_check_game(*seed, "demo.build.scholar");
+        artifact.rng = RfbRng::seeded(*seed);
+        let artifact = artifact.resolve_item_enchantment_component(0, 1, 1, false, true);
+        ordinary.successes == 1 && artifact.successes == 0
+    });
+    assert_eq!(artifact_seed, Some(0));
+
+    let ammunition_seed = (0..1_000).find(|seed| {
+        let mut ordinary = skill_check_game(*seed, "demo.build.scholar");
+        ordinary.rng = RfbRng::seeded(*seed);
+        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 20, false, false);
+        let mut ammunition = skill_check_game(*seed, "demo.build.scholar");
+        ammunition.rng = RfbRng::seeded(*seed);
+        let ammunition = ammunition.resolve_item_enchantment_component(0, 1, 20, true, false);
+        ordinary.successes == 0 && ammunition.successes == 1
+    });
+    assert_eq!(ammunition_seed, Some(0));
+}
+
+#[test]
+fn enchantment_scroll_rejects_invalid_targets_atomically() {
+    const SCROLL_ID: &str = "test.item.invalid-enchantment-scroll.1";
+    const ARMOR_ID: &str = "test.item.invalid-enchantment-armor.1";
+    let mut game = skill_check_game(41, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.accuracy-scroll");
+    give_inventory_item(&mut game, ARMOR_ID, "demo.item.resonance-mail");
+
+    for target in [
+        None,
+        Some(TargetSelection::Item {
+            item_id: "missing.item".to_owned(),
+        }),
+        Some(TargetSelection::Item {
+            item_id: SCROLL_ID.to_owned(),
+        }),
+        Some(TargetSelection::Item {
+            item_id: ARMOR_ID.to_owned(),
+        }),
+        Some(TargetSelection::SelfTarget),
+    ] {
+        let draws_before = game.rng_draw_counter();
+        let tick_before = game.world_tick;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: SCROLL_ID.to_owned(),
+                target,
+            },
+        );
+        assert_eq!(update.events[0].kind, "item.use-unavailable");
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert_eq!(game.world_tick, tick_before);
+        assert!(game.items.iter().any(|item| item.id == SCROLL_ID));
+        assert_eq!(
+            game.item_knowledge_dto("demo.item.accuracy-scroll"),
+            ItemKnowledgeDto::Unknown
+        );
+    }
+}
+
+#[test]
+fn enchantments_feed_combat_armor_and_legacy_save_projection() {
+    let mut game = skill_check_game(53, "demo.build.vanguard");
+    for item in game
+        .items
+        .iter_mut()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+    {
+        item.location = ItemLocation::Inventory;
+    }
+    for (id, kind_id, location, enchantments) in [
+        (
+            "test.item.enchanted-weapon",
+            "demo.item.adaptive-glaive",
+            ItemLocation::Equipped {
+                slot_id: "weapon".to_owned(),
+            },
+            ItemEnchantmentsDto {
+                to_hit: 3,
+                to_damage: 4,
+                to_armor: 0,
+            },
+        ),
+        (
+            "test.item.enchanted-launcher",
+            "demo.item.resonance-sling",
+            ItemLocation::Equipped {
+                slot_id: "launcher".to_owned(),
+            },
+            ItemEnchantmentsDto {
+                to_hit: 2,
+                to_damage: 3,
+                to_armor: 0,
+            },
+        ),
+        (
+            "test.item.enchanted-ammunition",
+            "demo.item.resonance-pellet",
+            ItemLocation::Inventory,
+            ItemEnchantmentsDto {
+                to_hit: 5,
+                to_damage: 6,
+                to_armor: 0,
+            },
+        ),
+        (
+            "test.item.enchanted-throwable",
+            "demo.item.luminous-shard",
+            ItemLocation::Inventory,
+            ItemEnchantmentsDto {
+                to_hit: 7,
+                to_damage: 8,
+                to_armor: 0,
+            },
+        ),
+        (
+            "test.item.enchanted-armor",
+            "demo.item.resonance-mail",
+            ItemLocation::Equipped {
+                slot_id: "body".to_owned(),
+            },
+            ItemEnchantmentsDto {
+                to_hit: 0,
+                to_damage: 0,
+                to_armor: 5,
+            },
+        ),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+        let item = game
+            .items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .expect("test item should be carried");
+        item.location = location;
+        item.enchantments = enchantments;
+    }
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.enchanted-ammunition")
+        .expect("ammunition should exist")
+        .quantity = 20;
+    for item in game.items.iter_mut().filter(|item| {
+        item.kind_id == "demo.item.resonance-pellet"
+            && item.location == ItemLocation::Inventory
+            && item.quantity > 0
+    }) {
+        item.enchantments = ItemEnchantmentsDto {
+            to_hit: 5,
+            to_damage: 6,
+            to_armor: 0,
+        };
+    }
+    for id in [
+        "test.item.enchanted-weapon",
+        "test.item.enchanted-launcher",
+        "test.item.enchanted-armor",
+    ] {
+        game.item_property_knowledge.insert(
+            id.to_owned(),
+            ItemPropertyKnowledgeState {
+                appraised: true,
+                identified: true,
+                known_affix_ids: BTreeSet::new(),
+            },
+        );
+    }
+    game.mark_item_aware("demo.item.luminous-shard");
+
+    let snapshot = game.snapshot();
+    let weapon = snapshot
+        .equipment
+        .iter()
+        .find(|item| item.id == "test.item.enchanted-weapon")
+        .expect("weapon should be equipped");
+    assert_eq!(weapon.enchantments.to_hit, 3);
+    assert_eq!(
+        weapon.melee_profile.as_ref().expect("melee profile").to_hit,
+        5
+    );
+    assert_eq!(
+        weapon
+            .melee_profile
+            .as_ref()
+            .expect("melee profile")
+            .to_damage,
+        6
+    );
+    assert_eq!(snapshot.player.melee_profile.to_damage, 6);
+    let projectile = snapshot
+        .player
+        .projectile_profile
+        .as_ref()
+        .expect("launcher should expose a projectile profile");
+    assert_eq!(projectile.to_hit, 37);
+    assert_eq!(projectile.to_damage, 10);
+    let throwable = snapshot
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.item.enchanted-throwable")
+        .and_then(|item| item.throw_profile.as_ref())
+        .expect("throwable should expose a throw profile");
+    assert_eq!(throwable.to_hit, 37);
+    assert_eq!(throwable.to_damage, 8);
+    let stats = game.player_derived_stats();
+    assert!(stats.armor_class.contributions.iter().any(|contribution| {
+        contribution.source_id == "test.item.enchanted-armor" && contribution.amount == 90
+    }));
+
+    let restored = Game::from_save(game.to_save()).expect("all item locations should round-trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
+
+    let mut legacy_json = serde_json::to_value(game.to_save()).expect("save should serialize");
+    for field in ["items", "inventory", "equipment", "carriedItems"] {
+        if let Some(items) = legacy_json
+            .get_mut(field)
+            .and_then(serde_json::Value::as_array_mut)
+        {
+            for item in items {
+                item.as_object_mut()
+                    .expect("saved item should be an object")
+                    .remove("enchantments");
+            }
+        }
+    }
+    let legacy: SavePayloadV1 =
+        serde_json::from_value(legacy_json).expect("missing enchantments should default");
+    let migrated = Game::from_save(legacy).expect("legacy save should load");
+    assert!(
+        migrated
+            .items
+            .iter()
+            .all(|item| item.enchantments.is_empty())
+    );
 }
 
 #[test]
@@ -11650,6 +12023,7 @@ fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation,
         charges,
         device_recovery_progress: 0,
@@ -12819,6 +13193,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -12869,6 +13244,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.frost-hunter".to_owned()],
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -12954,6 +13330,7 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.adaptive-echo".to_owned()],
         rolled_affixes: rolled.clone(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -13014,6 +13391,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
             affix_id: "demo.affix.adaptive-echo".to_owned(),
             properties,
         }],
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,
@@ -13341,6 +13719,7 @@ fn esoteria_validates_item_targets_before_cost_and_persists_knowledge() {
         quality: ItemQualityDto::Fine,
         affix_ids: vec!["demo.affix.vampiric".to_owned()],
         rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
         activation: None,
         charges: None,
         device_recovery_progress: 0,

@@ -37,6 +37,7 @@ import type {
   GameSnapshot,
   GameUpdate,
   InventoryItemDto,
+  ItemEnchantmentsDto,
   ItemPropertyDto,
   PlayerBuildDto,
   PlayerProgressDto,
@@ -1375,6 +1376,7 @@ function renderInventory(
         details.append(activation);
       }
       appendItemModifiers(details, item.modifiers);
+      appendItemEnchantments(details, item.enchantments);
       appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
       appendItemOffense(details, item.slays, item.brands);
@@ -1457,6 +1459,7 @@ function renderEquipment(equipment: EquipmentItemDto[]): void {
       slotTag.textContent = slotLabel;
       details.append(name, slotTag);
       appendItemModifiers(details, item.modifiers);
+      appendItemEnchantments(details, item.enchantments);
       appendEquipmentBonuses(details, item.equipmentBonuses);
       appendItemDefenses(details, item.resistances, item.statusImmunities);
       appendItemOffense(details, item.slays, item.brands);
@@ -1729,6 +1732,25 @@ function appendItemModifiers(
     modifier.className = "item-modifier";
     modifier.textContent = localization.format(key, { value: signedModifier(value) });
     container.append(modifier);
+  }
+}
+
+function appendItemEnchantments(
+  container: HTMLElement,
+  enchantments: ItemEnchantmentsDto | undefined,
+): void {
+  if (!enchantments) return;
+  const entries: Array<[MessageKey, number]> = [
+    ["item-enchantment-to-hit", enchantments.toHit],
+    ["item-enchantment-to-damage", enchantments.toDamage],
+    ["item-enchantment-to-armor", enchantments.toArmor],
+  ];
+  for (const [key, value] of entries) {
+    if (value === 0) continue;
+    const label = document.createElement("span");
+    label.className = "item-modifier";
+    label.textContent = localization.format(key, { value: signedModifier(value) });
+    container.append(label);
   }
 }
 
@@ -2437,6 +2459,16 @@ function formatEvent(event: GameEventDto): string {
     case "item-use-fully-identified":
       return localization.format("message-item-use-fully-identified", {
         source: visibleItemName(event.args.nameKey, event.args.source),
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "item-use-enchanted":
+      return localization.format("message-item-use-enchanted", {
+        source: visibleItemNameForKind(event.args.source),
+        target: visibleItemNameForKind(event.args.target),
+      });
+    case "item-use-enchantment-failed":
+      return localization.format("message-item-use-enchantment-failed", {
+        source: visibleItemNameForKind(event.args.source),
         target: visibleItemNameForKind(event.args.target),
       });
     case "item-use-unavailable":

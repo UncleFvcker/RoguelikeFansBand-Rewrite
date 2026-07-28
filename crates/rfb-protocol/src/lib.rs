@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.114";
+pub const PROTOCOL_VERSION: &str = "1.115";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1745,6 +1745,9 @@ pub enum GameEventOutcomeDto {
     ItemIdentify {
         resolution: ItemIdentifyResolutionDto,
     },
+    ItemEnchantment {
+        resolution: ItemEnchantmentResolutionDto,
+    },
     MonsterDisplacement {
         resolution: MonsterDisplacementResolutionDto,
     },
@@ -1940,6 +1943,8 @@ pub struct ItemDto {
     pub knowledge: ItemKnowledgeDto,
     pub position: Position,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2002,6 +2007,43 @@ pub struct ItemIdentifyResolutionDto {
     pub changed: bool,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemEnchantmentsDto {
+    pub to_hit: u16,
+    pub to_damage: u16,
+    pub to_armor: u16,
+}
+
+impl ItemEnchantmentsDto {
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.to_hit == 0 && self.to_damage == 0 && self.to_armor == 0
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemEnchantmentComponentResolutionDto {
+    pub attempts: u16,
+    pub successes: u16,
+    pub before: u16,
+    pub after: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemEnchantmentResolutionDto {
+    pub item_id: String,
+    pub item_kind_id: String,
+    pub to_hit: ItemEnchantmentComponentResolutionDto,
+    pub to_damage: ItemEnchantmentComponentResolutionDto,
+    pub to_armor: ItemEnchantmentComponentResolutionDto,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2039,6 +2081,8 @@ pub struct InventoryItemDto {
     #[serde(default)]
     pub can_supply_recharge: bool,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default)]
     pub weight_tenths_pound: u16,
     #[serde(default)]
@@ -2093,6 +2137,8 @@ pub struct EquipmentItemDto {
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default)]
     pub weight_tenths_pound: u16,
     pub slot_id: String,
@@ -2361,6 +2407,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemQualityDto);
     push_declaration!(ItemIdentificationDto);
     push_declaration!(ItemIdentifyResolutionDto);
+    push_declaration!(ItemEnchantmentsDto);
+    push_declaration!(ItemEnchantmentComponentResolutionDto);
+    push_declaration!(ItemEnchantmentResolutionDto);
     push_declaration!(ItemPropertyDto);
     push_declaration!(InventoryItemDto);
     push_declaration!(BodySlotDto);
@@ -2618,6 +2667,8 @@ pub struct ItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2638,6 +2689,8 @@ pub struct InventoryItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2659,6 +2712,8 @@ pub struct EquipmentItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2680,6 +2735,8 @@ pub struct CarriedItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3143,6 +3200,7 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 position: Position { x: 0, y: 0 },
                 quantity: 2,
+                enchantments: ItemEnchantmentsDto::default(),
             }],
             inventory: vec![InventoryItemDto {
                 id: "demo.item.inventory.1".to_owned(),
@@ -3156,6 +3214,7 @@ mod tests {
                 can_receive_recharge: false,
                 can_supply_recharge: false,
                 quantity: 1,
+                enchantments: ItemEnchantmentsDto::default(),
                 weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),
                 modifiers: StatModifiersDto {
@@ -3183,6 +3242,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 quantity: 1,
+                enchantments: ItemEnchantmentsDto::default(),
                 weight_tenths_pound: 5,
                 slot_id: "charm".to_owned(),
                 modifiers: StatModifiersDto {

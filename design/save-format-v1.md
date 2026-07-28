@@ -185,6 +185,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.114 为 `PlayerSaveDto` 增加可选 `recall { dungeonId, floorId, remainingTurns? }`。目的地保存稳定内容 ID，不保存 dungeon instance ID；载入时要求 floor 是同一 dungeon 的有效 dungeon floor，待触发倒计时必须为 1–2000，且当前位置必须是地表或 dungeon floor。v113 built-in 地牢存档缺字段时从当前楼层无 RNG 派生目的地，地表旧档保持 `None`。倒计时写入最终剩余行动周期，读档不重掷；返回地表后 `reset-on-surface` 实例仍按既有生命周期清除，从地表触发召回会为稳定目标楼层建立新实例。save 容器保持 v1，新增权威 recall 状态使 state hash 升至 Schema v50。完整边界见 [Contract v114](contract-v114-scroll-travel-recall.md)。
 
+协议 1.115 为 `ItemSaveDto`、`InventoryItemSaveDto`、`EquipmentItemSaveDto` 和 `CarriedItemSaveDto` 增加可选 `enchantments { toHit, toDamage, toArmor }`。缺失字段迁移为全零，不读取内容表、不补抽 RNG；任一单项超过 +15 时以 `item enchantment state is invalid` 拒绝载入。拆分、掉落、射击弹药结算和楼层仓库必须保留强化值，堆叠只合并强化及其他运行时属性兼容的实例。save 容器保持 v1，权威实例字段使 state hash 升至 Schema v51。完整边界见 [Contract v115](contract-v115-scroll-enchantment.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

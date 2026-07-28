@@ -73,6 +73,14 @@
 | P62 | 卷轴效果重分类与首批鉴定事务 | 已由 contract-v112 完成 | tval 70/71 缺口统一为 `scroll-effect`；sval 12/13 映射普通/完全鉴定；固定/动态 item-only 目标校验、消费/RNG/world tick 前原子拒绝、appraised/identified/affix 知识、来源 aware、结构化事件、Death helper 复用与 Web 物品选择器。`scroll-effect` 61→59，`device-effect` 退出报告。协议 1.112、包 1.103.0、Schema v49、fixtures 384-386 共 386 exact |
 | P63 | 卷轴地图与侦测事务 | 已由 contract-v113 完成 | 新增 item detect 主体与显式 `throughWalls`；Mapping 写 explored，隐藏地形写 revealedTerrain，actor/item 保持瞬时；静态卷轴事件、Web 文案与 Legacy gold/passage/invisible 标签贯通。sval 25–30/57 共七条使 `scroll-effect` 59→52。协议 1.113、包 1.104.0、Schema v49、fixtures 387-389 共 389 exact |
 | P64 | 卷轴传送与回城事务 | 已由 contract-v114 完成 | `random-teleport`、`teleport-level`、`recall`、`reset-recall`；最远半数合法格、上下方向/树连接、稳定 dungeon+floor 目的地、延迟/取消/重设、实例生命周期、原子拒绝与 v113 存档迁移。sval 8–11/53 使 `scroll-effect` 52→47；协议 1.114、包 1.105.0、Schema v50、fixtures 390-398 共 398 exact |
+| P65 | 装备附魔卷轴与实例强化 | 已由 contract-v115 完成 | `enchant-item` 的 to-hit/to-damage/to-AC 尝试骰、原版千分递减表、+15 上限、神器 50% 门、普通/弹药堆门、实例/save/战斗派生、原子拒绝和 Web 投影。sval 16/17/18/20/21 使 `scroll-effect` 47→42；协议 1.115、包 1.106.0、Schema v51、fixtures 399-405 共 405 exact |
+
+## contract-v115 明确遗留
+
+- 附魔只增加正向 to-hit/to-damage/to-AC，不包含装备诅咒、解除诅咒、负强化或按职业/服务调整概率；
+- 神器二次门、普通堆叠和弹药堆叠已按原版固定；神器保护目前由 item `artifact` tag 判定，随机神器与重铸尚未建立；
+- 地面目标只允许玩家脚下，Web 当前通用物品选择器主要覆盖背包/装备；批量选择、自动选装和商店强化服务尚未建立；
+- 剩余 `scroll-effect` 42 中，召唤四条和解除/施加诅咒四条是下一批高覆盖候选，其后再处理世界效果。
 
 ## contract-v114 明确遗留
 
@@ -80,14 +88,14 @@
 - 倒计时按完成的玩家行动周期推进，再次使用可取消；受伤中断、反召回区域和怪物干扰尚未建立；
 - Teleport Level 使用当前实例的树连接和方向边界回退；地表向下要求已有召回目的地并继续遵守地牢进入条件，不绕过入口规则；
 - 普通 `reset-on-surface` 地牢召回地表会清旧实例，地表召回创建新实例；persistent/TTL 仍沿用各自内容生命周期；
-- 剩余 `scroll-effect` 47 中，装备附魔/强化五条、召唤四条和解除/施加诅咒四条是下一批高覆盖候选。
+- 装备附魔/强化五条已由 contract-v115 完成；召唤四条和解除/施加诅咒四条进入下一候选集。
 
 ## contract-v113 明确遗留
 
 - Mapping 只写当前层 explored，不揭露隐藏 terrain 真值；persistent terrain detect 只把 concealed 命中写入 revealedTerrain；actor/item detect 不建立长期实体知识或怪物回忆；
 - item 的 `detectedEntityIds` 复用通用侦测结果字段承载物品实例 ID；自动拾取、地图标记与侦测结果列表 UI 未建立；
 - `throughWalls` 只绕过 FOV/LOS，不绕过当前楼层和半径；P83 法术与既有动态设备缺省 false，语义不回归；
-- 传送/回城五条已由 contract-v114 完成；地图结果列表 UI、自动拾取和怪物回忆仍保留，装备附魔、召唤和诅咒卷轴进入下一候选集。
+- 传送/回城五条已由 contract-v114 完成，装备附魔五条已由 contract-v115 完成；地图结果列表 UI、自动拾取和怪物回忆仍保留，召唤和诅咒卷轴进入下一候选集。
 
 ## contract-v112 明确遗留
 
@@ -95,10 +103,10 @@
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测和传送/回城完成后剩余 47 条，附魔/强化、诅咒、召唤与世界效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城和附魔完成后剩余 42 条，诅咒、召唤与世界效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
-- 地图/侦测七条已由 contract-v113 完成，传送/回城五条已由 contract-v114 完成；剩余 47 条按附魔/强化、诅咒、召唤和世界效果继续推进。
+- 地图/侦测七条已由 contract-v113 完成，传送/回城五条已由 contract-v114 完成，附魔五条已由 contract-v115 完成；剩余 42 条按诅咒、召唤和世界效果继续推进。
 
 ## contract-v107 明确遗留
 

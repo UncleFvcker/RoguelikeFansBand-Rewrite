@@ -58,8 +58,8 @@ use rfb_content::{
     ContentCatalog, ContentPosition, DeviceRechargeProfileDefinition, DungeonDefinition,
     DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
     EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
-    EquipmentPassive, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
-    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
+    EquipmentPassive, FloorLifecycle, ItemEnchantmentRollDefinition, ItemUseEffectDefinition,
+    MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
     ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
     ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
     SkillKind, SkillSetDefinition, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers,
@@ -84,7 +84,8 @@ use rfb_protocol::{
     EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto, EquipmentPassiveDto,
     FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
     HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto,
-    ItemChargesDto, ItemDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
+    ItemChargesDto, ItemDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
+    ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
     ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
     ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
     MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
@@ -104,7 +105,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 106] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 107] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -211,13 +212,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 106] = [
     "12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7",
     "c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25",
     "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653",
+    "36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86";
+    "9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 50;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 51;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1384,6 +1386,7 @@ fn append_starting_item(
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        enchantments: ItemEnchantmentsDto::default(),
         activation,
         charges,
         device_recovery_progress: 0,
@@ -1706,6 +1709,7 @@ impl Game {
                     quality: item_quality_dto(spawn.quality),
                     affix_ids: spawn.affix_ids.clone(),
                     rolled_affixes: Vec::new(),
+                    enchantments: ItemEnchantmentsDto::default(),
                     activation,
                     charges,
                     device_recovery_progress: 0,
@@ -2364,6 +2368,11 @@ impl Game {
             GameAction::UseItem { item_id, target }
                 if self.identify_item_use_target_is_invalid(item_id, target.as_ref())
         );
+        let invalid_enchant_item_use = matches!(
+            &action,
+            GameAction::UseItem { item_id, target }
+                if self.enchant_item_use_target_is_invalid(item_id, target.as_ref())
+        );
         let invalid_travel_item_use = matches!(
             &action,
             GameAction::UseItem { item_id, target }
@@ -2380,6 +2389,7 @@ impl Game {
         );
         let advances_world = !depleted_device_use
             && !invalid_identify_item_use
+            && !invalid_enchant_item_use
             && !invalid_travel_item_use
             && !unavailable_recharge
             && !matches!(
@@ -2923,6 +2933,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
             activation,
             charges,
             device_recovery_progress: 0,
@@ -4097,6 +4108,7 @@ impl Game {
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     position: *position,
                     quantity: item.quantity,
+                    enchantments: item.enchantments,
                 })
             })
             .collect::<Vec<_>>();
@@ -4143,7 +4155,8 @@ impl Game {
                                 .item(&item.kind_id)
                                 .and_then(|definition| definition.use_action.as_ref())
                                 .and_then(|action| match &action.effect {
-                                    ItemUseEffectDefinition::IdentifyItem { .. } => {
+                                    ItemUseEffectDefinition::IdentifyItem { .. }
+                                    | ItemUseEffectDefinition::EnchantItem { .. } => {
                                         Some(item_target_spec())
                                     }
                                     _ => None,
@@ -4152,6 +4165,7 @@ impl Game {
                     can_receive_recharge: self.item_can_receive_recharge(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
+                    enchantments: item.enchantments,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
                         .content
@@ -4191,6 +4205,7 @@ impl Game {
                     display_name_key: self.item_display_name_key(&item.kind_id),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     quantity: item.quantity,
+                    enchantments: item.enchantments,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),
@@ -4271,20 +4286,16 @@ impl Game {
             self.items[index].location = ItemLocation::Ground(self.player.position);
         } else {
             let id = self.allocate_item_instance_id()?;
-            let kind_id = self.items[index].kind_id.clone();
+            let mut split = self.items[index].clone();
+            let knowledge = self.item_property_knowledge.get(&split.id).cloned();
             self.items[index].quantity -= quantity;
-            self.items.push(ItemInstance {
-                id,
-                kind_id,
-                quantity,
-                quality: ItemQualityDto::Ordinary,
-                affix_ids: Vec::new(),
-                rolled_affixes: Vec::new(),
-                activation: None,
-                charges: None,
-                device_recovery_progress: 0,
-                location: ItemLocation::Ground(self.player.position),
-            });
+            split.id = id.clone();
+            split.quantity = quantity;
+            split.location = ItemLocation::Ground(self.player.position);
+            self.items.push(split);
+            if let Some(knowledge) = knowledge {
+                self.item_property_knowledge.insert(id, knowledge);
+            }
         }
         Ok(Some((1, u64::from(quantity))))
     }
@@ -4405,6 +4416,8 @@ impl Game {
             });
         }
         let mut remaining = original_quantity;
+        let pickup_item = self.items[index].clone();
+        let pickup_knowledge = self.item_property_knowledge.get(&pickup_item.id).cloned();
         let mut stack_indices = self
             .items
             .iter()
@@ -4413,6 +4426,8 @@ impl Game {
                 carried.location == ItemLocation::Inventory
                     && carried.kind_id == kind_id
                     && carried.quantity < max_stack
+                    && item_instances_stack_compatible(carried, &pickup_item)
+                    && self.item_property_knowledge.get(&carried.id) == pickup_knowledge.as_ref()
             })
             .map(|(index, _)| index)
             .collect::<Vec<_>>();
@@ -4620,6 +4635,9 @@ impl Game {
         for rolled in &item.rolled_affixes {
             add_stat_modifiers_dto(&mut modifiers, &rolled.properties.modifiers);
         }
+        modifiers.defense = modifiers
+            .defense
+            .saturating_add(i32::from(item.enchantments.to_armor));
         modifiers
     }
 
@@ -5489,8 +5507,12 @@ impl Game {
             .and_then(|definition| definition.melee_profile.as_ref())
             .map(|profile| AttackProfileDto {
                 attacks: profile.attacks,
-                to_hit: profile.to_hit,
-                to_damage: profile.to_damage,
+                to_hit: profile
+                    .to_hit
+                    .saturating_add(i32::from(item.enchantments.to_hit)),
+                to_damage: profile
+                    .to_damage
+                    .saturating_add(i32::from(item.enchantments.to_damage)),
                 damage: DamageDiceDto {
                     dice: profile.damage_dice,
                     sides: profile.damage_sides,
@@ -5506,8 +5528,12 @@ impl Game {
             .and_then(|definition| definition.projectile_profile.as_ref())
             .map(|profile| ProjectileProfileDto {
                 range: profile.range,
-                to_hit: profile.to_hit,
-                to_damage: profile.to_damage,
+                to_hit: profile
+                    .to_hit
+                    .saturating_add(i32::from(item.enchantments.to_hit)),
+                to_damage: profile
+                    .to_damage
+                    .saturating_add(i32::from(item.enchantments.to_damage)),
                 damage: DamageDiceDto {
                     dice: profile.damage_dice,
                     sides: profile.damage_sides,
@@ -5549,8 +5575,12 @@ impl Game {
             .as_ref()
             .map(|profile| ThrowProfileDto {
                 range: throw_range(definition.weight_tenths_pound),
-                to_hit: profile.to_hit,
-                to_damage: profile.to_damage,
+                to_hit: profile
+                    .to_hit
+                    .saturating_add(i32::from(item.enchantments.to_hit)),
+                to_damage: profile
+                    .to_damage
+                    .saturating_add(i32::from(item.enchantments.to_damage)),
                 damage: DamageDiceDto {
                     dice: profile.damage_dice,
                     sides: profile.damage_sides,
@@ -5580,14 +5610,31 @@ impl Game {
                 .projectile_profile
                 .as_ref()
                 .and_then(|profile| {
-                    let ammo_break_chance_percent = self
-                        .content
-                        .item(&profile.ammo_kind_id)?
-                        .break_chance_percent;
+                    let ammo_definition = self.content.item(&profile.ammo_kind_id)?;
+                    let ammo_break_chance_percent = ammo_definition.break_chance_percent;
+                    let ammunition_enchantments = self
+                        .items
+                        .iter()
+                        .filter(|ammunition| {
+                            ammunition.kind_id == profile.ammo_kind_id
+                                && ammunition.location == ItemLocation::Inventory
+                                && ammunition.quantity > 0
+                        })
+                        .min_by(|left, right| left.id.cmp(&right.id))
+                        .map_or_else(ItemEnchantmentsDto::default, |ammunition| {
+                            ammunition.enchantments
+                        });
                     Some(ResolvedProjectileProfile {
                         range: profile.range,
-                        to_hit: profile.to_hit,
-                        to_damage: profile.to_damage,
+                        to_hit: profile
+                            .to_hit
+                            .saturating_add(i32::from(item.enchantments.to_hit))
+                            .saturating_add(i32::from(ammunition_enchantments.to_hit)),
+                        to_damage: profile
+                            .to_damage
+                            .saturating_add(i32::from(item.enchantments.to_damage))
+                            .saturating_add(i32::from(ammunition_enchantments.to_damage)),
+                        ammunition_to_hit: ammunition_enchantments.to_hit,
                         damage_dice: profile.damage_dice,
                         damage_sides: profile.damage_sides,
                         damage_type: DamageType::from(profile.damage_type),
@@ -6058,13 +6105,17 @@ impl Game {
                         &mut pipeline,
                         StatKind::MeleeSkill,
                         &item.id,
-                        profile.to_hit,
+                        profile
+                            .to_hit
+                            .saturating_add(i32::from(item.enchantments.to_hit)),
                     );
                     add_equipment_stat(
                         &mut pipeline,
                         StatKind::MeleeDamageBonus,
                         &item.id,
-                        profile.to_damage,
+                        profile
+                            .to_damage
+                            .saturating_add(i32::from(item.enchantments.to_damage)),
                     );
                 }
                 if let Some(profile) = self
@@ -6076,7 +6127,9 @@ impl Game {
                         &mut pipeline,
                         StatKind::RangedSkill,
                         &item.id,
-                        profile.to_hit,
+                        profile
+                            .to_hit
+                            .saturating_add(i32::from(item.enchantments.to_hit)),
                     );
                 }
             }
@@ -6218,6 +6271,12 @@ impl Game {
             let target_kind_id = definition.id.clone();
             self.entities[index].alerted = true;
             let attacker = self.player_derived_stats();
+            let ranged_skill = attacker.ranged_skill.with_modifier(
+                StatLayer::Equipment,
+                profile.ammo_kind_id.clone(),
+                i32::from(profile.ammunition_to_hit),
+                StatBounds::NON_NEGATIVE,
+            );
             let target = self.actor_derived_stats(&self.entities[index], &definition, false);
             changed.insert(self.entities[index].position);
             if !resolve_check(
@@ -6226,7 +6285,7 @@ impl Game {
                     kind: CheckKind::ProjectileHit,
                     actor_id: self.player.id.clone(),
                     target_id: Some(self.entities[index].id.clone()),
-                    ability: attacker.ranged_skill,
+                    ability: ranged_skill,
                     difficulty: target.armor_class.clone(),
                 },
             )
@@ -9527,19 +9586,16 @@ impl Game {
             Ok(Some(self.items.remove(index)))
         } else {
             let id = self.allocate_item_instance_id()?;
+            let mut split = self.items[index].clone();
+            let knowledge = self.item_property_knowledge.get(&split.id).cloned();
             self.items[index].quantity -= 1;
-            Ok(Some(ItemInstance {
-                id,
-                kind_id: kind_id.to_owned(),
-                quantity: 1,
-                quality: ItemQualityDto::Ordinary,
-                affix_ids: Vec::new(),
-                rolled_affixes: Vec::new(),
-                activation: self.items[index].activation.clone(),
-                charges: self.items[index].charges,
-                device_recovery_progress: self.items[index].device_recovery_progress,
-                location: ItemLocation::Inventory,
-            }))
+            split.id = id.clone();
+            split.quantity = 1;
+            split.location = ItemLocation::Inventory;
+            if let Some(knowledge) = knowledge {
+                self.item_property_knowledge.insert(id, knowledge);
+            }
+            Ok(Some(split))
         }
     }
 
@@ -9590,8 +9646,12 @@ impl Game {
             .throw_profile
             .as_ref()
             .map(|profile| ResolvedThrowProfile {
-                to_hit: profile.to_hit,
-                to_damage: profile.to_damage,
+                to_hit: profile
+                    .to_hit
+                    .saturating_add(i32::from(item.enchantments.to_hit)),
+                to_damage: profile
+                    .to_damage
+                    .saturating_add(i32::from(item.enchantments.to_damage)),
                 damage_dice: profile.damage_dice,
                 damage_sides: profile.damage_sides,
                 damage_type: DamageType::from(profile.damage_type),
@@ -9698,19 +9758,16 @@ impl Game {
             Ok(Some(self.items.remove(index)))
         } else {
             let id = self.allocate_item_instance_id()?;
+            let mut split = self.items[index].clone();
+            let knowledge = self.item_property_knowledge.get(&split.id).cloned();
             self.items[index].quantity -= 1;
-            Ok(Some(ItemInstance {
-                id,
-                kind_id: self.items[index].kind_id.clone(),
-                quantity: 1,
-                quality: ItemQualityDto::Ordinary,
-                affix_ids: Vec::new(),
-                rolled_affixes: Vec::new(),
-                activation: self.items[index].activation.clone(),
-                charges: self.items[index].charges,
-                device_recovery_progress: self.items[index].device_recovery_progress,
-                location: ItemLocation::Inventory,
-            }))
+            split.id = id.clone();
+            split.quantity = 1;
+            split.location = ItemLocation::Inventory;
+            if let Some(knowledge) = knowledge {
+                self.item_property_knowledge.insert(id, knowledge);
+            }
+            Ok(Some(split))
         }
     }
 
@@ -9985,6 +10042,22 @@ impl Game {
                         item_id: target_item_id.clone(),
                     }
                 }
+                effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
+                    let Some(TargetSelection::Item {
+                        item_id: target_item_id,
+                    }) = target
+                    else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    if !self.item_is_valid_enchant_target(item_id, target_item_id, effect) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    }
+                }
                 ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
                     if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
                         events.push(DomainEvent::ItemUseUnavailable);
@@ -10051,6 +10124,22 @@ impl Game {
                         return Ok(());
                     };
                     if !self.item_is_valid_identify_target(item_id, target_item_id) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::Item {
+                        item_id: target_item_id.clone(),
+                    }
+                }
+                effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
+                    let Some(TargetSelection::Item {
+                        item_id: target_item_id,
+                    }) = target
+                    else {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    };
+                    if !self.item_is_valid_enchant_target(item_id, target_item_id, effect) {
                         events.push(DomainEvent::ItemUseUnavailable);
                         return Ok(());
                     }
@@ -10332,6 +10421,21 @@ impl Game {
                 });
             }
             (
+                ItemUseEffectDefinition::EnchantItem {
+                    to_hit,
+                    to_damage,
+                    to_armor,
+                },
+                ItemUsePlan::Item { item_id },
+            ) => {
+                self.mark_item_aware(&kind_id);
+                let resolution = self.enchant_item_instance(&item_id, to_hit, to_damage, to_armor);
+                events.push(DomainEvent::ItemEnchanted {
+                    source_kind_id: kind_id,
+                    resolution,
+                });
+            }
+            (
                 ItemUseEffectDefinition::RandomTeleport { .. },
                 ItemUsePlan::RandomTeleport { candidates },
             ) => {
@@ -10466,6 +10570,55 @@ impl Game {
             })
     }
 
+    fn item_is_valid_enchant_target(
+        &self,
+        source_item_id: &str,
+        target_item_id: &str,
+        effect: &ItemUseEffectDefinition,
+    ) -> bool {
+        if source_item_id == target_item_id {
+            return false;
+        }
+        let ItemUseEffectDefinition::EnchantItem {
+            to_hit,
+            to_damage,
+            to_armor,
+        } = effect
+        else {
+            return false;
+        };
+        self.items.iter().any(|item| {
+            if item.id != target_item_id
+                || item.quantity == 0
+                || !matches!(
+                    &item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                ) && !matches!(
+                    &item.location,
+                    ItemLocation::Ground(position) if *position == self.player.position
+                )
+            {
+                return false;
+            }
+            let Some(definition) = self.content.item(&item.kind_id) else {
+                return false;
+            };
+            if definition.tags.iter().any(|tag| tag == "no-enchant") {
+                return false;
+            }
+            if to_armor.is_some() {
+                definition.tags.iter().any(|tag| tag == "armor")
+            } else if to_hit.is_some() || to_damage.is_some() {
+                definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "weapon" | "launcher" | "ammunition"))
+            } else {
+                false
+            }
+        })
+    }
+
     fn identify_item_instance(&mut self, item_id: &str, full: bool) -> ItemIdentifyResolutionDto {
         let item = self
             .items
@@ -10502,6 +10655,128 @@ impl Game {
             item_kind_id,
             full,
             changed,
+        }
+    }
+
+    fn enchant_item_instance(
+        &mut self,
+        item_id: &str,
+        to_hit: Option<ItemEnchantmentRollDefinition>,
+        to_damage: Option<ItemEnchantmentRollDefinition>,
+        to_armor: Option<ItemEnchantmentRollDefinition>,
+    ) -> ItemEnchantmentResolutionDto {
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned enchantment target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let quantity = item.quantity;
+        let definition = self
+            .content
+            .item(&item_kind_id)
+            .expect("planned enchantment kind must remain available");
+        let artifact = definition.tags.iter().any(|tag| tag == "artifact");
+        let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
+        let before = item.enchantments;
+
+        let hit_attempts = self.roll_item_enchantment_attempts(to_hit);
+        let damage_attempts = self.roll_item_enchantment_attempts(to_damage);
+        let armor_attempts = self.roll_item_enchantment_attempts(to_armor);
+        let to_hit = self.resolve_item_enchantment_component(
+            before.to_hit,
+            hit_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        let to_damage = self.resolve_item_enchantment_component(
+            before.to_damage,
+            damage_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        let to_armor = self.resolve_item_enchantment_component(
+            before.to_armor,
+            armor_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        self.items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .expect("planned enchantment target must remain available")
+            .enchantments = ItemEnchantmentsDto {
+            to_hit: to_hit.after,
+            to_damage: to_damage.after,
+            to_armor: to_armor.after,
+        };
+        ItemEnchantmentResolutionDto {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            to_hit,
+            to_damage,
+            to_armor,
+        }
+    }
+
+    fn roll_item_enchantment_attempts(
+        &mut self,
+        roll: Option<ItemEnchantmentRollDefinition>,
+    ) -> u16 {
+        let Some(roll) = roll else {
+            return 0;
+        };
+        let rolled = if roll.dice == 0 {
+            0
+        } else {
+            u16::try_from(self.roll_damage(roll.dice, roll.sides))
+                .expect("validated enchantment roll must fit u16")
+        };
+        rolled.saturating_add(roll.bonus)
+    }
+
+    fn resolve_item_enchantment_component(
+        &mut self,
+        before: u16,
+        attempts: u16,
+        quantity: u32,
+        ammunition: bool,
+        artifact: bool,
+    ) -> ItemEnchantmentComponentResolutionDto {
+        const FAILURE_PER_THOUSAND: [u16; 16] = [
+            5, 10, 50, 100, 200, 300, 400, 500, 650, 800, 950, 987, 993, 995, 998, 1000,
+        ];
+        let mut after = before;
+        let pile_probability = if ammunition {
+            u64::from(quantity).saturating_mul(100) / 20
+        } else {
+            u64::from(quantity).saturating_mul(100)
+        }
+        .max(1);
+        for _ in 0..attempts {
+            if self.rng.bounded(pile_probability) >= 100 {
+                continue;
+            }
+            let failure = FAILURE_PER_THOUSAND
+                .get(usize::from(after))
+                .copied()
+                .unwrap_or(1000);
+            if self.rng.bounded(1000).saturating_add(1) <= u64::from(failure) {
+                continue;
+            }
+            if artifact && self.rng.bounded(100) >= 50 {
+                continue;
+            }
+            after = after.saturating_add(1).min(15);
+        }
+        ItemEnchantmentComponentResolutionDto {
+            attempts,
+            successes: after.saturating_sub(before),
+            before,
+            after,
         }
     }
 
@@ -10589,6 +10864,7 @@ impl Game {
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }
+            | ItemUseEffectDefinition::EnchantItem { .. }
             | ItemUseEffectDefinition::RandomTeleport { .. }
             | ItemUseEffectDefinition::TeleportLevel
             | ItemUseEffectDefinition::Recall { .. }
@@ -10735,6 +11011,49 @@ impl Game {
             return true;
         };
         !self.item_is_valid_identify_target(source_item_id, target_item_id)
+    }
+
+    fn enchant_item_use_target_is_invalid(
+        &self,
+        source_item_id: &str,
+        target: Option<&TargetSelection>,
+    ) -> bool {
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == source_item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+        }) else {
+            return false;
+        };
+        let Some(definition) = self.content.item(&item.kind_id) else {
+            return false;
+        };
+        let effect = item
+            .activation
+            .as_ref()
+            .and_then(|activation| {
+                definition
+                    .device_generation
+                    .as_ref()
+                    .and_then(|generation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|candidate| candidate.id == activation.profile_id)
+                    })
+            })
+            .map(|profile| &profile.effect)
+            .or_else(|| definition.use_action.as_ref().map(|action| &action.effect));
+        let Some(effect @ ItemUseEffectDefinition::EnchantItem { .. }) = effect else {
+            return false;
+        };
+        let Some(TargetSelection::Item {
+            item_id: target_item_id,
+        }) = target
+        else {
+            return true;
+        };
+        !self.item_is_valid_enchant_target(source_item_id, target_item_id, effect)
     }
 
     fn travel_item_use_is_invalid(
@@ -14707,6 +15026,7 @@ impl Game {
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),
+                enchantments: ItemEnchantmentsDto::default(),
                 location: ItemLocation::Ground(actor.position),
             })
         } else {
@@ -15030,6 +15350,7 @@ impl Game {
                 quality,
                 affix_ids,
                 rolled_affixes,
+                enchantments: ItemEnchantmentsDto::default(),
                 activation,
                 charges,
                 device_recovery_progress: 0,
@@ -15943,6 +16264,7 @@ impl Game {
                     quality: ItemQualityDto::Ordinary,
                     affix_ids: Vec::new(),
                     rolled_affixes: Vec::new(),
+                    enchantments: ItemEnchantmentsDto::default(),
                     activation,
                     charges,
                     device_recovery_progress: 0,
@@ -17257,6 +17579,7 @@ impl Game {
                         quality: ItemQualityDto::Ordinary,
                         affix_ids: Vec::new(),
                         rolled_affixes: Vec::new(),
+                        enchantments: ItemEnchantmentsDto::default(),
                         activation,
                         charges,
                         device_recovery_progress: 0,
@@ -19918,6 +20241,7 @@ struct ResolvedProjectileProfile {
     range: u16,
     to_hit: i32,
     to_damage: i32,
+    ammunition_to_hit: u16,
     damage_dice: u16,
     damage_sides: u16,
     damage_type: DamageType,
@@ -20028,6 +20352,17 @@ fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
             item.affix_ids.binary_search(&rolled.affix_id).is_ok()
                 && rolled.properties != AffixPropertyBundleDefinition::default()
         })
+}
+
+fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
+    left.kind_id == right.kind_id
+        && left.quality == right.quality
+        && left.affix_ids == right.affix_ids
+        && left.rolled_affixes == right.rolled_affixes
+        && left.enchantments == right.enchantments
+        && left.activation == right.activation
+        && left.charges == right.charges
+        && left.device_recovery_progress == right.device_recovery_progress
 }
 
 fn item_quality_dto(quality: rfb_content::ItemQuality) -> ItemQualityDto {

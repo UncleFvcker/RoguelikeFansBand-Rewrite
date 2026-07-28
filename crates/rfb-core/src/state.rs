@@ -4,8 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::AffixPropertyBundleDefinition;
 use rfb_protocol::{
-    ItemActivationDto, ItemChargesDto, ItemQualityDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
-    Position,
+    ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemQualityDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, Position,
 };
 use serde::{Deserialize, Serialize};
 
@@ -68,6 +68,7 @@ pub(crate) struct ItemInstance {
     pub(crate) quality: ItemQualityDto,
     pub(crate) affix_ids: Vec<String>,
     pub(crate) rolled_affixes: Vec<RolledAffixState>,
+    pub(crate) enchantments: ItemEnchantmentsDto,
     pub(crate) activation: Option<ItemActivationDto>,
     pub(crate) charges: Option<ItemChargesDto>,
     pub(crate) device_recovery_progress: u16,

@@ -20,11 +20,12 @@ use rfb_content::{
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
     EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
-    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemSaveDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
-    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TargetModeDto, TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
+    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemSaveDto,
+    MonsterPackSaveDto, NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto,
+    PlayerSaveDto, Position, ResistanceDto, ResistanceLevelDto, ResistanceSaveDto,
+    RolledAffixSaveDto, SkillProgressSaveDto, SlayDto, SlayLevelDto, SlayTargetDto,
+    StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto, TargetSpecDto, TerrainSaveDto,
+    WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -206,6 +207,7 @@ pub(crate) fn item_from_dto(
         item.activation.as_ref(),
         item.charges,
         item.device_recovery_progress,
+        item.enchantments,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
@@ -215,6 +217,7 @@ pub(crate) fn item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        enchantments: item.enchantments,
         activation: item.activation,
         charges: item.charges,
         device_recovery_progress: item.device_recovery_progress,
@@ -234,6 +237,7 @@ pub(crate) fn inventory_item_from_dto(
         item.activation.as_ref(),
         item.charges,
         item.device_recovery_progress,
+        item.enchantments,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
@@ -243,6 +247,7 @@ pub(crate) fn inventory_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        enchantments: item.enchantments,
         activation: item.activation,
         charges: item.charges,
         device_recovery_progress: item.device_recovery_progress,
@@ -267,6 +272,7 @@ pub(crate) fn equipment_item_from_dto(
         item.activation.as_ref(),
         item.charges,
         item.device_recovery_progress,
+        item.enchantments,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
@@ -276,6 +282,7 @@ pub(crate) fn equipment_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        enchantments: item.enchantments,
         activation: item.activation,
         charges: item.charges,
         device_recovery_progress: item.device_recovery_progress,
@@ -297,6 +304,7 @@ pub(crate) fn carried_item_from_dto(
         item.activation.as_ref(),
         item.charges,
         item.device_recovery_progress,
+        item.enchantments,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
@@ -306,6 +314,7 @@ pub(crate) fn carried_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        enchantments: item.enchantments,
         activation: item.activation,
         charges: item.charges,
         device_recovery_progress: item.device_recovery_progress,
@@ -320,6 +329,7 @@ fn validate_item_runtime_state(
     activation: Option<&ItemActivationDto>,
     charges: Option<ItemChargesDto>,
     device_recovery_progress: u16,
+    enchantments: ItemEnchantmentsDto,
 ) -> Result<(), CoreError> {
     let configured = definition
         .use_action
@@ -384,6 +394,9 @@ fn validate_item_runtime_state(
         }
         _ => device_recovery_progress == 0,
     };
+    if enchantments.to_hit > 15 || enchantments.to_damage > 15 || enchantments.to_armor > 15 {
+        return Err(CoreError::InvalidSave("item enchantment state is invalid"));
+    }
     if valid && valid_recovery_progress {
         Ok(())
     } else {
@@ -1049,6 +1062,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                enchantments: item.enchantments,
                 activation: item.activation.clone(),
                 charges: item.charges,
                 device_recovery_progress: item.device_recovery_progress,
@@ -1073,6 +1087,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                enchantments: item.enchantments,
                 activation: item.activation.clone(),
                 charges: item.charges,
                 device_recovery_progress: item.device_recovery_progress,
@@ -1098,6 +1113,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                enchantments: item.enchantments,
                 activation: item.activation.clone(),
                 charges: item.charges,
                 device_recovery_progress: item.device_recovery_progress,
@@ -1127,6 +1143,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                enchantments: item.enchantments,
                 activation: item.activation.clone(),
                 charges: item.charges,
                 device_recovery_progress: item.device_recovery_progress,

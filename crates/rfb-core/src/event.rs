@@ -7,11 +7,12 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemIdentifyResolutionDto, ItemQualityDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceGainResolutionDto,
-    ResourceGainSourceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
-    SummonCommandModeDto, SummonCommandResolutionDto,
+    GameEventOutcomeDto, HealingResolutionDto, ItemEnchantmentResolutionDto,
+    ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
+    ProjectileTraceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SummonCommandModeDto,
+    SummonCommandResolutionDto,
 };
 
 use crate::effect::DamageOutcome;
@@ -455,6 +456,10 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         display_name_key: String,
         resolution: ItemIdentifyResolutionDto,
+    },
+    ItemEnchanted {
+        source_kind_id: String,
+        resolution: ItemEnchantmentResolutionDto,
     },
     ItemActivationLanded {
         source_kind_id: String,
@@ -1724,6 +1729,35 @@ impl DomainEvent {
                     ("changed", resolution.changed.to_string()),
                 ],
                 GameEventOutcomeDto::ItemIdentify { resolution },
+            ),
+            Self::ItemEnchanted {
+                source_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                if resolution.to_hit.successes > 0
+                    || resolution.to_damage.successes > 0
+                    || resolution.to_armor.successes > 0
+                {
+                    "item.use-enchanted"
+                } else {
+                    "item.use-enchantment-failed"
+                },
+                if resolution.to_hit.successes > 0
+                    || resolution.to_damage.successes > 0
+                    || resolution.to_armor.successes > 0
+                {
+                    "item-use-enchanted"
+                } else {
+                    "item-use-enchantment-failed"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("target", resolution.item_kind_id.clone()),
+                    ("toHit", resolution.to_hit.after.to_string()),
+                    ("toDamage", resolution.to_damage.after.to_string()),
+                    ("toArmor", resolution.to_armor.after.to_string()),
+                ],
+                GameEventOutcomeDto::ItemEnchantment { resolution },
             ),
             Self::ItemActivationLanded {
                 source_kind_id,

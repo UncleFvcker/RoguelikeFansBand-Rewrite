@@ -3413,6 +3413,9 @@
           "type": "string",
           "default": ""
         },
+        "enchantments": {
+          "$ref": "#/$defs/ItemEnchantmentsDto"
+        },
         "equipmentBonuses": {
           "$ref": "#/$defs/EquipmentBonusesDto"
         },
@@ -4431,6 +4434,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/ItemEnchantmentResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "item-enchantment"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/MonsterDisplacementResolutionDto"
             },
             "type": {
@@ -4801,6 +4820,9 @@
           "type": "string",
           "default": ""
         },
+        "enchantments": {
+          "$ref": "#/$defs/ItemEnchantmentsDto"
+        },
         "equipmentBonuses": {
           "$ref": "#/$defs/EquipmentBonusesDto"
         },
@@ -5006,6 +5028,9 @@
           "type": "string",
           "default": ""
         },
+        "enchantments": {
+          "$ref": "#/$defs/ItemEnchantmentsDto"
+        },
         "id": {
           "type": "string"
         },
@@ -5030,6 +5055,96 @@
         "kindId",
         "position",
         "quantity"
+      ]
+    },
+    "ItemEnchantmentComponentResolutionDto": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "attempts": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "before": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "successes": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "attempts",
+        "successes",
+        "before",
+        "after"
+      ]
+    },
+    "ItemEnchantmentResolutionDto": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string"
+        },
+        "itemKindId": {
+          "type": "string"
+        },
+        "toArmor": {
+          "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+        },
+        "toDamage": {
+          "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+        },
+        "toHit": {
+          "$ref": "#/$defs/ItemEnchantmentComponentResolutionDto"
+        }
+      },
+      "required": [
+        "itemId",
+        "itemKindId",
+        "toHit",
+        "toDamage",
+        "toArmor"
+      ]
+    },
+    "ItemEnchantmentsDto": {
+      "type": "object",
+      "properties": {
+        "toArmor": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "toDamage": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "toHit": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "toHit",
+        "toDamage",
+        "toArmor"
       ]
     },
     "ItemIdentificationDto": {
