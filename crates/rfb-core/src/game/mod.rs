@@ -1826,7 +1826,6 @@ impl Game {
         game.player.hp = game.effective_player_max_hp();
         game.initialize_carried_loot()?;
         game.reveal_current_visibility();
-        game.validate_state()?;
         Ok(game)
     }
 
@@ -2282,7 +2281,7 @@ impl Game {
         // the authoritative level and HP are not dependent on a later input.
         game.apply_player_experience(0, &mut Vec::new());
         game.reveal_current_visibility();
-        game.validate_state()?;
+        game.validate_loaded_state()?;
         Ok(game)
     }
 
@@ -19533,7 +19532,7 @@ impl Game {
             .is_some_and(|terrain| terrain.walkable)
     }
 
-    fn validate_state(&self) -> Result<(), CoreError> {
+    fn validate_loaded_state(&self) -> Result<(), CoreError> {
         let world = self
             .content
             .world(&self.world_id)
