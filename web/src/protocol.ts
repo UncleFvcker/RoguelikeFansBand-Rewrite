@@ -47,7 +47,7 @@ export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "
 
 export type AbilityStatusStackingDto = "replace" | "extend" | "keep-strongest";
 
-export type AbilityDetectSubjectDto = "terrain" | "actor";
+export type AbilityDetectSubjectDto = "terrain" | "actor" | "item";
 
 export type AbilityControlOutcomeDto = "ineligible" | "resisted" | "controlled" | "already-controlled";
 

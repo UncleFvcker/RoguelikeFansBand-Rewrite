@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.trapfinding-scroll",
+  "nameKey": "item-demo-trapfinding-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-trapfinding-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "detect",
+      "subject": "terrain",
+      "category": "trap",
+      "radius": 8,
+      "persistent": true,
+      "throughWalls": true
+    }
+  },
+  "tags": ["consumable", "knowledge", "scroll"]
+}

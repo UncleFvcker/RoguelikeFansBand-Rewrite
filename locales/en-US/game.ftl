@@ -217,6 +217,7 @@ message-item-activation-landed = { $source } releases its power into empty space
 message-item-activation-hit = { $source } hits { $target } for { $damage } damage.
 message-item-activation-slay = { $source } destroys { $target }.
 message-item-activation-detected = { $source } reveals { $count } concealed locations.
+message-item-use-detected = { $source } reveals { $count } nearby locations.
 message-item-thrown = You throw { $target }.
 message-throw-miss = Your { $source } misses { $target }.
 message-throw-hit = Your { $source } hits { $target } for { $damage } damage.

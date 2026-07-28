@@ -25,7 +25,8 @@
     "AbilityDetectSubjectDefinition": {
       "enum": [
         "terrain",
-        "actor"
+        "actor",
+        "item"
       ],
       "type": "string"
     },

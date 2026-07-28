@@ -2496,6 +2496,11 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemNameForKind(event.args.source),
         count: event.args.count ?? "0",
       });
+    case "item-use-detected":
+      return localization.format("message-item-use-detected", {
+        source: visibleItemNameForKind(event.args.source),
+        count: event.args.count ?? "0",
+      });
     case "item-thrown":
       return localization.format("message-item-thrown", {
         target: visibleItemNameForKind(event.args.target),

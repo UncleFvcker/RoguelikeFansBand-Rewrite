@@ -815,9 +815,26 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
 fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
     let remove_status = |status_kind_id: &str| serde_json::json!({"type": "remove-status", "statusKindId": status_kind_id});
     let sequence = |effects: Vec<serde_json::Value>| serde_json::json!({"type": "sequence", "effects": effects});
+    let detect = |subject: &str, category: &str, persistent: bool| {
+        serde_json::json!({
+            "type": "detect",
+            "subject": subject,
+            "category": category,
+            "radius": 8,
+            "persistent": persistent,
+            "throughWalls": true
+        })
+    };
     let effect = match (entry.tval, entry.sval) {
         (70, 12) => serde_json::json!({"type": "identify-item", "full": false}),
         (70, 13) => serde_json::json!({"type": "identify-item", "full": true}),
+        (70, 25) => detect("terrain", "map", true),
+        (70, 26) => detect("item", "gold", false),
+        (70, 27) => detect("item", "item", false),
+        (70, 28) => detect("terrain", "trap", true),
+        (70, 29) => detect("terrain", "passage", true),
+        (70, 30) => detect("actor", "invisible", false),
+        (70, 57) => detect("actor", "legacy-import", false),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -1013,6 +1030,10 @@ fn item_json(
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
+    let mut tags = shape.tags.clone();
+    if entry.tval == 127 {
+        tags.push("gold");
+    }
     let use_action = fixed_consumable_use_action(entry);
     let device_generation = legacy_device_generation(entry);
     if let Some(gap) = shape.behavior_gap
@@ -1031,7 +1052,7 @@ fn item_json(
         "glyph": entry.glyph.map_or_else(|| "?".to_owned(), |glyph| glyph.to_string()),
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": shape.max_stack,
-        "tags": shape.tags,
+        "tags": tags,
     });
     if let Some(ability_book_id) = ability_book_id {
         value["maxStack"] = serde_json::json!(1);
@@ -3920,6 +3941,13 @@ fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
     if entry.flags.iter().any(|flag| flag == "TRAP") {
         tags.push("trap");
     }
+    if entry
+        .flags
+        .iter()
+        .any(|flag| matches!(flag.as_str(), "DOOR" | "STAIRS"))
+    {
+        tags.push("passage");
+    }
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/terrain.schema.json"),
         "formatVersion": 1,
@@ -4357,6 +4385,9 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "UNIQUE") {
         tags.push("unique".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "INVISIBLE") {
+        tags.push("invisible".to_owned());
     }
     if entry
         .glyph
@@ -7471,7 +7502,7 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn identify_scrolls_map_to_item_targeted_knowledge_effects() {
+    fn scrolls_map_to_knowledge_and_detection_effects() {
         let mut report = ContentImportReport::default();
         for (sval, full) in [(12, false), (13, true)] {
             let value = item_json(
@@ -7488,6 +7519,33 @@ F:BRAND_VAMP | HOLD_LIFE
             assert_eq!(value["useAction"]["effect"]["type"], "identify-item");
             assert_eq!(value["useAction"]["effect"]["full"], full);
         }
+        for (sval, subject, category, persistent) in [
+            (25, "terrain", "map", true),
+            (26, "item", "gold", false),
+            (27, "item", "item", false),
+            (28, "terrain", "trap", true),
+            (29, "terrain", "passage", true),
+            (30, "actor", "invisible", false),
+            (57, "actor", "legacy-import", false),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("detect-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], "detect");
+            assert_eq!(effect["subject"], subject);
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["persistent"], persistent);
+            assert_eq!(effect["throughWalls"], true);
+        }
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 
         let _ = item_json(
@@ -7502,6 +7560,22 @@ F:BRAND_VAMP | HOLD_LIFE
             &mut report,
         );
         assert_eq!(report.item_behavior_gaps["scroll-effect"], 1);
+
+        let gold = item_json(
+            &LegacyItemEntry {
+                tval: 127,
+                ..LegacyItemEntry::default()
+            },
+            "gold",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert!(
+            gold["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "gold") })
+        );
     }
 
     #[test]

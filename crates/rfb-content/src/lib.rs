@@ -743,6 +743,7 @@ pub enum AbilityDetectSubjectDefinition {
     #[default]
     Terrain,
     Actor,
+    Item,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -1527,6 +1528,8 @@ pub enum ItemUseEffectDefinition {
         radius: u8,
         #[serde(default)]
         persistent: bool,
+        #[serde(default)]
+        through_walls: bool,
     },
 }
 
@@ -3075,6 +3078,7 @@ fn valid_item_effect(
     effect: &ItemUseEffectDefinition,
     terrain_tags: &BTreeMap<String, BTreeSet<String>>,
     actor_tag_values: &BTreeSet<String>,
+    item_tag_values: &BTreeSet<String>,
     resource_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
@@ -3115,7 +3119,13 @@ fn valid_item_effect(
                             | ItemUseEffectDefinition::RestoreResource { .. }
                             | ItemUseEffectDefinition::RestoreResourceDice { .. }
                             | ItemUseEffectDefinition::RestoreResourceFull { .. }
-                    ) && valid_item_effect(effect, terrain_tags, actor_tag_values, resource_ids)
+                    ) && valid_item_effect(
+                        effect,
+                        terrain_tags,
+                        actor_tag_values,
+                        item_tag_values,
+                        resource_ids,
+                    )
                 })
         }
         ItemUseEffectDefinition::Damage {
@@ -3133,6 +3143,7 @@ fn valid_item_effect(
             category,
             radius,
             persistent,
+            through_walls,
         } => {
             !category.is_empty()
                 && category.len() <= 64
@@ -3144,10 +3155,17 @@ fn valid_item_effect(
                 && (1..=8).contains(radius)
                 && match subject {
                     AbilityDetectSubjectDefinition::Terrain => {
-                        terrain_tags.values().any(|tags| tags.contains(category))
+                        if category == "map" {
+                            *persistent && *through_walls
+                        } else {
+                            terrain_tags.values().any(|tags| tags.contains(category))
+                        }
                     }
                     AbilityDetectSubjectDefinition::Actor => {
                         !persistent && actor_tag_values.contains(category)
+                    }
+                    AbilityDetectSubjectDefinition::Item => {
+                        !persistent && (category == "item" || item_tag_values.contains(category))
                     }
                 }
         }
@@ -3518,6 +3536,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         actor_levels.insert(actor.id.clone(), actor.level);
     }
 
+    let item_tag_values = content
+        .items
+        .iter()
+        .flat_map(|item| item.tags.iter().cloned())
+        .collect::<BTreeSet<_>>();
+
     let mut affix_ids = BTreeSet::new();
     for affix in &mut content.affixes {
         require_schema(&affix.schema, AFFIX_SCHEMA, &affix.id)?;
@@ -3831,6 +3855,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                             }
                             AbilityDetectSubjectDefinition::Actor => {
                                 !persistent && actor_tag_values.contains(category)
+                            }
+                            AbilityDetectSubjectDefinition::Item => {
+                                !persistent
+                                    && (category == "item" || item_tag_values.contains(category))
                             }
                         }
                 }
@@ -4491,10 +4519,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 &action.effect,
                 &terrain_tags,
                 &actor_tag_values,
+                &item_tag_values,
                 &resource_ids,
             ) && (item_effect_is_self_targeted(&action.effect)
-                || matches!(action.effect, ItemUseEffectDefinition::IdentifyItem { .. }))
-                && !matches!(action.effect, ItemUseEffectDefinition::Detect { .. });
+                || matches!(action.effect, ItemUseEffectDefinition::IdentifyItem { .. }));
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
                     && charges.maximum <= 1_000_000
@@ -4541,6 +4569,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                             &activation.effect,
                             &terrain_tags,
                             &actor_tag_values,
+                            &item_tag_values,
                             &resource_ids,
                         )
                         && valid_item_effect_target(&activation.effect, &activation.target)
@@ -8357,7 +8386,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 27);
+        assert_eq!(first.content.items.len(), 30);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8383,7 +8412,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.103.0");
+        assert_eq!(catalog.pack_version(), "1.104.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.cartography-scroll",
+  "nameKey": "item-demo-cartography-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-cartography-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "detect",
+      "subject": "terrain",
+      "category": "map",
+      "radius": 8,
+      "persistent": true,
+      "throughWalls": true
+    }
+  },
+  "tags": ["consumable", "knowledge", "scroll"]
+}

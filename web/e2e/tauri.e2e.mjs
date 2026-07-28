@@ -206,7 +206,7 @@ async function runScenario(driver) {
   assert.equal(state.contentId, expected.contentId);
   assert.equal(state.contentHash, expected.contentHash);
   assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.contentVisualCount, "102");
+  assert.equal(state.contentVisualCount, "105");
   assert.equal(state.itemCount, "5");
   assert.equal(state.inventoryStackCount, "0");
   assert.equal(state.equipmentCount, "0");

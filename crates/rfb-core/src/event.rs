@@ -480,6 +480,10 @@ pub(crate) enum DomainEvent {
         profile_id: String,
         resolution: AbilityDetectResolutionDto,
     },
+    ItemDetected {
+        source_kind_id: String,
+        resolution: AbilityDetectResolutionDto,
+    },
     ItemUseUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
@@ -1757,6 +1761,18 @@ impl DomainEvent {
                 [
                     ("source", source_kind_id),
                     ("profile", profile_id),
+                    ("count", resolution.detected_positions.len().to_string()),
+                ],
+                GameEventOutcomeDto::AbilityDetect { resolution },
+            ),
+            Self::ItemDetected {
+                source_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "item.use-detected",
+                "item-use-detected",
+                [
+                    ("source", source_kind_id),
                     ("count", resolution.detected_positions.len().to_string()),
                 ],
                 GameEventOutcomeDto::AbilityDetect { resolution },

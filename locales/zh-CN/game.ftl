@@ -213,6 +213,7 @@ message-item-activation-landed = { $source }的力量落在空处。
 message-item-activation-hit = { $source }命中{ $target }，造成 { $damage } 点伤害。
 message-item-activation-slay = { $source }摧毁了{ $target }。
 message-item-activation-detected = { $source }揭示了 { $count } 处隐蔽位置。
+message-item-use-detected = { $source }揭示了附近的 { $count } 处位置。
 message-item-thrown = 你投出了{ $target }。
 message-throw-miss = 你投出的{ $source }没有击中{ $target }。
 message-throw-hit = 你投出的{ $source }击中了{ $target }，造成 { $damage } 点伤害。

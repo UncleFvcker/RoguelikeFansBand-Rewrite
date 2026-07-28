@@ -224,6 +224,8 @@ contract-v111 为物品效果增加 `remove-status`、`restore-resource`、`rest
 
 contract-v112 为物品效果增加 `identify-item { full }`。固定 `useAction` 和动态 activation 都必须声明 item-only 目标；恢复型 sequence 拒绝嵌套鉴定。demo 包 1.103.0 新增普通/完全鉴定卷轴，现含 68 abilities、5 ability books、27 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets，state hash 保持 Schema v49。完整边界见 [Contract v112](contract-v112-scroll-identification.md)。
 
+contract-v113 为侦测主体增加 `item`，并为物品 `detect` 增加默认关闭的 `throughWalls`。地图效果持久写入已探索格，隐藏地形侦测持久写入揭示集合；actor/item 结果只通过事件返回稳定实例 ID 与位置，不进入存档。demo 包 1.104.0 新增三种地图/侦测卷轴，现含 68 abilities、5 ability books、30 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets，state hash 保持 Schema v49。完整边界见 [Contract v113](contract-v113-scroll-detection.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

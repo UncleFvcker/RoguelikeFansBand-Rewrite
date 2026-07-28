@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.seeking-scroll",
+  "nameKey": "item-demo-seeking-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-seeking-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "detect",
+      "subject": "item",
+      "category": "item",
+      "radius": 8,
+      "throughWalls": true
+    }
+  },
+  "tags": ["consumable", "knowledge", "scroll"]
+}

@@ -104,7 +104,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 104] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 105] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -209,10 +209,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 104] = [
     "8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab",
     "f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9",
     "12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7",
+    "c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "c02d577a3eaf36f61c636c1b8bbdfcfa30935aef08ec4d9c5b59e77ef21b4d25";
+    "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 49;
@@ -6783,11 +6784,14 @@ impl Game {
             ) => {
                 let (detected_positions, detected_entity_ids) = match subject {
                     AbilityDetectSubjectDefinition::Terrain => (
-                        self.detect_terrain_positions(&category, radius, persistent),
+                        self.detect_terrain_positions(&category, radius, persistent, false),
                         Vec::new(),
                     ),
                     AbilityDetectSubjectDefinition::Actor => {
                         self.detect_actor_positions(&category, radius)
+                    }
+                    AbilityDetectSubjectDefinition::Item => {
+                        self.detect_item_positions(&category, radius, false)
                     }
                 };
                 if persistent {
@@ -8717,6 +8721,7 @@ impl Game {
         category: &str,
         radius: u8,
         persistent: bool,
+        through_walls: bool,
     ) -> Vec<Position> {
         let origin = self.player.position;
         let radius_distance = u32::from(radius);
@@ -8727,20 +8732,25 @@ impl Game {
             {
                 let position = Position { x, y };
                 let distance = origin.x.abs_diff(x).max(origin.y.abs_diff(y));
-                if distance > radius_distance
-                    || self.revealed_terrain.contains(&position)
-                    || !self.is_visible(position)
-                {
+                if distance > radius_distance || (!through_walls && !self.is_visible(position)) {
                     continue;
                 }
                 let Some(index) = self.index(position) else {
                     continue;
                 };
+                if category == "map" {
+                    if !self.explored[index] {
+                        candidates.push((distance, position.y, position.x, position));
+                    }
+                    continue;
+                }
                 let Some(terrain) = self.content.terrain(&self.terrain[index]) else {
                     continue;
                 };
-                if terrain.concealed_as_terrain_id.is_none()
-                    || !terrain.tags.iter().any(|tag| tag == category)
+                if !terrain.tags.iter().any(|tag| tag == category)
+                    || (persistent
+                        && terrain.concealed_as_terrain_id.is_some()
+                        && self.revealed_terrain.contains(&position))
                 {
                     continue;
                 }
@@ -8753,7 +8763,25 @@ impl Game {
             .map(|(_, _, _, position)| position)
             .collect::<Vec<_>>();
         if persistent {
-            self.revealed_terrain.extend(positions.iter().copied());
+            if category == "map" {
+                for position in &positions {
+                    let index = self
+                        .index(*position)
+                        .expect("mapped position must remain valid");
+                    self.explored[index] = true;
+                }
+            } else {
+                let concealed_positions = positions
+                    .iter()
+                    .copied()
+                    .filter(|position| {
+                        self.index(*position)
+                            .and_then(|index| self.content.terrain(&self.terrain[index]))
+                            .is_some_and(|terrain| terrain.concealed_as_terrain_id.is_some())
+                    })
+                    .collect::<Vec<_>>();
+                self.revealed_terrain.extend(concealed_positions);
+            }
         }
         positions
     }
@@ -8795,6 +8823,48 @@ impl Game {
             .map(|candidate| candidate.3)
             .collect();
         (positions, entity_ids)
+    }
+
+    fn detect_item_positions(
+        &self,
+        category: &str,
+        radius: u8,
+        through_walls: bool,
+    ) -> (Vec<Position>, Vec<String>) {
+        let origin = self.player.position;
+        let mut candidates = self
+            .items
+            .iter()
+            .filter_map(|item| {
+                let ItemLocation::Ground(position) = &item.location else {
+                    return None;
+                };
+                let distance = chebyshev_distance(origin, *position);
+                if distance > u32::from(radius)
+                    || (!through_walls && !self.is_visible(*position))
+                    || !self.content.item(&item.kind_id).is_some_and(|definition| {
+                        category == "item" || definition.tags.iter().any(|tag| tag == category)
+                    })
+                {
+                    return None;
+                }
+                Some((distance, position.y, position.x, item.id.clone(), *position))
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| {
+            (left.0, left.1, left.2, left.3.as_str()).cmp(&(
+                right.0,
+                right.1,
+                right.2,
+                right.3.as_str(),
+            ))
+        });
+        let positions = candidates.iter().map(|candidate| candidate.4).collect();
+        let item_ids = candidates
+            .into_iter()
+            .map(|candidate| candidate.3)
+            .collect();
+        (positions, item_ids)
     }
 
     fn terrain_transform_positions(
@@ -9793,6 +9863,13 @@ impl Game {
                         item_id: target_item_id.clone(),
                     }
                 }
+                ItemUseEffectDefinition::Detect { .. } => {
+                    if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
+                        events.push(DomainEvent::ItemUseUnavailable);
+                        return Ok(());
+                    }
+                    ItemUsePlan::Detect
+                }
                 _ => {
                     if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
                         events.push(DomainEvent::ItemUseUnavailable);
@@ -9962,35 +10039,46 @@ impl Game {
                     category,
                     radius,
                     persistent,
+                    through_walls,
                 },
                 ItemUsePlan::Detect,
             ) => {
                 let (detected_positions, detected_entity_ids) = match subject {
                     AbilityDetectSubjectDefinition::Terrain => (
-                        self.detect_terrain_positions(&category, radius, persistent),
+                        self.detect_terrain_positions(&category, radius, persistent, through_walls),
                         Vec::new(),
                     ),
                     AbilityDetectSubjectDefinition::Actor => {
                         self.detect_actor_positions(&category, radius)
+                    }
+                    AbilityDetectSubjectDefinition::Item => {
+                        self.detect_item_positions(&category, radius, through_walls)
                     }
                 };
                 if persistent {
                     changed.extend(detected_positions.iter().copied());
                 }
                 self.mark_item_aware(&kind_id);
-                events.push(DomainEvent::ItemActivationDetected {
-                    source_kind_id: kind_id,
-                    profile_id: profile_id
-                        .expect("dynamic detect activation must carry a profile ID"),
-                    resolution: AbilityDetectResolutionDto {
-                        subject: ability_detect_subject_dto(subject),
-                        category,
-                        radius,
-                        persistent,
-                        detected_positions,
-                        detected_entity_ids,
-                    },
-                });
+                let resolution = AbilityDetectResolutionDto {
+                    subject: ability_detect_subject_dto(subject),
+                    category,
+                    radius,
+                    persistent,
+                    detected_positions,
+                    detected_entity_ids,
+                };
+                if let Some(profile_id) = profile_id {
+                    events.push(DomainEvent::ItemActivationDetected {
+                        source_kind_id: kind_id,
+                        profile_id,
+                        resolution,
+                    });
+                } else {
+                    events.push(DomainEvent::ItemDetected {
+                        source_kind_id: kind_id,
+                        resolution,
+                    });
+                }
             }
             (ItemUseEffectDefinition::IdentifyItem { full }, ItemUsePlan::Item { item_id }) => {
                 self.mark_item_aware(&kind_id);
@@ -19612,6 +19700,7 @@ const fn ability_detect_subject_dto(
     match subject {
         AbilityDetectSubjectDefinition::Terrain => AbilityDetectSubjectDto::Terrain,
         AbilityDetectSubjectDefinition::Actor => AbilityDetectSubjectDto::Actor,
+        AbilityDetectSubjectDefinition::Item => AbilityDetectSubjectDto::Item,
     }
 }
 

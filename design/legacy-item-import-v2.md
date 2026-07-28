@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳 + P60 设备自然恢复 + P61 有序恢复消耗品 + P62 卷轴重分类/鉴定）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备、恢复/主动充能、恢复型物品和鉴定卷轴运行时分别由 Contract v108–v112 定义。
+状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳 + P60 设备自然恢复 + P61 有序恢复消耗品 + P62 卷轴重分类/鉴定 + P63 卷轴地图/侦测）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备、恢复/主动充能、恢复型物品、鉴定与侦测卷轴运行时分别由 Contract v108–v113 定义。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 
@@ -19,7 +19,7 @@
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |
 | 75/80（药水/食物） | 堆叠消耗品；P58 接入六种治疗药水；P61 增加四种状态恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种治疗药水补充当前可表达的异常清除序列，其余保留行为缺口 |
-| 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | P62 为卷轴 sval 12/13 接入普通/完全鉴定，其余统一计 `scroll-effect`；P59 为通用 wand/staff/rod 壳生成首批动态候选，效果 identity、power、成本与随机容量在实例生成时物化，不直接写成单一 kind 效果 |
+| 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | P62 为卷轴 sval 12/13 接入普通/完全鉴定；P63 再映射 25–30/57 的地图、gold/item、trap/passage、invisible/monster 侦测，剩余 52 条计 `scroll-effect`；P59 为通用 wand/staff/rod 壳生成首批动态候选，效果 identity、power、成本与随机容量在实例生成时物化，不直接写成单一 kind 效果 |
 | 90+ 魔典族 | 壳 + `book` 标签（旧版法术书系统未映射） |
 | 其余（箱子/尖刺/瓶罐/雕像/尸骸等） | 通用壳（identity/重量/堆叠/字形恒可表达） |
 
@@ -49,9 +49,11 @@ P61 增加有序恢复型物品效果后，四种状态恢复食物、Boldness�
 
 P62 把 tval 70/71 缺口重命名为 `scroll-effect`，并按 sval 12/13 映射普通/完全鉴定。独立 detached worktree 上的真实包保持 937 items、128 affixes、1260 abilities、4 ability books，严格源校验、编译和产物回读 hash 均为 `143ed91ebd453dd22628548663dac0483c28d2f20625b749844a5419c61cac44`；`scroll-effect` 61→59，报告不再含 `device-effect`。
 
+P63 按真实 sval 分布接入地图/侦测七条：25 Mapping、26 Gold、27 Item、28 Trap、29 Door/Stairs、30 Invisible、57 Monsters。导入器同步给 TV_GOLD、f_info DOOR/STAIRS 与 r_info INVISIBLE 增加 `gold`、`passage`、`invisible` 语义标签。真实包保持 937 items、128 affixes、1260 abilities、4 ability books，严格源校验、编译和产物回读 hash 均为 `43b02c9e94aaa8b962d54f3e9b55cf31ab16a3c1a6573e677b2d23df32636abe`；`scroll-effect` 59→52。
+
 ## 7. 遗留
 
-- 其余药水/食物按源码 sval 精选接入；剩余 `scroll-effect` 59 按传送/回城、侦测/地图、附魔/强化、诅咒和召唤等事务族继续盘点；
+- 其余药水/食物按源码 sval 精选接入；剩余 `scroll-effect` 52 优先推进传送/回城五条，其后是附魔/强化、诅咒、召唤与世界效果；
 - 装备旗标系统（抗性/免疫/速度/斩杀支路）落地后重跑导入，可解锁 72 条 ego-inexpressible 词条与神器旗标主体；
 - E:/D: 中文名与描述导出为本地 Fluent 片段（v2 方向未变）；
 - 词条与基础物品的运行时挂接（生成期 affix 抽取）属于战利品生成线，另行排期。

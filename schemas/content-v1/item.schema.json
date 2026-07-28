@@ -3,7 +3,8 @@
     "AbilityDetectSubjectDefinition": {
       "enum": [
         "terrain",
-        "actor"
+        "actor",
+        "item"
       ],
       "type": "string"
     },
@@ -646,6 +647,10 @@
             "subject": {
               "$ref": "#/$defs/AbilityDetectSubjectDefinition",
               "default": "terrain"
+            },
+            "throughWalls": {
+              "default": false,
+              "type": "boolean"
             },
             "type": {
               "const": "detect",
