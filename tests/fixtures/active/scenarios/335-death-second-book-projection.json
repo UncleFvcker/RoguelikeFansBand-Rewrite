@@ -3202,12 +3202,12 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "8bbb7b6c8f5d720e4ce9323e43875b379382d2f8d97db319191e85b6f42697af"
+      "stateHash": "c9e2d2f721a4bf6ad455bbacee06ff2a7ce9815f65f45b901b4fe1c14b26c31b"
     },
     "events": [],
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "8bbb7b6c8f5d720e4ce9323e43875b379382d2f8d97db319191e85b6f42697af"
+    "saveRoundTripStateHash": "c9e2d2f721a4bf6ad455bbacee06ff2a7ce9815f65f45b901b4fe1c14b26c31b"
   }
 }

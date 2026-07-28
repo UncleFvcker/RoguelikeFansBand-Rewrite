@@ -77,7 +77,7 @@
 | P66 | 装备诅咒与解除卷轴 | 已由 contract-v116 完成 | normal/heavy/permanent 实例诅咒、武器/护甲施咒、神器 50% 抵抗、普通/强力解除、永久诅咒保留、卸装/替换零时间拒绝、四类 save 与 Web 投影。sval 2/3/14/15 使 `scroll-effect` 42→38；协议 1.116、包 1.107.0、Schema v52、fixtures 406-413 共 413 exact |
 | P67 | 怪物、亡灵、宠物与同族召唤卷轴 | 已由 contract-v117 完成 | 物品召唤 selector、地牢深度/玩家等级来源、Race `kinCategory`、敌对 unique/guardian 过滤、永久玩家控制、零候选/零空间消费与知识/RNG 边界。sval 4/5/6/54 使 `scroll-effect` 38→34；协议 1.117、包 1.108.0、Schema v52、fixtures 414-420 共 420 exact |
 
-## contract-v117 明确遗留
+## contract-v118 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -163,7 +163,7 @@
 
 ## contract-v103 明确遗留
 
-- 首版 passive 中仅 regeneration 已有独立运行时消费；see-invisible、telepathy、levitation、hold-life、六维 sustain、blessed、easy-spell 与 device-power 已入内容/存档/DTO，分别等待视野、经验吸取、属性损伤、施法和设备系统接入；
+- contract-v118 后装备 passive 只保留已有权威消费者的 regeneration 与 vampiric；see-invisible、telepathy、levitation、hold-life、六维 sustain、blessed、easy-spell 与 device-power 回到真实导入 gap report，未来必须随实际规则消费者和 exact contract 一起重新接入；
 - equipmentBonuses 中近战攻击次数与现有十类技能已经进入派生管线；infravision/light-radius 已保存和显示，但真实视觉半径消费仍待多视觉通道迭代；
 - 旧存档缺 rolledAffixes 时刻意保持空，绝不按当前 rollGroups 补抽；内容作者修改候选只影响未来生成的物品；
 - 剩余 32/160 ego 的主要系统缺口是反射、伤害光环、诅咒、额外射击/威力、高级品牌、随机抗性/维持配方与设备/法术威力。

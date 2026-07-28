@@ -36,8 +36,7 @@
             "equipmentBonuses": {
               "deviceSkill": 8,
               "savingThrowSkill": 5
-            },
-            "passives": ["telepathy"]
+            }
           }
         },
         {

@@ -2032,23 +2032,7 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
             .insert("stealthSkill".to_owned(), serde_json::json!(-pval));
         fold.consumed.insert("DEC_STEALTH".to_owned());
     }
-    for (flag, passive) in [
-        ("SEE_INVIS", "see-invisible"),
-        ("TELEPATHY", "telepathy"),
-        ("LEVITATION", "levitation"),
-        ("REGEN", "regeneration"),
-        ("HOLD_LIFE", "hold-life"),
-        ("SUST_STR", "sustain-strength"),
-        ("SUST_INT", "sustain-intelligence"),
-        ("SUST_WIS", "sustain-wisdom"),
-        ("SUST_DEX", "sustain-dexterity"),
-        ("SUST_CON", "sustain-constitution"),
-        ("SUST_CHR", "sustain-charisma"),
-        ("BLESSED", "blessed"),
-        ("EASY_SPELL", "easy-spell"),
-        ("DEVICE_POWER", "device-power"),
-        ("BRAND_VAMP", "vampiric"),
-    ] {
+    for (flag, passive) in [("REGEN", "regeneration"), ("BRAND_VAMP", "vampiric")] {
         if flags.iter().any(|value| value == flag) {
             fold.passives.push(passive);
             fold.consumed.insert(flag.to_owned());
@@ -2181,16 +2165,6 @@ fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) 
         9 => vec![serde_json::json!({
             "rolls": 2,
             "candidates": elemental_craft_roll_candidates(),
-        })],
-        // Strong/weak ESP distinctions are not yet represented, so both
-        // original branches materialize as the current coarse telepathy
-        // passive without inventing a false secondary capability.
-        125 | 243 => vec![serde_json::json!({
-            "rolls": 1,
-            "candidates": [{
-                "weight": 1,
-                "properties": {"passives": ["telepathy"]}
-            }],
         })],
         // Original boots/ring speed pvals are depth-biased generation rolls.
         // Increasing minDepth thresholds keep high bonuses out of shallow
@@ -8090,6 +8064,7 @@ F:BRAND_VAMP | HOLD_LIFE
                 .any(|value| value == "vampiric")
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_VAMP"));
+        assert_eq!(outcome.report.unmapped_ego_flags["HOLD_LIFE"], 1);
     }
 
     #[test]

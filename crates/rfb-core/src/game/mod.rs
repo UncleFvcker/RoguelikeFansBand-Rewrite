@@ -108,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 109] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 110] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -218,10 +218,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 109] = [
     "36d07a047c3a9a331f051d4a0ebaa87070caef56408efb375e3b61e7e3fb1d86",
     "9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459",
     "9d1c6c1e01fb4533aa5a9868f0adfcbe876148d98585412783d0da93f4019dff",
+    "0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210";
+    "99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -20622,20 +20623,7 @@ fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
 
 const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto {
     match passive {
-        EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
-        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
-        EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
-        EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
-        EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
-        EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
-        EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
-        EquipmentPassive::SustainDexterity => EquipmentPassiveDto::SustainDexterity,
-        EquipmentPassive::SustainConstitution => EquipmentPassiveDto::SustainConstitution,
-        EquipmentPassive::SustainCharisma => EquipmentPassiveDto::SustainCharisma,
-        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
-        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
-        EquipmentPassive::DevicePower => EquipmentPassiveDto::DevicePower,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
     }
 }

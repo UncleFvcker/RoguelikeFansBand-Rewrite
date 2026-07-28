@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v117`，机器可读政策固定在：
+当前逻辑基线是 `contract-v118`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -57,4 +57,4 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 
 ## 5. 当前边界
 
-`contract-v117` 的四种物品类别召唤、深度或玩家等级过滤、Race kin、永久玩家控制、零结果知识/RNG、save/replay 和 state hash Schema v52 由 [Contract v117](contract-v117-scroll-summoning.md) 定义。active 集包含 420 个 exact fixtures，零 waiver。
+`contract-v118` 收缩无权威消费者的装备 passive，并在 rolled-affix DTO 边界迁移已知历史 no-op 值；`regeneration` 与 `vampiric` 行为保持不变，state hash Schema 仍为 v52。边界由 [Contract v118](contract-v118-passive-surface-cleanup.md) 定义。active 集包含 420 个 exact fixtures，零 waiver。

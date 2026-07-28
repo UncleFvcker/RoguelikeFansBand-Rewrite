@@ -359,7 +359,7 @@
         "completedTasks": 1
       },
       "revealedTerrain": [],
-      "stateHash": "2c917d662e492373a4dfc9d744834b09dd9bde4f82e1d9141c46a9a3ecdf4614"
+      "stateHash": "5f2c345ef597501c167f28db00eae4587e4e4a41b8e2faad1ba3d8a6624b27d0"
     },
     "events": [
       {
@@ -3807,6 +3807,6 @@
       "demo.task.echo-hunt.target.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "2c917d662e492373a4dfc9d744834b09dd9bde4f82e1d9141c46a9a3ecdf4614"
+    "saveRoundTripStateHash": "5f2c345ef597501c167f28db00eae4587e4e4a41b8e2faad1ba3d8a6624b27d0"
   }
 }

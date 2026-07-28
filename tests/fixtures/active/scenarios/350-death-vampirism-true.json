@@ -3235,7 +3235,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "895161c63e9fb0b1af177212f1d5349f9d13ad44b9a58440d7646b3ae20212a2"
+      "stateHash": "c43c61d429345d3ea7339223b70fe35cb7ae416afe5fae68c6fa16f152445729"
     },
     "events": [
       {
@@ -3706,6 +3706,6 @@
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "895161c63e9fb0b1af177212f1d5349f9d13ad44b9a58440d7646b3ae20212a2"
+    "saveRoundTripStateHash": "c43c61d429345d3ea7339223b70fe35cb7ae416afe5fae68c6fa16f152445729"
   }
 }

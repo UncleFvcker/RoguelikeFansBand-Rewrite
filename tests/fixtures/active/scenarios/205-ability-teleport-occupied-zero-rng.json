@@ -3246,7 +3246,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "87299b5c69dfc734b6b6c8c20692902a6885814a0ae0a20ac9a269713dc9f32e"
+      "stateHash": "5ecb651088b5ca778e056978a5580f0d1e79941e8ddeb03da5c77a21939ee423"
     },
     "events": [
       {
@@ -3269,6 +3269,6 @@
     ],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "87299b5c69dfc734b6b6c8c20692902a6885814a0ae0a20ac9a269713dc9f32e"
+    "saveRoundTripStateHash": "5ecb651088b5ca778e056978a5580f0d1e79941e8ddeb03da5c77a21939ee423"
   }
 }

@@ -3196,12 +3196,12 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "871240e13f752c4c0d5d13768be92593944d0eaaf0b7f4a0401a2fd33b359489"
+      "stateHash": "9dd69efe5dd7b42f20cf71cda43dd776b9bd65b80d36a115cb610c72194c851f"
     },
     "events": [],
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "871240e13f752c4c0d5d13768be92593944d0eaaf0b7f4a0401a2fd33b359489"
+    "saveRoundTripStateHash": "9dd69efe5dd7b42f20cf71cda43dd776b9bd65b80d36a115cb610c72194c851f"
   }
 }

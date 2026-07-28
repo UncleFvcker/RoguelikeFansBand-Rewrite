@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.117";
+pub const PROTOCOL_VERSION: &str = "1.118";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -262,21 +262,37 @@ impl EquipmentBonusesDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
 pub enum EquipmentPassiveDto {
-    SeeInvisible,
-    Telepathy,
-    Levitation,
     Regeneration,
-    HoldLife,
-    SustainStrength,
-    SustainIntelligence,
-    SustainWisdom,
-    SustainDexterity,
-    SustainConstitution,
-    SustainCharisma,
-    Blessed,
-    EasySpell,
-    DevicePower,
     Vampiric,
+}
+
+fn migrate_rolled_affix_passives<E>(passives: Vec<String>) -> Result<Vec<EquipmentPassiveDto>, E>
+where
+    E: serde::de::Error,
+{
+    passives
+        .into_iter()
+        .filter_map(|passive| match passive.as_str() {
+            "regeneration" => Some(Ok(EquipmentPassiveDto::Regeneration)),
+            "vampiric" => Some(Ok(EquipmentPassiveDto::Vampiric)),
+            "see-invisible"
+            | "telepathy"
+            | "levitation"
+            | "hold-life"
+            | "sustain-strength"
+            | "sustain-intelligence"
+            | "sustain-wisdom"
+            | "sustain-dexterity"
+            | "sustain-constitution"
+            | "sustain-charisma"
+            | "blessed"
+            | "easy-spell"
+            | "device-power" => None,
+            _ => Some(Err(serde::de::Error::custom(format!(
+                "unknown rolled affix passive `{passive}`"
+            )))),
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1154,7 +1170,7 @@ pub struct SlayDto {
     pub level: SlayLevelDto,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RolledAffixSaveDto {
@@ -1173,6 +1189,45 @@ pub struct RolledAffixSaveDto {
     pub brands: Vec<WeaponBrandDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub passives: Vec<EquipmentPassiveDto>,
+}
+
+impl<'de> Deserialize<'de> for RolledAffixSaveDto {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase", deny_unknown_fields)]
+        struct Wire {
+            affix_id: String,
+            #[serde(default)]
+            modifiers: StatModifiersDto,
+            #[serde(default)]
+            equipment_bonuses: EquipmentBonusesDto,
+            #[serde(default)]
+            resistances: Vec<ResistanceDto>,
+            #[serde(default)]
+            status_immunities: Vec<String>,
+            #[serde(default)]
+            slays: Vec<SlayDto>,
+            #[serde(default)]
+            brands: Vec<WeaponBrandDto>,
+            #[serde(default)]
+            passives: Vec<String>,
+        }
+
+        let wire = Wire::deserialize(deserializer)?;
+        Ok(Self {
+            affix_id: wire.affix_id,
+            modifiers: wire.modifiers,
+            equipment_bonuses: wire.equipment_bonuses,
+            resistances: wire.resistances,
+            status_immunities: wire.status_immunities,
+            slays: wire.slays,
+            brands: wire.brands,
+            passives: migrate_rolled_affix_passives(wire.passives)?,
+        })
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3169,6 +3224,37 @@ mod tests {
 
         let encoded = serde_json::to_value(&event).expect("event should encode");
         assert_eq!(encoded.get("outcome"), None);
+    }
+
+    #[test]
+    fn rolled_affix_save_filters_known_legacy_noop_passives_and_rejects_unknown_values() {
+        let migrated: RolledAffixSaveDto = serde_json::from_value(serde_json::json!({
+            "affixId": "demo.affix.adaptive-echo",
+            "passives": ["hold-life", "regeneration", "telepathy", "vampiric"]
+        }))
+        .expect("known legacy no-op passives should migrate");
+        assert_eq!(
+            migrated.passives,
+            [
+                EquipmentPassiveDto::Regeneration,
+                EquipmentPassiveDto::Vampiric
+            ]
+        );
+
+        let encoded = to_msgpack(&serde_json::json!({
+            "affixId": "demo.affix.adaptive-echo",
+            "passives": ["hold-life", "regeneration", "telepathy", "vampiric"]
+        }))
+        .expect("legacy rolled affix should encode");
+        let migrated_from_msgpack: RolledAffixSaveDto =
+            from_msgpack(&encoded).expect("legacy MessagePack should migrate");
+        assert_eq!(migrated_from_msgpack, migrated);
+
+        let unknown = serde_json::from_value::<RolledAffixSaveDto>(serde_json::json!({
+            "affixId": "demo.affix.adaptive-echo",
+            "passives": ["unknown-passive"]
+        }));
+        assert!(unknown.is_err(), "unknown passives must remain load errors");
     }
 
     #[test]

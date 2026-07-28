@@ -691,7 +691,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "d6e1ef7849ac4ebe1d126dfe1991dfae911a31e71384c263d36839853ffb6573"
+      "stateHash": "7b3f2268e1e49e477e2f55394c9e20981088bbdbe3bbf7f234d55299b7501b05"
     },
     "events": [
       {
@@ -6505,6 +6505,6 @@
       "demo.guardian.echo-depths.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "d6e1ef7849ac4ebe1d126dfe1991dfae911a31e71384c263d36839853ffb6573"
+    "saveRoundTripStateHash": "7b3f2268e1e49e477e2f55394c9e20981088bbdbe3bbf7f234d55299b7501b05"
   }
 }

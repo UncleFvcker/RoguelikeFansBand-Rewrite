@@ -353,7 +353,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "3e32f2dc744978e281eeaab2abe4a867b7a88928783af0ea36b27cc661df8e55"
+      "stateHash": "b98579cf1d013dc5f893651b5de72bbdefa4f38ab690e06efa07fa0fbbfca6da"
     },
     "events": [
       {
@@ -3649,6 +3649,6 @@
     ],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "3e32f2dc744978e281eeaab2abe4a867b7a88928783af0ea36b27cc661df8e55"
+    "saveRoundTripStateHash": "b98579cf1d013dc5f893651b5de72bbdefa4f38ab690e06efa07fa0fbbfca6da"
   }
 }

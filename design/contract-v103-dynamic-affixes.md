@@ -99,3 +99,12 @@ with content hash
 The remaining 32 egos mainly depend on reflection, damage auras, curses,
 extra shots/might, advanced brands, random resistance/sustain recipes, and
 device or spell-power consumers.
+
+## Contract v118 addendum
+
+Contract v118 supersedes the passive portion of this contract. Only
+`regeneration` and `vampiric` had authoritative consumers, so the other 13
+passive IDs and the telepathy-only legacy roll recipes were removed. Their
+source flags are again reported as unmapped until a complete rule slice is
+implemented. Existing rolled-affix saves discard only those known historical
+no-op strings at the DTO boundary and continue to reject unknown values.

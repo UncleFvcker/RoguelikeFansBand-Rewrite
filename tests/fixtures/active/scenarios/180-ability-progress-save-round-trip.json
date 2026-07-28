@@ -3207,12 +3207,12 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "1a2fc8e2d99bf9a7d324d195200d6caee86d7e6237dca5525bb3ce1b2313d580"
+      "stateHash": "49c2e52a0503fa49e3d647c03112b5f46411b0c1e77d56793443bcb37c8dd324"
     },
     "events": [],
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "1a2fc8e2d99bf9a7d324d195200d6caee86d7e6237dca5525bb3ce1b2313d580"
+    "saveRoundTripStateHash": "49c2e52a0503fa49e3d647c03112b5f46411b0c1e77d56793443bcb37c8dd324"
   }
 }

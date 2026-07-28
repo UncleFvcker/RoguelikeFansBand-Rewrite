@@ -538,7 +538,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "5704b849150d31841c696ef19f0c9e1f938e93840f9560c87a2aa357df8d713f"
+      "stateHash": "9dda345975867eb6524c34945a0b18787fb6975f769a25a4655bca3cdfe75e51"
     },
     "events": [
       {
@@ -12110,14 +12110,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "5704b849150d31841c696ef19f0c9e1f938e93840f9560c87a2aa357df8d713f"
+        "stateHash": "9dda345975867eb6524c34945a0b18787fb6975f769a25a4655bca3cdfe75e51"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "5704b849150d31841c696ef19f0c9e1f938e93840f9560c87a2aa357df8d713f"
+        "stateHash": "9dda345975867eb6524c34945a0b18787fb6975f769a25a4655bca3cdfe75e51"
       }
     ],
-    "saveRoundTripStateHash": "5704b849150d31841c696ef19f0c9e1f938e93840f9560c87a2aa357df8d713f"
+    "saveRoundTripStateHash": "9dda345975867eb6524c34945a0b18787fb6975f769a25a4655bca3cdfe75e51"
   }
 }

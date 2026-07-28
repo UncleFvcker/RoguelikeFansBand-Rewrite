@@ -1335,20 +1335,7 @@ pub enum WeaponBrand {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum EquipmentPassive {
-    SeeInvisible,
-    Telepathy,
-    Levitation,
     Regeneration,
-    HoldLife,
-    SustainStrength,
-    SustainIntelligence,
-    SustainWisdom,
-    SustainDexterity,
-    SustainConstitution,
-    SustainCharisma,
-    Blessed,
-    EasySpell,
-    DevicePower,
     Vampiric,
 }
 
@@ -8619,7 +8606,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.108.0");
+        assert_eq!(catalog.pack_version(), "1.109.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

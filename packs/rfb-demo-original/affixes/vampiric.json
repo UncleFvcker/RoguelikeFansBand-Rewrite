@@ -4,6 +4,6 @@
   "id": "demo.affix.vampiric",
   "nameKey": "affix-demo-vampiric-name",
   "descriptionKey": "affix-demo-vampiric-description",
-  "passives": ["hold-life", "vampiric"],
+  "passives": ["vampiric"],
   "tags": ["death", "offense", "vampiric"]
 }

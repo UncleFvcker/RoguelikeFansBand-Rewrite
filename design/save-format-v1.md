@@ -292,3 +292,5 @@ crates/rfb-legacy-import/
 - 截断、超大长度和畸形 MessagePack 不会 panic；
 - v1 → v2 示例迁移证明连续迁移机制可用；
 - 三个仅保存在本机 `.local/` 中的 `v1.3.0.7` 旧存档样本可以导入或给出结构化失败报告。
+
+协议 1.118 不增加存档字段。历史 `RolledAffixSaveDto.passives` 中 13 个已知无规则消费者的 no-op 值在 DTO 反序列化边界丢弃，`regeneration` 与 `vampiric` 正常保留，其他未知值继续失败；迁移不重掷 affix、不替换能力、不推进 RNG。静态 affix 由既有内容 hash 迁移到当前定义。save 容器保持 v1，state hash Schema 保持 v52。完整边界见 [Contract v118](contract-v118-passive-surface-cleanup.md)。

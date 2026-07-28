@@ -332,7 +332,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "f3467f473ae1c5bbbc70ac2f742454917a686d0fe9d256ac0b059ddd9447c840"
+      "stateHash": "ecfddd033e1cdba056669f1cbd2ebfbb41b90b6e63de5aa018cb461269f0fee7"
     },
     "events": [],
     "changedCells": [],
@@ -341,7 +341,7 @@
       {
         "step": 1,
         "kind": "revision-mismatch",
-        "stateHash": "f3467f473ae1c5bbbc70ac2f742454917a686d0fe9d256ac0b059ddd9447c840"
+        "stateHash": "ecfddd033e1cdba056669f1cbd2ebfbb41b90b6e63de5aa018cb461269f0fee7"
       }
     ],
     "saveRoundTripStateHash": null

@@ -360,7 +360,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "8905752bda4958adcc7b5e74c3571409522b11e6ab5cc1553f96ad6b1365f92d"
+      "stateHash": "8b8f325328846a341c46f5b5b6ae4ca225ac4cbfad5e47503565e469cd7080a6"
     },
     "events": [
       {
@@ -391,6 +391,6 @@
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "8905752bda4958adcc7b5e74c3571409522b11e6ab5cc1553f96ad6b1365f92d"
+    "saveRoundTripStateHash": "8b8f325328846a341c46f5b5b6ae4ca225ac4cbfad5e47503565e469cd7080a6"
   }
 }

@@ -1013,40 +1013,14 @@ const fn weapon_brand(value: WeaponBrandDto) -> WeaponBrand {
 
 const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
     match value {
-        EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
-        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
-        EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
-        EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
-        EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
-        EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
-        EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
-        EquipmentPassive::SustainDexterity => EquipmentPassiveDto::SustainDexterity,
-        EquipmentPassive::SustainConstitution => EquipmentPassiveDto::SustainConstitution,
-        EquipmentPassive::SustainCharisma => EquipmentPassiveDto::SustainCharisma,
-        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
-        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
-        EquipmentPassive::DevicePower => EquipmentPassiveDto::DevicePower,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
     }
 }
 
 const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
     match value {
-        EquipmentPassiveDto::SeeInvisible => EquipmentPassive::SeeInvisible,
-        EquipmentPassiveDto::Telepathy => EquipmentPassive::Telepathy,
-        EquipmentPassiveDto::Levitation => EquipmentPassive::Levitation,
         EquipmentPassiveDto::Regeneration => EquipmentPassive::Regeneration,
-        EquipmentPassiveDto::HoldLife => EquipmentPassive::HoldLife,
-        EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
-        EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
-        EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,
-        EquipmentPassiveDto::SustainDexterity => EquipmentPassive::SustainDexterity,
-        EquipmentPassiveDto::SustainConstitution => EquipmentPassive::SustainConstitution,
-        EquipmentPassiveDto::SustainCharisma => EquipmentPassive::SustainCharisma,
-        EquipmentPassiveDto::Blessed => EquipmentPassive::Blessed,
-        EquipmentPassiveDto::EasySpell => EquipmentPassive::EasySpell,
-        EquipmentPassiveDto::DevicePower => EquipmentPassive::DevicePower,
         EquipmentPassiveDto::Vampiric => EquipmentPassive::Vampiric,
     }
 }

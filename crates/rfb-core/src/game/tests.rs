@@ -13739,13 +13739,6 @@ fn dynamic_affix_rolls_are_seeded_depth_filtered_and_materialized() {
         shallow[0].properties.equipment_bonuses.melee_skill == 12
             || shallow[0].properties.equipment_bonuses.melee_attacks == 1
     );
-    assert!(
-        !shallow[0]
-            .properties
-            .passives
-            .contains(&EquipmentPassive::Telepathy)
-    );
-
     let deep = roll(17, 10);
     assert_eq!(deep.len(), 1);
     assert!(

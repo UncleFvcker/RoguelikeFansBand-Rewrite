@@ -209,20 +209,7 @@
     },
     "EquipmentPassive": {
       "enum": [
-        "see-invisible",
-        "telepathy",
-        "levitation",
         "regeneration",
-        "hold-life",
-        "sustain-strength",
-        "sustain-intelligence",
-        "sustain-wisdom",
-        "sustain-dexterity",
-        "sustain-constitution",
-        "sustain-charisma",
-        "blessed",
-        "easy-spell",
-        "device-power",
         "vampiric"
       ],
       "type": "string"

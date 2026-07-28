@@ -373,7 +373,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "c8b48823d6c5839096d38eebc8ea385bce2054b2e64c4610903721375dd985c5"
+      "stateHash": "002ce5151edb8370757406f9a2a4cac77f5b2ee7b660a52c6dd90e876e8c2c83"
     },
     "events": [
       {
@@ -5502,6 +5502,6 @@
       "demo.floor.echo-bounty-rift.task-target.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "c8b48823d6c5839096d38eebc8ea385bce2054b2e64c4610903721375dd985c5"
+    "saveRoundTripStateHash": "002ce5151edb8370757406f9a2a4cac77f5b2ee7b660a52c6dd90e876e8c2c83"
   }
 }

@@ -3268,12 +3268,12 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "ae407cfbfba1bce7291298197ae6e9831280ddd700e4a56732730a180aa4b3a8"
+      "stateHash": "2685a91c66d96b03c8f9ac81e22b7e8f201a1e6d1c335c403c6e254a07a4f229"
     },
     "events": [],
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "ae407cfbfba1bce7291298197ae6e9831280ddd700e4a56732730a180aa4b3a8"
+    "saveRoundTripStateHash": "2685a91c66d96b03c8f9ac81e22b7e8f201a1e6d1c335c403c6e254a07a4f229"
   }
 }

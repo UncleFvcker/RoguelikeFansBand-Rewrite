@@ -346,7 +346,7 @@
         "victoryTurn": 0
       },
       "revealedTerrain": [],
-      "stateHash": "45279d53de10de29281f52381376544c2565dcc2e93629ef0b5f917467a027aa"
+      "stateHash": "e70ccf2cd1fb7943e6ca4483cd2864b6eb8a8bfe9936f02531eb516a96ca877e"
     },
     "events": [
       {
@@ -364,6 +364,6 @@
     "changedCells": [],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "45279d53de10de29281f52381376544c2565dcc2e93629ef0b5f917467a027aa"
+    "saveRoundTripStateHash": "e70ccf2cd1fb7943e6ca4483cd2864b6eb8a8bfe9936f02531eb516a96ca877e"
   }
 }

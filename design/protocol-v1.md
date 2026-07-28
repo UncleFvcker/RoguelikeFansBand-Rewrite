@@ -340,3 +340,5 @@ major 版本要求：
 - fuzz 测试不会因畸形消息 panic 或越界分配；
 - 已提交的 TypeScript/JSON Schema 与 Rust DTO 发生漂移时由 CI 阻止；
 - 协议 Schema 的破坏性变化需要在后续兼容性检查中显式批准。
+
+协议 1.118 将 `EquipmentPassiveDto` 收缩为已有权威消费者的 `regeneration` 与 `vampiric`。13 个从未影响规则的历史值不再出现在快照、内容属性或 TypeScript 联合类型中；旧 rolled-affix save 的兼容过滤由存档 DTO 边界负责，未知字符串仍拒绝。save v1 与 state hash Schema v52 保持不变。完整边界见 [Contract v118](contract-v118-passive-surface-cleanup.md)。

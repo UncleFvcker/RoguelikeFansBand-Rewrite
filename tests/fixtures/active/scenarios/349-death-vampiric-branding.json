@@ -3328,7 +3328,6 @@
             "speed": 0
           },
           "passives": [
-            "hold-life",
             "vampiric"
           ],
           "identification": "identified",
@@ -3350,7 +3349,6 @@
                 "speed": 0
               },
               "passives": [
-                "hold-life",
                 "vampiric"
               ]
             }
@@ -3459,7 +3457,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "f909cf672264d5aa1d2761928e9e6439601d624346da45b80ad3b6db1a3ecdc9"
+      "stateHash": "72322c63f7f831457e3089b74600474b80432a0ee52d28ef5b2c02ed545a5fba"
     },
     "events": [
       {
@@ -3805,6 +3803,6 @@
       "demo.monster.ember-mote.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "f909cf672264d5aa1d2761928e9e6439601d624346da45b80ad3b6db1a3ecdc9"
+    "saveRoundTripStateHash": "72322c63f7f831457e3089b74600474b80432a0ee52d28ef5b2c02ed545a5fba"
   }
 }

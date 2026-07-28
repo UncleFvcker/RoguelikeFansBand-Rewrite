@@ -352,7 +352,7 @@
           "y": 2
         }
       ],
-      "stateHash": "f38c5eb1aeaace0dd5d6441aa62aaf7a1219a0f333d5a150f4f1e773c365e40a"
+      "stateHash": "2715c20c457a92d2e76671424f78288f6f80e3ebac7f49b3953546da5c992d68"
     },
     "events": [
       {
@@ -553,6 +553,6 @@
     ],
     "removedEntities": [],
     "errors": [],
-    "saveRoundTripStateHash": "f38c5eb1aeaace0dd5d6441aa62aaf7a1219a0f333d5a150f4f1e773c365e40a"
+    "saveRoundTripStateHash": "2715c20c457a92d2e76671424f78288f6f80e3ebac7f49b3953546da5c992d68"
   }
 }

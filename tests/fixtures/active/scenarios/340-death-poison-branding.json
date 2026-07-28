@@ -3382,7 +3382,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "6834d7d2d8cca97aa0e7bc4e689128f596a7494ba1597beb9b80d42ae4905e0d"
+      "stateHash": "ed1c93cdc320854177f68a39eea7159a0f4f6402d17eaee311714632667ec384"
     },
     "events": [
       {
@@ -3734,6 +3734,6 @@
       "demo.monster.ember-mote.1"
     ],
     "errors": [],
-    "saveRoundTripStateHash": "6834d7d2d8cca97aa0e7bc4e689128f596a7494ba1597beb9b80d42ae4905e0d"
+    "saveRoundTripStateHash": "ed1c93cdc320854177f68a39eea7159a0f4f6402d17eaee311714632667ec384"
   }
 }

@@ -356,7 +356,7 @@
         "completedTasks": 0
       },
       "revealedTerrain": [],
-      "stateHash": "fb785e9574891aed5a02a9f125598c7d63b3329375684454d28ebda70b323568"
+      "stateHash": "52ec7b03c504e19a9ed566200d7e1a45b68fc14a2ab6e4cda38bb73844d37b24"
     },
     "events": [
       {
@@ -2268,9 +2268,9 @@
       {
         "step": 8,
         "kind": "player-dead",
-        "stateHash": "fb785e9574891aed5a02a9f125598c7d63b3329375684454d28ebda70b323568"
+        "stateHash": "52ec7b03c504e19a9ed566200d7e1a45b68fc14a2ab6e4cda38bb73844d37b24"
       }
     ],
-    "saveRoundTripStateHash": "fb785e9574891aed5a02a9f125598c7d63b3329375684454d28ebda70b323568"
+    "saveRoundTripStateHash": "52ec7b03c504e19a9ed566200d7e1a45b68fc14a2ab6e4cda38bb73844d37b24"
   }
 }
