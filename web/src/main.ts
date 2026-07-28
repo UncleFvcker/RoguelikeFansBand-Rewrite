@@ -18,6 +18,7 @@ import {
 import {
   NativeSaveStorage,
   desktopErrorCode,
+  nativeSaveErrorCategory,
   type NativeSaveSummary,
 } from "./native-save-storage";
 import type {
@@ -808,10 +809,22 @@ function showNativeSaveError(error: unknown): void {
 }
 
 function nativeSaveErrorKey(code: string): MessageKey {
-  if (code === "native-save-name-invalid") return "native-save-error-name-invalid";
-  if (code === "native-save-not-found") return "native-save-error-not-found";
-  if (code === "native-save-invalid") return "native-save-error-corrupt";
-  return "native-save-error-unavailable";
+  switch (nativeSaveErrorCategory(code)) {
+    case "name-invalid":
+      return "native-save-error-name-invalid";
+    case "not-found":
+      return "native-save-error-not-found";
+    case "corrupt":
+      return "native-save-error-corrupt";
+    case "read":
+      return "native-save-error-read";
+    case "write":
+      return "native-save-error-write";
+    case "unavailable":
+      return "native-save-error-unavailable";
+    case "internal":
+      return "native-save-error-internal";
+  }
 }
 
 async function changeTileset(): Promise<void> {
@@ -3049,8 +3062,9 @@ function localizedMessageArgs(
     };
   }
   if (record.key === "message-native-save-failed") {
+    const code = String(record.args.code);
     return {
-      reason: localization.format(nativeSaveErrorKey(String(record.args.code))),
+      reason: localization.format(nativeSaveErrorKey(code), { code }),
     };
   }
   return record.args;

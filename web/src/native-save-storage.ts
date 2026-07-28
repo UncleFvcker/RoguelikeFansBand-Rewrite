@@ -5,6 +5,14 @@ import { invoke } from "@tauri-apps/api/core";
 import type { GameSnapshot } from "./protocol";
 
 export type NativeSaveStatus = "ready" | "recoverable" | "corrupt";
+export type NativeSaveErrorCategory =
+  | "name-invalid"
+  | "not-found"
+  | "corrupt"
+  | "read"
+  | "write"
+  | "unavailable"
+  | "internal";
 
 export interface NativeSaveSummary {
   slotId: string;
@@ -58,4 +66,36 @@ export function desktopErrorCode(error: unknown): string {
     if (typeof code === "string") return code;
   }
   return "desktop-storage-unknown";
+}
+
+export function nativeSaveErrorCategory(code: string): NativeSaveErrorCategory {
+  switch (code) {
+    case "native-save-name-invalid":
+      return "name-invalid";
+    case "native-save-not-found":
+      return "not-found";
+    case "native-save-invalid":
+      return "corrupt";
+    case "native-save-list":
+    case "native-save-read":
+    case "native-save-verify-read":
+    case "native-save-commit-read":
+    case "native-save-temp-list":
+      return "read";
+    case "native-save-temp-create":
+    case "native-save-write":
+    case "native-save-sync":
+    case "native-save-commit":
+    case "native-save-delete":
+    case "native-save-backup-remove":
+    case "native-save-backup-rotate":
+    case "native-save-backup-create":
+    case "native-save-temp-clean":
+      return "write";
+    case "native-save-directory":
+    case "native-save-lock":
+      return "unavailable";
+    default:
+      return "internal";
+  }
 }

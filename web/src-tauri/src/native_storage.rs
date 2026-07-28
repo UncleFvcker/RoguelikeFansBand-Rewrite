@@ -125,7 +125,7 @@ impl NativeSaveStore {
         let mut summaries = slot_ids
             .into_iter()
             .map(|slot_id| self.summary(&slot_id))
-            .collect::<Vec<_>>();
+            .collect::<DesktopResult<Vec<_>>>()?;
         summaries.sort_by(|left, right| {
             right
                 .saved_at
@@ -172,36 +172,37 @@ impl NativeSaveStore {
             let _ = fs::remove_file(&temporary);
         }
         write_result?;
-        Ok(self.summary(slot_id))
+        self.summary(slot_id)
     }
 
     pub fn load(&self, slot_id: &str) -> DesktopResult<NativeLoadedSave> {
         validate_slot_id(slot_id)?;
         self.ensure_ready()?;
-        let mut last_error = None;
+        let mut invalid_error = None;
+        let mut read_error = None;
         for backup in 0..=BACKUP_COUNT {
             let path = if backup == 0 {
                 self.primary_path(slot_id)
             } else {
                 self.backup_path(slot_id, backup)
             };
-            if !path.exists() {
-                continue;
-            }
-            match fs::read(&path)
-                .map_err(|error| DesktopCommandError::io("native-save-read", error))
-                .and_then(|bytes| decode_snapshot(&bytes).map(|_| bytes))
-            {
-                Ok(bytes) => {
-                    return Ok(NativeLoadedSave {
-                        bytes,
-                        recovery_backup: (backup > 0).then_some(backup),
-                    });
+            match fs::read(&path) {
+                Ok(bytes) => match decode_snapshot(&bytes) {
+                    Ok(_) => {
+                        return Ok(NativeLoadedSave {
+                            bytes,
+                            recovery_backup: (backup > 0).then_some(backup),
+                        });
+                    }
+                    Err(error) => invalid_error = Some(error),
+                },
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => {
+                    read_error = Some(DesktopCommandError::io("native-save-read", error));
                 }
-                Err(error) => last_error = Some(error),
             }
         }
-        Err(last_error.unwrap_or_else(|| {
+        Err(read_error.or(invalid_error).unwrap_or_else(|| {
             DesktopCommandError::new("native-save-not-found", "save slot does not exist")
         }))
     }
@@ -223,34 +224,36 @@ impl NativeSaveStore {
         Ok(())
     }
 
-    fn summary(&self, slot_id: &str) -> NativeSaveSummary {
-        match self.load(slot_id) {
-            Ok(loaded) => match decode_snapshot(&loaded.bytes) {
-                Ok((header, snapshot)) => NativeSaveSummary {
-                    slot_id: slot_id.to_owned(),
-                    slot_name: if header.slot_name.trim().is_empty() {
-                        slot_id.to_owned()
-                    } else {
-                        header.slot_name
-                    },
-                    status: if loaded.recovery_backup.is_some() {
-                        NativeSaveStatus::Recoverable
-                    } else {
-                        NativeSaveStatus::Ready
-                    },
-                    recovery_backup: loaded.recovery_backup,
-                    saved_at: Some(header.saved_at),
-                    created_at: Some(header.created_at),
-                    turn: Some(snapshot.turn),
-                    location_key: Some(header.character_summary.location_key),
-                    content_id: Some(snapshot.content_id),
-                    content_hash: Some(snapshot.content_hash),
-                    state_hash: Some(snapshot.state_hash),
-                },
-                Err(_) => corrupt_summary(slot_id),
+    fn summary(&self, slot_id: &str) -> DesktopResult<NativeSaveSummary> {
+        let loaded = match self.load(slot_id) {
+            Ok(loaded) => loaded,
+            Err(error) if error.code == "native-save-invalid" => {
+                return Ok(corrupt_summary(slot_id));
+            }
+            Err(error) => return Err(error),
+        };
+        let (header, snapshot) = decode_snapshot(&loaded.bytes)?;
+        Ok(NativeSaveSummary {
+            slot_id: slot_id.to_owned(),
+            slot_name: if header.slot_name.trim().is_empty() {
+                slot_id.to_owned()
+            } else {
+                header.slot_name
             },
-            Err(_) => corrupt_summary(slot_id),
-        }
+            status: if loaded.recovery_backup.is_some() {
+                NativeSaveStatus::Recoverable
+            } else {
+                NativeSaveStatus::Ready
+            },
+            recovery_backup: loaded.recovery_backup,
+            saved_at: Some(header.saved_at),
+            created_at: Some(header.created_at),
+            turn: Some(snapshot.turn),
+            location_key: Some(header.character_summary.location_key),
+            content_id: Some(snapshot.content_id),
+            content_hash: Some(snapshot.content_hash),
+            state_hash: Some(snapshot.state_hash),
+        })
     }
 
     fn rotate_backups(&self, slot_id: &str) -> DesktopResult<()> {
@@ -487,5 +490,28 @@ mod tests {
         assert!(validate_slot_id("../escape").is_err());
         assert!(validate_slot_name("\n").is_err());
         assert_eq!(validate_slot_name("  测试存档  ").unwrap(), "测试存档");
+    }
+
+    #[test]
+    fn native_store_distinguishes_corrupt_data_from_unreadable_entries() {
+        let directory = temporary_directory();
+        let store = NativeSaveStore::new(directory.clone());
+        store.ensure_ready().expect("save directory should exist");
+        let path = store.primary_path("save-broken");
+
+        fs::write(&path, b"corrupt").expect("corrupt save should write");
+        let summary = store
+            .list()
+            .expect("corrupt save should still list")
+            .remove(0);
+        assert_eq!(summary.status, NativeSaveStatus::Corrupt);
+
+        fs::remove_file(&path).expect("corrupt save should be removable");
+        fs::create_dir(&path).expect("directory-shaped save entry should be created");
+        let error = store
+            .list()
+            .expect_err("unreadable save entry should remain an I/O error");
+        assert_eq!(error.code, "native-save-read");
+        let _ = fs::remove_dir_all(directory);
     }
 }
