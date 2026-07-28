@@ -2395,6 +2395,8 @@ impl Game {
             return Err(CoreError::PlayerDead);
         }
 
+        let mut action = GameAction::from(envelope.command);
+        self.validate_runtime_invariants(&action)?;
         let base_revision = self.revision;
         // The world only mutates inside dispatch, so the visuals recorded at
         // the end of the previous command are exactly this command's "before"
@@ -2407,7 +2409,6 @@ impl Game {
         let mut events = Vec::new();
         let mut removed_entities = Vec::new();
         self.resources_touched.clear();
-        let mut action = GameAction::from(envelope.command);
         let depleted_device_use = matches!(
             &action,
             GameAction::UseItem { item_id, .. } if self.item_charge_is_insufficient(item_id)
@@ -2837,7 +2838,7 @@ impl Game {
                 self.decay_player_resources();
             }
         }
-        self.apply_task_events(&events);
+        self.apply_task_events(&events)?;
         self.apply_campaign_events(&mut events);
 
         self.last_command_seq = envelope.command_seq;
@@ -10142,21 +10143,15 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let Some(index) = self.items.iter().position(|item| {
-            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
-        }) else {
+        let Some((index, definition)) = self.inventory_item_use_context(item_id)? else {
             events.push(DomainEvent::ItemUseUnavailable);
             return Ok(());
         };
         let kind_id = self.items[index].kind_id.clone();
-        let Some(definition) = self.content.item(&kind_id).cloned() else {
-            events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
-        };
         let activation = self.items[index].activation.clone();
         let (profile_id, difficulty, cost, effect, plan) =
             if let Some(activation) = activation.as_ref() {
-                let Some(profile) = definition
+                let profile = definition
                     .device_generation
                     .as_ref()
                     .and_then(|generation| {
@@ -10165,10 +10160,7 @@ impl Game {
                             .iter()
                             .find(|candidate| candidate.id == activation.profile_id)
                     })
-                else {
-                    events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(());
-                };
+                    .expect("validated dynamic item activation profile must remain available");
                 let Some(plan) =
                     self.item_use_plan(item_id, &profile.effect, Some(&profile.target), target)
                 else {
@@ -11257,6 +11249,42 @@ impl Game {
             return false;
         };
         item.charges.is_none_or(|state| state.current < cost)
+    }
+
+    fn inventory_item_use_context(
+        &self,
+        item_id: &str,
+    ) -> Result<Option<(usize, rfb_content::ItemDefinition)>, CoreError> {
+        let Some(index) = self.items.iter().position(|item| {
+            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
+        }) else {
+            return Ok(None);
+        };
+        let item = &self.items[index];
+        let definition = self.content.item(&item.kind_id).cloned().ok_or_else(|| {
+            CoreError::Invariant(format!(
+                "inventory item {} references missing kind {}",
+                item.id, item.kind_id
+            ))
+        })?;
+        if let Some(activation) = &item.activation
+            && definition
+                .device_generation
+                .as_ref()
+                .and_then(|generation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|profile| profile.id == activation.profile_id)
+                })
+                .is_none()
+        {
+            return Err(CoreError::Invariant(format!(
+                "dynamic item {} references missing activation profile {}",
+                item.id, activation.profile_id
+            )));
+        }
+        Ok(Some((index, definition)))
     }
 
     fn inventory_item_use_effect(
@@ -15379,27 +15407,49 @@ impl Game {
         Ok(())
     }
 
-    fn apply_task_events(&mut self, events: &[DomainEvent]) {
+    fn validate_runtime_invariants(&self, action: &GameAction) -> Result<(), CoreError> {
+        self.active_task_objective()?;
+        if let GameAction::UseItem { item_id, .. } = action {
+            self.inventory_item_use_context(item_id)?;
+        }
+        Ok(())
+    }
+
+    fn active_task_objective(
+        &self,
+    ) -> Result<Option<(String, TaskObjectiveDefinition, Option<u32>)>, CoreError> {
         let Some((task_id, stage_index)) = self.task_states.iter().find_map(|(task_id, state)| {
             (state.status == TaskStatusKindDto::Active
                 && state.active_floor_id.as_deref() == Some(self.current_floor_id.as_str()))
-            .then_some((task_id.clone(), state.stage_index))
+            .then_some((task_id, state.stage_index))
         }) else {
-            return;
+            return Ok(None);
         };
         let world = self
             .content
             .world(&self.world_id)
-            .cloned()
             .expect("active world must remain available");
-        let objectives = task_objectives(&world, &task_id);
-        let Some(objective) = usize::try_from(stage_index)
-            .ok()
+        let objectives = task_objectives(world, task_id);
+        let stage = usize::try_from(stage_index).ok();
+        let objective = stage
             .and_then(|stage| objectives.get(stage))
             .copied()
             .cloned()
-        else {
-            return;
+            .ok_or_else(|| {
+                CoreError::Invariant(format!(
+                    "active task {task_id} references missing objective stage {stage_index}"
+                ))
+            })?;
+        let next_required = stage
+            .and_then(|stage| stage.checked_add(1))
+            .and_then(|stage| objectives.get(stage))
+            .map(|objective| objective.required);
+        Ok(Some((task_id.clone(), objective, next_required)))
+    }
+
+    fn apply_task_events(&mut self, events: &[DomainEvent]) -> Result<(), CoreError> {
+        let Some((task_id, objective, next_required)) = self.active_task_objective()? else {
+            return Ok(());
         };
         let increment = match objective.kind {
             TaskObjectiveKind::CollectItem => events.iter().any(|event| {
@@ -15442,17 +15492,14 @@ impl Game {
                 .expect("active task state must remain available");
             state.current = state.current.saturating_add(increment).min(state.required);
             if state.current >= state.required
-                && usize::try_from(state.stage_index)
-                    .ok()
-                    .is_some_and(|stage| stage + 1 < objectives.len())
+                && let Some(next_required) = next_required
             {
                 state.stage_index = state.stage_index.saturating_add(1);
                 state.current = 0;
-                state.required = objectives[usize::try_from(state.stage_index)
-                    .expect("validated task stage must fit usize")]
-                .required;
+                state.required = next_required;
             }
         }
+        Ok(())
     }
 
     fn generate_death_loot(&mut self, actor: &Actor) -> Result<Vec<ItemInstance>, CoreError> {

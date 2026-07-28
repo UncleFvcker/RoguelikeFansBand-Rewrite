@@ -5811,6 +5811,87 @@ fn stale_revision_is_rejected_without_mutation() {
     assert_eq!(game.state_hash(), before);
 }
 
+fn assert_invariant_error_without_mutation(
+    game: &mut Game,
+    game_command: GameCommand,
+    expected: &str,
+) {
+    let before = game.clone();
+    let error = game
+        .dispatch(command(1, 0, game_command))
+        .expect_err("broken runtime reference should fail");
+    match error {
+        CoreError::Invariant(message) => assert_eq!(message, expected),
+        other => panic!("expected an invariant error, got {other}"),
+    }
+    assert_eq!(game.to_save(), before.to_save());
+    assert_eq!(game.resources_touched, before.resources_touched);
+    assert_eq!(game.last_visual_cells, before.last_visual_cells);
+}
+
+#[test]
+fn inventory_item_missing_its_kind_is_an_invariant_error() {
+    const ITEM_ID: &str = "test.item.missing-kind";
+    let mut game = skill_check_game(1, "demo.build.vanguard");
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.clarity-draught");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == ITEM_ID)
+        .expect("test item should exist")
+        .kind_id = "test.item-kind.missing".to_owned();
+
+    assert_invariant_error_without_mutation(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+        "inventory item test.item.missing-kind references missing kind test.item-kind.missing",
+    );
+}
+
+#[test]
+fn dynamic_item_missing_its_activation_profile_is_an_invariant_error() {
+    const ITEM_ID: &str = "test.item.missing-activation";
+    let mut game = skill_check_game(1, "demo.build.tinkerer");
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.resonance-wand");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == ITEM_ID)
+        .and_then(|item| item.activation.as_mut())
+        .expect("dynamic test item should carry an activation")
+        .profile_id = "test.activation.missing".to_owned();
+
+    assert_invariant_error_without_mutation(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: Some(TargetSelection::Direction {
+                direction: Direction::East,
+            }),
+        },
+        "dynamic item test.item.missing-activation references missing activation profile test.activation.missing",
+    );
+}
+
+#[test]
+fn active_task_missing_its_objective_is_an_invariant_error() {
+    let mut game = skill_check_game(1, "demo.build.vanguard");
+    let state = game
+        .task_states
+        .get_mut("demo.task.echo-chain")
+        .expect("staged task should exist");
+    state.status = TaskStatusKindDto::Active;
+    state.active_floor_id = Some(game.current_floor_id.clone());
+    state.stage_index = 99;
+
+    assert_invariant_error_without_mutation(
+        &mut game,
+        GameCommand::Wait,
+        "active task demo.task.echo-chain references missing objective stage 99",
+    );
+}
+
 #[test]
 fn rfb_style_armor_reduction_uses_the_legacy_linear_cap() {
     assert_eq!(apply_melee_armor_reduction(100, 0), 100);

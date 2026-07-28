@@ -31,6 +31,8 @@ pub enum CoreError {
     UnknownCharacterBuild(String),
     #[error("generated item instance ID space is exhausted")]
     ItemIdExhausted,
+    #[error("internal invariant failed: {0}")]
+    Invariant(String),
     #[error("invalid save: {0}")]
     InvalidSave(&'static str),
     #[error(transparent)]
