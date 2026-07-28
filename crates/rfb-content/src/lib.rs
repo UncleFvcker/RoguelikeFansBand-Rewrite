@@ -1590,6 +1590,13 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    DispelCategory {
+        category: String,
+        damage: u32,
+    },
+    BanishVisible {
+        maximum_distance: u16,
+    },
     Detect {
         #[serde(default)]
         subject: AbilityDetectSubjectDefinition,
@@ -3294,6 +3301,12 @@ fn valid_item_effect(
                 && (1..=10_000).contains(damage_sides)
                 && *damage_bonus <= 10_000
         }
+        ItemUseEffectDefinition::DispelCategory { category, damage } => {
+            actor_tag_values.contains(category) && (1..=1_000_000).contains(damage)
+        }
+        ItemUseEffectDefinition::BanishVisible { maximum_distance } => {
+            (1..=200).contains(maximum_distance)
+        }
         ItemUseEffectDefinition::Detect {
             subject,
             category,
@@ -4584,7 +4597,9 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::ResetRecall
                     | ItemUseEffectDefinition::CurseEquippedItem { .. }
                     | ItemUseEffectDefinition::RemoveEquippedCurses { .. }
-                    | ItemUseEffectDefinition::SummonCategory { .. } => self_target,
+                    | ItemUseEffectDefinition::SummonCategory { .. }
+                    | ItemUseEffectDefinition::DispelCategory { .. }
+                    | ItemUseEffectDefinition::BanishVisible { .. } => self_target,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                     ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. } => {
@@ -8580,7 +8595,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 52);
+        assert_eq!(first.content.items.len(), 54);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8606,7 +8621,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.109.0");
+        assert_eq!(catalog.pack_version(), "1.110.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

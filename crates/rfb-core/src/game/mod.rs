@@ -108,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 110] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 111] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -219,10 +219,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 110] = [
     "9bfa2632f2be9129e39a59dad72f7bb9a64fd2f403d74c3feaee1302fb0fe459",
     "9d1c6c1e01fb4533aa5a9868f0adfcbe876148d98585412783d0da93f4019dff",
     "0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210",
+    "99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00";
+    "a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -312,6 +313,9 @@ enum AbilityTargetPlan {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ItemUsePlan {
     SelfTarget,
+    VisibleActors {
+        actor_ids: Vec<String>,
+    },
     Projectile {
         path: Vec<Position>,
     },
@@ -10335,6 +10339,32 @@ impl Game {
                 }
             }
             (
+                ItemUseEffectDefinition::DispelCategory { category, damage },
+                ItemUsePlan::VisibleActors { actor_ids },
+            ) => {
+                self.resolve_item_dispel_category(
+                    &kind_id,
+                    &category,
+                    damage,
+                    actor_ids,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                ItemUseEffectDefinition::BanishVisible { maximum_distance },
+                ItemUsePlan::VisibleActors { actor_ids },
+            ) => {
+                self.resolve_item_banish_visible(
+                    &kind_id,
+                    maximum_distance,
+                    actor_ids,
+                    events,
+                    changed,
+                );
+            }
+            (
                 ItemUseEffectDefinition::Detect {
                     subject,
                     category,
@@ -10624,6 +10654,12 @@ impl Game {
                 })?;
                 Some(ItemUsePlan::Projectile { path })
             }
+            ItemUseEffectDefinition::DispelCategory { .. }
+            | ItemUseEffectDefinition::BanishVisible { .. } => {
+                self_target.then(|| ItemUsePlan::VisibleActors {
+                    actor_ids: self.item_visible_actor_ids(),
+                })
+            }
             ItemUseEffectDefinition::Detect { .. } => self_target.then_some(ItemUsePlan::Detect),
             effect @ ItemUseEffectDefinition::SummonCategory { .. } => {
                 self_target.then(|| self.item_category_summon_plan(effect))
@@ -10678,6 +10714,195 @@ impl Game {
             ItemUseEffectDefinition::ResetRecall => {
                 (self_target && self.can_reset_recall()).then_some(ItemUsePlan::ResetRecall)
             }
+        }
+    }
+
+    fn item_visible_actor_ids(&self) -> Vec<String> {
+        self.entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self.is_visible(entity.position)
+                    && has_line_of_effect(self, self.player.position, entity.position)
+            })
+            .map(|entity| entity.id.clone())
+            .collect()
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_item_dispel_category(
+        &mut self,
+        source_kind_id: &str,
+        category: &str,
+        amount: u32,
+        actor_ids: Vec<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let mut affected = false;
+        for actor_id in actor_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == actor_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("item dispel target definition must remain available")
+                .clone();
+            if !actor_matches_category(&definition, category)
+                || definition.tags.iter().any(|tag| tag == "resist-all")
+            {
+                continue;
+            }
+
+            affected = true;
+            let target_kind_id = definition.id;
+            let target_position = self.entities[index].position;
+            let damage = resolve_damage(
+                DamagePacket::new(
+                    i32::try_from(amount).expect("validated item dispel damage must fit i32"),
+                    DamageType::HolyFire,
+                ),
+                ResistanceLevel::Normal,
+            );
+            self.entities[index].alerted = true;
+            self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
+            changed.insert(target_position);
+            self.wake_entity_after_damage(index, damage.applied, events);
+            if self.entities[index].hp <= 0 {
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::ItemDispelSlew {
+                        source_kind_id: source_kind_id.to_owned(),
+                        target_kind_id,
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            } else {
+                events.push(DomainEvent::ItemDispelHit {
+                    source_kind_id: source_kind_id.to_owned(),
+                    target_kind_id,
+                    damage,
+                });
+            }
+        }
+        if affected {
+            self.mark_item_aware(source_kind_id);
+        } else {
+            events.push(DomainEvent::ItemDispelNoEffect {
+                source_kind_id: source_kind_id.to_owned(),
+            });
+        }
+        Ok(())
+    }
+
+    fn resolve_item_banish_visible(
+        &mut self,
+        source_kind_id: &str,
+        maximum_distance: u16,
+        actor_ids: Vec<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if actor_ids.is_empty() {
+            events.push(DomainEvent::ItemBanishmentNoEffect {
+                source_kind_id: source_kind_id.to_owned(),
+            });
+            return;
+        }
+
+        let mut noticed = false;
+        for actor_id in actor_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == actor_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("item banishment target definition must remain available")
+                .clone();
+            let guardian = definition.tags.iter().any(|tag| tag == "guardian");
+            let teleport_resistance = definition.tags.iter().any(|tag| tag == "resist-teleport");
+            let protected_resistance = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "resist-all"));
+            let resisted = guardian
+                || (teleport_resistance
+                    && (protected_resistance
+                        || definition.level
+                            > u32::try_from(self.rng.bounded(100) + 1)
+                                .expect("bounded teleport resistance roll must fit u32")));
+            if resisted {
+                events.push(DomainEvent::ItemBanishmentResisted {
+                    source_kind_id: source_kind_id.to_owned(),
+                    target_kind_id: definition.id,
+                });
+                continue;
+            }
+
+            noticed = true;
+            let destinations = self.item_banishment_destinations(index, maximum_distance);
+            if destinations.is_empty() {
+                events.push(DomainEvent::ItemBanishmentNoSpace {
+                    source_kind_id: source_kind_id.to_owned(),
+                    target_kind_id: definition.id,
+                });
+                continue;
+            }
+            let choice = usize::try_from(self.rng.bounded(
+                u64::try_from(destinations.len()).expect("banishment candidate count must fit u64"),
+            ))
+            .expect("bounded banishment candidate index must fit usize");
+            let from = self.entities[index].position;
+            let to = destinations[choice];
+            self.entities[index].position = to;
+            changed.insert(from);
+            changed.insert(to);
+            events.push(DomainEvent::ItemBanishedActor {
+                source_kind_id: source_kind_id.to_owned(),
+                target_kind_id: definition.id,
+                resolution: MonsterDisplacementResolutionDto { actor_id, from, to },
+            });
+        }
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+    }
+
+    fn item_banishment_destinations(
+        &self,
+        source_index: usize,
+        maximum_distance: u16,
+    ) -> Vec<Position> {
+        let origin = self.entities[source_index].position;
+        let mut maximum = u32::from(maximum_distance).min(200);
+        let mut minimum = maximum / 2;
+        loop {
+            let candidates = self.displacement_destinations(source_index, |position| {
+                let distance = origin
+                    .x
+                    .abs_diff(position.x)
+                    .max(origin.y.abs_diff(position.y));
+                (minimum..=maximum).contains(&distance)
+            });
+            if !candidates.is_empty() || (maximum == 200 && minimum == 0) {
+                return candidates;
+            }
+            maximum = maximum.saturating_mul(2).min(200);
+            minimum /= 2;
         }
     }
 
@@ -11144,6 +11369,8 @@ impl Game {
                 noticed
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::DispelCategory { .. }
+            | ItemUseEffectDefinition::BanishVisible { .. }
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }
             | ItemUseEffectDefinition::EnchantItem { .. }

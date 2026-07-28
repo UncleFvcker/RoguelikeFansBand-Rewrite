@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.118 / contract-v118（P31–P67 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.118 / contract-v119（P31–P68 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v118 阶段性里程碑
+## 8. contract-v75–v119 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.118、内容包 1.109.0、contract-v118、save v1 和 state hash Schema v52；内容 hash 为 `99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00`。active baseline 包含 420 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.118、内容包 1.110.0、contract-v119、save v1 和 state hash Schema v52；内容 hash 为 `a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd`。active baseline 包含 422 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119 增加可见目标亡灵驱散与逐目标放逐。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、52 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、54 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -533,9 +533,11 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **P66 进展（2026-07）**：contract-v116 接入 Curse Armor/Weapon、Remove Curse 与 *Remove Curse*。内容新增 normal/heavy/permanent 生成期与实例诅咒；运行时固定装备候选顺序、神器 50% 抵抗、普通/强力解除边界，并阻止所有严重度的卸装和同槽替换。四类 save、拆分/堆叠、旧档缺字段迁移、知识语义和 Web 已贯通；fixtures 406–413 使 active baseline 达到 413 exact，Schema v52，demo 七件物品使包升至 1.107.0。legacy importer 映射 sval 2/3/14/15，`scroll-effect` 42→38，真实包严格编译 hash 为 `b517b3dc48395c91b3c9864028cce2f4ae5f97d94dc41264c1afe1ac9af9fb70`。P67 优先四种召唤卷轴；原版 `blast_object` 物品损坏留待独立实例事务。
 
-**P67 进展（2026-07）**：contract-v117 接入 Summon Monster/Undead/Pet/Kin。内容新增物品召唤 selector、地牢深度/玩家等级来源和 Race `kinCategory`；运行时复用能力类别召唤的候选、unique、落位和群体 helper，永久 Pet/Kin 只保存 `controllerId`。零候选/零空间正常消费，只记 Tried 且零召唤 RNG；fixtures 414–420 使 active baseline 达到 420 exact，Schema 保持 v52，demo 四件物品使包升至 1.108.0。legacy importer 映射 sval 4/5/6/54，并为 actor/Race 补 glyph 式 kin category，`scroll-effect` 38→34，真实包严格编译 hash 为 `fbe1a9682d464e28ade0bd5df8fe8fbdda4fd1030413dd78965a4a4c983834d0`。P68 应先重排剩余世界/状态/物品卷轴；宠物容量、忠诚和完整形态 glyph 留待独立系统。
+**P67 进展（2026-07）**：contract-v117 接入 Summon Monster/Undead/Pet/Kin。内容新增物品召唤 selector、地牢深度/玩家等级来源和 Race `kinCategory`；运行时复用能力类别召唤的候选、unique、落位和群体 helper，永久 Pet/Kin 只保存 `controllerId`。零候选/零空间正常消费，只记 Tried 且零召唤 RNG；fixtures 414–420 使 active baseline 达到 420 exact，Schema 保持 v52，demo 四件物品使包升至 1.108.0。legacy importer 映射 sval 4/5/6/54，并为 actor/Race 补 glyph 式 kin category，`scroll-effect` 38→34，真实包严格编译 hash 为 `fbe1a9682d464e28ade0bd5df8fe8fbdda4fd1030413dd78965a4a4c983834d0`。宠物容量、忠诚和完整形态 glyph 留待独立系统；后续可见目标卷轴由 P68 完成。
 
 **契约维护（2026-07）**：contract-v118 将装备 passive 收缩为已有权威消费者的 regeneration 与 vampiric。13 类未实现旗标重新进入真实导入 gap report，旧 rolled-affix 存档只在 DTO 边界过滤这些已知 no-op 值，未知值仍失败。demo 升至 1.109.0，420 条 exact fixture 因内容 hash 输入刷新，Schema 保持 v52；固定原版源码重新导入 122/160 egos，编译 hash 为 `e3408cabe6ca812c8dc3b79f82fadd0322fa18b7f2d8cef119a13b22458f147a`。
+
+**P68 进展（2026-07）**：contract-v119 接入 Dispel Undead 与 Banishment。物品计划器冻结可见且 line-of-effect 可达的 actor ID；驱散按 undead category 固定造成 80 点伤害并跳过 `RES_ALL`，放逐按 guardian、unique+`RES_TELE`、普通 `RES_TELE` 等级抵抗逐目标结算，落点也逐目标重算和抽取。无目标消费且零效果 RNG，放逐通过抵抗但无空间仍可识别。fixtures 421–422 使 active baseline 达到 422 exact；协议保持 1.118，demo 升至 1.110.0，Schema 保持 v52。legacy importer 映射 sval 42/62 和 `RES_ALL`/`RES_TELE`，`scroll-effect` 34→32，真实包严格编译 hash 为 `eaf66414ab9d7eda4bac24957b4263e101250ac90b84a3f5cff9d0b9730e1bf7`。剩余卷轴继续按世界/地形、状态和物品事务分组。
 
 ## 9. 内容迁移策略
 

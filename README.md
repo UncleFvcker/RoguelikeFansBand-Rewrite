@@ -138,6 +138,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v116：装备诅咒与解除卷轴](design/contract-v116-scroll-curses.md)
 - [Contract v117：怪物、亡灵、宠物与同族召唤卷轴](design/contract-v117-scroll-summoning.md)
 - [Contract v118：收缩无消费者的装备 passive 表面](design/contract-v118-passive-surface-cleanup.md)
+- [Contract v119：可见目标驱散与放逐卷轴](design/contract-v119-scroll-visible-actor-effects.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -161,7 +162,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v118`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v119`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -300,6 +301,8 @@ P67 / contract-v117 完成怪物、亡灵、宠物与同族四种召唤卷轴。
 
 Contract v118 清理 contract-v103 遗留的无消费者装备 passive。内容、协议、导入和 Web 只保留已有权威规则的 `regeneration` 与 `vampiric`；13 类未实现原版旗标回到 import gap report。旧 rolled-affix 存档在单一 DTO 边界丢弃这些已知 no-op 值，未知值仍拒绝，不重掷或替换能力。协议 1.118、demo 1.109.0、state hash Schema v52、active baseline 420 条 exact、零 waiver，内置 content hash 为 `99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00`。详见[Contract v118](design/contract-v118-passive-surface-cleanup.md)。
 
+P68 / contract-v119 接入 Dispel Undead 与 Banishment。两种卷轴共用可见且 line-of-effect 可达的 actor 快照；驱散对亡灵固定造成 80 点伤害并跳过 `resist-all`，放逐按 guardian、unique+`resist-teleport` 和普通等级抵抗逐目标结算，再逐目标抽取最远落点。无目标仍消费且零效果 RNG；放逐通过抵抗但无空间时仍可识别。legacy importer 映射 sval 42/62 并导入 `RES_ALL`/`RES_TELE` 标签，使 `scroll-effect` 34→32。协议保持 1.118、demo 1.110.0、state hash Schema v52、active baseline 422 条 exact、零 waiver，内置 content hash 为 `a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd`。详见[Contract v119](design/contract-v119-scroll-visible-actor-effects.md)。
+
 ### 本地验证
 
 ```powershell
@@ -372,7 +375,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 420 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 422 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

@@ -502,3 +502,7 @@ item-demo-pet-summoning-scroll-name = 召唤宠物卷轴
 item-demo-pet-summoning-scroll-description = 召唤一个怪物或群体，并使其永久服从阅读者。
 item-demo-kin-summoning-scroll-name = 召唤同族卷轴
 item-demo-kin-summoning-scroll-description = 召唤与阅读者种族相符的生物作为永久同伴。
+item-demo-dispel-undead-scroll-name = 驱散亡灵卷轴
+item-demo-dispel-undead-scroll-description = 以驱散之力打击视野内的所有亡灵。
+item-demo-banishment-scroll-name = 放逐卷轴
+item-demo-banishment-scroll-description = 将视野内所有未能抵抗的生物传送到远处。

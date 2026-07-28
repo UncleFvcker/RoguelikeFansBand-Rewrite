@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dispel-undead-scroll",
+  "nameKey": "item-demo-dispel-undead-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-dispel-undead-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "dispel-category",
+      "category": "undead",
+      "damage": 80
+    }
+  },
+  "tags": ["consumable", "dispel", "scroll", "undead"]
+}

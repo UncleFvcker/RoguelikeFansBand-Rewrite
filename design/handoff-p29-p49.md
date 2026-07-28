@@ -1,6 +1,6 @@
-# 交接文档：P29–P56 迭代史与当前状态
+# 交接文档：P29–P68 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-27，P56 已在当前工作树完成，等待提交。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.118 / contract-v119，P68 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文后续 P54-P56 数值是历史交接快照。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P68 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -73,18 +73,15 @@
 - **P50（contract-v102）装备旗标·进攻面（T2 后半）**：协议 1.102 / 包 1.93.0 / Schema 保持 v41 / 326 fixtures。Item/Affix 统一 `slays`（11 类目标，slay/kill 两档）与五元素 `brands`；玩家持武器近战按原版 tier 只放大武器骰，多项取最高，元素 immune 压制对应 brand，零额外 RNG。DTO 与 Web 按物品知识门控显示。demo 新增屠龙刃/余烬刃/寒霜猎手词条（fixtures 324-326）。导入回灌：ego 107/160、神器 392/392，12 词条/130 物品带 slay，5 词条/90 物品带基础 brand。详见 `design/contract-v102-offensive-flags.md`。
 - **P51（contract-v103）动态 affix 实例 + 装备 passive**：协议 1.103 / 包 1.94.0 / Schema v42 / 328 fixtures。Affix 新增按深度过滤的加权 `rollGroups`，生成结果以 `rolledAffixes` materialize 到物品实例、存档和 hash；旧档缺结果保持空且零 RNG。`equipmentBonuses` 覆盖额外攻击、十类技能、红外/光照，`passives` 建立 14 项能力词表；regeneration 已每 10 ticks 恢复 1 HP，其余 passive 保留为后续系统的权威数据。Web 中英显示完整属性，contract final state 直接记录 inventory/equipment DTO。demo Adaptive Echo 的 fixtures 327-328 锁住两个浅层候选、真实掉落、鉴定、装备、再生和回档。真实导入 ego 128/160、神器 392/392；详见 `design/contract-v103-dynamic-affixes.md`。
 
-## 4. 当前缺口与下一步候选
+## 4. 当前基线与下一步
 
-- **P52 已完成（纯工具）**：54 个职业壳与职业 skillSet；53 份 m_info 共 636 个领域行、144 个可读行和 4608 条逐法术参数；C caster_info 壳与领域可读性表；s_info 的 16640 条武器熟练和 156 条专项熟练进入报告。详见 `design/legacy-class-import-v1.md`。
-- **P53 已完成（首批运行时纵切）**：`CastingProfileDefinition.abilityOverrides` 保留同一法术的职业级等级/耗魔/失败率；Death 第一册 `[Stench of Death]` 映射 Malediction、Stinking Cloud、Horrify，12 个静态职业生成真实 castingProfile，共 3 abilities / 1 ability book / 36 行职业参数。敏捷、生命与动态档案继续显式排除。大型源包文件预算 4096→32768，16 MiB 源字节预算不变。详见 `design/legacy-player-spell-import-v1.md`。
-- **P54 已完成（contract-v104）**：七类 `levelScaling` 在能力投影/施放统一物化；actor Detect、status power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部入协议、存档和 Schema v43。Death 第一册达到 8 abilities / 1 ability book / 12 casting profiles / 96 行覆盖；协议 1.104、包 1.95.0、334 exact fixtures、零 waiver。真实 Death 效果缺口 480→384，详见 `design/contract-v104-death-first-book.md`。
-- **P55 已完成（contract-v105）**：Death 第二册 8/8 槽位落地；活体限定、bolt-or-beam、职业 beam 概率、自身中心 AoE、single/glyph Genocide、临时 poison 品牌、Drain Life、尸体与永久 Animate Dead 全部进入协议/存档/回放。两册合计 16 abilities、2 books、12 casting profiles、192 行覆盖；协议 1.105、包 1.96.0、Schema v44、343 exact fixtures、零 waiver，Death 效果缺口 480→288。详见 `design/contract-v105-death-second-book.md`。
-- **P56 已完成（contract-v106）**：Death 第三册 8/8 槽位落地；随机状态时长、状态派生加值/免疫、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰和 linear/prorated 曲线进入协议、存档与回放。三册合计 24 abilities、3 books、12 casting profiles、288 行覆盖；协议 1.106、包 1.97.0、Schema v45、353 exact fixtures、零 waiver，Death 效果缺口 288→192。Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 明确保留为 `NoOp`。详见 `design/contract-v106-death-third-book.md`。
-- **P57 候选**：继续读取 Death 第四册八个实际槽位并按系统族聚类；设备/消耗品效果系统仍是并列高收益候选。
-- 备选：**设备与消耗品效果系统**（行为缺口 231 + 激活 193，解锁卷轴/魔杖/药水实际效果）；**法术清尾**（S_ 特殊/字形 177、SHRIEK、TRAPS、DARKNESS 房间光照、ANIM_DEAD、ANTI_MAGIC）。
-- 导入优先级路线（design/legacy-import-priority-v1.md）：T1✅ T2 防御面✅ T2 进攻面✅ T2 动态实例/passive✅ T3 职业壳+m_info✅ T4 玩家领域法术首批✅（继续逐册）∥设备效果 → T5 d_info/v_info/任务/城镇荒野。
-- 能力性旗标已结构化入内容/实例/DTO，但除 REGEN 外仍需运行时消费者；另有种族 rank 动态（21 怪物种族）、双持/箭袋槽、非标准身体玩法待对应系统。
-- 长期设计约束（用户已确认、不得推翻）与地牢/楼梯/守护者决定见既有设计文档；显示状态不入档是铁律。
+- **P57** 完成 Death 第四册，四册合计 32 abilities、4 books、12 个静态职业和 384 行参数覆盖。
+- **P58–P61** 建立充能物品、动态设备、自然恢复/主动充能和有序恢复消耗品。
+- **P62–P67** 依次完成鉴定、地图侦测、传送召回、装备附魔、诅咒解除和四种召唤卷轴；真实 `scroll-effect` 缺口降至 34。
+- **contract-v118 维护** 删除 13 类无权威消费者的装备 passive；只保留 regeneration 与 vampiric，历史 no-op 兼容留在存档 DTO 边界。
+- **P68 / contract-v119** 接入 Dispel Undead 与 Banishment，共用可见且 line-of-effect 可达的 actor 快照。协议保持 1.118，demo 1.110.0，save v1，state hash Schema v52，active baseline 422 exact、零 waiver；内置 hash 为 `a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd`。固定原版导入的 `scroll-effect` 34→32，真实包 hash 为 `eaf66414ab9d7eda4bac24957b4263e101250ac90b84a3f5cff9d0b9730e1bf7`。
+- 下一步继续按真实报告拆分剩余 32 个卷轴效果。世界/地形、状态和物品事务应分别纵切；不要把 `AbilityEffectDefinition` 或通用 actor-effect 框架提前纳入。
+- 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令
 

@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v117、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v119、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -76,27 +76,30 @@
 | P65 | 装备附魔卷轴与实例强化 | 已由 contract-v115 完成 | `enchant-item` 的 to-hit/to-damage/to-AC 尝试骰、原版千分递减表、+15 上限、神器 50% 门、普通/弹药堆门、实例/save/战斗派生、原子拒绝和 Web 投影。sval 16/17/18/20/21 使 `scroll-effect` 47→42；协议 1.115、包 1.106.0、Schema v51、fixtures 399-405 共 405 exact |
 | P66 | 装备诅咒与解除卷轴 | 已由 contract-v116 完成 | normal/heavy/permanent 实例诅咒、武器/护甲施咒、神器 50% 抵抗、普通/强力解除、永久诅咒保留、卸装/替换零时间拒绝、四类 save 与 Web 投影。sval 2/3/14/15 使 `scroll-effect` 42→38；协议 1.116、包 1.107.0、Schema v52、fixtures 406-413 共 413 exact |
 | P67 | 怪物、亡灵、宠物与同族召唤卷轴 | 已由 contract-v117 完成 | 物品召唤 selector、地牢深度/玩家等级来源、Race `kinCategory`、敌对 unique/guardian 过滤、永久玩家控制、零候选/零空间消费与知识/RNG 边界。sval 4/5/6/54 使 `scroll-effect` 38→34；协议 1.117、包 1.108.0、Schema v52、fixtures 414-420 共 420 exact |
+| P68 | 可见目标驱散与放逐卷轴 | 已由 contract-v119 完成 | 共享可见/line-of-effect actor 快照；Dispel Undead 固定 80 点并跳过 `resist-all`；Banishment 按 guardian、unique+`resist-teleport`、普通等级抵抗逐目标结算并逐目标抽落点。sval 42/62 使 `scroll-effect` 34→32；协议保持 1.118、包 1.110.0、Schema v52、fixtures 421-422 共 422 exact |
 
-## contract-v118 明确遗留
+## contract-v119 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
 - 永久宠物复用首版召唤物 AI 与全局指令；维护费、忠诚、解除控制、宠物容量和独立成长尚未建立；
-- 剩余 `scroll-effect` 34 应先按世界效果、状态效果和物品事务重新分组，再选择 P68 纵切。
+- Dispel/Banishment 只消费当前可见且 line of effect 可达的 actor 快照，不建立怪物回忆、跨层感知或通用 actor-effect DSL；
+- Banishment 的 guardian、unique/`RES_TELE` 和普通等级抵抗已固定；反传送区域、玩家反制和追踪传送仍不在本轮；
+- 剩余 `scroll-effect` 32 继续按世界/地形、状态、actor 战斗和物品/成长事务分组，不因共享可见目标计划器合并无关效果。
 
 ## contract-v116 明确遗留
 
 - 原版施咒的 `blast_object` 还会抹除 ego/artifact、基础骰与加值；当前 immutable kind ID 不承担物品损坏，去词条、负强化和重铸需独立事务；
 - permanent 只能由内容/生成期盖章，卷轴解除永远保留；解除永久诅咒的能力、服务或剧情规则尚未建立；
 - 诅咒只约束卸装/替换，没有额外属性惩罚、随机诅咒副作用、诅咒知识鉴定或批量目标 UI；
-- 四种召唤卷轴已由 contract-v117 完成；剩余 `scroll-effect` 34 转入世界/状态/物品效果分组。
+- 四种召唤卷轴和两种可见目标卷轴已由 contract-v117/v119 完成；剩余 `scroll-effect` 32 转入世界/状态/物品效果分组。
 
 ## contract-v115 明确遗留
 
 - 附魔只增加正向 to-hit/to-damage/to-AC；装备诅咒与解除已由 contract-v116 独立完成，负强化和按职业/服务调整概率仍未建立；
 - 神器二次门、普通堆叠和弹药堆叠已按原版固定；神器保护目前由 item `artifact` tag 判定，随机神器与重铸尚未建立；
 - 地面目标只允许玩家脚下，Web 当前通用物品选择器主要覆盖背包/装备；批量选择、自动选装和商店强化服务尚未建立；
-- 四种召唤卷轴已由 contract-v117 完成；剩余 `scroll-effect` 34 转入世界效果候选。
+- 四种召唤卷轴和两种可见目标卷轴已由 contract-v117/v119 完成；剩余 `scroll-effect` 32 转入世界效果候选。
 
 ## contract-v114 明确遗留
 
@@ -104,7 +107,7 @@
 - 倒计时按完成的玩家行动周期推进，再次使用可取消；受伤中断、反召回区域和怪物干扰尚未建立；
 - Teleport Level 使用当前实例的树连接和方向边界回退；地表向下要求已有召回目的地并继续遵守地牢进入条件，不绕过入口规则；
 - 普通 `reset-on-surface` 地牢召回地表会清旧实例，地表召回创建新实例；persistent/TTL 仍沿用各自内容生命周期；
-- 装备附魔、施咒/解除和召唤卷轴已由 contract-v115–v117 完成；剩余 34 条进入世界/状态/物品效果重分组。
+- 装备附魔、施咒/解除、召唤和可见目标卷轴已由 contract-v115–v119 完成；剩余 32 条进入世界/状态/物品效果重分组。
 
 ## contract-v113 明确遗留
 
@@ -119,10 +122,10 @@
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒和召唤完成后剩余 34 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散和放逐完成后剩余 32 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
-- 地图/侦测、传送/回城、附魔、施咒/解除和召唤卷轴已由 contract-v113–v117 完成；剩余 34 条按世界/状态/物品效果继续推进。
+- 地图/侦测、传送/回城、附魔、施咒/解除、召唤和可见目标卷轴已由 contract-v113–v119 完成；剩余 32 条按世界/状态/物品效果继续推进。
 
 ## contract-v107 明确遗留
 
@@ -193,7 +196,7 @@
 
 - 玩家侧抗性来源（种族/职业/装备的内容层声明）未建立；玩家 resistances 仍只由既有运行时来源决定；
 - 抗性档只在生成时盖章；临时抗性 buff、装备切换即时重算等动态来源等实际内容需要时接入；
-- RES_TELE 238（传送抗性，等位移抗性机制）、RES_WALL 34（语义待核）、HURT_ROCK 29（削岩弱点）留缺口；
+- RES_TELE 238 已由 contract-v119 映射为放逐抵抗 tag；RES_WALL 34（语义待核）、HURT_ROCK 29（削岩弱点）继续留缺口；
 - 怪物抗性对玩家不可见（快照不暴露）；玩家侧的怪物回忆/知识系统仍未建立。
 
 ## contract-v95 明确遗留

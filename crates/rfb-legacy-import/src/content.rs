@@ -1223,6 +1223,11 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         (70, 28) => detect("terrain", "trap", true),
         (70, 29) => detect("terrain", "passage", true),
         (70, 30) => detect("actor", "invisible", false),
+        (70, 42) => serde_json::json!({
+            "type": "dispel-category",
+            "category": "undead",
+            "damage": 80
+        }),
         (70, 57) => detect("actor", "legacy-import", false),
         (70, 53) => serde_json::json!({"type": "reset-recall"}),
         (70, 54) => summon(
@@ -1235,6 +1240,10 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             1,
             false,
         ),
+        (70, 62) => serde_json::json!({
+            "type": "banish-visible",
+            "maximumDistance": 150
+        }),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -4975,7 +4984,7 @@ const RESISTANCE_ALL_TYPES: [&str; 27] = [
 ];
 
 fn resistance_flag_is_mapped(flag: &str) -> bool {
-    if flag == "RES_ALL" {
+    if matches!(flag, "RES_ALL" | "RES_TELE") {
         return true;
     }
     for (suffix, _) in RESISTANCE_FLAG_TYPES {
@@ -5060,6 +5069,12 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "UNIQUE") {
         tags.push("unique".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "RES_ALL") {
+        tags.push("resist-all".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "RES_TELE") {
+        tags.push("resist-teleport".to_owned());
     }
     if entry.flags.iter().any(|flag| flag == "INVISIBLE") {
         tags.push("invisible".to_owned());
@@ -7461,7 +7476,7 @@ G:L:w\n\
 I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
-F:UNDEAD | DRAGON\n\
+F:UNDEAD | DRAGON | RES_ALL | RES_TELE\n\
 S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
@@ -7484,8 +7499,22 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
                 "dragon",
                 "undead",
                 "nonliving",
+                "resist-all",
+                "resist-teleport",
                 "high-undead"
             ])
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_monster_flags
+                .contains_key("RES_ALL")
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_monster_flags
+                .contains_key("RES_TELE")
         );
         let ability_ids: Vec<&str> = caller["monsterCasting"]["abilities"]
             .as_array()
@@ -8489,6 +8518,33 @@ F:BRAND_VAMP | HOLD_LIFE
             assert_eq!(effect["category"], category);
             assert_eq!(effect["persistent"], persistent);
             assert_eq!(effect["throughWalls"], true);
+        }
+        for (sval, effect_type, field, expected) in [
+            (42, "dispel-category", "damage", serde_json::json!(80)),
+            (
+                62,
+                "banish-visible",
+                "maximumDistance",
+                serde_json::json!(150),
+            ),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("visible-actor-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], effect_type);
+            assert_eq!(effect[field], expected);
+            if sval == 42 {
+                assert_eq!(effect["category"], "undead");
+            }
         }
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 

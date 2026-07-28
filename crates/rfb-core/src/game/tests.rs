@@ -15292,6 +15292,228 @@ fn item_summon_zero_candidate_and_zero_space_consume_without_awareness_or_rng() 
 }
 
 #[test]
+fn dispel_undead_scroll_uses_the_visible_actor_snapshot_and_resist_all_gate() {
+    const SCROLL_ID: &str = "test.item.dispel-undead-scroll.1";
+    let mut game = skill_check_game(71, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.dispel-undead-scroll");
+    let mut spawn = |id: &str, kind_id: &str, position: Position| {
+        let definition = game.content.actor(kind_id).expect("demo actor").clone();
+        game.entities.push(actor_from_runtime_spawn(
+            id,
+            kind_id,
+            position,
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+    };
+    spawn(
+        "test.actor.dispel-target",
+        "demo.actor.dread-vampire",
+        Position { x: 4, y: 3 },
+    );
+    spawn(
+        "test.actor.dispel-living",
+        "demo.actor.echo-hound",
+        Position { x: 4, y: 2 },
+    );
+    spawn(
+        "test.actor.dispel-resist-all",
+        "demo.actor.resonant-warden",
+        Position { x: 2, y: 3 },
+    );
+    spawn(
+        "test.actor.dispel-behind-wall",
+        "demo.actor.dread-vampire",
+        Position { x: 3, y: 5 },
+    );
+    replace_terrain(&mut game, Position { x: 3, y: 4 }, "demo.terrain.wall");
+    game.rng = RfbRng::seeded(71);
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        SCROLL_ID,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Dispel Undead should resolve");
+
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert_eq!(
+        game.entities
+            .iter()
+            .find(|entity| entity.id == "test.actor.dispel-target")
+            .expect("visible undead should remain")
+            .hp,
+        80
+    );
+    for actor_id in [
+        "test.actor.dispel-living",
+        "test.actor.dispel-resist-all",
+        "test.actor.dispel-behind-wall",
+    ] {
+        let actor = game
+            .entities
+            .iter()
+            .find(|entity| entity.id == actor_id)
+            .expect("unaffected actor should remain");
+        assert_eq!(
+            actor.hp,
+            game.content
+                .actor(&actor.kind_id)
+                .expect("unaffected actor definition")
+                .max_hp
+        );
+    }
+    assert!(
+        matches!(events.as_slice(), [DomainEvent::ItemDispelHit { target_kind_id, damage, .. }]
+        if target_kind_id == "demo.actor.dread-vampire"
+            && damage.applied == 80
+            && damage.damage_type == DamageType::HolyFire)
+    );
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.dispel-undead-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+}
+
+#[test]
+fn banishment_scroll_resolves_resistance_and_destinations_in_actor_order() {
+    const SCROLL_ID: &str = "test.item.banishment-scroll.1";
+    let mut game = skill_check_game(72, "demo.build.scholar");
+    give_inventory_item(&mut game, SCROLL_ID, "demo.item.banishment-scroll");
+    for (id, kind_id, position) in [
+        (
+            "test.actor.banish-normal",
+            "demo.actor.echo-hound",
+            Position { x: 4, y: 3 },
+        ),
+        (
+            "test.actor.banish-resistant-unique",
+            "demo.actor.dread-vampire",
+            Position { x: 3, y: 4 },
+        ),
+        (
+            "test.actor.banish-guardian",
+            "demo.actor.resonant-warden",
+            Position { x: 2, y: 3 },
+        ),
+    ] {
+        let definition = game.content.actor(kind_id).expect("demo actor").clone();
+        game.entities.push(actor_from_runtime_spawn(
+            id,
+            kind_id,
+            position,
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+    }
+    game.rng = RfbRng::seeded(72);
+    let original_positions = game
+        .entities
+        .iter()
+        .map(|entity| (entity.id.clone(), entity.position))
+        .collect::<BTreeMap<_, _>>();
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        SCROLL_ID,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Banishment should resolve");
+
+    assert_eq!(game.rng_draw_counter(), 1);
+    assert_ne!(
+        game.entities
+            .iter()
+            .find(|entity| entity.id == "test.actor.banish-normal")
+            .expect("banished actor should remain")
+            .position,
+        original_positions["test.actor.banish-normal"]
+    );
+    for actor_id in [
+        "test.actor.banish-resistant-unique",
+        "test.actor.banish-guardian",
+    ] {
+        assert_eq!(
+            game.entities
+                .iter()
+                .find(|entity| entity.id == actor_id)
+                .expect("resistant actor should remain")
+                .position,
+            original_positions[actor_id]
+        );
+    }
+    let event_kinds = events
+        .iter()
+        .map(|event| match event {
+            DomainEvent::ItemBanishedActor { resolution, .. } => {
+                format!("banished:{}", resolution.actor_id)
+            }
+            DomainEvent::ItemBanishmentResisted { target_kind_id, .. } => {
+                format!("resisted:{target_kind_id}")
+            }
+            _ => "unexpected".to_owned(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        event_kinds,
+        [
+            "banished:test.actor.banish-normal",
+            "resisted:demo.actor.dread-vampire",
+            "resisted:demo.actor.resonant-warden",
+        ]
+    );
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.banishment-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+}
+
+#[test]
+fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
+    for (seed, item_id, kind_id) in [
+        (
+            73,
+            "test.item.empty-dispel-undead-scroll.1",
+            "demo.item.dispel-undead-scroll",
+        ),
+        (
+            74,
+            "test.item.empty-banishment-scroll.1",
+            "demo.item.banishment-scroll",
+        ),
+    ] {
+        let mut game = skill_check_game(seed, "demo.build.scholar");
+        give_inventory_item(&mut game, item_id, kind_id);
+        game.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            item_id,
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("empty visible actor effect should resolve");
+        assert_eq!(game.rng_draw_counter(), 0);
+        assert!(!game.items.iter().any(|item| item.id == item_id));
+        assert_eq!(game.item_knowledge_dto(kind_id), ItemKnowledgeDto::Tried);
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEvent::ItemDispelNoEffect { .. }] | [DomainEvent::ItemBanishmentNoEffect { .. }]
+        ));
+    }
+}
+
+#[test]
 fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
     let prepare = || {
         let mut game = Game::new(64);

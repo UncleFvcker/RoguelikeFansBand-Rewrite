@@ -494,6 +494,35 @@ pub(crate) enum DomainEvent {
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
+    ItemDispelHit {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    ItemDispelSlew {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    ItemDispelNoEffect {
+        source_kind_id: String,
+    },
+    ItemBanishedActor {
+        source_kind_id: String,
+        target_kind_id: String,
+        resolution: MonsterDisplacementResolutionDto,
+    },
+    ItemBanishmentResisted {
+        source_kind_id: String,
+        target_kind_id: String,
+    },
+    ItemBanishmentNoSpace {
+        source_kind_id: String,
+        target_kind_id: String,
+    },
+    ItemBanishmentNoEffect {
+        source_kind_id: String,
+    },
     ItemActivationDetected {
         source_kind_id: String,
         profile_id: String,
@@ -1888,6 +1917,70 @@ impl DomainEvent {
                     },
                 ),
                 trace,
+            ),
+            Self::ItemDispelHit {
+                source_kind_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "item.use-dispel-hit",
+                "item-use-dispel-hit",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::ItemDispelSlew {
+                source_kind_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "item.use-dispel-slay",
+                "item-use-dispel-slay",
+                [("source", source_kind_id), ("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::ItemDispelNoEffect { source_kind_id } => dto(
+                "item.use-dispel-no-effect",
+                "item-use-dispel-no-effect",
+                [("source", source_kind_id)],
+            ),
+            Self::ItemBanishedActor {
+                source_kind_id,
+                target_kind_id,
+                resolution,
+            } => dto_with_outcome(
+                "item.use-banished",
+                "item-use-banished",
+                [("source", source_kind_id), ("target", target_kind_id)],
+                GameEventOutcomeDto::MonsterDisplacement { resolution },
+            ),
+            Self::ItemBanishmentResisted {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "item.use-banishment-resisted",
+                "item-use-banishment-resisted",
+                [("source", source_kind_id), ("target", target_kind_id)],
+            ),
+            Self::ItemBanishmentNoSpace {
+                source_kind_id,
+                target_kind_id,
+            } => dto(
+                "item.use-banishment-no-space",
+                "item-use-banishment-no-space",
+                [("source", source_kind_id), ("target", target_kind_id)],
+            ),
+            Self::ItemBanishmentNoEffect { source_kind_id } => dto(
+                "item.use-banishment-no-effect",
+                "item-use-banishment-no-effect",
+                [("source", source_kind_id)],
             ),
             Self::ItemActivationDetected {
                 source_kind_id,
