@@ -81,6 +81,7 @@ let campaignEnded = false;
 let nativeSaveBusy = false;
 let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
+const announcedCrashDiagnosticErrors = new Set<string>();
 let dropQuantityItemId: string | undefined;
 let targeting: TargetingState | undefined;
 let targetingIntent: TargetingIntent | undefined;
@@ -436,7 +437,9 @@ function recordFrontendCrash(kind: "window-error" | "unhandled-rejection"): void
   void crashDiagnostics
     .recordFrontendCrash(kind)
     .then(announceCrashDiagnostic)
-    .catch((error: unknown) => console.error("Could not persist crash diagnostic", error))
+    .catch((error: unknown) =>
+      announceCrashDiagnosticError("Could not persist crash diagnostic", error),
+    )
     .finally(() => {
       recordingFrontendCrash = false;
     });
@@ -450,7 +453,7 @@ async function synchronizeCrashDiagnosticContext(snapshot: GameSnapshot): Promis
       mapHost.dataset.rendererBackend ?? "unknown",
     );
   } catch (error) {
-    console.error("Could not update crash diagnostic context", error);
+    announceCrashDiagnosticError("Could not update crash diagnostic context", error);
   }
 }
 
@@ -458,7 +461,7 @@ async function refreshCrashDiagnosticStatus(): Promise<void> {
   try {
     announceCrashDiagnostic(await crashDiagnostics.status());
   } catch (error) {
-    console.error("Could not read crash diagnostic status", error);
+    announceCrashDiagnosticError("Could not read crash diagnostic status", error);
   }
 }
 
@@ -469,6 +472,15 @@ function announceCrashDiagnostic(status: CrashDiagnosticStatus): void {
   document.documentElement.dataset.crashDiagnosticReport = fileName;
   document.documentElement.dataset.crashDiagnosticReason = status.reason ?? "unknown";
   addLocalizedMessage("message-crash-diagnostic-created", { file: fileName }, "system");
+}
+
+function announceCrashDiagnosticError(context: string, error: unknown): void {
+  console.error(context, error);
+  const code = desktopErrorCode(error);
+  document.documentElement.dataset.crashDiagnosticError = code;
+  if (announcedCrashDiagnosticErrors.has(code)) return;
+  announcedCrashDiagnosticErrors.add(code);
+  addLocalizedMessage("message-crash-diagnostic-unavailable", { code }, "error");
 }
 
 async function dispatch(command: GameCommand): Promise<void> {

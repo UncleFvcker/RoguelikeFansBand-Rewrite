@@ -19,7 +19,8 @@ mod crash_diagnostics;
 mod native_storage;
 
 use crash_diagnostics::{
-    CrashDiagnosticStatus, CrashDiagnostics, DiagnosticMetadata, install_log_only_panic_hook,
+    CrashDiagnosticState, CrashDiagnosticStatus, CrashDiagnostics, DiagnosticMetadata,
+    install_log_only_panic_hook,
 };
 use native_storage::{
     DesktopCommandError, DesktopResult, NativeSaveStore, NativeSaveSummary, append_log,
@@ -238,14 +239,14 @@ fn export_replay(state: tauri::State<'_, AppState>) -> Result<Vec<u8>, String> {
 
 #[tauri::command]
 fn crash_diagnostic_status(
-    diagnostics: tauri::State<'_, CrashDiagnostics>,
-) -> CrashDiagnosticStatus {
+    diagnostics: tauri::State<'_, CrashDiagnosticState>,
+) -> DesktopResult<CrashDiagnosticStatus> {
     diagnostics.status()
 }
 
 #[tauri::command(rename_all = "camelCase")]
 fn update_crash_diagnostic_context(
-    diagnostics: tauri::State<'_, CrashDiagnostics>,
+    diagnostics: tauri::State<'_, CrashDiagnosticState>,
     content_id: String,
     content_hash: String,
     renderer_backend: String,
@@ -255,7 +256,7 @@ fn update_crash_diagnostic_context(
 
 #[tauri::command(rename_all = "camelCase")]
 fn record_frontend_crash(
-    diagnostics: tauri::State<'_, CrashDiagnostics>,
+    diagnostics: tauri::State<'_, CrashDiagnosticState>,
     kind: String,
 ) -> DesktopResult<CrashDiagnosticStatus> {
     diagnostics.record_frontend_error(&kind)
@@ -380,16 +381,18 @@ pub fn run() {
             };
             let diagnostics = crash_diagnostic_root(app.handle())
                 .and_then(|root| CrashDiagnostics::begin(root, log_path.clone(), metadata));
-            match diagnostics {
+            let diagnostic_state = match diagnostics {
                 Ok(diagnostics) => {
                     diagnostics.install_panic_hook();
-                    app.manage(diagnostics);
+                    CrashDiagnosticState::available(diagnostics)
                 }
                 Err(error) => {
                     append_log(&log_path, "crash-diagnostic-disabled", &error.code);
                     install_log_only_panic_hook(log_path.clone());
+                    CrashDiagnosticState::unavailable(error)
                 }
-            }
+            };
+            app.manage(diagnostic_state);
             append_log(&log_path, "desktop-start", env!("CARGO_PKG_VERSION"));
             Ok(())
         })
@@ -412,7 +415,7 @@ pub fn run() {
         .expect("failed to build RoguelikeFansBand Rewrite")
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit)
-                && let Some(diagnostics) = app.try_state::<CrashDiagnostics>()
+                && let Some(diagnostics) = app.try_state::<CrashDiagnosticState>()
             {
                 diagnostics.mark_clean_exit();
             }

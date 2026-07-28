@@ -94,6 +94,52 @@ pub struct CrashDiagnostics {
     latest_status: Mutex<CrashDiagnosticStatus>,
 }
 
+pub enum CrashDiagnosticState {
+    Available(Box<CrashDiagnostics>),
+    Unavailable(DesktopCommandError),
+}
+
+impl CrashDiagnosticState {
+    pub fn available(diagnostics: CrashDiagnostics) -> Self {
+        Self::Available(Box::new(diagnostics))
+    }
+
+    pub fn unavailable(error: DesktopCommandError) -> Self {
+        Self::Unavailable(error)
+    }
+
+    pub fn status(&self) -> DesktopResult<CrashDiagnosticStatus> {
+        self.diagnostics()?.status()
+    }
+
+    pub fn update_context(
+        &self,
+        content_id: &str,
+        content_hash: &str,
+        renderer_backend: &str,
+    ) -> DesktopResult<()> {
+        self.diagnostics()?
+            .update_context(content_id, content_hash, renderer_backend)
+    }
+
+    pub fn record_frontend_error(&self, kind: &str) -> DesktopResult<CrashDiagnosticStatus> {
+        self.diagnostics()?.record_frontend_error(kind)
+    }
+
+    pub fn mark_clean_exit(&self) {
+        if let Self::Available(diagnostics) = self {
+            diagnostics.mark_clean_exit();
+        }
+    }
+
+    fn diagnostics(&self) -> DesktopResult<&CrashDiagnostics> {
+        match self {
+            Self::Available(diagnostics) => Ok(diagnostics),
+            Self::Unavailable(error) => Err(error.clone()),
+        }
+    }
+}
+
 impl CrashDiagnostics {
     pub fn begin(
         root: PathBuf,
@@ -104,29 +150,11 @@ impl CrashDiagnostics {
             DesktopCommandError::new("crash-diagnostic-directory", error.to_string())
         })?;
         let marker_path = root.join(ACTIVE_SESSION_FILE);
-        let previous_marker = read_marker(&marker_path).ok();
+        let previous_marker = read_existing_marker(&marker_path)?;
         let mut latest_status = CrashDiagnosticStatus::default();
 
-        if marker_path.exists() {
-            latest_status = if let Some(previous) = previous_marker.as_ref() {
-                existing_or_generate_report(&root, &log_path, previous)?
-            } else {
-                let fallback = SessionMarker {
-                    session_id: "unknown".to_owned(),
-                    started_at_unix_ms: 0,
-                    app_version: metadata.app_version.clone(),
-                    protocol_version: metadata.protocol_version.clone(),
-                    operating_system: metadata.operating_system.clone(),
-                    architecture: metadata.architecture.clone(),
-                    content_id: None,
-                    content_hash: None,
-                    renderer_backend: None,
-                    crash_reason: Some(CrashReason::UncleanExit),
-                    panic_location: None,
-                    report_file_name: None,
-                };
-                generate_report(&root, &log_path, &fallback, CrashReason::UncleanExit)?
-            };
+        if let Some(previous) = previous_marker.as_ref() {
+            latest_status = existing_or_generate_report(&root, &log_path, previous)?;
         }
 
         let now = unix_millis();
@@ -156,11 +184,8 @@ impl CrashDiagnostics {
         })
     }
 
-    pub fn status(&self) -> CrashDiagnosticStatus {
-        self.latest_status.lock().map_or_else(
-            |_| CrashDiagnosticStatus::default(),
-            |status| status.clone(),
-        )
+    pub fn status(&self) -> DesktopResult<CrashDiagnosticStatus> {
+        Ok(self.lock_status()?.clone())
     }
 
     pub fn update_context(
@@ -438,6 +463,22 @@ fn read_marker(path: &Path) -> DesktopResult<SessionMarker> {
         .map_err(|error| DesktopCommandError::new("crash-diagnostic-session", error.to_string()))
 }
 
+fn read_existing_marker(path: &Path) -> DesktopResult<Option<SessionMarker>> {
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => {
+            return Err(DesktopCommandError::new(
+                "crash-diagnostic-session",
+                error.to_string(),
+            ));
+        }
+    };
+    serde_json::from_slice(&bytes)
+        .map(Some)
+        .map_err(|error| DesktopCommandError::new("crash-diagnostic-session", error.to_string()))
+}
+
 fn write_json_atomic<T: Serialize>(path: &Path, value: &T, code: &str) -> DesktopResult<()> {
     let parent = path
         .parent()
@@ -524,7 +565,7 @@ mod tests {
 
         let second = CrashDiagnostics::begin(root.clone(), log_path, metadata())
             .expect("second session should recover the previous marker");
-        let status = second.status();
+        let status = second.status().expect("status should be available");
         assert!(status.report_created);
         assert_eq!(status.reason, Some(CrashReason::UncleanExit));
         let report_path = root.join(status.report_file_name.expect("report should have a name"));
@@ -566,8 +607,37 @@ mod tests {
 
         let second = CrashDiagnostics::begin(root.clone(), log_path, metadata())
             .expect("second session should start cleanly");
-        assert!(!second.status().report_created);
+        assert!(
+            !second
+                .status()
+                .expect("status should be available")
+                .report_created
+        );
         second.mark_clean_exit();
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn invalid_session_marker_is_reported_instead_of_fabricating_a_report() {
+        let root = temporary_directory();
+        let log_path = root.join("rfb-desktop.log");
+        fs::create_dir_all(&root).expect("test directory should exist");
+        fs::write(root.join(ACTIVE_SESSION_FILE), b"not json")
+            .expect("invalid marker should write");
+
+        let error = CrashDiagnostics::begin(root.clone(), log_path, metadata())
+            .err()
+            .expect("invalid marker should be reported");
+        assert_eq!(error.code, "crash-diagnostic-session");
+        assert!(
+            fs::read_dir(&root)
+                .expect("diagnostic directory should list")
+                .filter_map(Result::ok)
+                .all(|entry| !entry
+                    .file_name()
+                    .to_string_lossy()
+                    .ends_with(".rfbdiagnostic"))
+        );
         let _ = fs::remove_dir_all(root);
     }
 

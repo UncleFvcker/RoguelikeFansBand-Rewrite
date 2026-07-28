@@ -266,6 +266,7 @@ export const MESSAGE_KEYS = [
   "message-save-exported",
   "message-replay-exported",
   "message-crash-diagnostic-created",
+  "message-crash-diagnostic-unavailable",
   "message-save-loaded",
   "message-native-save-created",
   "message-native-save-overwritten",
