@@ -76,6 +76,8 @@ struct CrashDiagnosticReport {
     previous_session_started_at_unix_ms: u128,
     panic_location: Option<String>,
     log_tail: Vec<DiagnosticLogEntry>,
+    #[serde(default)]
+    log_unavailable: Option<DiagnosticLogUnavailable>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -84,6 +86,18 @@ struct DiagnosticLogEntry {
     timestamp_unix_ms: u128,
     event: String,
     detail: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticLogUnavailable {
+    code: String,
+    error_kind: String,
+}
+
+struct DiagnosticLogRead {
+    entries: Vec<DiagnosticLogEntry>,
+    unavailable: Option<DiagnosticLogUnavailable>,
 }
 
 pub struct CrashDiagnostics {
@@ -157,7 +171,7 @@ impl CrashDiagnostics {
             latest_status = existing_or_generate_report(&root, &log_path, previous)?;
         }
 
-        let now = unix_millis();
+        let now = unix_millis()?;
         let marker = SessionMarker {
             session_id: format!("session-{now}"),
             started_at_unix_ms: now,
@@ -234,7 +248,15 @@ impl CrashDiagnostics {
 
     pub fn mark_clean_exit(&self) {
         append_log(&self.log_path, "desktop-exit", "clean");
-        let _ = fs::remove_file(&self.marker_path);
+        if let Err(error) = fs::remove_file(&self.marker_path)
+            && error.kind() != std::io::ErrorKind::NotFound
+        {
+            append_log(
+                &self.log_path,
+                "crash-diagnostic-marker-remove",
+                &format!("{:?}", error.kind()),
+            );
+        }
     }
 
     pub fn install_panic_hook(&self) {
@@ -244,11 +266,18 @@ impl CrashDiagnostics {
         std::panic::set_hook(Box::new(move |info| {
             let location = info.location().map(sanitize_panic_location);
             append_log(&log_path, "panic", location.as_deref().unwrap_or("unknown"));
-            if let Ok(mut marker) = read_marker(&marker_path) {
-                marker.crash_reason = Some(CrashReason::RustPanic);
-                marker.panic_location = location;
-                marker.report_file_name = None;
-                let _ = write_marker(&marker_path, &marker, "crash-diagnostic-panic");
+            match read_marker(&marker_path) {
+                Ok(mut marker) => {
+                    marker.crash_reason = Some(CrashReason::RustPanic);
+                    marker.panic_location = location;
+                    marker.report_file_name = None;
+                    if let Err(error) =
+                        write_marker(&marker_path, &marker, "crash-diagnostic-panic")
+                    {
+                        append_log(&log_path, "crash-diagnostic-marker-write", &error.code);
+                    }
+                }
+                Err(error) => append_log(&log_path, "crash-diagnostic-marker-read", &error.code),
             }
             previous(info);
         }));
@@ -310,7 +339,8 @@ fn generate_report(
     fs::create_dir_all(root).map_err(|error| {
         DesktopCommandError::new("crash-diagnostic-directory", error.to_string())
     })?;
-    let generated_at = unix_millis();
+    let generated_at = unix_millis()?;
+    let log = read_sanitized_log_tail(log_path);
     let report = CrashDiagnosticReport {
         format: DIAGNOSTIC_FORMAT.to_owned(),
         format_version: DIAGNOSTIC_FORMAT_VERSION,
@@ -325,7 +355,8 @@ fn generate_report(
         renderer_backend: marker.renderer_backend.clone(),
         previous_session_started_at_unix_ms: marker.started_at_unix_ms,
         panic_location: marker.panic_location.clone(),
-        log_tail: read_sanitized_log_tail(log_path),
+        log_tail: log.entries,
+        log_unavailable: log.unavailable,
     };
     let file_name = allocate_report_name(root, generated_at)?;
     write_json_atomic(&root.join(&file_name), &report, "crash-diagnostic-report")?;
@@ -343,8 +374,15 @@ fn allocate_report_name(root: &Path, generated_at: u128) -> DesktopResult<String
         } else {
             format!("crash-{generated_at}-{suffix}.rfbdiagnostic")
         };
-        if !root.join(&file_name).exists() {
-            return Ok(file_name);
+        match root.join(&file_name).try_exists() {
+            Ok(false) => return Ok(file_name),
+            Ok(true) => {}
+            Err(error) => {
+                return Err(DesktopCommandError::new(
+                    "crash-diagnostic-name",
+                    error.to_string(),
+                ));
+            }
         }
     }
     Err(DesktopCommandError::new(
@@ -354,14 +392,35 @@ fn allocate_report_name(root: &Path, generated_at: u128) -> DesktopResult<String
 }
 
 fn prune_reports(root: &Path) -> DesktopResult<()> {
-    let mut reports = fs::read_dir(root)
-        .map_err(|error| DesktopCommandError::new("crash-diagnostic-list", error.to_string()))?
-        .filter_map(Result::ok)
-        .filter_map(|entry| {
-            let name = entry.file_name().to_str()?.to_owned();
-            safe_report_name(&name).then_some((name, entry.path()))
-        })
-        .collect::<Vec<_>>();
+    let entries = fs::read_dir(root)
+        .map_err(|error| DesktopCommandError::new("crash-diagnostic-list", error.to_string()))?;
+    let mut reports = Vec::new();
+    let mut entry_errors = Vec::new();
+    for entry in entries {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(error) => {
+                entry_errors.push(error.to_string());
+                continue;
+            }
+        };
+        let Some(name) = entry.file_name().to_str().map(str::to_owned) else {
+            continue;
+        };
+        if safe_report_name(&name) {
+            reports.push((name, entry.path()));
+        }
+    }
+    if !entry_errors.is_empty() {
+        return Err(DesktopCommandError::new(
+            "crash-diagnostic-list",
+            format!(
+                "{} directory entries could not be read: {}",
+                entry_errors.len(),
+                entry_errors.join("; ")
+            ),
+        ));
+    }
     reports.sort_by(|left, right| right.0.cmp(&left.0));
     for (_, path) in reports.into_iter().skip(MAX_REPORTS) {
         fs::remove_file(path).map_err(|error| {
@@ -371,20 +430,22 @@ fn prune_reports(root: &Path) -> DesktopResult<()> {
     Ok(())
 }
 
-fn read_sanitized_log_tail(path: &Path) -> Vec<DiagnosticLogEntry> {
-    let Ok(mut file) = fs::File::open(path) else {
-        return Vec::new();
+fn read_sanitized_log_tail(path: &Path) -> DiagnosticLogRead {
+    let mut file = match fs::File::open(path) {
+        Ok(file) => file,
+        Err(error) => return unavailable_log("log-open", error),
     };
-    let Ok(length) = file.metadata().map(|metadata| metadata.len()) else {
-        return Vec::new();
+    let length = match file.metadata() {
+        Ok(metadata) => metadata.len(),
+        Err(error) => return unavailable_log("log-metadata", error),
     };
     let start = length.saturating_sub(MAX_LOG_BYTES);
-    if file.seek(SeekFrom::Start(start)).is_err() {
-        return Vec::new();
+    if let Err(error) = file.seek(SeekFrom::Start(start)) {
+        return unavailable_log("log-seek", error);
     }
     let mut bytes = Vec::with_capacity((length - start) as usize);
-    if file.read_to_end(&mut bytes).is_err() {
-        return Vec::new();
+    if let Err(error) = file.read_to_end(&mut bytes) {
+        return unavailable_log("log-read", error);
     }
     let mut text = String::from_utf8_lossy(&bytes).into_owned();
     if start > 0
@@ -392,7 +453,20 @@ fn read_sanitized_log_tail(path: &Path) -> Vec<DiagnosticLogEntry> {
     {
         text.drain(..=first_newline);
     }
-    text.lines().filter_map(parse_log_entry).collect()
+    DiagnosticLogRead {
+        entries: text.lines().filter_map(parse_log_entry).collect(),
+        unavailable: None,
+    }
+}
+
+fn unavailable_log(code: &str, error: std::io::Error) -> DiagnosticLogRead {
+    DiagnosticLogRead {
+        entries: Vec::new(),
+        unavailable: Some(DiagnosticLogUnavailable {
+            code: code.to_owned(),
+            error_kind: format!("{:?}", error.kind()),
+        }),
+    }
 }
 
 fn parse_log_entry(line: &str) -> Option<DiagnosticLogEntry> {
@@ -408,7 +482,9 @@ fn parse_log_entry(line: &str) -> Option<DiagnosticLogEntry> {
         "desktop-start" | "desktop-exit" | "frontend-error" => {
             Some(sanitize_identifier(raw_detail, 120))
         }
-        event if event.starts_with("native-save-") => Some(sanitize_identifier(raw_detail, 120)),
+        event if event.starts_with("native-save-") || event.starts_with("crash-diagnostic-") => {
+            Some(sanitize_identifier(raw_detail, 120))
+        }
         _ => None,
     }
     .filter(|value| !value.is_empty());
@@ -519,10 +595,11 @@ fn write_marker<T: Serialize>(path: &Path, value: &T, code: &str) -> DesktopResu
         .map_err(|error| DesktopCommandError::new(code, error.to_string()))
 }
 
-fn unix_millis() -> u128 {
+fn unix_millis() -> DesktopResult<u128> {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_millis())
+        .map(|duration| duration.as_millis())
+        .map_err(|error| DesktopCommandError::new("crash-diagnostic-clock", error.to_string()))
 }
 
 #[cfg(test)]
@@ -677,12 +754,43 @@ mod tests {
             "1 panic C:\\Users\\secret\\src\\lib.rs:10:2\n2 arbitrary C:\\private\\value\n",
         )
         .expect("test log should write");
-        let entries = read_sanitized_log_tail(&log_path);
-        assert_eq!(entries[0].detail.as_deref(), Some("lib.rs:10:2"));
-        assert_eq!(entries[1].detail, None);
-        let encoded = serde_json::to_string(&entries).expect("entries should encode");
+        let log = read_sanitized_log_tail(&log_path);
+        assert!(log.unavailable.is_none());
+        assert_eq!(log.entries[0].detail.as_deref(), Some("lib.rs:10:2"));
+        assert_eq!(log.entries[1].detail, None);
+        let encoded = serde_json::to_string(&log.entries).expect("entries should encode");
         assert!(!encoded.contains("Users"));
         assert!(!encoded.contains("private"));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn report_records_when_the_desktop_log_is_unavailable() {
+        let root = temporary_directory();
+        let log_path = root.join("missing").join("rfb-desktop.log");
+        let diagnostics = CrashDiagnostics::begin(root.clone(), log_path.clone(), metadata())
+            .expect("diagnostics should start without a desktop log");
+        let marker = diagnostics
+            .marker
+            .lock()
+            .expect("test marker lock should be available")
+            .clone();
+
+        let status = generate_report(&root, &log_path, &marker, CrashReason::FrontendError)
+            .expect("report should record the unavailable log");
+        let report: CrashDiagnosticReport = serde_json::from_slice(
+            &fs::read(root.join(status.report_file_name.unwrap()))
+                .expect("report should be readable"),
+        )
+        .expect("report should decode");
+        assert!(report.log_tail.is_empty());
+        let unavailable = report
+            .log_unavailable
+            .expect("log failure should be explicit");
+        assert_eq!(unavailable.code, "log-open");
+        assert_eq!(unavailable.error_kind, "NotFound");
+
+        diagnostics.mark_clean_exit();
         let _ = fs::remove_dir_all(root);
     }
 }

@@ -3,7 +3,7 @@
 use std::{
     collections::BTreeSet,
     fs::{self, OpenOptions},
-    io::Write,
+    io::{self, Write},
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -331,19 +331,26 @@ pub fn validate_slot_name(name: &str) -> DesktopResult<String> {
 }
 
 pub fn append_log(path: &Path, event: &str, detail: &str) {
-    let Some(parent) = path.parent() else {
-        return;
-    };
-    if fs::create_dir_all(parent).is_err() {
-        return;
+    if let Err(error) = try_append_log(path, event, detail) {
+        let _ = writeln!(
+            io::stderr().lock(),
+            "desktop log unavailable for {event}: {error}"
+        );
     }
+}
+
+fn try_append_log(path: &Path, event: &str, detail: &str) -> io::Result<()> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| io::Error::other("desktop log path has no parent"))?;
+    fs::create_dir_all(parent)?;
     let sanitized = detail.replace(['\r', '\n'], " ");
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_millis());
-    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
-        let _ = writeln!(file, "{timestamp} {event} {sanitized}");
-    }
+        .map_err(io::Error::other)?
+        .as_millis();
+    let mut file = OpenOptions::new().create(true).append(true).open(path)?;
+    writeln!(file, "{timestamp} {event} {sanitized}")
 }
 
 fn validate_slot_id(slot_id: &str) -> DesktopResult<()> {
@@ -513,5 +520,15 @@ mod tests {
             .expect_err("unreadable save entry should remain an I/O error");
         assert_eq!(error.code, "native-save-read");
         let _ = fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn log_append_detects_filesystem_failures() {
+        let parent_file = temporary_directory();
+        fs::write(&parent_file, b"not a directory").expect("parent file should write");
+
+        try_append_log(&parent_file.join("rfb-desktop.log"), "test", "detail")
+            .expect_err("a file cannot contain the desktop log");
+        let _ = fs::remove_file(parent_file);
     }
 }

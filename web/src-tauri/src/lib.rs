@@ -198,8 +198,9 @@ fn crash_diagnostic_root(app: &tauri::AppHandle) -> DesktopResult<std::path::Pat
 }
 
 fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
-    if let Ok(path) = desktop_log_path(app) {
-        append_log(&path, event, detail);
+    match desktop_log_path(app) {
+        Ok(path) => append_log(&path, event, detail),
+        Err(error) => eprintln!("desktop log path unavailable for {event}: {}", error.code),
     }
 }
 

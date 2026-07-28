@@ -45,11 +45,12 @@
   "rendererBackend": "pixi-layered-chunks-v3",
   "previousSessionStartedAtUnixMs": 0,
   "panicLocation": null,
-  "logTail": []
+  "logTail": [],
+  "logUnavailable": null
 }
 ```
 
-格式独立于核心协议、存档和 state hash；以后扩展字段时必须增加默认值或提升 `formatVersion`。
+格式独立于核心协议、存档和 state hash；以后扩展字段时必须增加默认值或提升 `formatVersion`。`logUnavailable` 是带默认值的兼容扩展；日志无法打开、读取元数据、定位或读取时，它记录稳定操作码和 `io::ErrorKind`，不把失败伪装成正常的空日志，也不记录本地路径。
 
 ## 4. 隐私与大小限制
 
@@ -74,6 +75,7 @@ Rust 单元测试覆盖：
 - 未正常退出标记在下一次启动转换为报告；
 - 前端未处理异常立即生成报告；
 - 未知日志 detail 和绝对 panic 路径被清除；
+- 日志读取失败在报告中留下 `logUnavailable`；
 - 正常退出清理标记；
 - 报告轮换上限。
 
