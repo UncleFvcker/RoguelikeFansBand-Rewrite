@@ -104,7 +104,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 102] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 103] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -207,10 +207,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 102] = [
     "d8bdbdd4d4e85862a97229c279a874668b9b1d3ce9035aa6f17a11cff7b3af80",
     "4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8",
     "8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab",
+    "f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9";
+    "12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 49;
@@ -9722,7 +9723,13 @@ impl Game {
                 return Ok(());
             };
             let plan = match &profile.effect {
-                ItemUseEffectDefinition::Heal { .. } | ItemUseEffectDefinition::HealDice { .. } => {
+                ItemUseEffectDefinition::Heal { .. }
+                | ItemUseEffectDefinition::HealDice { .. }
+                | ItemUseEffectDefinition::RemoveStatus { .. }
+                | ItemUseEffectDefinition::RestoreResource { .. }
+                | ItemUseEffectDefinition::RestoreResourceDice { .. }
+                | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                | ItemUseEffectDefinition::Sequence { .. } => {
                     if target.is_some_and(|target| !matches!(target, TargetSelection::SelfTarget)) {
                         events.push(DomainEvent::ItemUseUnavailable);
                         return Ok(());
@@ -9829,57 +9836,17 @@ impl Game {
             self.items[index].quantity -= 1;
         }
         match (effect, plan) {
-            (ItemUseEffectDefinition::Heal { amount }, ItemUsePlan::SelfTarget) => {
-                let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
-                let max_hp = self.effective_player_max_hp();
-                let player = &mut self.player;
-                let outcome = apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut player.hp,
-                        max_hp,
-                        resistances: &player.resistances,
-                        statuses: &mut player.statuses,
-                    },
-                    EffectSpec::Heal { amount },
-                );
-                let EffectOutcome::Healed { requested, applied } = outcome else {
-                    unreachable!("healing effects must produce healing outcomes");
-                };
-                if applied > 0 {
-                    self.mark_item_aware(&kind_id);
-                }
-                events.push(DomainEvent::ItemUsed {
-                    display_name_key: self.item_display_name_key(&kind_id),
-                    source_kind_id: kind_id,
-                    requested,
-                    applied,
-                });
-            }
-            (ItemUseEffectDefinition::HealDice { dice, sides }, ItemUsePlan::SelfTarget) => {
-                let amount = self.roll_damage(dice, sides);
-                let max_hp = self.effective_player_max_hp();
-                let player = &mut self.player;
-                let outcome = apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut player.hp,
-                        max_hp,
-                        resistances: &player.resistances,
-                        statuses: &mut player.statuses,
-                    },
-                    EffectSpec::Heal { amount },
-                );
-                let EffectOutcome::Healed { requested, applied } = outcome else {
-                    unreachable!("healing effects must produce healing outcomes");
-                };
-                if applied > 0 {
-                    self.mark_item_aware(&kind_id);
-                }
-                events.push(DomainEvent::ItemUsed {
-                    display_name_key: self.item_display_name_key(&kind_id),
-                    source_kind_id: kind_id,
-                    requested,
-                    applied,
-                });
+            (
+                effect @ (ItemUseEffectDefinition::Heal { .. }
+                | ItemUseEffectDefinition::HealDice { .. }
+                | ItemUseEffectDefinition::RemoveStatus { .. }
+                | ItemUseEffectDefinition::RestoreResource { .. }
+                | ItemUseEffectDefinition::RestoreResourceDice { .. }
+                | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                | ItemUseEffectDefinition::Sequence { .. }),
+                ItemUsePlan::SelfTarget,
+            ) => {
+                self.resolve_item_self_effect(&kind_id, &effect, events);
             }
             (
                 ItemUseEffectDefinition::Damage {
@@ -9992,6 +9959,162 @@ impl Game {
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(())
+    }
+
+    fn resolve_item_self_effect(
+        &mut self,
+        source_kind_id: &str,
+        effect: &ItemUseEffectDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        match effect {
+            ItemUseEffectDefinition::Heal { amount } => {
+                let amount = i32::try_from(*amount).expect("validated healing amount must fit i32");
+                self.resolve_item_healing(source_kind_id, amount, events)
+            }
+            ItemUseEffectDefinition::HealDice { dice, sides } => {
+                let amount = self.roll_damage(*dice, *sides);
+                self.resolve_item_healing(source_kind_id, amount, events)
+            }
+            ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
+                let max_hp = self.effective_player_max_hp();
+                let player = &mut self.player;
+                let outcome = apply_effect(
+                    &mut EffectTarget {
+                        hp: &mut player.hp,
+                        max_hp,
+                        resistances: &player.resistances,
+                        statuses: &mut player.statuses,
+                    },
+                    EffectSpec::RemoveStatus {
+                        kind_id: status_kind_id.clone(),
+                    },
+                );
+                let EffectOutcome::StatusRemoved { removed, .. } = outcome else {
+                    unreachable!("status removal must produce a status outcome");
+                };
+                if removed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                events.push(DomainEvent::ItemStatusRemoved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    status_kind_id: status_kind_id.clone(),
+                    removed,
+                });
+                removed
+            }
+            ItemUseEffectDefinition::RestoreResource {
+                resource_id,
+                amount,
+            } => self.resolve_item_resource_restoration(
+                source_kind_id,
+                resource_id,
+                *amount,
+                false,
+                events,
+            ),
+            ItemUseEffectDefinition::RestoreResourceDice {
+                resource_id,
+                dice,
+                sides,
+                bonus,
+            } => {
+                let rolled = u32::try_from(self.roll_damage(*dice, *sides))
+                    .expect("validated resource restoration roll must fit u32")
+                    .saturating_add(*bonus);
+                self.resolve_item_resource_restoration(
+                    source_kind_id,
+                    resource_id,
+                    rolled,
+                    false,
+                    events,
+                )
+            }
+            ItemUseEffectDefinition::RestoreResourceFull { resource_id } => {
+                self.resolve_item_resource_restoration(source_kind_id, resource_id, 0, true, events)
+            }
+            ItemUseEffectDefinition::Sequence { effects } => {
+                let mut noticed = false;
+                for effect in effects {
+                    noticed =
+                        self.resolve_item_self_effect(source_kind_id, effect, events) || noticed;
+                }
+                noticed
+            }
+            ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::Detect { .. } => {
+                unreachable!("projected item effects cannot resolve as self restoration")
+            }
+        }
+    }
+
+    fn resolve_item_healing(
+        &mut self,
+        source_kind_id: &str,
+        amount: i32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let max_hp = self.effective_player_max_hp();
+        let player = &mut self.player;
+        let outcome = apply_effect(
+            &mut EffectTarget {
+                hp: &mut player.hp,
+                max_hp,
+                resistances: &player.resistances,
+                statuses: &mut player.statuses,
+            },
+            EffectSpec::Heal { amount },
+        );
+        let EffectOutcome::Healed { requested, applied } = outcome else {
+            unreachable!("healing effects must produce healing outcomes");
+        };
+        if applied > 0 {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemUsed {
+            display_name_key: self.item_display_name_key(source_kind_id),
+            source_kind_id: source_kind_id.to_owned(),
+            requested,
+            applied,
+        });
+        applied > 0
+    }
+
+    fn resolve_item_resource_restoration(
+        &mut self,
+        source_kind_id: &str,
+        resource_id: &str,
+        requested: u32,
+        full: bool,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let (before, after) = if let Some(pool) = self.resources.get_mut(resource_id) {
+            let before = pool.current;
+            pool.current = if full {
+                pool.maximum
+            } else {
+                pool.current.saturating_add(requested).min(pool.maximum)
+            };
+            (before, pool.current)
+        } else {
+            (0, 0)
+        };
+        let recovered = after.saturating_sub(before);
+        if recovered > 0 {
+            self.resources_touched.insert(resource_id.to_owned());
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemResourceRestored {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            resolution: ResourceRecoveryResolutionDto {
+                resource_id: resource_id.to_owned(),
+                before,
+                after,
+                recovered,
+            },
+        });
+        recovered > 0
     }
 
     fn item_charge_is_insufficient(&self, item_id: &str) -> bool {

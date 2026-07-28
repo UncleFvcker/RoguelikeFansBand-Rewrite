@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v109、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v111、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -69,17 +69,18 @@
 | P58 | 充能物品实例与首批治疗消耗品 | 已由 contract-v108 完成 | `heal-dice`、实例级 initial/maximum/cost 充能、成功扣费/失败保留/耗尽零世界时间、知识门控 DTO 和严格回档；demo Resonance Mender；六种原版治疗药水接入，`consumable-effect` 95→89。协议 1.108、包 1.99.0、Schema v47、fixtures 366-368 共 368 exact |
 | P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 已由 contract-v109 完成 | `deviceGeneration.activations` 深度过滤/稳定加权、profile/power/目标/成本/随机容量实例化、错误目标零 RNG、成功扣费、damage/detect/heal、知识门控和严格回档；demo Wand/Staff/Rod；原版通用壳接入后 `device-effect` 64→61。协议 1.109、包 1.100.0、Schema v48、fixtures 369-373 共 373 exact |
 | P60 | 设备自然恢复与主动充能 | 已由 contract-v110 完成 | `deviceGeneration.recovery` interval/per-mille 与确定性余数、背包自然恢复、四类物品严格回档；职业 recharge profile、资源/设备来源、资源失败清空、设备来源损毁与 artifact 免毁；Web/事件/调试开关。协议 1.110、包 1.101.0、Schema v49、fixtures 374-379 共 379 exact |
-| P61 | 后续设备/激活/消耗品效果族 | 下一候选 | 重新按真实覆盖收益排序，继续扩展 `device-effect` 61、`artifact-activation` 180、`ego-activation` 13 或 `consumable-effect` 89 |
+| P61 | 有序恢复型消耗品效果 | 已由 contract-v111 完成 | `remove-status`、固定/骰值/回满资源及 2–8 步非嵌套恢复序列；顺序事件、正式 RNG、缺池消费与物品知识边界；demo 两种恢复药水，legacy 四种食物 + Boldness/Vigor/Restore Mana/Clarity 及六种治疗药水异常清除，`consumable-effect` 89→81。协议 1.111、包 1.102.0、Schema v49、fixtures 380-383 共 383 exact |
+| P62 | 卷轴效果重分类与首批通用事务 | 下一候选 | `device-effect` 61 经审计全部是 tval 70/71 卷轴，不是剩余 wand/staff/rod；先盘点知识、传送、侦测、附魔等效果与现有能力的复用边界，再选择覆盖收益最高的事务族 |
 
-## contract-v110 明确遗留
+## contract-v111 明确遗留
 
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 固定治疗药水只接入六种纯治疗效果；状态恢复、资源恢复、属性变化、食物和卷轴仍在 `consumable-effect` 89 条缺口中；
-- `device-effect` 仍有 61 条，`artifact-activation` 180、`ego-activation` 13 仍保留；新增激活必须复用实例事务，不能回退为把单一效果硬写到通用设备壳；
+- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
+- `device-effect` 61 经审计全部来自卷轴，后续应重命名或拆分报告；`artifact-activation` 180、`ego-activation` 13 仍保留，新增激活必须复用实例事务；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
-- P61 按真实缺口覆盖收益选择下一批设备、artifact/ego activation 或消耗品效果。
+- P62 优先核对原版卷轴效果与知识、传送、侦测、附魔事务，避免把卷轴错误建模为动态设备。
 
 ## contract-v107 明确遗留
 

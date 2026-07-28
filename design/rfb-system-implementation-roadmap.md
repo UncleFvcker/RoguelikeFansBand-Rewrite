@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.110 / contract-v110（P31–P60 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.111 / contract-v111（P31–P61 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -463,9 +463,9 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.110、内容包 1.101.0、contract-v110、save v1 和 state hash Schema v49；内容 hash 为 `f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9`。active baseline 包含 379 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能事务；v109 建立动态设备 profile、深度加权、随机容量、目标事务和首批 wand/staff/rod；v110 建立设备自然恢复、持久余数和职业资源/设备来源主动充能。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.111、内容包 1.102.0、contract-v111、save v1 和 state hash Schema v49；内容 hash 为 `12c9160aec3bf8ebc6b7c92a785ad1ed8ad2dd23af674bd4bc6c445d2762d2e7`。active baseline 包含 383 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108 建立治疗骰和实例级充能事务；v109 建立动态设备 profile、深度加权、随机容量、目标事务和首批 wand/staff/rod；v110 建立设备自然恢复、持久余数和职业资源/设备来源主动充能；v111 建立状态清除、资源恢复和有序恢复型物品效果。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、23 种 item、2 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、25 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -519,7 +519,9 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 
 **P59 进展（2026-07）**：contract-v109 已完成动态设备纵切。`deviceGeneration.activations` 按深度过滤、稳定加权并随机物化容量，profile/power/难度/成本/目标规格随实例保存；错误目标在设备检定前零 RNG 拒绝，成功后才扣费，未知设备只暴露完成交互所需的目标规格。demo Resonance Wand/Staff/Rod 和 fixtures 369–373 固定浅深候选、容量、拒绝、伤害、持久侦测、治疗与回档。legacy importer 为三种原版通用壳生成首批候选并映射 `TRAP` terrain tag，`device-effect` 64→61；真实包 hash 为 `68f8c65c4b80e67437457e1c51ff77b11c2d4a095bb2e9cfa01983c244d427b3`。P60 候选为 recharge/rod 时间与失败语义，之后按激活和消耗品缺口收益继续扩展。
 
-**P60 进展（2026-07）**：contract-v110 已完成设备恢复与主动充能纵切。`deviceGeneration.recovery` 以 interval/per-mille 声明 rod 每 tick、wand/staff 每 10 tick 的 1% 最大能量恢复，实例余数持久化且零 RNG；首版只处理背包设备。Artificer recharge profile 使用 Resonance 资源或另一件有能量的设备，资源失败清空目标，设备来源失败保留目标并承担 `1 in 3` 损毁率，artifact 来源免毁。Web、结构化事件、三项 contract 调试选项与 fixtures 374–379 已固定事务、回档和十倍速率差；本地 legacy 包严格编译 hash 为 `21b00c14f10f6feff7e87f0a37e7974c78ab683e4995190eae040a4c84601137`。P61 应按 `device-effect` 61、`artifact-activation` 180、`ego-activation` 13 和 `consumable-effect` 89 的真实覆盖收益选择下一效果族。
+**P60 进展（2026-07）**：contract-v110 已完成设备恢复与主动充能纵切。`deviceGeneration.recovery` 以 interval/per-mille 声明 rod 每 tick、wand/staff 每 10 tick 的 1% 最大能量恢复，实例余数持久化且零 RNG；首版只处理背包设备。Artificer recharge profile 使用 Resonance 资源或另一件有能量的设备，资源失败清空目标，设备来源失败保留目标并承担 `1 in 3` 损毁率，artifact 来源免毁。Web、结构化事件、三项 contract 调试选项与 fixtures 374–379 已固定事务、回档和十倍速率差；本地 legacy 包严格编译 hash 为 `21b00c14f10f6feff7e87f0a37e7974c78ab683e4995190eae040a4c84601137`。
+
+**P61 进展（2026-07）**：contract-v111 已完成有序恢复型消耗品纵切。内容新增 `remove-status`、三种资源恢复与 2–8 步非嵌套 sequence，运行时固定顺序、RNG、缺池消费和物品知识边界；demo 两种恢复药水及 fixtures 380–383 固定骰值/回满、异常清除、no-effect 和存档回读。legacy importer 接入四种恢复食物、Boldness、Vigor、Restore Mana、Clarity，并扩展六种治疗药水，`consumable-effect` 89→81；真实包 hash 为 `b6913ec229580a8decd6816fbebc4af6554bb55cd222fc7e11e9ceec1a353eac`。`device-effect` 61 经审计全部来自 tval 70/71 卷轴，P62 应先完成卷轴效果重分类，再选择知识、传送、侦测或附魔事务族。
 
 ## 9. 内容迁移策略
 

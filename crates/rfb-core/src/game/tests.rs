@@ -11047,6 +11047,166 @@ fn failed_and_depleted_device_attempts_preserve_charges() {
 }
 
 #[test]
+fn restorative_item_sequence_recovers_resource_then_removes_status() {
+    const ITEM_ID: &str = "test.item.clarity-draught.1";
+    let mut game = skill_check_game(19, "demo.build.scholar");
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("scholar should have mana")
+        .current = 0;
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_CONFUSION.to_owned(),
+        remaining_ticks: 20,
+        intensity: 1,
+        source_id: Some("test".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.clarity-draught");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert!(game.resources["demo.resource.mana"].current > 0);
+    assert!(!game.player_has_status_kind(STATUS_CONFUSION));
+    let effect_events = update
+        .events
+        .iter()
+        .filter(|event| event.kind.starts_with("item.use-"))
+        .map(|event| event.kind.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        effect_events,
+        vec!["item.use-resource-restored", "item.use-status-removed"]
+    );
+}
+
+#[test]
+fn full_resource_restoration_is_deterministic_and_round_trips() {
+    const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
+    let mut game = skill_check_game(23, "demo.build.scholar");
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("scholar should have mana");
+    mana.current = 1;
+    let maximum = mana.maximum;
+    game.player.statuses.push(StatusInstance {
+        kind_id: "rfb.status.berserk".to_owned(),
+        remaining_ticks: 20,
+        intensity: 1,
+        source_id: Some("test".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.resources["demo.resource.mana"].current, maximum);
+    assert!(!game.player_has_status_kind("rfb.status.berserk"));
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(update.events.iter().any(|event| {
+        matches!(
+            &event.outcome,
+            Some(GameEventOutcomeDto::ResourceRecovery { resolution })
+                if resolution.before == 1
+                    && resolution.after == maximum
+                    && resolution.recovered == maximum - 1
+        )
+    }));
+    let restored = Game::from_save(game.to_save()).expect("restored resource state should reload");
+    assert_eq!(restored.snapshot(), game.snapshot());
+}
+
+#[test]
+fn successful_restoration_reveals_later_no_effect_events() {
+    const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
+    let mut game = skill_check_game(27, "demo.build.scholar");
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("scholar should have mana")
+        .current = 0;
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    let status_event = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-status-no-effect")
+        .expect("the absent berserk status should produce a no-effect event");
+    assert_eq!(
+        status_event.args["nameKey"],
+        "item-demo-perfect-focus-elixir-name"
+    );
+}
+
+#[test]
+fn missing_player_resource_consumes_restorative_without_claiming_awareness() {
+    const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
+    let mut game = skill_check_game(29, "demo.build.vanguard");
+    assert!(!game.resources.contains_key("demo.resource.mana"));
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-resource-no-effect"
+            && matches!(
+                &event.outcome,
+                Some(GameEventOutcomeDto::ResourceRecovery { resolution })
+                    if resolution.before == 0
+                        && resolution.after == 0
+                        && resolution.recovered == 0
+            )
+    }));
+    assert!(
+        game.item_knowledge
+            .get("demo.item.perfect-focus-elixir")
+            .is_some_and(|knowledge| knowledge.tried && !knowledge.aware)
+    );
+}
+
+#[test]
 fn dynamic_device_generation_filters_by_depth_is_weighted_and_round_trips() {
     const WAND_ID: &str = "demo.item.resonance-wand";
     let content = load_built_in_content().expect("built-in content should load");

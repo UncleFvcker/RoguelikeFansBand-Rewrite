@@ -461,6 +461,120 @@
         {
           "additionalProperties": false,
           "properties": {
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "remove-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "resourceId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "restore-resource",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "resourceId",
+            "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bonus": {
+              "default": 0,
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "dice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "resourceId": {
+              "type": "string"
+            },
+            "sides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "restore-resource-dice",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "resourceId",
+            "dice",
+            "sides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "resourceId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "restore-resource-full",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "resourceId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "effects": {
+              "items": {
+                "$ref": "#/$defs/ItemUseEffectDefinition"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "sequence",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "effects"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damageBonus": {
               "default": 0,
               "format": "uint16",

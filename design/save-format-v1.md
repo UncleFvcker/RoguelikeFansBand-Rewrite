@@ -177,6 +177,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.110 为四类物品 save DTO 增加带默认值的 `deviceRecoveryProgress`。声明自然恢复的动态设备允许 0–999 余数；满能量时余数必须为 0，未声明恢复或没有充能的物品也不得携带非零余数。旧档缺字段按 0 迁移，载入不补恢复、不抽 RNG。主动充能只修改既有资源池、设备能量和可能被销毁的来源实例，不增加显示缓存；职业 recharge profile 的资源池继续通过 `PlayerSaveDto.resources` 保存并按既有子集迁移规则载入。save 容器保持 v1，恢复余数使 state hash 升至 Schema v49。完整边界见 [Contract v110](contract-v110-device-recharge.md)。
 
+协议 1.111 的恢复型物品不增加存档字段。资源恢复写入既有 `PlayerSaveDto.resources`，状态清除写入既有 statuses，消耗后的数量使用现有四类物品实例，`tried`/`aware` 继续由 `itemKnowledge` 保存；缺少资源池不会在存档中创建新池。save 容器保持 v1，state hash Schema 保持 v49。完整边界见 [Contract v111](contract-v111-restorative-items.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

@@ -1488,6 +1488,26 @@ pub enum ItemUseEffectDefinition {
         dice: u16,
         sides: u16,
     },
+    RemoveStatus {
+        status_kind_id: String,
+    },
+    RestoreResource {
+        resource_id: String,
+        amount: u32,
+    },
+    RestoreResourceDice {
+        resource_id: String,
+        dice: u16,
+        sides: u16,
+        #[serde(default)]
+        bonus: u32,
+    },
+    RestoreResourceFull {
+        resource_id: String,
+    },
+    Sequence {
+        effects: Vec<Self>,
+    },
     Damage {
         damage_dice: u16,
         damage_sides: u16,
@@ -3047,6 +3067,98 @@ fn validate_manifest(manifest: &PackManifest) -> Result<(), ContentError> {
     validate_pack_relations(&manifest.id, &manifest.dependencies, &manifest.load_after)
 }
 
+fn valid_item_effect(
+    effect: &ItemUseEffectDefinition,
+    terrain_tags: &BTreeMap<String, BTreeSet<String>>,
+    actor_tag_values: &BTreeSet<String>,
+    resource_ids: &BTreeSet<String>,
+) -> bool {
+    match effect {
+        ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
+        ItemUseEffectDefinition::HealDice { dice, sides } => {
+            (1..=100).contains(dice) && (1..=10_000).contains(sides)
+        }
+        ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
+            validate_id(status_kind_id).is_ok()
+        }
+        ItemUseEffectDefinition::RestoreResource {
+            resource_id,
+            amount,
+        } => resource_ids.contains(resource_id) && (1..=1_000_000).contains(amount),
+        ItemUseEffectDefinition::RestoreResourceDice {
+            resource_id,
+            dice,
+            sides,
+            bonus,
+        } => {
+            resource_ids.contains(resource_id)
+                && (1..=100).contains(dice)
+                && (1..=10_000).contains(sides)
+                && *bonus <= 1_000_000
+        }
+        ItemUseEffectDefinition::RestoreResourceFull { resource_id } => {
+            resource_ids.contains(resource_id)
+        }
+        ItemUseEffectDefinition::Sequence { effects } => {
+            (2..=8).contains(&effects.len())
+                && effects.iter().all(|effect| {
+                    matches!(
+                        effect,
+                        ItemUseEffectDefinition::Heal { .. }
+                            | ItemUseEffectDefinition::HealDice { .. }
+                            | ItemUseEffectDefinition::RemoveStatus { .. }
+                            | ItemUseEffectDefinition::RestoreResource { .. }
+                            | ItemUseEffectDefinition::RestoreResourceDice { .. }
+                            | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                    ) && valid_item_effect(effect, terrain_tags, actor_tag_values, resource_ids)
+                })
+        }
+        ItemUseEffectDefinition::Damage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            ..
+        } => {
+            (1..=100).contains(damage_dice)
+                && (1..=10_000).contains(damage_sides)
+                && *damage_bonus <= 10_000
+        }
+        ItemUseEffectDefinition::Detect {
+            subject,
+            category,
+            radius,
+            persistent,
+        } => {
+            !category.is_empty()
+                && category.len() <= 64
+                && category.bytes().all(|byte| {
+                    byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'-' | b'_')
+                })
+                && (1..=8).contains(radius)
+                && match subject {
+                    AbilityDetectSubjectDefinition::Terrain => {
+                        terrain_tags.values().any(|tags| tags.contains(category))
+                    }
+                    AbilityDetectSubjectDefinition::Actor => {
+                        !persistent && actor_tag_values.contains(category)
+                    }
+                }
+        }
+    }
+}
+
+fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
+    match effect {
+        ItemUseEffectDefinition::Damage { .. } => false,
+        ItemUseEffectDefinition::Sequence { effects } => {
+            effects.iter().all(item_effect_is_self_targeted)
+        }
+        _ => true,
+    }
+}
+
 fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), ContentError> {
     if content.format != CONTENT_FORMAT || content.format_version != CONTENT_FORMAT_VERSION {
         return Err(ContentError::InvalidCompiledMetadata);
@@ -4231,45 +4343,6 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         ability_books_by_id.insert(book.id.clone(), book.clone());
     }
 
-    let valid_item_effect = |effect: &ItemUseEffectDefinition| match effect {
-        ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
-        ItemUseEffectDefinition::HealDice { dice, sides } => {
-            (1..=100).contains(dice) && (1..=10_000).contains(sides)
-        }
-        ItemUseEffectDefinition::Damage {
-            damage_dice,
-            damage_sides,
-            damage_bonus,
-            ..
-        } => {
-            (1..=100).contains(damage_dice)
-                && (1..=10_000).contains(damage_sides)
-                && *damage_bonus <= 10_000
-        }
-        ItemUseEffectDefinition::Detect {
-            subject,
-            category,
-            radius,
-            persistent,
-        } => {
-            !category.is_empty()
-                && category.len() <= 64
-                && category.bytes().all(|byte| {
-                    byte.is_ascii_lowercase()
-                        || byte.is_ascii_digit()
-                        || matches!(byte, b'-' | b'_')
-                })
-                && (1..=8).contains(radius)
-                && match subject {
-                    AbilityDetectSubjectDefinition::Terrain => {
-                        terrain_tags.values().any(|tags| tags.contains(category))
-                    }
-                    AbilityDetectSubjectDefinition::Actor => {
-                        !persistent && actor_tag_values.contains(category)
-                    }
-                }
-        }
-    };
     let valid_item_effect_target =
         |effect: &ItemUseEffectDefinition, target: &AbilityTargetDefinition| {
             let mut modes = BTreeSet::new();
@@ -4295,6 +4368,11 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 && match effect {
                     ItemUseEffectDefinition::Heal { .. }
                     | ItemUseEffectDefinition::HealDice { .. }
+                    | ItemUseEffectDefinition::RemoveStatus { .. }
+                    | ItemUseEffectDefinition::RestoreResource { .. }
+                    | ItemUseEffectDefinition::RestoreResourceDice { .. }
+                    | ItemUseEffectDefinition::RestoreResourceFull { .. }
+                    | ItemUseEffectDefinition::Sequence { .. }
                     | ItemUseEffectDefinition::Detect { .. } => self_target,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                 }
@@ -4397,15 +4475,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             return Err(ContentError::InvalidThrowProfile(item.id.clone()));
         }
         if let Some(action) = &item.use_action {
-            let valid_effect = match action.effect {
-                ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(&amount),
-                ItemUseEffectDefinition::HealDice { dice, sides } => {
-                    (1..=100).contains(&dice) && (1..=10_000).contains(&sides)
-                }
-                ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::Detect { .. } => {
-                    false
-                }
-            };
+            let valid_effect = valid_item_effect(
+                &action.effect,
+                &terrain_tags,
+                &actor_tag_values,
+                &resource_ids,
+            ) && item_effect_is_self_targeted(&action.effect)
+                && !matches!(action.effect, ItemUseEffectDefinition::Detect { .. });
             let valid_charges = action.charges.is_none_or(|charges| {
                 charges.maximum > 0
                     && charges.maximum <= 1_000_000
@@ -4448,7 +4524,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         && activation.charges.minimum <= activation.charges.maximum
                         && activation.charges.maximum <= 1_000_000
                         && (1..=activation.charges.minimum).contains(&activation.charges.cost)
-                        && valid_item_effect(&activation.effect)
+                        && valid_item_effect(
+                            &activation.effect,
+                            &terrain_tags,
+                            &actor_tag_values,
+                            &resource_ids,
+                        )
                         && valid_item_effect_target(&activation.effect, &activation.target)
                 })
                 && (1..=100).all(|depth| {
@@ -8263,7 +8344,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 23);
+        assert_eq!(first.content.items.len(), 25);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8289,7 +8370,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.101.0");
+        assert_eq!(catalog.pack_version(), "1.102.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -10212,6 +10293,74 @@ mod tests {
             .as_mut()
             .expect("charged action should exist")
             .device_check_difficulty = None;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+    }
+
+    #[test]
+    fn restorative_item_sequences_require_bounded_effects_and_known_resources() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let clarity = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == "demo.item.clarity-draught")
+            .and_then(|item| item.use_action.as_ref())
+            .expect("fixture should contain the clarity action");
+        let ItemUseEffectDefinition::Sequence { effects } = &clarity.effect else {
+            panic!("clarity should use an ordered effect sequence");
+        };
+        assert!(matches!(
+            &effects[0],
+            ItemUseEffectDefinition::RestoreResourceDice {
+                resource_id,
+                dice: 3,
+                sides: 6,
+                bonus: 3,
+            } if resource_id == "demo.resource.mana"
+        ));
+        assert!(matches!(
+            &effects[1],
+            ItemUseEffectDefinition::RemoveStatus { status_kind_id }
+                if status_kind_id == "rfb.status.confusion"
+        ));
+
+        let mut invalid = artifact.content.clone();
+        invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.clarity-draught")
+            .and_then(|item| item.use_action.as_mut())
+            .expect("clarity action should exist")
+            .effect = ItemUseEffectDefinition::RestoreResourceFull {
+            resource_id: "demo.resource.missing".to_owned(),
+        };
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let action = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.clarity-draught")
+            .and_then(|item| item.use_action.as_mut())
+            .expect("clarity action should exist");
+        action.effect = ItemUseEffectDefinition::Sequence {
+            effects: vec![
+                ItemUseEffectDefinition::Heal { amount: 1 },
+                ItemUseEffectDefinition::Sequence {
+                    effects: vec![
+                        ItemUseEffectDefinition::Heal { amount: 1 },
+                        ItemUseEffectDefinition::Heal { amount: 1 },
+                    ],
+                },
+            ],
+        };
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemUseAction(_))

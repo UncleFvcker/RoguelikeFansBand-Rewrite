@@ -440,6 +440,17 @@ pub(crate) enum DomainEvent {
         requested: i32,
         applied: i32,
     },
+    ItemStatusRemoved {
+        source_kind_id: String,
+        display_name_key: String,
+        status_kind_id: String,
+        removed: bool,
+    },
+    ItemResourceRestored {
+        source_kind_id: String,
+        display_name_key: String,
+        resolution: ResourceRecoveryResolutionDto,
+    },
     ItemActivationLanded {
         source_kind_id: String,
         profile_id: String,
@@ -1608,6 +1619,51 @@ impl DomainEvent {
                 GameEventOutcomeDto::Heal {
                     resolution: HealingResolutionDto { requested, applied },
                 },
+            ),
+            Self::ItemStatusRemoved {
+                source_kind_id,
+                display_name_key,
+                status_kind_id,
+                removed,
+            } => dto(
+                if removed {
+                    "item.use-status-removed"
+                } else {
+                    "item.use-status-no-effect"
+                },
+                if removed {
+                    "item-use-status-removed"
+                } else {
+                    "item-use-status-no-effect"
+                },
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("status", status_kind_id),
+                ],
+            ),
+            Self::ItemResourceRestored {
+                source_kind_id,
+                display_name_key,
+                resolution,
+            } => dto_with_outcome(
+                if resolution.recovered > 0 {
+                    "item.use-resource-restored"
+                } else {
+                    "item.use-resource-no-effect"
+                },
+                if resolution.recovered > 0 {
+                    "item-use-resource-restored"
+                } else {
+                    "item-use-resource-no-effect"
+                },
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("resource", resolution.resource_id.clone()),
+                    ("amount", resolution.recovered.to_string()),
+                ],
+                GameEventOutcomeDto::ResourceRecovery { resolution },
             ),
             Self::ItemActivationLanded {
                 source_kind_id,

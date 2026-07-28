@@ -813,16 +813,76 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
 }
 
 fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
-    if entry.tval != 75 {
-        return None;
-    }
-    let effect = match entry.sval {
-        34 => serde_json::json!({"type": "heal-dice", "dice": 4, "sides": 8}),
-        35 => serde_json::json!({"type": "heal-dice", "dice": 8, "sides": 8}),
-        36 => serde_json::json!({"type": "heal-dice", "dice": 12, "sides": 8}),
-        37 => serde_json::json!({"type": "heal", "amount": 300}),
-        38 => serde_json::json!({"type": "heal", "amount": 1000}),
-        39 => serde_json::json!({"type": "heal", "amount": 5000}),
+    let remove_status = |status_kind_id: &str| serde_json::json!({"type": "remove-status", "statusKindId": status_kind_id});
+    let sequence = |effects: Vec<serde_json::Value>| serde_json::json!({"type": "sequence", "effects": effects});
+    let effect = match (entry.tval, entry.sval) {
+        (80, 12) => remove_status("rfb.status.poison"),
+        (80, 13) => remove_status("rfb.status.blindness"),
+        (80, 14) => remove_status("rfb.status.fear"),
+        (80, 15) => remove_status("rfb.status.confusion"),
+        (75, 28) => remove_status("rfb.status.fear"),
+        (75, 31) => sequence(vec![
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.slow"),
+        ]),
+        (75, 34) => sequence(vec![
+            serde_json::json!({"type": "heal-dice", "dice": 4, "sides": 8}),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 35) => sequence(vec![
+            serde_json::json!({"type": "heal-dice", "dice": 8, "sides": 8}),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 36) => sequence(vec![
+            serde_json::json!({"type": "heal-dice", "dice": 12, "sides": 8}),
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.bleeding"),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 37) => sequence(vec![
+            serde_json::json!({"type": "heal", "amount": 300}),
+            remove_status("rfb.status.blindness"),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.bleeding"),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 38) => sequence(vec![
+            serde_json::json!({"type": "heal", "amount": 1000}),
+            remove_status("rfb.status.blindness"),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.poison"),
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.bleeding"),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 39) => sequence(vec![
+            serde_json::json!({"type": "heal", "amount": 5000}),
+            remove_status("rfb.status.poison"),
+            remove_status("rfb.status.blindness"),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.stun"),
+            remove_status("rfb.status.bleeding"),
+            remove_status("rfb.status.slow"),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 40) => sequence(vec![
+            serde_json::json!({
+                "type": "restore-resource-full",
+                "resourceId": LEGACY_MANA_RESOURCE_ID
+            }),
+            remove_status("rfb.status.berserk"),
+        ]),
+        (75, 70) => sequence(vec![
+            serde_json::json!({
+                "type": "restore-resource-dice",
+                "resourceId": LEGACY_MANA_RESOURCE_ID,
+                "dice": 3,
+                "sides": 6,
+                "bonus": 3
+            }),
+            remove_status("rfb.status.confusion"),
+        ]),
         _ => return None,
     };
     Some(serde_json::json!({"effect": effect}))
@@ -7235,7 +7295,7 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn fixed_healing_potions_map_to_deterministic_use_actions_and_leave_no_gap() {
+    fn fixed_healing_potions_add_ordered_status_recovery_and_leave_no_gap() {
         let expected = [
             (
                 34,
@@ -7266,7 +7326,15 @@ F:BRAND_VAMP | HOLD_LIFE
                 None,
                 &mut report,
             );
-            assert_eq!(value["useAction"]["effect"], effect);
+            let effects = value["useAction"]["effect"]["effects"]
+                .as_array()
+                .expect("healing potions should use ordered effects");
+            assert_eq!(effects[0], effect);
+            assert!(
+                effects[1..]
+                    .iter()
+                    .all(|effect| effect["type"] == "remove-status")
+            );
         }
         assert!(!report.item_behavior_gaps.contains_key("consumable-effect"));
 
@@ -7282,6 +7350,64 @@ F:BRAND_VAMP | HOLD_LIFE
             &mut report,
         );
         assert_eq!(report.item_behavior_gaps["consumable-effect"], 1);
+    }
+
+    #[test]
+    fn restorative_foods_and_potions_map_status_and_mana_effects() {
+        let mut report = ContentImportReport::default();
+        let cases = [
+            (80, 12, "remove-status"),
+            (80, 13, "remove-status"),
+            (80, 14, "remove-status"),
+            (80, 15, "remove-status"),
+            (75, 28, "remove-status"),
+            (75, 31, "sequence"),
+            (75, 40, "sequence"),
+            (75, 70, "sequence"),
+        ];
+        for (tval, sval, effect_type) in cases {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("restorative-{tval}-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(value["useAction"]["effect"]["type"], effect_type);
+        }
+        assert!(!report.item_behavior_gaps.contains_key("consumable-effect"));
+
+        let restore_mana = fixed_consumable_use_action(&LegacyItemEntry {
+            tval: 75,
+            sval: 40,
+            ..LegacyItemEntry::default()
+        })
+        .expect("restore mana should map");
+        assert_eq!(
+            restore_mana["effect"]["effects"][0],
+            serde_json::json!({
+                "type": "restore-resource-full",
+                "resourceId": LEGACY_MANA_RESOURCE_ID
+            })
+        );
+
+        let clarity = fixed_consumable_use_action(&LegacyItemEntry {
+            tval: 75,
+            sval: 70,
+            ..LegacyItemEntry::default()
+        })
+        .expect("clarity should map");
+        assert_eq!(clarity["effect"]["effects"][0]["dice"], 3);
+        assert_eq!(clarity["effect"]["effects"][0]["sides"], 6);
+        assert_eq!(clarity["effect"]["effects"][0]["bonus"], 3);
+        assert_eq!(
+            clarity["effect"]["effects"][1]["statusKindId"],
+            "rfb.status.confusion"
+        );
     }
 
     #[test]

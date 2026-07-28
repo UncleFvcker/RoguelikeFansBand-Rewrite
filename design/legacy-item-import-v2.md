@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳 + P60 设备自然恢复）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备与恢复/主动充能运行时分别由 [Contract v108](contract-v108-charged-items.md)、[Contract v109](contract-v109-dynamic-devices.md) 和 [Contract v110](contract-v110-device-recharge.md) 定义。
+状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳 + P60 设备自然恢复 + P61 有序恢复消耗品）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备、恢复/主动充能和恢复型物品运行时分别由 [Contract v108](contract-v108-charged-items.md)、[Contract v109](contract-v109-dynamic-devices.md)、[Contract v110](contract-v110-device-recharge.md) 和 [Contract v111](contract-v111-restorative-items.md) 定义。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 
@@ -18,7 +18,7 @@
 | 45（戒指） | `ring` 槽通用壳——**普通首饰无任何属性**（原版属性与 pval 全部由 ego 生成期赋予或固定神器携带，P45 修正）；AC 直接入 defense；效果留壳+缺口 |
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |
-| 75/80（药水/食物） | 堆叠消耗品；P58 按源码 sval 精选接入 Cure Light 4d8、Cure Serious 8d8、Cure Critical 12d8、Healing 300、*Healing* 1000、Life 5000，其余保留行为缺口 |
+| 75/80（药水/食物） | 堆叠消耗品；P58 接入六种治疗药水；P61 增加四种状态恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种治疗药水补充当前可表达的异常清除序列，其余保留行为缺口 |
 | 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | 卷轴仍为壳 + 行为缺口；P59 为通用 wand/staff/rod 壳生成首批动态候选，效果 identity、power、成本与随机容量在实例生成时物化，不直接写成单一 kind 效果 |
 | 90+ 魔典族 | 壳 + `book` 标签（旧版法术书系统未映射） |
 | 其余（箱子/尖刺/瓶罐/雕像/尸骸等） | 通用壳（identity/重量/堆叠/字形恒可表达） |
@@ -45,9 +45,11 @@ P58 在后续装备旗标/法书回灌结果上重跑真实包：937 items、128
 
 P59 为原版通用 wand/staff/rod 壳生成首批动态 activation，并把 `f_info` 的 `TRAP` 旗标映射为 terrain `trap` tag，保证 detect 候选通过严格内容引用校验。真实包仍为 937 items、128 affixes、1260 abilities、4 ability books，content hash 为 `68f8c65c4b80e67437457e1c51ff77b11c2d4a095bb2e9cfa01983c244d427b3`；`device-effect` 64→61，`consumable-effect` 89、`artifact-activation` 180、`ego-activation` 13 保持。
 
+P61 增加有序恢复型物品效果后，四种状态恢复食物、Boldness、Vigor、Restore Mana、Clarity 退出缺口，六种既有治疗药水获得异常清除序列。真实包仍为 937 items、128 affixes、1260 abilities、4 ability books，content hash 为 `b6913ec229580a8decd6816fbebc4af6554bb55cd222fc7e11e9ceec1a353eac`；`consumable-effect` 89→81。复核 `device-effect` 61 后确认全部来自 tval 70/71 卷轴，三种 wand/staff/rod 通用壳已不在该缺口中。
+
 ## 7. 遗留
 
-- 其余药水/食物/卷轴按源码 sval 精选接入；staff/wand/rod 继续扩展候选前，应先对照原版建立 recharge、rod 时间和失败/强行使用语义；
+- 其余药水/食物按源码 sval 精选接入；卷轴应从误导性的 `device-effect` 中拆分，并按知识、传送、侦测、附魔等事务族盘点；
 - 装备旗标系统（抗性/免疫/速度/斩杀支路）落地后重跑导入，可解锁 72 条 ego-inexpressible 词条与神器旗标主体；
 - E:/D: 中文名与描述导出为本地 Fluent 片段（v2 方向未变）；
 - 词条与基础物品的运行时挂接（生成期 affix 抽取）属于战利品生成线，另行排期。

@@ -220,6 +220,8 @@ contract-v109 为物品增加互斥于 `useAction` 的 `deviceGeneration.activat
 
 contract-v110 为 `deviceGeneration` 增加可选 `recovery { intervalTicks, energyPerMille }`，并为 Class 增加可选 `deviceRechargeProfile`（资源、主宰属性、上限公式、power 和设备来源损毁率）。编译器限制恢复间隔为 1–10000 tick、千分比为 1–1000，并验证 recharge 资源引用、上限参数、power 与损毁率。demo 包 1.101.0 新增 Resonance 资源，现含 68 abilities、5 ability books、23 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets，当前 state hash 为 Schema v49。完整边界见 [Contract v110](contract-v110-device-recharge.md)。
 
+contract-v111 为物品效果增加 `remove-status`、`restore-resource`、`restore-resource-dice`、`restore-resource-full` 和 `sequence`。序列限制为 2–8 个非嵌套、自目标恢复步骤；编译器验证资源引用、状态 ID、固定值/骰值边界，并拒绝 damage/detect 或嵌套 sequence。demo 包 1.102.0 新增两种恢复药水，现含 68 abilities、5 ability books、25 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets，state hash 保持 Schema v49。完整边界见 [Contract v111](contract-v111-restorative-items.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

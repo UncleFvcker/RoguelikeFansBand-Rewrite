@@ -2326,6 +2326,27 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-no-effect", {
         target: visibleItemName(event.args.nameKey, event.args.target),
       });
+    case "item-use-status-removed":
+      return localization.format("message-item-use-status-removed", {
+        target: visibleItemName(event.args.nameKey, event.args.target),
+        status: statusName(event.args.status),
+      });
+    case "item-use-status-no-effect":
+      return localization.format("message-item-use-status-no-effect", {
+        target: visibleItemName(event.args.nameKey, event.args.target),
+        status: statusName(event.args.status),
+      });
+    case "item-use-resource-restored":
+      return localization.format("message-item-use-resource-restored", {
+        target: visibleItemName(event.args.nameKey, event.args.target),
+        resource: contentName(event.args.resource),
+        amount: event.args.amount ?? "?",
+      });
+    case "item-use-resource-no-effect":
+      return localization.format("message-item-use-resource-no-effect", {
+        target: visibleItemName(event.args.nameKey, event.args.target),
+        resource: contentName(event.args.resource),
+      });
     case "item-use-unavailable":
       return localization.format("message-item-use-unavailable");
     case "device-energy-recovered":

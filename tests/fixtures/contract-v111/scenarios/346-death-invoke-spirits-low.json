@@ -1,0 +1,3357 @@
+{
+  "schemaVersion": 1,
+  "id": "death.invoke-spirits-low-branch",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "debugClearEntities": true,
+    "debugClearCarriedItems": false,
+    "debugAbilityCastsSucceed": true,
+    "debugRechargeAttemptsSucceed": false,
+    "debugRechargeAttemptsFail": false,
+    "debugRechargeSourcesSurvive": false,
+    "playerBuildId": "demo.build.scholar",
+    "playerHp": null,
+    "playerLevel": 10,
+    "playerExperience": null,
+    "playerMaximumExperience": null,
+    "playerLifeForce": null,
+    "playerMaxLevel": null,
+    "playerPendingAttributeIncreases": null,
+    "playerAttributes": null,
+    "legacyPlayerProgress": false,
+    "playerResources": [
+      {
+        "id": "demo.resource.mana",
+        "current": 39,
+        "maximum": 39
+      }
+    ],
+    "playerLearnedAbilityIds": [
+      "demo.ability.death-invoke-spirits"
+    ],
+    "playerAbilityProgress": null,
+    "legacyPlayerAbilityState": false,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [],
+    "inventoryItems": [],
+    "terrainOverrides": [],
+    "revealedTerrain": [],
+    "campaignConqueredDungeons": [],
+    "campaignState": null
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "cast-ability",
+        "abilityId": "demo.ability.death-invoke-spirits",
+        "target": {
+          "type": "direction",
+          "direction": "east"
+        }
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "rngDrawCounter": 5,
+      "floorId": "demo.floor.surface",
+      "dungeonInstanceId": null,
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 12,
+      "playerMaxHp": 62,
+      "playerAttack": 3,
+      "playerDefense": 2,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 95,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "playerLevel": 10,
+      "playerExperience": 0,
+      "playerMaxLevel": 10,
+      "playerPendingAttributeIncreases": 0,
+      "playerAttributes": {
+        "level": 10,
+        "maxLevel": 10,
+        "experience": 0,
+        "maximumExperience": 0,
+        "lifeForce": 1000,
+        "levelCap": 50,
+        "attributeCap": 238,
+        "attributeIndexCap": 37,
+        "experienceForNextLevel": 500,
+        "pendingAttributeIncreases": 0,
+        "victoryLevelCapUnlocked": false,
+        "attributes": {
+          "strength": {
+            "natural": 13,
+            "effective": 9,
+            "index": 6
+          },
+          "intelligence": {
+            "natural": 13,
+            "effective": 18,
+            "index": 15
+          },
+          "wisdom": {
+            "natural": 13,
+            "effective": 14,
+            "index": 11
+          },
+          "dexterity": {
+            "natural": 13,
+            "effective": 15,
+            "index": 12
+          },
+          "constitution": {
+            "natural": 13,
+            "effective": 10,
+            "index": 7
+          },
+          "charisma": {
+            "natural": 13,
+            "effective": 12,
+            "index": 9
+          }
+        },
+        "skills": [
+          {
+            "id": "demo.skill.device",
+            "nameKey": "skill-demo-device-name",
+            "current": 60,
+            "maximum": 1000,
+            "base": 45,
+            "growthPerTenLevels": 15
+          },
+          {
+            "id": "demo.skill.digging",
+            "nameKey": "skill-demo-digging-name",
+            "current": 10,
+            "maximum": 1000,
+            "base": 10,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.disarming",
+            "nameKey": "skill-demo-disarming-name",
+            "current": 37,
+            "maximum": 1000,
+            "base": 30,
+            "growthPerTenLevels": 7
+          },
+          {
+            "id": "demo.skill.melee",
+            "nameKey": "skill-demo-melee-name",
+            "current": 35,
+            "maximum": 1000,
+            "base": 29,
+            "growthPerTenLevels": 6
+          },
+          {
+            "id": "demo.skill.perception",
+            "nameKey": "skill-demo-perception-name",
+            "current": 23,
+            "maximum": 1000,
+            "base": 23,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.ranged",
+            "nameKey": "skill-demo-ranged-name",
+            "current": 27,
+            "maximum": 1000,
+            "base": 20,
+            "growthPerTenLevels": 7
+          },
+          {
+            "id": "demo.skill.saving-throw",
+            "nameKey": "skill-demo-saving-throw-name",
+            "current": 52,
+            "maximum": 1000,
+            "base": 41,
+            "growthPerTenLevels": 11
+          },
+          {
+            "id": "demo.skill.search",
+            "nameKey": "skill-demo-search-name",
+            "current": 19,
+            "maximum": 1000,
+            "base": 19,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.stealth",
+            "nameKey": "skill-demo-stealth-name",
+            "current": 4,
+            "maximum": 1000,
+            "base": 4,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.throwing",
+            "nameKey": "skill-demo-throwing-name",
+            "current": 30,
+            "maximum": 1000,
+            "base": 25,
+            "growthPerTenLevels": 5
+          }
+        ]
+      },
+      "playerBuild": {
+        "buildId": "demo.build.scholar",
+        "buildNameKey": "build-demo-scholar-name",
+        "raceId": "demo.race.elf",
+        "raceNameKey": "race-demo-elf-name",
+        "classId": "demo.class.mage",
+        "classNameKey": "class-demo-mage-name",
+        "personalityId": "demo.personality.ordinary",
+        "personalityNameKey": "personality-demo-ordinary-name",
+        "lifePercent": 93,
+        "experiencePercent": 156
+      },
+      "playerResources": [
+        {
+          "id": "demo.resource.mana",
+          "nameKey": "resource-demo-mana-name",
+          "current": 15,
+          "maximum": 39,
+          "waitRecoveryAmount": 1,
+          "restRecoveryAmount": 3
+        }
+      ],
+      "playerAbilityLearning": {
+        "learnedCount": 1,
+        "capacity": 11,
+        "remainingSlots": 10
+      },
+      "playerAbilities": [
+        {
+          "id": "demo.ability.death-animate-dead",
+          "nameKey": "ability-demo-death-animate-dead-name",
+          "descriptionKey": "ability-demo-death-animate-dead-description",
+          "minimumLevel": 36,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 35,
+          "resourceCost": 56,
+          "failurePercent": 65,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "animate-dead",
+              "actorKindId": "demo.actor.risen-thrall",
+              "corpseItemKindId": "demo.item.corpse-remains",
+              "radius": 8,
+              "count": 8
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-battle-frenzy",
+          "nameKey": "ability-demo-death-battle-frenzy-name",
+          "descriptionKey": "ability-demo-death-battle-frenzy-description",
+          "minimumLevel": 30,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 25,
+          "resourceCost": 40,
+          "failurePercent": 60,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.hero",
+              "intensity": 1,
+              "durationTicks": 25,
+              "durationDice": 1,
+              "durationSides": 25,
+              "stacking": "replace",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 10,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 12,
+                "meleeDamage": 0,
+                "rangedSkill": 12,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantedStatusImmunities": [
+                "rfb.status.fear"
+              ],
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            },
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.blessed",
+              "intensity": 1,
+              "durationTicks": 25,
+              "durationDice": 1,
+              "durationSides": 25,
+              "stacking": "replace",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 5,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 10,
+                "meleeDamage": 0,
+                "rangedSkill": 10,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            },
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.haste",
+              "intensity": 1,
+              "durationTicks": 5,
+              "durationDice": 1,
+              "durationSides": 25,
+              "stacking": "replace",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-berserk",
+          "nameKey": "ability-demo-death-berserk-name",
+          "descriptionKey": "ability-demo-death-berserk-description",
+          "minimumLevel": 10,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 20,
+          "resourceCost": 32,
+          "failurePercent": 65,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.berserk",
+              "intensity": 1,
+              "durationTicks": 25,
+              "durationDice": 1,
+              "durationSides": 25,
+              "stacking": "replace",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": -10,
+                "maxHp": 30,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 12,
+                "meleeDamage": 5,
+                "rangedSkill": -12,
+                "throwingSkill": -20,
+                "deviceSkill": -20,
+                "savingThrowSkill": -30,
+                "stealthSkill": -7,
+                "searchSkill": -15,
+                "perceptionSkill": -15,
+                "disarmingSkill": 0,
+                "diggingSkill": 30,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantedStatusImmunities": [
+                "rfb.status.fear"
+              ],
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            },
+            {
+              "type": "heal",
+              "amount": 30
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-black-sleep",
+          "nameKey": "ability-demo-death-black-sleep-name",
+          "descriptionKey": "ability-demo-death-black-sleep-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.sleep",
+              "intensity": 1,
+              "durationTicks": 500,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "keep-strongest",
+              "power": 20,
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-cloud-kill",
+          "nameKey": "ability-demo-death-cloud-kill-name",
+          "descriptionKey": "ability-demo-death-cloud-kill-description",
+          "minimumLevel": 18,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 15,
+          "resourceCost": 24,
+          "failurePercent": 35,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 3,
+          "effects": [
+            {
+              "type": "area-damage",
+              "damageDice": 1,
+              "damageSides": 1,
+              "damageBonus": 79,
+              "damageType": "poison",
+              "radius": 3
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-dark-bolt",
+          "nameKey": "ability-demo-death-dark-bolt-name",
+          "descriptionKey": "ability-demo-death-dark-bolt-description",
+          "minimumLevel": 11,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 11,
+          "resourceCost": 18,
+          "failurePercent": 15,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "bolt-or-beam-damage",
+              "damageDice": 5,
+              "damageSides": 8,
+              "damageBonus": 0,
+              "damageType": "dark",
+              "beamChancePercent": 10
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-darkness-storm",
+          "nameKey": "ability-demo-death-darkness-storm-name",
+          "descriptionKey": "ability-demo-death-darkness-storm-description",
+          "minimumLevel": 40,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 40,
+          "resourceCost": 64,
+          "failurePercent": 55,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 4,
+          "effects": [
+            {
+              "type": "area-damage",
+              "damageDice": 1,
+              "damageSides": 1,
+              "damageBonus": 111,
+              "damageType": "dark",
+              "radius": 4
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-death-ray",
+          "nameKey": "ability-demo-death-death-ray-name",
+          "descriptionKey": "ability-demo-death-death-ray-description",
+          "minimumLevel": 20,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 20,
+          "resourceCost": 32,
+          "failurePercent": 60,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "death-ray",
+              "power": 20
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-detect-evil",
+          "nameKey": "ability-demo-death-detect-evil-name",
+          "descriptionKey": "ability-demo-death-detect-evil-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "detect": {
+            "subject": "actor",
+            "category": "evil",
+            "radius": 8,
+            "persistent": false
+          },
+          "effects": [
+            {
+              "type": "detect",
+              "subject": "actor",
+              "category": "evil",
+              "radius": 8,
+              "persistent": false
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-detect-unlife",
+          "nameKey": "ability-demo-death-detect-unlife-name",
+          "descriptionKey": "ability-demo-death-detect-unlife-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "detect": {
+            "subject": "actor",
+            "category": "nonliving",
+            "radius": 8,
+            "persistent": false
+          },
+          "effects": [
+            {
+              "type": "detect",
+              "subject": "actor",
+              "category": "nonliving",
+              "radius": 8,
+              "persistent": false
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-enslave-undead",
+          "nameKey": "ability-demo-death-enslave-undead-name",
+          "descriptionKey": "ability-demo-death-enslave-undead-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "control",
+              "category": "undead",
+              "power": 20
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-entropy-orb",
+          "nameKey": "ability-demo-death-entropy-orb-name",
+          "descriptionKey": "ability-demo-death-entropy-orb-description",
+          "minimumLevel": 12,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 12,
+          "resourceCost": 19,
+          "failurePercent": 25,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 2,
+          "effects": [
+            {
+              "type": "area-damage",
+              "damageDice": 3,
+              "damageSides": 6,
+              "damageBonus": 15,
+              "damageType": "physical",
+              "radius": 2,
+              "targetCategory": "living"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-esoteria",
+          "nameKey": "ability-demo-death-esoteria-name",
+          "descriptionKey": "ability-demo-death-esoteria-description",
+          "minimumLevel": 30,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 40,
+          "resourceCost": 64,
+          "failurePercent": 80,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "identify-item",
+              "fullIdentifyPower": 2,
+              "fullIdentifyRollSides": 50
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "item"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-genocide",
+          "nameKey": "ability-demo-death-genocide-name",
+          "descriptionKey": "ability-demo-death-genocide-description",
+          "minimumLevel": 39,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 30,
+          "resourceCost": 48,
+          "failurePercent": 80,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "genocide",
+              "scope": "glyph",
+              "power": 30,
+              "radius": 0
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-genocide-one",
+          "nameKey": "ability-demo-death-genocide-one-name",
+          "descriptionKey": "ability-demo-death-genocide-one-description",
+          "minimumLevel": 24,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 21,
+          "resourceCost": 34,
+          "failurePercent": 45,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "genocide",
+              "scope": "single",
+              "power": 30,
+              "radius": 0
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-hellfire",
+          "nameKey": "ability-demo-death-hellfire-name",
+          "descriptionKey": "ability-demo-death-hellfire-description",
+          "minimumLevel": 45,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 58,
+          "resourceCost": 92,
+          "failurePercent": 70,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 1,
+          "effects": [
+            {
+              "type": "area-damage",
+              "damageDice": 1,
+              "damageSides": 1,
+              "damageBonus": 42,
+              "damageType": "nether",
+              "radius": 1
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-horrify",
+          "nameKey": "ability-demo-death-horrify-name",
+          "descriptionKey": "ability-demo-death-horrify-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.fear",
+              "intensity": 1,
+              "durationTicks": 200,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "extend",
+              "power": 20,
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            },
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.stun",
+              "intensity": 1,
+              "durationTicks": 7,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "extend",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-invoke-spirits",
+          "nameKey": "ability-demo-death-invoke-spirits-name",
+          "descriptionKey": "ability-demo-death-invoke-spirits-description",
+          "minimumLevel": 10,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 15,
+          "resourceCost": 23,
+          "failurePercent": 65,
+          "proficiency": 128,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 1,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "random-choice",
+              "rollSides": 100,
+              "levelBonusDivisor": 5,
+              "branches": [
+                {
+                  "maximumRoll": 7,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "summon",
+                    "actorKindId": "demo.actor.risen-thrall",
+                    "count": 1,
+                    "radius": 2,
+                    "durationTurns": 0,
+                    "hostile": true
+                  }
+                },
+                {
+                  "maximumRoll": 13,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "apply-status",
+                    "statusKindId": "rfb.status.fear",
+                    "intensity": 3,
+                    "durationTicks": 50,
+                    "durationDice": 0,
+                    "durationSides": 0,
+                    "stacking": "keep-strongest",
+                    "grantedModifiers": {
+                      "attack": 0,
+                      "defense": 0,
+                      "maxHp": 0,
+                      "strength": 0,
+                      "intelligence": 0,
+                      "wisdom": 0,
+                      "dexterity": 0,
+                      "constitution": 0,
+                      "charisma": 0,
+                      "speed": 0
+                    },
+                    "grantedEquipmentBonuses": {
+                      "meleeAttacks": 0,
+                      "meleeSkill": 0,
+                      "meleeDamage": 0,
+                      "rangedSkill": 0,
+                      "throwingSkill": 0,
+                      "deviceSkill": 0,
+                      "savingThrowSkill": 0,
+                      "stealthSkill": 0,
+                      "searchSkill": 0,
+                      "perceptionSkill": 0,
+                      "disarmingSkill": 0,
+                      "diggingSkill": 0,
+                      "infravision": 0,
+                      "lightRadius": 0
+                    },
+                    "grantsWallPassage": false,
+                    "incomingDamagePercent": 100
+                  }
+                },
+                {
+                  "maximumRoll": 25,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "apply-status",
+                    "statusKindId": "rfb.status.confusion",
+                    "intensity": 1,
+                    "durationTicks": 4,
+                    "durationDice": 1,
+                    "durationSides": 4,
+                    "stacking": "extend",
+                    "grantedModifiers": {
+                      "attack": 0,
+                      "defense": 0,
+                      "maxHp": 0,
+                      "strength": 0,
+                      "intelligence": 0,
+                      "wisdom": 0,
+                      "dexterity": 0,
+                      "constitution": 0,
+                      "charisma": 0,
+                      "speed": 0
+                    },
+                    "grantedEquipmentBonuses": {
+                      "meleeAttacks": 0,
+                      "meleeSkill": 0,
+                      "meleeDamage": 0,
+                      "rangedSkill": 0,
+                      "throwingSkill": 0,
+                      "deviceSkill": 0,
+                      "savingThrowSkill": 0,
+                      "stealthSkill": 0,
+                      "searchSkill": 0,
+                      "perceptionSkill": 0,
+                      "disarmingSkill": 0,
+                      "diggingSkill": 0,
+                      "infravision": 0,
+                      "lightRadius": 0
+                    },
+                    "grantsWallPassage": false,
+                    "incomingDamagePercent": 100
+                  }
+                },
+                {
+                  "maximumRoll": 30,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "no-op",
+                    "reason": "actor-polymorph-pending"
+                  }
+                },
+                {
+                  "maximumRoll": 35,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "bolt-or-beam-damage",
+                    "damageDice": 4,
+                    "damageSides": 4,
+                    "damageBonus": 0,
+                    "damageType": "physical",
+                    "beamChancePercent": 0
+                  }
+                },
+                {
+                  "maximumRoll": 40,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "apply-status",
+                    "statusKindId": "rfb.status.confusion",
+                    "intensity": 1,
+                    "durationTicks": 10,
+                    "durationDice": 0,
+                    "durationSides": 0,
+                    "stacking": "keep-strongest",
+                    "grantedModifiers": {
+                      "attack": 0,
+                      "defense": 0,
+                      "maxHp": 0,
+                      "strength": 0,
+                      "intelligence": 0,
+                      "wisdom": 0,
+                      "dexterity": 0,
+                      "constitution": 0,
+                      "charisma": 0,
+                      "speed": 0
+                    },
+                    "grantedEquipmentBonuses": {
+                      "meleeAttacks": 0,
+                      "meleeSkill": 0,
+                      "meleeDamage": 0,
+                      "rangedSkill": 0,
+                      "throwingSkill": 0,
+                      "deviceSkill": 0,
+                      "savingThrowSkill": 0,
+                      "stealthSkill": 0,
+                      "searchSkill": 0,
+                      "perceptionSkill": 0,
+                      "disarmingSkill": 0,
+                      "diggingSkill": 0,
+                      "infravision": 0,
+                      "lightRadius": 0
+                    },
+                    "grantsWallPassage": false,
+                    "incomingDamagePercent": 100
+                  }
+                },
+                {
+                  "maximumRoll": 45,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "area-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 24,
+                    "damageType": "poison",
+                    "radius": 3
+                  }
+                },
+                {
+                  "maximumRoll": 50,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "no-op",
+                    "reason": "line-light-pending"
+                  }
+                },
+                {
+                  "maximumRoll": 55,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "bolt-or-beam-damage",
+                    "damageDice": 4,
+                    "damageSides": 8,
+                    "damageBonus": 0,
+                    "damageType": "electricity",
+                    "beamChancePercent": 0
+                  }
+                },
+                {
+                  "maximumRoll": 60,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "bolt-or-beam-damage",
+                    "damageDice": 6,
+                    "damageSides": 8,
+                    "damageBonus": 0,
+                    "damageType": "cold",
+                    "beamChancePercent": 0
+                  }
+                },
+                {
+                  "maximumRoll": 65,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "bolt-or-beam-damage",
+                    "damageDice": 7,
+                    "damageSides": 8,
+                    "damageBonus": 0,
+                    "damageType": "acid",
+                    "beamChancePercent": 0
+                  }
+                },
+                {
+                  "maximumRoll": 70,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "bolt-or-beam-damage",
+                    "damageDice": 9,
+                    "damageSides": 8,
+                    "damageBonus": 0,
+                    "damageType": "fire",
+                    "beamChancePercent": 0
+                  }
+                },
+                {
+                  "maximumRoll": 75,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "drain-life",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 74,
+                    "damageType": "nether",
+                    "targetCategory": "living",
+                    "repeat": 1
+                  }
+                },
+                {
+                  "maximumRoll": 80,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "area-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 34,
+                    "damageType": "electricity",
+                    "radius": 2
+                  }
+                },
+                {
+                  "maximumRoll": 85,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "area-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 49,
+                    "damageType": "acid",
+                    "radius": 2
+                  }
+                },
+                {
+                  "maximumRoll": 90,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "area-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 79,
+                    "damageType": "ice",
+                    "radius": 3
+                  }
+                },
+                {
+                  "maximumRoll": 95,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "area-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 89,
+                    "damageType": "fire",
+                    "radius": 3
+                  }
+                },
+                {
+                  "maximumRoll": 100,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "drain-life",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 109,
+                    "damageType": "nether",
+                    "targetCategory": "living",
+                    "repeat": 1
+                  }
+                },
+                {
+                  "maximumRoll": 103,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "no-op",
+                    "reason": "earthquake-pending"
+                  }
+                },
+                {
+                  "maximumRoll": 105,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "no-op",
+                    "reason": "destroy-area-pending"
+                  }
+                },
+                {
+                  "maximumRoll": 107,
+                  "target": "cast-target",
+                  "effect": {
+                    "type": "genocide",
+                    "scope": "glyph",
+                    "power": 60,
+                    "radius": 0
+                  }
+                },
+                {
+                  "maximumRoll": 109,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "visible-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 119,
+                    "damageType": "physical"
+                  }
+                },
+                {
+                  "maximumRoll": 120,
+                  "target": "self-target",
+                  "effect": {
+                    "type": "visible-damage",
+                    "damageDice": 1,
+                    "damageSides": 1,
+                    "damageBonus": 149,
+                    "damageType": "physical"
+                  }
+                }
+              ]
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": true,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": true,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-malediction",
+          "nameKey": "ability-demo-death-malediction-name",
+          "descriptionKey": "ability-demo-death-malediction-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "damage",
+              "damageDice": 4,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "hell-fire"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-mass-genocide",
+          "nameKey": "ability-demo-death-mass-genocide-name",
+          "descriptionKey": "ability-demo-death-mass-genocide-description",
+          "minimumLevel": 43,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 75,
+          "resourceCost": 119,
+          "failurePercent": 65,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "genocide",
+              "scope": "nearby",
+              "power": 8,
+              "radius": 20
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-necromantic-resistance",
+          "nameKey": "ability-demo-death-necromantic-resistance-name",
+          "descriptionKey": "ability-demo-death-necromantic-resistance-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.necromantic-resistance",
+              "intensity": 1,
+              "durationTicks": 300,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "replace",
+              "grantedResistances": [
+                {
+                  "damageType": "cold",
+                  "level": "resistant"
+                },
+                {
+                  "damageType": "poison",
+                  "level": "resistant"
+                }
+              ],
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-nether-bolt",
+          "nameKey": "ability-demo-death-nether-bolt-name",
+          "descriptionKey": "ability-demo-death-nether-bolt-description",
+          "minimumLevel": 13,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 12,
+          "resourceCost": 19,
+          "failurePercent": 15,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "bolt-or-beam-damage",
+              "damageDice": 9,
+              "damageSides": 8,
+              "damageBonus": 0,
+              "damageType": "nether",
+              "beamChancePercent": 10
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-nether-wave",
+          "nameKey": "ability-demo-death-nether-wave-name",
+          "descriptionKey": "ability-demo-death-nether-wave-description",
+          "minimumLevel": 38,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 35,
+          "resourceCost": 56,
+          "failurePercent": 55,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "visible-damage",
+              "damageDice": 1,
+              "damageSides": 30,
+              "damageBonus": 0,
+              "damageType": "nether",
+              "targetCategory": "living"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-poison-branding",
+          "nameKey": "ability-demo-death-poison-branding-name",
+          "descriptionKey": "ability-demo-death-poison-branding-description",
+          "minimumLevel": 30,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 75,
+          "resourceCost": 119,
+          "failurePercent": 65,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.poison-branding",
+              "intensity": 1,
+              "durationTicks": 500,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "replace",
+              "grantedBrands": [
+                "poison"
+              ],
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-raise-dead",
+          "nameKey": "ability-demo-death-raise-dead-name",
+          "descriptionKey": "ability-demo-death-raise-dead-description",
+          "minimumLevel": 25,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 66,
+          "resourceCost": 105,
+          "failurePercent": 80,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "summon-category",
+              "category": "undead",
+              "upgradedCategory": "high-undead",
+              "upgradeAtLevel": 48,
+              "maximumLevel": 15,
+              "countDice": 1,
+              "countSides": 1,
+              "countBonus": 0,
+              "hostileChancePercent": 67,
+              "friendlyGroupChancePercent": 33,
+              "hostileGroupChancePercent": 100,
+              "groupCountDice": 1,
+              "groupCountSides": 3,
+              "groupCountBonus": 1,
+              "allowUniqueHostile": true,
+              "radius": 2,
+              "durationTurns": 0
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-restore-life",
+          "nameKey": "ability-demo-death-restore-life-name",
+          "descriptionKey": "ability-demo-death-restore-life-description",
+          "minimumLevel": 42,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 50,
+          "resourceCost": 80,
+          "failurePercent": 60,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "restore-vitality",
+              "lifeForce": 1000
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-stinking-cloud",
+          "nameKey": "ability-demo-death-stinking-cloud-name",
+          "descriptionKey": "ability-demo-death-stinking-cloud-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 1,
+          "resourceCost": 2,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 2,
+          "effects": [
+            {
+              "type": "area-damage",
+              "damageDice": 1,
+              "damageSides": 1,
+              "damageBonus": 14,
+              "damageType": "poison",
+              "radius": 2
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-vampiric-branding",
+          "nameKey": "ability-demo-death-vampiric-branding-name",
+          "descriptionKey": "ability-demo-death-vampiric-branding-description",
+          "minimumLevel": 34,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 90,
+          "resourceCost": 143,
+          "failurePercent": 55,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "enchant-equipped-weapon",
+              "affixId": "demo.affix.vampiric"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-vampiric-drain",
+          "nameKey": "ability-demo-death-vampiric-drain-name",
+          "descriptionKey": "ability-demo-death-vampiric-drain-description",
+          "minimumLevel": 32,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 30,
+          "resourceCost": 48,
+          "failurePercent": 45,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "drain-life",
+              "damageDice": 1,
+              "damageSides": 20,
+              "damageBonus": 20,
+              "damageType": "physical",
+              "targetCategory": "living",
+              "repeat": 1
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.6",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-vampiric-transformation",
+          "nameKey": "ability-demo-death-vampiric-transformation-name",
+          "descriptionKey": "ability-demo-death-vampiric-transformation-description",
+          "minimumLevel": 35,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 40,
+          "resourceCost": 64,
+          "failurePercent": 65,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.vampiric-transformation",
+              "intensity": 1,
+              "durationTicks": 11,
+              "durationDice": 1,
+              "durationSides": 11,
+              "stacking": "replace",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantedRaceId": "demo.race.vampire-lord",
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-vampirism-true",
+          "nameKey": "ability-demo-death-vampirism-true-name",
+          "descriptionKey": "ability-demo-death-vampirism-true-description",
+          "minimumLevel": 36,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 35,
+          "resourceCost": 56,
+          "failurePercent": 45,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "drain-life",
+              "damageDice": 1,
+              "damageSides": 1,
+              "damageBonus": 99,
+              "damageType": "nether",
+              "targetCategory": "living",
+              "repeat": 3
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 8,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.1",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.death-wraithform",
+          "nameKey": "ability-demo-death-wraithform-name",
+          "descriptionKey": "ability-demo-death-wraithform-description",
+          "minimumLevel": 47,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 100,
+          "resourceCost": 159,
+          "failurePercent": 75,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.wraithform",
+              "intensity": 1,
+              "durationTicks": 2,
+              "durationDice": 1,
+              "durationSides": 2,
+              "stacking": "replace",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": true,
+              "incomingDamagePercent": 50
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.5",
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-binding",
+          "nameKey": "ability-demo-echo-binding-name",
+          "descriptionKey": "ability-demo-echo-binding-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "damage",
+              "damageDice": 1,
+              "damageSides": 2,
+              "damageBonus": 0,
+              "damageType": "cold"
+            },
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.slow",
+              "intensity": 1,
+              "durationTicks": 30,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "keep-strongest",
+              "resistanceType": "cold",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-burst",
+          "nameKey": "ability-demo-echo-burst-name",
+          "descriptionKey": "ability-demo-echo-burst-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 5,
+          "resourceCost": 8,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "areaRadius": 2,
+          "effects": [
+            {
+              "type": "area-damage",
+              "damageDice": 2,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "electricity",
+              "radius": 2
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-companion",
+          "nameKey": "ability-demo-echo-companion-name",
+          "descriptionKey": "ability-demo-echo-companion-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 6,
+          "resourceCost": 10,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "summon": {
+            "actorKindId": "demo.actor.echo-companion",
+            "count": 2,
+            "radius": 2,
+            "durationTurns": 5,
+            "hostile": false
+          },
+          "effects": [
+            {
+              "type": "summon",
+              "actorKindId": "demo.actor.echo-companion",
+              "count": 2,
+              "radius": 2,
+              "durationTurns": 5,
+              "hostile": false
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-delving",
+          "nameKey": "ability-demo-echo-delving-name",
+          "descriptionKey": "ability-demo-echo-delving-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 5,
+          "resourceCost": 8,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "terrainTransform": {
+            "sourceTerrainIds": [
+              "demo.terrain.echo-rubble",
+              "demo.terrain.resonance-ruin",
+              "demo.terrain.resonance-vein",
+              "demo.terrain.wall"
+            ],
+            "targetTerrainId": "demo.terrain.floor",
+            "radius": 1
+          },
+          "effects": [
+            {
+              "type": "transform-terrain",
+              "sourceTerrainIds": [
+                "demo.terrain.echo-rubble",
+                "demo.terrain.resonance-ruin",
+                "demo.terrain.resonance-vein",
+                "demo.terrain.wall"
+              ],
+              "targetTerrainId": "demo.terrain.floor",
+              "radius": 1
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-fan",
+          "nameKey": "ability-demo-echo-fan-name",
+          "descriptionKey": "ability-demo-echo-fan-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 6,
+          "resourceCost": 10,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "coneRadius": 2,
+          "effects": [
+            {
+              "type": "cone-damage",
+              "damageDice": 2,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "electricity",
+              "radius": 2
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-lance",
+          "nameKey": "ability-demo-echo-lance-name",
+          "descriptionKey": "ability-demo-echo-lance-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "beamDamage": true,
+          "effects": [
+            {
+              "type": "beam-damage",
+              "damageDice": 2,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "electricity"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction",
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-pulse",
+          "nameKey": "ability-demo-echo-pulse-name",
+          "descriptionKey": "ability-demo-echo-pulse-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 3,
+          "resourceCost": 5,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "detect": {
+            "subject": "terrain",
+            "category": "perception-cue",
+            "radius": 4,
+            "persistent": false
+          },
+          "effects": [
+            {
+              "type": "detect",
+              "subject": "terrain",
+              "category": "perception-cue",
+              "radius": 4,
+              "persistent": false
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-quickening",
+          "nameKey": "ability-demo-echo-quickening-name",
+          "descriptionKey": "ability-demo-echo-quickening-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 5,
+          "resourceCost": 8,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.haste",
+              "intensity": 1,
+              "durationTicks": 30,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "extend",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            },
+            {
+              "type": "remove-status",
+              "statusKindId": "rfb.status.slow"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-rampart",
+          "nameKey": "ability-demo-echo-rampart-name",
+          "descriptionKey": "ability-demo-echo-rampart-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 6,
+          "resourceCost": 10,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "terrainTransform": {
+            "sourceTerrainIds": [
+              "demo.terrain.floor",
+              "demo.terrain.resonance-cavern",
+              "demo.terrain.resonance-water-shallow",
+              "demo.terrain.resonant-floor"
+            ],
+            "targetTerrainId": "demo.terrain.echo-rubble",
+            "radius": 1
+          },
+          "effects": [
+            {
+              "type": "transform-terrain",
+              "sourceTerrainIds": [
+                "demo.terrain.floor",
+                "demo.terrain.resonance-cavern",
+                "demo.terrain.resonance-water-shallow",
+                "demo.terrain.resonant-floor"
+              ],
+              "targetTerrainId": "demo.terrain.echo-rubble",
+              "radius": 1
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position"
+            ],
+            "range": 4,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-sight",
+          "nameKey": "ability-demo-echo-sight-name",
+          "descriptionKey": "ability-demo-echo-sight-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "detect": {
+            "subject": "terrain",
+            "category": "hidden",
+            "radius": 6,
+            "persistent": true
+          },
+          "effects": [
+            {
+              "type": "detect",
+              "subject": "terrain",
+              "category": "hidden",
+              "radius": 6,
+              "persistent": true
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.echo-step",
+          "nameKey": "ability-demo-echo-step-name",
+          "descriptionKey": "ability-demo-echo-step-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "teleport": true,
+          "effects": [
+            {
+              "type": "teleport"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.harmonic-spark",
+          "nameKey": "ability-demo-harmonic-spark-name",
+          "descriptionKey": "ability-demo-harmonic-spark-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 2,
+          "resourceCost": 4,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "damage",
+              "damageDice": 1,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "electricity"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 5,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.mending-echo",
+          "nameKey": "ability-demo-mending-echo-name",
+          "descriptionKey": "ability-demo-mending-echo-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 2,
+          "cooldownGroupId": "demo.cooldown.mending",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 6
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "bookItemId": "generated.item.7",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.resonant-bolt",
+          "nameKey": "ability-demo-resonant-bolt-name",
+          "descriptionKey": "ability-demo-resonant-bolt-description",
+          "minimumLevel": 1,
+          "resourceId": "demo.resource.mana",
+          "baseResourceCost": 3,
+          "resourceCost": 5,
+          "failurePercent": 5,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "damage",
+              "damageDice": 2,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "electricity"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "position",
+              "entity"
+            ],
+            "range": 6,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "bookItemId": "generated.item.3",
+          "canStudy": true,
+          "canForget": false,
+          "canCast": false
+        }
+      ],
+      "playerSummonCommand": {
+        "mode": "follow"
+      },
+      "entityCount": 0,
+      "entities": [],
+      "groundItemCount": 5,
+      "inventoryStackCount": 6,
+      "equipmentCount": 1,
+      "inventory": [
+        {
+          "id": "generated.item.1",
+          "kindId": "demo.item.black-channels",
+          "displayNameKey": "item-demo-black-channels-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.3",
+          "kindId": "demo.item.echo-primer",
+          "displayNameKey": "item-demo-echo-primer-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.4",
+          "kindId": "demo.item.luminous-shard",
+          "displayNameKey": "item-demo-luminous-shard-name",
+          "knowledge": "aware",
+          "usable": true,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 2,
+          "weightTenthsPound": 10,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined",
+          "throwProfile": {
+            "range": 5,
+            "toHit": 30,
+            "toDamage": 0,
+            "damage": {
+              "dice": 1,
+              "sides": 3,
+              "damageType": "physical"
+            },
+            "sourceItemId": "generated.item.4"
+          }
+        },
+        {
+          "id": "generated.item.5",
+          "kindId": "demo.item.necronomicon",
+          "displayNameKey": "item-demo-necronomicon-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.6",
+          "kindId": "demo.item.sepulchral-ways",
+          "displayNameKey": "item-demo-sepulchral-ways-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.7",
+          "kindId": "demo.item.stillwater-notes",
+          "displayNameKey": "item-demo-stillwater-notes-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 10,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        }
+      ],
+      "equipment": [
+        {
+          "id": "generated.item.2",
+          "kindId": "demo.item.echo-charm",
+          "displayNameKey": "item-demo-echo-charm-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 5,
+          "slotId": "charm",
+          "modifiers": {
+            "attack": 1,
+            "defense": 1,
+            "maxHp": 4,
+            "strength": 1,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary"
+        }
+      ],
+      "itemKnowledge": [
+        {
+          "kindId": "demo.item.luminous-shard",
+          "tried": true,
+          "aware": true
+        }
+      ],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "generated.item.2",
+          "appraised": true,
+          "identified": true
+        }
+      ],
+      "nextItemInstanceSerial": 9,
+      "terrainInteractions": [
+        {
+          "kind": "dig-terrain",
+          "direction": "south-west",
+          "position": {
+            "x": 2,
+            "y": 4
+          },
+          "terrainId": "demo.terrain.echo-rubble",
+          "requiresCheck": true,
+          "available": true
+        }
+      ],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0,
+          "maxRetakes": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3,
+          "retakesUsed": 0,
+          "maxRetakes": 2
+        }
+      ],
+      "campaign": {
+        "status": "active",
+        "score": 0,
+        "conqueredDungeons": 0,
+        "completedTasks": 0
+      },
+      "revealedTerrain": [],
+      "stateHash": "51986a76c8c537e799a7e85f951bcb623a6cff03cba28b8ecdbf227da6436541"
+    },
+    "events": [
+      {
+        "kind": "ability.cast-success",
+        "messageKey": "ability-cast-success",
+        "args": {
+          "target": "demo.ability.death-invoke-spirits"
+        },
+        "outcome": {
+          "type": "ability-cast",
+          "resolution": {
+            "abilityId": "demo.ability.death-invoke-spirits",
+            "resourceId": "demo.resource.mana",
+            "baseResourceCost": 15,
+            "resourceCost": 24,
+            "resourceBefore": 39,
+            "resourceAfter": 15,
+            "failurePercent": 0,
+            "percentileRoll": 32,
+            "succeeded": true,
+            "proficiencyBefore": 0,
+            "proficiencyAfter": 128,
+            "proficiencyRank": "unskilled",
+            "castCount": 1,
+            "failCount": 0,
+            "cooldownBefore": 0,
+            "cooldownAfter": 0
+          }
+        }
+      },
+      {
+        "kind": "ability.effects",
+        "messageKey": "ability-effects",
+        "args": {
+          "count": "1",
+          "target": "demo.ability.death-invoke-spirits"
+        },
+        "outcome": {
+          "type": "ability-effects",
+          "resolution": {
+            "effects": [
+              {
+                "type": "random-choice",
+                "effectIndex": 0,
+                "roll": 40,
+                "branchIndex": 5,
+                "maximumRoll": 40
+              }
+            ]
+          }
+        }
+      },
+      {
+        "kind": "ability.landed",
+        "messageKey": "ability-landed",
+        "args": {
+          "target": "demo.ability.death-invoke-spirits"
+        },
+        "trace": {
+          "origin": {
+            "x": 3,
+            "y": 3
+          },
+          "impact": {
+            "x": 11,
+            "y": 3
+          },
+          "landing": {
+            "x": 10,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 4,
+              "y": 3
+            },
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
+              "y": 3
+            },
+            {
+              "x": 10,
+              "y": 3
+            }
+          ]
+        }
+      },
+      {
+        "kind": "ability.effects",
+        "messageKey": "ability-effects",
+        "args": {
+          "count": "1",
+          "target": "demo.ability.death-invoke-spirits"
+        },
+        "outcome": {
+          "type": "ability-effects",
+          "resolution": {
+            "effects": [
+              {
+                "type": "skipped",
+                "effectIndex": 0,
+                "reason": "no-target"
+              }
+            ]
+          }
+        },
+        "trace": {
+          "origin": {
+            "x": 3,
+            "y": 3
+          },
+          "impact": {
+            "x": 11,
+            "y": 3
+          },
+          "landing": {
+            "x": 10,
+            "y": 3
+          },
+          "traversed": [
+            {
+              "x": 4,
+              "y": 3
+            },
+            {
+              "x": 5,
+              "y": 3
+            },
+            {
+              "x": 6,
+              "y": 3
+            },
+            {
+              "x": 7,
+              "y": 3
+            },
+            {
+              "x": 8,
+              "y": 3
+            },
+            {
+              "x": 9,
+              "y": 3
+            },
+            {
+              "x": 10,
+              "y": 3
+            }
+          ]
+        }
+      }
+    ],
+    "changedCells": [],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "51986a76c8c537e799a7e85f951bcb623a6cff03cba28b8ecdbf227da6436541"
+  }
+}

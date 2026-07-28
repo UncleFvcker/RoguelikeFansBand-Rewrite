@@ -20,7 +20,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v110";
+pub const ACTIVE_BASELINE: &str = "contract-v111";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
