@@ -70,6 +70,7 @@ pub(crate) struct ItemInstance {
     pub(crate) rolled_affixes: Vec<RolledAffixState>,
     pub(crate) activation: Option<ItemActivationDto>,
     pub(crate) charges: Option<ItemChargesDto>,
+    pub(crate) device_recovery_progress: u16,
     pub(crate) location: ItemLocation,
 }
 

@@ -2,9 +2,9 @@
 use crate::effect::StatusInstance;
 use crate::resistance::ResistanceLevel;
 use rfb_protocol::{
-    CheckOutcomeDto, CheckResolutionDto, DamageResolutionDto, DamageTypeDto, Direction,
-    GameCommand, GameCommandEnvelope, GameEventOutcomeDto, ResistanceLevelDto, ResistanceSaveDto,
-    StatusSaveDto, VisibilityState,
+    CheckOutcomeDto, CheckResolutionDto, DamageResolutionDto, DamageTypeDto,
+    DeviceRechargeSourceDto, Direction, GameCommand, GameCommandEnvelope, GameEventOutcomeDto,
+    ResistanceLevelDto, ResistanceSaveDto, StatusSaveDto, VisibilityState,
 };
 
 use super::*;
@@ -2215,6 +2215,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             rolled_affixes: Vec::new(),
             activation: None,
             charges: None,
+            device_recovery_progress: 0,
             location: ItemLocation::Inventory,
         });
     }
@@ -5728,6 +5729,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         rolled_affixes: Vec::new(),
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
     game.player.position = Position { x: 6, y: 4 };
@@ -8988,6 +8990,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             rolled_affixes: Vec::new(),
             activation: None,
             charges: None,
+            device_recovery_progress: 0,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
             },
@@ -9075,6 +9078,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             rolled_affixes: Vec::new(),
             activation: None,
             charges: None,
+            device_recovery_progress: 0,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
             },
@@ -9089,6 +9093,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 rolled_affixes: Vec::new(),
                 activation: None,
                 charges: None,
+                device_recovery_progress: 0,
                 location: ItemLocation::Equipped {
                     slot_id: "charm".to_owned(),
                 },
@@ -9563,6 +9568,7 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         rolled_affixes: Vec::new(),
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -11339,6 +11345,7 @@ fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         rolled_affixes: Vec::new(),
         activation,
         charges,
+        device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
 }
@@ -12507,6 +12514,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         rolled_affixes: Vec::new(),
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -12556,6 +12564,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         rolled_affixes: Vec::new(),
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
 
@@ -12640,6 +12649,7 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         rolled_affixes: rolled.clone(),
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
     let saved = game.to_save();
@@ -12699,6 +12709,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
         }],
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
         },
@@ -13025,6 +13036,7 @@ fn esoteria_validates_item_targets_before_cost_and_persists_knowledge() {
         rolled_affixes: Vec::new(),
         activation: None,
         charges: None,
+        device_recovery_progress: 0,
         location: ItemLocation::Ground(Position { x: 10, y: 10 }),
     };
     let mut invalid = prepare_death_caster(0, 30, "demo.ability.death-esoteria");
@@ -13380,6 +13392,448 @@ fn wraithform_passes_walls_halves_spell_damage_and_expires_in_place() {
     assert!(!restored.player_can_pass_walls());
     assert_eq!(restored.player.position, wall);
     assert_eq!(restored.terrain_at(wall), "demo.terrain.wall");
+}
+
+#[test]
+fn dynamic_device_recovery_is_inventory_only_deterministic_and_rod_fast() {
+    let mut game =
+        Game::new_with_build(11, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut game);
+    game.debug_add_generated_inventory_item("test.item.recovery.rod", "demo.item.resonance-rod", 1)
+        .expect("rod should generate");
+    game.debug_add_generated_inventory_item(
+        "test.item.recovery.wand",
+        "demo.item.resonance-wand",
+        1,
+    )
+    .expect("wand should generate");
+    for item_id in ["test.item.recovery.rod", "test.item.recovery.wand"] {
+        let item = game
+            .items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .expect("generated device");
+        item.charges = Some(ItemChargesDto {
+            current: 0,
+            maximum: 20,
+        });
+        item.device_recovery_progress = 0;
+    }
+
+    for world_tick in 1..=50 {
+        game.world_tick = world_tick;
+        game.process_inventory_device_recovery(&mut Vec::new());
+    }
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.recovery.rod")
+            .and_then(|item| item.charges)
+            .expect("rod charges")
+            .current,
+        10
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.recovery.wand")
+            .and_then(|item| item.charges)
+            .expect("wand charges")
+            .current,
+        1
+    );
+
+    let wand = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.recovery.wand")
+        .expect("wand");
+    wand.location = ItemLocation::Ground(Position { x: 0, y: 0 });
+    for world_tick in 51..=100 {
+        game.world_tick = world_tick;
+        game.process_inventory_device_recovery(&mut Vec::new());
+    }
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.recovery.wand")
+            .and_then(|item| item.charges)
+            .expect("wand charges")
+            .current,
+        1
+    );
+}
+
+#[test]
+fn device_recovery_remainder_round_trips_and_old_saves_default_to_zero() {
+    let mut game =
+        Game::new_with_build(12, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut game);
+    game.debug_add_generated_inventory_item("test.item.remainder", "demo.item.resonance-rod", 1)
+        .expect("rod should generate");
+    let item = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.remainder")
+        .expect("rod");
+    item.charges = Some(ItemChargesDto {
+        current: 0,
+        maximum: 20,
+    });
+    for world_tick in 1..=3 {
+        game.world_tick = world_tick;
+        game.process_inventory_device_recovery(&mut Vec::new());
+    }
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.remainder")
+            .expect("rod")
+            .device_recovery_progress,
+        600
+    );
+
+    let save = game.to_save();
+    let restored = Game::from_save(save.clone()).expect("recovery remainder should reload");
+    assert_eq!(restored.snapshot().state_hash, game.snapshot().state_hash);
+    let mut old_json = serde_json::to_value(save).expect("save should serialize");
+    let inventory = old_json["inventory"]
+        .as_array_mut()
+        .expect("save inventory should be an array");
+    for item in inventory {
+        item.as_object_mut()
+            .expect("inventory item should be an object")
+            .remove("deviceRecoveryProgress");
+    }
+    let old_save = serde_json::from_value(old_json).expect("legacy save should deserialize");
+    let migrated = Game::from_save(old_save).expect("missing recovery remainder should migrate");
+    assert_eq!(
+        migrated
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.remainder")
+            .expect("rod")
+            .device_recovery_progress,
+        0
+    );
+
+    let mut invalid = game.to_save();
+    invalid
+        .inventory
+        .iter_mut()
+        .find(|item| item.id == "test.item.remainder")
+        .expect("saved rod")
+        .device_recovery_progress = 1_000;
+    assert!(matches!(
+        Game::from_save(invalid),
+        Err(CoreError::InvalidSave("item charge state is invalid"))
+    ));
+}
+
+#[test]
+fn recharge_invalid_transactions_are_zero_time_and_zero_rng() {
+    let mut game =
+        Game::new_with_build(13, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut game);
+    game.debug_add_generated_inventory_item("test.item.full", "demo.item.resonance-staff", 1)
+        .expect("staff should generate");
+    let target = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.full")
+        .expect("staff");
+    target.charges = Some(ItemChargesDto {
+        current: 24,
+        maximum: 24,
+    });
+    let world_tick = game.world_tick;
+    let draws = game.rng.draw_counter;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.full".to_owned(),
+            source: DeviceRechargeSourceDto::Resource,
+        },
+    );
+    assert_eq!(update.world_tick, world_tick);
+    assert_eq!(game.rng.draw_counter, draws);
+    assert_eq!(update.events[0].kind, "device.recharge-unavailable");
+    assert_eq!(
+        update.events[0].args.get("reason").map(String::as_str),
+        Some("target-not-rechargeable")
+    );
+}
+
+#[test]
+fn resource_recharge_succeeds_and_failure_clears_target_energy() {
+    let mut success =
+        Game::new_with_build(14, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut success);
+    success
+        .debug_add_generated_inventory_item(
+            "test.item.resource-target",
+            "demo.item.resonance-staff",
+            1,
+        )
+        .expect("staff should generate");
+    success
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.resource-target")
+        .expect("staff")
+        .charges = Some(ItemChargesDto {
+        current: 0,
+        maximum: 24,
+    });
+    success.debug_set_recharge_attempts_succeed(true);
+    let resource_before = success.resources["demo.resource.resonance"].current;
+    let update = dispatch_next(
+        &mut success,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.resource-target".to_owned(),
+            source: DeviceRechargeSourceDto::Resource,
+        },
+    );
+    let attempted = resource_before.min(24);
+    assert_eq!(update.events[0].kind, "device.recharge-success");
+    assert_eq!(
+        success
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.resource-target")
+            .and_then(|item| item.charges)
+            .expect("staff charges")
+            .current,
+        attempted
+    );
+    assert_eq!(
+        success.resources["demo.resource.resonance"].current,
+        resource_before - attempted
+    );
+
+    let mut failure =
+        Game::new_with_build(15, "demo.build.tinkerer").expect("tinkerer build should create");
+    clear_monsters(&mut failure);
+    failure
+        .debug_add_generated_inventory_item(
+            "test.item.failed-target",
+            "demo.item.resonance-staff",
+            1,
+        )
+        .expect("staff should generate");
+    failure
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.failed-target")
+        .expect("staff")
+        .charges = Some(ItemChargesDto {
+        current: 5,
+        maximum: 24,
+    });
+    let failure_seed = (0..100)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(5) == 0
+        })
+        .expect("one seed should fail recharge");
+    failure.rng = RfbRng::seeded(failure_seed);
+    let update = dispatch_next(
+        &mut failure,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.failed-target".to_owned(),
+            source: DeviceRechargeSourceDto::Resource,
+        },
+    );
+    assert_eq!(update.events[0].kind, "device.recharge-failure");
+    assert_eq!(
+        failure
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.failed-target")
+            .and_then(|item| item.charges)
+            .expect("staff charges")
+            .current,
+        0
+    );
+}
+
+#[test]
+fn device_source_recharge_can_survive_be_destroyed_or_protect_artifacts() {
+    let prepare = |seed| {
+        let mut game = Game::new_with_build(seed, "demo.build.tinkerer")
+            .expect("tinkerer build should create");
+        clear_monsters(&mut game);
+        game.debug_add_generated_inventory_item(
+            "test.item.device-target",
+            "demo.item.resonance-staff",
+            1,
+        )
+        .expect("staff should generate");
+        game.debug_add_generated_inventory_item(
+            "test.item.device-source",
+            "demo.item.resonance-wand",
+            1,
+        )
+        .expect("wand should generate");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.device-target")
+            .expect("target")
+            .charges = Some(ItemChargesDto {
+            current: 0,
+            maximum: 24,
+        });
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.device-source")
+            .expect("source")
+            .charges = Some(ItemChargesDto {
+            current: 5,
+            maximum: 24,
+        });
+        game.debug_set_recharge_attempts_succeed(true);
+        game
+    };
+
+    let mut surviving = prepare(16);
+    surviving.debug_set_recharge_sources_survive(true);
+    let update = dispatch_next(
+        &mut surviving,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.device-target".to_owned(),
+            source: DeviceRechargeSourceDto::Item {
+                item_id: "test.item.device-source".to_owned(),
+            },
+        },
+    );
+    assert_eq!(update.events[0].kind, "device.recharge-success");
+    assert_eq!(
+        surviving
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.device-target")
+            .and_then(|item| item.charges)
+            .expect("target charges")
+            .current,
+        5
+    );
+    assert!(
+        surviving
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.device-source")
+    );
+
+    let destruction_seed = (0..100)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(3) == 0
+        })
+        .expect("one seed should destroy a source");
+    let mut destroyed = prepare(17);
+    destroyed.rng = RfbRng::seeded(destruction_seed);
+    let update = dispatch_next(
+        &mut destroyed,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.device-target".to_owned(),
+            source: DeviceRechargeSourceDto::Item {
+                item_id: "test.item.device-source".to_owned(),
+            },
+        },
+    );
+    assert_eq!(
+        update.events[0]
+            .args
+            .get("sourceDestroyed")
+            .map(String::as_str),
+        Some("true")
+    );
+    assert!(
+        destroyed
+            .items
+            .iter()
+            .all(|item| item.id != "test.item.device-source")
+    );
+
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact_content =
+        rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    artifact_content
+        .content
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.resonance-wand")
+        .expect("wand definition")
+        .tags
+        .push("artifact".to_owned());
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact_content.content)
+            .expect("artifact source content should remain valid"),
+    ));
+    let mut artifact =
+        Game::from_content_with_build(18, catalog, BUILT_IN_WORLD_ID, "demo.build.tinkerer")
+            .expect("custom tinkerer build should create");
+    clear_monsters(&mut artifact);
+    artifact
+        .debug_add_generated_inventory_item(
+            "test.item.device-target",
+            "demo.item.resonance-staff",
+            1,
+        )
+        .expect("staff should generate");
+    artifact
+        .debug_add_generated_inventory_item(
+            "test.item.device-source",
+            "demo.item.resonance-wand",
+            1,
+        )
+        .expect("wand should generate");
+    artifact
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.device-target")
+        .expect("target")
+        .charges = Some(ItemChargesDto {
+        current: 0,
+        maximum: 24,
+    });
+    artifact
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.device-source")
+        .expect("source")
+        .charges = Some(ItemChargesDto {
+        current: 5,
+        maximum: 24,
+    });
+    artifact.debug_set_recharge_attempts_succeed(true);
+    artifact.rng = RfbRng::seeded(destruction_seed);
+    let update = dispatch_next(
+        &mut artifact,
+        GameCommand::RechargeItem {
+            target_item_id: "test.item.device-target".to_owned(),
+            source: DeviceRechargeSourceDto::Item {
+                item_id: "test.item.device-source".to_owned(),
+            },
+        },
+    );
+    assert_eq!(
+        update.events[0]
+            .args
+            .get("sourceDestroyed")
+            .map(String::as_str),
+        Some("false")
+    );
+    assert!(
+        artifact
+            .items
+            .iter()
+            .any(|item| item.id == "test.item.device-source")
+    );
 }
 
 fn clear_monsters(game: &mut Game) {

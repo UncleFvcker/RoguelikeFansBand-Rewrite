@@ -20,7 +20,7 @@ pub mod approval;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v109";
+pub const ACTIVE_BASELINE: &str = "contract-v110";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -57,6 +57,12 @@ pub struct Preconditions {
     pub debug_clear_carried_items: bool,
     #[serde(default)]
     pub debug_ability_casts_succeed: bool,
+    #[serde(default)]
+    pub debug_recharge_attempts_succeed: bool,
+    #[serde(default)]
+    pub debug_recharge_attempts_fail: bool,
+    #[serde(default)]
+    pub debug_recharge_sources_survive: bool,
     #[serde(default)]
     pub player_build_id: Option<String>,
     #[serde(default)]
@@ -148,10 +154,16 @@ pub struct InventoryItemPrecondition {
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub device_recovery_progress: u16,
 }
 
 const fn default_precondition_quantity() -> u32 {
     1
+}
+
+const fn is_zero_u16(value: &u16) -> bool {
+    *value == 0
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -407,6 +419,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             rolled_affixes: Vec::new(),
             activation: item.activation.clone(),
             charges: item.charges,
+            device_recovery_progress: item.device_recovery_progress,
         });
     }
     for terrain_override in &fixture.preconditions.terrain_overrides {
@@ -498,6 +511,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         game.debug_add_generated_inventory_item(&item.id, &item.kind_id, depth)?;
     }
     game.debug_set_ability_casts_succeed(fixture.preconditions.debug_ability_casts_succeed);
+    game.debug_set_recharge_attempts_succeed(fixture.preconditions.debug_recharge_attempts_succeed);
+    game.debug_set_recharge_attempts_fail(fixture.preconditions.debug_recharge_attempts_fail);
+    game.debug_set_recharge_sources_survive(fixture.preconditions.debug_recharge_sources_survive);
     let mut events = Vec::new();
     let mut changed_cells = Vec::new();
     let mut removed_entities = Vec::new();

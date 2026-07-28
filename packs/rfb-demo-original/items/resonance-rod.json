@@ -9,6 +9,10 @@
   "weightTenthsPound": 14,
   "maxStack": 1,
   "deviceGeneration": {
+    "recovery": {
+      "intervalTicks": 1,
+      "energyPerMille": 10
+    },
     "activations": [
       {
         "id": "demo.device-activation.trap-sense",

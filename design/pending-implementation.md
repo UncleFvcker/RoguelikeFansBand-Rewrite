@@ -68,16 +68,18 @@
 | P57 | Death 第四册系统盘点与纵切 | 已由 contract-v107 完成 | 第四册 8/8 ability、四本实体书总计 32 个 Death ability、12 个静态职业 384 条覆盖；新增物品目标/鉴定、Death Ray、升级类别与敌友群体召唤、临时 Race、历史最高经验/生命力、邻域灭绝、穿墙与入伤比例。协议 1.107、包 1.98.0、Schema v46、fixtures 354-365 共 365 exact；真实 Death 效果缺口 192→96 |
 | P58 | 充能物品实例与首批治疗消耗品 | 已由 contract-v108 完成 | `heal-dice`、实例级 initial/maximum/cost 充能、成功扣费/失败保留/耗尽零世界时间、知识门控 DTO 和严格回档；demo Resonance Mender；六种原版治疗药水接入，`consumable-effect` 95→89。协议 1.108、包 1.99.0、Schema v47、fixtures 366-368 共 368 exact |
 | P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 已由 contract-v109 完成 | `deviceGeneration.activations` 深度过滤/稳定加权、profile/power/目标/成本/随机容量实例化、错误目标零 RNG、成功扣费、damage/detect/heal、知识门控和严格回档；demo Wand/Staff/Rod；原版通用壳接入后 `device-effect` 64→61。协议 1.109、包 1.100.0、Schema v48、fixtures 369-373 共 373 exact |
-| P60 | 设备充能恢复与激活族扩展 | 下一候选 | 对照原版区分 staff/wand/rod 的恢复与失败语义，先建立通用 recharge 事务，再按覆盖收益扩展 `artifact-activation` 180、`ego-activation` 13、`device-effect` 61 或 `consumable-effect` 89 |
+| P60 | 设备自然恢复与主动充能 | 已由 contract-v110 完成 | `deviceGeneration.recovery` interval/per-mille 与确定性余数、背包自然恢复、四类物品严格回档；职业 recharge profile、资源/设备来源、资源失败清空、设备来源损毁与 artifact 免毁；Web/事件/调试开关。协议 1.110、包 1.101.0、Schema v49、fixtures 374-379 共 379 exact |
+| P61 | 后续设备/激活/消耗品效果族 | 下一候选 | 重新按真实覆盖收益排序，继续扩展 `device-effect` 61、`artifact-activation` 180、`ego-activation` 13 或 `consumable-effect` 89 |
 
-## contract-v109 明确遗留
+## contract-v110 明确遗留
 
-- 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，但只接入首批 bolt、自疗和陷阱侦测；
-- 首版没有充能恢复、强行使用、desperation、rod 独立充能时间、按设备等级变化的成本或取消目标后的完整 UI 事务；
+- 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
+- rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
+- 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 固定治疗药水只接入六种纯治疗效果；状态恢复、资源恢复、属性变化、食物和卷轴仍在 `consumable-effect` 89 条缺口中；
 - `device-effect` 仍有 61 条，`artifact-activation` 180、`ego-activation` 13 仍保留；新增激活必须复用实例事务，不能回退为把单一效果硬写到通用设备壳；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
-- P60 先核对原版 recharge/rod 时间模型，再按真实缺口覆盖收益选择下一批激活或消耗品。
+- P61 按真实缺口覆盖收益选择下一批设备、artifact/ego activation 或消耗品效果。
 
 ## contract-v107 明确遗留
 

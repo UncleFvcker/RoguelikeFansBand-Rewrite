@@ -339,10 +339,43 @@
             "$ref": "#/$defs/ItemDeviceActivationDefinition"
           },
           "type": "array"
+        },
+        "recovery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemDeviceRecoveryDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
         "activations"
+      ],
+      "type": "object"
+    },
+    "ItemDeviceRecoveryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "energyPerMille": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "intervalTicks": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "intervalTicks",
+        "energyPerMille"
       ],
       "type": "object"
     },

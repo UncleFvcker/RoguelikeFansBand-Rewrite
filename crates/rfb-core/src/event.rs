@@ -312,6 +312,30 @@ pub(crate) enum DomainEvent {
         succeeded: bool,
         resolution: CheckResolutionDto,
     },
+    DeviceEnergyRecovered {
+        target_item_id: String,
+        target_kind_id: String,
+        amount: u32,
+        current: u32,
+        maximum: u32,
+    },
+    DeviceRechargeUnavailable {
+        target_item_id: String,
+        reason: String,
+    },
+    DeviceRechargeResolved {
+        target_item_id: String,
+        target_kind_id: String,
+        source_id: String,
+        source_is_item: bool,
+        attempted: u32,
+        target_before: u32,
+        target_after: u32,
+        succeeded: bool,
+        failure_one_in: u32,
+        failure_roll: Option<u32>,
+        source_destroyed: bool,
+    },
     SavingThrowChecked {
         source_kind_id: String,
         position: Position,
@@ -1237,6 +1261,74 @@ impl DomainEvent {
                 },
                 [("target", source_kind_id)],
                 GameEventOutcomeDto::Check { resolution },
+            ),
+            Self::DeviceEnergyRecovered {
+                target_item_id,
+                target_kind_id,
+                amount,
+                current,
+                maximum,
+            } => dto(
+                "device.energy-recovered",
+                "device-energy-recovered",
+                [
+                    ("target", target_kind_id),
+                    ("targetItem", target_item_id),
+                    ("amount", amount.to_string()),
+                    ("current", current.to_string()),
+                    ("maximum", maximum.to_string()),
+                ],
+            ),
+            Self::DeviceRechargeUnavailable {
+                target_item_id,
+                reason,
+            } => dto(
+                "device.recharge-unavailable",
+                "device-recharge-unavailable",
+                [("targetItem", target_item_id), ("reason", reason)],
+            ),
+            Self::DeviceRechargeResolved {
+                target_item_id,
+                target_kind_id,
+                source_id,
+                source_is_item,
+                attempted,
+                target_before,
+                target_after,
+                succeeded,
+                failure_one_in,
+                failure_roll,
+                source_destroyed,
+            } => dto(
+                if succeeded {
+                    "device.recharge-success"
+                } else {
+                    "device.recharge-failure"
+                },
+                if succeeded {
+                    "device-recharge-success"
+                } else {
+                    "device-recharge-failure"
+                },
+                [
+                    ("target", target_kind_id),
+                    ("targetItem", target_item_id),
+                    ("source", source_id),
+                    (
+                        "sourceType",
+                        if source_is_item { "item" } else { "resource" }.to_owned(),
+                    ),
+                    ("attempted", attempted.to_string()),
+                    ("before", target_before.to_string()),
+                    ("after", target_after.to_string()),
+                    ("failureOneIn", failure_one_in.to_string()),
+                    (
+                        "failureRoll",
+                        failure_roll
+                            .map_or_else(|| "automatic".to_owned(), |roll| roll.to_string()),
+                    ),
+                    ("sourceDestroyed", source_destroyed.to_string()),
+                ],
             ),
             Self::SavingThrowChecked {
                 source_kind_id,

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.109";
+pub const PROTOCOL_VERSION: &str = "1.110";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -126,6 +126,10 @@ pub enum GameCommand {
         turns: u16,
     },
     Search,
+    RechargeItem {
+        target_item_id: String,
+        source: DeviceRechargeSourceDto,
+    },
     SetSummonCommand {
         mode: SummonCommandModeDto,
     },
@@ -150,6 +154,18 @@ pub enum GameCommand {
         slot_id: String,
     },
     Wait,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum DeviceRechargeSourceDto {
+    Resource,
+    Item { item_id: String },
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1818,11 +1834,21 @@ pub struct PlayerDto {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resources: Vec<ResourcePoolDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub device_recharge: Option<DeviceRechargeDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ability_learning: Option<AbilityLearningDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<AbilityDto>,
     #[serde(default, skip_serializing_if = "is_default_summon_command")]
     pub summon_command: SummonCommandDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceRechargeDto {
+    pub resource_id: String,
+    pub power: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1982,6 +2008,10 @@ pub struct InventoryItemDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub use_target_spec: Option<TargetSpecDto>,
+    #[serde(default)]
+    pub can_receive_recharge: bool,
+    #[serde(default)]
+    pub can_supply_recharge: bool,
     pub quantity: u32,
     #[serde(default)]
     pub weight_tenths_pound: u16,
@@ -2205,6 +2235,7 @@ pub fn generated_typescript() -> String {
     }
 
     push_declaration!(Direction);
+    push_declaration!(DeviceRechargeSourceDto);
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
@@ -2291,6 +2322,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(HealingResolutionDto);
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
+    push_declaration!(DeviceRechargeDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
@@ -2560,6 +2592,8 @@ pub struct ItemSaveDto {
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub device_recovery_progress: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2578,6 +2612,8 @@ pub struct InventoryItemSaveDto {
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub device_recovery_progress: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2597,6 +2633,8 @@ pub struct EquipmentItemSaveDto {
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub device_recovery_progress: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2616,6 +2654,8 @@ pub struct CarriedItemSaveDto {
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub device_recovery_progress: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2736,6 +2776,10 @@ pub struct CampaignStateSaveDto {
 }
 
 fn is_zero_u32(value: &u32) -> bool {
+    *value == 0
+}
+
+fn is_zero_u16(value: &u16) -> bool {
     *value == 0
 }
 
@@ -2926,6 +2970,16 @@ mod tests {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
                 target: None,
             },
+            GameCommand::RechargeItem {
+                target_item_id: "demo.item.resonance-rod.1".to_owned(),
+                source: DeviceRechargeSourceDto::Resource,
+            },
+            GameCommand::RechargeItem {
+                target_item_id: "demo.item.resonance-rod.1".to_owned(),
+                source: DeviceRechargeSourceDto::Item {
+                    item_id: "demo.item.resonance-wand.1".to_owned(),
+                },
+            },
             GameCommand::CastAbility {
                 ability_id: "demo.ability.mending-echo".to_owned(),
                 target: TargetSelection::SelfTarget,
@@ -3019,6 +3073,7 @@ mod tests {
                 progress: PlayerProgressDto::default(),
                 build: None,
                 resources: Vec::new(),
+                device_recharge: None,
                 ability_learning: None,
                 abilities: Vec::new(),
                 summon_command: SummonCommandDto::default(),
@@ -3067,6 +3122,8 @@ mod tests {
                 charges: None,
                 activation: None,
                 use_target_spec: None,
+                can_receive_recharge: false,
+                can_supply_recharge: false,
                 quantity: 1,
                 weight_tenths_pound: 5,
                 equipment_slot: Some("charm".to_owned()),
@@ -3206,6 +3263,9 @@ mod tests {
         assert!(typescript.contains("{ \"type\": \"check\""));
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
+        assert!(typescript.contains("deviceRecharge?: DeviceRechargeDto | null"));
+        assert!(typescript.contains("canReceiveRecharge: boolean"));
+        assert!(typescript.contains("{ \"type\": \"recharge-item\""));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
         assert!(
             typescript

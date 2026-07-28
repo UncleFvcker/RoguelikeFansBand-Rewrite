@@ -25,6 +25,7 @@ import type {
   AbilityLearningDto,
   DamageResolutionDto,
   DamageTypeDto,
+  DeviceRechargeSourceDto,
   Direction,
   BodySlotDto,
   EquipmentBonusesDto,
@@ -1377,6 +1378,23 @@ function renderInventory(
       });
       label.append(checkbox, details, quantity);
       row.append(label);
+      if (item.canReceiveRecharge && currentStatus?.player.deviceRecharge) {
+        const recharge = document.createElement("button");
+        recharge.type = "button";
+        recharge.className = "inventory-recharge";
+        recharge.dataset.rechargeTargetId = item.id;
+        recharge.textContent = localization.format("action-inventory-recharge");
+        recharge.addEventListener("click", () => {
+          const source = rechargeSourceForTarget(item.id);
+          if (!source) return;
+          void dispatch({
+            type: "recharge-item",
+            targetItemId: item.id,
+            source,
+          });
+        });
+        row.append(recharge);
+      }
       inventoryList.append(row);
     }
   }
@@ -1549,9 +1567,36 @@ function updateInventoryActions(): void {
   )) {
     checkbox.disabled = busy || playerDead;
   }
+  for (const button of inventoryList.querySelectorAll<HTMLButtonElement>(
+    "button[data-recharge-target-id]",
+  )) {
+    const targetItemId = button.dataset.rechargeTargetId;
+    button.disabled =
+      busy ||
+      playerDead ||
+      targetItemId === undefined ||
+      rechargeSourceForTarget(targetItemId) === undefined;
+  }
   for (const button of equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
     button.disabled = busy || playerDead;
   }
+}
+
+function rechargeSourceForTarget(
+  targetItemId: string,
+): DeviceRechargeSourceDto | undefined {
+  const profile = currentStatus?.player.deviceRecharge;
+  if (!profile) return undefined;
+  const selectedSources = selectedInventoryItems().filter(
+    (item) => item.id !== targetItemId && item.canSupplyRecharge,
+  );
+  if (selectedSources.length > 1) return undefined;
+  const source = selectedSources[0];
+  if (source) return { type: "item", itemId: source.id };
+  const resource = currentStatus?.player.resources?.find(
+    (pool) => pool.id === profile.resourceId,
+  );
+  return resource && resource.current > 0 ? { type: "resource" } : undefined;
 }
 
 function updateCampaignAction(): void {
@@ -2283,6 +2328,41 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-use-unavailable":
       return localization.format("message-item-use-unavailable");
+    case "device-energy-recovered":
+      return localization.format("message-device-energy-recovered", {
+        target: visibleItemNameForKind(event.args.target),
+        amount: event.args.amount ?? "?",
+        current: event.args.current ?? "?",
+        maximum: event.args.maximum ?? "?",
+      });
+    case "device-recharge-unavailable":
+      return localization.format("message-device-recharge-unavailable");
+    case "device-recharge-success": {
+      const success = localization.format("message-device-recharge-success", {
+        target: visibleItemNameForKind(event.args.target),
+        source:
+          event.args.sourceType === "item"
+            ? visibleItemNameForKind(event.args.source)
+            : contentName(event.args.source),
+        amount: event.args.attempted ?? "?",
+        current: event.args.after ?? "?",
+      });
+      return event.args.sourceDestroyed === "true"
+        ? `${success} ${localization.format("message-device-recharge-source-destroyed")}`
+        : success;
+    }
+    case "device-recharge-failure": {
+      const failure = localization.format("message-device-recharge-failure", {
+        target: visibleItemNameForKind(event.args.target),
+        source:
+          event.args.sourceType === "item"
+            ? visibleItemNameForKind(event.args.source)
+            : contentName(event.args.source),
+      });
+      return event.args.sourceDestroyed === "true"
+        ? `${failure} ${localization.format("message-device-recharge-source-destroyed")}`
+        : failure;
+    }
     case "item-activation-landed":
       return localization.format("message-item-activation-landed", {
         source: visibleItemNameForKind(event.args.source),

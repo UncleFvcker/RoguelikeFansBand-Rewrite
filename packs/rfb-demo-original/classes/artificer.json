@@ -15,6 +15,15 @@
   "experiencePercent": 125,
   "baseHp": 2,
   "skillSetId": "demo.skill-set.artificer",
+  "deviceRechargeProfile": {
+    "resourceId": "demo.resource.resonance",
+    "governingAttribute": "intelligence",
+    "baseCapacity": 8,
+    "capacityPerLevel": 2,
+    "capacityPerAttributeIndex": 1,
+    "power": 90,
+    "sourceItemDestructionOneIn": 3
+  },
   "startingItems": [
     { "itemKindId": "demo.item.echo-charm", "quantity": 1, "equipped": true },
     { "itemKindId": "demo.item.luminous-shard", "quantity": 3 },

@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能与动态设备运行时分别由 [Contract v108](contract-v108-charged-items.md) 和 [Contract v109](contract-v109-dynamic-devices.md) 定义。
+状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58 首批固定治疗药水 + P59 动态设备壳 + P60 设备自然恢复）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备与恢复/主动充能运行时分别由 [Contract v108](contract-v108-charged-items.md)、[Contract v109](contract-v109-dynamic-devices.md) 和 [Contract v110](contract-v110-device-recharge.md) 定义。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 

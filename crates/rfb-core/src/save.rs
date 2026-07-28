@@ -201,7 +201,12 @@ pub(crate) fn item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
+    validate_item_runtime_state(
+        definition,
+        item.activation.as_ref(),
+        item.charges,
+        item.device_recovery_progress,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -212,6 +217,7 @@ pub(crate) fn item_from_dto(
         rolled_affixes,
         activation: item.activation,
         charges: item.charges,
+        device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::Ground(item.position),
     })
 }
@@ -223,7 +229,12 @@ pub(crate) fn inventory_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
+    validate_item_runtime_state(
+        definition,
+        item.activation.as_ref(),
+        item.charges,
+        item.device_recovery_progress,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -234,6 +245,7 @@ pub(crate) fn inventory_item_from_dto(
         rolled_affixes,
         activation: item.activation,
         charges: item.charges,
+        device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::Inventory,
     })
 }
@@ -250,7 +262,12 @@ pub(crate) fn equipment_item_from_dto(
     if definition.equipment_slot.is_none() {
         return Err(CoreError::InvalidSave("equipment metadata is invalid"));
     }
-    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
+    validate_item_runtime_state(
+        definition,
+        item.activation.as_ref(),
+        item.charges,
+        item.device_recovery_progress,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -261,6 +278,7 @@ pub(crate) fn equipment_item_from_dto(
         rolled_affixes,
         activation: item.activation,
         charges: item.charges,
+        device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
         },
@@ -274,7 +292,12 @@ pub(crate) fn carried_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-    validate_item_runtime_state(definition, item.activation.as_ref(), item.charges)?;
+    validate_item_runtime_state(
+        definition,
+        item.activation.as_ref(),
+        item.charges,
+        item.device_recovery_progress,
+    )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     Ok(ItemInstance {
         id: item.id,
@@ -285,6 +308,7 @@ pub(crate) fn carried_item_from_dto(
         rolled_affixes,
         activation: item.activation,
         charges: item.charges,
+        device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
         },
@@ -295,6 +319,7 @@ fn validate_item_runtime_state(
     definition: &rfb_content::ItemDefinition,
     activation: Option<&ItemActivationDto>,
     charges: Option<ItemChargesDto>,
+    device_recovery_progress: u16,
 ) -> Result<(), CoreError> {
     let configured = definition
         .use_action
@@ -346,7 +371,20 @@ fn validate_item_runtime_state(
             _ => false,
         }
     };
-    if valid {
+    let valid_recovery_progress = match (
+        definition
+            .device_generation
+            .as_ref()
+            .and_then(|generation| generation.recovery),
+        charges,
+    ) {
+        (Some(_), Some(charges)) => {
+            device_recovery_progress < 1_000
+                && (charges.current < charges.maximum || device_recovery_progress == 0)
+        }
+        _ => device_recovery_progress == 0,
+    };
+    if valid && valid_recovery_progress {
         Ok(())
     } else {
         Err(CoreError::InvalidSave("item charge state is invalid"))
@@ -1012,6 +1050,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 activation: item.activation.clone(),
                 charges: item.charges,
+                device_recovery_progress: item.device_recovery_progress,
             })
         })
         .collect::<Vec<_>>();
@@ -1035,6 +1074,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 activation: item.activation.clone(),
                 charges: item.charges,
+                device_recovery_progress: item.device_recovery_progress,
             })
         })
         .collect::<Vec<_>>();
@@ -1059,6 +1099,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 activation: item.activation.clone(),
                 charges: item.charges,
+                device_recovery_progress: item.device_recovery_progress,
             })
         })
         .collect::<Vec<_>>();
@@ -1087,6 +1128,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 activation: item.activation.clone(),
                 charges: item.charges,
+                device_recovery_progress: item.device_recovery_progress,
             })
         })
         .collect::<Vec<_>>();

@@ -495,6 +495,8 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub technique_profiles: Vec<TechniqueProfileDefinition>,
     #[serde(default)]
+    pub device_recharge_profile: Option<DeviceRechargeProfileDefinition>,
+    #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
     pub tags: Vec<String>,
 }
@@ -572,6 +574,19 @@ pub struct TechniqueProfileDefinition {
     pub capacity_per_attribute_index: u32,
     pub minimum_failure_percent: u8,
     pub innate_ability_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DeviceRechargeProfileDefinition {
+    pub resource_id: String,
+    pub governing_attribute: TechniqueAttribute,
+    pub base_capacity: u32,
+    pub capacity_per_level: u32,
+    pub capacity_per_attribute_index: u32,
+    pub power: u16,
+    pub source_item_destruction_one_in: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1540,6 +1555,16 @@ pub struct ItemDeviceActivationDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDeviceGenerationDefinition {
     pub activations: Vec<ItemDeviceActivationDefinition>,
+    #[serde(default)]
+    pub recovery: Option<ItemDeviceRecoveryDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemDeviceRecoveryDefinition {
+    pub interval_ticks: u16,
+    pub energy_per_mille: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4435,6 +4460,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                 || item.equipment_slot.is_some()
                 || item.max_stack != 1
                 || !item.tags.iter().any(|tag| tag == "device")
+                || generation.recovery.is_some_and(|recovery| {
+                    !(1..=10_000).contains(&recovery.interval_ticks)
+                        || !(1..=1_000).contains(&recovery.energy_per_mille)
+                })
                 || !valid_activations
             {
                 return Err(ContentError::InvalidItemUseAction(item.id.clone()));
@@ -4767,6 +4796,22 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     return Err(ContentError::InvalidTechniqueProfile(class.id.clone()));
                 }
             }
+        }
+        if let Some(profile) = &class.device_recharge_profile {
+            let maximum_capacity = u64::from(profile.base_capacity)
+                .saturating_add(u64::from(profile.capacity_per_level).saturating_mul(100))
+                .saturating_add(
+                    u64::from(profile.capacity_per_attribute_index).saturating_mul(100),
+                );
+            if maximum_capacity == 0
+                || maximum_capacity > 1_000_000_000
+                || !(1..=u16::MAX).contains(&profile.power)
+                || !(2..=u16::MAX).contains(&profile.source_item_destruction_one_in)
+                || !technique_resource_ids.insert(profile.resource_id.clone())
+            {
+                return Err(ContentError::InvalidDeviceRechargeProfile(class.id.clone()));
+            }
+            require_reference(&resource_ids, &profile.resource_id, &class.id)?;
         }
         normalize_tags(&class.id, &mut class.tags)?;
         insert_definition_id(&mut all_ids, &class.id)?;
@@ -8117,6 +8162,8 @@ pub enum ContentError {
     InvalidCastingProfile(String),
     #[error("class technique profile is invalid: {0}")]
     InvalidTechniqueProfile(String),
+    #[error("class device recharge profile is invalid: {0}")]
+    InvalidDeviceRechargeProfile(String),
     #[error("affix stat modifiers are invalid: {0}")]
     InvalidAffixModifiers(String),
     #[error("skill definition is invalid: {0}")]
@@ -8217,7 +8264,7 @@ mod tests {
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
         assert_eq!(first.content.items.len(), 23);
-        assert_eq!(first.content.resources.len(), 2);
+        assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
         assert_eq!(first.content.skills.len(), 10);
@@ -8242,7 +8289,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.100.0");
+        assert_eq!(catalog.pack_version(), "1.101.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
@@ -8324,6 +8371,29 @@ mod tests {
                     "demo.ability-book.stillwater-notes".to_owned(),
                 ]
                 .as_slice(),
+            ))
+        );
+        assert_eq!(
+            catalog
+                .class("demo.class.artificer")
+                .and_then(|class| class.device_recharge_profile.as_ref())
+                .map(|profile| (
+                    profile.resource_id.as_str(),
+                    profile.governing_attribute,
+                    profile.base_capacity,
+                    profile.capacity_per_level,
+                    profile.capacity_per_attribute_index,
+                    profile.power,
+                    profile.source_item_destruction_one_in,
+                )),
+            Some((
+                "demo.resource.resonance",
+                TechniqueAttribute::Intelligence,
+                8,
+                2,
+                1,
+                90,
+                3,
             ))
         );
         assert_eq!(
@@ -10169,6 +10239,13 @@ mod tests {
                 "demo.device-activation.spark-bolt",
             ]
         );
+        assert_eq!(
+            wand.recovery,
+            Some(ItemDeviceRecoveryDefinition {
+                interval_ticks: 10,
+                energy_per_mille: 10,
+            })
+        );
 
         let mut invalid = artifact.content.clone();
         let profiles = &mut invalid
@@ -10185,6 +10262,20 @@ mod tests {
             .find(|profile| profile.id == "demo.device-activation.spark-bolt")
             .expect("shallow profile should exist")
             .min_depth = 2;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.resonance-wand")
+            .and_then(|item| item.device_generation.as_mut())
+            .and_then(|generation| generation.recovery.as_mut())
+            .expect("dynamic wand should recover")
+            .energy_per_mille = 0;
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemUseAction(_))
@@ -10221,6 +10312,44 @@ mod tests {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidItemUseAction(_))
+        ));
+    }
+
+    #[test]
+    fn device_recharge_profiles_require_distinct_bounded_resources() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let mut invalid = artifact.content.clone();
+        invalid
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.artificer")
+            .and_then(|class| class.device_recharge_profile.as_mut())
+            .expect("artificer should recharge devices")
+            .source_item_destruction_one_in = 1;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidDeviceRechargeProfile(_))
+        ));
+
+        let mut invalid = artifact.content.clone();
+        let mage = invalid
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.mage")
+            .expect("mage class should exist");
+        mage.device_recharge_profile = Some(DeviceRechargeProfileDefinition {
+            resource_id: "demo.resource.mana".to_owned(),
+            governing_attribute: TechniqueAttribute::Intelligence,
+            base_capacity: 1,
+            capacity_per_level: 0,
+            capacity_per_attribute_index: 0,
+            power: 90,
+            source_item_destruction_one_in: 3,
+        });
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidDeviceRechargeProfile(_))
         ));
     }
 

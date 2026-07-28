@@ -55,17 +55,17 @@ use rfb_content::{
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CampaignDefinition,
     CastingAttribute, CastingProfileDefinition, CharacterBuildDefinition, ClassDefinition,
-    ContentCatalog, ContentPosition, DungeonDefinition, DungeonEntryRequirementDefinition,
-    DungeonEntryTaskStatus, DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterFormation,
-    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
-    ItemUseEffectDefinition, MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
-    RaceDefinition, RetakeFloorPolicy, SkillKind, SkillSetDefinition, SlayLevel, SlayTarget,
-    StartingItemDefinition, StatModifiers, TaskObjectiveDefinition, TaskObjectiveKind,
-    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
-    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
-    WeaponBrand,
+    ContentCatalog, ContentPosition, DeviceRechargeProfileDefinition, DungeonDefinition,
+    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
+    EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
+    EquipmentPassive, FloorLifecycle, ItemUseEffectDefinition, MonsterPackBehavior,
+    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
+    SkillKind, SkillSetDefinition, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers,
+    TaskObjectiveDefinition, TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
+    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
+    VaultDefinition, VaultTransform, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -79,21 +79,22 @@ use rfb_protocol::{
     AbilityTerrainTransformSpecDto, AbilityVisibleDamageResolutionDto, ActorSaveDto,
     AttackProfileDto, AttributeSetDto, AttributeValueDto, BodySlotDto, BodySlotSaveDto,
     CampaignStateDto, CampaignStateSaveDto, CampaignStatusDto, CarriedItemSaveDto, CellDto,
-    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, Direction, DungeonStateSaveDto,
-    EntityDto, EntityFactionDto, EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto,
-    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope,
-    GameSnapshot, GameUpdate, HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto,
-    ItemActivationDto, ItemChargesDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto,
-    ItemKnowledgeSaveDto, ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto,
-    ItemSaveDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
-    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, PROTOCOL_VERSION,
-    PlayerBuildDto, PlayerDto, PlayerProgressDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ProjectileProfileDto, ResistanceDto, ResourceGainResolutionDto, ResourceGainSourceDto,
-    ResourcePoolDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto,
-    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    CellLightDto, CellVisualDto, ContentVisualDto, DamageDiceDto, DeviceRechargeDto,
+    DeviceRechargeSourceDto, Direction, DungeonStateSaveDto, EntityDto, EntityFactionDto,
+    EquipmentBonusesDto, EquipmentItemDto, EquipmentItemSaveDto, EquipmentPassiveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, GameCommandEnvelope, GameSnapshot, GameUpdate,
+    HealingResolutionDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto,
+    ItemChargesDto, ItemDto, ItemIdentificationDto, ItemKnowledgeDto, ItemKnowledgeSaveDto,
+    ItemPropertyDto, ItemPropertyKnowledgeSaveDto, ItemQualityDto, ItemSaveDto, MeleeBlowDto,
+    MeleeRoutineDto, MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
+    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, PROTOCOL_VERSION, PlayerBuildDto, PlayerDto, PlayerProgressDto,
+    PlayerProgressSaveDto, PlayerSaveDto, Position, ProjectileProfileDto, ResistanceDto,
+    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, RngSaveDto,
+    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, SkillProgressDto, SlayDto, SlayLevelDto,
+    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
     SummonCommandResolutionDto, SummonDto, TargetModeDto, TargetSelection, TargetSpecDto,
     TaskStateSaveDto, TaskStatusDto, TaskStatusKindDto, TerrainInteractionDto,
     TerrainInteractionKindDto, TerrainInteractionUnavailableReasonDto, TerrainSaveDto,
@@ -103,7 +104,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 101] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 102] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -205,13 +206,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 101] = [
     "5e6e5f4ee9b83eb8d80e05c8aa893bd8d19c1db1bdd18c97fe3e120fd823a88c",
     "d8bdbdd4d4e85862a97229c279a874668b9b1d3ce9035aa6f17a11cff7b3af80",
     "4105aec18bdc40aced03bb503ec31e30385248545266d116b1d0088a374c04c8",
+    "8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "8432e5d6b0143608415de0f49969b6445cd902ef4db58c218c347b5da85cabab";
+    "f2bf96ea4a980a6a9914ca80dff5527a5e04b2e36d25aa668b118e6562c9cad9";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 48;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 49;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1357,6 +1359,7 @@ fn append_starting_item(
         rolled_affixes: Vec::new(),
         activation,
         charges,
+        device_recovery_progress: 0,
         location,
     });
     Ok(())
@@ -1512,6 +1515,9 @@ pub struct Game {
     world_tick: u32,
     last_command_seq: u32,
     debug_ability_casts_succeed: bool,
+    debug_recharge_attempts_succeed: bool,
+    debug_recharge_attempts_fail: bool,
+    debug_recharge_sources_survive: bool,
 }
 
 impl Game {
@@ -1673,6 +1679,7 @@ impl Game {
                     rolled_affixes: Vec::new(),
                     activation,
                     charges,
+                    device_recovery_progress: 0,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
                 }
             })
@@ -1728,6 +1735,9 @@ impl Game {
             world_tick: 0,
             last_command_seq: 0,
             debug_ability_casts_succeed: false,
+            debug_recharge_attempts_succeed: false,
+            debug_recharge_attempts_fail: false,
+            debug_recharge_sources_survive: false,
         };
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
@@ -2111,6 +2121,9 @@ impl Game {
             world_tick: payload.world_tick,
             last_command_seq: payload.last_command_seq,
             debug_ability_casts_succeed: false,
+            debug_recharge_attempts_succeed: false,
+            debug_recharge_attempts_fail: false,
+            debug_recharge_sources_survive: false,
         };
         game.restore_player_ability_state(
             saved_resources,
@@ -2309,7 +2322,17 @@ impl Game {
             &action,
             GameAction::UseItem { item_id, .. } if self.item_charge_is_insufficient(item_id)
         );
+        let unavailable_recharge = matches!(
+            &action,
+            GameAction::RechargeItem {
+                target_item_id,
+                source,
+            } if self
+                .device_recharge_unavailable_reason(target_item_id, source)
+                .is_some()
+        );
         let advances_world = !depleted_device_use
+            && !unavailable_recharge
             && !matches!(
                 &action,
                 GameAction::Retire
@@ -2551,6 +2574,12 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
+            }
+            GameAction::RechargeItem {
+                target_item_id,
+                source,
+            } => {
+                self.recharge_inventory_item(&target_item_id, &source, &mut events);
             }
             GameAction::ForgetAbility { ability_id } => {
                 match self.forget_player_ability(&ability_id) {
@@ -2877,6 +2906,21 @@ impl Game {
     }
 
     #[doc(hidden)]
+    pub fn debug_set_recharge_attempts_succeed(&mut self, enabled: bool) {
+        self.debug_recharge_attempts_succeed = enabled;
+    }
+
+    #[doc(hidden)]
+    pub fn debug_set_recharge_attempts_fail(&mut self, enabled: bool) {
+        self.debug_recharge_attempts_fail = enabled;
+    }
+
+    #[doc(hidden)]
+    pub fn debug_set_recharge_sources_survive(&mut self, enabled: bool) {
+        self.debug_recharge_sources_survive = enabled;
+    }
+
+    #[doc(hidden)]
     pub fn debug_add_generated_inventory_item(
         &mut self,
         id: &str,
@@ -2900,6 +2944,7 @@ impl Game {
             rolled_affixes: Vec::new(),
             activation,
             charges,
+            device_recovery_progress: 0,
             location: ItemLocation::Inventory,
         });
         Ok(())
@@ -2992,6 +3037,12 @@ impl Game {
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
+            device_recharge: self
+                .device_recharge_profile()
+                .map(|profile| DeviceRechargeDto {
+                    resource_id: profile.resource_id.clone(),
+                    power: profile.power,
+                }),
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
             summon_command: self.summon_command.clone(),
@@ -3037,6 +3088,11 @@ impl Game {
     fn casting_profile(&self) -> Option<&CastingProfileDefinition> {
         self.character_definitions()
             .and_then(|(_, _, class, _)| class.casting_profile.as_ref())
+    }
+
+    fn device_recharge_profile(&self) -> Option<&DeviceRechargeProfileDefinition> {
+        self.character_definitions()
+            .and_then(|(_, _, class, _)| class.device_recharge_profile.as_ref())
     }
 
     fn effective_casting_ability(
@@ -3173,6 +3229,17 @@ impl Game {
         )
     }
 
+    fn device_recharge_resource_maximum(&self, profile: &DeviceRechargeProfileDefinition) -> u32 {
+        self.profile_resource_maximum(
+            Self::technique_attribute_kind(profile.governing_attribute),
+            (
+                profile.base_capacity,
+                profile.capacity_per_level,
+                profile.capacity_per_attribute_index,
+            ),
+        )
+    }
+
     fn technique_profile_for_ability(
         &self,
         ability: &AbilityDefinition,
@@ -3260,6 +3327,12 @@ impl Game {
                 self.technique_resource_maximum(profile),
             );
             ability_ids.extend(profile.innate_ability_ids.iter().cloned());
+        }
+        if let Some(profile) = self.device_recharge_profile() {
+            pool_maxima.insert(
+                profile.resource_id.clone(),
+                self.device_recharge_resource_maximum(profile),
+            );
         }
         (pool_maxima, ability_ids)
     }
@@ -4082,6 +4155,8 @@ impl Game {
                         .activation
                         .as_ref()
                         .map(|activation| activation.target_spec.clone()),
+                    can_receive_recharge: self.item_can_receive_recharge(item),
+                    can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
@@ -4213,6 +4288,7 @@ impl Game {
                 rolled_affixes: Vec::new(),
                 activation: None,
                 charges: None,
+                device_recovery_progress: 0,
                 location: ItemLocation::Ground(self.player.position),
             });
         }
@@ -9243,6 +9319,7 @@ impl Game {
                 rolled_affixes: Vec::new(),
                 activation: self.items[index].activation.clone(),
                 charges: self.items[index].charges,
+                device_recovery_progress: self.items[index].device_recovery_progress,
                 location: ItemLocation::Inventory,
             }))
         }
@@ -9413,9 +9490,199 @@ impl Game {
                 rolled_affixes: Vec::new(),
                 activation: self.items[index].activation.clone(),
                 charges: self.items[index].charges,
+                device_recovery_progress: self.items[index].device_recovery_progress,
                 location: ItemLocation::Inventory,
             }))
         }
+    }
+
+    fn device_recharge_unavailable_reason(
+        &self,
+        target_item_id: &str,
+        source: &DeviceRechargeSourceDto,
+    ) -> Option<&'static str> {
+        let Some(profile) = self.device_recharge_profile() else {
+            return Some("no-profile");
+        };
+        let target = self.items.iter().find(|item| {
+            item.id == target_item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+        });
+        let Some(target) = target else {
+            return Some("target-unavailable");
+        };
+        if !self.item_can_receive_recharge(target) {
+            return Some("target-not-rechargeable");
+        }
+        match source {
+            DeviceRechargeSourceDto::Resource => {
+                if self
+                    .resources
+                    .get(&profile.resource_id)
+                    .is_none_or(|pool| pool.current == 0)
+                {
+                    Some("resource-empty")
+                } else {
+                    None
+                }
+            }
+            DeviceRechargeSourceDto::Item { item_id } => {
+                if item_id == target_item_id {
+                    return Some("source-is-target");
+                }
+                self.items
+                    .iter()
+                    .find(|item| {
+                        item.id == *item_id
+                            && item.location == ItemLocation::Inventory
+                            && item.quantity > 0
+                    })
+                    .filter(|item| self.item_can_supply_recharge(item))
+                    .map_or(Some("source-unavailable"), |_| None)
+            }
+        }
+    }
+
+    fn recharge_inventory_item(
+        &mut self,
+        target_item_id: &str,
+        source: &DeviceRechargeSourceDto,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if let Some(reason) = self.device_recharge_unavailable_reason(target_item_id, source) {
+            events.push(DomainEvent::DeviceRechargeUnavailable {
+                target_item_id: target_item_id.to_owned(),
+                reason: reason.to_owned(),
+            });
+            return;
+        }
+        let profile = self
+            .device_recharge_profile()
+            .cloned()
+            .expect("validated recharge action must retain its class profile");
+        let target = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .expect("preflighted recharge target must remain available");
+        let target_kind_id = target.kind_id.clone();
+        let target_charges = target.charges.expect("recharge target must carry energy");
+        let target_before = target_charges.current;
+        let missing = target_charges.maximum.saturating_sub(target_before);
+        let power = u32::from(profile.power);
+
+        let (source_id, source_is_item, attempted, source_destroyed) = match source {
+            DeviceRechargeSourceDto::Resource => {
+                let pool = self
+                    .resources
+                    .get_mut(&profile.resource_id)
+                    .expect("recharge resource must remain initialized");
+                let attempted = power.min(pool.current).min(missing);
+                pool.current -= attempted;
+                self.resources_touched.insert(profile.resource_id.clone());
+                (profile.resource_id.clone(), false, attempted, false)
+            }
+            DeviceRechargeSourceDto::Item { item_id } => {
+                let source_index = self
+                    .items
+                    .iter()
+                    .position(|item| item.id == *item_id)
+                    .expect("preflighted recharge source must remain available");
+                let source_kind_id = self.items[source_index].kind_id.clone();
+                let source_current = self.items[source_index]
+                    .charges
+                    .expect("recharge source must carry energy")
+                    .current;
+                let attempted = power.min(source_current).min(missing);
+                let destruction_roll = (!self.debug_recharge_sources_survive).then(|| {
+                    self.rng
+                        .bounded(u64::from(profile.source_item_destruction_one_in))
+                });
+                let destroy = destruction_roll == Some(0);
+                let artifact = self
+                    .content
+                    .item(&source_kind_id)
+                    .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+                let source_destroyed = destroy && !artifact;
+                if source_destroyed {
+                    let removed = self.items.remove(source_index);
+                    self.item_property_knowledge.remove(&removed.id);
+                } else {
+                    let source = self
+                        .items
+                        .iter_mut()
+                        .find(|item| item.id == *item_id)
+                        .expect("surviving recharge source must remain available");
+                    source
+                        .charges
+                        .as_mut()
+                        .expect("recharge source must carry energy")
+                        .current -= attempted;
+                }
+                (source_kind_id, true, attempted, source_destroyed)
+            }
+        };
+
+        let difficulty = u32::try_from(
+            self.items
+                .iter()
+                .find(|item| item.id == target_item_id)
+                .and_then(|item| item.activation.as_ref())
+                .expect("recharge target must retain dynamic activation")
+                .device_check_difficulty,
+        )
+        .expect("validated device difficulty must be positive");
+        let half_difficulty = difficulty / 2;
+        let failure_one_in = power.saturating_sub(half_difficulty) / 15;
+        let (failure_roll, succeeded) = if self.debug_recharge_attempts_succeed {
+            (None, true)
+        } else if self.debug_recharge_attempts_fail
+            || power <= half_difficulty
+            || failure_one_in == 0
+        {
+            (None, false)
+        } else {
+            let roll = u32::try_from(self.rng.bounded(u64::from(failure_one_in)))
+                .expect("recharge failure roll must fit u32");
+            (Some(roll), roll != 0)
+        };
+
+        let target = self
+            .items
+            .iter_mut()
+            .find(|item| item.id == target_item_id)
+            .expect("recharge target must remain available");
+        let charges = target
+            .charges
+            .as_mut()
+            .expect("recharge target must carry energy");
+        if succeeded {
+            charges.current = charges
+                .current
+                .saturating_add(attempted)
+                .min(charges.maximum);
+            if charges.current == charges.maximum {
+                target.device_recovery_progress = 0;
+            }
+        } else if !source_is_item {
+            charges.current = 0;
+            target.device_recovery_progress = 0;
+        }
+        let target_after = charges.current;
+        events.push(DomainEvent::DeviceRechargeResolved {
+            target_item_id: target_item_id.to_owned(),
+            target_kind_id,
+            source_id,
+            source_is_item,
+            attempted,
+            target_before,
+            target_after,
+            succeeded,
+            failure_one_in,
+            failure_roll,
+            source_destroyed,
+        });
     }
 
     fn use_inventory_item(
@@ -9750,6 +10017,27 @@ impl Game {
         item.charges.is_none_or(|state| state.current < cost)
     }
 
+    fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
+        item.location == ItemLocation::Inventory
+            && item.activation.is_some()
+            && self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.device_generation.is_some())
+            && item
+                .charges
+                .is_some_and(|charges| charges.current < charges.maximum)
+    }
+
+    fn item_can_supply_recharge(&self, item: &ItemInstance) -> bool {
+        item.location == ItemLocation::Inventory
+            && self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "device"))
+            && item.charges.is_some_and(|charges| charges.current > 0)
+    }
+
     fn item_effect_path(
         &self,
         target_definition: &AbilityTargetDefinition,
@@ -9970,6 +10258,7 @@ impl Game {
                 break;
             }
             self.process_equipment_regeneration(events);
+            self.process_inventory_device_recovery(events);
             self.process_monster_energy_pulse(events, changed, removed_entities)?;
             if self.player_is_dead() {
                 break;
@@ -10005,6 +10294,58 @@ impl Game {
                     applied,
                 },
             });
+        }
+    }
+
+    fn process_inventory_device_recovery(&mut self, events: &mut Vec<DomainEvent>) {
+        let world_tick = self.world_tick;
+        let content = &self.content;
+        for item in &mut self.items {
+            if item.location != ItemLocation::Inventory {
+                continue;
+            }
+            let Some(recovery) = content
+                .item(&item.kind_id)
+                .and_then(|definition| definition.device_generation.as_ref())
+                .and_then(|generation| generation.recovery)
+            else {
+                continue;
+            };
+            if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
+                continue;
+            }
+            let Some(charges) = item.charges.as_mut() else {
+                continue;
+            };
+            if charges.current >= charges.maximum {
+                item.device_recovery_progress = 0;
+                continue;
+            }
+            let scaled = u64::from(charges.maximum)
+                .saturating_mul(u64::from(recovery.energy_per_mille))
+                .saturating_add(u64::from(item.device_recovery_progress));
+            let gain =
+                u32::try_from(scaled / 1_000).expect("validated device recovery gain must fit u32");
+            item.device_recovery_progress =
+                u16::try_from(scaled % 1_000).expect("recovery remainder must fit u16");
+            if gain == 0 {
+                continue;
+            }
+            let before = charges.current;
+            charges.current = charges.current.saturating_add(gain).min(charges.maximum);
+            let applied = charges.current.saturating_sub(before);
+            if charges.current == charges.maximum {
+                item.device_recovery_progress = 0;
+            }
+            if applied > 0 {
+                events.push(DomainEvent::DeviceEnergyRecovered {
+                    target_item_id: item.id.clone(),
+                    target_kind_id: item.kind_id.clone(),
+                    amount: applied,
+                    current: charges.current,
+                    maximum: charges.maximum,
+                });
+            }
         }
     }
 
@@ -13533,6 +13874,7 @@ impl Game {
                 id: self.allocate_item_instance_id()?,
                 activation,
                 charges,
+                device_recovery_progress: 0,
                 kind_id,
                 quantity: 1,
                 quality: ItemQualityDto::Ordinary,
@@ -13863,6 +14205,7 @@ impl Game {
                 rolled_affixes,
                 activation,
                 charges,
+                device_recovery_progress: 0,
                 location: location.clone(),
             };
             generated.push(item);
@@ -14672,6 +15015,7 @@ impl Game {
                     rolled_affixes: Vec::new(),
                     activation,
                     charges,
+                    device_recovery_progress: 0,
                     location: ItemLocation::Ground(destination.player_position),
                 });
             }
@@ -15946,6 +16290,7 @@ impl Game {
                         rolled_affixes: Vec::new(),
                         activation,
                         charges,
+                        device_recovery_progress: 0,
                         location: ItemLocation::Ground(first_center),
                     });
                 }
@@ -18209,7 +18554,11 @@ impl Game {
         }
         let casting_profile = self.casting_profile().cloned();
         let technique_profiles = self.technique_profiles().to_vec();
-        if casting_profile.is_some() || !technique_profiles.is_empty() {
+        let device_recharge_profile = self.device_recharge_profile().cloned();
+        if casting_profile.is_some()
+            || !technique_profiles.is_empty()
+            || device_recharge_profile.is_some()
+        {
             let (expected_pool_maxima, expected_ability_ids) = self.player_ability_baseline();
             let pools_valid = self.resources.len() == expected_pool_maxima.len()
                 && expected_pool_maxima.iter().all(|(id, expected_maximum)| {

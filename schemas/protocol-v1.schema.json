@@ -3122,6 +3122,56 @@
         "curse"
       ]
     },
+    "DeviceRechargeDto": {
+      "type": "object",
+      "properties": {
+        "power": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "resourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resourceId",
+        "power"
+      ]
+    },
+    "DeviceRechargeSourceDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "resource"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        }
+      ]
+    },
     "Direction": {
       "type": "string",
       "enum": [
@@ -3827,6 +3877,26 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/DeviceRechargeSourceDto"
+            },
+            "targetItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "recharge-item"
+            }
+          },
+          "required": [
+            "type",
+            "targetItemId",
+            "source"
           ]
         },
         {
@@ -4692,6 +4762,14 @@
             "$ref": "#/$defs/WeaponBrandDto"
           }
         },
+        "canReceiveRecharge": {
+          "type": "boolean",
+          "default": false
+        },
+        "canSupplyRecharge": {
+          "type": "boolean",
+          "default": false
+        },
         "charges": {
           "anyOf": [
             {
@@ -5407,6 +5485,16 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "deviceRecharge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeviceRechargeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "energyNeed": {
           "type": "integer",

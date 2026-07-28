@@ -92,4 +92,4 @@ Death 可读的 15 个职业中，12 个静态档案生成运行时 casting prof
 
 ## 8. 下一步
 
-P58 已比较全领域与物品缺口并转入充能/治疗消耗品纵切；P59 已完成动态设备效果身份、容量和首批 staff/wand/rod。P60 候选为 recharge/rod 时间与失败语义；Dexterity/HP/dynamic caster 仍应在相应资源与施法属性系统完成后接入，不能把这些职业强行改成 Mana 档案；Invoke Spirits 四项 `NoOp` 随对应通用系统逐项清零。
+P58 已比较全领域与物品缺口并转入充能/治疗消耗品纵切；P59 已完成动态设备效果身份、容量和首批 staff/wand/rod；P60 已完成 rod/wand/staff 差异化自然恢复和资源/设备来源主动充能。P61 按实际覆盖收益继续选择设备、artifact/ego activation 或消耗品效果；Dexterity/HP/dynamic caster 仍应在相应资源与施法属性系统完成后接入，不能把这些职业强行改成 Mana 档案；Invoke Spirits 四项 `NoOp` 随对应通用系统逐项清零。

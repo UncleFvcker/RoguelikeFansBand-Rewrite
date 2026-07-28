@@ -415,7 +415,7 @@ pub enum ReplayError {
 
 #[cfg(test)]
 mod tests {
-    use rfb_protocol::{Direction, SummonCommandModeDto};
+    use rfb_protocol::{DeviceRechargeSourceDto, Direction, SummonCommandModeDto};
 
     use super::*;
 
@@ -602,6 +602,41 @@ mod tests {
         let (final_game, replay) = recorder.finish();
 
         let verification = verify(&replay, initial).expect("device replay should verify");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
+
+    #[test]
+    fn device_recharge_round_trips_through_replay() {
+        let mut initial =
+            Game::new_with_build(60, "demo.build.tinkerer").expect("build should create");
+        initial
+            .debug_add_generated_inventory_item(
+                "test.item.replay-recharge.1",
+                "demo.item.resonance-staff",
+                1,
+            )
+            .expect("dynamic staff should generate");
+        let mut payload = initial.to_save();
+        payload
+            .inventory
+            .iter_mut()
+            .find(|item| item.id == "test.item.replay-recharge.1")
+            .and_then(|item| item.charges.as_mut())
+            .expect("saved staff should carry energy")
+            .current = 0;
+        let mut initial = Game::from_save(payload).expect("depleted staff should reload");
+        initial.debug_set_recharge_attempts_succeed(true);
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::RechargeItem {
+                target_item_id: "test.item.replay-recharge.1".to_owned(),
+                source: DeviceRechargeSourceDto::Resource,
+            })
+            .expect("recharge command should execute");
+        let (final_game, replay) = recorder.finish();
+
+        let verification = verify(&replay, initial).expect("recharge replay should verify");
         assert_eq!(verification.commands_verified, 1);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
     }

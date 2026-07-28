@@ -182,6 +182,7 @@ item-quality-exceptional = 卓越
 item-modifier-defense = 防御 { $value }
 action-inventory-equip = 装备所选
 action-inventory-use = 使用所选
+action-inventory-recharge = 充能
 action-inventory-appraise = 鉴别所选
 action-inventory-drop = 丢弃所选
 panel-equipment-title = 装备

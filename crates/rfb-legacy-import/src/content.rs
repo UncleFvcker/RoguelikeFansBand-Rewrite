@@ -933,7 +933,14 @@ fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value
         )],
         _ => return None,
     };
-    Some(serde_json::json!({ "activations": activations }))
+    let interval_ticks = if entry.tval == 66 { 1 } else { 10 };
+    Some(serde_json::json!({
+        "activations": activations,
+        "recovery": {
+            "intervalTicks": interval_ticks,
+            "energyPerMille": 10
+        }
+    }))
 }
 
 fn item_json(
@@ -7301,6 +7308,11 @@ F:BRAND_VAMP | HOLD_LIFE
                     .iter()
                     .any(|activation| activation["effect"]["type"] == effect_type)
             );
+            assert_eq!(
+                value["deviceGeneration"]["recovery"]["intervalTicks"],
+                if tval == 66 { 1 } else { 10 }
+            );
+            assert_eq!(value["deviceGeneration"]["recovery"]["energyPerMille"], 10);
         }
         assert!(!report.item_behavior_gaps.contains_key("device-effect"));
 

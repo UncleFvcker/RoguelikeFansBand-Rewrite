@@ -175,6 +175,8 @@ Rust 运行时内部只保留一个 `ItemInstance` 集合，`ItemLocation` 明�
 
 协议 1.109 为地面、背包、装备和怪物携带四类物品 save DTO 增加可选 `activation`。动态设备必须同时保存 profile ID/名称键、生成 power、设备难度、实例成本、完整目标规格和充能；载入时逐项对照当前 `deviceGeneration` 候选，并验证 power 深度范围、maximum 容量范围及 current 上限。缺任一动态字段、静态 kind 携带 activation、profile 被替换或目标/成本/难度被篡改均拒绝。历史 built-in hash 迁移时不为已有物品补抽 activation，P58 静态 charged item 继续按固定容量规则读取。save 容器保持 v1，动态设备身份使 state hash 升至 Schema v48。完整边界见 [Contract v109](contract-v109-dynamic-devices.md)。
 
+协议 1.110 为四类物品 save DTO 增加带默认值的 `deviceRecoveryProgress`。声明自然恢复的动态设备允许 0–999 余数；满能量时余数必须为 0，未声明恢复或没有充能的物品也不得携带非零余数。旧档缺字段按 0 迁移，载入不补恢复、不抽 RNG。主动充能只修改既有资源池、设备能量和可能被销毁的来源实例，不增加显示缓存；职业 recharge profile 的资源池继续通过 `PlayerSaveDto.resources` 保存并按既有子集迁移规则载入。save 容器保持 v1，恢复余数使 state hash 升至 Schema v49。完整边界见 [Contract v110](contract-v110-device-recharge.md)。
+
 禁止保存：
 
 - Rust 内存布局和枚举下标；

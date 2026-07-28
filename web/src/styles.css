@@ -476,6 +476,12 @@ h1 {
   cursor: pointer;
 }
 
+.inventory-item .inventory-recharge {
+  align-self: center;
+  margin-right: 0.9rem;
+  white-space: nowrap;
+}
+
 .inventory-item input {
   accent-color: #62cfa4;
 }

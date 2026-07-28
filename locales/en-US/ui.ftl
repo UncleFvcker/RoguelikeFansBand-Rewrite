@@ -186,6 +186,7 @@ item-quality-exceptional = exceptional
 item-modifier-defense = Defense { $value }
 action-inventory-equip = Equip
 action-inventory-use = Use
+action-inventory-recharge = Recharge
 action-inventory-appraise = Appraise
 action-inventory-drop = Drop
 panel-equipment-title = Equipment

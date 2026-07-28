@@ -1,0 +1,484 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.tempo-idle-decay",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "0",
+  "preconditions": {
+    "world": "demo.world.original-v1",
+    "debugClearEntities": true,
+    "debugClearCarriedItems": false,
+    "debugAbilityCastsSucceed": false,
+    "debugRechargeAttemptsSucceed": false,
+    "debugRechargeSourcesSurvive": false,
+    "playerBuildId": "demo.build.duelist",
+    "playerHp": null,
+    "playerLevel": null,
+    "playerExperience": null,
+    "playerMaximumExperience": null,
+    "playerLifeForce": null,
+    "playerMaxLevel": null,
+    "playerPendingAttributeIncreases": null,
+    "playerAttributes": null,
+    "legacyPlayerProgress": false,
+    "playerResources": [
+      {
+        "id": "demo.resource.tempo",
+        "current": 5,
+        "maximum": 23
+      }
+    ],
+    "playerLearnedAbilityIds": null,
+    "playerAbilityProgress": null,
+    "legacyPlayerAbilityState": false,
+    "playerStatuses": [],
+    "playerResistances": [],
+    "entityEffects": [],
+    "inventoryItems": [],
+    "terrainOverrides": [],
+    "revealedTerrain": [],
+    "campaignConqueredDungeons": [],
+    "campaignState": null
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "north"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    },
+    {
+      "command": {
+        "type": "wait"
+      },
+      "commandSeq": null,
+      "expectedRevision": null
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 2,
+      "turn": 2,
+      "worldTick": 20,
+      "lastCommandSeq": 2,
+      "rngDrawCounter": 3,
+      "floorId": "demo.floor.surface",
+      "dungeonInstanceId": null,
+      "playerPosition": {
+        "x": 3,
+        "y": 2
+      },
+      "playerHp": 27,
+      "playerMaxHp": 27,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 30,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerStatuses": [],
+      "playerResistances": [],
+      "playerLevel": 1,
+      "playerExperience": 0,
+      "playerMaxLevel": 1,
+      "playerPendingAttributeIncreases": 0,
+      "playerAttributes": {
+        "level": 1,
+        "maxLevel": 1,
+        "experience": 0,
+        "maximumExperience": 0,
+        "lifeForce": 1000,
+        "levelCap": 50,
+        "attributeCap": 238,
+        "attributeIndexCap": 37,
+        "experienceForNextLevel": 10,
+        "pendingAttributeIncreases": 0,
+        "victoryLevelCapUnlocked": false,
+        "attributes": {
+          "strength": {
+            "natural": 13,
+            "effective": 15,
+            "index": 12
+          },
+          "intelligence": {
+            "natural": 13,
+            "effective": 11,
+            "index": 8
+          },
+          "wisdom": {
+            "natural": 13,
+            "effective": 10,
+            "index": 7
+          },
+          "dexterity": {
+            "natural": 13,
+            "effective": 17,
+            "index": 14
+          },
+          "constitution": {
+            "natural": 13,
+            "effective": 14,
+            "index": 11
+          },
+          "charisma": {
+            "natural": 13,
+            "effective": 14,
+            "index": 11
+          }
+        },
+        "skills": [
+          {
+            "id": "demo.skill.device",
+            "nameKey": "skill-demo-device-name",
+            "current": 20,
+            "maximum": 1000,
+            "base": 20,
+            "growthPerTenLevels": 8
+          },
+          {
+            "id": "demo.skill.digging",
+            "nameKey": "skill-demo-digging-name",
+            "current": 22,
+            "maximum": 1000,
+            "base": 22,
+            "growthPerTenLevels": 8
+          },
+          {
+            "id": "demo.skill.disarming",
+            "nameKey": "skill-demo-disarming-name",
+            "current": 29,
+            "maximum": 1000,
+            "base": 28,
+            "growthPerTenLevels": 13
+          },
+          {
+            "id": "demo.skill.melee",
+            "nameKey": "skill-demo-melee-name",
+            "current": 71,
+            "maximum": 1000,
+            "base": 69,
+            "growthPerTenLevels": 27
+          },
+          {
+            "id": "demo.skill.perception",
+            "nameKey": "skill-demo-perception-name",
+            "current": 6,
+            "maximum": 1000,
+            "base": 6,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.ranged",
+            "nameKey": "skill-demo-ranged-name",
+            "current": 53,
+            "maximum": 1000,
+            "base": 51,
+            "growthPerTenLevels": 22
+          },
+          {
+            "id": "demo.skill.saving-throw",
+            "nameKey": "skill-demo-saving-throw-name",
+            "current": 26,
+            "maximum": 1000,
+            "base": 25,
+            "growthPerTenLevels": 11
+          },
+          {
+            "id": "demo.skill.search",
+            "nameKey": "skill-demo-search-name",
+            "current": 15,
+            "maximum": 1000,
+            "base": 15,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.stealth",
+            "nameKey": "skill-demo-stealth-name",
+            "current": 3,
+            "maximum": 1000,
+            "base": 3,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.throwing",
+            "nameKey": "skill-demo-throwing-name",
+            "current": 54,
+            "maximum": 1000,
+            "base": 52,
+            "growthPerTenLevels": 20
+          }
+        ]
+      },
+      "playerBuild": {
+        "buildId": "demo.build.duelist",
+        "buildNameKey": "build-demo-duelist-name",
+        "raceId": "demo.race.human",
+        "raceNameKey": "race-demo-human-name",
+        "classId": "demo.class.duelist",
+        "classNameKey": "class-demo-duelist-name",
+        "personalityId": "demo.personality.combat",
+        "personalityNameKey": "personality-demo-combat-name",
+        "lifePercent": 108,
+        "experiencePercent": 110
+      },
+      "playerResources": [
+        {
+          "id": "demo.resource.tempo",
+          "nameKey": "resource-demo-tempo-name",
+          "current": 3,
+          "maximum": 23,
+          "waitRecoveryAmount": 0,
+          "restRecoveryAmount": 0,
+          "meleeHitGainAmount": 2,
+          "meleeKillGainAmount": 3,
+          "turnDecayAmount": 1
+        }
+      ],
+      "playerAbilityLearning": null,
+      "playerAbilities": [
+        {
+          "id": "demo.ability.crescent-cut",
+          "nameKey": "ability-demo-crescent-cut-name",
+          "descriptionKey": "ability-demo-crescent-cut-description",
+          "minimumLevel": 1,
+          "innate": true,
+          "resourceId": "demo.resource.tempo",
+          "baseResourceCost": 4,
+          "resourceCost": 7,
+          "failurePercent": 2,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "damage",
+              "damageDice": 3,
+              "damageSides": 4,
+              "damageBonus": 0,
+              "damageType": "physical"
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "direction"
+            ],
+            "range": 1,
+            "requiresLineOfEffect": true
+          },
+          "learned": false,
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        },
+        {
+          "id": "demo.ability.surging-tempo",
+          "nameKey": "ability-demo-surging-tempo-name",
+          "descriptionKey": "ability-demo-surging-tempo-description",
+          "minimumLevel": 1,
+          "innate": true,
+          "resourceId": "demo.resource.tempo",
+          "baseResourceCost": 6,
+          "resourceCost": 10,
+          "failurePercent": 2,
+          "proficiency": 0,
+          "proficiencyCap": 1600,
+          "proficiencyRank": "unskilled",
+          "castCount": 0,
+          "failCount": 0,
+          "cooldownRemaining": 0,
+          "cooldownTurns": 0,
+          "effects": [
+            {
+              "type": "apply-status",
+              "statusKindId": "rfb.status.haste",
+              "intensity": 1,
+              "durationTicks": 25,
+              "durationDice": 0,
+              "durationSides": 0,
+              "stacking": "extend",
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ],
+          "targetSpec": {
+            "modes": [
+              "self"
+            ],
+            "range": 0,
+            "requiresLineOfEffect": false
+          },
+          "learned": false,
+          "canStudy": false,
+          "canForget": false,
+          "canCast": false
+        }
+      ],
+      "playerSummonCommand": {
+        "mode": "follow"
+      },
+      "entityCount": 0,
+      "entities": [],
+      "groundItemCount": 5,
+      "inventoryStackCount": 0,
+      "equipmentCount": 1,
+      "inventory": [],
+      "equipment": [
+        {
+          "id": "generated.item.1",
+          "kindId": "demo.item.echo-blade",
+          "displayNameKey": "item-demo-echo-blade-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "slotId": "weapon",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary",
+          "meleeProfile": {
+            "attacks": 2,
+            "toHit": 10,
+            "toDamage": 1,
+            "damage": {
+              "dice": 1,
+              "sides": 2,
+              "damageType": "physical"
+            },
+            "sourceItemId": "generated.item.1"
+          }
+        }
+      ],
+      "itemKnowledge": [],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "generated.item.1",
+          "appraised": true,
+          "identified": true
+        }
+      ],
+      "nextItemInstanceSerial": 3,
+      "terrainInteractions": [],
+      "tasks": [
+        {
+          "taskId": "demo.floor.echo-hunt-rift",
+          "floorId": "demo.floor.echo-hunt-rift",
+          "nameKey": "floor-demo-echo-hunt-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.floor.echo-task-rift",
+          "floorId": "demo.floor.echo-task-rift",
+          "nameKey": "floor-demo-echo-task-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0
+        },
+        {
+          "taskId": "demo.task.echo-bounty",
+          "floorId": "demo.floor.echo-bounty-rift",
+          "nameKey": "floor-demo-echo-bounty-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 2,
+          "stage": 1,
+          "stages": 1,
+          "retakesUsed": 0,
+          "maxRetakes": 1
+        },
+        {
+          "taskId": "demo.task.echo-chain",
+          "floorId": "demo.floor.echo-chain-rift",
+          "nameKey": "floor-demo-echo-chain-rift-name",
+          "status": "available",
+          "current": 0,
+          "required": 1,
+          "stage": 1,
+          "stages": 3,
+          "retakesUsed": 0,
+          "maxRetakes": 2
+        }
+      ],
+      "campaign": {
+        "status": "active",
+        "score": 0,
+        "conqueredDungeons": 0,
+        "completedTasks": 0
+      },
+      "revealedTerrain": [],
+      "stateHash": "22d58e43e41b68824578c942d581f2bc43f88a04f7be87a47f7aab314aa1729c"
+    },
+    "events": [
+      {
+        "kind": "turn.wait",
+        "messageKey": "game-wait",
+        "args": {}
+      }
+    ],
+    "changedCells": [
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "removedEntities": [],
+    "errors": [],
+    "saveRoundTripStateHash": "22d58e43e41b68824578c942d581f2bc43f88a04f7be87a47f7aab314aa1729c"
+  }
+}

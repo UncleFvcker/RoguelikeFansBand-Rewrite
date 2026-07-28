@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, Direction, GameCommand, SummonCommandModeDto, TargetSelection,
+    AttributeKindDto, DeviceRechargeSourceDto, Direction, GameCommand, SummonCommandModeDto,
+    TargetSelection,
 };
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
@@ -48,6 +49,10 @@ pub(crate) enum GameAction {
     Retire,
     Rest {
         turns: u16,
+    },
+    RechargeItem {
+        target_item_id: String,
+        source: DeviceRechargeSourceDto,
     },
     Search,
     SetSummonCommand {
@@ -128,6 +133,13 @@ impl From<GameCommand> for GameAction {
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,
             GameCommand::Rest { turns } => Self::Rest { turns },
+            GameCommand::RechargeItem {
+                target_item_id,
+                source,
+            } => Self::RechargeItem {
+                target_item_id,
+                source,
+            },
             GameCommand::Search => Self::Search,
             GameCommand::SetSummonCommand { mode } => Self::SetSummonCommand { mode },
             GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },

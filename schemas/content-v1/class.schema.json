@@ -241,6 +241,54 @@
       ],
       "type": "object"
     },
+    "DeviceRechargeProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "baseCapacity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "capacityPerAttributeIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "capacityPerLevel": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "governingAttribute": {
+          "$ref": "#/$defs/TechniqueAttribute"
+        },
+        "power": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "sourceItemDestructionOneIn": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "resourceId",
+        "governingAttribute",
+        "baseCapacity",
+        "capacityPerLevel",
+        "capacityPerAttributeIndex",
+        "power",
+        "sourceItemDestructionOneIn"
+      ],
+      "type": "object"
+    },
     "StartingItemDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -404,6 +452,17 @@
     },
     "descriptionKey": {
       "type": "string"
+    },
+    "deviceRechargeProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DeviceRechargeProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "experiencePercent": {
       "default": 100,

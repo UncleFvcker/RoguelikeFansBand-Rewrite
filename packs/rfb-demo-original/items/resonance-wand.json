@@ -9,6 +9,10 @@
   "weightTenthsPound": 10,
   "maxStack": 1,
   "deviceGeneration": {
+    "recovery": {
+      "intervalTicks": 10,
+      "energyPerMille": 10
+    },
     "activations": [
       {
         "id": "demo.device-activation.frost-bolt",
