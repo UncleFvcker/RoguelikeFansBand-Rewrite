@@ -2506,6 +2506,13 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-aggravate", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-mass-genocide":
+      return localization.format("message-item-use-mass-genocide", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        removed: event.args.removed ?? "0",
+        resisted: event.args.resisted ?? "0",
+        fatigue: event.args.fatigue ?? "0",
+      });
     case "item-use-elemental-blast":
       return localization.format("message-item-use-elemental-blast", {
         source: visibleItemName(event.args.nameKey, event.args.source),

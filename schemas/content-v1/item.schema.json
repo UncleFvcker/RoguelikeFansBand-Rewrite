@@ -644,6 +644,33 @@
         {
           "additionalProperties": false,
           "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "mass-genocide",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "destroy-adjacent-traps-and-doors",
               "type": "string"

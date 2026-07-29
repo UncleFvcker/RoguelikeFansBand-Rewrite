@@ -518,3 +518,5 @@ item-demo-aether-rupture-scroll-name = 以太裂隙卷轴
 item-demo-aether-rupture-scroll-description = 在阅读者周围撕开魔力裂隙，随后由裂隙反噬自身。
 item-demo-clamor-scroll-name = 喧鸣卷轴
 item-demo-clamor-scroll-description = 发出尖锐嗡鸣，惊醒附近的生物并加速视线内的敌人。
+item-demo-severance-scroll-name = 断绝卷轴
+item-demo-severance-scroll-description = 尝试抹除附近的所有生物，并让阅读者承受痛苦的负担。

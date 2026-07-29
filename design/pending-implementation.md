@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v124、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v125、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -82,8 +82,9 @@
 | P71 | 火焰与寒冰卷轴 | 已由 contract-v122 完成 | 窄 `self-centered-elemental-blast` 复用 self-target、既有范围格/墙阻挡/衰减、actor 抗性/死亡和玩家入伤管线；Fire 666/r4/`25+1d25`，Ice 800/r4/`30+1d30`。sval 58/59 使 `scroll-effect` 28→26；协议保持 1.118、包 1.113.0、Schema v52、fixture 425，共 425 exact |
 | P72 | Mana 卷轴 | 已由 contract-v123 完成 | 复用 `self-centered-elemental-blast` 并增加必填 `backlashUsesResistance`；1100/r4 mana 爆发尊重 actor Mana 抗性，玩家 `50+1d50` 反噬忽略玩家 Mana 抗性但保留 incoming-damage 百分比。sval 61 使 `scroll-effect` 26→25；协议保持 1.118、包 1.114.0、Schema v52、fixture 426，共 426 exact |
 | P73 | 激怒怪物卷轴 | 已由 contract-v124 完成 | 窄 `aggravate-monsters` 按当前视距 8 唤醒距离 <16 的存活 actor，并为距离 ≤8 且有几何 LOS 的敌对 actor 延长 100 ticks haste；玩家阵营只唤醒。sval 1 使 `scroll-effect` 25→24；协议保持 1.118、包 1.115.0、Schema v52、fixture 427，共 427 exact |
+| P74 | Mass Genocide 卷轴 | 已由 contract-v125 完成 | 窄 `mass-genocide` 以稳定实体 ID 顺序结算半径 20 内存活 actor；普通目标按 power 300 对抗直接移除，unique/guardian 必定抵抗，每候选 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。sval 45 使 `scroll-effect` 24→23；协议保持 1.118、包 1.116.0、Schema v52、fixture 428，共 428 exact |
 
-## contract-v124 明确遗留
+## contract-v125 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -94,7 +95,8 @@
 - Fire/Ice/Mana 当前只覆盖 actor AoE 与玩家反噬；`_scroll_power`、Devicemaster Scrolls 特例及投射对物品/地形的副作用继续留在缺口；
 - Mana 反噬只通过必填内容字段跳过元素抗性，没有新增通用穿透枚举、职业特例或第二套伤害管线；
 - Aggravate Monster 复用当前权威视距与几何 LOS；原版 `MFLAG2_NOPET` 驯服关系副作用、`very_nice_summon_hack` 和骑乘刷新等待对应系统，不在本轮伪造字段；
-- 剩余 `scroll-effect` 24 继续按世界/地形、状态和物品/成长事务分组；Protection from Evil、Vengeance、Monster Confusion、Understanding 和 Inventory Protection 不并入本轮。
+- Mass Genocide 只复用 Nearby 候选结算；普通 Genocide glyph 选择、`NOGENO`、questor、骑乘和 virtues 不在本轮，也不新增通用 actor-removal 框架；
+- 剩余 `scroll-effect` 23 继续按世界/地形、状态和物品/成长事务分组；Protection from Evil、Vengeance、Monster Confusion、Understanding 和 Inventory Protection 不并入本轮。
 
 ## contract-v116 明确遗留
 
@@ -131,10 +133,10 @@
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发和激怒怪物完成后剩余 24 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物和 Mass Genocide 完成后剩余 23 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
-- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福、相邻地形破坏、元素爆发和激怒怪物卷轴已由 contract-v113–v124 完成；剩余 24 条按世界/状态/物品效果继续推进。
+- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福、相邻地形破坏、元素爆发、激怒怪物和 Mass Genocide 卷轴已由 contract-v113–v125 完成；剩余 23 条按世界/状态/物品效果继续推进。
 
 ## contract-v107 明确遗留
 

@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 116] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 117] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -226,10 +226,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 116] = [
     "3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7",
     "ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5",
     "db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2",
+    "337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b";
+    "39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -348,6 +349,13 @@ enum ItemUsePlan {
         cancel: bool,
     },
     ResetRecall,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GenocideResolution {
+    removed_entity_ids: Vec<String>,
+    resisted_entity_ids: Vec<String>,
+    fatigue_damage: i32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -7940,8 +7948,45 @@ impl Game {
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
         candidate_ids.sort();
-        let mut erased = Vec::new();
-        let mut resisted = Vec::new();
+        let resolution = self.resolve_genocide_candidates(
+            candidate_ids,
+            scope,
+            power,
+            changed,
+            removed_entities,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id,
+                target_kind_id,
+                effects: vec![AbilityEffectResolutionDto::Genocide {
+                    effect_index: 0,
+                    scope: ability_genocide_scope_dto(scope),
+                    power,
+                    radius,
+                    glyph: matches!(scope, AbilityGenocideScopeDefinition::Glyph)
+                        .then_some(glyph)
+                        .flatten(),
+                    removed_entity_ids: resolution.removed_entity_ids,
+                    resisted_entity_ids: resolution.resisted_entity_ids,
+                    fatigue_damage: resolution.fatigue_damage,
+                }],
+            },
+            trace,
+        });
+    }
+
+    fn resolve_genocide_candidates(
+        &mut self,
+        candidate_ids: Vec<String>,
+        scope: AbilityGenocideScopeDefinition,
+        power: u16,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> GenocideResolution {
+        let mut removed_entity_ids = Vec::new();
+        let mut resisted_entity_ids = Vec::new();
         let mut fatigue_damage = 0_i32;
         for entity_id in candidate_ids {
             let Some(entity) = self.entities.iter().find(|entity| entity.id == entity_id) else {
@@ -7952,7 +7997,10 @@ impl Game {
                 .actor(&entity.kind_id)
                 .expect("genocide target definition must remain available");
             let target_level = definition.level;
-            let unique = definition.tags.iter().any(|tag| tag == "unique");
+            let protected = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "guardian"));
             let fatigue_sides = match scope {
                 AbilityGenocideScopeDefinition::Single => target_level.div_ceil(2),
                 AbilityGenocideScopeDefinition::Glyph => 4,
@@ -7963,19 +8011,19 @@ impl Game {
                 i32::try_from(self.rng.bounded(u64::from(fatigue_sides)) + 1)
                     .expect("genocide fatigue roll must fit i32"),
             );
-            if unique {
-                resisted.push(entity_id);
+            if protected {
+                resisted_entity_ids.push(entity_id);
                 continue;
             }
             let roll = u32::try_from(self.rng.bounded(u64::from(power)))
                 .expect("validated genocide power roll must fit u32");
             if target_level > roll {
-                resisted.push(entity_id);
+                resisted_entity_ids.push(entity_id);
             } else {
-                erased.push(entity_id);
+                removed_entity_ids.push(entity_id);
             }
         }
-        for entity_id in &erased {
+        for entity_id in &removed_entity_ids {
             let Some(index) = self
                 .entities
                 .iter()
@@ -8022,26 +8070,11 @@ impl Game {
         )
         .unwrap_or(i32::MAX);
         self.player.hp = self.player.hp.saturating_sub(fatigue_damage);
-        events.push(DomainEvent::AbilityEffectsResolved {
-            ability_id: ability_id.to_owned(),
-            resolution: AbilityEffectsResolutionDto {
-                target_entity_id,
-                target_kind_id,
-                effects: vec![AbilityEffectResolutionDto::Genocide {
-                    effect_index: 0,
-                    scope: ability_genocide_scope_dto(scope),
-                    power,
-                    radius,
-                    glyph: matches!(scope, AbilityGenocideScopeDefinition::Glyph)
-                        .then_some(glyph)
-                        .flatten(),
-                    removed_entity_ids: erased,
-                    resisted_entity_ids: resisted,
-                    fatigue_damage,
-                }],
-            },
-            trace,
-        });
+        GenocideResolution {
+            removed_entity_ids,
+            resisted_entity_ids,
+            fatigue_damage,
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -10305,6 +10338,16 @@ impl Game {
             (ItemUseEffectDefinition::AggravateMonsters, ItemUsePlan::SelfTarget) => {
                 self.resolve_item_aggravation(&kind_id, events, changed);
             }
+            (ItemUseEffectDefinition::MassGenocide { power, radius }, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_mass_genocide(
+                    &kind_id,
+                    power,
+                    radius,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             (
                 ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
                 ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
@@ -10704,6 +10747,7 @@ impl Game {
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
+            | ItemUseEffectDefinition::MassGenocide { .. }
             | ItemUseEffectDefinition::RemoveStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -10863,6 +10907,43 @@ impl Game {
         events.push(DomainEvent::ItemAggravated {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
+        });
+    }
+
+    fn resolve_item_mass_genocide(
+        &mut self,
+        source_kind_id: &str,
+        power: u16,
+        radius: u8,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let mut candidate_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && chebyshev_distance(self.player.position, entity.position)
+                        <= u32::from(radius)
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        candidate_ids.sort();
+        let resolution = self.resolve_genocide_candidates(
+            candidate_ids,
+            AbilityGenocideScopeDefinition::Nearby,
+            power,
+            changed,
+            removed_entities,
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemMassGenocide {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            removed_count: resolution.removed_entity_ids.len(),
+            resisted_count: resolution.resisted_entity_ids.len(),
+            fatigue_damage: resolution.fatigue_damage,
         });
     }
 
@@ -11630,6 +11711,7 @@ impl Game {
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
+            | ItemUseEffectDefinition::MassGenocide { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }

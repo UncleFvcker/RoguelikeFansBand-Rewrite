@@ -207,6 +207,7 @@ message-item-use-status-removed = 你使用了{ $target }，解除了{ $status }
 message-item-use-status-no-effect = 你使用了{ $target }，但未受到{ $status }影响。
 message-item-use-blessed = 你使用{ $source }，获得了持续 { $duration } tick 的祝福。
 message-item-use-aggravate = { $source }发出尖锐嗡鸣，惊醒了附近的生物。
+message-item-use-mass-genocide = { $source }抹除了附近的 { $removed } 个生物，另有 { $resisted } 个抵抗；负担造成 { $fatigue } 点伤害。
 message-item-use-elemental-blast = { $source }在你周围爆发，波及了 { $count } 个生物。
 message-item-use-elemental-blast-hit = { $source }命中{ $target }，造成 { $damage } 点伤害。
 message-item-use-elemental-blast-slay = { $source }摧毁了{ $target }。

@@ -518,3 +518,5 @@ item-demo-aether-rupture-scroll-name = Aether Rupture Scroll
 item-demo-aether-rupture-scroll-description = Tears open a mana surge around the reader before the rupture strikes them in return.
 item-demo-clamor-scroll-name = Clamor Scroll
 item-demo-clamor-scroll-description = Releases a piercing hum that wakes nearby creatures and hastens enemies in sight.
+item-demo-severance-scroll-name = Severance Scroll
+item-demo-severance-scroll-description = Attempts to erase every nearby creature at a painful cost to the reader.

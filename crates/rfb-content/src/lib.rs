@@ -1534,6 +1534,10 @@ pub enum ItemUseEffectDefinition {
         backlash_uses_resistance: bool,
     },
     AggravateMonsters,
+    MassGenocide {
+        power: u16,
+        radius: u8,
+    },
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
         status_kind_id: String,
@@ -3226,6 +3230,7 @@ fn valid_item_effect(
         }
         ItemUseEffectDefinition::AggravateMonsters
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
+        ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
         }
@@ -4627,6 +4632,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::Bless { .. }
                     | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
                     | ItemUseEffectDefinition::AggravateMonsters
+                    | ItemUseEffectDefinition::MassGenocide { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | ItemUseEffectDefinition::RemoveStatus { .. }
                     | ItemUseEffectDefinition::RestoreResource { .. }
@@ -8638,7 +8644,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 60);
+        assert_eq!(first.content.items.len(), 61);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8664,7 +8670,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.115.0");
+        assert_eq!(catalog.pack_version(), "1.116.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

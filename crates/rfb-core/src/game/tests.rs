@@ -15514,6 +15514,40 @@ fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
 }
 
 #[test]
+fn mass_genocide_scroll_consumes_empty_result_with_awareness_and_zero_rng() {
+    const ITEM_ID: &str = "test.item.severance-scroll.1";
+    const KIND_ID: &str = "demo.item.severance-scroll";
+    let mut game = skill_check_game(75, "demo.build.scholar");
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    let hp_before = game.player.hp;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        ITEM_ID,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("empty mass genocide should resolve");
+
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert_eq!(game.player.hp, hp_before);
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ItemMassGenocide {
+            removed_count: 0,
+            resisted_count: 0,
+            fatigue_damage: 0,
+            ..
+        }]
+    ));
+}
+
+#[test]
 fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
     let prepare = || {
         let mut game = Game::new(64);

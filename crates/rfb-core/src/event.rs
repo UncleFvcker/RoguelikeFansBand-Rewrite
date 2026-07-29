@@ -483,6 +483,13 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         display_name_key: String,
     },
+    ItemMassGenocide {
+        source_kind_id: String,
+        display_name_key: String,
+        removed_count: usize,
+        resisted_count: usize,
+        fatigue_damage: i32,
+    },
     ItemDestroyedAdjacentTrapsAndDoors {
         source_kind_id: String,
         display_name_key: String,
@@ -1872,6 +1879,23 @@ impl DomainEvent {
                 "item.use-aggravate",
                 "item-use-aggravate",
                 [("source", source_kind_id), ("nameKey", display_name_key)],
+            ),
+            Self::ItemMassGenocide {
+                source_kind_id,
+                display_name_key,
+                removed_count,
+                resisted_count,
+                fatigue_damage,
+            } => dto(
+                "item.use-mass-genocide",
+                "item-use-mass-genocide",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("removed", removed_count.to_string()),
+                    ("resisted", resisted_count.to_string()),
+                    ("fatigue", fatigue_damage.to_string()),
+                ],
             ),
             Self::ItemDestroyedAdjacentTrapsAndDoors {
                 source_kind_id,

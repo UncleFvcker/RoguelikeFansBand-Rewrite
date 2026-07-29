@@ -1243,6 +1243,11 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "category": "undead",
             "damage": 80
         }),
+        (70, 45) => serde_json::json!({
+            "type": "mass-genocide",
+            "power": 300,
+            "radius": 20
+        }),
         (70, 58) => serde_json::json!({
             "type": "self-centered-elemental-blast",
             "baseDamage": 666,
@@ -8674,6 +8679,23 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(
             aggravation["useAction"]["effect"]["type"],
             "aggravate-monsters"
+        );
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let mass_genocide = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 45,
+                ..LegacyItemEntry::default()
+            },
+            "mass-genocide-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            mass_genocide["useAction"]["effect"],
+            serde_json::json!({"type": "mass-genocide", "power": 300, "radius": 20})
         );
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 

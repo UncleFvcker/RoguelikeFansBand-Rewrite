@@ -144,6 +144,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v122：火焰与寒冰卷轴](design/contract-v122-scroll-elemental-blasts.md)
 - [Contract v123：Mana 卷轴](design/contract-v123-scroll-mana.md)
 - [Contract v124：激怒怪物卷轴](design/contract-v124-scroll-aggravation.md)
+- [Contract v125：Mass Genocide 卷轴](design/contract-v125-scroll-mass-genocide.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -167,7 +168,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v124`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v125`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -318,6 +319,8 @@ P72 / contract-v123 接入 Mana 卷轴。继续复用 `self-centered-elemental-b
 
 P73 / contract-v124 接入 Aggravate Monster。窄 `aggravate-monsters` 效果以当前权威视距 8 为基准：距离小于 16 的存活 actor 清除 sleep 并警戒，距离不超过 8、具有几何 LOS 的敌对 actor 延长 100 ticks haste；玩家阵营只会被唤醒。合法使用无条件消费、Tried + Aware 且零效果 RNG，错误目标仍在消费和时间前拒绝。legacy importer 映射 sval 1，使 `scroll-effect` 25→24。协议保持 1.118、demo 1.115.0、state hash Schema v52、active baseline 427 条 exact、零 waiver，内置 content hash 为 `337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b`。详见[Contract v124](design/contract-v124-scroll-aggravation.md)。
 
+P74 / contract-v125 接入 Mass Genocide。窄 `mass-genocide` 效果按半径 20 收集存活 actor 并以稳定实体 ID 顺序结算，不要求 LOS；power 300 的既有 Genocide 对抗直接移除普通目标，`unique`/`guardian` 必定抵抗，每个候选仍产生 `1d3` 疲劳。空候选仍消费并变为 Aware，但零效果 RNG；直接移除不触发 XP、掉落、尸体、任务或守护者胜利事务。legacy importer 映射 sval 45，使 `scroll-effect` 24→23。协议保持 1.118、demo 1.116.0、state hash Schema v52、active baseline 428 条 exact、零 waiver，内置 content hash 为 `39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8`。详见[Contract v125](design/contract-v125-scroll-mass-genocide.md)。
+
 ### 本地验证
 
 ```powershell
@@ -390,7 +393,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 427 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 428 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web
