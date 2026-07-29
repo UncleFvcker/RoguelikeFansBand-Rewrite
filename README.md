@@ -181,7 +181,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v140`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v141`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -364,6 +364,8 @@ P88 / contract-v139 接入 Heroism Potion。窄 `apply-heroism` 每次抽取 `1d
 
 P90 / contract-v140 接入 Berserk Strength Potion。窄 `apply-berserk-strength` 每次抽取 `1d25+25` 并 Extend Berserk，再固定治疗 30；Berserk 复用既有 max HP +30、defense -10、战斗/技能加值与 Fear 免疫，melee damage 为 `3 + level / 5`。首次新增 Berserk 或实际恢复 HP 任一成立即 Aware，单纯延长保持 Tried-only。协议保持 1.121、demo 1.131.0、state hash Schema 保持 v54、active baseline 444 条 exact、零 waiver，内置 content hash 为 `de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846`。legacy importer 映射 tval 75/sval 33，使 `consumable-effect` 73→72。详见[Contract v140](design/contract-v140-potion-berserk-strength.md)。
 
+P91 / contract-v141 接入 Poetic Inspiration Potion。窄 `apply-poetic-inspiration` 每次抽取 `1d100+100` 并 Extend 状态，通过既有状态修正授予 Wisdom/Charisma 各 +5；首次新增才 Aware，重复延长保持 Tried-only。协议保持 1.121、demo 1.132.0、state hash Schema 保持 v54、active baseline 445 条 exact、零 waiver，内置 content hash 为 `6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0`。legacy importer 映射 tval 75/sval 14，使 `consumable-effect` 72→71。详见[Contract v141](design/contract-v141-potion-poetic-inspiration.md)。
+
 ### 本地验证
 
 ```powershell
@@ -436,7 +438,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 444 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 445 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

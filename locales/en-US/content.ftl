@@ -552,5 +552,7 @@ item-demo-valor-tonic-name = Valor Tonic
 item-demo-valor-tonic-description = Temporarily fills the drinker with heroic resolve.
 item-demo-fury-draught-name = Fury Draught
 item-demo-fury-draught-description = A fierce draught that kindles rage and restores a measure of vitality.
+item-demo-muse-tonic-name = Muse Tonic
+item-demo-muse-tonic-description = Temporarily sharpens the drinker's wisdom and eloquence.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

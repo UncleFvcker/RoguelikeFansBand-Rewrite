@@ -252,6 +252,8 @@ contract-v139 为静态消耗品增加 self-only 的 `apply-heroism { durationDi
 
 contract-v140 为静态消耗品增加 self-only 的 `apply-berserk-strength { durationDice, durationSides, durationBonus }`。核心先按内容骰 Extend 既有 Berserk，再固定治疗 30；首次新增状态或实际治疗任一成立即识别。动态 activation、充能和设备检定不允许使用该效果。demo 包 1.131.0 新增原创 Fury Draught，现含 68 abilities、5 ability books、77 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v140](contract-v140-potion-berserk-strength.md)。
 
+contract-v141 为静态消耗品增加 self-only 的 `apply-poetic-inspiration { durationDice, durationSides, durationBonus }`。核心每次按内容骰 Extend Poetic Inspiration，状态通过既有修正字段授予 Wisdom/Charisma 各 +5；首次新增才识别。动态 activation、充能和设备检定不允许使用该效果。demo 包 1.132.0 新增原创 Muse Tonic，现含 68 abilities、5 ability books、78 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v141](contract-v141-potion-poetic-inspiration.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

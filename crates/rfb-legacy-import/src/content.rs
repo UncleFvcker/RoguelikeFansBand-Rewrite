@@ -1363,6 +1363,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 25
         }),
+        (75, 14) => serde_json::json!({
+            "type": "apply-poetic-inspiration",
+            "durationDice": 1,
+            "durationSides": 100,
+            "durationBonus": 100
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -8855,6 +8861,26 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationDice": 1,
                 "durationSides": 25,
                 "durationBonus": 25
+            })
+        );
+        let poetic_inspiration = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 14,
+                ..LegacyItemEntry::default()
+            },
+            "poetic-inspiration-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            poetic_inspiration["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-poetic-inspiration",
+                "durationDice": 1,
+                "durationSides": 100,
+                "durationBonus": 100
             })
         );
         let thermal = item_json(

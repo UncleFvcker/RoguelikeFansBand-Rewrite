@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 132] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 133] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -243,10 +243,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 132] = [
     "b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57",
     "1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35",
     "99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091",
+    "de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846";
+    "6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -5526,7 +5527,11 @@ impl Game {
                 attributes = apply_attribute_modifiers(attributes, modifiers, cap);
             }
         }
-        apply_attribute_dto_modifiers(attributes, self.equipment_modifiers(), cap)
+        attributes = apply_attribute_dto_modifiers(attributes, self.equipment_modifiers(), cap);
+        for status in &self.player.statuses {
+            attributes = apply_attribute_dto_modifiers(attributes, status.granted_modifiers, cap);
+        }
+        attributes
     }
 
     fn player_progress_dto(&self) -> PlayerProgressDto {
@@ -10539,6 +10544,7 @@ impl Game {
                 | ItemUseEffectDefinition::ApplySpeed { .. }
                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
+                | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -11035,6 +11041,7 @@ impl Game {
             | ItemUseEffectDefinition::ApplySpeed { .. }
             | ItemUseEffectDefinition::ApplyHeroism { .. }
             | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
+            | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12080,6 +12087,17 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyPoeticInspiration {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_poetic_inspiration(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12601,6 +12619,65 @@ impl Game {
         });
         let healed = self.resolve_item_healing(source_kind_id, 30, events);
         status_noticed || healed
+    }
+
+    fn resolve_item_poetic_inspiration(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            "rfb.status.poetic-inspiration",
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                wisdom: 5,
+                charisma: 5,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let (duration, noticed) = match resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                change,
+                ..
+            } => (
+                applied_duration_ticks,
+                matches!(change, AbilityStatusChangeDto::Added),
+            ),
+            _ => unreachable!("poetic inspiration must produce a status application resolution"),
+        };
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemPoeticInspirationResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            noticed,
+        });
+        noticed
     }
 
     fn resolve_item_thermal_resistance(

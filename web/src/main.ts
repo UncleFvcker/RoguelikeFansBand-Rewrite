@@ -2645,6 +2645,18 @@ function formatEvent(event: GameEventDto): string {
           source: visibleItemName(event.args.nameKey, event.args.source),
         },
       );
+    case "item-use-poetic-inspiration-applied":
+      return localization.format("message-item-use-poetic-inspiration-applied", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "item-use-poetic-inspiration-no-new-effect":
+      return localization.format(
+        "message-item-use-poetic-inspiration-no-new-effect",
+        {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+        },
+      );
     case "item-use-poison-applied":
       return localization.format("message-item-use-poison-applied", {
         source: visibleItemName(event.args.nameKey, event.args.source),

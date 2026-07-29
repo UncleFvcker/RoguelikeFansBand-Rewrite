@@ -555,7 +555,7 @@
         "conqueredDungeons": 1,
         "completedTasks": 0
       },
-      "stateHash": "7b7a4004489d7fa845f46b1500a1e994ea74114be64dee409b3598ad554cc5cf"
+      "stateHash": "3d62475945a5f400efc1542f07cd5612098292003ea9821912f037198988ac66"
     },
     "events": [
       {
@@ -6368,6 +6368,6 @@
       "demo.floor.echo-depth-2.region.demo.region.resonance-grotto.encounter.plain.1",
       "demo.guardian.echo-depths.1"
     ],
-    "saveRoundTripStateHash": "7b7a4004489d7fa845f46b1500a1e994ea74114be64dee409b3598ad554cc5cf"
+    "saveRoundTripStateHash": "3d62475945a5f400efc1542f07cd5612098292003ea9821912f037198988ac66"
   }
 }

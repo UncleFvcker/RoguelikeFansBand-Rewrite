@@ -1,10 +1,10 @@
 {
   "schemaVersion": 2,
-  "baseline": "contract-v140",
+  "baseline": "contract-v141",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "contractSchemaVersion": 1,
   "normalizationSchemaVersion": 1,
-  "minimumFixtureCount": 444,
+  "minimumFixtureCount": 445,
   "fixtureDirectory": "scenarios",
   "waiverDirectory": "waivers"
 }
