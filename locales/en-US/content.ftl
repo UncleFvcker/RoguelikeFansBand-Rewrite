@@ -508,3 +508,5 @@ item-demo-banishment-scroll-name = Banishment Scroll
 item-demo-banishment-scroll-description = Teleports every creature in sight away unless it resists.
 item-demo-benediction-scroll-name = Benediction Scroll
 item-demo-benediction-scroll-description = Extends a blessing that sharpens defense and combat skill.
+item-demo-resonance-breach-scroll-name = Resonance Breach Scroll
+item-demo-resonance-breach-scroll-description = Disrupts adjacent traps and blocked doorways.

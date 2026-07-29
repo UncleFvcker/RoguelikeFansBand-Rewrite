@@ -2502,6 +2502,15 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         duration: event.args.duration ?? "?",
       });
+    case "item-use-destroy-adjacent-traps-doors":
+    case "item-use-destroy-adjacent-traps-doors-no-effect":
+      return localization.format(
+        `message-${event.messageKey}` as MessageKey,
+        {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+          count: event.args.count ?? "0",
+        },
+      );
     case "item-use-resource-restored":
       return localization.format("message-item-use-resource-restored", {
         target: visibleItemName(event.args.nameKey, event.args.target),

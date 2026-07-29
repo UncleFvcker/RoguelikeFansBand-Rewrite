@@ -108,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 112] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 113] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -221,10 +221,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 112] = [
     "0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210",
     "99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00",
     "a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd",
+    "b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab";
+    "3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -314,6 +315,9 @@ enum AbilityTargetPlan {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ItemUsePlan {
     SelfTarget,
+    DestroyAdjacentTrapsAndDoors {
+        replacements: Vec<(Position, String)>,
+    },
     VisibleActors {
         actor_ids: Vec<String>,
     },
@@ -10269,6 +10273,29 @@ impl Game {
                 self.resolve_item_self_effect(&kind_id, &effect, events);
             }
             (
+                ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
+                ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
+            ) => {
+                let affected_positions = replacements
+                    .into_iter()
+                    .map(|(position, target_terrain_id)| {
+                        let index = self
+                            .index(position)
+                            .expect("planned terrain replacement must remain in bounds");
+                        self.terrain[index] = target_terrain_id;
+                        self.revealed_terrain.remove(&position);
+                        changed.insert(position);
+                        position
+                    })
+                    .collect();
+                self.mark_item_aware(&kind_id);
+                events.push(DomainEvent::ItemDestroyedAdjacentTrapsAndDoors {
+                    source_kind_id: kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    affected_positions,
+                });
+            }
+            (
                 ItemUseEffectDefinition::Damage {
                     damage_dice,
                     damage_sides,
@@ -10651,6 +10678,11 @@ impl Game {
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
             }
+            ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => {
+                self_target.then(|| ItemUsePlan::DestroyAdjacentTrapsAndDoors {
+                    replacements: self.adjacent_trap_door_replacements(),
+                })
+            }
             ItemUseEffectDefinition::Damage { .. } => {
                 let path = target_definition.and_then(|definition| {
                     target.and_then(|target| self.item_effect_path(definition, target))
@@ -10718,6 +10750,26 @@ impl Game {
                 (self_target && self.can_reset_recall()).then_some(ItemUsePlan::ResetRecall)
             }
         }
+    }
+
+    fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
+        TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(*direction);
+                let terrain = self
+                    .index(position)
+                    .and_then(|index| self.content.terrain(&self.terrain[index]))?;
+                let target_terrain_id = if let Some(trap) = &terrain.trap {
+                    Some(trap.disarm_to_terrain_id.clone())
+                } else if terrain.tags.iter().any(|tag| tag == "door") {
+                    terrain.bash_to_terrain_id.clone()
+                } else {
+                    None
+                }?;
+                Some((position, target_terrain_id))
+            })
+            .collect()
     }
 
     fn item_visible_actor_ids(&self) -> Vec<String> {
@@ -11386,6 +11438,7 @@ impl Game {
                 noticed
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }
             | ItemUseEffectDefinition::Detect { .. }

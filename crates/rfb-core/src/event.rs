@@ -459,6 +459,11 @@ pub(crate) enum DomainEvent {
         duration: u32,
         resolution: AbilityEffectsResolutionDto,
     },
+    ItemDestroyedAdjacentTrapsAndDoors {
+        source_kind_id: String,
+        display_name_key: String,
+        affected_positions: Vec<Position>,
+    },
     ItemResourceRestored {
         source_kind_id: String,
         display_name_key: String,
@@ -1765,6 +1770,27 @@ impl DomainEvent {
                     ("duration", duration.to_string()),
                 ],
                 GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::ItemDestroyedAdjacentTrapsAndDoors {
+                source_kind_id,
+                display_name_key,
+                affected_positions,
+            } => dto(
+                if affected_positions.is_empty() {
+                    "item.use-destroy-adjacent-traps-doors-no-effect"
+                } else {
+                    "item.use-destroy-adjacent-traps-doors"
+                },
+                if affected_positions.is_empty() {
+                    "item-use-destroy-adjacent-traps-doors-no-effect"
+                } else {
+                    "item-use-destroy-adjacent-traps-doors"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", affected_positions.len().to_string()),
+                ],
             ),
             Self::ItemResourceRestored {
                 source_kind_id,

@@ -1234,6 +1234,9 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         (70, 33) => bless(12, 6),
         (70, 34) => bless(24, 12),
         (70, 35) => bless(48, 24),
+        (70, 39) => serde_json::json!({
+            "type": "destroy-adjacent-traps-and-doors"
+        }),
         (70, 42) => serde_json::json!({
             "type": "dispel-category",
             "category": "undead",
@@ -8548,6 +8551,21 @@ F:BRAND_VAMP | HOLD_LIFE
             assert_eq!(effect["durationSides"], duration_sides);
             assert_eq!(effect["durationBonus"], duration_bonus);
         }
+        let trap_door_destruction = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 39,
+                ..LegacyItemEntry::default()
+            },
+            "trap-door-destruction-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            trap_door_destruction["useAction"]["effect"]["type"],
+            "destroy-adjacent-traps-and-doors"
+        );
         for (sval, effect_type, field, expected) in [
             (42, "dispel-category", "damage", serde_json::json!(80)),
             (

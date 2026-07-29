@@ -508,3 +508,5 @@ item-demo-banishment-scroll-name = 放逐卷轴
 item-demo-banishment-scroll-description = 将视野内所有未能抵抗的生物传送到远处。
 item-demo-benediction-scroll-name = 祈福卷轴
 item-demo-benediction-scroll-description = 延长祝福，提高防御与战斗技能。
+item-demo-resonance-breach-scroll-name = 共鸣破障卷轴
+item-demo-resonance-breach-scroll-description = 破坏相邻的陷阱与封闭门道。

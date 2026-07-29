@@ -1,6 +1,6 @@
-# 交接文档：P29–P69 迭代史与当前状态
+# 交接文档：P29–P70 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.118 / contract-v120，P69 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.118 / contract-v121，P70 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P69 在当前状态中汇总。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P70 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -81,7 +81,8 @@
 - **contract-v118 维护** 删除 13 类无权威消费者的装备 passive；只保留 regeneration 与 vampiric，历史 no-op 兼容留在存档 DTO 边界。
 - **P68 / contract-v119** 接入 Dispel Undead 与 Banishment，共用可见且 line-of-effect 可达的 actor 快照。协议保持 1.118，demo 1.110.0，save v1，state hash Schema v52，active baseline 422 exact、零 waiver；内置 hash 为 `a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd`。固定原版导入的 `scroll-effect` 34→32，真实包 hash 为 `eaf66414ab9d7eda4bac24957b4263e101250ac90b84a3f5cff9d0b9730e1bf7`。
 - **P69 / contract-v120** 接入 Blessing、Holy Chant 与 Holy Prayer，复用 self-target 与既有 blessed 状态结算。协议保持 1.118，demo 1.111.0，save v1，state hash Schema v52，active baseline 423 exact、零 waiver；内置 hash 为 `b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab`。固定原版导入的 `scroll-effect` 32→29，真实包 hash 为 `b008570c950fab4541286f1eccd86926f1c535cc0dea0770f038cca523b4e643`。
-- 下一步继续按真实报告拆分剩余 29 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把 `AbilityEffectDefinition` 或通用 actor-effect 框架提前纳入。
+- **P70 / contract-v121** 接入 Trap/Door Destruction，按固定八方向把陷阱替换为 disarm target、封闭门替换为 bash target；空用消费、Aware、零 RNG，开启/破损门保持不变。协议保持 1.118，demo 1.112.0，save v1，state hash Schema v52，active baseline 424 exact、零 waiver；内置 hash 为 `3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7`。固定原版导入的 `scroll-effect` 29→28，真实包 hash 为 `ad65fb2058f2a01b47ec73a616606d4550b5b807cb653d9410aafe0bfd49b6e2`。
+- 下一步继续按真实报告拆分剩余 28 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把 `AbilityEffectDefinition`、通用地形 DSL 或 actor-effect 框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令
