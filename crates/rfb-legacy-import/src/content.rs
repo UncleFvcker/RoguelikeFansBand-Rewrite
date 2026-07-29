@@ -1436,6 +1436,12 @@ fn fixed_consumable_use_action_with_terrain(
             }),
             remove_status("rfb.status.berserk"),
         ]),
+        (75, 67) => sequence(vec![
+            serde_json::json!({"type": "heal", "amount": 200}),
+            remove_status("rfb.status.blindness"),
+            remove_status("rfb.status.confusion"),
+            remove_status("rfb.status.stun"),
+        ]),
         (75, 70) => sequence(vec![
             serde_json::json!({
                 "type": "restore-resource-dice",
@@ -8386,6 +8392,38 @@ F:BRAND_VAMP | HOLD_LIFE
                     .all(|effect| effect["type"] == "remove-status")
             );
         }
+        let blood = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 67,
+                ..LegacyItemEntry::default()
+            },
+            "blood-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            blood["useAction"]["effect"],
+            serde_json::json!({
+                "type": "sequence",
+                "effects": [
+                    {"type": "heal", "amount": 200},
+                    {
+                        "type": "remove-status",
+                        "statusKindId": "rfb.status.blindness"
+                    },
+                    {
+                        "type": "remove-status",
+                        "statusKindId": "rfb.status.confusion"
+                    },
+                    {
+                        "type": "remove-status",
+                        "statusKindId": "rfb.status.stun"
+                    }
+                ]
+            })
+        );
         assert!(!report.item_behavior_gaps.contains_key("consumable-effect"));
 
         let _ = item_json(

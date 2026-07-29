@@ -98,6 +98,8 @@
 | P87 | Speed 药水 | 已由 contract-v138 完成 | 窄 `apply-speed` 在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks。tval 75/sval 29 使 `consumable-effect` 76→75；协议保持 1.121、包 1.129.0、Schema 保持 v54、fixture 442，共 442 exact |
 | P88 | Heroism 药水 | 已由 contract-v139 完成 | 窄 `apply-heroism` 每次抽取 `1d25+25` 并 Extend Hero，授予 max HP +10、melee/ranged skill +12 与 Fear 免疫；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 32 使 `consumable-effect` 75→74；协议保持 1.121、包 1.130.0、Schema 保持 v54、fixture 443，共 443 exact |
 
+contract-v139 后的 importer 维护复用 P61 已有 `sequence`，将 tval 75/sval 67 映射为固定治疗 200，随后依次解除 Blindness、Confusion 与 Stun；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 74→73，真实包源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
+
 ## contract-v139 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
@@ -126,7 +128,7 @@
 - Resistance Potion 只增加单一五抗 bundle 状态；不把 Thermal 改写为通用 resistance 列表，不建立五个独立计时器或共享物品状态 helper；
 - Speed Potion 只实现普通职业的首次持续时间与重复 `+5`；原版 `_potion_power` 和 Mauler 重复使用 `+10` 等待各自纵切，不建立职业覆盖表；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
-- `consumable-effect` 现为 75；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
+- `consumable-effect` 现为 73；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
 
 ## contract-v116 明确遗留
 
@@ -162,7 +164,7 @@
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 75 条缺口中；
+- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 73 条缺口中；
 - 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion、Protection from Evil、Recharging 和 Spell 完成后剩余 15 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
