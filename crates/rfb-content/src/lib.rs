@@ -1533,6 +1533,9 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    SelfLifeLoss {
+        amount: u32,
+    },
     Vengeance {
         duration_dice: u16,
         duration_sides: u32,
@@ -3230,7 +3233,8 @@ fn valid_item_effect(
     resource_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
-        ItemUseEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
+        ItemUseEffectDefinition::Heal { amount }
+        | ItemUseEffectDefinition::SelfLifeLoss { amount } => (1..=1_000_000).contains(amount),
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -4690,6 +4694,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
                     | ItemUseEffectDefinition::ApplySlowness { .. }
+                    | ItemUseEffectDefinition::SelfLifeLoss { .. }
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
                     | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -4863,6 +4868,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     ItemUseEffectDefinition::RechargeFromDevice { .. }
                         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                         | ItemUseEffectDefinition::ApplySlowness { .. }
+                        | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 ) && (action.device_check_difficulty.is_some()
                     || action.charges.is_some()
                     || !item.tags.iter().any(|tag| tag == "consumable")))
@@ -4912,6 +4918,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                             activation.effect,
                             ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                                 | ItemUseEffectDefinition::ApplySlowness { .. }
+                                | ItemUseEffectDefinition::SelfLifeLoss { .. }
                         )
                         && valid_item_effect_target(&activation.effect, &activation.target)
                 })
@@ -8739,7 +8746,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 70);
+        assert_eq!(first.content.items.len(), 71);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8765,7 +8772,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.124.0");
+        assert_eq!(catalog.pack_version(), "1.125.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

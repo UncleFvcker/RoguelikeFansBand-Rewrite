@@ -611,6 +611,25 @@
         {
           "additionalProperties": false,
           "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "self-life-loss",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "durationBonus": {
               "format": "uint32",
               "minimum": 0,

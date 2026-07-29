@@ -465,6 +465,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
         noticed: bool,
     },
+    ItemLifeLost {
+        source_kind_id: String,
+        display_name_key: String,
+        amount: i32,
+        fatal: bool,
+    },
     ItemVengeanceActivated {
         source_kind_id: String,
         display_name_key: String,
@@ -1885,6 +1891,28 @@ impl DomainEvent {
                     ("source", source_kind_id),
                     ("nameKey", display_name_key),
                     ("duration", duration.to_string()),
+                ],
+            ),
+            Self::ItemLifeLost {
+                source_kind_id,
+                display_name_key,
+                amount,
+                fatal,
+            } => dto(
+                if fatal {
+                    "item.use-life-loss-death"
+                } else {
+                    "item.use-life-loss"
+                },
+                if fatal {
+                    "item-use-life-loss-death"
+                } else {
+                    "item-use-life-loss"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("amount", amount.to_string()),
                 ],
             ),
             Self::ItemVengeanceActivated {

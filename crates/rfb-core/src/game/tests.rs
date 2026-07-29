@@ -15285,6 +15285,43 @@ fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
     );
 }
 
+#[test]
+fn mortal_draught_life_loss_bypasses_incoming_damage_reduction_without_rng() {
+    const ITEM_ID: &str = "test.item.mortal-draught";
+    const KIND_ID: &str = "demo.item.mortal-draught";
+
+    let mut game = Game::new(83);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.half-damage".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.life-loss-guard".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 50,
+    });
+    let hp_before = game.player.hp;
+    let draws_before = game.rng_draw_counter();
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.player.hp, hp_before.saturating_sub(5000));
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
 fn clear_monsters(game: &mut Game) {
     game.entities.clear();
     game.dungeon_states

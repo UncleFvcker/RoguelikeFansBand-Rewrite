@@ -275,13 +275,13 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "969ec0f004198b4b8898305485b5015d8256b8b2d74f2862f5637e726257c1c2"
+      "stateHash": "73b6280769ea5d552629bc873b8d57e783e6e8ec03834bfb4fd57b18fce8d6a4"
     },
     "errors": [
       {
         "step": 1,
         "kind": "command-sequence",
-        "stateHash": "969ec0f004198b4b8898305485b5015d8256b8b2d74f2862f5637e726257c1c2"
+        "stateHash": "73b6280769ea5d552629bc873b8d57e783e6e8ec03834bfb4fd57b18fce8d6a4"
       }
     ]
   }

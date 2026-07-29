@@ -1345,6 +1345,10 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 15
         }),
+        (75, 23) => serde_json::json!({
+            "type": "self-life-loss",
+            "amount": 5000
+        }),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -8723,6 +8727,21 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationSides": 25,
                 "durationBonus": 15
             })
+        );
+        let death = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 23,
+                ..LegacyItemEntry::default()
+            },
+            "death-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            death["useAction"]["effect"],
+            serde_json::json!({"type": "self-life-loss", "amount": 5000})
         );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),

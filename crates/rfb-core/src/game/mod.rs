@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 125] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 126] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -235,10 +235,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 125] = [
     "786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549",
     "d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52",
     "25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5",
+    "5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404";
+    "1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10528,6 +10529,7 @@ impl Game {
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
+                | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -11017,6 +11019,7 @@ impl Game {
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::ApplySlowness { .. }
+            | ItemUseEffectDefinition::SelfLifeLoss { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -12025,6 +12028,10 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::SelfLifeLoss { amount } => {
+                self.resolve_item_life_loss(source_kind_id, *amount, events);
+                true
+            }
             ItemUseEffectDefinition::Vengeance {
                 duration_dice,
                 duration_sides,
@@ -12318,6 +12325,23 @@ impl Game {
             noticed,
         });
         noticed
+    }
+
+    fn resolve_item_life_loss(
+        &mut self,
+        source_kind_id: &str,
+        amount: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let amount = i32::try_from(amount).expect("validated life loss must fit i32");
+        self.player.hp = self.player.hp.saturating_sub(amount);
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemLifeLost {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            amount,
+            fatal: self.player_is_dead(),
+        });
     }
 
     fn resolve_item_vengeance(

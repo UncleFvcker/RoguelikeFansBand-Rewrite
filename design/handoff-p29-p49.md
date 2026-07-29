@@ -1,6 +1,6 @@
 # 交接文档：P29–P82 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v133，P82 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v134，P83 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -94,7 +94,8 @@
 - **P80 / contract-v131** 接入 Recharging。互异的卷轴/来源/目标背包 ID 通过窄 `UseItemForRecharge` 命令提交；非法组合零时间零 RNG，合法事务消费卷轴后先支付来源损毁或能量，再复用 P60 目标失败公式。协议 1.121，demo 1.122.0，save v1，state hash Schema v53，active baseline 434 exact、零 waiver；内置 hash 为 `d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52`。固定原版导入的 `scroll-effect` 17→16，真实包 hash 为 `3df0f3da5a5700ba42d0e6b40a1bcd630d298d1f808292f1da5e043dfb33084b`。
 - **P81 / contract-v132** 接入 Spell。Class `usesSpellScrolls` 声明资格，合格职业固定永久增加 1 点学习容量；无资格职业仍消费、Aware、推进时间且零效果 RNG。bonus 进入默认 0 的 save 字段，协议保持 1.121，demo 1.123.0，state hash Schema v54，active baseline 435 exact、零 waiver；内置 hash 为 `25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5`。固定原版导入的 `scroll-effect` 16→15，真实包 hash 为 `6feceb4793b043f03c826cb242a9e182edf49ea2c708fffac31fa8f30daf589d`。
 - **P82 / contract-v133** 接入 Slowness Potion。窄 `apply-slowness` 固定 `15+1d25` 并总是掷一次持续时间，以 KeepStrongest 合并 Slow；只有首次新增状态才 Aware，已有 Slow 即使被延长也保持 Tried-only。协议保持 1.121，demo 1.124.0，state hash Schema v54，active baseline 436 exact、零 waiver；内置 hash 为 `5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404`。固定原版导入的 `consumable-effect` 81→80，真实包 hash 为 `d13e08a4feccd9717bac5eeab937f81266cad791e7ca53d8ca631abf88fe5764`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 80 个其他消耗品分别排期，不把通用状态 DSL、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **P83 / contract-v134** 接入 Death Potion。窄 `self-life-loss { amount: 5000 }` 直接扣除玩家生命，绕过护甲、抗性与 incoming-damage 缩放，零效果 RNG 且总是 Aware；demo 使用原创公开物品 Mortal Draught。协议保持 1.121，demo 1.125.0，state hash Schema v54，active baseline 437 exact、零 waiver；内置 hash 为 `1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562`。固定原版导入的 `consumable-effect` 80→79，真实包 hash 为 `ab0e840f704f3c9a1e9de7ba5c6c2f0ab28ea6dc775a037a54104b1bb9970210`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 79 个其他消耗品分别排期，不把通用状态/伤害 DSL、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

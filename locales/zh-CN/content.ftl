@@ -538,5 +538,7 @@ item-demo-spell-scroll-name = 法术卷轴
 item-demo-spell-scroll-description = 永久增加符合资格的阅读者可学习的法术数量。
 item-demo-slowness-potion-name = 减速药水
 item-demo-slowness-potion-description = 暂时降低饮用者的速度。
+item-demo-mortal-draught-name = 致命饮剂
+item-demo-mortal-draught-description = 一剂直接抽离生命的危险药液。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。
