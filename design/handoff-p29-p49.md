@@ -1,6 +1,6 @@
-# 交接文档：P29–P86 迭代史与当前状态
+# 交接文档：P29–P87 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v137，P86 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v138，P87 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -98,7 +98,8 @@
 - **P84 / contract-v135** 接入 Poison Potion。窄 `apply-poison` 先固定抽取 `bounded(55)` 并与既有 Poison 抗性档阈值比较；抵抗成功保持 Tried-only 且不抽持续时间，失败后才抽 `1d15+9`、Extend Poison 并 Aware。协议保持 1.121，demo 1.126.0，state hash Schema v54，active baseline 439 exact、零 waiver；内置 hash 为 `497fbc6b137e9bc2d8162ad52b0253f4d655a37c58abe391be6bcdd94ef94d9e`。固定原版导入的 `consumable-effect` 79→78，真实包 hash 为 `54244a2fd227878c7017bc8dfe2bd125c48f65cb093a198547bdcd891f1aef3c`。
 - **P85 / contract-v136** 接入 Thermal Potion。窄 `apply-thermal-resistance` 只抽一次 `1d10+10`，以 Extend 应用单一 Thermal 状态并同时授予 Fire/Cold Resistant；首次新增才 Aware，已有状态延长保持 Tried-only。协议保持 1.121，demo 1.127.0，state hash Schema v54，active baseline 440 exact、零 waiver；内置 hash 为 `3098d9de2051029b4509acc3b8973cec0b76679dcacfa6ace1244864bc3f363d`。固定原版导入的 `consumable-effect` 78→77，真实包 hash 为 `9832b1a0d8c31d49407adb4f4a9dd9982292dab35b1d50c8b187670fa825a370`。
 - **P86 / contract-v137** 接入 Resistance Potion。窄 `apply-basic-resistance` 每次只抽一次 `1d20+20`，以 KeepStrongest 应用单一 Basic Resistance 状态并同时授予 Acid/Electricity/Fire/Cold/Poison Resistant；合法使用无条件 Aware。协议保持 1.121，demo 1.128.0，state hash Schema v54，active baseline 441 exact、零 waiver；内置 hash 为 `b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57`。固定原版导入的 `consumable-effect` 77→76，真实包 hash 为 `430e28aaf60a043a344c02dc8d41185aaa0e33e0393da034fe0af9bbf0d785a2`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 76 个其他消耗品分别排期，不把通用状态/伤害 DSL、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **P87 / contract-v138** 接入 Speed Potion。窄 `apply-speed` 在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks；复用既有速度派生和调度。协议保持 1.121，demo 1.129.0，state hash Schema v54，active baseline 442 exact、零 waiver；内置 hash 为 `1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35`。固定原版导入的 `consumable-effect` 76→75，真实包 hash 为 `4b35c7d998cbb576b952384ce2c587a261a4dd28628dda451f04466e116a983f`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 75 个其他消耗品分别排期，不把通用状态/伤害 DSL、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

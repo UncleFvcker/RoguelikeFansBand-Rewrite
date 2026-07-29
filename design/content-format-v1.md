@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.128.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.129.0
 
 ## 1. 目标
 
@@ -246,6 +246,8 @@ contract-v136 为静态消耗品增加 self-only 的 `apply-thermal-resistance {
 
 contract-v137 为静态消耗品增加 self-only 的 `apply-basic-resistance { durationDice, durationSides, durationBonus }`。核心每次只抽一次持续时间，以 KeepStrongest 应用单一 Basic Resistance 状态并同时授予 Acid/Electricity/Fire/Cold/Poison Resistant；合法使用无条件识别，动态 activation、充能和设备检定不允许使用该效果。demo 包 1.128.0 新增原创 Prismatic Elixir，现含 68 abilities、5 ability books、74 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v137](contract-v137-potion-basic-resistance.md)。
 
+contract-v138 为静态消耗品增加 self-only 的 `apply-speed { durationDice, durationSides, durationBonus }`。核心在没有 Haste 时抽取初始持续时间并识别，已有 Haste 时零 RNG、固定延长 5 ticks；动态 activation、充能和设备检定不允许使用该效果。demo 包 1.129.0 新增原创 Swiftstep Tonic，现含 68 abilities、5 ability books、75 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v138](contract-v138-potion-speed.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。
@@ -270,7 +272,7 @@ contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord
 
 contract-v88 以 1.80.0 增加 `smart`、`preferredDistance` 和 `fleeHpPercent`，并让 Echo Cantor 使用 3 格偏好距离、25% 受伤撤退和已观察抗性记忆；阵营目标、敌我计数和实际多目标结算由核心定义。contract-v89 只增加玩家级召唤物命令、行动与跨层规则，不修改内容 schema 或 demo 数据，因此内容版本/hash 保持不变。contract-v90 以 1.81.0 为 `ResourceDefinition` 增加 `initialFillPercent`、`meleeHitGainAmount`、`meleeKillGainAmount` 和 `turnDecayAmount`，为 `ClassDefinition` 增加多条目 `techniqueProfiles`（资源、主宰属性、上限公式、最低失败率与先天能力），并加入节奏资源、决斗家职业/构筑/技能集与弦月斩、涌动节奏两个技法能力；Mana 与既有职业数据不变。contract-v91 以 1.82.0 为能力效果增加 `blink-self`、`teleport-self` 与 `teleport-target` 三种怪物位移形态（怪物施法白名单准入），并加入裂隙潜行者与三个位移能力。
 
-当前原创包的 active 编译版本为 1.128.0，content hash 为 `b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57`；其能力/物品效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确与随机位移、树状跨层、延迟召回、固定/类别/同族友方与敌对召唤、瞬时/持久 terrain/actor/item 侦测、原版式 terrain 转换、状态添加/移除、有序多效果、治疗、鉴定、装备附魔、装备诅咒与解除、Death 四册高级效果、动态设备激活、职业许可的学习容量增长、窄 Slowness/Poison/Thermal/Resistance Potion 和固定 self life loss，并由怪物 caster 与物品实例复用既有 actor、楼层、地形和知识管线。装备 passive 只允许已有权威消费者的 regeneration 与 vampiric；设备自然恢复、职业主动充能与召回继续只保存权威资源/实例/稳定目的地，不建立显示缓存。
+当前原创包的 active 编译版本为 1.129.0，content hash 为 `1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35`；其能力/物品效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确与随机位移、树状跨层、延迟召回、固定/类别/同族友方与敌对召唤、瞬时/持久 terrain/actor/item 侦测、原版式 terrain 转换、状态添加/移除、有序多效果、治疗、鉴定、装备附魔、装备诅咒与解除、Death 四册高级效果、动态设备激活、职业许可的学习容量增长、窄 Slowness/Speed/Poison/Thermal/Resistance Potion 和固定 self life loss，并由怪物 caster 与物品实例复用既有 actor、楼层、地形和知识管线。装备 passive 只允许已有权威消费者的 regeneration 与 vampiric；设备自然恢复、职业主动充能与召回继续只保存权威资源/实例/稳定目的地，不建立显示缓存。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 

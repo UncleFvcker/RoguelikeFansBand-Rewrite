@@ -214,6 +214,7 @@ message-item-use-status-no-effect = You use { $target }, but you are not affecte
 message-item-use-blessed = You use { $source } and are blessed for { $duration } ticks.
 message-item-use-slowness-applied = You use { $source } and are slowed for { $duration } ticks.
 message-item-use-slowness-no-effect = You use { $source }, but notice no new effect.
+message-item-use-speed = You use { $source } and move faster for { $duration } ticks.
 message-item-use-poison-applied = You use { $source } and are poisoned for { $duration } ticks.
 message-item-use-poison-resisted = You use { $source }, but resist its poison.
 message-item-use-thermal-resistance-applied = You use { $source } and resist fire and cold for { $duration } ticks.

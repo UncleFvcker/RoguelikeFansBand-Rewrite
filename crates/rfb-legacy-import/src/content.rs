@@ -1345,6 +1345,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 15
         }),
+        (75, 29) => serde_json::json!({
+            "type": "apply-speed",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 15
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -7887,7 +7893,13 @@ W:5:0:0:150:80
 
         let potion = get("test-potion-of-mending.json");
         assert_eq!(potion["maxStack"], 20);
-        assert_eq!(outcome.report.item_behavior_gaps["consumable-effect"], 1);
+        assert_eq!(potion["useAction"]["effect"]["type"], "apply-speed");
+        assert!(
+            !outcome
+                .report
+                .item_behavior_gaps
+                .contains_key("consumable-effect")
+        );
 
         let torch = get("test-torch.json");
         assert_eq!(torch["equipmentSlot"], "light");
@@ -8373,10 +8385,10 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 75,
-                sval: 29,
+                sval: 32,
                 ..LegacyItemEntry::default()
             },
-            "speed-potion",
+            "heroism-potion",
             &LauncherAmmoIndex::default(),
             None,
             &mut report,
@@ -8741,6 +8753,26 @@ F:BRAND_VAMP | HOLD_LIFE
             slowness["useAction"]["effect"],
             serde_json::json!({
                 "type": "apply-slowness",
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationBonus": 15
+            })
+        );
+        let speed = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 29,
+                ..LegacyItemEntry::default()
+            },
+            "speed-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            speed["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-speed",
                 "durationDice": 1,
                 "durationSides": 25,
                 "durationBonus": 15

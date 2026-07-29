@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 129] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 130] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -240,10 +240,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 129] = [
     "1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562",
     "497fbc6b137e9bc2d8162ad52b0253f4d655a37c58abe391be6bcdd94ef94d9e",
     "3098d9de2051029b4509acc3b8973cec0b76679dcacfa6ace1244864bc3f363d",
+    "b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57";
+    "1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10533,6 +10534,7 @@ impl Game {
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
+                | ItemUseEffectDefinition::ApplySpeed { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -11026,6 +11028,7 @@ impl Game {
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::ApplySlowness { .. }
+            | ItemUseEffectDefinition::ApplySpeed { .. }
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12038,6 +12041,17 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplySpeed {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_speed(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12369,6 +12383,60 @@ impl Game {
             display_name_key: self.item_display_name_key(source_kind_id),
             duration,
             noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_speed(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let already_hasted = self
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_HASTE);
+        let duration = if already_hasted {
+            5
+        } else {
+            let duration_sides =
+                u16::try_from(duration_sides).expect("validated speed die sides must fit u16");
+            u32::try_from(self.roll_damage(duration_dice, duration_sides))
+                .expect("validated speed duration must fit u32")
+                .saturating_add(duration_bonus)
+        };
+        let change = apply_status(
+            &mut self.player.statuses,
+            StatusApplication {
+                status: StatusInstance {
+                    kind_id: STATUS_HASTE.to_owned(),
+                    intensity: 1,
+                    remaining_ticks: duration,
+                    source_id: Some(source_kind_id.to_owned()),
+                    granted_resistances: BTreeMap::new(),
+                    granted_brands: BTreeSet::new(),
+                    granted_modifiers: StatModifiersDto::default(),
+                    granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                    granted_status_immunities: BTreeSet::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                },
+                stacking: StatusStacking::Extend,
+            },
+        );
+        let noticed = matches!(change, StatusChange::Added);
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemSpeedResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
         });
         noticed
     }

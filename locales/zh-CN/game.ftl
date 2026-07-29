@@ -210,6 +210,7 @@ message-item-use-status-no-effect = 你使用了{ $target }，但未受到{ $sta
 message-item-use-blessed = 你使用{ $source }，获得了持续 { $duration } tick 的祝福。
 message-item-use-slowness-applied = 你使用{ $source }，陷入了持续 { $duration } tick 的减速。
 message-item-use-slowness-no-effect = 你使用{ $source }，但没有察觉新的效果。
+message-item-use-speed = 你使用{ $source }，速度提升持续 { $duration } tick。
 message-item-use-poison-applied = 你使用{ $source }，中毒持续 { $duration } tick。
 message-item-use-poison-resisted = 你使用{ $source }，但抵抗了其中的毒素。
 message-item-use-thermal-resistance-applied = 你使用{ $source }，获得持续 { $duration } tick 的火焰与寒冷抗性。

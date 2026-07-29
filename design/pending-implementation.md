@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v137、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v138、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -95,8 +95,9 @@
 | P84 | Poison 药水 | 已由 contract-v135 完成 | 窄 `apply-poison` 先抽 `bounded(55)` 并与既有 Poison 抗性阈值比较；成功抵抗保持 Tried-only 且不抽持续时间，失败后才抽 `1d15+9`、Extend Poison 并 Aware。tval 75/sval 6 使 `consumable-effect` 79→78；协议保持 1.121、包 1.126.0、Schema 保持 v54、fixtures 438–439，共 439 exact |
 | P85 | Thermal 药水 | 已由 contract-v136 完成 | 窄 `apply-thermal-resistance` 只抽一次 `1d10+10`，以 Extend 应用一个同时授予 Fire/Cold Resistant 的状态；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 30 使 `consumable-effect` 78→77；协议保持 1.121、包 1.127.0、Schema 保持 v54、fixture 440，共 440 exact |
 | P86 | Resistance 药水 | 已由 contract-v137 完成 | 窄 `apply-basic-resistance` 每次只抽一次 `1d20+20`，以 KeepStrongest 应用一个同时授予 Acid/Electricity/Fire/Cold/Poison Resistant 的状态；合法使用无条件 Aware。tval 75/sval 60 使 `consumable-effect` 77→76；协议保持 1.121、包 1.128.0、Schema 保持 v54、fixture 441，共 441 exact |
+| P87 | Speed 药水 | 已由 contract-v138 完成 | 窄 `apply-speed` 在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks。tval 75/sval 29 使 `consumable-effect` 76→75；协议保持 1.121、包 1.129.0、Schema 保持 v54、fixture 442，共 442 exact |
 
-## contract-v137 明确遗留
+## contract-v138 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -122,8 +123,9 @@
 - 抵抗成功时的原版逐装备抗性学习等待单项属性知识模型，不把整件装备标为 identified；
 - Thermal Potion 只增加单一双抗 bundle 状态；不提前建立独立 Fire/Cold 临时计时器、跨来源共享 oppose 计时器或通用物品状态 DSL；
 - Resistance Potion 只增加单一五抗 bundle 状态；不把 Thermal 改写为通用 resistance 列表，不建立五个独立计时器或共享物品状态 helper；
+- Speed Potion 只实现普通职业的首次持续时间与重复 `+5`；原版 `_potion_power` 和 Mauler 重复使用 `+10` 等待各自纵切，不建立职业覆盖表；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
-- `consumable-effect` 现为 76；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
+- `consumable-effect` 现为 75；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
 
 ## contract-v116 明确遗留
 
@@ -159,7 +161,7 @@
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 76 条缺口中；
+- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 75 条缺口中；
 - 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion、Protection from Evil、Recharging 和 Spell 完成后剩余 15 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
