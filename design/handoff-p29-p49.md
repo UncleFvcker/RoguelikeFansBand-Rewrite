@@ -1,6 +1,6 @@
-# 交接文档：P29–P88 迭代史与当前状态
+# 交接文档：P29–P90 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v139，P88 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v140，P90 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -101,7 +101,8 @@
 - **P87 / contract-v138** 接入 Speed Potion。窄 `apply-speed` 在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks；复用既有速度派生和调度。协议保持 1.121，demo 1.129.0，state hash Schema v54，active baseline 442 exact、零 waiver；内置 hash 为 `1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35`。固定原版导入的 `consumable-effect` 76→75，真实包 hash 为 `4b35c7d998cbb576b952384ce2c587a261a4dd28628dda451f04466e116a983f`。
 - **P88 / contract-v139** 接入 Heroism Potion。窄 `apply-heroism` 每次抽取 `1d25+25` 并 Extend Hero，复用既有状态派生授予 max HP +10、melee/ranged skill +12 与 Fear 免疫；首次新增才 Aware，已有状态延长保持 Tried-only。协议保持 1.121，demo 1.130.0，state hash Schema v54，active baseline 443 exact、零 waiver；内置 hash 为 `99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091`。固定原版导入的 `consumable-effect` 75→74，真实包 hash 为 `47b741de879cefd63ad79a6d9ea4643c1e37b4444c63b9b581a3598a620241cc`。
 - **contract-v139 后 importer 维护** 复用 P61 已有恢复序列，将 tval 75/sval 67 映射为固定治疗 200 后依次解除 Blindness、Confusion 与 Stun；不增加 demo、contract 或 fixture。固定原版导入的 `consumable-effect` 74→73，源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 73 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **P90 / contract-v140** 接入 Berserk Strength Potion。窄 `apply-berserk-strength` 先按 `1d25+25` Extend Berserk，再治疗 30；首次新增状态或实际治疗任一成立即 Aware，单纯延长保持 Tried-only。协议保持 1.121，demo 1.131.0，state hash Schema v54，active baseline 444 exact、零 waiver；内置 hash 为 `de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846`。固定原版导入的 `consumable-effect` 73→72，真实包 hash 为 `b143ba1a8198e280fbedfdb595088e9b572ef830731eed7ee101d6ce9f80ac0d`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 72 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

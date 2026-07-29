@@ -15286,6 +15286,85 @@ fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
 }
 
 #[test]
+fn fury_draught_awareness_depends_on_new_berserk_or_actual_healing() {
+    const ITEM_ID: &str = "test.item.fury-draught";
+    const KIND_ID: &str = "demo.item.fury-draught";
+
+    for (damage, expected_knowledge, expected_heal_kind) in [
+        (10, ItemKnowledgeDto::Aware, "item.use-heal"),
+        (0, ItemKnowledgeDto::Tried, "item.use-no-effect"),
+    ] {
+        let mut game = Game::new(90);
+        clear_monsters(&mut game);
+        give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+        game.player.statuses.push(StatusInstance {
+            kind_id: "rfb.status.berserk".to_owned(),
+            intensity: 1,
+            remaining_ticks: 20,
+            source_id: Some("test.existing-berserk".to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto {
+                defense: -10,
+                max_hp: 30,
+                ..StatModifiersDto::default()
+            },
+            granted_equipment_bonuses: EquipmentBonusesDto {
+                melee_skill: 12,
+                melee_damage: 3,
+                ranged_skill: -12,
+                throwing_skill: -20,
+                device_skill: -20,
+                saving_throw_skill: -30,
+                stealth_skill: -7,
+                search_skill: -15,
+                perception_skill: -15,
+                digging_skill: 30,
+                ..EquipmentBonusesDto::default()
+            },
+            granted_status_immunities: BTreeSet::from([STATUS_FEAR.to_owned()]),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+        game.player.hp = game.effective_player_max_hp() - damage;
+        let expected_hp = game.effective_player_max_hp();
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+                target: None,
+            },
+        );
+
+        assert_eq!(game.rng_draw_counter(), draws_before + 1);
+        assert_eq!(game.player.hp, expected_hp);
+        assert_eq!(game.item_knowledge_dto(KIND_ID), expected_knowledge);
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .take(2)
+                .map(|event| event.kind.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "item.use-berserk-strength-no-new-effect",
+                expected_heal_kind
+            ]
+        );
+        let berserk = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == "rfb.status.berserk")
+            .expect("the draught should extend Berserk");
+        assert!((36..=60).contains(&berserk.remaining_ticks));
+    }
+}
+
+#[test]
 fn temperate_tonic_extends_existing_resistance_without_becoming_aware() {
     const ITEM_ID: &str = "test.item.temperate-tonic";
     const KIND_ID: &str = "demo.item.temperate-tonic";

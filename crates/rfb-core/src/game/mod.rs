@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 131] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 132] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -242,10 +242,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 131] = [
     "3098d9de2051029b4509acc3b8973cec0b76679dcacfa6ace1244864bc3f363d",
     "b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57",
     "1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35",
+    "99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091";
+    "de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10537,6 +10538,7 @@ impl Game {
                 | ItemUseEffectDefinition::ApplySlowness { .. }
                 | ItemUseEffectDefinition::ApplySpeed { .. }
                 | ItemUseEffectDefinition::ApplyHeroism { .. }
+                | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -11032,6 +11034,7 @@ impl Game {
             | ItemUseEffectDefinition::ApplySlowness { .. }
             | ItemUseEffectDefinition::ApplySpeed { .. }
             | ItemUseEffectDefinition::ApplyHeroism { .. }
+            | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12066,6 +12069,17 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyBerserkStrength {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_berserk_strength(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12515,6 +12529,78 @@ impl Game {
             noticed,
         });
         noticed
+    }
+
+    fn resolve_item_berserk_strength(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            "rfb.status.berserk",
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                defense: -10,
+                max_hp: 30,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses {
+                melee_skill: 12,
+                melee_damage: 3 + i32::from(self.progress.level / 5),
+                ranged_skill: -12,
+                throwing_skill: -20,
+                device_skill: -20,
+                saving_throw_skill: -30,
+                stealth_skill: -7,
+                search_skill: -15,
+                perception_skill: -15,
+                digging_skill: 30,
+                ..EquipmentBonuses::default()
+            },
+            &BTreeSet::from([STATUS_FEAR.to_owned()]),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let (duration, status_noticed) = match resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                change,
+                ..
+            } => (
+                applied_duration_ticks,
+                matches!(change, AbilityStatusChangeDto::Added),
+            ),
+            _ => unreachable!("berserk strength must produce a status application resolution"),
+        };
+        if status_noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemBerserkStrengthResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            noticed: status_noticed,
+        });
+        let healed = self.resolve_item_healing(source_kind_id, 30, events);
+        status_noticed || healed
     }
 
     fn resolve_item_thermal_resistance(

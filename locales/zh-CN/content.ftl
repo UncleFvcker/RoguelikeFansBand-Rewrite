@@ -550,5 +550,7 @@ item-demo-swiftstep-tonic-name = 疾步饮剂
 item-demo-swiftstep-tonic-description = 暂时加快饮用者的动作。
 item-demo-valor-tonic-name = 勇毅饮剂
 item-demo-valor-tonic-description = 暂时激发饮用者的英雄气概。
+item-demo-fury-draught-name = 狂怒饮剂
+item-demo-fury-draught-description = 一剂激起狂暴并恢复少量生命力的猛烈药液。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

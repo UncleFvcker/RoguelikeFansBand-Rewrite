@@ -1357,6 +1357,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 25
         }),
+        (75, 33) => serde_json::json!({
+            "type": "apply-berserk-strength",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 25
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -8426,7 +8432,7 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!report.item_behavior_gaps.contains_key("consumable-effect"));
 
-        let _ = item_json(
+        let berserk_strength = item_json(
             &LegacyItemEntry {
                 tval: 75,
                 sval: 33,
@@ -8437,7 +8443,16 @@ F:BRAND_VAMP | HOLD_LIFE
             None,
             &mut report,
         );
-        assert_eq!(report.item_behavior_gaps["consumable-effect"], 1);
+        assert_eq!(
+            berserk_strength["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-berserk-strength",
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationBonus": 25
+            })
+        );
+        assert!(!report.item_behavior_gaps.contains_key("consumable-effect"));
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.121 / contract-v139（P31–P88 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.121 / contract-v140（P31–P90 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v139 阶段性里程碑
+## 8. contract-v75–v140 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.121、内容包 1.130.0、contract-v139、save v1 和 state hash Schema v54；内容 hash 为 `99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091`。active baseline 包含 443 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126–v139 增加相邻树/墙创建、怪物伤害 Vengeance、玩家下一次近战 Monster Confusion、近战 Protection from Evil、glyph Genocide、Recharging、Spell 学习容量、Slowness Potion、固定生命损失 Death Potion、Poison Potion、Thermal Potion、Resistance Potion、Speed Potion 与 Heroism Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.121、内容包 1.131.0、contract-v140、save v1 和 state hash Schema v54；内容 hash 为 `de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846`。active baseline 包含 444 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126–v140 增加相邻树/墙创建、怪物伤害 Vengeance、玩家下一次近战 Monster Confusion、近战 Protection from Evil、glyph Genocide、Recharging、Spell 学习容量、Slowness Potion、固定生命损失 Death Potion、Poison Potion、Thermal Potion、Resistance Potion、Speed Potion、Heroism Potion 与 Berserk Strength Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、76 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、77 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -578,6 +578,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P87 进展（2026-07）**：contract-v138 接入 Speed Potion。窄 `apply-speed` 静态消耗品效果在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks；复用既有 Haste、速度派生和调度。fixture 442 连续使用两次，固定首次 40、重复 5、总效果 RNG 一次与最终 35 ticks。协议保持 1.121，demo 升至 1.129.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 29，`consumable-effect` 76→75，真实包严格编译 hash 为 `4b35c7d998cbb576b952384ce2c587a261a4dd28628dda451f04466e116a983f`。
 
 **P88 进展（2026-07）**：contract-v139 接入 Heroism Potion。窄 `apply-heroism` 静态消耗品效果每次抽取 `1d25+25`，以 Extend 应用既有 Hero 状态，授予 max HP +10、melee/ranged skill +12 与 Fear 免疫；首次新增才 Aware，已有 Hero 的延长保持 Tried-only。fixture 443 连续使用两次，固定骰值 50、36、最终 66 ticks、派生加值、知识、事件与回档。协议保持 1.121，demo 升至 1.130.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 32，`consumable-effect` 75→74，真实包严格编译 hash 为 `47b741de879cefd63ad79a6d9ea4643c1e37b4444c63b9b581a3598a620241cc`。
+
+**P90 进展（2026-07）**：contract-v140 接入 Berserk Strength Potion。窄 `apply-berserk-strength` 静态消耗品效果先按 `1d25+25` Extend 既有 Berserk，再复用物品治疗路径恢复 30 HP；首次新增 Berserk 或实际治疗任一成立即 Aware，仅延长保持 Tried-only。fixture 444 固定状态先于治疗、max HP 33→63、治疗填满新上限、一次效果 RNG、消费、知识与完整派生值，不做 save round-trip；一个表驱动核心测试覆盖已有 Berserk 时“有治疗识别/满血不识别”两支。协议保持 1.121，demo 升至 1.131.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 33，`consumable-effect` 73→72，真实包严格编译 hash 为 `b143ba1a8198e280fbedfdb595088e9b572ef830731eed7ee101d6ce9f80ac0d`。
 
 ## 9. 内容迁移策略
 

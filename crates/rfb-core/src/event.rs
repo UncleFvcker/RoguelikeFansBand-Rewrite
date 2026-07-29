@@ -476,6 +476,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
         noticed: bool,
     },
+    ItemBerserkStrengthResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        noticed: bool,
+    },
     ItemThermalResistanceResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -1948,6 +1954,28 @@ impl DomainEvent {
                     "item-use-heroism-applied"
                 } else {
                     "item-use-heroism-no-new-effect"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+            ),
+            Self::ItemBerserkStrengthResolved {
+                source_kind_id,
+                display_name_key,
+                duration,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-berserk-strength-applied"
+                } else {
+                    "item.use-berserk-strength-no-new-effect"
+                },
+                if noticed {
+                    "item-use-berserk-strength-applied"
+                } else {
+                    "item-use-berserk-strength-no-new-effect"
                 },
                 [
                     ("source", source_kind_id),

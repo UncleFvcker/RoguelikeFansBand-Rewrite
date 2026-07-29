@@ -2633,6 +2633,18 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-heroism-no-new-effect", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-berserk-strength-applied":
+      return localization.format("message-item-use-berserk-strength-applied", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "item-use-berserk-strength-no-new-effect":
+      return localization.format(
+        "message-item-use-berserk-strength-no-new-effect",
+        {
+          source: visibleItemName(event.args.nameKey, event.args.source),
+        },
+      );
     case "item-use-poison-applied":
       return localization.format("message-item-use-poison-applied", {
         source: visibleItemName(event.args.nameKey, event.args.source),
