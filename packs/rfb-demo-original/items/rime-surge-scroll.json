@@ -16,7 +16,8 @@
       "radius": 4,
       "backlashSides": 30,
       "backlashBonus": 30,
-      "backlashDamageType": "cold"
+      "backlashDamageType": "cold",
+      "backlashUsesResistance": true
     }
   },
   "tags": ["cold", "consumable", "scroll"]

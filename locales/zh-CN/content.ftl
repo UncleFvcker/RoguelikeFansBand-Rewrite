@@ -514,3 +514,5 @@ item-demo-cinder-surge-scroll-name = 烬潮卷轴
 item-demo-cinder-surge-scroll-description = 在阅读者周围释放火焰爆发，随后以烈焰反噬自身。
 item-demo-rime-surge-scroll-name = 霜潮卷轴
 item-demo-rime-surge-scroll-description = 在阅读者周围释放寒冰爆发，随后以严寒反噬自身。
+item-demo-aether-rupture-scroll-name = 以太裂隙卷轴
+item-demo-aether-rupture-scroll-description = 在阅读者周围撕开魔力裂隙，随后由裂隙反噬自身。

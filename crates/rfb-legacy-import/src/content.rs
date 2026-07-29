@@ -1249,7 +1249,8 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "radius": 4,
             "backlashSides": 25,
             "backlashBonus": 25,
-            "backlashDamageType": "fire"
+            "backlashDamageType": "fire",
+            "backlashUsesResistance": true
         }),
         (70, 59) => serde_json::json!({
             "type": "self-centered-elemental-blast",
@@ -1258,7 +1259,18 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "radius": 4,
             "backlashSides": 30,
             "backlashBonus": 30,
-            "backlashDamageType": "cold"
+            "backlashDamageType": "cold",
+            "backlashUsesResistance": true
+        }),
+        (70, 61) => serde_json::json!({
+            "type": "self-centered-elemental-blast",
+            "baseDamage": 1100,
+            "damageType": "mana",
+            "radius": 4,
+            "backlashSides": 50,
+            "backlashBonus": 50,
+            "backlashDamageType": "mana",
+            "backlashUsesResistance": false
         }),
         (70, 57) => detect("actor", "legacy-import", false),
         (70, 53) => serde_json::json!({"type": "reset-recall"}),
@@ -8618,9 +8630,11 @@ F:BRAND_VAMP | HOLD_LIFE
             backlash_sides,
             backlash_bonus,
             backlash_damage_type,
+            backlash_uses_resistance,
         ) in [
-            (58, 666, "fire", 25, 25, "fire"),
-            (59, 800, "ice", 30, 30, "cold"),
+            (58, 666, "fire", 25, 25, "fire", true),
+            (59, 800, "ice", 30, 30, "cold", true),
+            (61, 1100, "mana", 50, 50, "mana", false),
         ] {
             let value = item_json(
                 &LegacyItemEntry {
@@ -8641,6 +8655,7 @@ F:BRAND_VAMP | HOLD_LIFE
             assert_eq!(effect["backlashSides"], backlash_sides);
             assert_eq!(effect["backlashBonus"], backlash_bonus);
             assert_eq!(effect["backlashDamageType"], backlash_damage_type);
+            assert_eq!(effect["backlashUsesResistance"], backlash_uses_resistance);
         }
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 

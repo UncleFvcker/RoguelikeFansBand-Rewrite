@@ -108,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 114] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 115] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -223,10 +223,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 114] = [
     "a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd",
     "b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab",
     "3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7",
+    "ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5";
+    "db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -10281,6 +10282,7 @@ impl Game {
                     backlash_sides,
                     backlash_bonus,
                     backlash_damage_type,
+                    backlash_uses_resistance,
                 },
                 ItemUsePlan::SelfTarget,
             ) => {
@@ -10292,6 +10294,7 @@ impl Game {
                     backlash_sides,
                     backlash_bonus,
                     backlash_damage_type.into(),
+                    backlash_uses_resistance,
                     events,
                     changed,
                     removed_entities,
@@ -10895,6 +10898,7 @@ impl Game {
         backlash_sides: u16,
         backlash_bonus: u16,
         backlash_damage_type: DamageType,
+        backlash_uses_resistance: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -10961,10 +10965,15 @@ impl Game {
         let backlash_raw = self
             .roll_damage(1, backlash_sides)
             .saturating_add(i32::from(backlash_bonus));
+        let backlash_resistance = if backlash_uses_resistance {
+            self.effective_player_resistances()
+                .level(backlash_damage_type)
+        } else {
+            ResistanceLevel::Normal
+        };
         let backlash = self.reduce_player_damage(resolve_damage(
             DamagePacket::new(backlash_raw, backlash_damage_type),
-            self.effective_player_resistances()
-                .level(backlash_damage_type),
+            backlash_resistance,
         ));
         self.player.hp = self.player.hp.saturating_sub(backlash.applied);
         events.push(DomainEvent::ItemElementalBlastBacklash {

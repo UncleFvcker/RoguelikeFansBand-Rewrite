@@ -16,7 +16,8 @@
       "radius": 4,
       "backlashSides": 25,
       "backlashBonus": 25,
-      "backlashDamageType": "fire"
+      "backlashDamageType": "fire",
+      "backlashUsesResistance": true
     }
   },
   "tags": ["consumable", "fire", "scroll"]

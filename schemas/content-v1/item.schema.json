@@ -594,6 +594,9 @@
               "minimum": 0,
               "type": "integer"
             },
+            "backlashUsesResistance": {
+              "type": "boolean"
+            },
             "baseDamage": {
               "format": "uint32",
               "minimum": 0,
@@ -620,7 +623,8 @@
             "radius",
             "backlashSides",
             "backlashBonus",
-            "backlashDamageType"
+            "backlashDamageType",
+            "backlashUsesResistance"
           ],
           "type": "object"
         },

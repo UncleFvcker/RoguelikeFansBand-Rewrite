@@ -1531,6 +1531,7 @@ pub enum ItemUseEffectDefinition {
         backlash_sides: u16,
         backlash_bonus: u16,
         backlash_damage_type: ActorDamageType,
+        backlash_uses_resistance: bool,
     },
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
@@ -8634,7 +8635,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 58);
+        assert_eq!(first.content.items.len(), 59);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8660,7 +8661,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.113.0");
+        assert_eq!(catalog.pack_version(), "1.114.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
