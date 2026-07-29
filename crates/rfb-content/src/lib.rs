@@ -1538,6 +1538,10 @@ pub enum ItemUseEffectDefinition {
         power: u16,
         radius: u8,
     },
+    CreateAdjacentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
         status_kind_id: String,
@@ -3231,6 +3235,21 @@ fn valid_item_effect(
         ItemUseEffectDefinition::AggravateMonsters
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
+        ItemUseEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } => {
+            !source_terrain_ids.is_empty()
+                && source_terrain_ids.len() <= 32
+                && source_terrain_ids.windows(2).all(|pair| pair[0] != pair[1])
+                && source_terrain_ids
+                    .iter()
+                    .all(|source_id| terrain_tags.contains_key(source_id))
+                && terrain_tags.contains_key(target_terrain_id)
+                && source_terrain_ids
+                    .iter()
+                    .all(|source_id| source_id != target_terrain_id)
+        }
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
         }
@@ -4633,6 +4652,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
                     | ItemUseEffectDefinition::AggravateMonsters
                     | ItemUseEffectDefinition::MassGenocide { .. }
+                    | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | ItemUseEffectDefinition::RemoveStatus { .. }
                     | ItemUseEffectDefinition::RestoreResource { .. }
@@ -4756,6 +4776,13 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         {
             return Err(ContentError::InvalidThrowProfile(item.id.clone()));
         }
+        if let Some(action) = &mut item.use_action
+            && let ItemUseEffectDefinition::CreateAdjacentTerrain {
+                source_terrain_ids, ..
+            } = &mut action.effect
+        {
+            source_terrain_ids.sort();
+        }
         if let Some(action) = &item.use_action {
             let valid_effect = valid_item_effect(
                 &action.effect,
@@ -4796,6 +4823,14 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             generation
                 .activations
                 .sort_by(|left, right| left.id.cmp(&right.id));
+            for activation in &mut generation.activations {
+                if let ItemUseEffectDefinition::CreateAdjacentTerrain {
+                    source_terrain_ids, ..
+                } = &mut activation.effect
+                {
+                    source_terrain_ids.sort();
+                }
+            }
             let mut activation_ids = BTreeSet::new();
             let valid_activations = (1..=256).contains(&generation.activations.len())
                 && generation.activations.iter().all(|activation| {
@@ -8641,10 +8676,10 @@ mod tests {
         assert_eq!(first.bytes, second.bytes);
         assert_eq!(decoded, first);
         assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-        assert_eq!(first.content.terrain.len(), 47);
+        assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 61);
+        assert_eq!(first.content.items.len(), 63);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8670,7 +8705,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.116.0");
+        assert_eq!(catalog.pack_version(), "1.117.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

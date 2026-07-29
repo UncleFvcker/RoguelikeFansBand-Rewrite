@@ -671,6 +671,30 @@
         {
           "additionalProperties": false,
           "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-adjacent-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "destroy-adjacent-traps-and-doors",
               "type": "string"

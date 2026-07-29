@@ -490,6 +490,11 @@ pub(crate) enum DomainEvent {
         resisted_count: usize,
         fatigue_damage: i32,
     },
+    ItemCreatedAdjacentTerrain {
+        source_kind_id: String,
+        display_name_key: String,
+        affected_positions: Vec<Position>,
+    },
     ItemDestroyedAdjacentTrapsAndDoors {
         source_kind_id: String,
         display_name_key: String,
@@ -1895,6 +1900,27 @@ impl DomainEvent {
                     ("removed", removed_count.to_string()),
                     ("resisted", resisted_count.to_string()),
                     ("fatigue", fatigue_damage.to_string()),
+                ],
+            ),
+            Self::ItemCreatedAdjacentTerrain {
+                source_kind_id,
+                display_name_key,
+                affected_positions,
+            } => dto(
+                if affected_positions.is_empty() {
+                    "item.use-create-adjacent-terrain-no-effect"
+                } else {
+                    "item.use-create-adjacent-terrain"
+                },
+                if affected_positions.is_empty() {
+                    "item-use-create-adjacent-terrain-no-effect"
+                } else {
+                    "item-use-create-adjacent-terrain"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", affected_positions.len().to_string()),
                 ],
             ),
             Self::ItemDestroyedAdjacentTrapsAndDoors {

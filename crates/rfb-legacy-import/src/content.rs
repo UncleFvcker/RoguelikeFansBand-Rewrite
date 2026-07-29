@@ -1109,7 +1109,17 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
     }
 }
 
-fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct TerrainCreationImportIds {
+    source_terrain_ids: Vec<String>,
+    tree_terrain_id: Option<String>,
+    wall_terrain_id: Option<String>,
+}
+
+fn fixed_consumable_use_action_with_terrain(
+    entry: &LegacyItemEntry,
+    terrain_creation: Option<&TerrainCreationImportIds>,
+) -> Option<serde_json::Value> {
     let remove_status = |status_kind_id: &str| serde_json::json!({"type": "remove-status", "statusKindId": status_kind_id});
     let sequence = |effects: Vec<serde_json::Value>| serde_json::json!({"type": "sequence", "effects": effects});
     let detect = |subject: &str, category: &str, persistent: bool| {
@@ -1248,6 +1258,22 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "power": 300,
             "radius": 20
         }),
+        (70, 48) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "create-adjacent-terrain",
+                "sourceTerrainIds": terrain_creation.source_terrain_ids,
+                "targetTerrainId": terrain_creation.tree_terrain_id.as_ref()?
+            })
+        }
+        (70, 49) => {
+            let terrain_creation = terrain_creation?;
+            serde_json::json!({
+                "type": "create-adjacent-terrain",
+                "sourceTerrainIds": terrain_creation.source_terrain_ids,
+                "targetTerrainId": terrain_creation.wall_terrain_id.as_ref()?
+            })
+        }
         (70, 58) => serde_json::json!({
             "type": "self-centered-elemental-blast",
             "baseDamage": 666,
@@ -1366,6 +1392,11 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
     Some(serde_json::json!({"effect": effect}))
 }
 
+#[cfg(test)]
+fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
+    fixed_consumable_use_action_with_terrain(entry, None)
+}
+
 fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value> {
     let activation = |id: &str,
                       name_key: &str,
@@ -1481,11 +1512,12 @@ fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value
     }))
 }
 
-fn item_json(
+fn item_json_with_terrain(
     entry: &LegacyItemEntry,
     id: &str,
     ammo: &LauncherAmmoIndex,
     ability_book_id: Option<&str>,
+    terrain_creation: Option<&TerrainCreationImportIds>,
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
@@ -1493,7 +1525,7 @@ fn item_json(
     if entry.tval == 127 {
         tags.push("gold");
     }
-    let use_action = fixed_consumable_use_action(entry);
+    let use_action = fixed_consumable_use_action_with_terrain(entry, terrain_creation);
     let device_generation = legacy_device_generation(entry);
     if let Some(gap) = shape.behavior_gap
         && ability_book_id.is_none()
@@ -1605,6 +1637,17 @@ fn item_json(
         );
     }
     value
+}
+
+#[cfg(test)]
+fn item_json(
+    entry: &LegacyItemEntry,
+    id: &str,
+    ammo: &LauncherAmmoIndex,
+    ability_book_id: Option<&str>,
+    report: &mut ContentImportReport,
+) -> serde_json::Value {
+    item_json_with_terrain(entry, id, ammo, ability_book_id, None, report)
 }
 
 impl ItemShape {
@@ -5787,6 +5830,7 @@ pub fn convert_content(
     };
     let mut terrain_files = Vec::new();
     let mut seen_ids = BTreeMap::new();
+    let mut terrain_creation = TerrainCreationImportIds::default();
 
     report.terrain_total = terrain.len();
     for entry in terrain {
@@ -5812,9 +5856,19 @@ pub fn convert_content(
             id = format!("{id}-{}", entry.index);
         }
         *duplicates += 1;
+        let terrain_id = format!("rfb-legacy.terrain.{id}");
+        if entry.flags.iter().any(|flag| flag == "FLOOR") {
+            terrain_creation.source_terrain_ids.push(terrain_id.clone());
+        }
+        match entry.tag.as_str() {
+            "TREE" => terrain_creation.tree_terrain_id = Some(terrain_id),
+            "GRANITE" => terrain_creation.wall_terrain_id = Some(terrain_id),
+            _ => {}
+        }
         terrain_files.push((format!("{id}.json"), terrain_json(entry, &id)));
         report.terrain_imported += 1;
     }
+    terrain_creation.source_terrain_ids.sort();
 
     let mut actor_files = Vec::new();
     let mut seen_actor_ids = BTreeMap::new();
@@ -6044,11 +6098,12 @@ pub fn convert_content(
         *duplicates += 1;
         item_files.push((
             format!("{id}.json"),
-            item_json(
+            item_json_with_terrain(
                 entry,
                 &id,
                 &ammo_index,
                 player_ability_book_for_item(entry),
+                Some(&terrain_creation),
                 &mut report,
             ),
         ));
@@ -8697,6 +8752,44 @@ F:BRAND_VAMP | HOLD_LIFE
             mass_genocide["useAction"]["effect"],
             serde_json::json!({"type": "mass-genocide", "power": 300, "radius": 20})
         );
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let terrain_creation = TerrainCreationImportIds {
+            source_terrain_ids: vec![
+                "rfb-legacy.terrain.floor".to_owned(),
+                "rfb-legacy.terrain.grass".to_owned(),
+            ],
+            tree_terrain_id: Some("rfb-legacy.terrain.tree".to_owned()),
+            wall_terrain_id: Some("rfb-legacy.terrain.granite".to_owned()),
+        };
+        for (sval, target_terrain_id) in [
+            (48, "rfb-legacy.terrain.tree"),
+            (49, "rfb-legacy.terrain.granite"),
+        ] {
+            let value = item_json_with_terrain(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("terrain-creation-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                Some(&terrain_creation),
+                &mut report,
+            );
+            assert_eq!(
+                value["useAction"]["effect"],
+                serde_json::json!({
+                    "type": "create-adjacent-terrain",
+                    "sourceTerrainIds": [
+                        "rfb-legacy.terrain.floor",
+                        "rfb-legacy.terrain.grass"
+                    ],
+                    "targetTerrainId": target_terrain_id
+                })
+            );
+        }
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 
         let _ = item_json(

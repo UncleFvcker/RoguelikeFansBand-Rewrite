@@ -2513,6 +2513,12 @@ function formatEvent(event: GameEventDto): string {
         resisted: event.args.resisted ?? "0",
         fatigue: event.args.fatigue ?? "0",
       });
+    case "item-use-create-adjacent-terrain":
+    case "item-use-create-adjacent-terrain-no-effect":
+      return localization.format(`message-${event.messageKey}`, {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        count: event.args.count ?? "0",
+      });
     case "item-use-elemental-blast":
       return localization.format("message-item-use-elemental-blast", {
         source: visibleItemName(event.args.nameKey, event.args.source),

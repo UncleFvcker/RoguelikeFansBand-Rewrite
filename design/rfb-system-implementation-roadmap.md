@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.118 / contract-v125（P31–P74 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.118 / contract-v126（P31–P75 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v125 阶段性里程碑
+## 8. contract-v75–v126 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.118、内容包 1.116.0、contract-v125、save v1 和 state hash Schema v52；内容 hash 为 `39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8`。active baseline 包含 428 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119 增加可见目标亡灵驱散与逐目标放逐；v120 增加三种祝福卷轴；v121 增加相邻陷阱与封闭门破坏；v122 增加 Fire/Ice 中心范围伤害和玩家反噬；v123 增加 Mana 爆发与忽略玩家 Mana 抗性的反噬；v124 增加近距唤醒与 LOS 敌对加速；v125 增加半径 Mass Genocide、unique/guardian 保护与逐候选疲劳。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.118、内容包 1.117.0、contract-v126、save v1 和 state hash Schema v52；内容 hash 为 `7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149`。active baseline 包含 429 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126 增加固定八邻格的树/墙创建与裸地排除事务。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、61 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、63 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -548,6 +548,10 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P72 进展（2026-07）**：contract-v123 接入 Mana 卷轴。继续复用 `self-centered-elemental-blast`，只增加必填 `backlashUsesResistance`：Mana 使用 1100/r4 actor 爆发和 `50+1d50` 玩家反噬，actor 伤害照常经过 Mana 抗性，玩家反噬以 `Normal` 抗性结算并继续经过 incoming-damage 百分比。fixture 426 固定 Mana immune 玩家仍被反噬致死、Mana resistant actor 减半、一次反噬 RNG、消费与 Tried/Aware；协议保持 1.118，demo 升至 1.114.0，Schema 保持 v52。legacy importer 映射 sval 61，`scroll-effect` 26→25，真实包严格编译 hash 为 `745204c6290b7cc64d5a5eda1783bb4212b43a74d932aa822799c46301fe03a5`。`_scroll_power`、Devicemaster Scrolls 特例和投射的物品/地形副作用继续显式保留。
 
 **P73 进展（2026-07）**：contract-v124 接入 Aggravate Monster。窄 `aggravate-monsters` 复用当前权威视距 8 与几何 LOS：距离 <16 的存活 actor 清除 sleep 并警戒，距离 ≤8 且有 LOS 的敌对 actor 延长 100 ticks haste，玩家阵营只唤醒。合法使用无条件消费、Tried + Aware 且零效果 RNG；fixture 427 用一名 LOS 内目标和一名墙后目标固定分支。协议保持 1.118，demo 升至 1.115.0，Schema 保持 v52。legacy importer 映射 sval 1，`scroll-effect` 25→24，真实包严格编译 hash 为 `3dd566a5705f3d7d9671a2fbabc03451802718024a1870b236af3d0088dd8ec7`。原版 `MFLAG2_NOPET`、特殊召唤与骑乘副作用继续显式保留。
+
+**P74 进展（2026-07）**：contract-v125 接入 Mass Genocide。窄 `mass-genocide` 按稳定实体 ID 结算半径 20 内存活 actor，普通目标按 power 300 对抗移除，unique/guardian 必定抵抗，每候选产生 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。fixture 428 固定普通目标移除、guardian 抵抗和疲劳。协议保持 1.118，demo 升至 1.116.0，Schema 保持 v52。legacy importer 映射 sval 45，`scroll-effect` 24→23，真实包 hash 为 `aeba4b11bddc16259fd02558f666bdca774fe3f5dd7d347b35330cc6bc24436b`。
+
+**P75 进展（2026-07）**：contract-v126 接入 Forest Creation 与 Wall Creation。窄 `create-adjacent-terrain` 固定扫描八邻格，只替换显式 `sourceTerrainIds`，跳过玩家、存活 actor、地面物品和权威楼层连接；预先规划后原子提交，不作连通性证明或修复。成功才 Aware，空结果消费、Tried-only、零效果 RNG。fixture 429 同时固定两种卷轴，另一个窄单测固定空结果和占用/连接排除。协议保持 1.118，demo 升至 1.117.0，Schema 保持 v52。legacy importer 从 `FF_FLOOR` 派生源 ID 并解析 TREE/GRANITE，`scroll-effect` 23→21，真实包 hash 为 `1eb1303a7476dcbce4209460a0af728019680112d55a767c03d2c39ade00bdad`。
 
 ## 9. 内容迁移策略
 

@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 117] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 118] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -227,10 +227,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 117] = [
     "ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5",
     "db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2",
     "337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b",
+    "39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8";
+    "7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -320,6 +321,9 @@ enum AbilityTargetPlan {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ItemUsePlan {
     SelfTarget,
+    CreateAdjacentTerrain {
+        replacements: Vec<(Position, String)>,
+    },
     DestroyAdjacentTrapsAndDoors {
         replacements: Vec<(Position, String)>,
     },
@@ -10349,6 +10353,31 @@ impl Game {
                 );
             }
             (
+                ItemUseEffectDefinition::CreateAdjacentTerrain { .. },
+                ItemUsePlan::CreateAdjacentTerrain { replacements },
+            ) => {
+                let affected_positions = replacements
+                    .into_iter()
+                    .map(|(position, target_terrain_id)| {
+                        let index = self
+                            .index(position)
+                            .expect("planned terrain creation must remain in bounds");
+                        self.terrain[index] = target_terrain_id;
+                        self.revealed_terrain.remove(&position);
+                        changed.insert(position);
+                        position
+                    })
+                    .collect::<Vec<_>>();
+                if !affected_positions.is_empty() {
+                    self.mark_item_aware(&kind_id);
+                }
+                events.push(DomainEvent::ItemCreatedAdjacentTerrain {
+                    source_kind_id: kind_id.clone(),
+                    display_name_key: self.item_display_name_key(&kind_id),
+                    affected_positions,
+                });
+            }
+            (
                 ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
                 ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
             ) => {
@@ -10757,6 +10786,13 @@ impl Game {
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
             }
+            ItemUseEffectDefinition::CreateAdjacentTerrain {
+                source_terrain_ids,
+                target_terrain_id,
+            } => self_target.then(|| ItemUsePlan::CreateAdjacentTerrain {
+                replacements: self
+                    .adjacent_terrain_creation_replacements(source_terrain_ids, target_terrain_id),
+            }),
             ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => {
                 self_target.then(|| ItemUsePlan::DestroyAdjacentTrapsAndDoors {
                     replacements: self.adjacent_trap_door_replacements(),
@@ -10829,6 +10865,41 @@ impl Game {
                 (self_target && self.can_reset_recall()).then_some(ItemUsePlan::ResetRecall)
             }
         }
+    }
+
+    fn adjacent_terrain_creation_replacements(
+        &self,
+        source_terrain_ids: &[String],
+        target_terrain_id: &str,
+    ) -> Vec<(Position, String)> {
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .chain(self.items.iter().filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some(position),
+                ItemLocation::Inventory
+                | ItemLocation::Equipped { .. }
+                | ItemLocation::CarriedBy { .. } => None,
+            }))
+            .collect::<BTreeSet<_>>();
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(*direction);
+                let index = self.index(position)?;
+                (!occupied.contains(&position)
+                    && !connections.contains(&position)
+                    && source_terrain_ids.contains(&self.terrain[index]))
+                .then(|| (position, target_terrain_id.to_owned()))
+            })
+            .collect()
     }
 
     fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
@@ -11712,6 +11783,7 @@ impl Game {
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
+            | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }

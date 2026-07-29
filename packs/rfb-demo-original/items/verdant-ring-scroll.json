@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.verdant-ring-scroll",
+  "nameKey": "item-demo-verdant-ring-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-verdant-ring-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "create-adjacent-terrain",
+      "sourceTerrainIds": [
+        "demo.terrain.floor",
+        "demo.terrain.resonance-cavern",
+        "demo.terrain.resonant-floor"
+      ],
+      "targetTerrainId": "demo.terrain.echo-tree"
+    }
+  },
+  "tags": ["consumable", "scroll", "terrain"]
+}

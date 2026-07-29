@@ -1,6 +1,6 @@
-# 交接文档：P29–P74 迭代史与当前状态
+# 交接文档：P29–P75 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.118 / contract-v125，P74 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.118 / contract-v126，P75 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P74 在当前状态中汇总。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P75 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -86,7 +86,8 @@
 - **P72 / contract-v123** 接入 Mana 卷轴，复用同一中心爆发路径并用必填 `backlashUsesResistance` 区分反噬：1100/r4 actor mana 爆发尊重目标抗性，玩家 `50+1d50` 反噬忽略玩家 Mana 抗性但保留 incoming-damage 百分比。协议保持 1.118，demo 1.114.0，save v1，state hash Schema v52，active baseline 426 exact、零 waiver；内置 hash 为 `db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2`。固定原版导入的 `scroll-effect` 26→25，真实包 hash 为 `745204c6290b7cc64d5a5eda1783bb4212b43a74d932aa822799c46301fe03a5`。
 - **P73 / contract-v124** 接入 Aggravate Monster。距离小于当前两倍权威视距的存活 actor 清除 sleep 并警戒，当前视距内有几何 LOS 的敌对 actor 延长 100 ticks haste；玩家阵营只唤醒。合法使用无条件消费、Tried + Aware 且零效果 RNG。协议保持 1.118，demo 1.115.0，save v1，state hash Schema v52，active baseline 427 exact、零 waiver；内置 hash 为 `337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b`。固定原版导入的 `scroll-effect` 25→24，真实包 hash 为 `3dd566a5705f3d7d9671a2fbabc03451802718024a1870b236af3d0088dd8ec7`。
 - **P74 / contract-v125** 接入 Mass Genocide。半径 20 内存活 actor 按稳定实体 ID 顺序结算，普通目标按 power 300 对抗直接移除，unique/guardian 必定抵抗，每候选均产生 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。直接移除不触发 XP、掉落、尸体、任务或守护者胜利事务。协议保持 1.118，demo 1.116.0，save v1，state hash Schema v52，active baseline 428 exact、零 waiver；内置 hash 为 `39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8`。固定原版导入的 `scroll-effect` 24→23，真实包 hash 为 `aeba4b11bddc16259fd02558f666bdca774fe3f5dd7d347b35330cc6bc24436b`。
-- 下一步继续按真实报告拆分剩余 23 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把 `AbilityEffectDefinition`、通用地形 DSL、actor-effect 或 actor-removal 框架提前纳入。
+- **P75 / contract-v126** 接入 Forest Creation 与 Wall Creation。固定八邻格只替换显式源地形，跳过玩家、存活 actor、地面物品和权威楼层连接；预先规划后原子提交，成功才 Aware，空结果消费、Tried-only、零效果 RNG。协议保持 1.118，demo 1.117.0，save v1，state hash Schema v52，active baseline 429 exact、零 waiver；内置 hash 为 `7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149`。固定原版导入从 `FF_FLOOR` 派生源 ID，`scroll-effect` 23→21，真实包 hash 为 `1eb1303a7476dcbce4209460a0af728019680112d55a767c03d2c39ade00bdad`。
+- 下一步继续按真实报告拆分剩余 21 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把 `AbilityEffectDefinition`、通用地形 DSL、actor-effect 或 actor-removal 框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

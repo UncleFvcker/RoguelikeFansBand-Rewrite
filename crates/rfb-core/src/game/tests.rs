@@ -15548,6 +15548,55 @@ fn mass_genocide_scroll_consumes_empty_result_with_awareness_and_zero_rng() {
 }
 
 #[test]
+fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
+    const ITEM_ID: &str = "test.item.stone-ring-scroll.1";
+    const KIND_ID: &str = "demo.item.stone-ring-scroll";
+    let mut game = skill_check_game(76, "demo.build.scholar");
+    let player_index = game
+        .index(game.player.position)
+        .expect("player position should be in bounds");
+    game.terrain.fill("demo.terrain.wall".to_owned());
+    game.terrain[player_index] = "demo.terrain.floor".to_owned();
+    let item_position = Position { x: 4, y: 3 };
+    let connection_position = Position { x: 3, y: 4 };
+    replace_terrain(&mut game, item_position, "demo.terrain.floor");
+    replace_terrain(&mut game, connection_position, "demo.terrain.floor");
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.location == ItemLocation::Ground(item_position))
+    );
+    game.floor_connections.push(FloorConnectionState {
+        id: "test.connection.protected-floor".to_owned(),
+        position: connection_position,
+        target_floor_id: None,
+        target_connection_id: None,
+    });
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    let before = game.snapshot();
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(update.world_tick, before.world_tick + 10);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Tried);
+    assert_eq!(update.events.len(), 1);
+    assert_eq!(
+        update.events[0].kind,
+        "item.use-create-adjacent-terrain-no-effect"
+    );
+    assert_eq!(update.events[0].args["count"], "0");
+}
+
+#[test]
 fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
     let prepare = || {
         let mut game = Game::new(64);
