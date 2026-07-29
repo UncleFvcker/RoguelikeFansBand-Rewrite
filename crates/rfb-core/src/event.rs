@@ -471,6 +471,11 @@ pub(crate) enum DomainEvent {
         duration: u32,
         noticed: bool,
     },
+    ItemBasicResistanceApplied {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+    },
     ItemPoisonResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -1920,6 +1925,19 @@ impl DomainEvent {
                 } else {
                     "item-use-thermal-resistance-no-effect"
                 },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+            ),
+            Self::ItemBasicResistanceApplied {
+                source_kind_id,
+                display_name_key,
+                duration,
+            } => dto(
+                "item.use-basic-resistance",
+                "item-use-basic-resistance",
                 [
                     ("source", source_kind_id),
                     ("nameKey", display_name_key),

@@ -544,5 +544,7 @@ item-demo-venom-draught-name = 毒液饮剂
 item-demo-venom-draught-description = 一剂苦涩药液，可能使缺乏防护的饮用者中毒。
 item-demo-temperate-tonic-name = 调温饮剂
 item-demo-temperate-tonic-description = 暂时使饮用者同时抵抗火焰与寒冷。
+item-demo-prismatic-elixir-name = 棱彩灵药
+item-demo-prismatic-elixir-description = 暂时使饮用者抵抗酸液、电击、火焰、寒冷与毒素。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

@@ -214,6 +214,7 @@ message-item-use-poison-applied = 你使用{ $source }，中毒持续 { $duratio
 message-item-use-poison-resisted = 你使用{ $source }，但抵抗了其中的毒素。
 message-item-use-thermal-resistance-applied = 你使用{ $source }，获得持续 { $duration } tick 的火焰与寒冷抗性。
 message-item-use-thermal-resistance-no-effect = 你使用{ $source }，但没有察觉新的效果。
+message-item-use-basic-resistance = 你使用{ $source }，获得持续 { $duration } tick 的酸液、电击、火焰、寒冷与毒素抗性。
 message-item-use-life-loss = 你使用{ $source }，损失了 { $amount } 点生命。
 message-item-use-life-loss-death = 你使用{ $source }，损失了 { $amount } 点生命并死亡。
 message-item-use-vengeance = 你使用{ $source }，获得了持续 { $duration } tick 的反击护佑。

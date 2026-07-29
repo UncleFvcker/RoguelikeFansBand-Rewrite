@@ -544,5 +544,7 @@ item-demo-venom-draught-name = Venom Draught
 item-demo-venom-draught-description = A bitter draught that may poison an unprotected drinker.
 item-demo-temperate-tonic-name = Temperate Tonic
 item-demo-temperate-tonic-description = Temporarily steadies the drinker against both fire and cold.
+item-demo-prismatic-elixir-name = Prismatic Elixir
+item-demo-prismatic-elixir-description = Temporarily fortifies the drinker against acid, electricity, fire, cold, and poison.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

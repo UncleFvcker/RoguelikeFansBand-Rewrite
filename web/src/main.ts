@@ -2637,6 +2637,11 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-thermal-resistance-no-effect", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-basic-resistance":
+      return localization.format("message-item-use-basic-resistance", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
     case "item-use-life-loss":
     case "item-use-life-loss-death":
       return localization.format(`message-${event.messageKey}` as MessageKey, {

@@ -218,6 +218,7 @@ message-item-use-poison-applied = You use { $source } and are poisoned for { $du
 message-item-use-poison-resisted = You use { $source }, but resist its poison.
 message-item-use-thermal-resistance-applied = You use { $source } and resist fire and cold for { $duration } ticks.
 message-item-use-thermal-resistance-no-effect = You use { $source }, but notice no new effect.
+message-item-use-basic-resistance = You use { $source } and resist acid, electricity, fire, cold, and poison for { $duration } ticks.
 message-item-use-life-loss = You use { $source } and lose { $amount } life.
 message-item-use-life-loss-death = You use { $source }, lose { $amount } life, and die.
 message-item-use-vengeance = You use { $source } and prepare vengeance for { $duration } ticks.

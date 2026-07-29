@@ -1351,6 +1351,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 10,
             "durationBonus": 10
         }),
+        (75, 60) => serde_json::json!({
+            "type": "apply-basic-resistance",
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationBonus": 20
+        }),
         (75, 6) => serde_json::json!({
             "type": "apply-poison",
             "durationDice": 1,
@@ -8758,6 +8764,26 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationDice": 1,
                 "durationSides": 10,
                 "durationBonus": 10
+            })
+        );
+        let resistance = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 60,
+                ..LegacyItemEntry::default()
+            },
+            "resistance-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            resistance["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-basic-resistance",
+                "durationDice": 1,
+                "durationSides": 20,
+                "durationBonus": 20
             })
         );
         let poison = item_json(

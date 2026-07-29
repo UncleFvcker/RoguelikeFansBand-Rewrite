@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.121 / contract-v136（P31–P85 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.121 / contract-v137（P31–P86 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v135 阶段性里程碑
+## 8. contract-v75–v137 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.121、内容包 1.127.0、contract-v136、save v1 和 state hash Schema v54；内容 hash 为 `3098d9de2051029b4509acc3b8973cec0b76679dcacfa6ace1244864bc3f363d`。active baseline 包含 440 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126–v136 增加相邻树/墙创建、怪物伤害 Vengeance、玩家下一次近战 Monster Confusion、近战 Protection from Evil、glyph Genocide、Recharging、Spell 学习容量、Slowness Potion、固定生命损失 Death Potion、Poison Potion 与 Thermal Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.121、内容包 1.128.0、contract-v137、save v1 和 state hash Schema v54；内容 hash 为 `b33b104f3d7fd2153a66597b4f7685647020f3c9e3352366840dac326e650a57`。active baseline 包含 441 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126–v137 增加相邻树/墙创建、怪物伤害 Vengeance、玩家下一次近战 Monster Confusion、近战 Protection from Evil、glyph Genocide、Recharging、Spell 学习容量、Slowness Potion、固定生命损失 Death Potion、Poison Potion、Thermal Potion 与 Resistance Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、72 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、74 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -572,6 +572,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P84 进展（2026-07）**：contract-v135 接入 Poison Potion。窄 `apply-poison` 静态消耗品效果先抽 `bounded(55)` 并与既有 Poison 抗性档阈值比较；抵抗成功保持 Tried-only 且不抽持续时间，失败后才抽 `1d15+9`、以 Extend 合并 Poison 并 Aware。fixtures 438–439 分别固定失败后的两次效果 RNG、现有 Poison tick，以及抵抗成功的一次效果 RNG。协议保持 1.121，demo 升至 1.126.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 6，`consumable-effect` 79→78，真实包严格编译 hash 为 `54244a2fd227878c7017bc8dfe2bd125c48f65cb093a198547bdcd891f1aef3c`。
 
 **P85 进展（2026-07）**：contract-v136 接入 Thermal Potion。窄 `apply-thermal-resistance` 静态消耗品效果只抽一次 `1d10+10`，以 Extend 应用单一 `rfb.status.thermal-resistance` 并同时授予 Fire/Cold Resistant；只有首次新增状态才 Aware，已有状态的延长保持 Tried-only。fixture 440 固定首次应用、消费、知识、一次效果 RNG、双抗投影和回档，一个聚焦核心单测覆盖已有状态的延长/不识别边界。协议保持 1.121，demo 升至 1.127.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 30，`consumable-effect` 78→77，真实包严格编译 hash 为 `9832b1a0d8c31d49407adb4f4a9dd9982292dab35b1d50c8b187670fa825a370`。
+
+**P86 进展（2026-07）**：contract-v137 接入 Resistance Potion。窄 `apply-basic-resistance` 静态消耗品效果每次只抽一次 `1d20+20`，以 KeepStrongest 应用单一 `rfb.status.basic-resistance` 并同时授予 Acid/Electricity/Fire/Cold/Poison Resistant；合法使用无条件 Aware。fixture 441 用两次连续使用固定 40、29 的骰值与最终 20 tick，覆盖首次生效和较短重复结果不缩短。协议保持 1.121，demo 升至 1.128.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 60，`consumable-effect` 77→76，真实包严格编译 hash 为 `430e28aaf60a043a344c02dc8d41185aaa0e33e0393da034fe0af9bbf0d785a2`。
 
 ## 9. 内容迁移策略
 
