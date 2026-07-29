@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 126] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 127] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -236,10 +236,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 126] = [
     "d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52",
     "25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5",
     "5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404",
+    "1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562";
+    "497fbc6b137e9bc2d8162ad52b0253f4d655a37c58abe391be6bcdd94ef94d9e";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10529,6 +10530,7 @@ impl Game {
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
+                | ItemUseEffectDefinition::ApplyPoison { .. }
                 | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
@@ -11019,6 +11021,7 @@ impl Game {
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::ApplySlowness { .. }
+            | ItemUseEffectDefinition::ApplyPoison { .. }
             | ItemUseEffectDefinition::SelfLifeLoss { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
@@ -12028,6 +12031,17 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyPoison {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_poison(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::SelfLifeLoss { amount } => {
                 self.resolve_item_life_loss(source_kind_id, *amount, events);
                 true
@@ -12325,6 +12339,59 @@ impl Game {
             noticed,
         });
         noticed
+    }
+
+    fn resolve_item_poison(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let resistance = self
+            .effective_player_resistances()
+            .level(DamageType::Poison);
+        let resistance_threshold = u64::try_from(resistance.reduction_percent().max(0))
+            .expect("threshold is non-negative");
+        let resisted = self.rng.bounded(55) < resistance_threshold;
+        let duration = if resisted {
+            None
+        } else {
+            let duration_sides =
+                u16::try_from(duration_sides).expect("validated poison die sides must fit u16");
+            let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
+                .expect("validated poison duration must fit u32")
+                .saturating_add(duration_bonus);
+            apply_status(
+                &mut self.player.statuses,
+                StatusApplication {
+                    status: StatusInstance {
+                        kind_id: STATUS_POISON.to_owned(),
+                        intensity: 1,
+                        remaining_ticks: duration,
+                        source_id: Some(source_kind_id.to_owned()),
+                        granted_resistances: BTreeMap::new(),
+                        granted_brands: BTreeSet::new(),
+                        granted_modifiers: StatModifiersDto::default(),
+                        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                        granted_status_immunities: BTreeSet::new(),
+                        granted_race_id: None,
+                        grants_wall_passage: false,
+                        incoming_damage_percent: 100,
+                    },
+                    stacking: StatusStacking::Extend,
+                },
+            );
+            self.mark_item_aware(source_kind_id);
+            Some(duration)
+        };
+        events.push(DomainEvent::ItemPoisonResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+        });
+        !resisted
     }
 
     fn resolve_item_life_loss(

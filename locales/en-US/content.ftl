@@ -540,5 +540,7 @@ item-demo-slowness-potion-name = Slowness Potion
 item-demo-slowness-potion-description = Temporarily slows the drinker.
 item-demo-mortal-draught-name = Mortal Draught
 item-demo-mortal-draught-description = A perilous draught that drains life itself.
+item-demo-venom-draught-name = Venom Draught
+item-demo-venom-draught-description = A bitter draught that may poison an unprotected drinker.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

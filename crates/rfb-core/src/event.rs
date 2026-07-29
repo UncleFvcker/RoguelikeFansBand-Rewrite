@@ -465,6 +465,11 @@ pub(crate) enum DomainEvent {
         duration: u32,
         noticed: bool,
     },
+    ItemPoisonResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: Option<u32>,
+    },
     ItemLifeLost {
         source_kind_id: String,
         display_name_key: String,
@@ -1893,6 +1898,26 @@ impl DomainEvent {
                     ("duration", duration.to_string()),
                 ],
             ),
+            Self::ItemPoisonResolved {
+                source_kind_id,
+                display_name_key,
+                duration,
+            } => match duration {
+                Some(duration) => dto(
+                    "item.use-poison-applied",
+                    "item-use-poison-applied",
+                    [
+                        ("source", source_kind_id),
+                        ("nameKey", display_name_key),
+                        ("duration", duration.to_string()),
+                    ],
+                ),
+                None => dto(
+                    "item.use-poison-resisted",
+                    "item-use-poison-resisted",
+                    [("source", source_kind_id), ("nameKey", display_name_key)],
+                ),
+            },
             Self::ItemLifeLost {
                 source_kind_id,
                 display_name_key,

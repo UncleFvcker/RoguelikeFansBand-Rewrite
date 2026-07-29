@@ -154,6 +154,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v132：Spell 卷轴](design/contract-v132-scroll-spell.md)
 - [Contract v133：Slowness 药水](design/contract-v133-potion-slowness.md)
 - [Contract v134：Death 药水](design/contract-v134-potion-death.md)
+- [Contract v135：Poison 药水](design/contract-v135-potion-poison.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -177,7 +178,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v134`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v135`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -348,6 +349,8 @@ P82 / contract-v133 接入 Slowness Potion。窄 `apply-slowness` 静态消耗�
 
 P83 / contract-v134 接入 Death Potion。窄 `self-life-loss { amount: 5000 }` 静态消耗品效果直接扣除生命，绕过护甲、抗性与 `incomingDamagePercent`，零效果 RNG 并总是 Aware；demo 使用原创公开物品 Mortal Draught。协议保持 1.121、demo 1.125.0、state hash Schema 保持 v54、active baseline 437 条 exact、零 waiver，内置 content hash 为 `1c6e2bf891c76796cca6eb53ea014caa03fb8bb1fa3a95b8df8fd81f942e8562`。legacy importer 映射 tval 75/sval 23，使 `consumable-effect` 80→79。详见[Contract v134](design/contract-v134-potion-death.md)。
 
+P84 / contract-v135 接入 Poison Potion。窄 `apply-poison` 静态消耗品效果先固定抽取 `bounded(55)` 并与既有 Poison 抗性档阈值比较；抵抗成功保持 Tried-only 且不抽持续时间，失败后才抽 `10..24` ticks、Extend Poison 并 Aware。协议保持 1.121、demo 1.126.0、state hash Schema 保持 v54、active baseline 439 条 exact、零 waiver，内置 content hash 为 `497fbc6b137e9bc2d8162ad52b0253f4d655a37c58abe391be6bcdd94ef94d9e`。legacy importer 映射 tval 75/sval 6，使 `consumable-effect` 79→78。详见[Contract v135](design/contract-v135-potion-poison.md)。
+
 ### 本地验证
 
 ```powershell
@@ -420,7 +423,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 437 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 439 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

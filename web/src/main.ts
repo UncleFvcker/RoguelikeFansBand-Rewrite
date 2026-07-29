@@ -2619,6 +2619,15 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-slowness-no-effect", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-poison-applied":
+      return localization.format("message-item-use-poison-applied", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "item-use-poison-resisted":
+      return localization.format("message-item-use-poison-resisted", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
     case "item-use-life-loss":
     case "item-use-life-loss-death":
       return localization.format(`message-${event.messageKey}` as MessageKey, {
