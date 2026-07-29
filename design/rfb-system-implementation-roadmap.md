@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.121 / contract-v132（P31–P81 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.121 / contract-v133（P31–P82 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v132 阶段性里程碑
+## 8. contract-v75–v133 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.121、内容包 1.123.0、contract-v132、save v1 和 state hash Schema v54；内容 hash 为 `25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5`。active baseline 包含 435 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126–v132 增加相邻树/墙创建、怪物伤害 Vengeance、玩家下一次近战 Monster Confusion、近战 Protection from Evil、glyph Genocide、Recharging 与 Spell 学习容量。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.121、内容包 1.124.0、contract-v133、save v1 和 state hash Schema v54；内容 hash 为 `5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404`。active baseline 包含 436 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126–v133 增加相邻树/墙创建、怪物伤害 Vengeance、玩家下一次近战 Monster Confusion、近战 Protection from Evil、glyph Genocide、Recharging、Spell 学习容量与 Slowness Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、69 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、70 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -564,6 +564,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P80 进展（2026-07）**：contract-v131 接入 Recharging。窄 `recharge-from-device { power }` 只接受背包内互异的卷轴、来源设备和目标设备；非法组合在消费、时间和 RNG 前拒绝。合法事务消费卷轴后按固定 `one_in(3)` 支付来源损毁或能量，再复用 P60 的目标失败公式，artifact 只免毁不免费，目标失败不回滚来源。fixture 434 固定成功转移、知识、事件与回档，一个窄核心单测覆盖非法组合和失败事务顺序。协议升至 1.121，demo 升至 1.122.0，Schema 保持 v53。legacy importer 映射 sval 22，`scroll-effect` 17→16，真实包严格编译 hash 为 `3df0f3da5a5700ba42d0e6b40a1bcd630d298d1f808292f1da5e043dfb33084b`。
 
 **P81 进展（2026-07）**：contract-v132 接入 Spell。Class 以 `usesSpellScrolls` 声明原版资格；无参数 `increase-spell-learning-capacity` 为合格职业固定永久增加 1 点学习容量，无资格职业仍消费、Aware、推进时间且零效果 RNG。默认 0 的 bonus 进入 save 与 state hash，非零值和无资格职业组合显式拒绝。fixture 435 固定 Scholar 容量 2→3、知识、事件和回档，一个聚焦核心单测覆盖无资格消费与损坏存档。协议保持 1.121，demo 升至 1.123.0，Schema 升至 v54。legacy importer 映射 sval 43 并写入职业资格，`scroll-effect` 16→15，真实包严格编译 hash 为 `6feceb4793b043f03c826cb242a9e182edf49ea2c708fffac31fa8f30daf589d`。
+
+**P82 进展（2026-07）**：contract-v133 接入 Slowness Potion。窄 `apply-slowness` 静态消耗品效果固定 `15+1d25`，总是掷一次持续时间并以 KeepStrongest 合并 Slow；只有首次新增状态才 Aware，已有 Slow 即使被更长结果刷新也保持 Tried-only，免疫和更短/相等结果同样不识别。fixture 436 固定首次应用、消费、知识、RNG 与回档，一个聚焦核心单测覆盖已有 Slow 的刷新/不识别边界。协议保持 1.121，demo 升至 1.124.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 4，`consumable-effect` 81→80，真实包严格编译 hash 为 `d13e08a4feccd9717bac5eeab937f81266cad791e7ca53d8ca631abf88fe5764`。
 
 ## 9. 内容迁移策略
 

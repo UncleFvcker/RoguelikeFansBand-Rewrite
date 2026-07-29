@@ -1339,6 +1339,12 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "banish-visible",
             "maximumDistance": 150
         }),
+        (75, 4) => serde_json::json!({
+            "type": "apply-slowness",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 15
+        }),
         (80, 12) => remove_status("rfb.status.poison"),
         (80, 13) => remove_status("rfb.status.blindness"),
         (80, 14) => remove_status("rfb.status.fear"),
@@ -8697,6 +8703,26 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(
             spell["useAction"]["effect"],
             serde_json::json!({"type": "increase-spell-learning-capacity"})
+        );
+        let slowness = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 4,
+                ..LegacyItemEntry::default()
+            },
+            "slowness-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            slowness["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-slowness",
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationBonus": 15
+            })
         );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),

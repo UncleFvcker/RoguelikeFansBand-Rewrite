@@ -2610,6 +2610,15 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         duration: event.args.duration ?? "?",
       });
+    case "item-use-slowness-applied":
+      return localization.format("message-item-use-slowness-applied", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "item-use-slowness-no-effect":
+      return localization.format("message-item-use-slowness-no-effect", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
     case "item-use-vengeance":
       return localization.format("message-item-use-vengeance", {
         source: visibleItemName(event.args.nameKey, event.args.source),

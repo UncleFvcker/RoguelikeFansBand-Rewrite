@@ -459,6 +459,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
         resolution: AbilityEffectsResolutionDto,
     },
+    ItemSlownessResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        noticed: bool,
+    },
     ItemVengeanceActivated {
         source_kind_id: String,
         display_name_key: String,
@@ -1858,6 +1864,28 @@ impl DomainEvent {
                     ("duration", duration.to_string()),
                 ],
                 GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::ItemSlownessResolved {
+                source_kind_id,
+                display_name_key,
+                duration,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-slowness-applied"
+                } else {
+                    "item.use-slowness-no-effect"
+                },
+                if noticed {
+                    "item-use-slowness-applied"
+                } else {
+                    "item-use-slowness-no-effect"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
             ),
             Self::ItemVengeanceActivated {
                 source_kind_id,

@@ -1528,6 +1528,11 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    ApplySlowness {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
     Vengeance {
         duration_dice: u16,
         duration_sides: u32,
@@ -3234,6 +3239,11 @@ fn valid_item_effect(
             duration_sides,
             duration_bonus,
         }
+        | ItemUseEffectDefinition::ApplySlowness {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        }
         | ItemUseEffectDefinition::Vengeance {
             duration_dice,
             duration_sides,
@@ -4679,6 +4689,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     ItemUseEffectDefinition::Heal { .. }
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
+                    | ItemUseEffectDefinition::ApplySlowness { .. }
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
                     | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -4851,6 +4862,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     action.effect,
                     ItemUseEffectDefinition::RechargeFromDevice { .. }
                         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
+                        | ItemUseEffectDefinition::ApplySlowness { .. }
                 ) && (action.device_check_difficulty.is_some()
                     || action.charges.is_some()
                     || !item.tags.iter().any(|tag| tag == "consumable")))
@@ -4899,6 +4911,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         && !matches!(
                             activation.effect,
                             ItemUseEffectDefinition::IncreaseSpellLearningCapacity
+                                | ItemUseEffectDefinition::ApplySlowness { .. }
                         )
                         && valid_item_effect_target(&activation.effect, &activation.target)
                 })
@@ -8726,7 +8739,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 69);
+        assert_eq!(first.content.items.len(), 70);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8752,7 +8765,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.123.0");
+        assert_eq!(catalog.pack_version(), "1.124.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

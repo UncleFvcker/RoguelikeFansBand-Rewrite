@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 124] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 125] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -234,10 +234,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 124] = [
     "27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24",
     "786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549",
     "d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52",
+    "25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5";
+    "5ef19e0ecaf7328a7eb4ef3ff69ca066858ca0cc718c6b2db84b078e281f2404";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10526,6 +10527,7 @@ impl Game {
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
+                | ItemUseEffectDefinition::ApplySlowness { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -11014,6 +11016,7 @@ impl Game {
             ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
+            | ItemUseEffectDefinition::ApplySlowness { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -12011,6 +12014,17 @@ impl Game {
                 );
                 true
             }
+            ItemUseEffectDefinition::ApplySlowness {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_slowness(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::Vengeance {
                 duration_dice,
                 duration_sides,
@@ -12254,6 +12268,56 @@ impl Game {
                 effects: vec![resolution],
             },
         });
+    }
+
+    fn resolve_item_slowness(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let duration_sides =
+            u16::try_from(duration_sides).expect("validated slowness die sides must fit u16");
+        let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
+            .expect("validated slowness duration must fit u32")
+            .saturating_add(duration_bonus);
+        let change = if self.player_status_immunities().contains(STATUS_SLOW) {
+            StatusChange::Unchanged
+        } else {
+            apply_status(
+                &mut self.player.statuses,
+                StatusApplication {
+                    status: StatusInstance {
+                        kind_id: STATUS_SLOW.to_owned(),
+                        intensity: 1,
+                        remaining_ticks: duration,
+                        source_id: Some(source_kind_id.to_owned()),
+                        granted_resistances: BTreeMap::new(),
+                        granted_brands: BTreeSet::new(),
+                        granted_modifiers: StatModifiersDto::default(),
+                        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                        granted_status_immunities: BTreeSet::new(),
+                        granted_race_id: None,
+                        grants_wall_passage: false,
+                        incoming_damage_percent: 100,
+                    },
+                    stacking: StatusStacking::KeepStrongest,
+                },
+            )
+        };
+        let noticed = matches!(change, StatusChange::Added);
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemSlownessResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            noticed,
+        });
+        noticed
     }
 
     fn resolve_item_vengeance(

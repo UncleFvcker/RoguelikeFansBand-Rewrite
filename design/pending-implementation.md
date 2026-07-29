@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v132、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v133、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -90,8 +90,9 @@
 | P79 | Genocide 卷轴 | 已由 contract-v130 完成 | 窄 `genocide { power }` 使用单字符 glyph 选择当前楼层存活 actor，按稳定实体 ID 复用 `1d4` 疲劳、unique/guardian 保护和 power 对抗；非法输入原子拒绝，合法空选择消费、Aware、零效果 RNG。sval 44 使 `scroll-effect` 18→17；协议 1.120、包 1.121.0、Schema 保持 v53、fixture 433，共 433 exact |
 | P80 | Recharging 卷轴 | 已由 contract-v131 完成 | 窄 `recharge-from-device { power }` 接受互异的卷轴/来源设备/目标设备背包 ID；非法组合零时间零 RNG，合法事务消费卷轴后先支付来源损毁或能量，再复用 P60 目标失败检定。sval 22 使 `scroll-effect` 17→16；协议 1.121、包 1.122.0、Schema 保持 v53、fixture 434，共 434 exact |
 | P81 | Spell 卷轴 | 已由 contract-v132 完成 | Class `usesSpellScrolls` 声明资格；无参数 `increase-spell-learning-capacity` 固定永久 +1，无资格职业仍消费/Aware/推进时间且零效果 RNG。bonus 进入存档，sval 43 使 `scroll-effect` 16→15；协议保持 1.121、包 1.123.0、Schema v54、fixture 435，共 435 exact |
+| P82 | Slowness 药水 | 已由 contract-v133 完成 | 窄 `apply-slowness` 静态消耗品效果固定 `15+1d25`，总是掷持续时间并以 KeepStrongest 合并 Slow；只有首次新增状态才 Aware，已有 Slow 即使延长也保持 Tried-only。tval 75/sval 4 使 `consumable-effect` 81→80；协议保持 1.121、包 1.124.0、Schema 保持 v54、fixture 436，共 436 exact |
 
-## contract-v132 明确遗留
+## contract-v133 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -110,7 +111,10 @@
 - Genocide 只增加窄命令和单字符 Web 输入，不新增通用 glyph target、actor selector 或跨效果输入框架；
 - Recharging 当前只选择背包中的卷轴、来源和目标；原版地面设备、`_scroll_power` 与 Devicemaster Scrolls 专精等待对应系统，不扩展通用多物品 target；
 - Spell 只固定增加职业许可的学习容量；不改变学习来源、书本/领域限制、遗忘或熟练度，也不建立通用永久成长 effect；
+- Slowness Potion 只增加静态消耗品的 self-only Slow 事务；不建立通用物品状态 DSL、能力状态复用层、设备激活入口或额外 debug 开关；
+- 未受 Slow 时首次应用才可察觉并 Aware；已有 Slow 的更长持续时间仍可刷新，但遵循原版 `set_slow` 返回值保持 Tried-only，免疫和更短/相等持续时间同样只记 Tried；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
+- `consumable-effect` 现为 80；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
 
 ## contract-v116 明确遗留
 
@@ -146,7 +150,7 @@
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
+- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 80 条缺口中；
 - 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion 和 Protection from Evil 完成后剩余 17 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；

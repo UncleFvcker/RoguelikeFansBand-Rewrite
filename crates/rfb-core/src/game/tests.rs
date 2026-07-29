@@ -15234,6 +15234,57 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
     ));
 }
 
+#[test]
+fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
+    const ITEM_ID: &str = "test.item.slowness-potion";
+    const KIND_ID: &str = "demo.item.slowness-potion";
+
+    let mut game = Game::new(82);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_SLOW.to_owned(),
+        intensity: 1,
+        remaining_ticks: 1,
+        source_id: Some("test.existing-slow".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    let slow = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_SLOW)
+        .expect("the longer slowness roll should refresh the status");
+    assert!((6..=30).contains(&slow.remaining_ticks));
+    assert_eq!(slow.source_id.as_deref(), Some("test.existing-slow"));
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Tried);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-slowness-no-effect")
+    );
+}
+
 fn clear_monsters(game: &mut Game) {
     game.entities.clear();
     game.dungeon_states

@@ -536,5 +536,7 @@ item-demo-recharging-scroll-name = Recharging Scroll
 item-demo-recharging-scroll-description = Transfers stored energy from one field device into another.
 item-demo-spell-scroll-name = Spell Scroll
 item-demo-spell-scroll-description = Permanently increases how many spells an eligible reader may learn.
+item-demo-slowness-potion-name = Slowness Potion
+item-demo-slowness-potion-description = Temporarily slows the drinker.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.
