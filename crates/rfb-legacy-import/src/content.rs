@@ -1236,6 +1236,10 @@ fn fixed_consumable_use_action_with_terrain(
             "toHit": {"dice": 1, "sides": 3, "bonus": 3},
             "toDamage": {"dice": 1, "sides": 3, "bonus": 3}
         }),
+        (70, 22) => serde_json::json!({
+            "type": "recharge-from-device",
+            "power": 100
+        }),
         (70, 25) => detect("terrain", "map", true),
         (70, 26) => detect("item", "gold", false),
         (70, 27) => detect("item", "item", false),
@@ -8622,6 +8626,21 @@ F:BRAND_VAMP | HOLD_LIFE
             assert_eq!(effect[component]["sides"], sides);
             assert_eq!(effect[component]["bonus"], bonus);
         }
+        let recharging = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 22,
+                ..LegacyItemEntry::default()
+            },
+            "recharging-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            recharging["useAction"]["effect"],
+            serde_json::json!({"type": "recharge-from-device", "power": 100})
+        );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),
             (26, "item", "gold", false),

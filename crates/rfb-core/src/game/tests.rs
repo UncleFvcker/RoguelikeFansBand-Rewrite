@@ -15042,6 +15042,115 @@ fn device_source_recharge_can_survive_be_destroyed_or_protect_artifacts() {
     );
 }
 
+#[test]
+fn recharging_item_rejects_invalid_pairs_and_pays_the_source_before_failure() {
+    let prepare = || {
+        let mut game =
+            Game::new_with_build(19, "demo.build.vanguard").expect("vanguard should create");
+        clear_monsters(&mut game);
+        game.debug_add_generated_inventory_item(
+            "test.item.recharging-scroll",
+            "demo.item.recharging-scroll",
+            1,
+        )
+        .expect("recharging scroll should create");
+        game.debug_add_generated_inventory_item(
+            "test.item.recharge-source",
+            "demo.item.resonance-wand",
+            1,
+        )
+        .expect("source device should create");
+        game.debug_add_generated_inventory_item(
+            "test.item.recharge-target",
+            "demo.item.resonance-staff",
+            1,
+        )
+        .expect("target device should create");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.recharge-source")
+            .expect("source device")
+            .charges = Some(ItemChargesDto {
+            current: 5,
+            maximum: 24,
+        });
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.recharge-target")
+            .expect("target device")
+            .charges = Some(ItemChargesDto {
+            current: 2,
+            maximum: 24,
+        });
+        game
+    };
+
+    for (source_item_id, target_item_id) in [
+        ("missing.item", "test.item.recharge-target"),
+        ("test.item.recharge-source", "test.item.recharge-source"),
+    ] {
+        let mut game = prepare();
+        let world_tick = game.world_tick;
+        let draws = game.rng.draw_counter;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItemForRecharge {
+                item_id: "test.item.recharging-scroll".to_owned(),
+                source_item_id: source_item_id.to_owned(),
+                target_item_id: target_item_id.to_owned(),
+            },
+        );
+        assert_eq!(update.events[0].kind, "item.use-unavailable");
+        assert_eq!(game.world_tick, world_tick);
+        assert_eq!(game.rng.draw_counter, draws);
+        assert!(
+            game.items
+                .iter()
+                .any(|item| item.id == "test.item.recharging-scroll")
+        );
+    }
+
+    let mut game = prepare();
+    game.debug_set_recharge_sources_survive(true);
+    game.debug_set_recharge_attempts_fail(true);
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItemForRecharge {
+            item_id: "test.item.recharging-scroll".to_owned(),
+            source_item_id: "test.item.recharge-source".to_owned(),
+            target_item_id: "test.item.recharge-target".to_owned(),
+        },
+    );
+    assert_eq!(update.events[0].kind, "device.recharge-failure");
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.item.recharging-scroll")
+    );
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.recharging-scroll"),
+        ItemKnowledgeDto::Aware
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.recharge-source")
+            .and_then(|item| item.charges)
+            .expect("source charges")
+            .current,
+        0
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.recharge-target")
+            .and_then(|item| item.charges)
+            .expect("target charges")
+            .current,
+        2
+    );
+}
+
 fn clear_monsters(game: &mut Game) {
     game.entities.clear();
     game.dungeon_states

@@ -1532,8 +1532,15 @@ async function appraiseSelectedInventoryItem(): Promise<void> {
 
 async function useSelectedInventoryItem(): Promise<void> {
   const selected = selectedInventoryItems();
-  if (busy || selected.length !== 1 || !selected[0]?.usable) return;
+  if (busy) return;
+  const recharge = selectedRechargingItems(selected);
+  if (recharge) {
+    selectRechargeTarget(recharge.item.id, recharge.source.id);
+    return;
+  }
+  if (selected.length !== 1 || !selected[0]?.usable) return;
   const item = selected[0];
+  if (item.requiresRechargeTargets) return;
   if (item.requiresTargetGlyph) {
     selectGlyphTarget((glyph) =>
       dispatch({ type: "use-item-by-glyph", itemId: item.id, glyph }),
@@ -1584,6 +1591,33 @@ function selectItemTarget(
       label: visibleItemName(item.displayNameKey, item.kindId),
     })),
   ];
+  selectItemTargetFrom(candidates, onSelect);
+}
+
+function selectRechargeTarget(itemId: string, sourceItemId: string): void {
+  const candidates = currentInventory
+    .filter(
+      (item) =>
+        item.id !== itemId && item.id !== sourceItemId && item.canReceiveRecharge,
+    )
+    .map((item) => ({
+      id: item.id,
+      label: visibleItemName(item.displayNameKey, item.kindId),
+    }));
+  selectItemTargetFrom(candidates, (targetItemId) =>
+    dispatch({
+      type: "use-item-for-recharge",
+      itemId,
+      sourceItemId,
+      targetItemId,
+    }),
+  );
+}
+
+function selectItemTargetFrom(
+  candidates: Array<{ id: string; label: string }>,
+  onSelect: (itemId: string) => Promise<void>,
+): void {
   if (candidates.length === 0) {
     addLocalizedMessage("message-target-mode-unavailable", undefined, "system");
     return;
@@ -1702,6 +1736,17 @@ function selectedInventoryItems(): InventoryItemDto[] {
   return currentInventory.filter((item) => selectedInventoryIds.has(item.id));
 }
 
+function selectedRechargingItems(
+  selected: InventoryItemDto[],
+): { item: InventoryItemDto; source: InventoryItemDto } | undefined {
+  if (selected.length !== 2) return undefined;
+  const item = selected.find((candidate) => candidate.requiresRechargeTargets);
+  const source = selected.find(
+    (candidate) => candidate.id !== item?.id && candidate.canSupplyRecharge,
+  );
+  return item && source ? { item, source } : undefined;
+}
+
 function updateInventoryActions(): void {
   updateCampaignAction();
   const selected = selectedInventoryItems();
@@ -1710,7 +1755,15 @@ function updateInventoryActions(): void {
   });
   inventoryEquip.disabled =
     busy || playerDead || selected.length !== 1 || !selected[0]?.equipmentSlot;
-  inventoryUse.disabled = busy || playerDead || selected.length !== 1 || !selected[0]?.usable;
+  inventoryUse.disabled =
+    busy ||
+    playerDead ||
+    !(
+      (selected.length === 1 &&
+        selected[0]?.usable &&
+        !selected[0].requiresRechargeTargets) ||
+      selectedRechargingItems(selected)
+    );
   inventoryAppraise.disabled =
     busy || playerDead || selected.length !== 1 || selected[0]?.identification !== "unexamined";
   const [item] = selected;

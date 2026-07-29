@@ -1550,6 +1550,9 @@ pub enum ItemUseEffectDefinition {
     Genocide {
         power: u16,
     },
+    RechargeFromDevice {
+        power: u16,
+    },
     CreateAdjacentTerrain {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
@@ -3255,6 +3258,7 @@ fn valid_item_effect(
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::Genocide { power } => (1..=1_000).contains(power),
+        ItemUseEffectDefinition::RechargeFromDevice { power } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::CreateAdjacentTerrain {
             source_terrain_ids,
             target_terrain_id,
@@ -4695,6 +4699,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::SummonCategory { .. }
                     | ItemUseEffectDefinition::DispelCategory { .. }
                     | ItemUseEffectDefinition::BanishVisible { .. } => self_target,
+                    ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. } => projectile_target,
                     ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. } => {
@@ -4837,6 +4842,12 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     .is_some_and(|difficulty| !(1..=1_000_000).contains(&difficulty))
                 || (action.device_check_difficulty.is_some()
                     && !item.tags.iter().any(|tag| tag == "device"))
+                || (matches!(
+                    action.effect,
+                    ItemUseEffectDefinition::RechargeFromDevice { .. }
+                ) && (action.device_check_difficulty.is_some()
+                    || action.charges.is_some()
+                    || !item.tags.iter().any(|tag| tag == "consumable")))
                 || (action.charges.is_some()
                     && (item.max_stack != 1
                         || action.device_check_difficulty.is_none()
@@ -8705,7 +8716,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 67);
+        assert_eq!(first.content.items.len(), 68);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8731,7 +8742,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.121.0");
+        assert_eq!(catalog.pack_version(), "1.122.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

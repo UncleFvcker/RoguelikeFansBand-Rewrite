@@ -1,6 +1,6 @@
 # 交接文档：P29–P79 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.120 / contract-v130，P79 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v131，P80 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -91,7 +91,8 @@
 - **P77 / contract-v128** 接入 Monster Confusion。玩家专属准备态在 miss/致死时保留，首个非致死命中先清态，再按 `NO_CONF`、目标 level 与玩家 level 结算 confusion；不建立通用 on-hit/prepared-effect。协议 1.119，demo 1.119.0，save v1，state hash Schema v53，active baseline 431 exact、零 waiver；内置 hash 为 `757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0`。固定原版导入的 `scroll-effect` 20→19，真实包 hash 为 `cd8e1982e33c20555019b77bec49a44fb1028e81bf54729923b5e78a7cbc1d3e`。
 - **P78 / contract-v129** 接入 Protection from Evil。Extend 状态持续 `3 * level + 1d25`；只在 evil 怪物近战命中后、伤害骰前执行 Wisdom/等级对抗和 `one_in(3)` 绕过，击退时跳过该 blow。协议保持 1.119，demo 1.120.0，save v1，state hash Schema v53，active baseline 432 exact、零 waiver；内置 hash 为 `27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24`。固定原版导入的 `scroll-effect` 19→18，真实包 hash 为 `db78e5d8fe181d88943b024647afb94791c0e3f00adb25ab3271e18c67bde408`。
 - **P79 / contract-v130** 接入 Genocide。单字符 glyph 选择当前楼层存活 actor，按稳定实体 ID 复用既有 `1d4` 疲劳、unique/guardian 保护和 power 300 对抗；非法输入原子拒绝，合法空选择消费、Aware、零效果 RNG。协议 1.120，demo 1.121.0，save v1，state hash Schema v53，active baseline 433 exact、零 waiver；内置 hash 为 `786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549`。固定原版导入的 `scroll-effect` 18→17，真实包 hash 为 `4814e2cd4a0d8ac582c1b514e1cbc7998760cbe26f6293a6ab5bd5ff5324707a`。
-- 下一步继续按真实报告拆分剩余 17 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用伤害监听器、`AbilityEffectDefinition`、通用地形 DSL、actor-effect、on-hit、glyph target 或 actor-removal 框架提前纳入。
+- **P80 / contract-v131** 接入 Recharging。互异的卷轴/来源/目标背包 ID 通过窄 `UseItemForRecharge` 命令提交；非法组合零时间零 RNG，合法事务消费卷轴后先支付来源损毁或能量，再复用 P60 目标失败公式。协议 1.121，demo 1.122.0，save v1，state hash Schema v53，active baseline 434 exact、零 waiver；内置 hash 为 `d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52`。固定原版导入的 `scroll-effect` 17→16，真实包 hash 为 `3df0f3da5a5700ba42d0e6b40a1bcd630d298d1f808292f1da5e043dfb33084b`。
+- 下一步继续按真实报告拆分剩余 16 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用多物品 target、`AbilityEffectDefinition`、通用地形 DSL、actor-effect、on-hit、glyph target 或 actor-removal 框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

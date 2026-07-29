@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 122] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 123] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -232,10 +232,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 122] = [
     "c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3",
     "757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0",
     "27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24",
+    "786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549";
+    "d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 53;
@@ -361,6 +362,8 @@ enum ItemUsePlan {
     },
     ResetRecall,
 }
+
+const RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN: u16 = 3;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct GenocideResolution {
@@ -2481,11 +2484,22 @@ impl Game {
                 .device_recharge_unavailable_reason(target_item_id, source)
                 .is_some()
         );
+        let unavailable_recharging_item = matches!(
+            &action,
+            GameAction::UseItemForRecharge {
+                item_id,
+                source_item_id,
+                target_item_id,
+            } if self
+                .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
+                .is_some()
+        );
         let advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
             && !unavailable_recharge
+            && !unavailable_recharging_item
             && !matches!(
                 &action,
                 GameAction::Retire
@@ -2673,6 +2687,13 @@ impl Game {
                 source,
             } => {
                 self.recharge_inventory_item(&target_item_id, &source, &mut events);
+            }
+            GameAction::UseItemForRecharge {
+                item_id,
+                source_item_id,
+                target_item_id,
+            } => {
+                self.use_recharging_item(&item_id, &source_item_id, &target_item_id, &mut events);
             }
             GameAction::ForgetAbility { ability_id } => {
                 match self.forget_player_ability(&ability_id) {
@@ -4292,6 +4313,11 @@ impl Game {
                     requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
                         |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
                     ),
+                    requires_recharge_targets: self
+                        .inventory_item_use_effect(&item.id)
+                        .is_some_and(|(effect, _)| {
+                            matches!(effect, ItemUseEffectDefinition::RechargeFromDevice { .. })
+                        }),
                     can_receive_recharge: self.item_can_receive_recharge(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
@@ -10074,6 +10100,54 @@ impl Game {
         }
     }
 
+    fn recharging_item_power(&self, item_id: &str) -> Option<u16> {
+        let item = self.items.iter().find(|item| {
+            item.id == item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+                && item.activation.is_none()
+        })?;
+        let action = self.content.item(&item.kind_id)?.use_action.as_ref()?;
+        match action.effect {
+            ItemUseEffectDefinition::RechargeFromDevice { power } => Some(power),
+            _ => None,
+        }
+    }
+
+    fn recharging_item_unavailable_reason(
+        &self,
+        item_id: &str,
+        source_item_id: &str,
+        target_item_id: &str,
+    ) -> Option<&'static str> {
+        if item_id == source_item_id || item_id == target_item_id {
+            return Some("recharging-item-is-device");
+        }
+        if source_item_id == target_item_id {
+            return Some("source-is-target");
+        }
+        if self.recharging_item_power(item_id).is_none() {
+            return Some("item-unavailable");
+        }
+        let source = self.items.iter().find(|item| {
+            item.id == source_item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+        });
+        if source.is_none_or(|item| !self.item_can_supply_recharge(item)) {
+            return Some("source-unavailable");
+        }
+        let target = self.items.iter().find(|item| {
+            item.id == target_item_id
+                && item.location == ItemLocation::Inventory
+                && item.quantity > 0
+        });
+        if target.is_none_or(|item| !self.item_can_receive_recharge(item)) {
+            return Some("target-not-rechargeable");
+        }
+        None
+    }
+
     fn recharge_inventory_item(
         &mut self,
         target_item_id: &str,
@@ -10091,19 +10165,18 @@ impl Game {
             .device_recharge_profile()
             .cloned()
             .expect("validated recharge action must retain its class profile");
-        let target = self
-            .items
-            .iter()
-            .find(|item| item.id == target_item_id)
-            .expect("preflighted recharge target must remain available");
-        let target_kind_id = target.kind_id.clone();
-        let target_charges = target.charges.expect("recharge target must carry energy");
-        let target_before = target_charges.current;
-        let missing = target_charges.maximum.saturating_sub(target_before);
         let power = u32::from(profile.power);
-
-        let (source_id, source_is_item, attempted, source_destroyed) = match source {
+        match source {
             DeviceRechargeSourceDto::Resource => {
+                let target_charges = self
+                    .items
+                    .iter()
+                    .find(|item| item.id == target_item_id)
+                    .and_then(|item| item.charges)
+                    .expect("preflighted recharge target must carry energy");
+                let missing = target_charges
+                    .maximum
+                    .saturating_sub(target_charges.current);
                 let pool = self
                     .resources
                     .get_mut(&profile.resource_id)
@@ -10111,48 +10184,107 @@ impl Game {
                 let attempted = power.min(pool.current).min(missing);
                 pool.current -= attempted;
                 self.resources_touched.insert(profile.resource_id.clone());
-                (profile.resource_id.clone(), false, attempted, false)
+                events.push(self.resolve_recharge_target(
+                    target_item_id,
+                    profile.resource_id,
+                    false,
+                    attempted,
+                    power,
+                    false,
+                ));
             }
             DeviceRechargeSourceDto::Item { item_id } => {
-                let source_index = self
-                    .items
-                    .iter()
-                    .position(|item| item.id == *item_id)
-                    .expect("preflighted recharge source must remain available");
-                let source_kind_id = self.items[source_index].kind_id.clone();
-                let source_current = self.items[source_index]
-                    .charges
-                    .expect("recharge source must carry energy")
-                    .current;
-                let attempted = power.min(source_current).min(missing);
-                let destruction_roll = (!self.debug_recharge_sources_survive).then(|| {
-                    self.rng
-                        .bounded(u64::from(profile.source_item_destruction_one_in))
-                });
-                let destroy = destruction_roll == Some(0);
-                let artifact = self
-                    .content
-                    .item(&source_kind_id)
-                    .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
-                let source_destroyed = destroy && !artifact;
-                if source_destroyed {
-                    let removed = self.items.remove(source_index);
-                    self.item_property_knowledge.remove(&removed.id);
-                } else {
-                    let source = self
-                        .items
-                        .iter_mut()
-                        .find(|item| item.id == *item_id)
-                        .expect("surviving recharge source must remain available");
-                    source
-                        .charges
-                        .as_mut()
-                        .expect("recharge source must carry energy")
-                        .current -= attempted;
-                }
-                (source_kind_id, true, attempted, source_destroyed)
+                self.recharge_inventory_item_from_device(
+                    target_item_id,
+                    item_id,
+                    power,
+                    profile.source_item_destruction_one_in,
+                    events,
+                );
             }
-        };
+        }
+    }
+
+    fn recharge_inventory_item_from_device(
+        &mut self,
+        target_item_id: &str,
+        source_item_id: &str,
+        power: u32,
+        source_destruction_one_in: u16,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let target_charges = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .and_then(|item| item.charges)
+            .expect("preflighted recharge target must carry energy");
+        let missing = target_charges
+            .maximum
+            .saturating_sub(target_charges.current);
+        let source_index = self
+            .items
+            .iter()
+            .position(|item| item.id == source_item_id)
+            .expect("preflighted recharge source must remain available");
+        let source_kind_id = self.items[source_index].kind_id.clone();
+        let source_current = self.items[source_index]
+            .charges
+            .expect("recharge source must carry energy")
+            .current;
+        let attempted = power.min(source_current).min(missing);
+        let destruction_roll = (!self.debug_recharge_sources_survive)
+            .then(|| self.rng.bounded(u64::from(source_destruction_one_in)));
+        let destroy = destruction_roll == Some(0);
+        let artifact = self
+            .content
+            .item(&source_kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let source_destroyed = destroy && !artifact;
+        if source_destroyed {
+            let removed = self.items.remove(source_index);
+            self.item_property_knowledge.remove(&removed.id);
+        } else {
+            let source = self
+                .items
+                .iter_mut()
+                .find(|item| item.id == source_item_id)
+                .expect("surviving recharge source must remain available");
+            source
+                .charges
+                .as_mut()
+                .expect("recharge source must carry energy")
+                .current -= attempted;
+        }
+        events.push(self.resolve_recharge_target(
+            target_item_id,
+            source_kind_id,
+            true,
+            attempted,
+            power,
+            source_destroyed,
+        ));
+    }
+
+    fn resolve_recharge_target(
+        &mut self,
+        target_item_id: &str,
+        source_id: String,
+        source_is_item: bool,
+        attempted: u32,
+        power: u32,
+        source_destroyed: bool,
+    ) -> DomainEvent {
+        let target = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .expect("preflighted recharge target must remain available");
+        let target_kind_id = target.kind_id.clone();
+        let target_before = target
+            .charges
+            .expect("recharge target must carry energy")
+            .current;
 
         let difficulty = u32::try_from(
             self.items
@@ -10200,7 +10332,7 @@ impl Game {
             target.device_recovery_progress = 0;
         }
         let target_after = charges.current;
-        events.push(DomainEvent::DeviceRechargeResolved {
+        DomainEvent::DeviceRechargeResolved {
             target_item_id: target_item_id.to_owned(),
             target_kind_id,
             source_id,
@@ -10212,7 +10344,48 @@ impl Game {
             failure_one_in,
             failure_roll,
             source_destroyed,
-        });
+        }
+    }
+
+    fn use_recharging_item(
+        &mut self,
+        item_id: &str,
+        source_item_id: &str,
+        target_item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if self
+            .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
+            .is_some()
+        {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return;
+        }
+        let power = u32::from(
+            self.recharging_item_power(item_id)
+                .expect("preflighted recharging item must retain its power"),
+        );
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .expect("preflighted recharging item must remain available");
+        let kind_id = self.items[index].kind_id.clone();
+        self.mark_item_tried(&kind_id);
+        if self.items[index].quantity == 1 {
+            let removed = self.items.remove(index);
+            self.item_property_knowledge.remove(&removed.id);
+        } else {
+            self.items[index].quantity -= 1;
+        }
+        self.recharge_inventory_item_from_device(
+            target_item_id,
+            source_item_id,
+            power,
+            RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN,
+            events,
+        );
+        self.mark_item_aware(&kind_id);
     }
 
     fn use_inventory_item(
@@ -10856,6 +11029,7 @@ impl Game {
                     }
                 })
             }
+            ItemUseEffectDefinition::RechargeFromDevice { .. } => None,
             ItemUseEffectDefinition::CreateAdjacentTerrain {
                 source_terrain_ids,
                 target_terrain_id,
@@ -11921,6 +12095,7 @@ impl Game {
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
             | ItemUseEffectDefinition::Genocide { .. }
+            | ItemUseEffectDefinition::RechargeFromDevice { .. }
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
@@ -12269,6 +12444,7 @@ impl Game {
                 effect,
                 ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
                     | ItemUseEffectDefinition::Recall { .. }
@@ -16547,8 +16723,12 @@ impl Game {
 
     fn validate_runtime_invariants(&self, action: &GameAction) -> Result<(), CoreError> {
         self.active_task_objective()?;
-        if let GameAction::UseItem { item_id, .. } = action {
-            self.inventory_item_use_context(item_id)?;
+        match action {
+            GameAction::UseItem { item_id, .. }
+            | GameAction::UseItemForRecharge { item_id, .. } => {
+                self.inventory_item_use_context(item_id)?;
+            }
+            _ => {}
         }
         Ok(())
     }

@@ -150,6 +150,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v128：Monster Confusion 卷轴](design/contract-v128-scroll-monster-confusion.md)
 - [Contract v129：Protection from Evil 卷轴](design/contract-v129-scroll-protection-from-evil.md)
 - [Contract v130：Genocide 卷轴](design/contract-v130-scroll-genocide.md)
+- [Contract v131：Recharging 卷轴](design/contract-v131-scroll-recharging.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -173,7 +174,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v130`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v131`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -336,6 +337,8 @@ P78 / contract-v129 接入 Protection from Evil。无参数 `protection-from-evi
 
 P79 / contract-v130 接入 Genocide。窄 `genocide { power }` 以单字符 glyph 选择当前楼层的存活 actor，按稳定实体 ID 复用既有 Glyph Genocide 的 `1d4` 疲劳、unique/guardian 保护和 power 对抗；缺失/非法 glyph 零时间、零 RNG、不消费，合法空选择消费、Aware 且零效果 RNG。协议新增 `UseItemByGlyph` 与省略式 `requiresTargetGlyph`，不扩展通用目标模式；legacy importer 映射 sval 44，使 `scroll-effect` 18→17。协议 1.120、demo 1.121.0、state hash Schema 保持 v53、active baseline 433 条 exact、零 waiver，内置 content hash 为 `786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549`。详见[Contract v130](design/contract-v130-scroll-genocide.md)。
 
+P80 / contract-v131 接入 Recharging。窄 `recharge-from-device { power }` 只接受背包内互异的卷轴、来源设备和目标设备；非法组合在消费、时间和 RNG 前拒绝，合法事务先消费卷轴并支付来源的固定 `one_in(3)` 损毁或能量，再复用 P60 的目标失败公式，目标失败不回滚来源。协议新增 `UseItemForRecharge` 与省略式 `requiresRechargeTargets`，Web 复用既有物品目标对话框；legacy importer 映射 sval 22，使 `scroll-effect` 17→16。协议 1.121、demo 1.122.0、state hash Schema 保持 v53、active baseline 434 条 exact、零 waiver，内置 content hash 为 `d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52`。详见[Contract v131](design/contract-v131-scroll-recharging.md)。
+
 ### 本地验证
 
 ```powershell
@@ -408,7 +411,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 433 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 434 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

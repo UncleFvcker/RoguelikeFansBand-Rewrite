@@ -4033,6 +4033,30 @@
         {
           "type": "object",
           "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "sourceItemId": {
+              "type": "string"
+            },
+            "targetItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "use-item-for-recharge"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "sourceItemId",
+            "targetItemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "slotId": {
               "type": "string"
             },
@@ -4983,6 +5007,9 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "requiresRechargeTargets": {
+          "type": "boolean"
         },
         "requiresTargetGlyph": {
           "type": "boolean"

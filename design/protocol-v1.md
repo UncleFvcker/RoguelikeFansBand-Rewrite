@@ -346,3 +346,5 @@ major 版本要求：
 协议 1.119 为 `PlayerDto` 和 `PlayerSaveDto` 增加带 false 默认值的 `confusingStrikeReady`。该字段是玩家下一次合格近战命中的权威准备态，不属于 `StatusDto`，也不进入共享 Actor。字段参与存档、回放和 state hash，Schema 升到 v53。完整边界见 [Contract v128](contract-v128-scroll-monster-confusion.md)。
 
 协议 1.120 为物品 glyph 选择新增窄 `UseItemByGlyph { itemId, glyph }` 命令，并为 `InventoryItemDto` 增加省略式 `requiresTargetGlyph`。核心入口立即归一到既有物品使用动作，不扩展通用 `TargetMode`；glyph 是瞬时命令输入，不进入存档或 state hash，Schema 保持 v53。完整边界见 [Contract v130](contract-v130-scroll-genocide.md)。
+
+协议 1.121 为 Recharging 卷轴新增窄 `UseItemForRecharge { itemId, sourceItemId, targetItemId }` 命令，并为 `InventoryItemDto` 增加省略式 `requiresRechargeTargets`。三个 ID 只描述一次背包物品事务，不进入存档或 state hash，也不扩展通用 `TargetSelection`；Schema 保持 v53。完整边界见 [Contract v131](contract-v131-scroll-recharging.md)。

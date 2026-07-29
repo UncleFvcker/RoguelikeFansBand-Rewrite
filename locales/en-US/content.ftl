@@ -532,5 +532,7 @@ item-demo-confusing-touch-scroll-name = Confusing Touch Scroll
 item-demo-confusing-touch-scroll-description = Makes the reader's next nonlethal melee hit attempt to confuse its target.
 item-demo-protection-from-evil-scroll-name = Protection from Evil Scroll
 item-demo-protection-from-evil-scroll-description = Temporarily repels melee blows from lesser evil creatures.
+item-demo-recharging-scroll-name = Recharging Scroll
+item-demo-recharging-scroll-description = Transfers stored energy from one field device into another.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.
