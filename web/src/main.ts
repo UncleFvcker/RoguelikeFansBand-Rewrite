@@ -2509,6 +2509,15 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         duration: event.args.duration ?? "?",
       });
+    case "item-use-protection-from-evil":
+      return localization.format("message-item-use-protection-from-evil", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "combat-monster-repelled":
+      return localization.format("message-combat-monster-repelled", {
+        source: contentName(event.args.source),
+      });
     case "item-use-confusing-strike-prepared":
       return localization.format("message-item-use-confusing-strike-prepared", {
         source: visibleItemName(event.args.nameKey, event.args.source),
@@ -3074,6 +3083,9 @@ function statusName(statusId: string | undefined): string {
   }
   if (statusId === "rfb.status.vengeance") {
     return localization.format("status-vengeance-name");
+  }
+  if (statusId === "rfb.status.protection-from-evil") {
+    return localization.format("status-protection-from-evil-name");
   }
   return localization.format("status-unknown-name");
 }

@@ -1246,6 +1246,7 @@ fn fixed_consumable_use_action_with_terrain(
         (70, 34) => bless(24, 12),
         (70, 35) => bless(48, 24),
         (70, 36) => serde_json::json!({"type": "prepare-confusing-strike"}),
+        (70, 37) => serde_json::json!({"type": "protection-from-evil"}),
         (70, 39) => serde_json::json!({
             "type": "destroy-adjacent-traps-and-doors"
         }),
@@ -8848,6 +8849,23 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(
             monster_confusion["useAction"]["effect"],
             serde_json::json!({"type": "prepare-confusing-strike"})
+        );
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let protection_from_evil = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 37,
+                ..LegacyItemEntry::default()
+            },
+            "protection-from-evil-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            protection_from_evil["useAction"]["effect"],
+            serde_json::json!({"type": "protection-from-evil"})
         );
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 

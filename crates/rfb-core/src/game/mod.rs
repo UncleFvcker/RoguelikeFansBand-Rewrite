@@ -19,9 +19,9 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
         STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR, STATUS_HASTE, STATUS_PARALYSIS,
-        STATUS_POISON, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_VENGEANCE, StatusApplication,
-        StatusChange, StatusInstance, StatusStacking, advance_status_ticks, apply_effect,
-        apply_status, resolve_damage,
+        STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
+        STATUS_VENGEANCE, StatusApplication, StatusChange, StatusInstance, StatusStacking,
+        advance_status_ticks, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ProjectileTrace, project_events},
@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 120] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 121] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -230,10 +230,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 120] = [
     "39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8",
     "7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149",
     "c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3",
+    "757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0";
+    "27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 53;
@@ -10314,6 +10315,7 @@ impl Game {
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
+                | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
                 | ItemUseEffectDefinition::RemoveStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
@@ -10786,6 +10788,7 @@ impl Game {
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
+            | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
@@ -11740,6 +11743,10 @@ impl Game {
                 );
                 true
             }
+            ItemUseEffectDefinition::ProtectionFromEvil => {
+                self.resolve_item_protection_from_evil(source_kind_id, events);
+                true
+            }
             ItemUseEffectDefinition::PrepareConfusingStrike => {
                 self.confusing_strike_ready = true;
                 self.mark_item_aware(source_kind_id);
@@ -11836,6 +11843,54 @@ impl Game {
                 unreachable!("projected item effects cannot resolve as self restoration")
             }
         }
+    }
+
+    fn resolve_item_protection_from_evil(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let duration = u32::from(self.progress.level)
+            .saturating_mul(3)
+            .saturating_add(
+                u32::try_from(self.roll_damage(1, 25))
+                    .expect("protection from evil duration must fit u32"),
+            );
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            STATUS_PROTECTION_FROM_EVIL,
+            1,
+            duration,
+            0,
+            1,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemProtectionFromEvil {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![resolution],
+            },
+        });
     }
 
     fn resolve_item_blessing(
@@ -15738,6 +15793,14 @@ impl Game {
                 continue;
             }
 
+            if self.protection_from_evil_repels(&definition) {
+                events.push(DomainEvent::MonsterMeleeRepelled {
+                    source_kind_id: kind_id.clone(),
+                    method_id: blow.method_id,
+                });
+                continue;
+            }
+
             let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
             let resistance = self.effective_player_resistances().level(blow.damage_type);
             let damage = self.reduce_player_damage(resolve_armored_damage(
@@ -15761,6 +15824,39 @@ impl Game {
                 break;
             }
         }
+    }
+
+    fn protection_from_evil_repels(&mut self, definition: &rfb_content::ActorDefinition) -> bool {
+        if !self.player_has_status_kind(STATUS_PROTECTION_FROM_EVIL)
+            || !definition.tags.iter().any(|tag| tag == "evil")
+        {
+            return false;
+        }
+
+        const ORIGINAL_SAVE_ADJUSTMENT: [i32; 38] = [
+            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
+        ];
+        let wisdom_index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Wisdom),
+        )
+        .min(ORIGINAL_SAVE_ADJUSTMENT.len() - 1);
+        let player_power = i64::from(self.progress.level)
+            .saturating_add(i64::from(ORIGINAL_SAVE_ADJUSTMENT[wisdom_index]))
+            .max(1) as u64;
+        let monster_power = u64::from(if definition.tags.iter().any(|tag| tag == "unique") {
+            definition.level.saturating_add(definition.level / 5)
+        } else {
+            definition.level
+        })
+        .max(1);
+        let player_roll = self.rng.bounded(player_power).saturating_add(1);
+        let monster_roll = self.rng.bounded(monster_power).saturating_add(1);
+        if player_roll <= monster_roll {
+            return false;
+        }
+        self.rng.bounded(3) != 0
     }
 
     fn resolve_vengeance_retaliation(

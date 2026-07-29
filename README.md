@@ -169,7 +169,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v126`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v129`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -328,6 +328,8 @@ P76 / contract-v127 接入 Vengeance。窄 `vengeance` 效果按 `25+1d25` 施�
 
 P77 / contract-v128 接入 Monster Confusion。无参数 `prepare-confusing-strike` 写入玩家专属准备态；miss 与致死命中保留，首个非致死命中先清态，再按 `NO_CONF` 免疫、`bounded(100) < actor.level` 抵抗和 `10 + bounded(player.level) / 5` Extend confusion 顺序结算。legacy importer 映射 sval 36 与怪物 `NO_CONF`，使 `scroll-effect` 20→19。协议 1.119、demo 1.119.0、state hash Schema v53、active baseline 431 条 exact、零 waiver，内置 content hash 为 `757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0`。详见[Contract v128](design/contract-v128-scroll-monster-confusion.md)。
 
+P78 / contract-v129 接入 Protection from Evil。无参数 `protection-from-evil` 以 Extend 方式施加 `3 * player level + 1d25` ticks；只有带 `evil` tag 的怪物近战命中才进入 Wisdom/等级对抗，怪物失败后仍有 `one_in(3)` 绕过，其余结果在伤害骰前击退。非邪恶攻击零保护 RNG。legacy importer 映射 sval 37，使 `scroll-effect` 19→18。协议保持 1.119、demo 1.120.0、state hash Schema 保持 v53、active baseline 432 条 exact、零 waiver，内置 content hash 为 `27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24`。详见[Contract v129](design/contract-v129-scroll-protection-from-evil.md)。
+
 ### 本地验证
 
 ```powershell
@@ -400,7 +402,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 431 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 432 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

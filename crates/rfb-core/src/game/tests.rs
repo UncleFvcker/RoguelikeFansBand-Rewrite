@@ -15855,6 +15855,124 @@ fn confusing_strike_preparation_and_hit_boundaries_are_authoritative() {
 }
 
 #[test]
+fn protection_from_evil_duration_and_melee_branches_are_authoritative() {
+    fn protection_status() -> StatusInstance {
+        StatusInstance {
+            kind_id: STATUS_PROTECTION_FROM_EVIL.to_owned(),
+            intensity: 1,
+            remaining_ticks: 100,
+            source_id: Some("demo.item.protection-from-evil-scroll".to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        }
+    }
+
+    fn protected_game() -> Game {
+        let mut game = Game::new(77);
+        game.progress.level = 50;
+        game.progress.attributes.wisdom = 238;
+        game.player.statuses.push(protection_status());
+        game
+    }
+
+    let mut prepared = Game::new(77);
+    clear_monsters(&mut prepared);
+    prepared.progress.level = 10;
+    for serial in 1..=2 {
+        give_inventory_item(
+            &mut prepared,
+            &format!("test.item.protection-from-evil-scroll.{serial}"),
+            "demo.item.protection-from-evil-scroll",
+        );
+    }
+    prepared.rng = RfbRng::seeded(77);
+    let mut expected_rng = RfbRng::seeded(77);
+    let expected_durations = [
+        31 + u32::try_from(expected_rng.bounded(25)).expect("duration roll must fit u32"),
+        31 + u32::try_from(expected_rng.bounded(25)).expect("duration roll must fit u32"),
+    ];
+    for (serial, expected_duration) in (1..=2).zip(expected_durations) {
+        let mut events = Vec::new();
+        prepared
+            .use_inventory_item(
+                &format!("test.item.protection-from-evil-scroll.{serial}"),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("protection from evil should resolve");
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEvent::ItemProtectionFromEvil { duration, .. }]
+                if *duration == expected_duration
+        ));
+    }
+    assert_eq!(prepared.rng_draw_counter(), 2);
+    assert_eq!(
+        prepared
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_PROTECTION_FROM_EVIL)
+            .expect("protection from evil should remain active")
+            .remaining_ticks,
+        expected_durations.into_iter().sum::<u32>()
+    );
+
+    let non_evil = prepared
+        .content
+        .actor("demo.actor.ember-mote")
+        .expect("non-evil actor should exist")
+        .clone();
+    let mut non_evil_game = protected_game();
+    let draws_before = non_evil_game.rng_draw_counter();
+    assert!(!non_evil_game.protection_from_evil_repels(&non_evil));
+    assert_eq!(non_evil_game.rng_draw_counter(), draws_before);
+
+    let evil = prepared
+        .content
+        .actor("demo.actor.gloom-weaver")
+        .expect("evil actor should exist")
+        .clone();
+    let branch = |seed| {
+        let mut rng = RfbRng::seeded(seed);
+        let player_roll = rng.bounded(100) + 1;
+        let monster_roll = rng.bounded(3) + 1;
+        if player_roll <= monster_roll {
+            (false, 2)
+        } else {
+            (rng.bounded(3) != 0, 3)
+        }
+    };
+    let saved_seed = (0..1_000_u64)
+        .find(|seed| branch(*seed) == (false, 2))
+        .expect("one seed should let the evil monster save");
+    let bypass_seed = (0..1_000_u64)
+        .find(|seed| branch(*seed) == (false, 3))
+        .expect("one seed should pass the one-in-three bypass");
+    let repelled_seed = (0..1_000_u64)
+        .find(|seed| branch(*seed) == (true, 3))
+        .expect("one seed should repel the evil monster");
+    for (seed, expected_repelled, expected_draws) in [
+        (saved_seed, false, 2),
+        (bypass_seed, false, 3),
+        (repelled_seed, true, 3),
+    ] {
+        let mut game = protected_game();
+        game.rng = RfbRng::seeded(seed);
+        assert_eq!(game.protection_from_evil_repels(&evil), expected_repelled);
+        assert_eq!(game.rng_draw_counter(), expected_draws);
+    }
+}
+
+#[test]
 fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
     let prepare = || {
         let mut game = Game::new(64);

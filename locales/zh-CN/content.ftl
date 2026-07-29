@@ -528,5 +528,7 @@ item-demo-reprisal-scroll-name = 反击卷轴
 item-demo-reprisal-scroll-description = 短暂护佑阅读者，将所受伤害还给来源。
 item-demo-confusing-touch-scroll-name = 乱触卷轴
 item-demo-confusing-touch-scroll-description = 让阅读者下一次造成非致死伤害的近战命中尝试使目标陷入混乱。
+item-demo-protection-from-evil-scroll-name = 防邪卷轴
+item-demo-protection-from-evil-scroll-description = 暂时击退较弱邪恶生物的近战攻击。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

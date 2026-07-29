@@ -465,6 +465,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
         resolution: AbilityEffectsResolutionDto,
     },
+    ItemProtectionFromEvil {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        resolution: AbilityEffectsResolutionDto,
+    },
     ItemConfusingStrikePrepared {
         source_kind_id: String,
         display_name_key: String,
@@ -678,6 +684,10 @@ pub(crate) enum DomainEvent {
         damage: DamageOutcome,
     },
     MonsterMeleeMissed {
+        source_kind_id: String,
+        method_id: Option<String>,
+    },
+    MonsterMeleeRepelled {
         source_kind_id: String,
         method_id: Option<String>,
     },
@@ -1850,6 +1860,21 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::AbilityEffects { resolution },
             ),
+            Self::ItemProtectionFromEvil {
+                source_kind_id,
+                display_name_key,
+                duration,
+                resolution,
+            } => dto_with_outcome(
+                "item.use-protection-from-evil",
+                "item-use-protection-from-evil",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+                GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
             Self::ItemConfusingStrikePrepared {
                 source_kind_id,
                 display_name_key,
@@ -2501,6 +2526,17 @@ impl DomainEvent {
                 dto(
                     "combat.monster-miss",
                     "combat-monster-miss",
+                    [("source", source_kind_id)],
+                ),
+                method_id,
+            ),
+            Self::MonsterMeleeRepelled {
+                source_kind_id,
+                method_id,
+            } => with_method(
+                dto(
+                    "combat.monster-repelled",
+                    "combat-monster-repelled",
                     [("source", source_kind_id)],
                 ),
                 method_id,
