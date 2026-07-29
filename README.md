@@ -155,6 +155,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v133：Slowness 药水](design/contract-v133-potion-slowness.md)
 - [Contract v134：Death 药水](design/contract-v134-potion-death.md)
 - [Contract v135：Poison 药水](design/contract-v135-potion-poison.md)
+- [Contract v136：Thermal 药水](design/contract-v136-potion-thermal-resistance.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -178,7 +179,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v135`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v136`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -351,6 +352,8 @@ P83 / contract-v134 接入 Death Potion。窄 `self-life-loss { amount: 5000 }` 
 
 P84 / contract-v135 接入 Poison Potion。窄 `apply-poison` 静态消耗品效果先固定抽取 `bounded(55)` 并与既有 Poison 抗性档阈值比较；抵抗成功保持 Tried-only 且不抽持续时间，失败后才抽 `10..24` ticks、Extend Poison 并 Aware。协议保持 1.121、demo 1.126.0、state hash Schema 保持 v54、active baseline 439 条 exact、零 waiver，内置 content hash 为 `497fbc6b137e9bc2d8162ad52b0253f4d655a37c58abe391be6bcdd94ef94d9e`。legacy importer 映射 tval 75/sval 6，使 `consumable-effect` 79→78。详见[Contract v135](design/contract-v135-potion-poison.md)。
 
+P85 / contract-v136 接入 Thermal Potion。窄 `apply-thermal-resistance` 静态消耗品效果只抽一次 `1d10+10`，以 Extend 应用单一 Thermal 状态并同时授予 Fire/Cold Resistant；只有首次新增状态才 Aware，已有状态的延长保持 Tried-only。协议保持 1.121、demo 1.127.0、state hash Schema 保持 v54、active baseline 440 条 exact、零 waiver，内置 content hash 为 `3098d9de2051029b4509acc3b8973cec0b76679dcacfa6ace1244864bc3f363d`。legacy importer 映射 tval 75/sval 30，使 `consumable-effect` 78→77。详见[Contract v136](design/contract-v136-potion-thermal-resistance.md)。
+
 ### 本地验证
 
 ```powershell
@@ -423,7 +426,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 439 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 440 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

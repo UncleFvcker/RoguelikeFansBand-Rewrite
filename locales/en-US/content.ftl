@@ -542,5 +542,7 @@ item-demo-mortal-draught-name = Mortal Draught
 item-demo-mortal-draught-description = A perilous draught that drains life itself.
 item-demo-venom-draught-name = Venom Draught
 item-demo-venom-draught-description = A bitter draught that may poison an unprotected drinker.
+item-demo-temperate-tonic-name = Temperate Tonic
+item-demo-temperate-tonic-description = Temporarily steadies the drinker against both fire and cold.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

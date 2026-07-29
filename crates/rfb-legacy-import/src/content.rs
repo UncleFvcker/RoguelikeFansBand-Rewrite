@@ -1345,6 +1345,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 15
         }),
+        (75, 30) => serde_json::json!({
+            "type": "apply-thermal-resistance",
+            "durationDice": 1,
+            "durationSides": 10,
+            "durationBonus": 10
+        }),
         (75, 6) => serde_json::json!({
             "type": "apply-poison",
             "durationDice": 1,
@@ -7798,7 +7804,7 @@ W:30:0:0:2:500
 F:HIDE_TYPE
 N:*:& Test Potion~ of Mending
 G:!:b
-I:75:30:0
+I:75:29:0
 W:5:0:0:4:20
 N:*:& Test Torch~
 G:~:u
@@ -8361,7 +8367,7 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 75,
-                sval: 30,
+                sval: 29,
                 ..LegacyItemEntry::default()
             },
             "speed-potion",
@@ -8732,6 +8738,26 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationDice": 1,
                 "durationSides": 25,
                 "durationBonus": 15
+            })
+        );
+        let thermal = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 30,
+                ..LegacyItemEntry::default()
+            },
+            "thermal-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            thermal["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-thermal-resistance",
+                "durationDice": 1,
+                "durationSides": 10,
+                "durationBonus": 10
             })
         );
         let poison = item_json(

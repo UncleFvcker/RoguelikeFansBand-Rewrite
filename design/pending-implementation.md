@@ -93,8 +93,9 @@
 | P82 | Slowness 药水 | 已由 contract-v133 完成 | 窄 `apply-slowness` 静态消耗品效果固定 `15+1d25`，总是掷持续时间并以 KeepStrongest 合并 Slow；只有首次新增状态才 Aware，已有 Slow 即使延长也保持 Tried-only。tval 75/sval 4 使 `consumable-effect` 81→80；协议保持 1.121、包 1.124.0、Schema 保持 v54、fixture 436，共 436 exact |
 | P83 | Death 药水 | 已由 contract-v134 完成 | 窄 `self-life-loss { amount: 5000 }` 静态消耗品效果直接扣除生命，绕过护甲、抗性与 incoming-damage 缩放，零效果 RNG 且总是 Aware。tval 75/sval 23 使 `consumable-effect` 80→79；协议保持 1.121、包 1.125.0、Schema 保持 v54、fixture 437，共 437 exact |
 | P84 | Poison 药水 | 已由 contract-v135 完成 | 窄 `apply-poison` 先抽 `bounded(55)` 并与既有 Poison 抗性阈值比较；成功抵抗保持 Tried-only 且不抽持续时间，失败后才抽 `1d15+9`、Extend Poison 并 Aware。tval 75/sval 6 使 `consumable-effect` 79→78；协议保持 1.121、包 1.126.0、Schema 保持 v54、fixtures 438–439，共 439 exact |
+| P85 | Thermal 药水 | 已由 contract-v136 完成 | 窄 `apply-thermal-resistance` 只抽一次 `1d10+10`，以 Extend 应用一个同时授予 Fire/Cold Resistant 的状态；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 30 使 `consumable-effect` 78→77；协议保持 1.121、包 1.127.0、Schema 保持 v54、fixture 440，共 440 exact |
 
-## contract-v135 明确遗留
+## contract-v136 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -118,8 +119,9 @@
 - Death Potion 只增加固定 `self-life-loss`；不建立通用伤害 DSL、伤害类型、穿透开关、属性损失或 Ruination/Detonations 预备结构；
 - Poison Potion 只增加低抗性检定与既有 Poison Extend；不建立通用状态保存 DSL、第二份抗性映射或 status-immunity 入口；
 - 抵抗成功时的原版逐装备抗性学习等待单项属性知识模型，不把整件装备标为 identified；
+- Thermal Potion 只增加单一双抗 bundle 状态；不提前建立独立 Fire/Cold 临时计时器、跨来源共享 oppose 计时器或通用物品状态 DSL；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
-- `consumable-effect` 现为 78；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
+- `consumable-effect` 现为 77；其他食物、营养、增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
 
 ## contract-v116 明确遗留
 
@@ -155,7 +157,7 @@
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 78 条缺口中；
+- 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 77 条缺口中；
 - 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion、Protection from Evil、Recharging 和 Spell 完成后剩余 15 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；

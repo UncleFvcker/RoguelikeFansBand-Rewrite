@@ -542,5 +542,7 @@ item-demo-mortal-draught-name = 致命饮剂
 item-demo-mortal-draught-description = 一剂直接抽离生命的危险药液。
 item-demo-venom-draught-name = 毒液饮剂
 item-demo-venom-draught-description = 一剂苦涩药液，可能使缺乏防护的饮用者中毒。
+item-demo-temperate-tonic-name = 调温饮剂
+item-demo-temperate-tonic-description = 暂时使饮用者同时抵抗火焰与寒冷。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

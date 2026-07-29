@@ -15286,6 +15286,71 @@ fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
 }
 
 #[test]
+fn temperate_tonic_extends_existing_resistance_without_becoming_aware() {
+    const ITEM_ID: &str = "test.item.temperate-tonic";
+    const KIND_ID: &str = "demo.item.temperate-tonic";
+
+    let mut game = Game::new(85);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_THERMAL_RESISTANCE.to_owned(),
+        intensity: 1,
+        remaining_ticks: 3,
+        source_id: Some("test.existing-thermal-resistance".to_owned()),
+        granted_resistances: BTreeMap::from([
+            (DamageType::Fire, ResistanceLevel::Resistant),
+            (DamageType::Cold, ResistanceLevel::Resistant),
+        ]),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    let thermal = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_THERMAL_RESISTANCE)
+        .expect("the tonic should extend the existing resistance");
+    assert!((4..=13).contains(&thermal.remaining_ticks));
+    assert_eq!(
+        thermal.source_id.as_deref(),
+        Some("test.existing-thermal-resistance")
+    );
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Cold),
+        ResistanceLevel::Resistant
+    );
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Tried);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-thermal-resistance-no-effect")
+    );
+}
+
+#[test]
 fn mortal_draught_life_loss_bypasses_incoming_damage_reduction_without_rng() {
     const ITEM_ID: &str = "test.item.mortal-draught";
     const KIND_ID: &str = "demo.item.mortal-draught";
