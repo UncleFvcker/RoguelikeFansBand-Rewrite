@@ -459,6 +459,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
         resolution: AbilityEffectsResolutionDto,
     },
+    ItemVengeanceActivated {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        resolution: AbilityEffectsResolutionDto,
+    },
     ItemElementalBlast {
         source_kind_id: String,
         display_name_key: String,
@@ -664,6 +670,14 @@ pub(crate) enum DomainEvent {
     MonsterMeleeHit {
         source_kind_id: String,
         method_id: Option<String>,
+        damage: DamageOutcome,
+    },
+    VengeanceHit {
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    VengeanceSlew {
+        target_kind_id: String,
         damage: DamageOutcome,
     },
     MonsterMeleeEntityMissed {
@@ -1807,6 +1821,21 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::AbilityEffects { resolution },
             ),
+            Self::ItemVengeanceActivated {
+                source_kind_id,
+                display_name_key,
+                duration,
+                resolution,
+            } => dto_with_outcome(
+                "item.use-vengeance",
+                "item-use-vengeance",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+                GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
             Self::ItemElementalBlast {
                 source_kind_id,
                 display_name_key,
@@ -2450,6 +2479,31 @@ impl DomainEvent {
                     },
                 ),
                 method_id,
+            ),
+            Self::VengeanceHit {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "combat.vengeance-hit",
+                "combat-vengeance-hit",
+                [
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::VengeanceSlew {
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "combat.vengeance-slay",
+                "combat-vengeance-slay",
+                [("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
             ),
             Self::MonsterMeleeEntityMissed {
                 source_kind_id,

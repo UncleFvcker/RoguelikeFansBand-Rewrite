@@ -1274,6 +1274,12 @@ fn fixed_consumable_use_action_with_terrain(
                 "targetTerrainId": terrain_creation.wall_terrain_id.as_ref()?
             })
         }
+        (70, 50) => serde_json::json!({
+            "type": "vengeance",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 25
+        }),
         (70, 58) => serde_json::json!({
             "type": "self-centered-elemental-blast",
             "baseDamage": 666,
@@ -8790,6 +8796,28 @@ F:BRAND_VAMP | HOLD_LIFE
                 })
             );
         }
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let vengeance = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 50,
+                ..LegacyItemEntry::default()
+            },
+            "vengeance-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            vengeance["useAction"]["effect"],
+            serde_json::json!({
+                "type": "vengeance",
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationBonus": 25
+            })
+        );
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 
         let _ = item_json(

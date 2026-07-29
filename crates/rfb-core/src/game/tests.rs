@@ -15597,6 +15597,115 @@ fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
 }
 
 #[test]
+fn vengeance_retaliates_against_monster_spells_but_not_after_player_death() {
+    fn vengeance_status() -> StatusInstance {
+        StatusInstance {
+            kind_id: STATUS_VENGEANCE.to_owned(),
+            intensity: 1,
+            remaining_ticks: 100,
+            source_id: Some("demo.item.reprisal-scroll".to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        }
+    }
+
+    fn cinder_game(player_hp: i32) -> Game {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.wall".to_owned());
+        let player = game.player.position;
+        for step in 0..=3 {
+            replace_terrain(
+                &mut game,
+                Position {
+                    x: player.x + step,
+                    y: player.y,
+                },
+                "demo.terrain.floor",
+            );
+        }
+        game.player.hp = player_hp;
+        game.player.statuses.push(vengeance_status());
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.vengeance-cinder",
+            "demo.actor.cinder-adept",
+            Position {
+                x: player.x + 3,
+                y: player.y,
+            },
+            20,
+            100,
+            100,
+            true,
+        ));
+        game
+    }
+
+    fn first_cast(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        for _ in 0..100 {
+            if game.resolve_monster_ability(0, &mut events) {
+                return events;
+            }
+        }
+        panic!("cinder adept should cast within 100 attempts");
+    }
+
+    let mut surviving = cinder_game(100);
+    let events = first_cast(&mut surviving);
+    let cast_damage = events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::MonsterAbilityCast { resolution, .. } => {
+                resolution.effects.iter().find_map(|effect| match effect {
+                    AbilityEffectResolutionDto::Damage { resolution, .. } => {
+                        Some(resolution.final_damage)
+                    }
+                    _ => None,
+                })
+            }
+            _ => None,
+        })
+        .expect("damaging monster cast should expose applied damage");
+    let retaliation_damage = events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::VengeanceHit { damage, .. }
+            | DomainEvent::VengeanceSlew { damage, .. } => Some(damage.applied),
+            _ => None,
+        })
+        .expect("surviving player should retaliate");
+    assert_eq!(retaliation_damage, cast_damage);
+    assert_eq!(
+        surviving
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_VENGEANCE)
+            .expect("vengeance should remain active")
+            .remaining_ticks,
+        95
+    );
+
+    let mut dying = cinder_game(1);
+    let source_hp = dying.entities[0].hp;
+    let events = first_cast(&mut dying);
+    assert!(dying.player_is_dead());
+    assert_eq!(dying.entities[0].hp, source_hp);
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::VengeanceHit { .. } | DomainEvent::VengeanceSlew { .. }
+    )));
+    assert_eq!(dying.player.statuses[0].remaining_ticks, 100);
+}
+
+#[test]
 fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
     let prepare = || {
         let mut game = Game::new(64);

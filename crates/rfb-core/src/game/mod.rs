@@ -19,9 +19,9 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
         STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR, STATUS_HASTE, STATUS_PARALYSIS,
-        STATUS_POISON, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, StatusApplication, StatusChange,
-        StatusInstance, StatusStacking, advance_status_ticks, apply_effect, apply_status,
-        resolve_damage,
+        STATUS_POISON, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_VENGEANCE, StatusApplication,
+        StatusChange, StatusInstance, StatusStacking, advance_status_ticks, apply_effect,
+        apply_status, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ProjectileTrace, project_events},
@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 118] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 119] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -228,10 +228,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 118] = [
     "db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2",
     "337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b",
     "39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8",
+    "7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149";
+    "c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -937,6 +938,7 @@ fn task_death_target_kind(event: &DomainEvent) -> Option<&str> {
         | DomainEvent::SummonSlew { target_kind_id, .. }
         | DomainEvent::ProjectileSlew { target_kind_id, .. }
         | DomainEvent::ItemThrowSlew { target_kind_id, .. }
+        | DomainEvent::VengeanceSlew { target_kind_id, .. }
         | DomainEvent::EntityDiedFromStatus { target_kind_id, .. } => Some(target_kind_id.as_str()),
         _ => None,
     }
@@ -10304,6 +10306,7 @@ impl Game {
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
+                | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::RemoveStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -10774,6 +10777,7 @@ impl Game {
             ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
+            | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
@@ -11713,6 +11717,20 @@ impl Game {
                 );
                 true
             }
+            ItemUseEffectDefinition::Vengeance {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => {
+                self.resolve_item_vengeance(
+                    source_kind_id,
+                    *duration_dice,
+                    *duration_sides,
+                    *duration_bonus,
+                    events,
+                );
+                true
+            }
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 let max_hp = self.effective_player_max_hp();
                 let player = &mut self.player;
@@ -11850,6 +11868,58 @@ impl Game {
         };
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemBlessed {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![resolution],
+            },
+        });
+    }
+
+    fn resolve_item_vengeance(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            STATUS_VENGEANCE,
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::KeepStrongest,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let duration = match &resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                ..
+            } => *applied_duration_ticks,
+            _ => unreachable!("vengeance must produce a status application resolution"),
+        };
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemVengeanceActivated {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             duration,
@@ -12619,7 +12689,7 @@ impl Game {
         if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
             return Ok(());
         }
-        if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities) {
+        if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities)? {
             return Ok(());
         }
         let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {
@@ -12687,7 +12757,7 @@ impl Game {
                 events,
                 changed,
                 removed_entities,
-            );
+            )?;
             return Ok(());
         }
         let next_position = match behavior {
@@ -13041,6 +13111,7 @@ impl Game {
             &mut BTreeSet::new(),
             &mut Vec::new(),
         )
+        .expect("monster ability test resolution should preserve invariants")
     }
 
     fn resolve_monster_ability_with_changes(
@@ -13049,7 +13120,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> bool {
+    ) -> Result<bool, CoreError> {
         let source_entity_id = self.entities[index].id.clone();
         let source_kind_id = self.entities[index].kind_id.clone();
         let Some(casting) = self
@@ -13057,11 +13128,11 @@ impl Game {
             .actor(&source_kind_id)
             .and_then(|definition| definition.monster_casting.clone())
         else {
-            return false;
+            return Ok(false);
         };
         if self.entities[index].casting_cooldown_remaining > 0 {
             self.entities[index].casting_cooldown_remaining -= 1;
-            return false;
+            return Ok(false);
         }
 
         // FrogComposband checks the monster's spell frequency before asking
@@ -13139,11 +13210,12 @@ impl Game {
         });
 
         let Some(selected_index) = selected_index else {
-            return false;
+            return Ok(false);
         };
         let plan = viable[selected_index].clone();
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);
+        let player_hp_before = self.player.hp;
         let MonsterAbilityPlanResolution {
             target_entity_id,
             target_kind_id,
@@ -13162,7 +13234,7 @@ impl Game {
         );
         events.push(DomainEvent::MonsterAbilityCast {
             resolution: Box::new(MonsterAbilityCastResolutionDto {
-                source_entity_id,
+                source_entity_id: source_entity_id.clone(),
                 source_kind_id,
                 ability_id: plan.ability.id,
                 target_entity_id,
@@ -13174,7 +13246,14 @@ impl Game {
             }),
             trace,
         });
-        true
+        self.resolve_vengeance_retaliation(
+            &source_entity_id,
+            player_hp_before.saturating_sub(self.player.hp),
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(true)
     }
 
     /// Row-major enumeration of open destinations for monster displacement:
@@ -15453,10 +15532,19 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) {
+    ) -> Result<(), CoreError> {
         if target.is_player() {
+            let source_entity_id = self.entities[source_index].id.clone();
+            let player_hp_before = self.player.hp;
             self.resolve_monster_melee(source_index, events);
-            return;
+            self.resolve_vengeance_retaliation(
+                &source_entity_id,
+                player_hp_before.saturating_sub(self.player.hp),
+                events,
+                changed,
+                removed_entities,
+            )?;
+            return Ok(());
         }
         let source_kind_id = self.entities[source_index].kind_id.clone();
         let definition = self
@@ -15538,6 +15626,7 @@ impl Game {
                 damage,
             });
         }
+        Ok(())
     }
 
     fn resolve_monster_melee(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
@@ -15599,6 +15688,79 @@ impl Game {
                 break;
             }
         }
+    }
+
+    fn resolve_vengeance_retaliation(
+        &mut self,
+        source_entity_id: &str,
+        applied_damage: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        if applied_damage <= 0
+            || self.player_is_dead()
+            || !self.player_has_status_kind(STATUS_VENGEANCE)
+        {
+            return Ok(());
+        }
+        let source_index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == source_entity_id && entity.hp > 0)
+            .ok_or_else(|| {
+                CoreError::Invariant(format!(
+                    "vengeance source actor {source_entity_id} is missing"
+                ))
+            })?;
+        let target_kind_id = self.entities[source_index].kind_id.clone();
+        let target_position = self.entities[source_index].position;
+        let damage = resolve_damage(
+            DamagePacket::new(applied_damage, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        self.entities[source_index].hp = self.entities[source_index]
+            .hp
+            .saturating_sub(damage.applied);
+        changed.insert(target_position);
+        if self.entities[source_index].hp <= 0 {
+            self.resolve_actor_death(
+                source_index,
+                DomainEvent::VengeanceSlew {
+                    target_kind_id,
+                    damage,
+                },
+                events,
+                changed,
+                removed_entities,
+            )?;
+        } else {
+            events.push(DomainEvent::VengeanceHit {
+                target_kind_id,
+                damage,
+            });
+        }
+
+        let status_index = self
+            .player
+            .statuses
+            .iter()
+            .position(|status| status.kind_id == STATUS_VENGEANCE)
+            .ok_or_else(|| {
+                CoreError::Invariant(
+                    "active vengeance status disappeared during retaliation".into(),
+                )
+            })?;
+        self.player.statuses[status_index].remaining_ticks = self.player.statuses[status_index]
+            .remaining_ticks
+            .saturating_sub(5);
+        if self.player.statuses[status_index].remaining_ticks == 0 {
+            self.player.statuses.remove(status_index);
+            events.push(DomainEvent::PlayerStatusExpired {
+                status_kind_id: STATUS_VENGEANCE.to_owned(),
+            });
+        }
+        Ok(())
     }
 
     fn next_monster_step(&self, index: usize) -> Option<Position> {

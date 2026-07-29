@@ -2502,6 +2502,20 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         duration: event.args.duration ?? "?",
       });
+    case "item-use-vengeance":
+      return localization.format("message-item-use-vengeance", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "combat-vengeance-hit":
+      return localization.format("message-combat-vengeance-hit", {
+        target: contentName(event.args.target),
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
+    case "combat-vengeance-slay":
+      return localization.format("message-combat-vengeance-slay", {
+        target: contentName(event.args.target),
+      });
     case "item-use-aggravate":
       return localization.format("message-item-use-aggravate", {
         source: visibleItemName(event.args.nameKey, event.args.source),
@@ -3044,6 +3058,9 @@ function statusName(statusId: string | undefined): string {
   }
   if (statusId === "rfb.status.blessed") {
     return localization.format("status-blessed-name");
+  }
+  if (statusId === "rfb.status.vengeance") {
+    return localization.format("status-vengeance-name");
   }
   return localization.format("status-unknown-name");
 }

@@ -324,6 +324,8 @@ P74 / contract-v125 接入 Mass Genocide。窄 `mass-genocide` 效果按半径 2
 
 P75 / contract-v126 接入 Forest Creation 与 Wall Creation。窄 `create-adjacent-terrain` 固定扫描八邻格，只替换显式源地形，跳过玩家、存活 actor、地面物品和权威楼层连接；候选在消费前规划，提交时清除对应旧 reveal 状态，不作连通性证明或自动修复。成功才变为 Aware；空结果仍消费、推进时间、只记 Tried 且零效果 RNG。legacy importer 从解析后的 `FF_FLOOR` 派生源 ID，并解析本地 TREE/GRANITE 目标，使 `scroll-effect` 23→21。协议保持 1.118、demo 1.117.0、state hash Schema v52、active baseline 429 条 exact、零 waiver，内置 content hash 为 `7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149`。详见[Contract v126](design/contract-v126-scroll-adjacent-terrain-creation.md)。
 
+P76 / contract-v127 接入 Vengeance。窄 `vengeance` 效果按 `25+1d25` 施加 KeepStrongest 反击状态；怪物完整 melee routine 或完整 spell cast 结束后，按本次实际玩家 HP 损失反击来源一次，零伤害与玩家死亡不触发，每次反击额外扣 5 ticks。反击零 RNG、跳过目标抗性，击杀复用统一 actor death 事务。legacy importer 映射 sval 50，使 `scroll-effect` 21→20。协议保持 1.118、demo 1.118.0、state hash Schema v52、active baseline 430 条 exact、零 waiver，内置 content hash 为 `c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3`。详见[Contract v127](design/contract-v127-scroll-vengeance.md)。
+
 ### 本地验证
 
 ```powershell
@@ -396,7 +398,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 429 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 430 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.118 / contract-v126（P31–P75 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.118 / contract-v127（P31–P76 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -463,7 +463,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.118、内容包 1.117.0、contract-v126、save v1 和 state hash Schema v52；内容 hash 为 `7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149`。active baseline 包含 429 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126 增加固定八邻格的树/墙创建与裸地排除事务。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.118、内容包 1.118.0、contract-v127、save v1 和 state hash Schema v52；内容 hash 为 `c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3`。active baseline 包含 430 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v125 依次增加可见目标驱散/放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒和 Mass Genocide；v126 增加固定八邻格的树/墙创建与裸地排除事务；v127 增加按实际玩家 HP 损失结算的怪物 melee/spell Vengeance。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
 这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、63 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
@@ -552,6 +552,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P74 进展（2026-07）**：contract-v125 接入 Mass Genocide。窄 `mass-genocide` 按稳定实体 ID 结算半径 20 内存活 actor，普通目标按 power 300 对抗移除，unique/guardian 必定抵抗，每候选产生 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。fixture 428 固定普通目标移除、guardian 抵抗和疲劳。协议保持 1.118，demo 升至 1.116.0，Schema 保持 v52。legacy importer 映射 sval 45，`scroll-effect` 24→23，真实包 hash 为 `aeba4b11bddc16259fd02558f666bdca774fe3f5dd7d347b35330cc6bc24436b`。
 
 **P75 进展（2026-07）**：contract-v126 接入 Forest Creation 与 Wall Creation。窄 `create-adjacent-terrain` 固定扫描八邻格，只替换显式 `sourceTerrainIds`，跳过玩家、存活 actor、地面物品和权威楼层连接；预先规划后原子提交，不作连通性证明或修复。成功才 Aware，空结果消费、Tried-only、零效果 RNG。fixture 429 同时固定两种卷轴，另一个窄单测固定空结果和占用/连接排除。协议保持 1.118，demo 升至 1.117.0，Schema 保持 v52。legacy importer 从 `FF_FLOOR` 派生源 ID 并解析 TREE/GRANITE，`scroll-effect` 23→21，真实包 hash 为 `1eb1303a7476dcbce4209460a0af728019680112d55a767c03d2c39ade00bdad`。
+
+**P76 进展（2026-07）**：contract-v127 接入 Vengeance。窄 `vengeance` 以 `25+1d25` 施加 KeepStrongest 状态；怪物完整 melee routine 或 spell cast 后按本次实际玩家 HP 损失反击来源一次，零伤害和玩家死亡不触发，每次反击扣 5 ticks。反击零 RNG、跳过抗性，击杀复用统一 actor death 事务；来源丢失为显式核心不变量错误。fixture 430 固定双 blow 聚合、持续时间成本、知识、RNG 和回档，另一个窄单测覆盖 spell 与死亡抑制。协议保持 1.118，demo 升至 1.118.0，Schema 保持 v52。legacy importer 映射 sval 50，`scroll-effect` 21→20，真实包严格编译 hash 为 `2178aea924ffe39476e2c89c668e13a98555b2f8a41d9315aa9630b32d0f4afc`。
 
 ## 9. 内容迁移策略
 

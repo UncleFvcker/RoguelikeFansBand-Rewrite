@@ -19,6 +19,7 @@ pub const STATUS_CONFUSION: &str = "rfb.status.confusion";
 pub const STATUS_BLINDNESS: &str = "rfb.status.blindness";
 pub const STATUS_PARALYSIS: &str = "rfb.status.paralysis";
 pub const STATUS_SLEEP: &str = "rfb.status.sleep";
+pub const STATUS_VENGEANCE: &str = "rfb.status.vengeance";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

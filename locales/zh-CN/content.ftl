@@ -524,5 +524,7 @@ item-demo-verdant-ring-scroll-name = 翠环卷轴
 item-demo-verdant-ring-scroll-description = 在阅读者周围的空地上催生一圈茂密植被。
 item-demo-stone-ring-scroll-name = 石环卷轴
 item-demo-stone-ring-scroll-description = 在阅读者周围的空地上升起石墙。
+item-demo-reprisal-scroll-name = 反击卷轴
+item-demo-reprisal-scroll-description = 短暂护佑阅读者，将所受伤害还给来源。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

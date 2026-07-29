@@ -1524,6 +1524,11 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    Vengeance {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
     SelfCenteredElementalBlast {
         base_damage: u32,
         damage_type: ActorDamageType,
@@ -3215,6 +3220,11 @@ fn valid_item_effect(
             duration_dice,
             duration_sides,
             duration_bonus,
+        }
+        | ItemUseEffectDefinition::Vengeance {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
         } => {
             (1..=100).contains(duration_dice)
                 && (1..=10_000).contains(duration_sides)
@@ -4649,6 +4659,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     ItemUseEffectDefinition::Heal { .. }
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
+                    | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
                     | ItemUseEffectDefinition::AggravateMonsters
                     | ItemUseEffectDefinition::MassGenocide { .. }
@@ -8679,7 +8690,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 63);
+        assert_eq!(first.content.items.len(), 64);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8705,7 +8716,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.117.0");
+        assert_eq!(catalog.pack_version(), "1.118.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),
