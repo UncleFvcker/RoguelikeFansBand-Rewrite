@@ -108,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 111] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 112] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -220,10 +220,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 111] = [
     "9d1c6c1e01fb4533aa5a9868f0adfcbe876148d98585412783d0da93f4019dff",
     "0b9023398c8213f9e74d7f0d4d076b8ce70819dbb5cd8cc4eb3a2b84d4996210",
     "99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00",
+    "a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd";
+    "b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -10257,6 +10258,7 @@ impl Game {
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::HealDice { .. }
+                | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::RemoveStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -10639,6 +10641,7 @@ impl Game {
         match effect {
             ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
+            | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::RemoveStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -11302,6 +11305,20 @@ impl Game {
                 let amount = self.roll_damage(*dice, *sides);
                 self.resolve_item_healing(source_kind_id, amount, events)
             }
+            ItemUseEffectDefinition::Bless {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => {
+                self.resolve_item_blessing(
+                    source_kind_id,
+                    *duration_dice,
+                    *duration_sides,
+                    *duration_bonus,
+                    events,
+                );
+                true
+            }
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 let max_hp = self.effective_player_max_hp();
                 let player = &mut self.player;
@@ -11384,6 +11401,65 @@ impl Game {
                 unreachable!("projected item effects cannot resolve as self restoration")
             }
         }
+    }
+
+    fn resolve_item_blessing(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            "rfb.status.blessed",
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                defense: 5,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses {
+                melee_skill: 10,
+                ranged_skill: 10,
+                ..EquipmentBonuses::default()
+            },
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let duration = match &resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                ..
+            } => *applied_duration_ticks,
+            _ => unreachable!("blessing must produce a status application resolution"),
+        };
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemBlessed {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![resolution],
+            },
+        });
     }
 
     fn resolve_item_healing(

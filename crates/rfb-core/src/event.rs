@@ -453,6 +453,12 @@ pub(crate) enum DomainEvent {
         status_kind_id: String,
         removed: bool,
     },
+    ItemBlessed {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        resolution: AbilityEffectsResolutionDto,
+    },
     ItemResourceRestored {
         source_kind_id: String,
         display_name_key: String,
@@ -1744,6 +1750,21 @@ impl DomainEvent {
                     ("nameKey", display_name_key),
                     ("status", status_kind_id),
                 ],
+            ),
+            Self::ItemBlessed {
+                source_kind_id,
+                display_name_key,
+                duration,
+                resolution,
+            } => dto_with_outcome(
+                "item.use-blessed",
+                "item-use-blessed",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+                GameEventOutcomeDto::AbilityEffects { resolution },
             ),
             Self::ItemResourceRestored {
                 source_kind_id,

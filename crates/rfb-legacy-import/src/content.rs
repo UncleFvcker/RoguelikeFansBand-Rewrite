@@ -1122,6 +1122,14 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "throughWalls": true
         })
     };
+    let bless = |duration_sides: u32, duration_bonus: u32| {
+        serde_json::json!({
+            "type": "bless",
+            "durationDice": 1,
+            "durationSides": duration_sides,
+            "durationBonus": duration_bonus
+        })
+    };
     let summon = |selector: serde_json::Value,
                   maximum_level_source: &str,
                   hostile: bool,
@@ -1223,6 +1231,9 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         (70, 28) => detect("terrain", "trap", true),
         (70, 29) => detect("terrain", "passage", true),
         (70, 30) => detect("actor", "invisible", false),
+        (70, 33) => bless(12, 6),
+        (70, 34) => bless(24, 12),
+        (70, 35) => bless(48, 24),
         (70, 42) => serde_json::json!({
             "type": "dispel-category",
             "category": "undead",
@@ -8518,6 +8529,24 @@ F:BRAND_VAMP | HOLD_LIFE
             assert_eq!(effect["category"], category);
             assert_eq!(effect["persistent"], persistent);
             assert_eq!(effect["throughWalls"], true);
+        }
+        for (sval, duration_sides, duration_bonus) in [(33, 12, 6), (34, 24, 12), (35, 48, 24)] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("blessing-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], "bless");
+            assert_eq!(effect["durationDice"], 1);
+            assert_eq!(effect["durationSides"], duration_sides);
+            assert_eq!(effect["durationBonus"], duration_bonus);
         }
         for (sval, effect_type, field, expected) in [
             (42, "dispel-category", "damage", serde_json::json!(80)),

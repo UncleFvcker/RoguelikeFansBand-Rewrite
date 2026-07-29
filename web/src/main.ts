@@ -2497,6 +2497,11 @@ function formatEvent(event: GameEventDto): string {
         target: visibleItemName(event.args.nameKey, event.args.target),
         status: statusName(event.args.status),
       });
+    case "item-use-blessed":
+      return localization.format("message-item-use-blessed", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
     case "item-use-resource-restored":
       return localization.format("message-item-use-resource-restored", {
         target: visibleItemName(event.args.nameKey, event.args.target),
@@ -2988,6 +2993,9 @@ function statusName(statusId: string | undefined): string {
   }
   if (statusId === "rfb.status.paralysis") {
     return localization.format("status-paralysis-name");
+  }
+  if (statusId === "rfb.status.blessed") {
+    return localization.format("status-blessed-name");
   }
   return localization.format("status-unknown-name");
 }

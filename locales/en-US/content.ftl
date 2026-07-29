@@ -506,3 +506,5 @@ item-demo-dispel-undead-scroll-name = Dispel Undead Scroll
 item-demo-dispel-undead-scroll-description = Strikes every undead creature in sight with dispelling force.
 item-demo-banishment-scroll-name = Banishment Scroll
 item-demo-banishment-scroll-description = Teleports every creature in sight away unless it resists.
+item-demo-benediction-scroll-name = Benediction Scroll
+item-demo-benediction-scroll-description = Extends a blessing that sharpens defense and combat skill.

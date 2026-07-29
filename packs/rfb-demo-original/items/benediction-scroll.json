@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.benediction-scroll",
+  "nameKey": "item-demo-benediction-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-benediction-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "bless",
+      "durationDice": 1,
+      "durationSides": 12,
+      "durationBonus": 6
+    }
+  },
+  "tags": ["blessing", "consumable", "scroll"]
+}
