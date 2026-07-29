@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.118";
+pub const PROTOCOL_VERSION: &str = "1.119";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1897,6 +1897,8 @@ pub struct PlayerDto {
     #[serde(default)]
     pub statuses: Vec<StatusDto>,
     #[serde(default)]
+    pub confusing_strike_ready: bool,
+    #[serde(default)]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "is_default_player_progress")]
     pub progress: PlayerProgressDto,
@@ -2567,6 +2569,8 @@ pub struct PlayerSaveDto {
     pub energy_need: i32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub confusing_strike_ready: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3301,6 +3305,7 @@ mod tests {
                     ..StatModifiersDto::default()
                 },
                 statuses: Vec::new(),
+                confusing_strike_ready: false,
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
                 build: None,
@@ -3465,6 +3470,7 @@ mod tests {
             base_speed: 110,
             energy_need: 0,
             statuses: Vec::new(),
+            confusing_strike_ready: false,
             resistances: Vec::new(),
             progress: None,
             build: None,

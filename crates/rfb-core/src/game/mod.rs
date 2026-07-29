@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 119] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 120] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -229,13 +229,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 119] = [
     "337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b",
     "39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8",
     "7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149",
+    "c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3";
+    "757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 53;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1605,6 +1606,7 @@ pub struct Game {
     campaign_state: CampaignState,
     summon_command: SummonCommandDto,
     recall: Option<RecallStateDto>,
+    confusing_strike_ready: bool,
     next_item_instance_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
@@ -1831,6 +1833,7 @@ impl Game {
             campaign_state: CampaignState::default(),
             summon_command: SummonCommandDto::default(),
             recall: None,
+            confusing_strike_ready: false,
             next_item_instance_serial,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
@@ -1995,6 +1998,7 @@ impl Game {
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
         let recall = payload.player.recall.clone();
+        let confusing_strike_ready = payload.player.confusing_strike_ready;
         // Body slots are save-authoritative once present; pre-template saves
         // derive them from the build's race (or the standard body) with no
         // RNG involvement.
@@ -2221,6 +2225,7 @@ impl Game {
             campaign_state,
             summon_command,
             recall,
+            confusing_strike_ready,
             next_item_instance_serial,
             explored,
             revealed_terrain,
@@ -3126,6 +3131,7 @@ impl Game {
                 .iter()
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
+            confusing_strike_ready: self.confusing_strike_ready,
             resistances: self.effective_player_resistances().to_dtos(),
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
@@ -3169,6 +3175,7 @@ impl Game {
             .collect();
         player.summon_command = self.summon_command.clone();
         player.recall = self.recall.clone();
+        player.confusing_strike_ready = self.confusing_strike_ready;
         player.body_slots = self
             .body_slots
             .iter()
@@ -10307,6 +10314,7 @@ impl Game {
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
+                | ItemUseEffectDefinition::PrepareConfusingStrike
                 | ItemUseEffectDefinition::RemoveStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -10778,6 +10786,7 @@ impl Game {
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
+            | ItemUseEffectDefinition::PrepareConfusingStrike
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
@@ -11731,6 +11740,15 @@ impl Game {
                 );
                 true
             }
+            ItemUseEffectDefinition::PrepareConfusingStrike => {
+                self.confusing_strike_ready = true;
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemConfusingStrikePrepared {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                });
+                true
+            }
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 let max_hp = self.effective_player_max_hp();
                 let player = &mut self.player;
@@ -12331,8 +12349,63 @@ impl Game {
                 self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
                 break;
             }
+            self.resolve_confusing_strike(index, &definition, events);
         }
         Ok(())
+    }
+
+    fn resolve_confusing_strike(
+        &mut self,
+        index: usize,
+        definition: &rfb_content::ActorDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if !self.confusing_strike_ready {
+            return;
+        }
+        self.confusing_strike_ready = false;
+        let target_kind_id = self.entities[index].kind_id.clone();
+        if definition
+            .status_immunities
+            .iter()
+            .any(|status| status == STATUS_CONFUSION)
+        {
+            events.push(DomainEvent::ConfusingStrikeImmune { target_kind_id });
+            return;
+        }
+        if self.rng.bounded(100) < u64::from(definition.level) {
+            events.push(DomainEvent::ConfusingStrikeResisted { target_kind_id });
+            return;
+        }
+        let duration = 10_u32.saturating_add(
+            u32::try_from(self.rng.bounded(u64::from(self.progress.level.max(1))))
+                .expect("confusing strike duration roll must fit u32")
+                / 5,
+        );
+        apply_status(
+            &mut self.entities[index].statuses,
+            StatusApplication {
+                status: StatusInstance {
+                    kind_id: STATUS_CONFUSION.to_owned(),
+                    intensity: 1,
+                    remaining_ticks: duration,
+                    source_id: None,
+                    granted_resistances: BTreeMap::new(),
+                    granted_brands: BTreeSet::new(),
+                    granted_modifiers: StatModifiersDto::default(),
+                    granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                    granted_status_immunities: BTreeSet::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                },
+                stacking: StatusStacking::Extend,
+            },
+        );
+        events.push(DomainEvent::ConfusingStrikeApplied {
+            target_kind_id,
+            duration,
+        });
     }
 
     fn advance_until_player_ready(

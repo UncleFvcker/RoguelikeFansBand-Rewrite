@@ -611,6 +611,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "prepare-confusing-strike",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "backlashBonus": {
               "format": "uint16",
               "maximum": 65535,

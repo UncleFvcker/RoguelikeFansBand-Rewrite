@@ -526,5 +526,7 @@ item-demo-stone-ring-scroll-name = 石环卷轴
 item-demo-stone-ring-scroll-description = 在阅读者周围的空地上升起石墙。
 item-demo-reprisal-scroll-name = 反击卷轴
 item-demo-reprisal-scroll-description = 短暂护佑阅读者，将所受伤害还给来源。
+item-demo-confusing-touch-scroll-name = 乱触卷轴
+item-demo-confusing-touch-scroll-description = 让阅读者下一次造成非致死伤害的近战命中尝试使目标陷入混乱。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

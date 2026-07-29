@@ -42,6 +42,7 @@ status-stat-value-bonus = { $value }（装备 { $bonus }）
 status-effects = 状态
 status-effects-none = 无
 status-effect-entry = { $status } { $intensity }级 / 剩余 { $ticks } 脉冲
+status-effect-confusing-strike-ready = 混乱攻击已准备
 status-position = 位置
 status-hash = 状态哈希
 panel-progression-title = 角色成长

@@ -1,6 +1,6 @@
 # 交接文档：P29–P76 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.118 / contract-v127，P76 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.119 / contract-v128，P77 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -88,7 +88,8 @@
 - **P74 / contract-v125** 接入 Mass Genocide。半径 20 内存活 actor 按稳定实体 ID 顺序结算，普通目标按 power 300 对抗直接移除，unique/guardian 必定抵抗，每候选均产生 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。直接移除不触发 XP、掉落、尸体、任务或守护者胜利事务。协议保持 1.118，demo 1.116.0，save v1，state hash Schema v52，active baseline 428 exact、零 waiver；内置 hash 为 `39a7a79bdabafa301140266e7119735a0a0f16ef6a7071b8c5d06de6a53655a8`。固定原版导入的 `scroll-effect` 24→23，真实包 hash 为 `aeba4b11bddc16259fd02558f666bdca774fe3f5dd7d347b35330cc6bc24436b`。
 - **P75 / contract-v126** 接入 Forest Creation 与 Wall Creation。固定八邻格只替换显式源地形，跳过玩家、存活 actor、地面物品和权威楼层连接；预先规划后原子提交，成功才 Aware，空结果消费、Tried-only、零效果 RNG。协议保持 1.118，demo 1.117.0，save v1，state hash Schema v52，active baseline 429 exact、零 waiver；内置 hash 为 `7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149`。固定原版导入从 `FF_FLOOR` 派生源 ID，`scroll-effect` 23→21，真实包 hash 为 `1eb1303a7476dcbce4209460a0af728019680112d55a767c03d2c39ade00bdad`。
 - **P76 / contract-v127** 接入 Vengeance。`25+1d25` KeepStrongest 状态在完整怪物 melee routine 或 spell cast 后按实际玩家 HP 损失反击来源一次；零伤害/玩家死亡抑制，每次反击扣 5 ticks，零 RNG、跳过抗性，击杀复用统一 actor death 事务。协议保持 1.118，demo 1.118.0，save v1，state hash Schema v52，active baseline 430 exact、零 waiver；内置 hash 为 `c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3`。固定原版导入的 `scroll-effect` 21→20，真实包 hash 为 `2178aea924ffe39476e2c89c668e13a98555b2f8a41d9315aa9630b32d0f4afc`。
-- 下一步继续按真实报告拆分剩余 20 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用伤害监听器、`AbilityEffectDefinition`、通用地形 DSL、actor-effect 或 actor-removal 框架提前纳入。
+- **P77 / contract-v128** 接入 Monster Confusion。玩家专属准备态在 miss/致死时保留，首个非致死命中先清态，再按 `NO_CONF`、目标 level 与玩家 level 结算 confusion；不建立通用 on-hit/prepared-effect。协议 1.119，demo 1.119.0，save v1，state hash Schema v53，active baseline 431 exact、零 waiver；内置 hash 为 `757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0`。固定原版导入的 `scroll-effect` 20→19，真实包 hash 为 `cd8e1982e33c20555019b77bec49a44fb1028e81bf54729923b5e78a7cbc1d3e`。
+- 下一步继续按真实报告拆分剩余 19 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用伤害监听器、`AbilityEffectDefinition`、通用地形 DSL、actor-effect、on-hit 或 actor-removal 框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

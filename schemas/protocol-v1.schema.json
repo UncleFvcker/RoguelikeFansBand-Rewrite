@@ -5777,6 +5777,10 @@
           "default": 0,
           "minimum": 0
         },
+        "confusingStrikeReady": {
+          "type": "boolean",
+          "default": false
+        },
         "defense": {
           "type": "integer",
           "format": "int32",

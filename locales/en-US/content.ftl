@@ -526,5 +526,7 @@ item-demo-stone-ring-scroll-name = Stone Ring Scroll
 item-demo-stone-ring-scroll-description = Raises stone walls from clear ground around the reader.
 item-demo-reprisal-scroll-name = Reprisal Scroll
 item-demo-reprisal-scroll-description = Surrounds the reader with a brief ward that returns harm to its source.
+item-demo-confusing-touch-scroll-name = Confusing Touch Scroll
+item-demo-confusing-touch-scroll-description = Makes the reader's next nonlethal melee hit attempt to confuse its target.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

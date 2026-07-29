@@ -187,6 +187,7 @@ mod tests {
                 base_speed: 110,
                 energy_need: 0,
                 statuses: Vec::new(),
+                confusing_strike_ready: false,
                 resistances: Vec::new(),
                 progress: None,
                 build: None,

@@ -891,18 +891,20 @@ function renderStatus(state: GameSnapshot | GameUpdate): void {
     state.player.abilityLearning,
   );
   renderSummonCommand(state.player.summonCommand, state.entities);
+  const activeEffects = state.player.statuses.map((status) =>
+    localization.format("status-effect-entry", {
+      status: statusName(status.kindId),
+      intensity: status.intensity,
+      ticks: status.remainingTicks,
+    }),
+  );
+  if (state.player.confusingStrikeReady) {
+    activeEffects.push(localization.format("status-effect-confusing-strike-ready"));
+  }
   effectsValue.textContent =
-    state.player.statuses.length === 0
+    activeEffects.length === 0
       ? localization.format("status-effects-none")
-      : state.player.statuses
-          .map((status) =>
-            localization.format("status-effect-entry", {
-              status: statusName(status.kindId),
-              intensity: status.intensity,
-              ticks: status.remainingTicks,
-            }),
-          )
-          .join(" · ");
+      : activeEffects.join(" · ");
   taskLogList.replaceChildren(
     ...state.tasks.map((task) => {
       const row = document.createElement("li");
@@ -2505,6 +2507,17 @@ function formatEvent(event: GameEventDto): string {
     case "item-use-vengeance":
       return localization.format("message-item-use-vengeance", {
         source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "item-use-confusing-strike-prepared":
+      return localization.format("message-item-use-confusing-strike-prepared", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
+    case "combat-confusing-strike-immune":
+    case "combat-confusing-strike-resisted":
+    case "combat-confusing-strike-applied":
+      return localization.format(`message-${event.messageKey}` as MessageKey, {
+        target: contentName(event.args.target),
         duration: event.args.duration ?? "?",
       });
     case "combat-vengeance-hit":

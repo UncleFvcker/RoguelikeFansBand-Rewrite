@@ -438,6 +438,12 @@
       "minimum": 0,
       "type": "integer"
     },
+    "statusImmunities": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "tags": {
       "items": {
         "type": "string"

@@ -294,3 +294,5 @@ crates/rfb-legacy-import/
 - 三个仅保存在本机 `.local/` 中的 `v1.3.0.7` 旧存档样本可以导入或给出结构化失败报告。
 
 协议 1.118 不增加存档字段。历史 `RolledAffixSaveDto.passives` 中 13 个已知无规则消费者的 no-op 值在 DTO 反序列化边界丢弃，`regeneration` 与 `vampiric` 正常保留，其他未知值继续失败；迁移不重掷 affix、不替换能力、不推进 RNG。静态 affix 由既有内容 hash 迁移到当前定义。save 容器保持 v1，state hash Schema 保持 v52。完整边界见 [Contract v118](contract-v118-passive-surface-cleanup.md)。
+
+协议 1.119 在 `PlayerSaveDto` 增加 `confusingStrikeReady`；旧存档缺字段迁移为 false，true 原样回读，不重抽 RNG。save 容器保持 v1，因该准备态进入权威 hash，state hash Schema 升到 v53。完整边界见 [Contract v128](contract-v128-scroll-monster-confusion.md)。

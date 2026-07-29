@@ -15706,6 +15706,155 @@ fn vengeance_retaliates_against_monster_spells_but_not_after_player_death() {
 }
 
 #[test]
+fn confusing_strike_preparation_and_hit_boundaries_are_authoritative() {
+    fn target(game: &mut Game, kind_id: &str, hp: i32) {
+        clear_monsters(game);
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.confusing-strike-target",
+            kind_id,
+            Position {
+                x: game.player.position.x + 1,
+                y: game.player.position.y,
+            },
+            hp,
+            100,
+            100,
+            true,
+        ));
+        game.confusing_strike_ready = true;
+    }
+
+    let mut prepared = Game::new(77);
+    clear_monsters(&mut prepared);
+    for serial in 1..=2 {
+        give_inventory_item(
+            &mut prepared,
+            &format!("test.item.confusing-touch-scroll.{serial}"),
+            "demo.item.confusing-touch-scroll",
+        );
+    }
+    prepared.rng = RfbRng::seeded(77);
+    for serial in 1..=2 {
+        let draws_before = prepared.rng_draw_counter();
+        let mut events = Vec::new();
+        prepared
+            .use_inventory_item(
+                &format!("test.item.confusing-touch-scroll.{serial}"),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("confusing strike preparation should resolve");
+        assert!(prepared.confusing_strike_ready);
+        assert_eq!(prepared.rng_draw_counter(), draws_before);
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEvent::ItemConfusingStrikePrepared { .. }]
+        ));
+    }
+    let saved = prepared.to_save();
+    assert!(saved.player.confusing_strike_ready);
+    assert!(
+        Game::from_save(saved)
+            .expect("prepared confusing strike should reload")
+            .confusing_strike_ready
+    );
+
+    let mut missed = Game::new(77);
+    target(&mut missed, "demo.actor.ember-mote", 10);
+    missed
+        .progress
+        .skills
+        .get_mut("demo.skill.melee")
+        .expect("player melee skill should exist")
+        .current = 0;
+    let miss_seed = (0..100_u64)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) >= 10
+        })
+        .expect("one seed should produce a regular miss");
+    missed.rng = RfbRng::seeded(miss_seed);
+    let mut events = Vec::new();
+    missed
+        .resolve_player_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("missed melee should resolve");
+    assert!(missed.confusing_strike_ready);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::PlayerMeleeMissed { .. }]
+    ));
+
+    let lethal_seed = (0..100_u64)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < 5
+        })
+        .expect("one seed should produce an automatic hit");
+    let mut lethal = Game::new(77);
+    target(&mut lethal, "demo.actor.ember-mote", 1);
+    lethal.rng = RfbRng::seeded(lethal_seed);
+    let mut events = Vec::new();
+    lethal
+        .resolve_player_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("lethal melee should resolve");
+    assert!(lethal.confusing_strike_ready);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerSlew { .. }))
+    );
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ConfusingStrikeImmune { .. }
+            | DomainEvent::ConfusingStrikeResisted { .. }
+            | DomainEvent::ConfusingStrikeApplied { .. }
+    )));
+
+    let mut immune = Game::new(77);
+    target(&mut immune, "demo.actor.veil-warden", 10);
+    let definition = immune
+        .content
+        .actor("demo.actor.veil-warden")
+        .expect("immune target definition should exist")
+        .clone();
+    let draws_before = immune.rng_draw_counter();
+    let mut events = Vec::new();
+    immune.resolve_confusing_strike(0, &definition, &mut events);
+    assert!(!immune.confusing_strike_ready);
+    assert_eq!(immune.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ConfusingStrikeImmune { .. }]
+    ));
+
+    let mut resisted = Game::new(77);
+    target(&mut resisted, "demo.actor.echo-hound", 10);
+    let definition = resisted
+        .content
+        .actor("demo.actor.echo-hound")
+        .expect("resisting target definition should exist")
+        .clone();
+    let resist_seed = (0..1_000_u64)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(definition.level)
+        })
+        .expect("one seed should produce a level resistance");
+    resisted.rng = RfbRng::seeded(resist_seed);
+    let mut events = Vec::new();
+    resisted.resolve_confusing_strike(0, &definition, &mut events);
+    assert!(!resisted.confusing_strike_ready);
+    assert_eq!(resisted.rng_draw_counter(), 1);
+    assert!(resisted.entities[0].statuses.is_empty());
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ConfusingStrikeResisted { .. }]
+    ));
+}
+
+#[test]
 fn travel_scroll_random_teleport_is_deterministic_and_rejects_without_space_atomically() {
     let prepare = || {
         let mut game = Game::new(64);

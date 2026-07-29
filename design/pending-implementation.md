@@ -85,8 +85,9 @@
 | P74 | Mass Genocide 卷轴 | 已由 contract-v125 完成 | 窄 `mass-genocide` 以稳定实体 ID 顺序结算半径 20 内存活 actor；普通目标按 power 300 对抗直接移除，unique/guardian 必定抵抗，每候选 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。sval 45 使 `scroll-effect` 24→23；协议保持 1.118、包 1.116.0、Schema v52、fixture 428，共 428 exact |
 | P75 | Forest Creation 与 Wall Creation 卷轴 | 已由 contract-v126 完成 | 窄 `create-adjacent-terrain` 固定八邻格，只替换显式源地形；跳过玩家、存活 actor、地面物品和权威楼层连接，不作连通修复。空结果消费、Tried-only、零效果 RNG。sval 48/49 使 `scroll-effect` 23→21；协议保持 1.118、包 1.117.0、Schema v52、fixture 429，共 429 exact |
 | P76 | Vengeance 卷轴 | 已由 contract-v127 完成 | 窄 `vengeance` 按 `25+1d25` 施加 KeepStrongest 状态；完整怪物 melee routine/spell cast 后按实际玩家 HP 损失反击来源一次，零伤害/玩家死亡抑制，每次扣 5 ticks；反击零 RNG、跳过抗性并复用统一 death 事务。sval 50 使 `scroll-effect` 21→20；协议保持 1.118、包 1.118.0、Schema v52、fixture 430，共 430 exact |
+| P77 | Monster Confusion 卷轴 | 已由 contract-v128 完成 | 无参数 `prepare-confusing-strike` 写入玩家专属准备态；miss/致死命中保留，首个非致死命中先清态，再按 `NO_CONF`、`bounded(100) < actor.level`、`10 + bounded(player.level) / 5` 顺序结算。sval 36 使 `scroll-effect` 20→19；协议 1.119、包 1.119.0、Schema v53、fixture 431，共 431 exact |
 
-## contract-v127 明确遗留
+## contract-v128 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -100,7 +101,8 @@
 - Mass Genocide 只复用 Nearby 候选结算；普通 Genocide glyph 选择、`NOGENO`、questor、骑乘和 virtues 不在本轮，也不新增通用 actor-removal 框架；
 - Forest/Wall Creation 只支持固定八邻格和显式源/目标地形；不开放 radius、shape、LOS、随机地形、通用 selector、连通性证明或自动修复；
 - Vengeance 只响应怪物 melee/spell 直接造成的实际 HP 损失，不提前建立环境、状态伤害、陷阱或玩家自身反噬的通用伤害监听器；
-- 剩余 `scroll-effect` 20 继续按世界/地形、状态和物品/成长事务分组；Protection from Evil、Monster Confusion、Understanding 和 Inventory Protection 不并入本轮。
+- Monster Confusion 只响应玩家近战；miss/致死保留、NO_CONF 免疫和等级抵抗已固定，不建立通用 on-hit/prepared-effect 系统；
+- 剩余 `scroll-effect` 19 继续按世界/地形、状态和物品/成长事务分组；Protection from Evil、Understanding 和 Inventory Protection 不并入本轮。
 
 ## contract-v116 明确遗留
 
@@ -137,10 +139,10 @@
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass Genocide、相邻树/墙创建和 Vengeance 完成后剩余 20 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass Genocide、相邻树/墙创建、Vengeance 和 Monster Confusion 完成后剩余 19 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
-- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福、相邻地形破坏、元素爆发、激怒怪物、Mass Genocide、相邻树/墙创建和 Vengeance 卷轴已由 contract-v113–v127 完成；剩余 20 条按世界/状态/物品效果继续推进。
+- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福、相邻地形破坏、元素爆发、激怒怪物、Mass Genocide、相邻树/墙创建、Vengeance 和 Monster Confusion 卷轴已由 contract-v113–v128 完成；剩余 19 条按世界/状态/物品效果继续推进。
 
 ## contract-v107 明确遗留
 

@@ -42,6 +42,7 @@ status-stat-value-bonus = { $value } (equipment { $bonus })
 status-effects = Effects
 status-effects-none = None
 status-effect-entry = { $status } { $intensity } / { $ticks } ticks
+status-effect-confusing-strike-ready = Confusing strike ready
 status-position = Position
 status-hash = State hash
 panel-progression-title = Character Progression

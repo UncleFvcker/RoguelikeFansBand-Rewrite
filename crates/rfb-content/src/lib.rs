@@ -257,6 +257,8 @@ pub struct ActorDefinition {
     pub damage_type: ActorDamageType,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub status_immunities: Vec<String>,
     #[serde(default)]
     pub melee_routine: Option<MeleeRoutineDefinition>,
     #[serde(default)]
@@ -1529,6 +1531,7 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    PrepareConfusingStrike,
     SelfCenteredElementalBlast {
         base_damage: u32,
         damage_type: ActorDamageType,
@@ -3242,7 +3245,8 @@ fn valid_item_effect(
                 && (1..=10_000).contains(backlash_sides)
                 && *backlash_bonus <= 10_000
         }
-        ItemUseEffectDefinition::AggravateMonsters
+        ItemUseEffectDefinition::PrepareConfusingStrike
+        | ItemUseEffectDefinition::AggravateMonsters
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::CreateAdjacentTerrain {
@@ -3690,6 +3694,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
         validate_definition_id(&actor.id, "actor")?;
         validate_definition_text(&actor.id, &actor.name_key, &actor.description_key)?;
         validate_glyph(&actor.id, &actor.glyph)?;
+        validate_status_immunities(&actor.id, &mut actor.status_immunities)?;
         if actor.level > 10_000
             || actor.experience_value > 999_999_999
             || (actor.role == ActorRole::Player && actor.experience_value != 0)
@@ -3710,6 +3715,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
             || actor.damage_dice > 100
             || actor.damage_sides == 0
             || actor.damage_sides > 10_000
+            || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
@@ -4660,6 +4666,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
                     | ItemUseEffectDefinition::Vengeance { .. }
+                    | ItemUseEffectDefinition::PrepareConfusingStrike
                     | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
                     | ItemUseEffectDefinition::AggravateMonsters
                     | ItemUseEffectDefinition::MassGenocide { .. }
@@ -8690,7 +8697,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 64);
+        assert_eq!(first.content.items.len(), 65);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8716,7 +8723,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.118.0");
+        assert_eq!(catalog.pack_version(), "1.119.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

@@ -15,6 +15,9 @@
   "damageDice": 1,
   "damageSides": 3,
   "damageType": "physical",
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
   "monsterCasting": {
     "frequencyPercent": 50,
     "abilities": [

@@ -426,6 +426,7 @@ pub(crate) fn player_to_save(
             .iter()
             .map(StatusInstance::to_save_dto)
             .collect(),
+        confusing_strike_ready: false,
         resistances: player.resistances.to_save_dtos(),
         progress: Some(PlayerProgressSaveDto {
             attributes: NaturalAttributeSetSaveDto {

@@ -465,6 +465,10 @@ pub(crate) enum DomainEvent {
         duration: u32,
         resolution: AbilityEffectsResolutionDto,
     },
+    ItemConfusingStrikePrepared {
+        source_kind_id: String,
+        display_name_key: String,
+    },
     ItemElementalBlast {
         source_kind_id: String,
         display_name_key: String,
@@ -621,6 +625,16 @@ pub(crate) enum DomainEvent {
     ItemUseUnavailable,
     PlayerMeleeMissed {
         target_kind_id: String,
+    },
+    ConfusingStrikeImmune {
+        target_kind_id: String,
+    },
+    ConfusingStrikeResisted {
+        target_kind_id: String,
+    },
+    ConfusingStrikeApplied {
+        target_kind_id: String,
+        duration: u32,
     },
     PlayerFearBlocked {
         status_kind_id: String,
@@ -1836,6 +1850,14 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::AbilityEffects { resolution },
             ),
+            Self::ItemConfusingStrikePrepared {
+                source_kind_id,
+                display_name_key,
+            } => dto(
+                "item.use-confusing-strike-prepared",
+                "item-use-confusing-strike-prepared",
+                [("source", source_kind_id), ("nameKey", display_name_key)],
+            ),
             Self::ItemElementalBlast {
                 source_kind_id,
                 display_name_key,
@@ -2349,6 +2371,27 @@ impl DomainEvent {
                 "combat.miss",
                 "combat-player-miss",
                 [("target", target_kind_id)],
+            ),
+            Self::ConfusingStrikeImmune { target_kind_id } => dto(
+                "combat.confusing-strike-immune",
+                "combat-confusing-strike-immune",
+                [("target", target_kind_id)],
+            ),
+            Self::ConfusingStrikeResisted { target_kind_id } => dto(
+                "combat.confusing-strike-resisted",
+                "combat-confusing-strike-resisted",
+                [("target", target_kind_id)],
+            ),
+            Self::ConfusingStrikeApplied {
+                target_kind_id,
+                duration,
+            } => dto(
+                "combat.confusing-strike-applied",
+                "combat-confusing-strike-applied",
+                [
+                    ("target", target_kind_id),
+                    ("duration", duration.to_string()),
+                ],
             ),
             Self::PlayerFearBlocked { status_kind_id } => dto(
                 "status.fear-blocked",

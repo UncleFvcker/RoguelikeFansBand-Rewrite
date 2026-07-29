@@ -1245,6 +1245,7 @@ fn fixed_consumable_use_action_with_terrain(
         (70, 33) => bless(12, 6),
         (70, 34) => bless(24, 12),
         (70, 35) => bless(48, 24),
+        (70, 36) => serde_json::json!({"type": "prepare-confusing-strike"}),
         (70, 39) => serde_json::json!({
             "type": "destroy-adjacent-traps-and-doors"
         }),
@@ -5082,8 +5083,8 @@ const RESISTANCE_ALL_TYPES: [&str; 27] = [
     "water",
 ];
 
-fn resistance_flag_is_mapped(flag: &str) -> bool {
-    if matches!(flag, "RES_ALL" | "RES_TELE") {
+fn monster_flag_is_mapped(flag: &str) -> bool {
+    if matches!(flag, "RES_ALL" | "RES_TELE" | "NO_CONF") {
         return true;
     }
     for (suffix, _) in RESISTANCE_FLAG_TYPES {
@@ -5210,6 +5211,9 @@ fn monster_json(
     let resistances = resistances_from_flags(&entry.flags);
     if !resistances.is_empty() {
         value["resistances"] = serde_json::json!(resistances);
+    }
+    if entry.flags.iter().any(|flag| flag == "NO_CONF") {
+        value["statusImmunities"] = serde_json::json!(["rfb.status.confusion"]);
     }
     if let Some(routine) = melee_routine {
         value["meleeRoutine"] = routine;
@@ -6033,7 +6037,7 @@ pub fn convert_content(
             })
         });
         for flag in &entry.flags {
-            if resistance_flag_is_mapped(flag) {
+            if monster_flag_is_mapped(flag) {
                 continue;
             }
             *report
@@ -7587,7 +7591,7 @@ G:L:w\n\
 I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
-F:UNDEAD | DRAGON | RES_ALL | RES_TELE\n\
+F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
 S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
@@ -7626,6 +7630,16 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_CYBER\n";
                 .report
                 .unmapped_monster_flags
                 .contains_key("RES_TELE")
+        );
+        assert_eq!(
+            caller["statusImmunities"],
+            serde_json::json!(["rfb.status.confusion"])
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_monster_flags
+                .contains_key("NO_CONF")
         );
         let ability_ids: Vec<&str> = caller["monsterCasting"]["abilities"]
             .as_array()
@@ -8817,6 +8831,23 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationSides": 25,
                 "durationBonus": 25
             })
+        );
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let monster_confusion = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 36,
+                ..LegacyItemEntry::default()
+            },
+            "monster-confusion-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            monster_confusion["useAction"]["effect"],
+            serde_json::json!({"type": "prepare-confusing-strike"})
         );
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 
