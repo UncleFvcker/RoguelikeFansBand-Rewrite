@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 123] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 124] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -233,13 +233,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 123] = [
     "757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0",
     "27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24",
     "786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549",
+    "d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52";
+    "25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 53;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1603,6 +1604,7 @@ pub struct Game {
     resources: BTreeMap<String, ResourcePool>,
     resources_touched: BTreeSet<String>,
     last_visual_cells: Option<Vec<CellVisualDto>>,
+    bonus_spell_learning_capacity: u16,
     learned_abilities: BTreeSet<String>,
     ability_progress: BTreeMap<String, AbilityProgress>,
     entities: Vec<Actor>,
@@ -1830,6 +1832,7 @@ impl Game {
             resources: BTreeMap::new(),
             resources_touched: BTreeSet::new(),
             last_visual_cells: None,
+            bonus_spell_learning_capacity: 0,
             learned_abilities: BTreeSet::new(),
             ability_progress: BTreeMap::new(),
             entities,
@@ -2002,6 +2005,7 @@ impl Game {
             expected_skills,
         )?;
         let saved_resources = payload.player.resources.clone();
+        let bonus_spell_learning_capacity = payload.player.bonus_spell_learning_capacity;
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
@@ -2222,6 +2226,7 @@ impl Game {
             resources: BTreeMap::new(),
             resources_touched: BTreeSet::new(),
             last_visual_cells: None,
+            bonus_spell_learning_capacity,
             learned_abilities: BTreeSet::new(),
             ability_progress: BTreeMap::new(),
             entities,
@@ -3199,6 +3204,7 @@ impl Game {
                 maximum: pool.maximum,
             })
             .collect();
+        player.bonus_spell_learning_capacity = self.bonus_spell_learning_capacity;
         player.learned_ability_ids = self.learned_abilities.iter().cloned().collect();
         player.ability_progress = self
             .ability_progress
@@ -3229,6 +3235,11 @@ impl Game {
     fn casting_profile(&self) -> Option<&CastingProfileDefinition> {
         self.character_definitions()
             .and_then(|(_, _, class, _)| class.casting_profile.as_ref())
+    }
+
+    fn uses_spell_scrolls(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, _, class, _)| class.uses_spell_scrolls)
     }
 
     fn device_recharge_profile(&self) -> Option<&DeviceRechargeProfileDefinition> {
@@ -3428,7 +3439,8 @@ impl Game {
         let raw = u32::from(profile.base_learning_capacity)
             .saturating_add(level_bonus)
             .saturating_add(attribute_bonus);
-        raw.min(u32::from(profile.learning_capacity_cap)) as u16
+        (raw.min(u32::from(profile.learning_capacity_cap)) as u16)
+            .saturating_add(self.bonus_spell_learning_capacity)
     }
 
     fn player_ability_learning_dto(&self) -> Option<AbilityLearningDto> {
@@ -10517,6 +10529,7 @@ impl Game {
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
+                | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                 | ItemUseEffectDefinition::RemoveStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
                 | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -11004,6 +11017,7 @@ impl Game {
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
             | ItemUseEffectDefinition::PrepareConfusingStrike
+            | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
@@ -12021,6 +12035,26 @@ impl Game {
                 events.push(DomainEvent::ItemConfusingStrikePrepared {
                     source_kind_id: source_kind_id.to_owned(),
                     display_name_key: self.item_display_name_key(source_kind_id),
+                });
+                true
+            }
+            ItemUseEffectDefinition::IncreaseSpellLearningCapacity => {
+                let before = self
+                    .casting_profile()
+                    .map_or(0, |profile| self.ability_learning_capacity(profile));
+                if self.uses_spell_scrolls() {
+                    self.bonus_spell_learning_capacity =
+                        self.bonus_spell_learning_capacity.saturating_add(1);
+                }
+                let after = self
+                    .casting_profile()
+                    .map_or(0, |profile| self.ability_learning_capacity(profile));
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemSpellLearningCapacityChanged {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    before,
+                    after,
                 });
                 true
             }
@@ -21428,6 +21462,11 @@ impl Game {
         let casting_profile = self.casting_profile().cloned();
         let technique_profiles = self.technique_profiles().to_vec();
         let device_recharge_profile = self.device_recharge_profile().cloned();
+        if self.bonus_spell_learning_capacity > 0 && !self.uses_spell_scrolls() {
+            return Err(CoreError::InvalidSave(
+                "bonus spell learning capacity is invalid",
+            ));
+        }
         if casting_profile.is_some()
             || !technique_profiles.is_empty()
             || device_recharge_profile.is_some()

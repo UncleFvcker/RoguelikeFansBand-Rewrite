@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.112、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.121、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -348,3 +348,5 @@ major 版本要求：
 协议 1.120 为物品 glyph 选择新增窄 `UseItemByGlyph { itemId, glyph }` 命令，并为 `InventoryItemDto` 增加省略式 `requiresTargetGlyph`。核心入口立即归一到既有物品使用动作，不扩展通用 `TargetMode`；glyph 是瞬时命令输入，不进入存档或 state hash，Schema 保持 v53。完整边界见 [Contract v130](contract-v130-scroll-genocide.md)。
 
 协议 1.121 为 Recharging 卷轴新增窄 `UseItemForRecharge { itemId, sourceItemId, targetItemId }` 命令，并为 `InventoryItemDto` 增加省略式 `requiresRechargeTargets`。三个 ID 只描述一次背包物品事务，不进入存档或 state hash，也不扩展通用 `TargetSelection`；Schema 保持 v53。完整边界见 [Contract v131](contract-v131-scroll-recharging.md)。
+
+contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与既有 `AbilityLearningDto`。`PlayerSaveDto` 增加默认 0、零值省略的 `bonusSpellLearningCapacity`；它是权威持久状态并使 state hash Schema 升至 v54，但 `PROTOCOL_VERSION` 保持 1.121。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。

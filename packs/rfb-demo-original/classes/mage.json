@@ -14,6 +14,7 @@
   "lifePercent": 95,
   "experiencePercent": 130,
   "skillSetId": "demo.skill-set.mage",
+  "usesSpellScrolls": true,
   "castingProfile": {
     "resourceId": "demo.resource.mana",
     "castingAttribute": "intelligence",

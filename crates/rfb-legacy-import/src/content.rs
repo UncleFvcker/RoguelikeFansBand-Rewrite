@@ -1240,6 +1240,9 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "recharge-from-device",
             "power": 100
         }),
+        (70, 43) => serde_json::json!({
+            "type": "increase-spell-learning-capacity"
+        }),
         (70, 25) => detect("terrain", "map", true),
         (70, 26) => detect("item", "gold", false),
         (70, 27) => detect("item", "item", false),
@@ -3737,8 +3740,47 @@ fn class_json(
     if let Some(profile) = runtime_casting_profile {
         value["castingProfile"] = profile.clone();
     }
+    if legacy_class_uses_spell_scrolls(&entry.registration.id) {
+        value["usesSpellScrolls"] = serde_json::Value::Bool(true);
+    }
     class_gap_accounting(entry, report);
     value
+}
+
+fn legacy_class_uses_spell_scrolls(class_id: &str) -> bool {
+    !matches!(
+        class_id,
+        "warrior"
+            | "mindcrafter"
+            | "psion"
+            | "sorcerer"
+            | "archer"
+            | "magic-eater"
+            | "devicemaster"
+            | "red-mage"
+            | "samurai"
+            | "cavalry"
+            | "berserker"
+            | "weaponsmith"
+            | "mirror-master"
+            | "time-lord"
+            | "blood-knight"
+            | "warlock"
+            | "archaeologist"
+            | "duelist"
+            | "rune-knight"
+            | "wild-talent"
+            | "blue-mage"
+            | "ninja"
+            | "ninja-lawyer"
+            | "scout"
+            | "mystic"
+            | "mauler"
+            | "politician"
+            | "alchemist"
+            | "disciple"
+            | "skillmaster"
+    )
 }
 
 fn magic_profile_json(profile: &LegacyMagicProfile, class_id: &str) -> serde_json::Value {
@@ -8641,6 +8683,21 @@ F:BRAND_VAMP | HOLD_LIFE
             recharging["useAction"]["effect"],
             serde_json::json!({"type": "recharge-from-device", "power": 100})
         );
+        let spell = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 43,
+                ..LegacyItemEntry::default()
+            },
+            "spell-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            spell["useAction"]["effect"],
+            serde_json::json!({"type": "increase-spell-learning-capacity"})
+        );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),
             (26, "item", "gold", false),
@@ -8937,6 +8994,13 @@ F:BRAND_VAMP | HOLD_LIFE
                 .as_array()
                 .is_some_and(|tags| { tags.iter().any(|tag| tag == "gold") })
         );
+    }
+
+    #[test]
+    fn spell_scroll_class_eligibility_matches_legacy_exceptions() {
+        for (class_id, expected) in [("mage", true), ("sorcerer", false), ("red-mage", false)] {
+            assert_eq!(legacy_class_uses_spell_scrolls(class_id), expected);
+        }
     }
 
     #[test]

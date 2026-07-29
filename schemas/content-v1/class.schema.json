@@ -527,6 +527,10 @@
         "$ref": "#/$defs/TechniqueProfileDefinition"
       },
       "type": "array"
+    },
+    "usesSpellScrolls": {
+      "default": false,
+      "type": "boolean"
     }
   },
   "required": [

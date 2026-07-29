@@ -463,6 +463,7 @@ pub(crate) fn player_to_save(
             personality_id: build.personality_id.clone(),
         }),
         resources: Vec::new(),
+        bonus_spell_learning_capacity: 0,
         learned_ability_ids: Vec::new(),
         ability_progress: Vec::new(),
         summon_command: Default::default(),

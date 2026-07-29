@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.121.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.123.0
 
 ## 1. 目标
 
@@ -234,6 +234,8 @@ contract-v116 为物品效果增加 self-only 的 `curse-equipped-item { target 
 
 contract-v117 为 Race 增加可选 `kinCategory`，并为物品效果增加 self-only 的 `summon-category`。selector 可选择任意怪物、显式 actor category 或当前有效 Race 的 kin category；最高等级来源可选择地牢深度或玩家等级，数量/群体/敌对/unique/半径均显式声明。物品召唤首版固定 `durationTurns: 0`，永久友方由运行时保存 `controllerId`。demo 包 1.108.0 新增四种召唤卷轴，现含 68 abilities、5 ability books、52 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v52。完整边界见 [Contract v117](contract-v117-scroll-summoning.md)。
 
+contract-v132 为 Class 增加默认 false 的 `usesSpellScrolls`，并为静态消耗品增加无参数 `increase-spell-learning-capacity`。该效果不能作为动态 activation，也不开放 amount；职业资格与学习容量 bonus 由核心解释。demo 包 1.123.0 新增 Spell Scroll，现含 68 abilities、5 ability books、69 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；bonus 进入 state hash Schema v54。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。
@@ -258,7 +260,7 @@ contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord
 
 contract-v88 以 1.80.0 增加 `smart`、`preferredDistance` 和 `fleeHpPercent`，并让 Echo Cantor 使用 3 格偏好距离、25% 受伤撤退和已观察抗性记忆；阵营目标、敌我计数和实际多目标结算由核心定义。contract-v89 只增加玩家级召唤物命令、行动与跨层规则，不修改内容 schema 或 demo 数据，因此内容版本/hash 保持不变。contract-v90 以 1.81.0 为 `ResourceDefinition` 增加 `initialFillPercent`、`meleeHitGainAmount`、`meleeKillGainAmount` 和 `turnDecayAmount`，为 `ClassDefinition` 增加多条目 `techniqueProfiles`（资源、主宰属性、上限公式、最低失败率与先天能力），并加入节奏资源、决斗家职业/构筑/技能集与弦月斩、涌动节奏两个技法能力；Mana 与既有职业数据不变。contract-v91 以 1.82.0 为能力效果增加 `blink-self`、`teleport-self` 与 `teleport-target` 三种怪物位移形态（怪物施法白名单准入），并加入裂隙潜行者与三个位移能力。
 
-当前原创包的 active 编译版本为 1.109.0，content hash 为 `99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00`；其能力/物品效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确与随机位移、树状跨层、延迟召回、固定/类别/同族友方与敌对召唤、瞬时/持久 terrain/actor/item 侦测、原版式 terrain 转换、状态添加/移除、有序多效果、治疗、鉴定、装备附魔、装备诅咒与解除、Death 四册高级效果和动态设备激活，并由怪物 caster 与物品实例复用既有 actor、楼层、地形和知识管线。装备 passive 只允许已有权威消费者的 regeneration 与 vampiric；设备自然恢复、职业主动充能与召回继续只保存权威资源/实例/稳定目的地，不建立显示缓存。
+当前原创包的 active 编译版本为 1.123.0，content hash 为 `25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5`；其能力/物品效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确与随机位移、树状跨层、延迟召回、固定/类别/同族友方与敌对召唤、瞬时/持久 terrain/actor/item 侦测、原版式 terrain 转换、状态添加/移除、有序多效果、治疗、鉴定、装备附魔、装备诅咒与解除、Death 四册高级效果、动态设备激活和职业许可的学习容量增长，并由怪物 caster 与物品实例复用既有 actor、楼层、地形和知识管线。装备 passive 只允许已有权威消费者的 regeneration 与 vampiric；设备自然恢复、职业主动充能与召回继续只保存权威资源/实例/稳定目的地，不建立显示缓存。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
@@ -338,4 +340,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v118 建立实例充能、动态设备、恢复/鉴定/侦测消耗品、传送/召回、装备附魔、装备诅咒、物品召唤，并收缩无消费者的 passive 表面；contract-v119–v130 继续以窄物品效果接入可见 actor、状态、地形、爆发与 Genocide 卷轴族。当前 state hash 为 Schema v53。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v118 建立实例充能、动态设备、恢复/鉴定/侦测消耗品、传送/召回、装备附魔、装备诅咒、物品召唤，并收缩无消费者的 passive 表面；contract-v119–v132 继续以窄物品效果接入可见 actor、状态、地形、爆发、Genocide、Recharging 与 Spell 卷轴族。当前 state hash 为 Schema v54。

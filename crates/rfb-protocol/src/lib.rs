@@ -2592,6 +2592,8 @@ pub struct PlayerSaveDto {
     pub build: Option<PlayerBuildSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resources: Vec<ResourcePoolSaveDto>,
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub bonus_spell_learning_capacity: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub learned_ability_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3499,6 +3501,7 @@ mod tests {
             progress: None,
             build: None,
             resources: Vec::new(),
+            bonus_spell_learning_capacity: 0,
             learned_ability_ids: Vec::new(),
             ability_progress: Vec::new(),
             summon_command: SummonCommandDto::default(),

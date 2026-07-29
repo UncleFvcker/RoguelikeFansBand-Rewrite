@@ -749,6 +749,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "increase-spell-learning-capacity",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "power": {
               "format": "uint16",
               "maximum": 65535,

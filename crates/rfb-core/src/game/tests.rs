@@ -15151,6 +15151,89 @@ fn recharging_item_rejects_invalid_pairs_and_pays_the_source_before_failure() {
     );
 }
 
+#[test]
+fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
+    const ITEM_ID: &str = "test.item.spell-scroll";
+    const KIND_ID: &str = "demo.item.spell-scroll";
+
+    let mut scholar =
+        Game::new_with_build(17, "demo.build.scholar").expect("scholar build should create");
+    clear_monsters(&mut scholar);
+    give_inventory_item(&mut scholar, ITEM_ID, KIND_ID);
+    let capacity_before = scholar
+        .snapshot()
+        .player
+        .ability_learning
+        .expect("scholar should expose learning capacity")
+        .capacity;
+    let draws_before = scholar.rng_draw_counter();
+    let update = dispatch_next(
+        &mut scholar,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(scholar.rng_draw_counter(), draws_before);
+    assert_eq!(scholar.bonus_spell_learning_capacity, 1);
+    assert_eq!(
+        scholar
+            .snapshot()
+            .player
+            .ability_learning
+            .expect("scholar should retain learning capacity")
+            .capacity,
+        capacity_before + 1
+    );
+    let capacity_before_arg = capacity_before.to_string();
+    let capacity_after_arg = capacity_before.saturating_add(1).to_string();
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-spell-learning-capacity-increased"
+            && event.args.get("before").map(String::as_str) == Some(capacity_before_arg.as_str())
+            && event.args.get("after").map(String::as_str) == Some(capacity_after_arg.as_str())
+    }));
+    assert_eq!(scholar.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
+    let restored = Game::from_save(scholar.to_save()).expect("spell bonus should round trip");
+    assert_eq!(restored.state_hash(), scholar.state_hash());
+
+    let mut vanguard =
+        Game::new_with_build(17, "demo.build.vanguard").expect("vanguard build should create");
+    clear_monsters(&mut vanguard);
+    give_inventory_item(&mut vanguard, ITEM_ID, KIND_ID);
+    let draws_before = vanguard.rng_draw_counter();
+    let tick_before = vanguard.world_tick;
+    let update = dispatch_next(
+        &mut vanguard,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(vanguard.rng_draw_counter(), draws_before);
+    assert_eq!(vanguard.world_tick, tick_before + 10);
+    assert_eq!(vanguard.bonus_spell_learning_capacity, 0);
+    assert!(!vanguard.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(
+        vanguard.item_knowledge_dto(KIND_ID),
+        ItemKnowledgeDto::Aware
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| { event.kind == "item.use-spell-learning-capacity-no-effect" })
+    );
+
+    let mut invalid = vanguard.to_save();
+    invalid.player.bonus_spell_learning_capacity = 1;
+    assert!(matches!(
+        Game::from_save(invalid),
+        Err(CoreError::InvalidSave(
+            "bonus spell learning capacity is invalid"
+        ))
+    ));
+}
+
 fn clear_monsters(game: &mut Game) {
     game.entities.clear();
     game.dungeon_states

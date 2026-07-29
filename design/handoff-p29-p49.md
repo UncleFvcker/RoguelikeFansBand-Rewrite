@@ -1,6 +1,6 @@
-# 交接文档：P29–P79 迭代史与当前状态
+# 交接文档：P29–P81 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v131，P80 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.121 / contract-v132，P81 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P79 在当前状态中汇总。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P81 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -92,7 +92,8 @@
 - **P78 / contract-v129** 接入 Protection from Evil。Extend 状态持续 `3 * level + 1d25`；只在 evil 怪物近战命中后、伤害骰前执行 Wisdom/等级对抗和 `one_in(3)` 绕过，击退时跳过该 blow。协议保持 1.119，demo 1.120.0，save v1，state hash Schema v53，active baseline 432 exact、零 waiver；内置 hash 为 `27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24`。固定原版导入的 `scroll-effect` 19→18，真实包 hash 为 `db78e5d8fe181d88943b024647afb94791c0e3f00adb25ab3271e18c67bde408`。
 - **P79 / contract-v130** 接入 Genocide。单字符 glyph 选择当前楼层存活 actor，按稳定实体 ID 复用既有 `1d4` 疲劳、unique/guardian 保护和 power 300 对抗；非法输入原子拒绝，合法空选择消费、Aware、零效果 RNG。协议 1.120，demo 1.121.0，save v1，state hash Schema v53，active baseline 433 exact、零 waiver；内置 hash 为 `786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549`。固定原版导入的 `scroll-effect` 18→17，真实包 hash 为 `4814e2cd4a0d8ac582c1b514e1cbc7998760cbe26f6293a6ab5bd5ff5324707a`。
 - **P80 / contract-v131** 接入 Recharging。互异的卷轴/来源/目标背包 ID 通过窄 `UseItemForRecharge` 命令提交；非法组合零时间零 RNG，合法事务消费卷轴后先支付来源损毁或能量，再复用 P60 目标失败公式。协议 1.121，demo 1.122.0，save v1，state hash Schema v53，active baseline 434 exact、零 waiver；内置 hash 为 `d486f818e41cea542ac951f6a92abca69e298d29f5139e6219ddd0c34836ad52`。固定原版导入的 `scroll-effect` 17→16，真实包 hash 为 `3df0f3da5a5700ba42d0e6b40a1bcd630d298d1f808292f1da5e043dfb33084b`。
-- 下一步继续按真实报告拆分剩余 16 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用多物品 target、`AbilityEffectDefinition`、通用地形 DSL、actor-effect、on-hit、glyph target 或 actor-removal 框架提前纳入。
+- **P81 / contract-v132** 接入 Spell。Class `usesSpellScrolls` 声明资格，合格职业固定永久增加 1 点学习容量；无资格职业仍消费、Aware、推进时间且零效果 RNG。bonus 进入默认 0 的 save 字段，协议保持 1.121，demo 1.123.0，state hash Schema v54，active baseline 435 exact、零 waiver；内置 hash 为 `25d972db57c825d4e23f5a61532c00579f9467acbe10edf97f2c0600b00514f5`。固定原版导入的 `scroll-effect` 16→15，真实包 hash 为 `6feceb4793b043f03c826cb242a9e182edf49ea2c708fffac31fa8f30daf589d`。
+- 下一步继续按真实报告拆分剩余 15 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用永久成长 effect、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

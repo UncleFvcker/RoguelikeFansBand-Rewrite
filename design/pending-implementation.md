@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v131、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v132、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -89,8 +89,9 @@
 | P78 | Protection from Evil 卷轴 | 已由 contract-v129 完成 | 无参数 `protection-from-evil` 以 Extend 施加 `3 * level + 1d25`；仅 evil 怪物在近战命中后、伤害骰前进入 Wisdom/等级对抗与 `one_in(3)` 绕过，成功击退整段 blow；非 evil 零保护 RNG。sval 37 使 `scroll-effect` 19→18；协议保持 1.119、包 1.120.0、Schema 保持 v53、fixture 432，共 432 exact |
 | P79 | Genocide 卷轴 | 已由 contract-v130 完成 | 窄 `genocide { power }` 使用单字符 glyph 选择当前楼层存活 actor，按稳定实体 ID 复用 `1d4` 疲劳、unique/guardian 保护和 power 对抗；非法输入原子拒绝，合法空选择消费、Aware、零效果 RNG。sval 44 使 `scroll-effect` 18→17；协议 1.120、包 1.121.0、Schema 保持 v53、fixture 433，共 433 exact |
 | P80 | Recharging 卷轴 | 已由 contract-v131 完成 | 窄 `recharge-from-device { power }` 接受互异的卷轴/来源设备/目标设备背包 ID；非法组合零时间零 RNG，合法事务消费卷轴后先支付来源损毁或能量，再复用 P60 目标失败检定。sval 22 使 `scroll-effect` 17→16；协议 1.121、包 1.122.0、Schema 保持 v53、fixture 434，共 434 exact |
+| P81 | Spell 卷轴 | 已由 contract-v132 完成 | Class `usesSpellScrolls` 声明资格；无参数 `increase-spell-learning-capacity` 固定永久 +1，无资格职业仍消费/Aware/推进时间且零效果 RNG。bonus 进入存档，sval 43 使 `scroll-effect` 16→15；协议保持 1.121、包 1.123.0、Schema v54、fixture 435，共 435 exact |
 
-## contract-v131 明确遗留
+## contract-v132 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -108,7 +109,8 @@
 - Protection from Evil 只拦截怪物对玩家的近战 blow；法术、远程、环境伤害、反击和玩家阵营 actor 不提前接入；
 - Genocide 只增加窄命令和单字符 Web 输入，不新增通用 glyph target、actor selector 或跨效果输入框架；
 - Recharging 当前只选择背包中的卷轴、来源和目标；原版地面设备、`_scroll_power` 与 Devicemaster Scrolls 专精等待对应系统，不扩展通用多物品 target；
-- 剩余 `scroll-effect` 16 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
+- Spell 只固定增加职业许可的学习容量；不改变学习来源、书本/领域限制、遗忘或熟练度，也不建立通用永久成长 effect；
+- 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
 
 ## contract-v116 明确遗留
 

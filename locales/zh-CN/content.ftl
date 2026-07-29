@@ -534,5 +534,7 @@ item-demo-protection-from-evil-scroll-name = 防邪卷轴
 item-demo-protection-from-evil-scroll-description = 暂时击退较弱邪恶生物的近战攻击。
 item-demo-recharging-scroll-name = 充能卷轴
 item-demo-recharging-scroll-description = 将一件野外装置中储存的能量转移到另一件装置。
+item-demo-spell-scroll-name = 法术卷轴
+item-demo-spell-scroll-description = 永久增加符合资格的阅读者可学习的法术数量。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

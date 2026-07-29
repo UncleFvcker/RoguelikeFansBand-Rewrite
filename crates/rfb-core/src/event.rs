@@ -475,6 +475,12 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         display_name_key: String,
     },
+    ItemSpellLearningCapacityChanged {
+        source_kind_id: String,
+        display_name_key: String,
+        before: u16,
+        after: u16,
+    },
     ItemElementalBlast {
         source_kind_id: String,
         display_name_key: String,
@@ -1890,6 +1896,29 @@ impl DomainEvent {
                 "item.use-confusing-strike-prepared",
                 "item-use-confusing-strike-prepared",
                 [("source", source_kind_id), ("nameKey", display_name_key)],
+            ),
+            Self::ItemSpellLearningCapacityChanged {
+                source_kind_id,
+                display_name_key,
+                before,
+                after,
+            } => dto(
+                if after > before {
+                    "item.use-spell-learning-capacity-increased"
+                } else {
+                    "item.use-spell-learning-capacity-no-effect"
+                },
+                if after > before {
+                    "item-use-spell-learning-capacity-increased"
+                } else {
+                    "item-use-spell-learning-capacity-no-effect"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("before", before.to_string()),
+                    ("after", after.to_string()),
+                ],
             ),
             Self::ItemElementalBlast {
                 source_kind_id,
