@@ -510,3 +510,7 @@ item-demo-benediction-scroll-name = Benediction Scroll
 item-demo-benediction-scroll-description = Extends a blessing that sharpens defense and combat skill.
 item-demo-resonance-breach-scroll-name = Resonance Breach Scroll
 item-demo-resonance-breach-scroll-description = Disrupts adjacent traps and blocked doorways.
+item-demo-cinder-surge-scroll-name = Cinder Surge Scroll
+item-demo-cinder-surge-scroll-description = Unleashes a fire blast around the reader before scorching them in return.
+item-demo-rime-surge-scroll-name = Rime Surge Scroll
+item-demo-rime-surge-scroll-description = Unleashes an ice blast around the reader before freezing them in return.

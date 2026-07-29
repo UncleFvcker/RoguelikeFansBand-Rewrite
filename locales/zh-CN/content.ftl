@@ -510,3 +510,7 @@ item-demo-benediction-scroll-name = 祈福卷轴
 item-demo-benediction-scroll-description = 延长祝福，提高防御与战斗技能。
 item-demo-resonance-breach-scroll-name = 共鸣破障卷轴
 item-demo-resonance-breach-scroll-description = 破坏相邻的陷阱与封闭门道。
+item-demo-cinder-surge-scroll-name = 烬潮卷轴
+item-demo-cinder-surge-scroll-description = 在阅读者周围释放火焰爆发，随后以烈焰反噬自身。
+item-demo-rime-surge-scroll-name = 霜潮卷轴
+item-demo-rime-surge-scroll-description = 在阅读者周围释放寒冰爆发，随后以严寒反噬自身。

@@ -459,6 +459,26 @@ pub(crate) enum DomainEvent {
         duration: u32,
         resolution: AbilityEffectsResolutionDto,
     },
+    ItemElementalBlast {
+        source_kind_id: String,
+        display_name_key: String,
+        target_count: usize,
+    },
+    ItemElementalBlastHit {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    ItemElementalBlastSlew {
+        source_kind_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    ItemElementalBlastBacklash {
+        source_kind_id: String,
+        damage: DamageOutcome,
+        fatal: bool,
+    },
     ItemDestroyedAdjacentTrapsAndDoors {
         source_kind_id: String,
         display_name_key: String,
@@ -1770,6 +1790,76 @@ impl DomainEvent {
                     ("duration", duration.to_string()),
                 ],
                 GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::ItemElementalBlast {
+                source_kind_id,
+                display_name_key,
+                target_count,
+            } => dto(
+                "item.use-elemental-blast",
+                "item-use-elemental-blast",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("count", target_count.to_string()),
+                ],
+            ),
+            Self::ItemElementalBlastHit {
+                source_kind_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "item.use-elemental-blast-hit",
+                "item-use-elemental-blast-hit",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::ItemElementalBlastSlew {
+                source_kind_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "item.use-elemental-blast-slay",
+                "item-use-elemental-blast-slay",
+                [("source", source_kind_id), ("target", target_kind_id)],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::ItemElementalBlastBacklash {
+                source_kind_id,
+                damage,
+                fatal,
+            } => dto_with_outcome(
+                if fatal {
+                    "item.use-elemental-backlash-death"
+                } else {
+                    "item.use-elemental-backlash"
+                },
+                if fatal {
+                    "item-use-elemental-backlash-death"
+                } else {
+                    "item-use-elemental-backlash"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("damage", damage.applied.to_string()),
+                ],
+                if fatal {
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    }
+                } else {
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    }
+                },
             ),
             Self::ItemDestroyedAdjacentTrapsAndDoors {
                 source_kind_id,

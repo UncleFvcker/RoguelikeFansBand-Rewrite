@@ -1242,6 +1242,24 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
             "category": "undead",
             "damage": 80
         }),
+        (70, 58) => serde_json::json!({
+            "type": "self-centered-elemental-blast",
+            "baseDamage": 666,
+            "damageType": "fire",
+            "radius": 4,
+            "backlashSides": 25,
+            "backlashBonus": 25,
+            "backlashDamageType": "fire"
+        }),
+        (70, 59) => serde_json::json!({
+            "type": "self-centered-elemental-blast",
+            "baseDamage": 800,
+            "damageType": "ice",
+            "radius": 4,
+            "backlashSides": 30,
+            "backlashBonus": 30,
+            "backlashDamageType": "cold"
+        }),
         (70, 57) => detect("actor", "legacy-import", false),
         (70, 53) => serde_json::json!({"type": "reset-recall"}),
         (70, 54) => summon(
@@ -8592,6 +8610,37 @@ F:BRAND_VAMP | HOLD_LIFE
             if sval == 42 {
                 assert_eq!(effect["category"], "undead");
             }
+        }
+        for (
+            sval,
+            base_damage,
+            damage_type,
+            backlash_sides,
+            backlash_bonus,
+            backlash_damage_type,
+        ) in [
+            (58, 666, "fire", 25, 25, "fire"),
+            (59, 800, "ice", 30, 30, "cold"),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 70,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("elemental-blast-scroll-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            let effect = &value["useAction"]["effect"];
+            assert_eq!(effect["type"], "self-centered-elemental-blast");
+            assert_eq!(effect["baseDamage"], base_damage);
+            assert_eq!(effect["damageType"], damage_type);
+            assert_eq!(effect["radius"], 4);
+            assert_eq!(effect["backlashSides"], backlash_sides);
+            assert_eq!(effect["backlashBonus"], backlash_bonus);
+            assert_eq!(effect["backlashDamageType"], backlash_damage_type);
         }
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 

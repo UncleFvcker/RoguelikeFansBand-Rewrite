@@ -79,8 +79,9 @@
 | P68 | 可见目标驱散与放逐卷轴 | 已由 contract-v119 完成 | 共享可见/line-of-effect actor 快照；Dispel Undead 固定 80 点并跳过 `resist-all`；Banishment 按 guardian、unique+`resist-teleport`、普通等级抵抗逐目标结算并逐目标抽落点。sval 42/62 使 `scroll-effect` 34→32；协议保持 1.118、包 1.110.0、Schema v52、fixtures 421-422 共 422 exact |
 | P69 | 祝福卷轴族 | 已由 contract-v120 完成 | 窄 `bless` 物品效果复用 self-target 与既有状态结算，固定 blessed/Extend、defense +5、melee/ranged skill +10；sval 33/34/35 分别映射 `6+1d12`、`12+1d24`、`24+1d48`，使 `scroll-effect` 32→29。协议保持 1.118、包 1.111.0、Schema v52、fixture 423，共 423 exact |
 | P70 | 相邻陷阱与门破坏卷轴 | 已由 contract-v121 完成 | 窄 `destroy-adjacent-traps-and-doors` 物品效果按固定八方向扫描权威地形；陷阱直达 disarm target，封闭门直达 bash target，开启/破损门不变；空用消费、Aware、零 RNG。sval 39 使 `scroll-effect` 29→28；协议保持 1.118、包 1.112.0、Schema v52、fixture 424，共 424 exact |
+| P71 | 火焰与寒冰卷轴 | 已由 contract-v122 完成 | 窄 `self-centered-elemental-blast` 复用 self-target、既有范围格/墙阻挡/衰减、actor 抗性/死亡和玩家入伤管线；Fire 666/r4/`25+1d25`，Ice 800/r4/`30+1d30`。sval 58/59 使 `scroll-effect` 28→26；协议保持 1.118、包 1.113.0、Schema v52、fixture 425，共 425 exact |
 
-## contract-v121 明确遗留
+## contract-v122 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -88,7 +89,8 @@
 - Dispel/Banishment 只消费当前可见且 line of effect 可达的 actor 快照，不建立怪物回忆、跨层感知或通用 actor-effect DSL；
 - Banishment 的 guardian、unique/`RES_TELE` 和普通等级抵抗已固定；反传送区域、玩家反制和追踪传送仍不在本轮；
 - Trap/Door Destruction 只处理相邻权威 terrain；原版箱锁/箱子陷阱分支等待箱子实例事务，不把 kind 或地形 tag 伪装成箱子状态；
-- 剩余 `scroll-effect` 28 继续按世界/地形、状态、actor 战斗和物品/成长事务分组；Protection from Evil、Vengeance、Monster Confusion、Understanding 和 Inventory Protection 不并入本轮。
+- Fire/Ice 当前只覆盖 actor AoE 与玩家反噬；`_scroll_power`、Devicemaster/抗性豁免门及投射对物品/地形的副作用继续留在缺口；
+- 剩余 `scroll-effect` 26 继续按世界/地形、状态和物品/成长事务分组；Protection from Evil、Vengeance、Monster Confusion、Understanding 和 Inventory Protection 不并入本轮。
 
 ## contract-v116 明确遗留
 
@@ -125,10 +127,10 @@
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
 - 恢复型消耗品已支持状态与资源恢复；属性/经验恢复、食物营养、增益药水等仍在 `consumable-effect` 81 条缺口中；
-- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福和相邻陷阱/门破坏完成后剩余 28 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏和元素爆发完成后剩余 26 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
-- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福和相邻地形破坏卷轴已由 contract-v113–v121 完成；剩余 28 条按世界/状态/物品效果继续推进。
+- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福、相邻地形破坏和元素爆发卷轴已由 contract-v113–v122 完成；剩余 26 条按世界/状态/物品效果继续推进。
 
 ## contract-v107 明确遗留
 

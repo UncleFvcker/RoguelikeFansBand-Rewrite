@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.118 / contract-v121（P31–P70 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.118 / contract-v122（P31–P71 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v121 阶段性里程碑
+## 8. contract-v75–v122 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.118、内容包 1.112.0、contract-v121、save v1 和 state hash Schema v52；内容 hash 为 `3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7`。active baseline 包含 424 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119 增加可见目标亡灵驱散与逐目标放逐；v120 增加三种祝福卷轴；v121 增加相邻陷阱与封闭门破坏。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.118、内容包 1.113.0、contract-v122、save v1 和 state hash Schema v52；内容 hash 为 `ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5`。active baseline 包含 425 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119 增加可见目标亡灵驱散与逐目标放逐；v120 增加三种祝福卷轴；v121 增加相邻陷阱与封闭门破坏；v122 增加 Fire/Ice 中心范围伤害和玩家反噬。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、56 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 47 种 terrain、28 种 actor、58 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -542,6 +542,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P69 进展（2026-07）**：contract-v120 接入 Blessing、Holy Chant 与 Holy Prayer。窄 `bless` 物品效果复用 self-target 和已有状态结算，固定 blessed/Extend、defense +5、melee/ranged skill +10；消费后分别按 `6+1d12`、`12+1d24`、`24+1d48` 抽持续时间。fixture 423 固定两次使用与延长；协议保持 1.118，demo 升至 1.111.0，Schema 保持 v52。legacy importer 映射 sval 33–35，`scroll-effect` 32→29，真实包 hash 为 `b008570c950fab4541286f1eccd86926f1c535cc0dea0770f038cca523b4e643`。
 
 **P70 进展（2026-07）**：contract-v121 接入 Trap/Door Destruction。窄 `destroy-adjacent-traps-and-doors` 物品效果按固定八方向冻结替换计划：陷阱直达 `disarmToTerrainId`，带 door tag 的封闭门直达 `bashToTerrainId`；开启/破损门、actor 和地面物品均不受影响。空用仍消费、推进时间并 Aware，全程零 RNG。fixture 424 固定零效果后再破坏隐藏陷阱与秘密门；协议保持 1.118，demo 升至 1.112.0，Schema 保持 v52。legacy importer 映射 sval 39，`scroll-effect` 29→28，真实包严格编译 hash 为 `ad65fb2058f2a01b47ec73a616606d4550b5b807cb653d9410aafe0bfd49b6e2`。箱锁与箱子陷阱留待独立物品实例事务。
+
+**P71 进展（2026-07）**：contract-v122 接入 Fire 与 Ice。窄 `self-centered-elemental-blast` 复用 self-target、既有范围格/墙阻挡/RFB 衰减、actor 抗性与死亡，以及玩家抗性/入伤管线；Fire 固定 666/r4/`25+1d25`，Ice 固定 800/r4/`30+1d30`。fixture 425 同时固定距离衰减、墙阻挡、免疫/易伤、击杀、反噬与回档；协议保持 1.118，demo 升至 1.113.0，Schema 保持 v52。legacy importer 映射 sval 58/59，`scroll-effect` 28→26，真实包严格编译 hash 为 `54649044572c7ef0f36e7d078dc338680cab6489cfb29c3f723dbf5a7a5bc280`。设备 power、反噬前抗性豁免和投射的物品/地形副作用继续显式保留。
 
 ## 9. 内容迁移策略
 

@@ -2502,6 +2502,28 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         duration: event.args.duration ?? "?",
       });
+    case "item-use-elemental-blast":
+      return localization.format("message-item-use-elemental-blast", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        count: event.args.count ?? "0",
+      });
+    case "item-use-elemental-blast-hit":
+      return localization.format("message-item-use-elemental-blast-hit", {
+        source: visibleItemNameForKind(event.args.source),
+        target: contentName(event.args.target),
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
+    case "item-use-elemental-blast-slay":
+      return localization.format("message-item-use-elemental-blast-slay", {
+        source: visibleItemNameForKind(event.args.source),
+        target: contentName(event.args.target),
+      });
+    case "item-use-elemental-backlash":
+    case "item-use-elemental-backlash-death":
+      return localization.format(`message-${event.messageKey}` as MessageKey, {
+        source: visibleItemNameForKind(event.args.source),
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
     case "item-use-destroy-adjacent-traps-doors":
     case "item-use-destroy-adjacent-traps-doors-no-effect":
       return localization.format(

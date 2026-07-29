@@ -1524,6 +1524,14 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    SelfCenteredElementalBlast {
+        base_damage: u32,
+        damage_type: ActorDamageType,
+        radius: u8,
+        backlash_sides: u16,
+        backlash_bonus: u16,
+        backlash_damage_type: ActorDamageType,
+    },
     DestroyAdjacentTrapsAndDoors,
     RemoveStatus {
         status_kind_id: String,
@@ -3202,6 +3210,18 @@ fn valid_item_effect(
                 && (1..=10_000).contains(duration_sides)
                 && *duration_bonus <= 1_000_000
         }
+        ItemUseEffectDefinition::SelfCenteredElementalBlast {
+            base_damage,
+            radius,
+            backlash_sides,
+            backlash_bonus,
+            ..
+        } => {
+            (1..=1_000_000).contains(base_damage)
+                && (1..=8).contains(radius)
+                && (1..=10_000).contains(backlash_sides)
+                && *backlash_bonus <= 10_000
+        }
         ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
@@ -4602,6 +4622,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     ItemUseEffectDefinition::Heal { .. }
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
+                    | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | ItemUseEffectDefinition::RemoveStatus { .. }
                     | ItemUseEffectDefinition::RestoreResource { .. }
@@ -8613,7 +8634,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 47);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 56);
+        assert_eq!(first.content.items.len(), 58);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8639,7 +8660,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.112.0");
+        assert_eq!(catalog.pack_version(), "1.113.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

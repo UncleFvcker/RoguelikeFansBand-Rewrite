@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.cinder-surge-scroll",
+  "nameKey": "item-demo-cinder-surge-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-cinder-surge-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "self-centered-elemental-blast",
+      "baseDamage": 666,
+      "damageType": "fire",
+      "radius": 4,
+      "backlashSides": 25,
+      "backlashBonus": 25,
+      "backlashDamageType": "fire"
+    }
+  },
+  "tags": ["consumable", "fire", "scroll"]
+}

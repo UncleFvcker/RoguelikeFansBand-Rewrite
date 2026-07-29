@@ -141,6 +141,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v119：可见目标驱散与放逐卷轴](design/contract-v119-scroll-visible-actor-effects.md)
 - [Contract v120：祝福卷轴族](design/contract-v120-scroll-blessing.md)
 - [Contract v121：相邻陷阱与门破坏卷轴](design/contract-v121-scroll-trap-door-destruction.md)
+- [Contract v122：火焰与寒冰卷轴](design/contract-v122-scroll-elemental-blasts.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -164,7 +165,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v121`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v122`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -309,6 +310,8 @@ P69 / contract-v120 接入 Blessing、Holy Chant 与 Holy Prayer。物品层新�
 
 P70 / contract-v121 接入 Trap/Door Destruction。物品层新增窄 `destroy-adjacent-traps-and-doors` 效果，按固定八方向扫描权威地形：陷阱直达 `disarmToTerrainId`，带 `door` tag 的封闭门直达 `bashToTerrainId`；开启/破损门保持不变。空用仍消费、推进时间并变为 Aware，全程零 RNG；不受 FOV、revealed 状态、actor 或地面物品限制。legacy importer 映射 sval 39，使 `scroll-effect` 29→28。协议保持 1.118、demo 1.112.0、state hash Schema v52、active baseline 424 条 exact、零 waiver，内置 content hash 为 `3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7`。详见[Contract v121](design/contract-v121-scroll-trap-door-destruction.md)。
 
+P71 / contract-v122 接入 Fire 与 Ice。物品层新增窄 `self-centered-elemental-blast`，复用 self-target、既有范围格/墙阻挡/RFB 衰减、actor 抗性/死亡和玩家抗性/入伤管线；Fire 固定 666/r4/`25+1d25` fire 反噬，Ice 固定 800/r4/`30+1d30` cold 反噬。legacy importer 映射 sval 58/59，使 `scroll-effect` 28→26。协议保持 1.118、demo 1.113.0、state hash Schema v52、active baseline 425 条 exact、零 waiver，内置 content hash 为 `ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5`。详见[Contract v122](design/contract-v122-scroll-elemental-blasts.md)。
+
 ### 本地验证
 
 ```powershell
@@ -381,7 +384,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 424 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 425 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

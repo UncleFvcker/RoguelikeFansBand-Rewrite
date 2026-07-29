@@ -108,7 +108,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 113] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 114] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -222,10 +222,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 113] = [
     "99398a53687b4cf106939ddebcb08865f4a24ee147795e9de2ae8e08036aaf00",
     "a9fa7d716f4f5e13ba8f97cb9c72f1dfbb4ed84c83a284b3cde2219549fcb1dd",
     "b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab",
+    "3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7";
+    "ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -10273,6 +10274,30 @@ impl Game {
                 self.resolve_item_self_effect(&kind_id, &effect, events);
             }
             (
+                ItemUseEffectDefinition::SelfCenteredElementalBlast {
+                    base_damage,
+                    damage_type,
+                    radius,
+                    backlash_sides,
+                    backlash_bonus,
+                    backlash_damage_type,
+                },
+                ItemUsePlan::SelfTarget,
+            ) => {
+                self.resolve_item_elemental_blast(
+                    &kind_id,
+                    base_damage,
+                    damage_type.into(),
+                    radius,
+                    backlash_sides,
+                    backlash_bonus,
+                    backlash_damage_type.into(),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
                 ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
                 ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
             ) => {
@@ -10669,6 +10694,7 @@ impl Game {
             ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
+            | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::RemoveStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -10856,6 +10882,96 @@ impl Game {
                 source_kind_id: source_kind_id.to_owned(),
             });
         }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_item_elemental_blast(
+        &mut self,
+        source_kind_id: &str,
+        base_damage: u32,
+        damage_type: DamageType,
+        radius: u8,
+        backlash_sides: u16,
+        backlash_bonus: u16,
+        backlash_damage_type: DamageType,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.mark_item_aware(source_kind_id);
+        let (affected_positions, targets) =
+            self.area_damage_targets(self.player.position, radius, None);
+        changed.extend(affected_positions);
+        events.push(DomainEvent::ItemElementalBlast {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            target_count: targets.len(),
+        });
+        let base_damage =
+            i32::try_from(base_damage).expect("validated elemental blast damage must fit i32");
+        for (actor_id, distance) in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == actor_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("elemental blast target definition must remain available")
+                .clone();
+            let target_kind_id = definition.id.clone();
+            let target_position = self.entities[index].position;
+            let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+            let resistance = self.entities[index].resistances.level(damage_type);
+            let damage = resolve_armored_damage(
+                rfb_area_damage(base_damage, distance),
+                damage_type,
+                target.armor_class.value,
+                resistance,
+            );
+            self.entities[index].alerted = true;
+            self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
+            changed.insert(target_position);
+            self.wake_entity_after_damage(index, damage.applied, events);
+            if self.entities[index].hp <= 0 {
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::ItemElementalBlastSlew {
+                        source_kind_id: source_kind_id.to_owned(),
+                        target_kind_id,
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            } else {
+                events.push(DomainEvent::ItemElementalBlastHit {
+                    source_kind_id: source_kind_id.to_owned(),
+                    target_kind_id,
+                    damage,
+                });
+            }
+        }
+
+        let backlash_raw = self
+            .roll_damage(1, backlash_sides)
+            .saturating_add(i32::from(backlash_bonus));
+        let backlash = self.reduce_player_damage(resolve_damage(
+            DamagePacket::new(backlash_raw, backlash_damage_type),
+            self.effective_player_resistances()
+                .level(backlash_damage_type),
+        ));
+        self.player.hp = self.player.hp.saturating_sub(backlash.applied);
+        events.push(DomainEvent::ItemElementalBlastBacklash {
+            source_kind_id: source_kind_id.to_owned(),
+            damage: backlash,
+            fatal: self.player_is_dead(),
+        });
         Ok(())
     }
 
@@ -11438,6 +11554,7 @@ impl Game {
                 noticed
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }

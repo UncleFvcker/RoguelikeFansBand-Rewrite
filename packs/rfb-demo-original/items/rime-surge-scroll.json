@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.rime-surge-scroll",
+  "nameKey": "item-demo-rime-surge-scroll-name",
+  "appearanceNameKey": "item-demo-unfamiliar-scroll-name",
+  "descriptionKey": "item-demo-rime-surge-scroll-description",
+  "glyph": "?",
+  "weightTenthsPound": 1,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "self-centered-elemental-blast",
+      "baseDamage": 800,
+      "damageType": "ice",
+      "radius": 4,
+      "backlashSides": 30,
+      "backlashBonus": 30,
+      "backlashDamageType": "cold"
+    }
+  },
+  "tags": ["cold", "consumable", "scroll"]
+}
