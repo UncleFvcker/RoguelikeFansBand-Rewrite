@@ -516,3 +516,5 @@ item-demo-rime-surge-scroll-name = Rime Surge Scroll
 item-demo-rime-surge-scroll-description = Unleashes an ice blast around the reader before freezing them in return.
 item-demo-aether-rupture-scroll-name = Aether Rupture Scroll
 item-demo-aether-rupture-scroll-description = Tears open a mana surge around the reader before the rupture strikes them in return.
+item-demo-clamor-scroll-name = Clamor Scroll
+item-demo-clamor-scroll-description = Releases a piercing hum that wakes nearby creatures and hastens enemies in sight.

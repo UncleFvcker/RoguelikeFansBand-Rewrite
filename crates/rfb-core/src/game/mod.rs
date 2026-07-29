@@ -20,7 +20,8 @@ use crate::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_BLEEDING,
         STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR, STATUS_HASTE, STATUS_PARALYSIS,
         STATUS_POISON, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, StatusApplication, StatusChange,
-        StatusInstance, StatusStacking, advance_status_ticks, apply_effect, resolve_damage,
+        StatusInstance, StatusStacking, advance_status_ticks, apply_effect, apply_status,
+        resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ProjectileTrace, project_events},
@@ -108,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 115] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 116] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -224,10 +225,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 115] = [
     "b62824da6e34e2f72a367f94b2e46e50e279ba6ac4df88bece81021a156e90ab",
     "3fd2b0a8b58531b89629aa2b50ef943a7a5687bdcb619991a26a3c81a7437bf7",
     "ab0bcb63b25c6729fd95d5fba97a4f618f7aca4589f3931a9ac149615d6062b5",
+    "db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "db5233e09952166a195617182db8020cfacc457e2279d0ff403f16a941c49db2";
+    "337e8599f02e53264b45ac1e899eb47b5ec6f4eeb6be0ae31b517c67ae6fb82b";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 52;
@@ -10300,6 +10302,9 @@ impl Game {
                     removed_entities,
                 )?;
             }
+            (ItemUseEffectDefinition::AggravateMonsters, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_aggravation(&kind_id, events, changed);
+            }
             (
                 ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors,
                 ItemUsePlan::DestroyAdjacentTrapsAndDoors { replacements },
@@ -10698,6 +10703,7 @@ impl Game {
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
+            | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::RemoveStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
             | ItemUseEffectDefinition::RestoreResourceDice { .. }
@@ -10799,6 +10805,65 @@ impl Game {
                 Some((position, target_terrain_id))
             })
             .collect()
+    }
+
+    fn resolve_item_aggravation(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let origin = self.player.position;
+        let sight_radius =
+            u32::try_from(VISIBILITY_RADIUS).expect("positive visibility radius must fit u32");
+        for index in 0..self.entities.len() {
+            if self.entities[index].hp <= 0 {
+                continue;
+            }
+            let position = self.entities[index].position;
+            let distance = rfb_distance(origin, position);
+            let nearby = distance < sight_radius.saturating_mul(2);
+            let hostile_in_los = distance <= sight_radius
+                && !self.actor_is_player_aligned(&self.entities[index])
+                && has_line_of_sight(self, origin, position);
+            if !nearby && !hostile_in_los {
+                continue;
+            }
+            if nearby {
+                self.entities[index].alerted = true;
+                self.entities[index]
+                    .statuses
+                    .retain(|status| status.kind_id != STATUS_SLEEP);
+            }
+            if hostile_in_los {
+                apply_status(
+                    &mut self.entities[index].statuses,
+                    StatusApplication {
+                        status: StatusInstance {
+                            kind_id: STATUS_HASTE.to_owned(),
+                            intensity: 1,
+                            remaining_ticks: 100,
+                            source_id: Some(source_kind_id.to_owned()),
+                            granted_resistances: BTreeMap::new(),
+                            granted_brands: BTreeSet::new(),
+                            granted_modifiers: StatModifiersDto::default(),
+                            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                            granted_status_immunities: BTreeSet::new(),
+                            granted_race_id: None,
+                            grants_wall_passage: false,
+                            incoming_damage_percent: 100,
+                        },
+                        stacking: StatusStacking::Extend,
+                    },
+                );
+            }
+            changed.insert(position);
+        }
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemAggravated {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+        });
     }
 
     fn item_visible_actor_ids(&self) -> Vec<String> {
@@ -11564,6 +11629,7 @@ impl Game {
             }
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
+            | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }

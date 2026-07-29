@@ -2502,6 +2502,10 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         duration: event.args.duration ?? "?",
       });
+    case "item-use-aggravate":
+      return localization.format("message-item-use-aggravate", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
     case "item-use-elemental-blast":
       return localization.format("message-item-use-elemental-blast", {
         source: visibleItemName(event.args.nameKey, event.args.source),

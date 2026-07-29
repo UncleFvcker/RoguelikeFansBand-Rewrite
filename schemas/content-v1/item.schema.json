@@ -632,6 +632,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "aggravate-monsters",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "destroy-adjacent-traps-and-doors",
               "type": "string"
             }

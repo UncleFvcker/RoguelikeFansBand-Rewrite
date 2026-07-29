@@ -479,6 +479,10 @@ pub(crate) enum DomainEvent {
         damage: DamageOutcome,
         fatal: bool,
     },
+    ItemAggravated {
+        source_kind_id: String,
+        display_name_key: String,
+    },
     ItemDestroyedAdjacentTrapsAndDoors {
         source_kind_id: String,
         display_name_key: String,
@@ -1860,6 +1864,14 @@ impl DomainEvent {
                         resolution: damage.into(),
                     }
                 },
+            ),
+            Self::ItemAggravated {
+                source_kind_id,
+                display_name_key,
+            } => dto(
+                "item.use-aggravate",
+                "item-use-aggravate",
+                [("source", source_kind_id), ("nameKey", display_name_key)],
             ),
             Self::ItemDestroyedAdjacentTrapsAndDoors {
                 source_kind_id,

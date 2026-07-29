@@ -210,6 +210,7 @@ message-item-use-no-effect = You use { $target }, but notice no effect.
 message-item-use-status-removed = You use { $target } and clear { $status }.
 message-item-use-status-no-effect = You use { $target }, but you are not affected by { $status }.
 message-item-use-blessed = You use { $source } and are blessed for { $duration } ticks.
+message-item-use-aggravate = { $source } releases a piercing hum that rouses nearby creatures.
 message-item-use-elemental-blast = { $source } erupts around you, reaching { $count } creature(s).
 message-item-use-elemental-blast-hit = { $source } hits { $target } for { $damage } damage.
 message-item-use-elemental-blast-slay = { $source } destroys { $target }.

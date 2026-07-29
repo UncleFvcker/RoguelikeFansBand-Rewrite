@@ -1155,6 +1155,7 @@ fn fixed_consumable_use_action(entry: &LegacyItemEntry) -> Option<serde_json::Va
         })
     };
     let effect = match (entry.tval, entry.sval) {
+        (70, 1) => serde_json::json!({"type": "aggravate-monsters"}),
         (70, 2) => serde_json::json!({"type": "curse-equipped-item", "target": "armor"}),
         (70, 3) => serde_json::json!({"type": "curse-equipped-item", "target": "weapon"}),
         (70, 4) => summon(
@@ -8659,10 +8660,27 @@ F:BRAND_VAMP | HOLD_LIFE
         }
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 
-        let _ = item_json(
+        let aggravation = item_json(
             &LegacyItemEntry {
                 tval: 70,
                 sval: 1,
+                ..LegacyItemEntry::default()
+            },
+            "aggravation-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            aggravation["useAction"]["effect"]["type"],
+            "aggravate-monsters"
+        );
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let _ = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 0,
                 ..LegacyItemEntry::default()
             },
             "unsupported-scroll",

@@ -516,3 +516,5 @@ item-demo-rime-surge-scroll-name = 霜潮卷轴
 item-demo-rime-surge-scroll-description = 在阅读者周围释放寒冰爆发，随后以严寒反噬自身。
 item-demo-aether-rupture-scroll-name = 以太裂隙卷轴
 item-demo-aether-rupture-scroll-description = 在阅读者周围撕开魔力裂隙，随后由裂隙反噬自身。
+item-demo-clamor-scroll-name = 喧鸣卷轴
+item-demo-clamor-scroll-description = 发出尖锐嗡鸣，惊醒附近的生物并加速视线内的敌人。
