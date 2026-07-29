@@ -1351,6 +1351,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 25,
             "durationBonus": 15
         }),
+        (75, 32) => serde_json::json!({
+            "type": "apply-heroism",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 25
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -7816,7 +7822,7 @@ W:30:0:0:2:500
 F:HIDE_TYPE
 N:*:& Test Potion~ of Mending
 G:!:b
-I:75:29:0
+I:75:32:0
 W:5:0:0:4:20
 N:*:& Test Torch~
 G:~:u
@@ -7893,7 +7899,7 @@ W:5:0:0:150:80
 
         let potion = get("test-potion-of-mending.json");
         assert_eq!(potion["maxStack"], 20);
-        assert_eq!(potion["useAction"]["effect"]["type"], "apply-speed");
+        assert_eq!(potion["useAction"]["effect"]["type"], "apply-heroism");
         assert!(
             !outcome
                 .report
@@ -8385,10 +8391,10 @@ F:BRAND_VAMP | HOLD_LIFE
         let _ = item_json(
             &LegacyItemEntry {
                 tval: 75,
-                sval: 32,
+                sval: 33,
                 ..LegacyItemEntry::default()
             },
-            "heroism-potion",
+            "berserk-strength-potion",
             &LauncherAmmoIndex::default(),
             None,
             &mut report,
@@ -8776,6 +8782,26 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationDice": 1,
                 "durationSides": 25,
                 "durationBonus": 15
+            })
+        );
+        let heroism = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 32,
+                ..LegacyItemEntry::default()
+            },
+            "heroism-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            heroism["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-heroism",
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationBonus": 25
             })
         );
         let thermal = item_json(

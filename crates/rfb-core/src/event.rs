@@ -470,6 +470,12 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         duration: u32,
     },
+    ItemHeroismResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        noticed: bool,
+    },
     ItemThermalResistanceResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -1921,6 +1927,28 @@ impl DomainEvent {
             } => dto(
                 "item.use-speed",
                 "item-use-speed",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+            ),
+            Self::ItemHeroismResolved {
+                source_kind_id,
+                display_name_key,
+                duration,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-heroism-applied"
+                } else {
+                    "item.use-heroism-no-new-effect"
+                },
+                if noticed {
+                    "item-use-heroism-applied"
+                } else {
+                    "item-use-heroism-no-new-effect"
+                },
                 [
                     ("source", source_kind_id),
                     ("nameKey", display_name_key),

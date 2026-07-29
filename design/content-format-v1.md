@@ -248,6 +248,8 @@ contract-v137 为静态消耗品增加 self-only 的 `apply-basic-resistance { d
 
 contract-v138 为静态消耗品增加 self-only 的 `apply-speed { durationDice, durationSides, durationBonus }`。核心在没有 Haste 时抽取初始持续时间并识别，已有 Haste 时零 RNG、固定延长 5 ticks；动态 activation、充能和设备检定不允许使用该效果。demo 包 1.129.0 新增原创 Swiftstep Tonic，现含 68 abilities、5 ability books、75 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v138](contract-v138-potion-speed.md)。
 
+contract-v139 为静态消耗品增加 self-only 的 `apply-heroism { durationDice, durationSides, durationBonus }`。核心每次抽取持续时间并以 Extend 应用既有 Hero 状态，授予 max HP、melee/ranged skill 与 Fear 免疫；只有首次新增状态才识别。动态 activation、充能和设备检定不允许使用该效果。demo 包 1.130.0 新增原创 Valor Tonic，现含 68 abilities、5 ability books、76 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v139](contract-v139-potion-heroism.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

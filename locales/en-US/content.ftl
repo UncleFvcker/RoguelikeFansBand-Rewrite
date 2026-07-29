@@ -548,5 +548,7 @@ item-demo-prismatic-elixir-name = Prismatic Elixir
 item-demo-prismatic-elixir-description = Temporarily fortifies the drinker against acid, electricity, fire, cold, and poison.
 item-demo-swiftstep-tonic-name = Swiftstep Tonic
 item-demo-swiftstep-tonic-description = Temporarily quickens the drinker's movements.
+item-demo-valor-tonic-name = Valor Tonic
+item-demo-valor-tonic-description = Temporarily fills the drinker with heroic resolve.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

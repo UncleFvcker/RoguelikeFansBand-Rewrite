@@ -96,8 +96,9 @@
 | P85 | Thermal 药水 | 已由 contract-v136 完成 | 窄 `apply-thermal-resistance` 只抽一次 `1d10+10`，以 Extend 应用一个同时授予 Fire/Cold Resistant 的状态；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 30 使 `consumable-effect` 78→77；协议保持 1.121、包 1.127.0、Schema 保持 v54、fixture 440，共 440 exact |
 | P86 | Resistance 药水 | 已由 contract-v137 完成 | 窄 `apply-basic-resistance` 每次只抽一次 `1d20+20`，以 KeepStrongest 应用一个同时授予 Acid/Electricity/Fire/Cold/Poison Resistant 的状态；合法使用无条件 Aware。tval 75/sval 60 使 `consumable-effect` 77→76；协议保持 1.121、包 1.128.0、Schema 保持 v54、fixture 441，共 441 exact |
 | P87 | Speed 药水 | 已由 contract-v138 完成 | 窄 `apply-speed` 在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks。tval 75/sval 29 使 `consumable-effect` 76→75；协议保持 1.121、包 1.129.0、Schema 保持 v54、fixture 442，共 442 exact |
+| P88 | Heroism 药水 | 已由 contract-v139 完成 | 窄 `apply-heroism` 每次抽取 `1d25+25` 并 Extend Hero，授予 max HP +10、melee/ranged skill +12 与 Fear 免疫；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 32 使 `consumable-effect` 75→74；协议保持 1.121、包 1.130.0、Schema 保持 v54、fixture 443，共 443 exact |
 
-## contract-v138 明确遗留
+## contract-v139 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；

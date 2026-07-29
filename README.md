@@ -181,7 +181,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v138`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v139`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -360,6 +360,8 @@ P86 / contract-v137 接入 Resistance Potion。窄 `apply-basic-resistance` 静�
 
 P87 / contract-v138 接入 Speed Potion。窄 `apply-speed` 在没有 Haste 时只抽一次 `1d25+15` 并变为 Aware；已有 Haste 时零 RNG、固定延长 5 ticks，保持既有知识边界。协议保持 1.121、demo 1.129.0、state hash Schema 保持 v54、active baseline 442 条 exact、零 waiver，内置 content hash 为 `1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35`。legacy importer 映射 tval 75/sval 29，使 `consumable-effect` 76→75。详见[Contract v138](design/contract-v138-potion-speed.md)。
 
+P88 / contract-v139 接入 Heroism Potion。窄 `apply-heroism` 每次抽取 `1d25+25`，以 Extend 应用授予 max HP +10、melee/ranged skill +12 与 Fear 免疫的 Hero 状态；只有首次新增状态才 Aware，已有 Hero 的延长保持 Tried-only。协议保持 1.121、demo 1.130.0、state hash Schema 保持 v54、active baseline 443 条 exact、零 waiver，内置 content hash 为 `99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091`。legacy importer 映射 tval 75/sval 32，使 `consumable-effect` 75→74。详见[Contract v139](design/contract-v139-potion-heroism.md)。
+
 ### 本地验证
 
 ```powershell
@@ -432,7 +434,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 442 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 443 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

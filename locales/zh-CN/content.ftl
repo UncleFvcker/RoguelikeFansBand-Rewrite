@@ -548,5 +548,7 @@ item-demo-prismatic-elixir-name = 棱彩灵药
 item-demo-prismatic-elixir-description = 暂时使饮用者抵抗酸液、电击、火焰、寒冷与毒素。
 item-demo-swiftstep-tonic-name = 疾步饮剂
 item-demo-swiftstep-tonic-description = 暂时加快饮用者的动作。
+item-demo-valor-tonic-name = 勇毅饮剂
+item-demo-valor-tonic-description = 暂时激发饮用者的英雄气概。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。
