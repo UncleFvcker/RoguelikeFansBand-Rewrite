@@ -759,7 +759,8 @@ h1 {
   font-size: 1rem;
 }
 
-.item-target-dialog select {
+.item-target-dialog select,
+.item-target-dialog input {
   width: 100%;
 }
 

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.119";
+pub const PROTOCOL_VERSION: &str = "1.120";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -149,6 +149,10 @@ pub enum GameCommand {
         item_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target: Option<TargetSelection>,
+    },
+    UseItemByGlyph {
+        item_id: String,
+        glyph: String,
     },
     Unequip {
         slot_id: String,
@@ -2177,6 +2181,8 @@ pub struct InventoryItemDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub use_target_spec: Option<TargetSpecDto>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub requires_target_glyph: bool,
     #[serde(default)]
     pub can_receive_recharge: bool,
     #[serde(default)]
@@ -3175,6 +3181,10 @@ mod tests {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
                 target: None,
             },
+            GameCommand::UseItemByGlyph {
+                item_id: "demo.item.glyph-severance-scroll.1".to_owned(),
+                glyph: "o".to_owned(),
+            },
             GameCommand::RechargeItem {
                 target_item_id: "demo.item.resonance-rod.1".to_owned(),
                 source: DeviceRechargeSourceDto::Resource,
@@ -3362,6 +3372,7 @@ mod tests {
                 charges: None,
                 activation: None,
                 use_target_spec: None,
+                requires_target_glyph: false,
                 can_receive_recharge: false,
                 can_supply_recharge: false,
                 quantity: 1,
@@ -3511,7 +3522,9 @@ mod tests {
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("deviceRecharge?: DeviceRechargeDto | null"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
+        assert!(typescript.contains("requiresTargetGlyph?: boolean"));
         assert!(typescript.contains("{ \"type\": \"recharge-item\""));
+        assert!(typescript.contains("{ \"type\": \"use-item-by-glyph\""));
         assert!(typescript.contains("{ \"type\": \"wait\" }"));
         assert!(
             typescript

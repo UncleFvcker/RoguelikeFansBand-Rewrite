@@ -1255,6 +1255,10 @@ fn fixed_consumable_use_action_with_terrain(
             "category": "undead",
             "damage": 80
         }),
+        (70, 44) => serde_json::json!({
+            "type": "genocide",
+            "power": 300
+        }),
         (70, 45) => serde_json::json!({
             "type": "mass-genocide",
             "power": 300,
@@ -8755,6 +8759,23 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(
             aggravation["useAction"]["effect"]["type"],
             "aggravate-monsters"
+        );
+        assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
+
+        let genocide = item_json(
+            &LegacyItemEntry {
+                tval: 70,
+                sval: 44,
+                ..LegacyItemEntry::default()
+            },
+            "genocide-scroll",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            genocide["useAction"]["effect"],
+            serde_json::json!({"type": "genocide", "power": 300})
         );
         assert!(!report.item_behavior_gaps.contains_key("scroll-effect"));
 

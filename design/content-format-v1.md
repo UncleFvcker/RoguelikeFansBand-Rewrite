@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.101.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.121.0
 
 ## 1. 目标
 
@@ -330,7 +330,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含 47 种地形、28 种 actor、52 种原创物品、3 种资源、68 个能力、5 本能力书、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；
+- 已完成：`packs/rfb-demo-original`，包含 48 种地形、28 种 actor、67 种原创物品、3 种资源、68 个能力、5 本能力书、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -338,4 +338,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v118 建立实例充能、动态设备、恢复/鉴定/侦测消耗品、传送/召回、装备附魔、装备诅咒、物品召唤，并收缩无消费者的 passive 表面。当前 state hash 为 Schema v52。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v118 建立实例充能、动态设备、恢复/鉴定/侦测消耗品、传送/召回、装备附魔、装备诅咒、物品召唤，并收缩无消费者的 passive 表面；contract-v119–v130 继续以窄物品效果接入可见 actor、状态、地形、爆发与 Genocide 卷轴族。当前 state hash 为 Schema v53。

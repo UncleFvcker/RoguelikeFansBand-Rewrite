@@ -1534,6 +1534,12 @@ async function useSelectedInventoryItem(): Promise<void> {
   const selected = selectedInventoryItems();
   if (busy || selected.length !== 1 || !selected[0]?.usable) return;
   const item = selected[0];
+  if (item.requiresTargetGlyph) {
+    selectGlyphTarget((glyph) =>
+      dispatch({ type: "use-item-by-glyph", itemId: item.id, glyph }),
+    );
+    return;
+  }
   if (item.useTargetSpec?.modes.includes("self")) {
     await dispatch({
       type: "use-item",
@@ -1622,6 +1628,53 @@ function selectItemTarget(
   document.body.append(dialog);
   dialog.showModal();
   select.focus();
+}
+
+function selectGlyphTarget(
+  onSelect: (glyph: string) => Promise<void>,
+): void {
+  const dialog = document.createElement("dialog");
+  dialog.className = "item-target-dialog";
+  const form = document.createElement("form");
+  form.method = "dialog";
+  const title = document.createElement("h2");
+  title.textContent = localization.format("item-use-glyph-title");
+  const label = document.createElement("label");
+  const labelText = document.createElement("span");
+  labelText.textContent = localization.format("item-use-glyph-label");
+  const input = document.createElement("input");
+  input.type = "text";
+  input.autocomplete = "off";
+  input.spellcheck = false;
+  label.append(labelText, input);
+  const actions = document.createElement("div");
+  actions.className = "item-target-actions";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = localization.format("action-dialog-cancel");
+  cancel.addEventListener("click", () => dialog.close());
+  const confirm = document.createElement("button");
+  confirm.type = "submit";
+  confirm.textContent = localization.format("item-use-glyph-confirm");
+  actions.append(cancel, confirm);
+  form.append(title, label, actions);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const characters = [...input.value];
+    if (characters.length !== 1 || /\p{Cc}/u.test(characters[0] ?? "")) {
+      input.setCustomValidity(localization.format("item-use-glyph-invalid"));
+      input.reportValidity();
+      return;
+    }
+    input.setCustomValidity("");
+    dialog.close();
+    void onSelect(characters[0] ?? "");
+  });
+  dialog.addEventListener("close", () => dialog.remove(), { once: true });
+  dialog.append(form);
+  document.body.append(dialog);
+  dialog.showModal();
+  input.focus();
 }
 
 async function dropSelectedInventoryItems(): Promise<void> {
@@ -2545,6 +2598,14 @@ function formatEvent(event: GameEventDto): string {
     case "item-use-mass-genocide":
       return localization.format("message-item-use-mass-genocide", {
         source: visibleItemName(event.args.nameKey, event.args.source),
+        removed: event.args.removed ?? "0",
+        resisted: event.args.resisted ?? "0",
+        fatigue: event.args.fatigue ?? "0",
+      });
+    case "item-use-genocide":
+      return localization.format("message-item-use-genocide", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        glyph: event.args.glyph ?? "?",
         removed: event.args.removed ?? "0",
         resisted: event.args.resisted ?? "0",
         fatigue: event.args.fatigue ?? "0",

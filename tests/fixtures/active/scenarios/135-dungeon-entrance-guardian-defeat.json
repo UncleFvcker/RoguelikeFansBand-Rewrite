@@ -302,7 +302,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a59647b6945f5d72b45d5be6194b347fac3d9867db5b2c2b700e10d66e848f0a"
+      "stateHash": "98f6cdbee741179f0572befeb498d29866a61a7bbed725e87c6999239830fcc2"
     },
     "events": [
       {
@@ -463,6 +463,6 @@
     "removedEntities": [
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "a59647b6945f5d72b45d5be6194b347fac3d9867db5b2c2b700e10d66e848f0a"
+    "saveRoundTripStateHash": "98f6cdbee741179f0572befeb498d29866a61a7bbed725e87c6999239830fcc2"
   }
 }

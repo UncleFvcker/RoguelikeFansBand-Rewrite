@@ -223,6 +223,7 @@ message-combat-vengeance-hit = Your vengeance strikes { $target } for { $damage 
 message-combat-vengeance-slay = Your vengeance destroys { $target }.
 message-item-use-aggravate = { $source } releases a piercing hum that rouses nearby creatures.
 message-item-use-mass-genocide = { $source } erases { $removed } nearby creatures; { $resisted } resist. The strain deals { $fatigue } damage.
+message-item-use-genocide = { $source } targets glyph { $glyph }, erasing { $removed } creature(s); { $resisted } resist. The strain deals { $fatigue } damage.
 message-item-use-create-adjacent-terrain = { $source } reshapes { $count } adjacent spaces.
 message-item-use-create-adjacent-terrain-no-effect = { $source } finds no open ground to reshape.
 message-item-use-elemental-blast = { $source } erupts around you, reaching { $count } creature(s).

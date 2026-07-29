@@ -4013,6 +4013,26 @@
         {
           "type": "object",
           "properties": {
+            "glyph": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "use-item-by-glyph"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "glyph"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "slotId": {
               "type": "string"
             },
@@ -4963,6 +4983,9 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "requiresTargetGlyph": {
+          "type": "boolean"
         },
         "resistances": {
           "type": "array",

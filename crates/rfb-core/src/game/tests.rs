@@ -12318,6 +12318,7 @@ fn dynamic_wand_validates_target_before_check_and_spends_only_on_success() {
     game.use_inventory_item(
         ITEM_ID,
         Some(&TargetSelection::SelfTarget),
+        None,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -12339,6 +12340,7 @@ fn dynamic_wand_validates_target_before_check_and_spends_only_on_success() {
         Some(&TargetSelection::Direction {
             direction: Direction::East,
         }),
+        None,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -15335,6 +15337,7 @@ fn dispel_undead_scroll_uses_the_visible_actor_snapshot_and_resist_all_gate() {
     game.use_inventory_item(
         SCROLL_ID,
         None,
+        None,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -15423,6 +15426,7 @@ fn banishment_scroll_resolves_resistance_and_destinations_in_actor_order() {
     game.use_inventory_item(
         SCROLL_ID,
         None,
+        None,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -15498,6 +15502,7 @@ fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
         game.use_inventory_item(
             item_id,
             None,
+            None,
             &mut events,
             &mut BTreeSet::new(),
             &mut Vec::new(),
@@ -15526,6 +15531,7 @@ fn mass_genocide_scroll_consumes_empty_result_with_awareness_and_zero_rng() {
     game.use_inventory_item(
         ITEM_ID,
         None,
+        None,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -15545,6 +15551,65 @@ fn mass_genocide_scroll_consumes_empty_result_with_awareness_and_zero_rng() {
             ..
         }]
     ));
+}
+
+#[test]
+fn genocide_scroll_rejects_invalid_glyphs_and_consumes_an_empty_selection_without_rng() {
+    const ITEM_ID: &str = "test.item.glyph-severance-scroll.1";
+    const KIND_ID: &str = "demo.item.glyph-severance-scroll";
+    let mut game = skill_check_game(79, "demo.build.scholar");
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    assert!(
+        game.inventory_dto()
+            .iter()
+            .find(|item| item.id == ITEM_ID)
+            .is_some_and(|item| item.requires_target_glyph)
+    );
+    let world_tick_before = game.world_tick;
+    let draws_before = game.rng_draw_counter();
+
+    for command in [
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+        GameCommand::UseItemByGlyph {
+            item_id: ITEM_ID.to_owned(),
+            glyph: "oo".to_owned(),
+        },
+    ] {
+        let update = dispatch_next(&mut game, command);
+        assert_eq!(update.world_tick, world_tick_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert!(game.items.iter().any(|item| item.id == ITEM_ID));
+        assert_eq!(update.events[0].kind, "item.use-unavailable");
+    }
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItemByGlyph {
+            item_id: ITEM_ID.to_owned(),
+            glyph: "x".to_owned(),
+        },
+    );
+    assert!(update.world_tick > world_tick_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
+    assert_eq!(update.events[0].kind, "item.use-genocide");
+    assert_eq!(
+        update.events[0].args.get("glyph").map(String::as_str),
+        Some("x")
+    );
+    assert_eq!(
+        update.events[0].args.get("removed").map(String::as_str),
+        Some("0")
+    );
+    assert_eq!(
+        update.events[0].args.get("resisted").map(String::as_str),
+        Some("0")
+    );
 }
 
 #[test]
@@ -15741,6 +15806,7 @@ fn confusing_strike_preparation_and_hit_boundaries_are_authoritative() {
             .use_inventory_item(
                 &format!("test.item.confusing-touch-scroll.{serial}"),
                 None,
+                None,
                 &mut events,
                 &mut BTreeSet::new(),
                 &mut Vec::new(),
@@ -15902,6 +15968,7 @@ fn protection_from_evil_duration_and_melee_branches_are_authoritative() {
         prepared
             .use_inventory_item(
                 &format!("test.item.protection-from-evil-scroll.{serial}"),
+                None,
                 None,
                 &mut events,
                 &mut BTreeSet::new(),

@@ -109,7 +109,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 121] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 122] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -231,10 +231,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 121] = [
     "7d344bf57cf11e303fbbd6b98f9792e572792e97a696e9a2c1987ba6f349a149",
     "c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3",
     "757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0",
+    "27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24";
+    "786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 53;
@@ -324,6 +325,9 @@ enum AbilityTargetPlan {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ItemUsePlan {
     SelfTarget,
+    GlyphGenocide {
+        glyph: String,
+    },
     CreateAdjacentTerrain {
         replacements: Vec<(Position, String)>,
     },
@@ -2448,8 +2452,16 @@ impl Game {
         );
         let zero_time_unavailable_item_use = matches!(
             &action,
-            GameAction::UseItem { item_id, target }
-                if self.item_use_is_zero_time_unavailable(item_id, target.as_ref())
+            GameAction::UseItem {
+                item_id,
+                target,
+                target_glyph,
+            }
+                if self.item_use_is_zero_time_unavailable(
+                    item_id,
+                    target.as_ref(),
+                    target_glyph.as_deref(),
+                )
         );
         let cursed_unequip = matches!(
             &action,
@@ -2642,10 +2654,15 @@ impl Game {
                     events.push(DomainEvent::FloorTransitionUnavailable);
                 }
             }
-            GameAction::UseItem { item_id, target } => {
+            GameAction::UseItem {
+                item_id,
+                target,
+                target_glyph,
+            } => {
                 self.use_inventory_item(
                     &item_id,
                     target.as_ref(),
+                    target_glyph.as_deref(),
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
@@ -4272,6 +4289,9 @@ impl Game {
                                     _ => None,
                                 })
                         }),
+                    requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
+                        |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
+                    ),
                     can_receive_recharge: self.item_can_receive_recharge(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
@@ -10199,6 +10219,7 @@ impl Game {
         &mut self,
         item_id: &str,
         target: Option<&TargetSelection>,
+        target_glyph: Option<&str>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -10221,9 +10242,13 @@ impl Game {
                             .find(|candidate| candidate.id == activation.profile_id)
                     })
                     .expect("validated dynamic item activation profile must remain available");
-                let Some(plan) =
-                    self.item_use_plan(item_id, &profile.effect, Some(&profile.target), target)
-                else {
+                let Some(plan) = self.item_use_plan(
+                    item_id,
+                    &profile.effect,
+                    Some(&profile.target),
+                    target,
+                    target_glyph,
+                ) else {
                     events.push(DomainEvent::ItemUseUnavailable);
                     return Ok(());
                 };
@@ -10235,7 +10260,9 @@ impl Game {
                     plan,
                 )
             } else if let Some(action) = definition.use_action {
-                let Some(plan) = self.item_use_plan(item_id, &action.effect, None, target) else {
+                let Some(plan) =
+                    self.item_use_plan(item_id, &action.effect, None, target, target_glyph)
+                else {
                     events.push(DomainEvent::ItemUseUnavailable);
                     return Ok(());
                 };
@@ -10360,6 +10387,16 @@ impl Game {
                     &kind_id,
                     power,
                     radius,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (ItemUseEffectDefinition::Genocide { power }, ItemUsePlan::GlyphGenocide { glyph }) => {
+                self.resolve_item_genocide(
+                    &kind_id,
+                    &glyph,
+                    power,
                     events,
                     changed,
                     removed_entities,
@@ -10781,7 +10818,11 @@ impl Game {
         effect: &ItemUseEffectDefinition,
         target_definition: Option<&AbilityTargetDefinition>,
         target: Option<&TargetSelection>,
+        target_glyph: Option<&str>,
     ) -> Option<ItemUsePlan> {
+        if target_glyph.is_some() && !matches!(effect, ItemUseEffectDefinition::Genocide { .. }) {
+            return None;
+        }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
             ItemUseEffectDefinition::Heal { .. }
@@ -10801,6 +10842,19 @@ impl Game {
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
+            }
+            ItemUseEffectDefinition::Genocide { .. } => {
+                if target.is_some() {
+                    return None;
+                }
+                let glyph = target_glyph?;
+                let mut characters = glyph.chars();
+                let character = characters.next()?;
+                (!character.is_control() && characters.next().is_none()).then(|| {
+                    ItemUsePlan::GlyphGenocide {
+                        glyph: glyph.to_owned(),
+                    }
+                })
             }
             ItemUseEffectDefinition::CreateAdjacentTerrain {
                 source_terrain_ids,
@@ -11028,6 +11082,46 @@ impl Game {
         events.push(DomainEvent::ItemMassGenocide {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
+            removed_count: resolution.removed_entity_ids.len(),
+            resisted_count: resolution.resisted_entity_ids.len(),
+            fatigue_damage: resolution.fatigue_damage,
+        });
+    }
+
+    fn resolve_item_genocide(
+        &mut self,
+        source_kind_id: &str,
+        glyph: &str,
+        power: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let mut candidate_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self
+                        .content
+                        .actor(&entity.kind_id)
+                        .is_some_and(|definition| definition.glyph == glyph)
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        candidate_ids.sort();
+        let resolution = self.resolve_genocide_candidates(
+            candidate_ids,
+            AbilityGenocideScopeDefinition::Glyph,
+            power,
+            changed,
+            removed_entities,
+        );
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemGenocide {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            glyph: glyph.to_owned(),
             removed_count: resolution.removed_entity_ids.len(),
             resisted_count: resolution.resisted_entity_ids.len(),
             fatigue_damage: resolution.fatigue_damage,
@@ -11826,6 +11920,7 @@ impl Game {
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
+            | ItemUseEffectDefinition::Genocide { .. }
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
@@ -12162,22 +12257,32 @@ impl Game {
         &self,
         source_item_id: &str,
         target: Option<&TargetSelection>,
+        target_glyph: Option<&str>,
     ) -> bool {
         let Some((effect, target_definition)) = self.inventory_item_use_effect(source_item_id)
         else {
             return false;
         };
-        matches!(
-            effect,
-            ItemUseEffectDefinition::IdentifyItem { .. }
-                | ItemUseEffectDefinition::EnchantItem { .. }
-                | ItemUseEffectDefinition::RandomTeleport { .. }
-                | ItemUseEffectDefinition::TeleportLevel
-                | ItemUseEffectDefinition::Recall { .. }
-                | ItemUseEffectDefinition::ResetRecall
-        ) && self
-            .item_use_plan(source_item_id, effect, target_definition, target)
-            .is_none()
+        (target_glyph.is_some()
+            || matches!(effect, ItemUseEffectDefinition::Genocide { .. })
+            || matches!(
+                effect,
+                ItemUseEffectDefinition::IdentifyItem { .. }
+                    | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::RandomTeleport { .. }
+                    | ItemUseEffectDefinition::TeleportLevel
+                    | ItemUseEffectDefinition::Recall { .. }
+                    | ItemUseEffectDefinition::ResetRecall
+            ))
+            && self
+                .item_use_plan(
+                    source_item_id,
+                    effect,
+                    target_definition,
+                    target,
+                    target_glyph,
+                )
+                .is_none()
     }
 
     fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {

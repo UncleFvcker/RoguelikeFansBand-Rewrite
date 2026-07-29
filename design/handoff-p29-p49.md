@@ -1,6 +1,6 @@
-# 交接文档：P29–P78 迭代史与当前状态
+# 交接文档：P29–P79 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.119 / contract-v129，P78 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-29，当前权威基线为协议 1.120 / contract-v130，P79 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P78 在当前状态中汇总。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P79 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -90,7 +90,8 @@
 - **P76 / contract-v127** 接入 Vengeance。`25+1d25` KeepStrongest 状态在完整怪物 melee routine 或 spell cast 后按实际玩家 HP 损失反击来源一次；零伤害/玩家死亡抑制，每次反击扣 5 ticks，零 RNG、跳过抗性，击杀复用统一 actor death 事务。协议保持 1.118，demo 1.118.0，save v1，state hash Schema v52，active baseline 430 exact、零 waiver；内置 hash 为 `c920d9f1b78d5f51a8ebb1097a54c1f74efe7b4a83eb469809b2c3e60d9717d3`。固定原版导入的 `scroll-effect` 21→20，真实包 hash 为 `2178aea924ffe39476e2c89c668e13a98555b2f8a41d9315aa9630b32d0f4afc`。
 - **P77 / contract-v128** 接入 Monster Confusion。玩家专属准备态在 miss/致死时保留，首个非致死命中先清态，再按 `NO_CONF`、目标 level 与玩家 level 结算 confusion；不建立通用 on-hit/prepared-effect。协议 1.119，demo 1.119.0，save v1，state hash Schema v53，active baseline 431 exact、零 waiver；内置 hash 为 `757be0f1513b9cbfb2f77e08ceef8bff8ffcdb10fc7da17a0da05dbe32f908a0`。固定原版导入的 `scroll-effect` 20→19，真实包 hash 为 `cd8e1982e33c20555019b77bec49a44fb1028e81bf54729923b5e78a7cbc1d3e`。
 - **P78 / contract-v129** 接入 Protection from Evil。Extend 状态持续 `3 * level + 1d25`；只在 evil 怪物近战命中后、伤害骰前执行 Wisdom/等级对抗和 `one_in(3)` 绕过，击退时跳过该 blow。协议保持 1.119，demo 1.120.0，save v1，state hash Schema v53，active baseline 432 exact、零 waiver；内置 hash 为 `27ad6b88a3e4bdeb4f1464d2081f6f59e62cbbfbab14ed09e9b5bdfaf43ead24`。固定原版导入的 `scroll-effect` 19→18，真实包 hash 为 `db78e5d8fe181d88943b024647afb94791c0e3f00adb25ab3271e18c67bde408`。
-- 下一步继续按真实报告拆分剩余 18 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用伤害监听器、`AbilityEffectDefinition`、通用地形 DSL、actor-effect、on-hit 或 actor-removal 框架提前纳入。
+- **P79 / contract-v130** 接入 Genocide。单字符 glyph 选择当前楼层存活 actor，按稳定实体 ID 复用既有 `1d4` 疲劳、unique/guardian 保护和 power 300 对抗；非法输入原子拒绝，合法空选择消费、Aware、零效果 RNG。协议 1.120，demo 1.121.0，save v1，state hash Schema v53，active baseline 433 exact、零 waiver；内置 hash 为 `786aba7f693bac066d6caa0dbc848c97ac7bc01e4652bfeb2674cfa739130549`。固定原版导入的 `scroll-effect` 18→17，真实包 hash 为 `4814e2cd4a0d8ac582c1b514e1cbc7998760cbe26f6293a6ab5bd5ff5324707a`。
+- 下一步继续按真实报告拆分剩余 17 个卷轴效果。世界/地形、其余状态和物品事务应分别纵切；不要把通用伤害监听器、`AbilityEffectDefinition`、通用地形 DSL、actor-effect、on-hit、glyph target 或 actor-removal 框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

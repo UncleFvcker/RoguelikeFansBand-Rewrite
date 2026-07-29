@@ -82,6 +82,7 @@ pub(crate) enum GameAction {
     UseItem {
         item_id: String,
         target: Option<TargetSelection>,
+        target_glyph: Option<String>,
     },
     Unequip {
         slot_id: String,
@@ -155,7 +156,16 @@ impl From<GameCommand> for GameAction {
             GameCommand::FireTarget { target } => Self::FireTarget { target },
             GameCommand::Throw { item_id, direction } => Self::Throw { item_id, direction },
             GameCommand::TraverseStairs => Self::TraverseStairs,
-            GameCommand::UseItem { item_id, target } => Self::UseItem { item_id, target },
+            GameCommand::UseItem { item_id, target } => Self::UseItem {
+                item_id,
+                target,
+                target_glyph: None,
+            },
+            GameCommand::UseItemByGlyph { item_id, glyph } => Self::UseItem {
+                item_id,
+                target: None,
+                target_glyph: Some(glyph),
+            },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },
             GameCommand::DropQuantity { item_id, quantity } => {

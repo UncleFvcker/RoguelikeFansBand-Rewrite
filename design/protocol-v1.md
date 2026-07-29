@@ -344,3 +344,5 @@ major 版本要求：
 协议 1.118 将 `EquipmentPassiveDto` 收缩为已有权威消费者的 `regeneration` 与 `vampiric`。13 个从未影响规则的历史值不再出现在快照、内容属性或 TypeScript 联合类型中；旧 rolled-affix save 的兼容过滤由存档 DTO 边界负责，未知字符串仍拒绝。save v1 与 state hash Schema v52 保持不变。完整边界见 [Contract v118](contract-v118-passive-surface-cleanup.md)。
 
 协议 1.119 为 `PlayerDto` 和 `PlayerSaveDto` 增加带 false 默认值的 `confusingStrikeReady`。该字段是玩家下一次合格近战命中的权威准备态，不属于 `StatusDto`，也不进入共享 Actor。字段参与存档、回放和 state hash，Schema 升到 v53。完整边界见 [Contract v128](contract-v128-scroll-monster-confusion.md)。
+
+协议 1.120 为物品 glyph 选择新增窄 `UseItemByGlyph { itemId, glyph }` 命令，并为 `InventoryItemDto` 增加省略式 `requiresTargetGlyph`。核心入口立即归一到既有物品使用动作，不扩展通用 `TargetMode`；glyph 是瞬时命令输入，不进入存档或 state hash，Schema 保持 v53。完整边界见 [Contract v130](contract-v130-scroll-genocide.md)。

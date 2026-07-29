@@ -729,6 +729,26 @@
         {
           "additionalProperties": false,
           "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "genocide",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "sourceTerrainIds": {
               "items": {
                 "type": "string"

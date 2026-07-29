@@ -287,7 +287,7 @@
         "completedTasks": 0,
         "victoryTurn": 0
       },
-      "stateHash": "b3f9fc4d078d32339c667dfc2ca04e2b318343f5a5446f92138ec88527e3326e"
+      "stateHash": "f05c36bfd28dfc046e73ac0b1b91d135a56cc18c32496f1c682c02ee8cb95b34"
     },
     "events": [
       {
@@ -306,6 +306,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "b3f9fc4d078d32339c667dfc2ca04e2b318343f5a5446f92138ec88527e3326e"
+    "saveRoundTripStateHash": "f05c36bfd28dfc046e73ac0b1b91d135a56cc18c32496f1c682c02ee8cb95b34"
   }
 }

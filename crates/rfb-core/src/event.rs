@@ -506,6 +506,14 @@ pub(crate) enum DomainEvent {
         resisted_count: usize,
         fatigue_damage: i32,
     },
+    ItemGenocide {
+        source_kind_id: String,
+        display_name_key: String,
+        glyph: String,
+        removed_count: usize,
+        resisted_count: usize,
+        fatigue_damage: i32,
+    },
     ItemCreatedAdjacentTerrain {
         source_kind_id: String,
         display_name_key: String,
@@ -1973,6 +1981,25 @@ impl DomainEvent {
                 [
                     ("source", source_kind_id),
                     ("nameKey", display_name_key),
+                    ("removed", removed_count.to_string()),
+                    ("resisted", resisted_count.to_string()),
+                    ("fatigue", fatigue_damage.to_string()),
+                ],
+            ),
+            Self::ItemGenocide {
+                source_kind_id,
+                display_name_key,
+                glyph,
+                removed_count,
+                resisted_count,
+                fatigue_damage,
+            } => dto(
+                "item.use-genocide",
+                "item-use-genocide",
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("glyph", glyph),
                     ("removed", removed_count.to_string()),
                     ("resisted", resisted_count.to_string()),
                     ("fatigue", fatigue_damage.to_string()),

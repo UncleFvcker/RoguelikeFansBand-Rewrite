@@ -219,6 +219,7 @@ message-combat-vengeance-hit = 你的反击命中{ $target }，造成 { $damage 
 message-combat-vengeance-slay = 你的反击摧毁了{ $target }。
 message-item-use-aggravate = { $source }发出尖锐嗡鸣，惊醒了附近的生物。
 message-item-use-mass-genocide = { $source }抹除了附近的 { $removed } 个生物，另有 { $resisted } 个抵抗；负担造成 { $fatigue } 点伤害。
+message-item-use-genocide = { $source }以字形 { $glyph } 为目标，抹除了 { $removed } 个生物，另有 { $resisted } 个抵抗；负担造成 { $fatigue } 点伤害。
 message-item-use-create-adjacent-terrain = { $source }重塑了相邻的 { $count } 处地面。
 message-item-use-create-adjacent-terrain-no-effect = { $source }未找到可重塑的空地。
 message-item-use-elemental-blast = { $source }在你周围爆发，波及了 { $count } 个生物。
