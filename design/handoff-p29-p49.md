@@ -103,7 +103,8 @@
 - **contract-v139 后 importer 维护** 复用 P61 已有恢复序列，将 tval 75/sval 67 映射为固定治疗 200 后依次解除 Blindness、Confusion 与 Stun；不增加 demo、contract 或 fixture。固定原版导入的 `consumable-effect` 74→73，源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
 - **P90 / contract-v140** 接入 Berserk Strength Potion。窄 `apply-berserk-strength` 先按 `1d25+25` Extend Berserk，再治疗 30；首次新增状态或实际治疗任一成立即 Aware，单纯延长保持 Tried-only。协议保持 1.121，demo 1.131.0，state hash Schema v54，active baseline 444 exact、零 waiver；内置 hash 为 `de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846`。固定原版导入的 `consumable-effect` 73→72，真实包 hash 为 `b143ba1a8198e280fbedfdb595088e9b572ef830731eed7ee101d6ce9f80ac0d`。
 - **P91 / contract-v141** 接入 Poetic Inspiration Potion。窄 `apply-poetic-inspiration` 每次按 `1d100+100` Extend 状态并授予 Wisdom/Charisma 各 +5；首次新增才 Aware，重复延长保持 Tried-only。协议保持 1.121，demo 1.132.0，state hash Schema v54，active baseline 445 exact、零 waiver；内置 hash 为 `6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0`。固定原版导入的 `consumable-effect` 72→71，真实包 hash 为 `53fd88e36019c7c40f177a00cc16a9bc019c51e3f31cb8c9b5b7036417a8fa89`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 71 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **contract-v141 后 importer 维护** 复用 P84 已有 `apply-poison`，将 tval 80/sval 0 映射为相同抗性检定与 `1d10+9` Poison；不增加核心、demo、contract 或 fixture。固定原版导入的 `consumable-effect` 71→70，源码校验、编译与二进制回读 hash 均为 `f916b49530a6eebe54908ecdc18ab32360e17dd3177d759df68b4003e8abe602`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 70 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令
