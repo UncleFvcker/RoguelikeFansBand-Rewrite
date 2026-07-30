@@ -515,6 +515,12 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         duration: Option<u32>,
     },
+    ItemBlindnessResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: Option<u32>,
+        noticed: bool,
+    },
     ItemLifeLost {
         source_kind_id: String,
         display_name_key: String,
@@ -2113,6 +2119,36 @@ impl DomainEvent {
                 None => dto(
                     "item.use-poison-resisted",
                     "item-use-poison-resisted",
+                    [("source", source_kind_id), ("nameKey", display_name_key)],
+                ),
+            },
+            Self::ItemBlindnessResolved {
+                source_kind_id,
+                display_name_key,
+                duration,
+                noticed,
+            } => match (duration, noticed) {
+                (Some(duration), true) => dto(
+                    "item.use-blindness-applied",
+                    "item-use-blindness-applied",
+                    [
+                        ("source", source_kind_id),
+                        ("nameKey", display_name_key),
+                        ("duration", duration.to_string()),
+                    ],
+                ),
+                (Some(duration), false) => dto(
+                    "item.use-blindness-no-new-effect",
+                    "item-use-blindness-no-new-effect",
+                    [
+                        ("source", source_kind_id),
+                        ("nameKey", display_name_key),
+                        ("duration", duration.to_string()),
+                    ],
+                ),
+                (None, _) => dto(
+                    "item.use-blindness-resisted",
+                    "item-use-blindness-resisted",
                     [("source", source_kind_id), ("nameKey", display_name_key)],
                 ),
             },

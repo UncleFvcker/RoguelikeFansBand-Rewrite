@@ -181,7 +181,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v143`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v144`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -370,6 +370,8 @@ P92 / contract-v142 接入 Stone Skin Potion。窄 `apply-stone-skin` 每次抽�
 
 P93 / contract-v143 接入 Restore Life Levels Potion。窄 `restore-life-levels { lifeForceAmount: 150 }` 先把当前经验恢复到历史最高值并复用既有等级重算，再增加生命力并封顶 1000；两项任一实际变化才 Aware，完全无变化保持 Tried-only，效果零 RNG。协议保持 1.121、demo 1.134.0、state hash Schema 保持 v54、active baseline 447 条 exact、零 waiver，内置 content hash 为 `8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404`。legacy importer 映射 tval 75/sval 41，使 `consumable-effect` 69→68。详见[Contract v143](design/contract-v143-potion-restore-life-levels.md)。
 
+P94 / contract-v144 接入 Blindness Potion 与 Blindness Food。窄 `apply-blindness` 固定先抽一次 `bounded(55)` 抗性 RNG，拥有 Blindness 免疫时短路持续时间；未抵抗时按来源抽取 `1d100+99` 或 `1d25+24` 并 Extend Blindness。只有首次新增状态才 Aware，已有状态延长保持 Tried-only。协议保持 1.121、demo 1.135.0、state hash Schema 保持 v54、active baseline 448 条 exact、零 waiver，内置 content hash 为 `9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5`。legacy importer 映射 tval 75/sval 7 与 tval 80/sval 1，使 `consumable-effect` 68→66，`food-nutrition` 保持 28。详见[Contract v144](design/contract-v144-potion-blindness.md)。
+
 ### 本地验证
 
 ```powershell
@@ -442,7 +444,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 447 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 448 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

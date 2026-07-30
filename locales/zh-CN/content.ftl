@@ -558,5 +558,7 @@ item-demo-granite-tonic-name = 花岗岩饮剂
 item-demo-granite-tonic-description = 暂时硬化饮用者的皮肤，以抵御来袭的攻击。
 item-demo-renewal-tonic-name = 复元饮剂
 item-demo-renewal-tonic-description = 恢复受损的经验并补充生命力。
+item-demo-veil-draught-name = 遮目饮剂
+item-demo-veil-draught-description = 一剂浑浊药液，可能遮蔽缺乏防护者的视野。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

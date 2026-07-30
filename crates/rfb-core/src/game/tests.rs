@@ -15286,6 +15286,81 @@ fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
 }
 
 #[test]
+fn veil_draught_awareness_and_rng_follow_existing_blindness_and_immunity() {
+    const ITEM_ID: &str = "test.item.veil-draught";
+    const KIND_ID: &str = "demo.item.veil-draught";
+
+    for (existing_blindness, expected_draws, expected_event) in [
+        (true, 2, "item.use-blindness-no-new-effect"),
+        (false, 1, "item.use-blindness-resisted"),
+    ] {
+        let mut game = Game::new(94);
+        clear_monsters(&mut game);
+        give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+        game.player.statuses.push(StatusInstance {
+            kind_id: if existing_blindness {
+                STATUS_BLINDNESS.to_owned()
+            } else {
+                "test.status.blindness-immunity".to_owned()
+            },
+            intensity: 1,
+            remaining_ticks: 20,
+            source_id: Some(if existing_blindness {
+                "test.existing-blindness".to_owned()
+            } else {
+                "test.blindness-immunity".to_owned()
+            }),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: if existing_blindness {
+                BTreeSet::new()
+            } else {
+                BTreeSet::from([STATUS_BLINDNESS.to_owned()])
+            },
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+                target: None,
+            },
+        );
+
+        assert_eq!(game.rng_draw_counter(), draws_before + expected_draws);
+        assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+        assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Tried);
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == expected_event)
+        );
+        let blindness = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLINDNESS);
+        if existing_blindness {
+            let blindness = blindness.expect("the blindness duration should extend");
+            assert!((110..=209).contains(&blindness.remaining_ticks));
+            assert_eq!(
+                blindness.source_id.as_deref(),
+                Some("test.existing-blindness")
+            );
+        } else {
+            assert!(blindness.is_none());
+        }
+    }
+}
+
+#[test]
 fn fury_draught_awareness_depends_on_new_berserk_or_actual_healing() {
     const ITEM_ID: &str = "test.item.fury-draught";
     const KIND_ID: &str = "demo.item.fury-draught";

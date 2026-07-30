@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 135] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 136] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -246,10 +246,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 135] = [
     "de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846",
     "6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0",
     "48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a",
+    "8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404";
+    "9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10552,6 +10553,7 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
+                | ItemUseEffectDefinition::ApplyBlindness { .. }
                 | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
@@ -11051,6 +11053,7 @@ impl Game {
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
+            | ItemUseEffectDefinition::ApplyBlindness { .. }
             | ItemUseEffectDefinition::SelfLifeLoss { .. }
             | ItemUseEffectDefinition::Vengeance { .. }
             | ItemUseEffectDefinition::ProtectionFromEvil
@@ -12154,6 +12157,17 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyBlindness {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_blindness(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::SelfLifeLoss { amount } => {
                 self.resolve_item_life_loss(source_kind_id, *amount, events);
                 true
@@ -12934,6 +12948,63 @@ impl Game {
             duration,
         });
         !resisted
+    }
+
+    fn resolve_item_blindness(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let resistance_threshold = if self.player_status_immunities().contains(STATUS_BLINDNESS) {
+            55
+        } else {
+            0
+        };
+        let resisted = self.rng.bounded(55) < resistance_threshold;
+        let (duration, noticed) = if resisted {
+            (None, false)
+        } else {
+            let duration_sides =
+                u16::try_from(duration_sides).expect("validated blindness die sides must fit u16");
+            let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
+                .expect("validated blindness duration must fit u32")
+                .saturating_add(duration_bonus);
+            let change = apply_status(
+                &mut self.player.statuses,
+                StatusApplication {
+                    status: StatusInstance {
+                        kind_id: STATUS_BLINDNESS.to_owned(),
+                        intensity: 1,
+                        remaining_ticks: duration,
+                        source_id: Some(source_kind_id.to_owned()),
+                        granted_resistances: BTreeMap::new(),
+                        granted_brands: BTreeSet::new(),
+                        granted_modifiers: StatModifiersDto::default(),
+                        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                        granted_status_immunities: BTreeSet::new(),
+                        granted_race_id: None,
+                        grants_wall_passage: false,
+                        incoming_damage_percent: 100,
+                    },
+                    stacking: StatusStacking::Extend,
+                },
+            );
+            let noticed = matches!(change, StatusChange::Added);
+            if noticed {
+                self.mark_item_aware(source_kind_id);
+            }
+            (Some(duration), noticed)
+        };
+        events.push(DomainEvent::ItemBlindnessResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            noticed,
+        });
+        noticed
     }
 
     fn resolve_item_life_loss(

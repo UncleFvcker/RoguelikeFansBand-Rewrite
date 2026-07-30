@@ -1403,6 +1403,18 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 10,
             "durationBonus": 9
         }),
+        (75, 7) => serde_json::json!({
+            "type": "apply-blindness",
+            "durationDice": 1,
+            "durationSides": 100,
+            "durationBonus": 99
+        }),
+        (80, 1) => serde_json::json!({
+            "type": "apply-blindness",
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationBonus": 24
+        }),
         (75, 23) => serde_json::json!({
             "type": "self-life-loss",
             "amount": 5000
@@ -9054,6 +9066,28 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationBonus": 9
             })
         );
+        for (tval, sval, sides, bonus) in [(75, 7, 100, 99), (80, 1, 25, 24)] {
+            let blindness = item_json(
+                &LegacyItemEntry {
+                    tval,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("blindness-{tval}-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(
+                blindness["useAction"]["effect"],
+                serde_json::json!({
+                    "type": "apply-blindness",
+                    "durationDice": 1,
+                    "durationSides": sides,
+                    "durationBonus": bonus
+                })
+            );
+        }
         let death = item_json(
             &LegacyItemEntry {
                 tval: 75,

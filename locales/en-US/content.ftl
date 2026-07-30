@@ -558,5 +558,7 @@ item-demo-granite-tonic-name = Granite Tonic
 item-demo-granite-tonic-description = Temporarily hardens the drinker's skin against incoming blows.
 item-demo-renewal-tonic-name = Renewal Tonic
 item-demo-renewal-tonic-description = Restores drained experience and replenishes life force.
+item-demo-veil-draught-name = Veil Draught
+item-demo-veil-draught-description = A murky draught that may cloud an unprotected drinker's sight.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

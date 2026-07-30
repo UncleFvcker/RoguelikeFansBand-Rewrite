@@ -2683,6 +2683,19 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-poison-resisted", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-blindness-applied":
+      return localization.format("message-item-use-blindness-applied", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        duration: event.args.duration ?? "?",
+      });
+    case "item-use-blindness-no-new-effect":
+      return localization.format("message-item-use-blindness-no-new-effect", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
+    case "item-use-blindness-resisted":
+      return localization.format("message-item-use-blindness-resisted", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
     case "item-use-thermal-resistance-applied":
       return localization.format("message-item-use-thermal-resistance-applied", {
         source: visibleItemName(event.args.nameKey, event.args.source),
