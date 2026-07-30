@@ -3562,7 +3562,13 @@
       "type": "string",
       "enum": [
         "regeneration",
-        "vampiric"
+        "vampiric",
+        "sustain-strength",
+        "sustain-intelligence",
+        "sustain-wisdom",
+        "sustain-dexterity",
+        "sustain-constitution",
+        "sustain-charisma"
       ]
     },
     "GameCommand": {

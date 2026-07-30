@@ -1,6 +1,6 @@
 # 交接文档：P29–P96 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.122 / contract-v146，P96 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.123 / contract-v147，P96 已完成并修正。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -109,6 +109,7 @@
 - **P94 / contract-v144** 接入 Blindness Potion 与 Blindness Food。窄 `apply-blindness` 固定先抽一次 `bounded(55)` 抗性 RNG，拥有 Blindness 免疫时短路持续时间；未抵抗时按来源掷 `1d100+99` 或 `1d25+24` 并 Extend Blindness，首次新增才 Aware，已有状态延长保持 Tried-only。协议保持 1.121，demo 1.135.0，state hash Schema v54，active baseline 448 exact、零 waiver；内置 hash 为 `9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5`。固定原版导入的 `consumable-effect` 68→66，`food-nutrition` 保持 28，真实包 hash 为 `47f5a78d899de6cee7339c97832e8cd2aef84049d1394ce42bf6dbcc644e8c39`。
 - **P95 / contract-v145** 接入 Detonations Potion。窄 `apply-detonation` 按 `50d20` 直接伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；玩家存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时不施加后续状态，合法使用无条件 Aware。协议保持 1.121，demo 1.136.0，state hash Schema v54，active baseline 449 exact、零 waiver；内置 hash 为 `136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717`。固定原版导入的 `consumable-effect` 66→65，真实包 hash 为 `e724905cda4f306f6080e80844e61af0a51f1cc692ae678bedbcf7850f33adb6`。
 - **P96 / contract-v146** 接入属性损伤与恢复。玩家进度分离当前自然属性和历史最大自然属性；六种 `drain-attribute` 按原版 18/xx 公式降低当前值，六种 `restore-attribute` 无 RNG 恢复至历史最大值。当前值为 3 时保持下限，旧存档缺最大属性时迁移，current > maximum 的损坏存档拒绝载入；实际变化才 Aware，无变化仍消费并保持 Tried-only。协议升至 1.122，demo 1.137.0，state hash Schema v55，active baseline 450 exact、零 waiver；内置 hash 为 `ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b`。固定原版导入的 `consumable-effect` 65→53，`food-nutrition` 保持 28，`scroll-effect` 保持 15，真实导入内容 hash 为 `450e3eeaa989e04f15747578abb45449ef9662507b47e6a0e8c823cc93dce867`。
+- **P96 修正 / contract-v147** 修复属性变化后资源池先 clamp、再二次比例缩放；六种 sustain passive 同步回到内容、协议、存档、导入器和属性损伤入口。装备维持时属性不变、零效果 RNG，但来源药水 Aware 并发出 sustained 事件。fixture schema 升至 2，schema 1 只迁移六项全缺失的历史投影，部分缺失显式失败；Web cap 判断改用 `maximumNatural`。协议 1.123，demo 1.138.0，state hash Schema 保持 v55，active baseline 451 exact、零 waiver；内置 hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`，真实导入内容 hash 为 `21fb38c839a993bcb5b2b6562a7ff46ce537255052fa4ef41bebc4db00a245c3`。
 - 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 53 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 

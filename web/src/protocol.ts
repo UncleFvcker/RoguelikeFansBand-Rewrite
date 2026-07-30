@@ -13,7 +13,7 @@ export type StatModifiersDto = { attack: number, defense: number, maxHp: number,
 
 export type EquipmentBonusesDto = { meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
 
-export type EquipmentPassiveDto = "regeneration" | "vampiric";
+export type EquipmentPassiveDto = "regeneration" | "vampiric" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 

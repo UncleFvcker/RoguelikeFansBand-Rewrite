@@ -7,7 +7,9 @@ use std::{
     thread,
 };
 
-use rfb_contract::{ACTIVE_FIXTURE_DIRECTORY, ContractFixture, validate_fixture_set, verify};
+use rfb_contract::{
+    ACTIVE_FIXTURE_DIRECTORY, ContractError, ContractFixture, validate_fixture_set, verify,
+};
 
 #[test]
 fn committed_contract_fixtures_pass() {
@@ -70,4 +72,61 @@ fn committed_contract_fixtures_pass() {
         "contract fixtures failed:\n{}",
         failures.join("\n")
     );
+}
+
+#[test]
+fn legacy_attribute_projection_migration_is_schema_bounded() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/active/scenarios/450-potion-attribute-history.json");
+    let fixture: ContractFixture =
+        serde_json::from_slice(&fs::read(path).expect("attribute fixture should be readable"))
+            .expect("attribute fixture should parse");
+
+    let legacy = |schema_version| {
+        let mut fixture = fixture.clone();
+        fixture.schema_version = schema_version;
+        let attributes = &mut fixture
+            .assertions
+            .as_mut()
+            .expect("fixture should have assertions")
+            .final_state
+            .player_attributes
+            .as_mut()
+            .expect("fixture should project player attributes")
+            .attributes;
+        for value in [
+            &mut attributes.strength,
+            &mut attributes.intelligence,
+            &mut attributes.wisdom,
+            &mut attributes.dexterity,
+            &mut attributes.constitution,
+            &mut attributes.charisma,
+        ] {
+            value.maximum_natural = 0;
+        }
+        fixture
+    };
+
+    verify(&legacy(1)).expect("schema 1 should migrate the complete legacy projection");
+
+    let mut partial = legacy(1);
+    partial
+        .assertions
+        .as_mut()
+        .unwrap()
+        .final_state
+        .player_attributes
+        .as_mut()
+        .unwrap()
+        .attributes
+        .strength
+        .maximum_natural = 13;
+    assert!(matches!(
+        verify(&partial),
+        Err(ContractError::IncompleteLegacyAttributeProjection(_))
+    ));
+    assert!(matches!(
+        verify(&legacy(2)),
+        Err(ContractError::AssertionMismatch { .. })
+    ));
 }

@@ -272,6 +272,9 @@
               "level": "resistant"
             }
           ],
+          "passives": [
+            "sustain-strength"
+          ],
           "identification": "identified",
           "quality": "ordinary"
         }
@@ -351,7 +354,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "17bca6720da82512fef30aa0f1fcef8eeea44fab0e04e4f28326bfea735c01c0"
+      "stateHash": "b83548e601688bee94568915fed4703d8fd3161569c414c11d732b660e21d785"
     },
     "events": [
       {
@@ -583,6 +586,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "17bca6720da82512fef30aa0f1fcef8eeea44fab0e04e4f28326bfea735c01c0"
+    "saveRoundTripStateHash": "b83548e601688bee94568915fed4703d8fd3161569c414c11d732b660e21d785"
   }
 }

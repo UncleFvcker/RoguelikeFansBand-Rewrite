@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.122 / contract-v146（P31–P96 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.123 / contract-v147（P31–P96 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -463,7 +463,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.122、内容包 1.137.0、contract-v146、save v1 和 state hash Schema v55；内容 hash 为 `ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b`。active baseline 包含 450 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v143 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration、Stone Skin 与 Restore Life Levels Potion；v144–v146 增加 Blindness、Detonations 与属性损伤/恢复。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.123、内容包 1.138.0、contract-v147、save v1 和 state hash Schema v55；内容 hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`。active baseline 包含 451 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v143 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration、Stone Skin 与 Restore Life Levels Potion；v144–v146 增加 Blindness、Detonations 与属性损伤/恢复，v147 修复 P96 资源比例、恢复六种 sustain 消费者并显式限定旧 fixture 投影迁移。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
 这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、84 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
@@ -592,6 +592,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P95 进展（2026-07）**：contract-v145 接入 Detonations Potion。窄 `apply-detonation` 按 `50d20` 直接伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时跳过后续状态。协议保持 1.121，demo 升至 1.136.0，Schema 保持 v54，fixture 449；legacy importer 映射 tval 75/sval 22，`consumable-effect` 66→65。
 
 **P96 进展（2026-07）**：contract-v146 接入六种属性损伤与六种属性恢复。玩家进度分离当前自然属性与历史最大自然属性；旧存档缺最大值时迁移为当前值，current > maximum 的损坏存档拒绝载入。`drain-attribute` 按原版 18/xx 公式降低当前属性，3 点为下限；高于 18 时抽一次有界 RNG，低于或等于 18 时不抽。`restore-attribute` 无 RNG 恢复到历史最大值，实际变化才 Aware，无变化保持 Tried-only。属性变化复用既有 HP、资源上限和派生刷新。协议升至 1.122，demo 升至 1.137.0，state hash Schema 升至 v55；fixture 450 使 active baseline 达到 450。legacy importer 映射 tval 75/sval 16–21、42–47，`consumable-effect` 65→53，真实导入内容 hash 为 `450e3eeaa989e04f15747578abb45449ef9662507b47e6a0e8c823cc93dce867`。
+
+**P96 修正（2026-07）**：contract-v147 让资源池用属性变化前的 current/max 计算一次比例，避免刷新上限时先 clamp 后再次缩放。六种 `sustain-*` 重新进入内容、协议、存档、导入器和核心，属性损伤在装备维持时不抽效果 RNG、不改属性，但会识别药水并发布 sustained 事件。fixture schema 2 只为 schema 1 的六项全零历史投影迁移，部分填充直接报错；Web 提升按钮按历史最大自然属性判断 cap。协议 1.123，demo 1.138.0，state hash Schema 保持 v55，fixture 451；内置 hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`。真实导入内容 hash 为 `21fb38c839a993bcb5b2b6562a7ff46ce537255052fa4ef41bebc4db00a245c3`，可装备 ego/artifact 的 sustain gap 已清零，唯一剩余 `SUST_CHR` 来自 slotless artifact。
 
 ## 9. 内容迁移策略
 

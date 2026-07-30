@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "item.potion-attribute-history",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
@@ -431,7 +431,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "28a3fc7eb748ef6015f125d8f8918b0128bea5ec3174bf3ea96c67a1c51fe873"
+      "stateHash": "85258ab08c4cc4715b68dd35064df1c9f00695998cfc43bad636cdaba8d9adaa"
     },
     "events": [
       {
@@ -474,6 +474,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "28a3fc7eb748ef6015f125d8f8918b0128bea5ec3174bf3ea96c67a1c51fe873"
+    "saveRoundTripStateHash": "85258ab08c4cc4715b68dd35064df1c9f00695998cfc43bad636cdaba8d9adaa"
   }
 }

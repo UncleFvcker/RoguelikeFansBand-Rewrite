@@ -1047,7 +1047,7 @@ function renderProgression(
         busy ||
         playerDead ||
         progress.pendingAttributeIncreases === 0 ||
-        value.index >= progress.attributeIndexCap;
+        value.maximumNatural >= progress.attributeCap;
       increase.addEventListener("click", () =>
         void dispatch({ type: "increase-attribute", attribute }),
       );
@@ -2677,6 +2677,7 @@ function formatEvent(event: GameEventDto): string {
       });
     case "item-use-attribute-drained":
     case "item-use-attribute-drain-no-effect":
+    case "item-use-attribute-sustained":
     case "item-use-attribute-restored":
     case "item-use-attribute-restore-no-effect":
       return localization.format(`message-${event.messageKey}` as MessageKey, {

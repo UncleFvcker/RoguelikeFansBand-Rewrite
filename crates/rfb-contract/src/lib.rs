@@ -19,8 +19,8 @@ use thiserror::Error;
 pub mod policy;
 pub mod snapshot;
 
-pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v146";
+pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
+pub const ACTIVE_BASELINE: &str = "contract-v147";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -687,16 +687,33 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
 }
 
 pub fn verify(fixture: &ContractFixture) -> Result<(), ContractError> {
-    let mut expected = fixture
+    let expected = fixture
         .assertions
         .as_ref()
         .ok_or_else(|| ContractError::MissingAssertions(fixture.id.clone()))?;
-    let mut migrated_expected;
-    if let Some(player_attributes) = expected.final_state.player_attributes.as_ref()
-        && player_attributes.attributes.strength.maximum_natural == 0
-    {
-        migrated_expected = expected.clone();
-        if let Some(progress) = migrated_expected.final_state.player_attributes.as_mut() {
+    let mut migrated_expected = None;
+    if let Some(player_attributes) = expected.final_state.player_attributes.as_ref() {
+        let maxima = [
+            player_attributes.attributes.strength.maximum_natural,
+            player_attributes.attributes.intelligence.maximum_natural,
+            player_attributes.attributes.wisdom.maximum_natural,
+            player_attributes.attributes.dexterity.maximum_natural,
+            player_attributes.attributes.constitution.maximum_natural,
+            player_attributes.attributes.charisma.maximum_natural,
+        ];
+        let all_legacy = maxima.iter().all(|maximum| *maximum == 0);
+        if maxima.contains(&0) && !all_legacy {
+            return Err(ContractError::IncompleteLegacyAttributeProjection(
+                fixture.id.clone(),
+            ));
+        }
+        if fixture.schema_version == 1 && all_legacy {
+            let mut migrated = expected.clone();
+            let progress = migrated
+                .final_state
+                .player_attributes
+                .as_mut()
+                .expect("checked player progress must remain available");
             for value in [
                 &mut progress.attributes.strength,
                 &mut progress.attributes.intelligence,
@@ -707,9 +724,10 @@ pub fn verify(fixture: &ContractFixture) -> Result<(), ContractError> {
             ] {
                 value.maximum_natural = value.natural;
             }
+            migrated_expected = Some(migrated);
         }
-        expected = &migrated_expected;
     }
+    let expected = migrated_expected.as_ref().unwrap_or(expected);
     let actual = observe(fixture)?;
     if &actual == expected {
         return Ok(());
@@ -733,7 +751,7 @@ pub fn validate_fixture_set(fixtures: &[ContractFixture]) -> Result<(), Contract
 }
 
 fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
-    if fixture.schema_version != CONTRACT_SCHEMA_VERSION {
+    if !(1..=CONTRACT_SCHEMA_VERSION).contains(&fixture.schema_version) {
         return Err(ContractError::UnsupportedSchema(fixture.schema_version));
     }
     if fixture.legacy_commit != LEGACY_BASELINE_COMMIT {
@@ -847,6 +865,8 @@ pub enum ContractError {
     InvalidSeed(String),
     #[error("fixture {0} does not contain assertions")]
     MissingAssertions(String),
+    #[error("fixture {0} has a partially populated legacy attribute projection")]
+    IncompleteLegacyAttributeProjection(String),
     #[error("fixture {id} did not match\nexpected:\n{expected}\nactual:\n{actual}")]
     AssertionMismatch {
         id: String,

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.122";
+pub const PROTOCOL_VERSION: &str = "1.123";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -273,6 +273,12 @@ impl EquipmentBonusesDto {
 pub enum EquipmentPassiveDto {
     Regeneration,
     Vampiric,
+    SustainStrength,
+    SustainIntelligence,
+    SustainWisdom,
+    SustainDexterity,
+    SustainConstitution,
+    SustainCharisma,
 }
 
 fn migrate_rolled_affix_passives<E>(passives: Vec<String>) -> Result<Vec<EquipmentPassiveDto>, E>
@@ -284,19 +290,14 @@ where
         .filter_map(|passive| match passive.as_str() {
             "regeneration" => Some(Ok(EquipmentPassiveDto::Regeneration)),
             "vampiric" => Some(Ok(EquipmentPassiveDto::Vampiric)),
-            "see-invisible"
-            | "telepathy"
-            | "levitation"
-            | "hold-life"
-            | "sustain-strength"
-            | "sustain-intelligence"
-            | "sustain-wisdom"
-            | "sustain-dexterity"
-            | "sustain-constitution"
-            | "sustain-charisma"
-            | "blessed"
-            | "easy-spell"
-            | "device-power" => None,
+            "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
+            "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
+            "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
+            "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
+            "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
+            "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
+            "see-invisible" | "telepathy" | "levitation" | "hold-life" | "blessed"
+            | "easy-spell" | "device-power" => None,
             _ => Some(Err(serde::de::Error::custom(format!(
                 "unknown rolled affix passive `{passive}`"
             )))),
@@ -3259,23 +3260,51 @@ mod tests {
     }
 
     #[test]
-    fn rolled_affix_save_filters_known_legacy_noop_passives_and_rejects_unknown_values() {
+    fn rolled_affix_save_migrates_supported_passives_and_rejects_unknown_values() {
         let migrated: RolledAffixSaveDto = serde_json::from_value(serde_json::json!({
             "affixId": "demo.affix.adaptive-echo",
-            "passives": ["hold-life", "regeneration", "telepathy", "vampiric"]
+            "passives": [
+                "hold-life",
+                "regeneration",
+                "sustain-strength",
+                "sustain-intelligence",
+                "sustain-wisdom",
+                "sustain-dexterity",
+                "sustain-constitution",
+                "sustain-charisma",
+                "telepathy",
+                "vampiric"
+            ]
         }))
-        .expect("known legacy no-op passives should migrate");
+        .expect("known legacy passives should migrate");
         assert_eq!(
             migrated.passives,
             [
                 EquipmentPassiveDto::Regeneration,
+                EquipmentPassiveDto::SustainStrength,
+                EquipmentPassiveDto::SustainIntelligence,
+                EquipmentPassiveDto::SustainWisdom,
+                EquipmentPassiveDto::SustainDexterity,
+                EquipmentPassiveDto::SustainConstitution,
+                EquipmentPassiveDto::SustainCharisma,
                 EquipmentPassiveDto::Vampiric
             ]
         );
 
         let encoded = to_msgpack(&serde_json::json!({
             "affixId": "demo.affix.adaptive-echo",
-            "passives": ["hold-life", "regeneration", "telepathy", "vampiric"]
+            "passives": [
+                "hold-life",
+                "regeneration",
+                "sustain-strength",
+                "sustain-intelligence",
+                "sustain-wisdom",
+                "sustain-dexterity",
+                "sustain-constitution",
+                "sustain-charisma",
+                "telepathy",
+                "vampiric"
+            ]
         }))
         .expect("legacy rolled affix should encode");
         let migrated_from_msgpack: RolledAffixSaveDto =

@@ -223,6 +223,7 @@ message-item-use-restore-life-levels = 你使用{ $source }，感到生命力正
 message-item-use-restore-life-levels-no-effect = 你使用{ $source }，但没有察觉新的效果。
 message-item-use-attribute-drained = 你使用{ $source }，{ $attribute }从 { $before } 降至 { $after }。
 message-item-use-attribute-drain-no-effect = 你使用{ $source }，但{ $attribute }无法继续降低。
+message-item-use-attribute-sustained = 你使用{ $source }，但装备维持住了{ $attribute }。
 message-item-use-attribute-restored = 你使用{ $source }，{ $attribute }恢复至 { $after }。
 message-item-use-attribute-restore-no-effect = 你使用{ $source }，但{ $attribute }已经达到历史最大值。
 message-item-use-poison-applied = 你使用{ $source }，中毒持续 { $duration } tick。

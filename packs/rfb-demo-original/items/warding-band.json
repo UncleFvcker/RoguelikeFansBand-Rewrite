@@ -11,6 +11,7 @@
   "resistances": {
     "fire": "resistant"
   },
+  "passives": ["sustain-strength"],
   "tags": [
     "equipment",
     "jewelry"

@@ -22,6 +22,7 @@ use crate::effect::DamageOutcome;
 pub(crate) enum ItemAttributeChange {
     Drained,
     Restored,
+    Sustained,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2119,6 +2120,11 @@ impl DomainEvent {
                         "item.use-attribute-restore-no-effect",
                         "item-use-attribute-restore-no-effect",
                         "restored",
+                    ),
+                    (ItemAttributeChange::Sustained, _) => (
+                        "item.use-attribute-sustained",
+                        "item-use-attribute-sustained",
+                        "sustained",
                     ),
                 };
                 dto(

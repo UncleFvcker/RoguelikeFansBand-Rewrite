@@ -2300,7 +2300,16 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
             .insert("stealthSkill".to_owned(), serde_json::json!(-pval));
         fold.consumed.insert("DEC_STEALTH".to_owned());
     }
-    for (flag, passive) in [("REGEN", "regeneration"), ("BRAND_VAMP", "vampiric")] {
+    for (flag, passive) in [
+        ("REGEN", "regeneration"),
+        ("BRAND_VAMP", "vampiric"),
+        ("SUST_STR", "sustain-strength"),
+        ("SUST_INT", "sustain-intelligence"),
+        ("SUST_WIS", "sustain-wisdom"),
+        ("SUST_DEX", "sustain-dexterity"),
+        ("SUST_CON", "sustain-constitution"),
+        ("SUST_CHR", "sustain-charisma"),
+    ] {
         if flags.iter().any(|value| value == flag) {
             fold.passives.push(passive);
             fold.consumed.insert(flag.to_owned());
@@ -8305,7 +8314,7 @@ N:2:of the Test Bear
 T:AMULET | RING
 W:10:*:4
 C:0:0:0:3
-F:STR | DEC_INT | HIDE_TYPE | SPEED
+F:STR | DEC_INT | HIDE_TYPE | SPEED | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON | SUST_CHR
 E:BERSERK:50:100
 
 N:3:(Test Aura)
@@ -8379,6 +8388,22 @@ F:BRAND_VAMP | HOLD_LIFE
         assert!(!outcome.report.unmapped_ego_flags.contains_key("STR"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("DEC_INT"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("SPEED"));
+        assert_eq!(
+            bear["passives"],
+            serde_json::json!([
+                "sustain-charisma",
+                "sustain-constitution",
+                "sustain-dexterity",
+                "sustain-intelligence",
+                "sustain-strength",
+                "sustain-wisdom"
+            ])
+        );
+        for flag in [
+            "SUST_STR", "SUST_INT", "SUST_WIS", "SUST_DEX", "SUST_CON", "SUST_CHR",
+        ] {
+            assert!(!outcome.report.unmapped_ego_flags.contains_key(flag));
+        }
 
         // A purely defensive ego used to be inexpressible; the flag fold now
         // carries its elemental defenses and status immunities.

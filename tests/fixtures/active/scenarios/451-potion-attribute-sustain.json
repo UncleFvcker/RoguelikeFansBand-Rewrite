@@ -1,53 +1,43 @@
 {
-  "schemaVersion": 1,
-  "id": "item.scroll-adjacent-terrain-creation",
+  "schemaVersion": 2,
+  "id": "item.potion-attribute-sustain",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
-  "seed": "101",
+  "seed": "96",
   "preconditions": {
     "world": "demo.world.original-v1",
     "debugClearEntities": true,
     "debugClearCarriedItems": true,
+    "playerAttributes": {
+      "strength": 38,
+      "intelligence": 13,
+      "wisdom": 13,
+      "dexterity": 13,
+      "constitution": 13,
+      "charisma": 13
+    },
     "inventoryItems": [
       {
-        "id": "test.item.verdant-ring-scroll.1",
-        "kindId": "demo.item.verdant-ring-scroll"
+        "id": "test.item.warding-band.1",
+        "kindId": "demo.item.warding-band"
       },
       {
-        "id": "test.item.stone-ring-scroll.1",
-        "kindId": "demo.item.stone-ring-scroll"
-      }
-    ],
-    "terrainOverrides": [
-      {
-        "position": {
-          "x": 3,
-          "y": 4
-        },
-        "terrainId": "demo.terrain.floor"
+        "id": "test.item.frailty-tonic.1",
+        "kindId": "demo.item.frailty-tonic"
       }
     ]
   },
   "commands": [
     {
       "command": {
-        "type": "use-item",
-        "itemId": "test.item.verdant-ring-scroll.1",
-        "target": {
-          "type": "self"
-        }
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "east"
+        "type": "equip",
+        "itemId": "test.item.warding-band.1"
       }
     },
     {
       "command": {
         "type": "use-item",
-        "itemId": "test.item.stone-ring-scroll.1",
+        "itemId": "test.item.frailty-tonic.1",
         "target": {
           "type": "self"
         }
@@ -57,14 +47,14 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 3,
-      "turn": 3,
-      "worldTick": 30,
-      "lastCommandSeq": 3,
+      "revision": 2,
+      "turn": 2,
+      "worldTick": 20,
+      "lastCommandSeq": 2,
       "rngDrawCounter": 3,
       "floorId": "demo.floor.surface",
       "playerPosition": {
-        "x": 4,
+        "x": 3,
         "y": 3
       },
       "playerHp": 10,
@@ -73,8 +63,14 @@
       "playerDefense": 1,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 0,
+      "playerCarriedWeightTenthsPound": 1,
       "playerCarryCapacityTenthsPound": 100,
+      "playerResistances": [
+        {
+          "damageType": "fire",
+          "level": "resistant"
+        }
+      ],
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -93,32 +89,38 @@
         "victoryLevelCapUnlocked": false,
         "attributes": {
           "strength": {
-            "natural": 13,
-            "effective": 13,
-            "index": 10
+            "natural": 38,
+            "maximumNatural": 38,
+            "effective": 38,
+            "index": 17
           },
           "intelligence": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           }
@@ -220,19 +222,69 @@
       },
       "entityCount": 0,
       "groundItemCount": 5,
+      "equipmentCount": 1,
+      "equipment": [
+        {
+          "id": "test.item.warding-band.1",
+          "kindId": "demo.item.warding-band",
+          "displayNameKey": "item-demo-warding-band-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 1,
+          "slotId": "ring-1",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "resistances": [
+            {
+              "damageType": "fire",
+              "level": "resistant"
+            }
+          ],
+          "passives": [
+            "sustain-strength"
+          ],
+          "identification": "identified",
+          "quality": "ordinary"
+        }
+      ],
       "itemKnowledge": [
         {
-          "kindId": "demo.item.stone-ring-scroll",
-          "tried": true,
-          "aware": true
-        },
-        {
-          "kindId": "demo.item.verdant-ring-scroll",
+          "kindId": "demo.item.frailty-tonic",
           "tried": true,
           "aware": true
         }
       ],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "test.item.warding-band.1",
+          "appraised": true,
+          "identified": true
+        }
+      ],
       "nextItemInstanceSerial": 2,
+      "terrainInteractions": [
+        {
+          "kind": "dig-terrain",
+          "direction": "south-west",
+          "position": {
+            "x": 2,
+            "y": 4
+          },
+          "terrainId": "demo.terrain.echo-rubble",
+          "requiresCheck": true,
+          "available": true
+        }
+      ],
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -287,58 +339,31 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4130d7e8c9682718f4db3b5153ef20478506a363794cc57a032dc14949b8c1ff"
+      "stateHash": "00578ed8027cd4c48abb0334a658a445308d76b7bce425dda2a74320a595412c"
     },
     "events": [
       {
-        "kind": "item.use-create-adjacent-terrain",
-        "messageKey": "item-use-create-adjacent-terrain",
+        "kind": "item.equip",
+        "messageKey": "item-equip-success",
         "args": {
-          "count": "2",
-          "nameKey": "item-demo-verdant-ring-scroll-name",
-          "source": "demo.item.verdant-ring-scroll"
+          "slot": "ring-1",
+          "target": "demo.item.warding-band"
         }
       },
       {
-        "kind": "item.use-create-adjacent-terrain",
-        "messageKey": "item-use-create-adjacent-terrain",
+        "kind": "item.use-attribute-sustained",
+        "messageKey": "item-use-attribute-sustained",
         "args": {
-          "count": "3",
-          "nameKey": "item-demo-stone-ring-scroll-name",
-          "source": "demo.item.stone-ring-scroll"
+          "after": "38",
+          "attribute": "strength",
+          "before": "38",
+          "change": "sustained",
+          "maximum": "38",
+          "nameKey": "item-demo-frailty-tonic-name",
+          "source": "demo.item.frailty-tonic"
         }
       }
     ],
-    "changedCells": [
-      {
-        "x": 2,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 4
-      },
-      {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 4,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 5,
-        "y": 2
-      },
-      {
-        "x": 5,
-        "y": 4
-      }
-    ],
-    "saveRoundTripStateHash": "4130d7e8c9682718f4db3b5153ef20478506a363794cc57a032dc14949b8c1ff"
+    "saveRoundTripStateHash": "00578ed8027cd4c48abb0334a658a445308d76b7bce425dda2a74320a595412c"
   }
 }

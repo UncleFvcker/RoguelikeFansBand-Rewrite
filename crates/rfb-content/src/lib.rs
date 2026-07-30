@@ -1353,6 +1353,12 @@ pub enum WeaponBrand {
 pub enum EquipmentPassive {
     Regeneration,
     Vampiric,
+    SustainStrength,
+    SustainIntelligence,
+    SustainWisdom,
+    SustainDexterity,
+    SustainConstitution,
+    SustainCharisma,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -8940,7 +8946,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.137.0");
+        assert_eq!(catalog.pack_version(), "1.138.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

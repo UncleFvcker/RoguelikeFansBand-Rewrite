@@ -1025,6 +1025,12 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
     match value {
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
+        EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
+        EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
+        EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
+        EquipmentPassive::SustainDexterity => EquipmentPassiveDto::SustainDexterity,
+        EquipmentPassive::SustainConstitution => EquipmentPassiveDto::SustainConstitution,
+        EquipmentPassive::SustainCharisma => EquipmentPassiveDto::SustainCharisma,
     }
 }
 
@@ -1032,6 +1038,12 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
     match value {
         EquipmentPassiveDto::Regeneration => EquipmentPassive::Regeneration,
         EquipmentPassiveDto::Vampiric => EquipmentPassive::Vampiric,
+        EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
+        EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
+        EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,
+        EquipmentPassiveDto::SustainDexterity => EquipmentPassive::SustainDexterity,
+        EquipmentPassiveDto::SustainConstitution => EquipmentPassive::SustainConstitution,
+        EquipmentPassiveDto::SustainCharisma => EquipmentPassive::SustainCharisma,
     }
 }
 

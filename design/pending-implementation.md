@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v146、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v147、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -103,7 +103,7 @@
 | P93 | Restore Life Levels 药水 | 已由 contract-v143 完成 | 窄 `restore-life-levels { lifeForceAmount: 150 }` 先恢复当前经验至历史最高值并重算等级，再增加生命力并封顶 1000；任一变化才 Aware，完全无变化保持 Tried-only，零效果 RNG。tval 75/sval 41 使 `consumable-effect` 69→68；协议保持 1.121、包 1.134.0、Schema 保持 v54、fixture 447，共 447 exact |
 | P94 | Blindness 药水与食物 | 已由 contract-v144 完成 | 窄 `apply-blindness` 先抽固定 `bounded(55)` 抗性 RNG；免疫时短路持续时间，未抵抗时按来源掷 `1d100+99` 或 `1d25+24` 并 Extend Blindness。首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 7 与 tval 80/sval 1 使 `consumable-effect` 68→66，`food-nutrition` 保持 28；协议保持 1.121、包 1.135.0、Schema 保持 v54、fixture 448，共 448 exact |
 | P95 | Detonations 药水 | 已由 contract-v145 完成 | 窄 `apply-detonation` 按 `50d20` 伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时不施加后续状态，合法使用无条件 Aware。tval 75/sval 22 使 `consumable-effect` 66→65；协议保持 1.121、包 1.136.0、Schema 保持 v54、fixture 449，共 449 exact |
-| P96 | 属性损伤与恢复药水 | 已由 contract-v146 完成 | 玩家进度分离当前属性与历史最大属性；六种 `drain-attribute` 按原版 18/xx 公式降低当前值，六种 `restore-attribute` 无 RNG 恢复至历史最大值。当前值为 3 时保持下限；旧存档缺最大属性时迁移，current > maximum 的损坏存档拒绝载入。实际变化才 Aware，无变化仍消费并保持 Tried-only；复用既有 HP/资源派生刷新。tval 75/sval 16–21、42–47 使 `consumable-effect` 65→53；`food-nutrition` 保持 28、`scroll-effect` 保持 15；协议 1.122、包 1.137.0、Schema v55、fixture 450，共 450 exact |
+| P96 | 属性损伤与恢复药水 | 已由 contract-v146/v147 完成 | 当前属性与历史最大属性分离；六种损伤、六种恢复和六种装备 sustain 已接入。资源池按变化前 current/max 只缩放一次；被维持的损伤零效果 RNG、属性不变但药水 Aware。fixture schema 2 将旧投影迁移限定在 schema 1 的六项全缺失情况；Web 按 `maximumNatural` 判断提升上限。`consumable-effect` 保持 53；协议 1.123、包 1.138.0、Schema v55、fixture 451，共 451 exact |
 
 contract-v139 后的 importer 维护复用 P61 已有 `sequence`，将 tval 75/sval 67 映射为固定治疗 200，随后依次解除 Blindness、Confusion 与 Stun；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 74→73，真实包源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
 

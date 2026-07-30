@@ -159,6 +159,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v137：Resistance 药水](design/contract-v137-potion-basic-resistance.md)
 - [Contract v138：Speed 药水](design/contract-v138-potion-speed.md)
 - [Contract v146：属性损伤与恢复](design/contract-v146-attribute-drain-restoration.md)
+- [Contract v147：P96 属性事务修正与 Sustain](design/contract-v147-p96-attribute-corrections.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -182,7 +183,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v146`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v147`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -377,6 +378,8 @@ P95 / contract-v145 接入 Detonations Potion。窄 `apply-detonation` 依原版
 
 P96 / contract-v146 接入属性损伤与恢复。玩家进度分别保存当前自然属性与历史最大自然属性；六种 `drain-attribute` 按原版 18/xx 公式降低当前值，六种 `restore-attribute` 无 RNG 恢复至历史最大值。当前值为 3 时不再降低，旧存档缺最大属性时迁移为当前值，损坏的 current > maximum 存档拒绝载入。实际变化才 Aware，无变化仍消费并保持 Tried-only；属性变化复用既有 HP、资源上限和派生刷新。协议 1.122、demo 1.137.0、state hash Schema v55、active baseline 450 条 exact、零 waiver，内置 content hash 为 `ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b`。legacy importer 映射 tval 75/sval 16–21、42–47，使 `consumable-effect` 65→53；`food-nutrition` 保持 28，`scroll-effect` 保持 15。详见[Contract v146](design/contract-v146-attribute-drain-restoration.md)。
 
+P96 修正 / contract-v147 修复属性变化后资源池被先 clamp、再二次缩放的问题；装备 sustain 重新成为六维属性损伤的真实消费者，Warding Band 固定提供 Strength sustain。被维持的损伤不抽效果 RNG、不改变属性，但会识别来源药水并发出明确事件。fixture schema 升至 2：449 条历史 fixture 继续以 schema 1 显式迁移全缺失的历史最大属性投影，部分缺失拒绝验证；新 fixture 不再静默补值。Web 属性提升按钮改按 `maximumNatural` 判断上限。协议 1.123、demo 1.138.0、state hash Schema 保持 v55、active baseline 451 条 exact、零 waiver，内置 content hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`。详见[Contract v147](design/contract-v147-p96-attribute-corrections.md)。
+
 ### 本地验证
 
 ```powershell
@@ -449,7 +452,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 449 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 451 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

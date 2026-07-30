@@ -14471,6 +14471,41 @@ fn attribute_history_migrates_old_saves_and_rejects_inverted_values() {
 }
 
 #[test]
+fn attribute_resource_refresh_scales_the_prechange_current_value_once() {
+    let mut game =
+        Game::new_with_build(96, "demo.build.scholar").expect("scholar build should create");
+    let before = *game
+        .resources
+        .get("demo.resource.mana")
+        .expect("scholar should have mana");
+    assert_eq!(before.current, before.maximum);
+
+    assert!(game.resolve_item_drain_attribute(
+        "demo.item.frailty-tonic",
+        AttributeKind::Intelligence,
+        &mut Vec::new(),
+    ));
+    let drained = *game
+        .resources
+        .get("demo.resource.mana")
+        .expect("scholar should retain mana");
+    assert!(drained.maximum < before.maximum);
+    assert_eq!(drained.current, drained.maximum);
+
+    assert!(game.resolve_item_restore_attribute(
+        "demo.item.intelligence-renewal-tonic",
+        AttributeKind::Intelligence,
+        &mut Vec::new(),
+    ));
+    let restored = game
+        .resources
+        .get("demo.resource.mana")
+        .expect("scholar should retain mana");
+    assert_eq!(restored.maximum, before.maximum);
+    assert_eq!(restored.current, before.current);
+}
+
+#[test]
 fn nearby_genocide_filters_radius_resists_unique_and_is_deterministic() {
     let prepare = || {
         let mut game = Game::new(0);

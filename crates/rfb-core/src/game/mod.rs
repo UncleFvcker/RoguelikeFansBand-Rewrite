@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 138] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 139] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -249,10 +249,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 138] = [
     "8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404",
     "9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5",
     "136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717",
+    "ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b";
+    "2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 55;
@@ -5758,17 +5759,17 @@ impl Game {
         ))
     }
 
-    fn player_resource_maxima(&self) -> BTreeMap<String, u32> {
+    fn player_resource_maxima(&self) -> BTreeMap<String, (u32, u32)> {
         self.resources
             .iter()
-            .map(|(id, pool)| (id.clone(), pool.maximum))
+            .map(|(id, pool)| (id.clone(), (pool.current, pool.maximum)))
             .collect()
     }
 
     fn refresh_after_attribute_change(
         &mut self,
         previous_max_hp: i32,
-        previous_resource_maxima: &BTreeMap<String, u32>,
+        previous_resource_maxima: &BTreeMap<String, (u32, u32)>,
     ) {
         let next_max_hp = self.effective_player_max_hp();
         if previous_max_hp > 0 && next_max_hp != previous_max_hp {
@@ -5786,13 +5787,13 @@ impl Game {
             });
         }
         self.refresh_player_resource_maxima();
-        for (resource_id, previous_maximum) in previous_resource_maxima {
+        for (resource_id, (previous_current, previous_maximum)) in previous_resource_maxima {
             let Some(pool) = self.resources.get_mut(resource_id) else {
                 continue;
             };
             if *previous_maximum > 0 && pool.maximum != *previous_maximum {
                 pool.current = u32::try_from(
-                    u64::from(pool.current)
+                    u64::from(*previous_current)
                         .saturating_mul(u64::from(pool.maximum))
                         .saturating_div(u64::from(*previous_maximum)),
                 )
@@ -12916,6 +12917,24 @@ impl Game {
         attribute: AttributeKind,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        if self
+            .player_equipment_passives()
+            .contains(&attribute_sustain_passive(attribute))
+        {
+            let value = self.progress.attributes.value(attribute);
+            self.mark_item_aware(source_kind_id);
+            events.push(DomainEvent::ItemAttributeChanged {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                attribute,
+                change: ItemAttributeChange::Sustained,
+                before: value,
+                after: value,
+                maximum: self.progress.maximum_attributes.value(attribute),
+                noticed: true,
+            });
+            return true;
+        }
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
         let before = self.progress.attributes.value(attribute);
@@ -23032,6 +23051,23 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
     match passive {
         EquipmentPassive::Regeneration => EquipmentPassiveDto::Regeneration,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
+        EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
+        EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
+        EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
+        EquipmentPassive::SustainDexterity => EquipmentPassiveDto::SustainDexterity,
+        EquipmentPassive::SustainConstitution => EquipmentPassiveDto::SustainConstitution,
+        EquipmentPassive::SustainCharisma => EquipmentPassiveDto::SustainCharisma,
+    }
+}
+
+const fn attribute_sustain_passive(attribute: AttributeKind) -> EquipmentPassive {
+    match attribute {
+        AttributeKind::Strength => EquipmentPassive::SustainStrength,
+        AttributeKind::Intelligence => EquipmentPassive::SustainIntelligence,
+        AttributeKind::Wisdom => EquipmentPassive::SustainWisdom,
+        AttributeKind::Dexterity => EquipmentPassive::SustainDexterity,
+        AttributeKind::Constitution => EquipmentPassive::SustainConstitution,
+        AttributeKind::Charisma => EquipmentPassive::SustainCharisma,
     }
 }
 

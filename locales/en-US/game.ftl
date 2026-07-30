@@ -227,6 +227,7 @@ message-item-use-restore-life-levels = You use { $source } and feel your life fo
 message-item-use-restore-life-levels-no-effect = You use { $source }, but notice no new effect.
 message-item-use-attribute-drained = You use { $source }; { $attribute } falls from { $before } to { $after }.
 message-item-use-attribute-drain-no-effect = You use { $source }, but { $attribute } cannot be drained further.
+message-item-use-attribute-sustained = You use { $source }, but your equipment sustains { $attribute }.
 message-item-use-attribute-restored = You use { $source }; { $attribute } returns to { $after }.
 message-item-use-attribute-restore-no-effect = You use { $source }, but { $attribute } is already at its maximum.
 message-item-use-poison-applied = You use { $source } and are poisoned for { $duration } ticks.
