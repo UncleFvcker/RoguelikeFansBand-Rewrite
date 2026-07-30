@@ -1581,6 +1581,12 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    ApplyDetonation {
+        damage_dice: u16,
+        damage_sides: u16,
+        stun_ticks: u32,
+        bleeding_ticks: u32,
+    },
     SelfLifeLoss {
         amount: u32,
     },
@@ -3283,6 +3289,17 @@ fn valid_item_effect(
     match effect {
         ItemUseEffectDefinition::Heal { amount }
         | ItemUseEffectDefinition::SelfLifeLoss { amount } => (1..=1_000_000).contains(amount),
+        ItemUseEffectDefinition::ApplyDetonation {
+            damage_dice,
+            damage_sides,
+            stun_ticks,
+            bleeding_ticks,
+        } => {
+            (1..=100).contains(damage_dice)
+                && (1..=10_000).contains(damage_sides)
+                && *stun_ticks > 0
+                && *bleeding_ticks > 0
+        }
         ItemUseEffectDefinition::RestoreLifeLevels { life_force_amount } => {
             (1..=1_000).contains(life_force_amount)
         }
@@ -4800,6 +4817,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
                     | ItemUseEffectDefinition::ApplyBlindness { .. }
+                    | ItemUseEffectDefinition::ApplyDetonation { .. }
                     | ItemUseEffectDefinition::SelfLifeLoss { .. }
                     | ItemUseEffectDefinition::Vengeance { .. }
                     | ItemUseEffectDefinition::ProtectionFromEvil
@@ -4984,6 +5002,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                         | ItemUseEffectDefinition::ApplyPoison { .. }
                         | ItemUseEffectDefinition::ApplyBlindness { .. }
+                        | ItemUseEffectDefinition::ApplyDetonation { .. }
                         | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 ) && (action.device_check_difficulty.is_some()
                     || action.charges.is_some()
@@ -5044,6 +5063,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                                 | ItemUseEffectDefinition::ApplyPoison { .. }
                                 | ItemUseEffectDefinition::ApplyBlindness { .. }
+                                | ItemUseEffectDefinition::ApplyDetonation { .. }
                                 | ItemUseEffectDefinition::SelfLifeLoss { .. }
                         )
                         && valid_item_effect_target(&activation.effect, &activation.target)
@@ -8872,7 +8892,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 81);
+        assert_eq!(first.content.items.len(), 82);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8898,7 +8918,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.135.0");
+        assert_eq!(catalog.pack_version(), "1.136.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

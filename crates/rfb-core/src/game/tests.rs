@@ -15579,6 +15579,87 @@ fn temperate_tonic_extends_existing_resistance_without_becoming_aware() {
 }
 
 #[test]
+fn shatterburst_draught_uses_damage_scaling_and_existing_status_stacking() {
+    const ITEM_ID: &str = "test.item.shatterburst-draught";
+    const KIND_ID: &str = "demo.item.shatterburst-draught";
+
+    let mut game = Game::new(95);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+    game.player.hp = 10_000;
+    for (kind_id, intensity, remaining_ticks, source_id, incoming_damage_percent) in [
+        (STATUS_STUN, 2, 100, "test.existing-stun", 100),
+        (STATUS_BLEEDING, 2, 20, "test.existing-bleeding", 100),
+        (
+            "test.status.half-damage",
+            1,
+            100,
+            "test.detonation-guard",
+            50,
+        ),
+    ] {
+        game.player.statuses.push(StatusInstance {
+            kind_id: kind_id.to_owned(),
+            intensity,
+            remaining_ticks,
+            source_id: Some(source_id.to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent,
+        });
+    }
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: ITEM_ID.to_owned(),
+            target: None,
+        },
+    );
+
+    let damage = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-detonation")
+        .and_then(|event| match &event.outcome {
+            Some(GameEventOutcomeDto::Damage { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .expect("detonation should report its nonfatal damage");
+    assert_eq!(game.rng_draw_counter(), draws_before + 50);
+    assert_eq!(damage.armor_reduction, 0);
+    assert_eq!(damage.resistance, ResistanceLevelDto::Normal);
+    assert_eq!(damage.final_damage, (damage.raw_damage + 1) / 2);
+    let stun = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_STUN)
+        .expect("detonation should retain existing stun");
+    assert_eq!(stun.intensity, 2);
+    assert_eq!(stun.remaining_ticks, 90);
+    assert_eq!(stun.source_id.as_deref(), Some("test.existing-stun"));
+    let bleeding = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_BLEEDING)
+        .expect("detonation should extend existing bleeding");
+    assert_eq!(bleeding.intensity, 2);
+    assert_eq!(bleeding.remaining_ticks, 5_010);
+    assert_eq!(
+        bleeding.source_id.as_deref(),
+        Some("test.existing-bleeding")
+    );
+}
+
+#[test]
 fn mortal_draught_life_loss_bypasses_incoming_damage_reduction_without_rng() {
     const ITEM_ID: &str = "test.item.mortal-draught";
     const KIND_ID: &str = "demo.item.mortal-draught";

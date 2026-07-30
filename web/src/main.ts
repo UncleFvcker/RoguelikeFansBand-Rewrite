@@ -2716,6 +2716,12 @@ function formatEvent(event: GameEventDto): string {
         source: visibleItemName(event.args.nameKey, event.args.source),
         amount: event.args.amount ?? "?",
       });
+    case "item-use-detonation":
+    case "item-use-detonation-death":
+      return localization.format(`message-${event.messageKey}` as MessageKey, {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        damage: damageResolution(event)?.finalDamage ?? "?",
+      });
     case "item-use-vengeance":
       return localization.format("message-item-use-vengeance", {
         source: visibleItemName(event.args.nameKey, event.args.source),

@@ -1,6 +1,6 @@
-# 交接文档：P29–P94 迭代史与当前状态
+# 交接文档：P29–P95 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.121 / contract-v144，P94 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.121 / contract-v145，P95 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P94 在当前状态中汇总。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P95 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -107,7 +107,8 @@
 - **P92 / contract-v142** 接入 Stone Skin Potion。窄 `apply-stone-skin` 每次按 `1d20+20` 以 KeepStrongest 应用状态，并按饮用时等级授予 `10 + 40 * level / 50` defense；首次新增才 Aware，更长刷新保持无新效果。协议保持 1.121，demo 1.133.0，state hash Schema v54，active baseline 446 exact、零 waiver；内置 hash 为 `48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a`。固定原版导入的 `consumable-effect` 70→69，真实包 hash 为 `845faf23ab10df14f22dbf5c14481db63385e210011d548ee7bbd18ee5cb4136`。
 - **P93 / contract-v143** 接入 Restore Life Levels Potion。窄 `restore-life-levels { lifeForceAmount: 150 }` 先恢复历史最高经验并重算等级，再增加生命力且封顶 1000；任一变化才 Aware，完全无变化保持 Tried-only，效果零 RNG。协议保持 1.121，demo 1.134.0，state hash Schema v54，active baseline 447 exact、零 waiver；内置 hash 为 `8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404`。固定原版导入的 `consumable-effect` 69→68，真实包 hash 为 `c7d1868b4ed9452c9159b6870af80eb942bfca3350f76d42c2b540a90b710ed1`。
 - **P94 / contract-v144** 接入 Blindness Potion 与 Blindness Food。窄 `apply-blindness` 固定先抽一次 `bounded(55)` 抗性 RNG，拥有 Blindness 免疫时短路持续时间；未抵抗时按来源掷 `1d100+99` 或 `1d25+24` 并 Extend Blindness，首次新增才 Aware，已有状态延长保持 Tried-only。协议保持 1.121，demo 1.135.0，state hash Schema v54，active baseline 448 exact、零 waiver；内置 hash 为 `9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5`。固定原版导入的 `consumable-effect` 68→66，`food-nutrition` 保持 28，真实包 hash 为 `47f5a78d899de6cee7339c97832e8cd2aef84049d1394ce42bf6dbcc644e8c39`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 66 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **P95 / contract-v145** 接入 Detonations Potion。窄 `apply-detonation` 按 `50d20` 直接伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；玩家存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时不施加后续状态，合法使用无条件 Aware。协议保持 1.121，demo 1.136.0，state hash Schema v54，active baseline 449 exact、零 waiver；内置 hash 为 `136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717`。固定原版导入的 `consumable-effect` 66→65，真实包 hash 为 `e724905cda4f306f6080e80844e61af0a51f1cc692ae678bedbcf7850f33adb6`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 65 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

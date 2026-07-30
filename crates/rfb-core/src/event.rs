@@ -521,6 +521,12 @@ pub(crate) enum DomainEvent {
         duration: Option<u32>,
         noticed: bool,
     },
+    ItemDetonation {
+        source_kind_id: String,
+        display_name_key: String,
+        damage: DamageOutcome,
+        fatal: bool,
+    },
     ItemLifeLost {
         source_kind_id: String,
         display_name_key: String,
@@ -2152,6 +2158,37 @@ impl DomainEvent {
                     [("source", source_kind_id), ("nameKey", display_name_key)],
                 ),
             },
+            Self::ItemDetonation {
+                source_kind_id,
+                display_name_key,
+                damage,
+                fatal,
+            } => dto_with_outcome(
+                if fatal {
+                    "item.use-detonation-death"
+                } else {
+                    "item.use-detonation"
+                },
+                if fatal {
+                    "item-use-detonation-death"
+                } else {
+                    "item-use-detonation"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("damage", damage.applied.to_string()),
+                ],
+                if fatal {
+                    GameEventOutcomeDto::Death {
+                        resolution: damage.into(),
+                    }
+                } else {
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    }
+                },
+            ),
             Self::ItemLifeLost {
                 source_kind_id,
                 display_name_key,

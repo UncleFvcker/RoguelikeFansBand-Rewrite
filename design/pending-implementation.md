@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v138、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v145、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -102,12 +102,13 @@
 | P92 | Stone Skin 药水 | 已由 contract-v142 完成 | 窄 `apply-stone-skin` 每次按 `1d20+20` 以 KeepStrongest 应用状态，并按饮用时等级授予 `10 + 40 * level / 50` defense；首次新增才 Aware，更长刷新保持无新效果。tval 75/sval 69 使 `consumable-effect` 70→69；协议保持 1.121、包 1.133.0、Schema 保持 v54、fixture 446，共 446 exact |
 | P93 | Restore Life Levels 药水 | 已由 contract-v143 完成 | 窄 `restore-life-levels { lifeForceAmount: 150 }` 先恢复当前经验至历史最高值并重算等级，再增加生命力并封顶 1000；任一变化才 Aware，完全无变化保持 Tried-only，零效果 RNG。tval 75/sval 41 使 `consumable-effect` 69→68；协议保持 1.121、包 1.134.0、Schema 保持 v54、fixture 447，共 447 exact |
 | P94 | Blindness 药水与食物 | 已由 contract-v144 完成 | 窄 `apply-blindness` 先抽固定 `bounded(55)` 抗性 RNG；免疫时短路持续时间，未抵抗时按来源掷 `1d100+99` 或 `1d25+24` 并 Extend Blindness。首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 7 与 tval 80/sval 1 使 `consumable-effect` 68→66，`food-nutrition` 保持 28；协议保持 1.121、包 1.135.0、Schema 保持 v54、fixture 448，共 448 exact |
+| P95 | Detonations 药水 | 已由 contract-v145 完成 | 窄 `apply-detonation` 按 `50d20` 伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时不施加后续状态，合法使用无条件 Aware。tval 75/sval 22 使 `consumable-effect` 66→65；协议保持 1.121、包 1.136.0、Schema 保持 v54、fixture 449，共 449 exact |
 
 contract-v139 后的 importer 维护复用 P61 已有 `sequence`，将 tval 75/sval 67 映射为固定治疗 200，随后依次解除 Blindness、Confusion 与 Stun；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 74→73，真实包源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
 
 contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 80/sval 0 映射为相同 Poison 抗性检定与 `1d10+9` 持续时间；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 71→70，真实包源码校验、编译与二进制回读 hash 均为 `f916b49530a6eebe54908ecdc18ab32360e17dd3177d759df68b4003e8abe602`。
 
-## contract-v144 明确遗留
+## contract-v145 明确遗留
 
 - Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
 - 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
@@ -140,7 +141,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - Stone Skin Potion 只实现普通 `1d20+20` KeepStrongest 与饮用时等级防御；原版 `_potion_power`、持续期间升级重算、Magic Defense、Kata Musou 和职业特例继续留在缺口；
 - Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；不建立通用成长事务、经验吸取、生命力损伤、Possessor/Mimic 上限或 Android 特例，也不提前开放设备 activation；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
-- `consumable-effect` 现为 66，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。其他属性恢复和增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
+- `consumable-effect` 现为 65，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。其他属性恢复和增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
 
 ## contract-v116 明确遗留
 
@@ -176,7 +177,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 恢复型消耗品已支持状态、资源和经验/生命力恢复；属性恢复和增益药水等仍在 `consumable-effect` 66 条缺口中，全部 28 种食物的营养/饥饿事务独立记录为 `food-nutrition`；
+- 恢复型消耗品已支持状态、资源和经验/生命力恢复；属性恢复和增益药水等仍在 `consumable-effect` 65 条缺口中，全部 28 种食物的营养/饥饿事务独立记录为 `food-nutrition`；
 - 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion、Protection from Evil、Recharging 和 Spell 完成后剩余 15 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；

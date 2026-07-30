@@ -1409,6 +1409,13 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 100,
             "durationBonus": 99
         }),
+        (75, 22) => serde_json::json!({
+            "type": "apply-detonation",
+            "damageDice": 50,
+            "damageSides": 20,
+            "stunTicks": 75,
+            "bleedingTicks": 5000
+        }),
         (80, 1) => serde_json::json!({
             "type": "apply-blindness",
             "durationDice": 1,
@@ -9102,6 +9109,27 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(
             death["useAction"]["effect"],
             serde_json::json!({"type": "self-life-loss", "amount": 5000})
+        );
+        let detonation = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 22,
+                ..LegacyItemEntry::default()
+            },
+            "detonation-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            detonation["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-detonation",
+                "damageDice": 50,
+                "damageSides": 20,
+                "stunTicks": 75,
+                "bleedingTicks": 5000
+            })
         );
         for (sval, subject, category, persistent) in [
             (25, "terrain", "map", true),
