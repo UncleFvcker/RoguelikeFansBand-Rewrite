@@ -1553,6 +1553,11 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    ApplyStoneSkin {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
     ApplyThermalResistance {
         duration_dice: u16,
         duration_sides: u32,
@@ -3303,6 +3308,11 @@ fn valid_item_effect(
             duration_sides,
             duration_bonus,
         }
+        | ItemUseEffectDefinition::ApplyStoneSkin {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        }
         | ItemUseEffectDefinition::ApplyThermalResistance {
             duration_dice,
             duration_sides,
@@ -4768,6 +4778,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::ApplyHeroism { .. }
                     | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                     | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
+                    | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -4949,6 +4960,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         | ItemUseEffectDefinition::ApplyHeroism { .. }
                         | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                         | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
+                        | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                         | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                         | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                         | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -5006,6 +5018,7 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
+                                | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -8837,7 +8850,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 78);
+        assert_eq!(first.content.items.len(), 79);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8863,7 +8876,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.132.0");
+        assert_eq!(catalog.pack_version(), "1.133.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

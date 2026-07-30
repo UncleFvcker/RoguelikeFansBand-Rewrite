@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 133] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 134] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -244,10 +244,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 133] = [
     "1b3c059fedbc14ad79a9549a8b0bd4496f22785355e2bb4ef1ce3a0f763c7e35",
     "99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091",
     "de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846",
+    "6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0";
+    "48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10545,6 +10546,7 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
+                | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -11042,6 +11044,7 @@ impl Game {
             | ItemUseEffectDefinition::ApplyHeroism { .. }
             | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
             | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
+            | ItemUseEffectDefinition::ApplyStoneSkin { .. }
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12098,6 +12101,17 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyStoneSkin {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => self.resolve_item_stone_skin(
+                source_kind_id,
+                *duration_dice,
+                *duration_sides,
+                *duration_bonus,
+                events,
+            ),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12672,6 +12686,65 @@ impl Game {
             self.mark_item_aware(source_kind_id);
         }
         events.push(DomainEvent::ItemPoeticInspirationResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            duration,
+            noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_stone_skin(
+        &mut self,
+        source_kind_id: &str,
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let defense = 10 + 40 * i32::from(self.progress.level) / 50;
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            source_kind_id,
+            0,
+            "rfb.status.stone-skin",
+            1,
+            duration_bonus,
+            duration_dice,
+            duration_sides,
+            AbilityStatusStackingDefinition::KeepStrongest,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                defense,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let (duration, noticed) = match resolution {
+            AbilityEffectResolutionDto::ApplyStatus {
+                applied_duration_ticks,
+                change,
+                ..
+            } => (
+                applied_duration_ticks,
+                matches!(change, AbilityStatusChangeDto::Added),
+            ),
+            _ => unreachable!("stone skin must produce a status application resolution"),
+        };
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemStoneSkinResolved {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             duration,

@@ -488,6 +488,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
         noticed: bool,
     },
+    ItemStoneSkinResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        duration: u32,
+        noticed: bool,
+    },
     ItemThermalResistanceResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -2004,6 +2010,28 @@ impl DomainEvent {
                     "item-use-poetic-inspiration-applied"
                 } else {
                     "item-use-poetic-inspiration-no-new-effect"
+                },
+                [
+                    ("source", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("duration", duration.to_string()),
+                ],
+            ),
+            Self::ItemStoneSkinResolved {
+                source_kind_id,
+                display_name_key,
+                duration,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-stone-skin-applied"
+                } else {
+                    "item.use-stone-skin-no-new-effect"
+                },
+                if noticed {
+                    "item-use-stone-skin-applied"
+                } else {
+                    "item-use-stone-skin-no-new-effect"
                 },
                 [
                     ("source", source_kind_id),

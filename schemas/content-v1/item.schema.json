@@ -756,6 +756,38 @@
               "type": "integer"
             },
             "type": {
+              "const": "apply-stone-skin",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
               "const": "apply-thermal-resistance",
               "type": "string"
             }

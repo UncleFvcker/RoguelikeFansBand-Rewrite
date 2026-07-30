@@ -1369,6 +1369,12 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 100,
             "durationBonus": 100
         }),
+        (75, 69) => serde_json::json!({
+            "type": "apply-stone-skin",
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationBonus": 20
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -8887,6 +8893,26 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationDice": 1,
                 "durationSides": 100,
                 "durationBonus": 100
+            })
+        );
+        let stone_skin = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 69,
+                ..LegacyItemEntry::default()
+            },
+            "stone-skin-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            stone_skin["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-stone-skin",
+                "durationDice": 1,
+                "durationSides": 20,
+                "durationBonus": 20
             })
         );
         let thermal = item_json(

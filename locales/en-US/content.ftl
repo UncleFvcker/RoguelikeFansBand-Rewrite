@@ -554,5 +554,7 @@ item-demo-fury-draught-name = Fury Draught
 item-demo-fury-draught-description = A fierce draught that kindles rage and restores a measure of vitality.
 item-demo-muse-tonic-name = Muse Tonic
 item-demo-muse-tonic-description = Temporarily sharpens the drinker's wisdom and eloquence.
+item-demo-granite-tonic-name = Granite Tonic
+item-demo-granite-tonic-description = Temporarily hardens the drinker's skin against incoming blows.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

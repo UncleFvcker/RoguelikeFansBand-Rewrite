@@ -1,6 +1,6 @@
-# 交接文档：P29–P90 迭代史与当前状态
+# 交接文档：P29–P92 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.121 / contract-v141，P91 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.121 / contract-v142，P92 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -104,7 +104,8 @@
 - **P90 / contract-v140** 接入 Berserk Strength Potion。窄 `apply-berserk-strength` 先按 `1d25+25` Extend Berserk，再治疗 30；首次新增状态或实际治疗任一成立即 Aware，单纯延长保持 Tried-only。协议保持 1.121，demo 1.131.0，state hash Schema v54，active baseline 444 exact、零 waiver；内置 hash 为 `de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846`。固定原版导入的 `consumable-effect` 73→72，真实包 hash 为 `b143ba1a8198e280fbedfdb595088e9b572ef830731eed7ee101d6ce9f80ac0d`。
 - **P91 / contract-v141** 接入 Poetic Inspiration Potion。窄 `apply-poetic-inspiration` 每次按 `1d100+100` Extend 状态并授予 Wisdom/Charisma 各 +5；首次新增才 Aware，重复延长保持 Tried-only。协议保持 1.121，demo 1.132.0，state hash Schema v54，active baseline 445 exact、零 waiver；内置 hash 为 `6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0`。固定原版导入的 `consumable-effect` 72→71，真实包 hash 为 `53fd88e36019c7c40f177a00cc16a9bc019c51e3f31cb8c9b5b7036417a8fa89`。
 - **contract-v141 后 importer 维护** 复用 P84 已有 `apply-poison`，将 tval 80/sval 0 映射为相同抗性检定与 `1d10+9` Poison；不增加核心、demo、contract 或 fixture。固定原版导入的 `consumable-effect` 71→70，源码校验、编译与二进制回读 hash 均为 `f916b49530a6eebe54908ecdc18ab32360e17dd3177d759df68b4003e8abe602`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 70 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **P92 / contract-v142** 接入 Stone Skin Potion。窄 `apply-stone-skin` 每次按 `1d20+20` 以 KeepStrongest 应用状态，并按饮用时等级授予 `10 + 40 * level / 50` defense；首次新增才 Aware，更长刷新保持无新效果。协议保持 1.121，demo 1.133.0，state hash Schema v54，active baseline 446 exact、零 waiver；内置 hash 为 `48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a`。固定原版导入的 `consumable-effect` 70→69，真实包 hash 为 `845faf23ab10df14f22dbf5c14481db63385e210011d548ee7bbd18ee5cb4136`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 69 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

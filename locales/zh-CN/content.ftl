@@ -554,5 +554,7 @@ item-demo-fury-draught-name = 狂怒饮剂
 item-demo-fury-draught-description = 一剂激起狂暴并恢复少量生命力的猛烈药液。
 item-demo-muse-tonic-name = 灵感饮剂
 item-demo-muse-tonic-description = 暂时提升饮用者的智慧与雄辩能力。
+item-demo-granite-tonic-name = 花岗岩饮剂
+item-demo-granite-tonic-description = 暂时硬化饮用者的皮肤，以抵御来袭的攻击。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。
