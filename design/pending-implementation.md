@@ -1,6 +1,6 @@
 # 待实现内容清单
 
-状态：基于 contract-v1–v147、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
+状态：基于 contract-v1–v148、前端目标模式和系统路线书审计；每完成一个纵切后同步更新
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
@@ -104,6 +104,7 @@
 | P94 | Blindness 药水与食物 | 已由 contract-v144 完成 | 窄 `apply-blindness` 先抽固定 `bounded(55)` 抗性 RNG；免疫时短路持续时间，未抵抗时按来源掷 `1d100+99` 或 `1d25+24` 并 Extend Blindness。首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 7 与 tval 80/sval 1 使 `consumable-effect` 68→66，`food-nutrition` 保持 28；协议保持 1.121、包 1.135.0、Schema 保持 v54、fixture 448，共 448 exact |
 | P95 | Detonations 药水 | 已由 contract-v145 完成 | 窄 `apply-detonation` 按 `50d20` 伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时不施加后续状态，合法使用无条件 Aware。tval 75/sval 22 使 `consumable-effect` 66→65；协议保持 1.121、包 1.136.0、Schema 保持 v54、fixture 449，共 449 exact |
 | P96 | 属性损伤与恢复药水 | 已由 contract-v146/v147 完成 | 当前属性与历史最大属性分离；六种损伤、六种恢复和六种装备 sustain 已接入。资源池按变化前 current/max 只缩放一次；被维持的损伤零效果 RNG、属性不变但药水 Aware。fixture schema 2 将旧投影迁移限定在 schema 1 的六项全缺失情况；Web 按 `maximumNatural` 判断提升上限。`consumable-effect` 保持 53；协议 1.123、包 1.138.0、Schema v55、fixture 451，共 451 exact |
+| P97 | 属性永久增长药水 | 已由 contract-v148 完成 | 六种 `increase-attribute` 与 `augment-attributes` 复用当前/历史最大属性、原版三段增长公式及胜利前后上限；先恢复损伤，封顶跳过 RNG，Augmentation 固定六维顺序且只刷新一次派生。`consumable-effect` 53→46；协议保持 1.123、包 1.139.0、Schema 保持 v55、fixture 452，共 452 exact |
 
 contract-v139 后的 importer 维护复用 P61 已有 `sequence`，将 tval 75/sval 67 映射为固定治疗 200，随后依次解除 Blindness、Confusion 与 Stun；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 74→73，真实包源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
 
@@ -141,8 +142,9 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - Poetic Inspiration Potion 只实现普通 `1d100+100` Extend 与 Wisdom/Charisma 各 +5；原版 `_potion_power`、Potion Devicemaster 特例和全局 10000-tick 上限继续留在缺口；
 - Stone Skin Potion 只实现普通 `1d20+20` KeepStrongest 与饮用时等级防御；原版 `_potion_power`、持续期间升级重算、Magic Defense、Kata Musou 和职业特例继续留在缺口；
 - Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；不建立通用成长事务、经验吸取、生命力损伤、Possessor/Mimic 上限或 Android 特例，也不提前开放设备 activation；
+- 属性增长药水只覆盖六种单属性增长和固定六维 Augmentation；不建立可配置属性列表、通用成长事务或与等级提升点合流，也不提前加入 `_potion_power` 和职业特例；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
-- `consumable-effect` 现为 53，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。属性损伤与恢复只覆盖当前/历史最大自然属性；属性上限、装备属性损伤、临时属性修改和更一般的成长事务继续按独立纵切，不扩展通用序列或属性 effect DSL。
+- `consumable-effect` 现为 46，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。装备属性损伤、临时属性修改和更一般的成长事务继续按独立纵切，不扩展通用序列或属性 effect DSL。
 
 ## contract-v116 明确遗留
 

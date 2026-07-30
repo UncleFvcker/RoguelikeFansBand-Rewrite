@@ -1427,6 +1427,33 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "restore-attribute",
             "attribute": "charisma"
         }),
+        (75, 48) => serde_json::json!({
+            "type": "increase-attribute",
+            "attribute": "strength"
+        }),
+        (75, 49) => serde_json::json!({
+            "type": "increase-attribute",
+            "attribute": "intelligence"
+        }),
+        (75, 50) => serde_json::json!({
+            "type": "increase-attribute",
+            "attribute": "wisdom"
+        }),
+        (75, 51) => serde_json::json!({
+            "type": "increase-attribute",
+            "attribute": "dexterity"
+        }),
+        (75, 52) => serde_json::json!({
+            "type": "increase-attribute",
+            "attribute": "constitution"
+        }),
+        (75, 53) => serde_json::json!({
+            "type": "increase-attribute",
+            "attribute": "charisma"
+        }),
+        (75, 55) => serde_json::json!({
+            "type": "augment-attributes"
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -9079,6 +9106,12 @@ F:BRAND_VAMP | HOLD_LIFE
             (45, "restore-attribute", "dexterity"),
             (46, "restore-attribute", "constitution"),
             (47, "restore-attribute", "charisma"),
+            (48, "increase-attribute", "strength"),
+            (49, "increase-attribute", "intelligence"),
+            (50, "increase-attribute", "wisdom"),
+            (51, "increase-attribute", "dexterity"),
+            (52, "increase-attribute", "constitution"),
+            (53, "increase-attribute", "charisma"),
         ] {
             let value = item_json(
                 &LegacyItemEntry {
@@ -9096,6 +9129,21 @@ F:BRAND_VAMP | HOLD_LIFE
                 serde_json::json!({"type": effect_type, "attribute": attribute})
             );
         }
+        let augmentation = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 55,
+                ..LegacyItemEntry::default()
+            },
+            "augmentation-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            augmentation["useAction"]["effect"],
+            serde_json::json!({"type": "augment-attributes"})
+        );
         let thermal = item_json(
             &LegacyItemEntry {
                 tval: 75,

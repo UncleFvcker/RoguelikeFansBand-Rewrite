@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 139] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 140] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -250,10 +250,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 139] = [
     "9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5",
     "136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717",
     "ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b",
+    "2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003";
+    "a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 55;
@@ -10632,6 +10633,8 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyBlindness { .. }
                 | ItemUseEffectDefinition::DrainAttribute { .. }
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
+                | ItemUseEffectDefinition::IncreaseAttribute { .. }
+                | ItemUseEffectDefinition::AugmentAttributes
                 | ItemUseEffectDefinition::ApplyDetonation { .. }
                 | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
@@ -11131,6 +11134,8 @@ impl Game {
             | ItemUseEffectDefinition::RestoreLifeLevels { .. }
             | ItemUseEffectDefinition::DrainAttribute { .. }
             | ItemUseEffectDefinition::RestoreAttribute { .. }
+            | ItemUseEffectDefinition::IncreaseAttribute { .. }
+            | ItemUseEffectDefinition::AugmentAttributes
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12215,6 +12220,24 @@ impl Game {
                     Self::item_attribute_kind(attribute),
                     events,
                 ),
+            ItemUseEffectDefinition::IncreaseAttribute { attribute } => self
+                .resolve_item_increase_attributes(
+                    source_kind_id,
+                    &[Self::item_attribute_kind(attribute)],
+                    events,
+                ),
+            ItemUseEffectDefinition::AugmentAttributes => self.resolve_item_increase_attributes(
+                source_kind_id,
+                &[
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ],
+                events,
+            ),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12980,6 +13003,57 @@ impl Game {
             maximum: self.progress.maximum_attributes.value(attribute),
             noticed,
         });
+        noticed
+    }
+
+    fn resolve_item_increase_attributes(
+        &mut self,
+        source_kind_id: &str,
+        attributes: &[AttributeKind],
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let victorious = self.victory_level_cap_unlocked();
+        let mut noticed = false;
+        let mut resolutions = Vec::with_capacity(attributes.len());
+
+        for &attribute in attributes {
+            let before = self.progress.attributes.value(attribute);
+            let maximum_before = self.progress.maximum_attributes.value(attribute);
+            let changed =
+                self.progress
+                    .increase_attribute_permanently(attribute, victorious, &mut self.rng);
+            let after = self.progress.attributes.value(attribute);
+            let maximum = self.progress.maximum_attributes.value(attribute);
+            let change = if maximum > maximum_before {
+                ItemAttributeChange::Increased
+            } else if after > before {
+                ItemAttributeChange::Restored
+            } else {
+                ItemAttributeChange::Increased
+            };
+            resolutions.push((attribute, change, before, after, maximum, changed));
+            noticed = changed || noticed;
+        }
+
+        if noticed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.mark_item_aware(source_kind_id);
+        }
+        let display_name_key = self.item_display_name_key(source_kind_id);
+        for (attribute, change, before, after, maximum, changed) in resolutions {
+            events.push(DomainEvent::ItemAttributeChanged {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: display_name_key.clone(),
+                attribute,
+                change,
+                before,
+                after,
+                maximum,
+                noticed: changed,
+            });
+        }
         noticed
     }
 

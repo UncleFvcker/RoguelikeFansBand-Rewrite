@@ -1585,6 +1585,10 @@ pub enum ItemUseEffectDefinition {
     RestoreAttribute {
         attribute: ItemAttributeDefinition,
     },
+    IncreaseAttribute {
+        attribute: ItemAttributeDefinition,
+    },
+    AugmentAttributes,
     ApplyThermalResistance {
         duration_dice: u16,
         duration_sides: u32,
@@ -3328,7 +3332,9 @@ fn valid_item_effect(
             (1..=1_000).contains(life_force_amount)
         }
         ItemUseEffectDefinition::DrainAttribute { .. }
-        | ItemUseEffectDefinition::RestoreAttribute { .. } => true,
+        | ItemUseEffectDefinition::RestoreAttribute { .. }
+        | ItemUseEffectDefinition::IncreaseAttribute { .. }
+        | ItemUseEffectDefinition::AugmentAttributes => true,
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -4841,6 +4847,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::RestoreLifeLevels { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }
                     | ItemUseEffectDefinition::RestoreAttribute { .. }
+                    | ItemUseEffectDefinition::IncreaseAttribute { .. }
+                    | ItemUseEffectDefinition::AugmentAttributes
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                     | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -5026,6 +5034,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                         | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                         | ItemUseEffectDefinition::RestoreLifeLevels { .. }
+                        | ItemUseEffectDefinition::IncreaseAttribute { .. }
+                        | ItemUseEffectDefinition::AugmentAttributes
                         | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                         | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                         | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -5087,6 +5097,8 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::RestoreLifeLevels { .. }
+                                | ItemUseEffectDefinition::IncreaseAttribute { .. }
+                                | ItemUseEffectDefinition::AugmentAttributes
                                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -8920,7 +8932,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 84);
+        assert_eq!(first.content.items.len(), 86);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8946,7 +8958,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.138.0");
+        assert_eq!(catalog.pack_version(), "1.139.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

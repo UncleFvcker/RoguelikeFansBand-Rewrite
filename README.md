@@ -160,6 +160,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v138：Speed 药水](design/contract-v138-potion-speed.md)
 - [Contract v146：属性损伤与恢复](design/contract-v146-attribute-drain-restoration.md)
 - [Contract v147：P96 属性事务修正与 Sustain](design/contract-v147-p96-attribute-corrections.md)
+- [Contract v148：P97 属性永久增长药水](design/contract-v148-potion-attribute-increase.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -183,7 +184,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v147`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v148`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -380,6 +381,8 @@ P96 / contract-v146 接入属性损伤与恢复。玩家进度分别保存当前
 
 P96 修正 / contract-v147 修复属性变化后资源池被先 clamp、再二次缩放的问题；装备 sustain 重新成为六维属性损伤的真实消费者，Warding Band 固定提供 Strength sustain。被维持的损伤不抽效果 RNG、不改变属性，但会识别来源药水并发出明确事件。fixture schema 升至 2：449 条历史 fixture 继续以 schema 1 显式迁移全缺失的历史最大属性投影，部分缺失拒绝验证；新 fixture 不再静默补值。Web 属性提升按钮改按 `maximumNatural` 判断上限。协议 1.123、demo 1.138.0、state hash Schema 保持 v55、active baseline 451 条 exact、零 waiver，内置 content hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`。详见[Contract v147](design/contract-v147-p96-attribute-corrections.md)。
 
+P97 / contract-v148 接入六种单属性增长药水与 Augmentation。`increase-attribute` 先恢复当前属性，再按原版三段公式增长历史最大值；`augment-attributes` 固定按六维顺序处理，封顶属性跳过 RNG 但不阻断后续属性。实际恢复或增长才 Aware，完全无变化保持 Tried-only；不消费等级提升点，整瓶药水只刷新一次 HP 和职业资源。协议保持 1.123、demo 1.139.0、state hash Schema 保持 v55、active baseline 452 条 exact、零 waiver，内置 content hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。legacy importer 映射 tval 75/sval 48–53、55，使 `consumable-effect` 53→46。详见[Contract v148](design/contract-v148-potion-attribute-increase.md)。
+
 ### 本地验证
 
 ```powershell
@@ -452,7 +455,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 451 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 452 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

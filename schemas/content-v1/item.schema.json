@@ -842,6 +842,36 @@
         {
           "additionalProperties": false,
           "properties": {
+            "attribute": {
+              "$ref": "#/$defs/ItemAttributeDefinition"
+            },
+            "type": {
+              "const": "increase-attribute",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "attribute"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "augment-attributes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "durationBonus": {
               "format": "uint32",
               "minimum": 0,

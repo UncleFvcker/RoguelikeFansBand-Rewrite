@@ -2680,6 +2680,8 @@ function formatEvent(event: GameEventDto): string {
     case "item-use-attribute-sustained":
     case "item-use-attribute-restored":
     case "item-use-attribute-restore-no-effect":
+    case "item-use-attribute-increased":
+    case "item-use-attribute-increase-no-effect":
       return localization.format(`message-${event.messageKey}` as MessageKey, {
         source: visibleItemName(event.args.nameKey, event.args.source),
         attribute: localization.format(

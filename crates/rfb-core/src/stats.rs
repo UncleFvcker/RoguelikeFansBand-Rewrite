@@ -400,6 +400,64 @@ impl CharacterProgress {
         self.set_current_attribute(kind, self.maximum_attributes.value(kind))
     }
 
+    pub fn increase_attribute_permanently(
+        &mut self,
+        kind: AttributeKind,
+        victorious: bool,
+        rng: &mut RfbRng,
+    ) -> bool {
+        let restored = self.restore_attribute(kind);
+        let cap = Self::attribute_cap(victorious);
+        let value = self.maximum_attributes.value(kind);
+        if value >= cap {
+            return restored;
+        }
+
+        let next = if value < 18 {
+            let threshold = if value == 17 { 58 } else { 75 };
+            let gain = if rng.bounded(100) < threshold { 1 } else { 2 };
+            value + gain
+        } else if value < cap - 2 {
+            let delta = u32::from(cap - value) * 10;
+            let percentage = u32::try_from(rng.bounded(151) + 200)
+                .expect("attribute growth percentage must fit u32");
+            let gain = ((delta * percentage / 1_000 + 5) / 10).max(2);
+            u16::try_from(u32::from(value) + gain)
+                .expect("validated attribute growth must fit u16")
+                .min(cap - 1)
+        } else {
+            value + 1
+        };
+
+        match kind {
+            AttributeKind::Strength => {
+                self.attributes.strength = next;
+                self.maximum_attributes.strength = next;
+            }
+            AttributeKind::Intelligence => {
+                self.attributes.intelligence = next;
+                self.maximum_attributes.intelligence = next;
+            }
+            AttributeKind::Wisdom => {
+                self.attributes.wisdom = next;
+                self.maximum_attributes.wisdom = next;
+            }
+            AttributeKind::Dexterity => {
+                self.attributes.dexterity = next;
+                self.maximum_attributes.dexterity = next;
+            }
+            AttributeKind::Constitution => {
+                self.attributes.constitution = next;
+                self.maximum_attributes.constitution = next;
+            }
+            AttributeKind::Charisma => {
+                self.attributes.charisma = next;
+                self.maximum_attributes.charisma = next;
+            }
+        }
+        true
+    }
+
     fn set_current_attribute(&mut self, kind: AttributeKind, next: u16) -> bool {
         let current = self.attributes.value(kind);
         if current == next || next > self.maximum_attributes.value(kind) {
@@ -837,6 +895,53 @@ mod tests {
                 current != 3
             );
             assert_eq!(progress.attributes.strength, expected);
+            assert_eq!(rng.draw_counter, draws);
+        }
+    }
+
+    #[test]
+    fn permanent_attribute_increase_uses_potion_bands_without_spending_level_points() {
+        for (current, maximum, seed, expected, changed, draws) in [
+            (13, 13, 0, 14, true, 1),
+            (17, 17, 2, 19, true, 1),
+            (
+                PRE_VICTORY_ATTRIBUTE_CAP - 2,
+                PRE_VICTORY_ATTRIBUTE_CAP - 2,
+                0,
+                PRE_VICTORY_ATTRIBUTE_CAP - 1,
+                true,
+                0,
+            ),
+            (
+                PRE_VICTORY_ATTRIBUTE_CAP - 1,
+                PRE_VICTORY_ATTRIBUTE_CAP,
+                0,
+                PRE_VICTORY_ATTRIBUTE_CAP,
+                true,
+                0,
+            ),
+            (
+                PRE_VICTORY_ATTRIBUTE_CAP,
+                PRE_VICTORY_ATTRIBUTE_CAP,
+                0,
+                PRE_VICTORY_ATTRIBUTE_CAP,
+                false,
+                0,
+            ),
+        ] {
+            let mut progress = CharacterProgress::new(1, 10);
+            progress.attributes.strength = current;
+            progress.maximum_attributes.strength = maximum;
+            progress.pending_attribute_increases = 1;
+            let mut rng = RfbRng::seeded(seed);
+
+            assert_eq!(
+                progress.increase_attribute_permanently(AttributeKind::Strength, false, &mut rng,),
+                changed
+            );
+            assert_eq!(progress.attributes.strength, expected);
+            assert_eq!(progress.maximum_attributes.strength, expected);
+            assert_eq!(progress.pending_attribute_increases, 1);
             assert_eq!(rng.draw_counter, draws);
         }
     }
