@@ -3200,7 +3200,7 @@
           "y": 4
         }
       ],
-      "stateHash": "48692ef956103d24006cd63e2ca4ac660ed495aa76c5b4d2839a5920b0b51b2f"
+      "stateHash": "6290c75385f13c23ebbd63fc32716a8343d556aab7cc37a31d6919a488c0d473"
     },
     "events": [
       {
@@ -3270,6 +3270,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "48692ef956103d24006cd63e2ca4ac660ed495aa76c5b4d2839a5920b0b51b2f"
+    "saveRoundTripStateHash": "6290c75385f13c23ebbd63fc32716a8343d556aab7cc37a31d6919a488c0d473"
   }
 }

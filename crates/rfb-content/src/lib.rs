@@ -1579,6 +1579,18 @@ pub enum ItemUseEffectDefinition {
     RestoreLifeLevels {
         life_force_amount: u16,
     },
+    RestoreAllAttributes,
+    RestoreAllVitality {
+        life_force_amount: u16,
+    },
+    ApplyRestorativeFeast {
+        healing_dice: u16,
+        healing_sides: u16,
+    },
+    ApplyLifeRestoration {
+        healing_amount: u32,
+        life_force_amount: u16,
+    },
     DrainAttribute {
         attribute: ItemAttributeDefinition,
     },
@@ -3331,7 +3343,19 @@ fn valid_item_effect(
         ItemUseEffectDefinition::RestoreLifeLevels { life_force_amount } => {
             (1..=1_000).contains(life_force_amount)
         }
-        ItemUseEffectDefinition::DrainAttribute { .. }
+        ItemUseEffectDefinition::RestoreAllVitality { life_force_amount } => {
+            (1..=1_000).contains(life_force_amount)
+        }
+        ItemUseEffectDefinition::ApplyRestorativeFeast {
+            healing_dice,
+            healing_sides,
+        } => (1..=100).contains(healing_dice) && (1..=10_000).contains(healing_sides),
+        ItemUseEffectDefinition::ApplyLifeRestoration {
+            healing_amount,
+            life_force_amount,
+        } => (1..=1_000_000).contains(healing_amount) && (1..=1_000).contains(life_force_amount),
+        ItemUseEffectDefinition::RestoreAllAttributes
+        | ItemUseEffectDefinition::DrainAttribute { .. }
         | ItemUseEffectDefinition::RestoreAttribute { .. }
         | ItemUseEffectDefinition::IncreaseAttribute { .. }
         | ItemUseEffectDefinition::AugmentAttributes => true,
@@ -4845,6 +4869,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                     | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                     | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                     | ItemUseEffectDefinition::RestoreLifeLevels { .. }
+                    | ItemUseEffectDefinition::RestoreAllAttributes
+                    | ItemUseEffectDefinition::RestoreAllVitality { .. }
+                    | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+                    | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                     | ItemUseEffectDefinition::DrainAttribute { .. }
                     | ItemUseEffectDefinition::RestoreAttribute { .. }
                     | ItemUseEffectDefinition::IncreaseAttribute { .. }
@@ -5034,6 +5062,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                         | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                         | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                         | ItemUseEffectDefinition::RestoreLifeLevels { .. }
+                        | ItemUseEffectDefinition::RestoreAllAttributes
+                        | ItemUseEffectDefinition::RestoreAllVitality { .. }
+                        | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+                        | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                         | ItemUseEffectDefinition::IncreaseAttribute { .. }
                         | ItemUseEffectDefinition::AugmentAttributes
                         | ItemUseEffectDefinition::ApplyThermalResistance { .. }
@@ -5097,6 +5129,10 @@ fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), Content
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::RestoreLifeLevels { .. }
+                                | ItemUseEffectDefinition::RestoreAllAttributes
+                                | ItemUseEffectDefinition::RestoreAllVitality { .. }
+                                | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
+                                | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
                                 | ItemUseEffectDefinition::AugmentAttributes
                                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
@@ -8932,7 +8968,7 @@ mod tests {
         assert_eq!(first.content.terrain.len(), 48);
         assert_eq!(first.content.actors.len(), 28);
         assert_eq!(first.content.affixes.len(), 4);
-        assert_eq!(first.content.items.len(), 86);
+        assert_eq!(first.content.items.len(), 90);
         assert_eq!(first.content.resources.len(), 3);
         assert_eq!(first.content.abilities.len(), 68);
         assert_eq!(first.content.ability_books.len(), 5);
@@ -8958,7 +8994,7 @@ mod tests {
         let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
         assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-        assert_eq!(catalog.pack_version(), "1.139.0");
+        assert_eq!(catalog.pack_version(), "1.140.0");
         assert_eq!(
             catalog.resource("demo.resource.mana").map(|resource| (
                 resource.name_key.as_str(),

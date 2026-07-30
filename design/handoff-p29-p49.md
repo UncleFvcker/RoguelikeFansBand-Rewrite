@@ -1,6 +1,6 @@
-# 交接文档：P29–P97 迭代史与当前状态
+# 交接文档：P29–P98 迭代史与当前状态
 
-> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.123 / contract-v148，P97 已完成。
+> 面向接手本仓库的下一位开发者/模型。截至 2026-07-30，当前权威基线为协议 1.123 / contract-v149，P98 已完成。
 > 通读本文 + `design/pending-implementation.md` + `design/legacy-import-priority-v1.md` 即可接力。
 
 ## 0. 项目一句话
@@ -9,7 +9,7 @@
 `D:/codex/Frogcomposband/master` @ v1.3.0.7 / `191f48c3`），以"契约测试基线"驱动迭代：
 每轮 P## 迭代对应（通常）一个逻辑 `contract-vN` 基线，行为由稳定目录
 `tests/fixtures/active/scenarios` 下的 exact fixtures 锁死。历史基线由 Git 历史保存，
-不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P97 在当前状态中汇总。
+不再复制到新的版本目录。本文 P29–P56 保留详细迭代史，P57–P98 在当前状态中汇总。
 
 ## 1. 架构速查
 
@@ -111,7 +111,8 @@
 - **P96 / contract-v146** 接入属性损伤与恢复。玩家进度分离当前自然属性和历史最大自然属性；六种 `drain-attribute` 按原版 18/xx 公式降低当前值，六种 `restore-attribute` 无 RNG 恢复至历史最大值。当前值为 3 时保持下限，旧存档缺最大属性时迁移，current > maximum 的损坏存档拒绝载入；实际变化才 Aware，无变化仍消费并保持 Tried-only。协议升至 1.122，demo 1.137.0，state hash Schema v55，active baseline 450 exact、零 waiver；内置 hash 为 `ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b`。固定原版导入的 `consumable-effect` 65→53，`food-nutrition` 保持 28，`scroll-effect` 保持 15，真实导入内容 hash 为 `450e3eeaa989e04f15747578abb45449ef9662507b47e6a0e8c823cc93dce867`。
 - **P96 修正 / contract-v147** 修复属性变化后资源池先 clamp、再二次比例缩放；六种 sustain passive 同步回到内容、协议、存档、导入器和属性损伤入口。装备维持时属性不变、零效果 RNG，但来源药水 Aware 并发出 sustained 事件。fixture schema 升至 2，schema 1 只迁移六项全缺失的历史投影，部分缺失显式失败；Web cap 判断改用 `maximumNatural`。协议 1.123，demo 1.138.0，state hash Schema 保持 v55，active baseline 451 exact、零 waiver；内置 hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`，真实导入内容 hash 为 `21fb38c839a993bcb5b2b6562a7ff46ce537255052fa4ef41bebc4db00a245c3`。
 - **P97 / contract-v148** 接入六种单属性增长与 Augmentation。每项先恢复损伤，再按原版三段公式增长历史最大值；封顶跳过 RNG，Augmentation 固定按六维顺序继续处理。实际变化才 Aware，不消费等级提升点，整瓶只刷新一次派生。协议保持 1.123，demo 1.139.0，state hash Schema 保持 v55，active baseline 452 exact、零 waiver；内置 hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。固定原版导入的 `consumable-effect` 53→46，真实导入内容 hash 为 `2a5a78a6c8518385e45babebcc2670edd9ddb653a1eca8da2c78635c497e1138`。
-- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 46 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
+- **P98 / contract-v149** 接入 Restoring Food、Restoring Potion、Ambrosia 与 Life Potion。四种窄效果复用六维属性恢复、历史最高经验/生命力恢复、既有状态清除和治疗；Restoring 系列按实际变化决定 Aware，Ambrosia 与 Life 合法使用即 Aware。协议保持 1.123，demo 1.140.0，state hash Schema 保持 v55，active baseline 454 exact、零 waiver；内置 hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。固定原版导入的 `consumable-effect` 46→41、`food-nutrition` 保持 28，真实导入内容 hash 为 `54333ae2cda9df63ceaccc23794f54a66033897630afe44aa2f845fb217807ad`。
+- 下一步重新核对真实报告后选择单一纵切；剩余 15 个卷轴与 41 个其他消耗品分别排期，不把通用状态/伤害 DSL、状态抗性框架、`AbilityEffectDefinition`、通用地形 DSL 或物品事务框架提前纳入。
 - 长期设计约束与地牢/楼梯/守护者决定见既有设计文档；显示状态不入存档、回放或 state hash。
 
 ## 5. 常用命令

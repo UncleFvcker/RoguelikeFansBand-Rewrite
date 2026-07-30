@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.sixfold-provision",
+  "nameKey": "item-demo-sixfold-provision-name",
+  "appearanceNameKey": "item-demo-unfamiliar-food-name",
+  "descriptionKey": "item-demo-sixfold-provision-description",
+  "glyph": ",",
+  "weightTenthsPound": 2,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "restore-all-attributes"
+    }
+  },
+  "tags": ["attribute-restoration", "consumable", "food"]
+}

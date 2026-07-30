@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.123 / contract-v148（P31–P97 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.123 / contract-v149（P31–P98 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v143 阶段性里程碑
+## 8. contract-v75–v149 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.123、内容包 1.139.0、contract-v148、save v1 和 state hash Schema v55；内容 hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。active baseline 包含 452 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v143 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration、Stone Skin 与 Restore Life Levels Potion；v144–v147 增加 Blindness、Detonations、属性损伤/恢复、资源比例修正与六种 sustain 消费者，v148 接入六种属性永久增长与 Augmentation。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.123、内容包 1.140.0、contract-v149、save v1 和 state hash Schema v55；内容 hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。active baseline 包含 454 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v143 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration、Stone Skin 与 Restore Life Levels Potion；v144–v147 增加 Blindness、Detonations、属性损伤/恢复、资源比例修正与六种 sustain 消费者，v148 接入六种属性永久增长与 Augmentation，v149 接入 Restoring、Ambrosia 与 Life 组合恢复事务。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、86 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、90 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -596,6 +596,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P96 修正（2026-07）**：contract-v147 让资源池用属性变化前的 current/max 计算一次比例，避免刷新上限时先 clamp 后再次缩放。六种 `sustain-*` 重新进入内容、协议、存档、导入器和核心，属性损伤在装备维持时不抽效果 RNG、不改属性，但会识别药水并发布 sustained 事件。fixture schema 2 只为 schema 1 的六项全零历史投影迁移，部分填充直接报错；Web 提升按钮按历史最大自然属性判断 cap。协议 1.123，demo 1.138.0，state hash Schema 保持 v55，fixture 451；内置 hash 为 `2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003`。真实导入内容 hash 为 `21fb38c839a993bcb5b2b6562a7ff46ce537255052fa4ef41bebc4db00a245c3`，可装备 ego/artifact 的 sustain gap 已清零，唯一剩余 `SUST_CHR` 来自 slotless artifact。
 
 **P97 进展（2026-07）**：contract-v148 接入六种 `increase-attribute` 与固定六维顺序的 `augment-attributes`。每项先恢复当前属性，再按原版三段公式增长历史最大值，复用胜利前后属性上限；封顶属性零 RNG，Augmentation 仍继续处理后续属性。实际恢复或增长才 Aware，不消费 `pendingAttributeIncreases`，整瓶药水只刷新一次 HP 与职业资源。协议保持 1.123，demo 1.139.0，state hash Schema 保持 v55，fixture 452；内置 hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。legacy importer 映射 tval 75/sval 48–53、55，`consumable-effect` 53→46，真实导入内容 hash 为 `2a5a78a6c8518385e45babebcc2670edd9ddb653a1eca8da2c78635c497e1138`。
+
+**P98 进展（2026-07）**：contract-v149 接入 Restoring Food、Restoring Potion、Ambrosia 与 Life Potion。四种窄效果按原版顺序组合六维属性恢复、历史最高经验/生命力恢复、减 Poison、`15d15`/5000 治疗和已建模状态清除；只复用两个共享 mutation helper，不建立通用成长事务或任意 sequence。Restoring 系列按实际变化决定 Aware，Ambrosia 与 Life 合法使用即 Aware。协议保持 1.123，demo 1.140.0，state hash Schema 保持 v55，fixtures 453–454；内置 hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。legacy importer 使 `consumable-effect` 46→41、`food-nutrition` 保持 28，真实导入内容 hash 为 `54333ae2cda9df63ceaccc23794f54a66033897630afe44aa2f845fb217807ad`。
 
 ## 9. 内容迁移策略
 

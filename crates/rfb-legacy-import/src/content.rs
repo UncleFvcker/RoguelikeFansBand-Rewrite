@@ -1379,6 +1379,26 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "restore-life-levels",
             "lifeForceAmount": 150
         }),
+        (75, 54) => serde_json::json!({
+            "type": "restore-all-vitality",
+            "lifeForceAmount": 150
+        }),
+        (80, 17) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "strength"
+        }),
+        (80, 18) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "constitution"
+        }),
+        (80, 19) => serde_json::json!({
+            "type": "restore-all-attributes"
+        }),
+        (80, 40) => serde_json::json!({
+            "type": "apply-restorative-feast",
+            "healingDice": 15,
+            "healingSides": 15
+        }),
         (75, 16) => serde_json::json!({
             "type": "drain-attribute",
             "attribute": "strength"
@@ -1541,16 +1561,11 @@ fn fixed_consumable_use_action_with_terrain(
             remove_status("rfb.status.bleeding"),
             remove_status("rfb.status.berserk"),
         ]),
-        (75, 39) => sequence(vec![
-            serde_json::json!({"type": "heal", "amount": 5000}),
-            remove_status("rfb.status.poison"),
-            remove_status("rfb.status.blindness"),
-            remove_status("rfb.status.confusion"),
-            remove_status("rfb.status.stun"),
-            remove_status("rfb.status.bleeding"),
-            remove_status("rfb.status.slow"),
-            remove_status("rfb.status.berserk"),
-        ]),
+        (75, 39) => serde_json::json!({
+            "type": "apply-life-restoration",
+            "healingAmount": 5000,
+            "lifeForceAmount": 1000
+        }),
         (75, 40) => sequence(vec![
             serde_json::json!({
                 "type": "restore-resource-full",
@@ -8520,7 +8535,6 @@ F:BRAND_VAMP | HOLD_LIFE
             ),
             (37, serde_json::json!({"type": "heal", "amount": 300})),
             (38, serde_json::json!({"type": "heal", "amount": 1000})),
-            (39, serde_json::json!({"type": "heal", "amount": 5000})),
         ];
         let mut report = ContentImportReport::default();
         for (sval, effect) in expected {
@@ -8545,6 +8559,25 @@ F:BRAND_VAMP | HOLD_LIFE
                     .all(|effect| effect["type"] == "remove-status")
             );
         }
+        let life = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 39,
+                ..LegacyItemEntry::default()
+            },
+            "life-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            life["useAction"]["effect"],
+            serde_json::json!({
+                "type": "apply-life-restoration",
+                "healingAmount": 5000,
+                "lifeForceAmount": 1000
+            })
+        );
         let blood = item_json(
             &LegacyItemEntry {
                 tval: 75,
@@ -9093,6 +9126,68 @@ F:BRAND_VAMP | HOLD_LIFE
                 "lifeForceAmount": 150
             })
         );
+        for (tval, sval, effect) in [
+            (
+                75,
+                54,
+                serde_json::json!({
+                    "type": "restore-all-vitality",
+                    "lifeForceAmount": 150
+                }),
+            ),
+            (
+                80,
+                17,
+                serde_json::json!({
+                    "type": "restore-attribute",
+                    "attribute": "strength"
+                }),
+            ),
+            (
+                80,
+                18,
+                serde_json::json!({
+                    "type": "restore-attribute",
+                    "attribute": "constitution"
+                }),
+            ),
+            (
+                80,
+                19,
+                serde_json::json!({"type": "restore-all-attributes"}),
+            ),
+            (
+                80,
+                40,
+                serde_json::json!({
+                    "type": "apply-restorative-feast",
+                    "healingDice": 15,
+                    "healingSides": 15
+                }),
+            ),
+            (
+                75,
+                39,
+                serde_json::json!({
+                    "type": "apply-life-restoration",
+                    "healingAmount": 5000,
+                    "lifeForceAmount": 1000
+                }),
+            ),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("restoration-{tval}-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(value["useAction"]["effect"], effect);
+        }
         for (sval, effect_type, attribute) in [
             (16, "drain-attribute", "strength"),
             (17, "drain-attribute", "intelligence"),

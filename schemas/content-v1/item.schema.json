@@ -808,6 +808,92 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "restore-all-attributes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "lifeForceAmount": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "restore-all-vitality",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "lifeForceAmount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "healingDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "healingSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "apply-restorative-feast",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "healingDice",
+            "healingSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "healingAmount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "lifeForceAmount": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "apply-life-restoration",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "healingAmount",
+            "lifeForceAmount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "attribute": {
               "$ref": "#/$defs/ItemAttributeDefinition"
             },

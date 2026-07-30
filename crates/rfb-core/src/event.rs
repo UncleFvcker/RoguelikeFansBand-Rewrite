@@ -507,6 +507,11 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         noticed: bool,
     },
+    ItemRestorationResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        noticed: bool,
+    },
     ItemAttributeChanged {
         source_kind_id: String,
         display_name_key: String,
@@ -2088,6 +2093,23 @@ impl DomainEvent {
                     "item-use-restore-life-levels"
                 } else {
                     "item-use-restore-life-levels-no-effect"
+                },
+                [("source", source_kind_id), ("nameKey", display_name_key)],
+            ),
+            Self::ItemRestorationResolved {
+                source_kind_id,
+                display_name_key,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-restoration"
+                } else {
+                    "item.use-restoration-no-effect"
+                },
+                if noticed {
+                    "item-use-restoration"
+                } else {
+                    "item-use-restoration-no-effect"
                 },
                 [("source", source_kind_id), ("nameKey", display_name_key)],
             ),

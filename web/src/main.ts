@@ -2675,6 +2675,14 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-restore-life-levels-no-effect", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-restoration":
+      return localization.format("message-item-use-restoration", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
+    case "item-use-restoration-no-effect":
+      return localization.format("message-item-use-restoration-no-effect", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
     case "item-use-attribute-drained":
     case "item-use-attribute-drain-no-effect":
     case "item-use-attribute-sustained":
