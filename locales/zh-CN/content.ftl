@@ -556,5 +556,7 @@ item-demo-muse-tonic-name = 灵感饮剂
 item-demo-muse-tonic-description = 暂时提升饮用者的智慧与雄辩能力。
 item-demo-granite-tonic-name = 花岗岩饮剂
 item-demo-granite-tonic-description = 暂时硬化饮用者的皮肤，以抵御来袭的攻击。
+item-demo-renewal-tonic-name = 复元饮剂
+item-demo-renewal-tonic-description = 恢复受损的经验并补充生命力。
 terrain-demo-echo-tree-name = 回声树
 terrain-demo-echo-tree-description = 由共振之力催生的茂密活体植被。

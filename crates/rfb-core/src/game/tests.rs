@@ -15365,6 +15365,80 @@ fn fury_draught_awareness_depends_on_new_berserk_or_actual_healing() {
 }
 
 #[test]
+fn renewal_tonic_awareness_depends_on_either_restoration() {
+    const ITEM_ID: &str = "test.item.renewal-tonic";
+    const KIND_ID: &str = "demo.item.renewal-tonic";
+
+    for (
+        experience,
+        maximum_experience,
+        life_force,
+        level,
+        expected_life_force,
+        expected_knowledge,
+        expected_event_kind,
+    ) in [
+        (
+            5,
+            25,
+            1_000,
+            1,
+            1_000,
+            ItemKnowledgeDto::Aware,
+            "item.use-restore-life-levels",
+        ),
+        (
+            25,
+            25,
+            900,
+            3,
+            1_000,
+            ItemKnowledgeDto::Aware,
+            "item.use-restore-life-levels",
+        ),
+        (
+            25,
+            25,
+            1_000,
+            3,
+            1_000,
+            ItemKnowledgeDto::Tried,
+            "item.use-restore-life-levels-no-effect",
+        ),
+    ] {
+        let mut game = Game::new(93);
+        clear_monsters(&mut game);
+        game.progress.experience = experience;
+        game.progress.maximum_experience = maximum_experience;
+        game.progress.life_force = life_force;
+        game.progress.level = level;
+        game.progress.max_level = level;
+        give_inventory_item(&mut game, ITEM_ID, KIND_ID);
+        let draws_before = game.rng_draw_counter();
+
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+                target: None,
+            },
+        );
+
+        assert_eq!(game.progress.experience, maximum_experience);
+        assert_eq!(game.progress.life_force, expected_life_force);
+        assert_eq!(game.item_knowledge_dto(KIND_ID), expected_knowledge);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == expected_event_kind)
+        );
+    }
+}
+
+#[test]
 fn temperate_tonic_extends_existing_resistance_without_becoming_aware() {
     const ITEM_ID: &str = "test.item.temperate-tonic";
     const KIND_ID: &str = "demo.item.temperate-tonic";

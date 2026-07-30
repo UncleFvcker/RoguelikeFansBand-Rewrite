@@ -2666,6 +2666,14 @@ function formatEvent(event: GameEventDto): string {
       return localization.format("message-item-use-stone-skin-no-new-effect", {
         source: visibleItemName(event.args.nameKey, event.args.source),
       });
+    case "item-use-restore-life-levels":
+      return localization.format("message-item-use-restore-life-levels", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
+    case "item-use-restore-life-levels-no-effect":
+      return localization.format("message-item-use-restore-life-levels-no-effect", {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+      });
     case "item-use-poison-applied":
       return localization.format("message-item-use-poison-applied", {
         source: visibleItemName(event.args.nameKey, event.args.source),

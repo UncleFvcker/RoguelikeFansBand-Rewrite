@@ -1375,6 +1375,10 @@ fn fixed_consumable_use_action_with_terrain(
             "durationSides": 20,
             "durationBonus": 20
         }),
+        (75, 41) => serde_json::json!({
+            "type": "restore-life-levels",
+            "lifeForceAmount": 150
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -8913,6 +8917,24 @@ F:BRAND_VAMP | HOLD_LIFE
                 "durationDice": 1,
                 "durationSides": 20,
                 "durationBonus": 20
+            })
+        );
+        let restore_life_levels = item_json(
+            &LegacyItemEntry {
+                tval: 75,
+                sval: 41,
+                ..LegacyItemEntry::default()
+            },
+            "restore-life-levels-potion",
+            &LauncherAmmoIndex::default(),
+            None,
+            &mut report,
+        );
+        assert_eq!(
+            restore_life_levels["useAction"]["effect"],
+            serde_json::json!({
+                "type": "restore-life-levels",
+                "lifeForceAmount": 150
             })
         );
         let thermal = item_json(

@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 134] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 135] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -245,10 +245,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 134] = [
     "99c41b9668586d97987cc18a459632c8f444d9c8dffbf1e6e024f2ce35a11091",
     "de5986a0133867854afb49f98e06a294528d9e4360bc88e7a0fa78d48fff8846",
     "6ecb079e1a1dd1e653e7c4d201f264d72e7c1db9bfe466f8d1ffa410cfee36e0",
+    "48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a";
+    "8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
@@ -10547,6 +10548,7 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
+                | ItemUseEffectDefinition::RestoreLifeLevels { .. }
                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -11045,6 +11047,7 @@ impl Game {
             | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
             | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
             | ItemUseEffectDefinition::ApplyStoneSkin { .. }
+            | ItemUseEffectDefinition::RestoreLifeLevels { .. }
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12112,6 +12115,9 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::RestoreLifeLevels { life_force_amount } => {
+                self.resolve_item_restore_life_levels(source_kind_id, *life_force_amount, events)
+            }
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12748,6 +12754,34 @@ impl Game {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             duration,
+            noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_restore_life_levels(
+        &mut self,
+        source_kind_id: &str,
+        life_force_amount: u16,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let experience_before = self.progress.experience;
+        let life_force_before = self.progress.life_force;
+        self.progress.experience = self.progress.maximum_experience;
+        self.apply_player_experience(0, events);
+        self.progress.life_force = self
+            .progress
+            .life_force
+            .saturating_add(life_force_amount)
+            .min(1_000);
+        let noticed = self.progress.experience != experience_before
+            || self.progress.life_force != life_force_before;
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemRestoreLifeLevelsResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
             noticed,
         });
         noticed

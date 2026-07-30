@@ -556,5 +556,7 @@ item-demo-muse-tonic-name = Muse Tonic
 item-demo-muse-tonic-description = Temporarily sharpens the drinker's wisdom and eloquence.
 item-demo-granite-tonic-name = Granite Tonic
 item-demo-granite-tonic-description = Temporarily hardens the drinker's skin against incoming blows.
+item-demo-renewal-tonic-name = Renewal Tonic
+item-demo-renewal-tonic-description = Restores drained experience and replenishes life force.
 terrain-demo-echo-tree-name = echo tree
 terrain-demo-echo-tree-description = Dense living growth raised by resonant force.

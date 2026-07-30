@@ -494,6 +494,11 @@ pub(crate) enum DomainEvent {
         duration: u32,
         noticed: bool,
     },
+    ItemRestoreLifeLevelsResolved {
+        source_kind_id: String,
+        display_name_key: String,
+        noticed: bool,
+    },
     ItemThermalResistanceResolved {
         source_kind_id: String,
         display_name_key: String,
@@ -2038,6 +2043,23 @@ impl DomainEvent {
                     ("nameKey", display_name_key),
                     ("duration", duration.to_string()),
                 ],
+            ),
+            Self::ItemRestoreLifeLevelsResolved {
+                source_kind_id,
+                display_name_key,
+                noticed,
+            } => dto(
+                if noticed {
+                    "item.use-restore-life-levels"
+                } else {
+                    "item.use-restore-life-levels-no-effect"
+                },
+                if noticed {
+                    "item-use-restore-life-levels"
+                } else {
+                    "item-use-restore-life-levels-no-effect"
+                },
+                [("source", source_kind_id), ("nameKey", display_name_key)],
             ),
             Self::ItemThermalResistanceResolved {
                 source_kind_id,

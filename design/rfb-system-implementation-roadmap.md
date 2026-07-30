@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.121 / contract-v142（P31–P92 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.121 / contract-v143（P31–P93 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
 
 ## 1. 目的与边界
 
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v142 阶段性里程碑
+## 8. contract-v75–v143 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.121、内容包 1.133.0、contract-v142、save v1 和 state hash Schema v54；内容 hash 为 `48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a`。active baseline 包含 446 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v142 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration 与 Stone Skin Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.121、内容包 1.134.0、contract-v143、save v1 和 state hash Schema v54；内容 hash 为 `8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404`。active baseline 包含 447 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v143 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration、Stone Skin 与 Restore Life Levels Potion。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、79 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、80 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -584,6 +584,8 @@ P30“首个非 Mana 职业资源”已由 contract-v90 完成：节奏资源按
 **P91 进展（2026-07）**：contract-v141 接入 Poetic Inspiration Potion。窄 `apply-poetic-inspiration` 每次按 `1d100+100` Extend 状态，通过既有 `grantedModifiers` 授予 Wisdom/Charisma 各 +5；首次新增才 Aware，重复延长保持 Tried-only。fixture 445 连续使用两瓶，固定 179/181 ticks、最终 340 ticks、属性、知识、消费、时间与事件顺序。协议保持 1.121，demo 升至 1.132.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 14，`consumable-effect` 72→71，真实包严格编译 hash 为 `53fd88e36019c7c40f177a00cc16a9bc019c51e3f31cb8c9b5b7036417a8fa89`。完整边界见 [Contract v141](contract-v141-potion-poetic-inspiration.md)。
 
 **P92 进展（2026-07）**：contract-v142 接入 Stone Skin Potion。窄 `apply-stone-skin` 每次按 `1d20+20` 以 KeepStrongest 应用状态，并按饮用时等级授予 `10 + 40 * level / 50` defense；首次新增才 Aware，更长刷新保持无新效果。fixture 446 以 25 级角色连续使用两瓶，固定 24/25 ticks、最终 15 ticks、defense +30、知识、消费、时间与事件顺序。协议保持 1.121，demo 升至 1.133.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 69，`consumable-effect` 70→69，真实包严格编译 hash 为 `845faf23ab10df14f22dbf5c14481db63385e210011d548ee7bbd18ee5cb4136`。完整边界见 [Contract v142](contract-v142-potion-stone-skin.md)。
+
+**P93 进展（2026-07）**：contract-v143 接入 Restore Life Levels Potion。窄 `restore-life-levels { lifeForceAmount: 150 }` 先恢复当前经验至历史最高值并复用既有等级重算，再增加生命力并封顶 1000；两项任一实际变化才 Aware，完全无变化保持 Tried-only，效果零 RNG。fixture 447 固定经验 5→25、等级 1→3、生命力 900→1000、消费、知识和事件顺序；一个表驱动核心测试覆盖仅经验、仅生命力和均无变化三支。协议保持 1.121，demo 升至 1.134.0，Schema 保持 v54。legacy importer 映射 tval 75/sval 41，`consumable-effect` 69→68，真实包严格编译 hash 为 `c7d1868b4ed9452c9159b6870af80eb942bfca3350f76d42c2b540a90b710ed1`。完整边界见 [Contract v143](contract-v143-potion-restore-life-levels.md)。
 
 ## 9. 内容迁移策略
 

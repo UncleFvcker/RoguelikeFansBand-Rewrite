@@ -256,6 +256,8 @@ contract-v141 为静态消耗品增加 self-only 的 `apply-poetic-inspiration {
 
 contract-v142 为静态消耗品增加 self-only 的 `apply-stone-skin { durationDice, durationSides, durationBonus }`。核心每次按内容骰以 KeepStrongest 应用 Stone Skin，按饮用时等级通过既有状态修正授予 defense；首次新增才识别。动态 activation、充能和设备检定不允许使用该效果。demo 包 1.133.0 新增原创 Granite Tonic，现含 68 abilities、5 ability books、79 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v142](contract-v142-potion-stone-skin.md)。
 
+contract-v143 为静态消耗品增加 self-only 的 `restore-life-levels { lifeForceAmount }`。核心按固定顺序恢复历史最高经验、重算等级，再增加生命力并封顶 1000；任一实际变化才识别，效果不抽 RNG。动态 activation、充能和设备检定不允许使用该效果。demo 包 1.134.0 新增原创 Renewal Tonic，现含 68 abilities、5 ability books、80 items、4 affixes、3 resources、28 actors、4 races 和 13 skill sets；state hash 保持 Schema v54。完整边界见 [Contract v143](contract-v143-potion-restore-life-levels.md)。
+
 多包拓扑排序、patch、locale 完整性和开发期索引仍待后续实现。
 
 contract-v79 以 1.71.0 增加固定八向 `cone-damage` 能力效果和 Echo Fan；锥形半径、伤害参数与目标模式继续由内容定义，能力进度仍由 `abilityProgress` 保存，当前 state hash 为 Schema v34。

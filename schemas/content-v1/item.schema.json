@@ -771,6 +771,26 @@
         {
           "additionalProperties": false,
           "properties": {
+            "lifeForceAmount": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "restore-life-levels",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "lifeForceAmount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "durationBonus": {
               "format": "uint32",
               "minimum": 0,
