@@ -18,7 +18,7 @@
 | 45（戒指） | `ring` 槽通用壳——**普通首饰无任何属性**（原版属性与 pval 全部由 ego 生成期赋予或固定神器携带，P45 修正）；AC 直接入 defense；效果留壳+缺口 |
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |
-| 75/80（药水/食物） | 堆叠消耗品；P58 接入六种治疗药水；P61 增加四种状态恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种治疗药水补充当前可表达的异常清除序列，其余保留行为缺口 |
+| 75/80（药水/食物） | 堆叠消耗品；P58 接入六种治疗药水；P61 增加四种状态恢复食物、Boldness、Vigor、Restore Mana、Clarity，并为六种治疗药水补充当前可表达的异常清除序列；缺少主动效果计 `consumable-effect`，全部食物另计独立的 `food-nutrition` 缺口 |
 | 70/71/65/55/66（卷轴/魔杖/法杖/权杖） | P62 为 sval 12/13 接入鉴定；P63 映射 25–30/57 的地图/侦测；P64 映射 8–11/53 的传送/召回；P65 映射 16/17/18/20/21 的装备附魔；P66 映射 2/3/14/15 的施咒/解除，剩余 38 条计 `scroll-effect`；P59 为通用 wand/staff/rod 壳生成动态候选，效果 identity、power、成本与随机容量在实例生成时物化 |
 | 90+ 魔典族 | 壳 + `book` 标签（旧版法术书系统未映射） |
 | 其余（箱子/尖刺/瓶罐/雕像/尸骸等） | 通用壳（identity/重量/堆叠/字形恒可表达） |
@@ -27,7 +27,7 @@
 
 ## 3. 缺口报告扩展
 
-`itemsTotal/itemsImported/itemsSkipped`、`unmappedItemFlags`（基础物品的全部 F: 旗标——基础件不再映射任何属性）、`egosTotal/egosImported`、`artifactsTotal/artifactsImported`、`unmappedEgoFlags`、`unmappedArtifactFlags`、`itemBehaviorGaps`（按形态类计数：scroll-effect / consumable-effect / book-system / ammo-dice-folded / launcher-multiplier / effect-jewelry / launcher-unpaired / ego-activation / artifact-activation）。`device-effect` 已在 P62 退出报告。
+`itemsTotal/itemsImported/itemsSkipped`、`unmappedItemFlags`（基础物品的全部 F: 旗标——基础件不再映射任何属性）、`egosTotal/egosImported`、`artifactsTotal/artifactsImported`、`unmappedEgoFlags`、`unmappedArtifactFlags`、`itemBehaviorGaps`（按独立行为缺口计数：scroll-effect / consumable-effect / food-nutrition / book-system / ammo-dice-folded / launcher-multiplier / effect-jewelry / launcher-unpaired / ego-activation / artifact-activation）。`device-effect` 已在 P62 退出报告。
 
 ## 4. e_info 词条 → affix（P45）
 
@@ -61,7 +61,7 @@ P67 接入四种召唤卷轴：4 Summon Monster、5 Summon Undead、6 Summon Pet
 
 ## 7. 遗留
 
-- 其余药水/食物按源码 sval 精选接入；剩余 `scroll-effect` 34 按世界/状态/物品效果重新分组后继续接入；
+- 其余药水/食物按源码 sval 精选接入；当前 `consumable-effect` 68、`food-nutrition` 28，食物主动效果完成后仍保留营养缺口；剩余 `scroll-effect` 15 按世界/状态/物品效果重新分组后继续接入；
 - 装备旗标系统（抗性/免疫/速度/斩杀支路）落地后重跑导入，可解锁 72 条 ego-inexpressible 词条与神器旗标主体；
 - E:/D: 中文名与描述导出为本地 Fluent 片段（v2 方向未变）；
 - 词条与基础物品的运行时挂接（生成期 affix 抽取）属于战利品生成线，另行排期。

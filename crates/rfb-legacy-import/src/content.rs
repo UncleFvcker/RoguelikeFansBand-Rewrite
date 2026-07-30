@@ -1627,6 +1627,12 @@ fn item_json_with_terrain(
     {
         *report.item_behavior_gaps.entry(gap.to_owned()).or_default() += 1;
     }
+    if entry.tval == 80 {
+        *report
+            .item_behavior_gaps
+            .entry("food-nutrition".to_owned())
+            .or_default() += 1;
+    }
     let mut value = serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/item.schema.json"),
         "formatVersion": 1,
@@ -8533,6 +8539,37 @@ F:BRAND_VAMP | HOLD_LIFE
             clarity["effect"]["effects"][1]["statusKindId"],
             "rfb.status.confusion"
         );
+    }
+
+    #[test]
+    fn food_nutrition_gap_is_independent_from_active_effect_gap() {
+        let cases = [
+            (80, 99, Some(1), Some(1)),
+            (80, 12, None, Some(1)),
+            (75, 99, Some(1), None),
+        ];
+        for (tval, sval, consumable_effect, food_nutrition) in cases {
+            let mut report = ContentImportReport::default();
+            item_json(
+                &LegacyItemEntry {
+                    tval,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("gap-{tval}-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(
+                report.item_behavior_gaps.get("consumable-effect").copied(),
+                consumable_effect
+            );
+            assert_eq!(
+                report.item_behavior_gaps.get("food-nutrition").copied(),
+                food_nutrition
+            );
+        }
     }
 
     #[test]

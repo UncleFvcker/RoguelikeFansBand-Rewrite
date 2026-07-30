@@ -139,7 +139,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - Stone Skin Potion 只实现普通 `1d20+20` KeepStrongest 与饮用时等级防御；原版 `_potion_power`、持续期间升级重算、Magic Defense、Kata Musou 和职业特例继续留在缺口；
 - Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；不建立通用成长事务、经验吸取、生命力损伤、Possessor/Mimic 上限或 Android 特例，也不提前开放设备 activation；
 - 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
-- `consumable-effect` 现为 68；其他食物、营养、属性恢复和增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
+- `consumable-effect` 现为 68，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。其他属性恢复和增益/减益药水继续按独立事务纵切，不扩展通用序列或状态 DSL。
 
 ## contract-v116 明确遗留
 
@@ -175,7 +175,7 @@ contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 
 - 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
 - rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
 - 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
-- 恢复型消耗品已支持状态、资源和经验/生命力恢复；属性恢复、食物营养、增益药水等仍在 `consumable-effect` 68 条缺口中；
+- 恢复型消耗品已支持状态、资源和经验/生命力恢复；属性恢复和增益药水等仍在 `consumable-effect` 68 条缺口中，全部 28 种食物的营养/饥饿事务独立记录为 `food-nutrition`；
 - 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion、Protection from Evil、Recharging 和 Spell 完成后剩余 15 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
 - 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
 - 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
