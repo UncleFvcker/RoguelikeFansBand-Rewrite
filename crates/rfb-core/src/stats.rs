@@ -181,6 +181,7 @@ pub fn experience_required_for_level(level: u16) -> u64 {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CharacterProgress {
     pub attributes: AttributeSet,
+    pub maximum_attributes: AttributeSet,
     pub experience: u64,
     pub maximum_experience: u64,
     pub life_force: u16,
@@ -237,6 +238,7 @@ impl CharacterProgress {
         }
         Self {
             attributes: AttributeSet::default(),
+            maximum_attributes: AttributeSet::default(),
             experience: 0,
             maximum_experience: 0,
             life_force: 1_000,
@@ -339,13 +341,69 @@ impl CharacterProgress {
             return None;
         }
         let cap = Self::attribute_cap(victorious);
-        let value = self.attributes.value(kind);
+        let value = self.maximum_attributes.value(kind);
         if value >= cap {
             return None;
         }
         let next = modify_attribute_value(value, 1, cap);
         if next == value {
             return None;
+        }
+        match kind {
+            AttributeKind::Strength => {
+                self.attributes.strength = next;
+                self.maximum_attributes.strength = next;
+            }
+            AttributeKind::Intelligence => {
+                self.attributes.intelligence = next;
+                self.maximum_attributes.intelligence = next;
+            }
+            AttributeKind::Wisdom => {
+                self.attributes.wisdom = next;
+                self.maximum_attributes.wisdom = next;
+            }
+            AttributeKind::Dexterity => {
+                self.attributes.dexterity = next;
+                self.maximum_attributes.dexterity = next;
+            }
+            AttributeKind::Constitution => {
+                self.attributes.constitution = next;
+                self.maximum_attributes.constitution = next;
+            }
+            AttributeKind::Charisma => {
+                self.attributes.charisma = next;
+                self.maximum_attributes.charisma = next;
+            }
+        }
+        self.pending_attribute_increases -= 1;
+        Some(next)
+    }
+
+    pub fn drain_attribute(&mut self, kind: AttributeKind, rng: &mut RfbRng) -> bool {
+        let current = self.attributes.value(kind);
+        if current <= 3 {
+            return false;
+        }
+        let next = if current <= 18 {
+            current.saturating_sub(1)
+        } else {
+            let loss_base = (((current - 18) / 2).div_ceil(2) + 1).max(1);
+            let roll = rng.bounded(u64::from(loss_base)) + 1;
+            let loss = ((roll + u64::from(loss_base)) * 10 / 100).max(5);
+            let reduced = u16::try_from(u64::from(current).saturating_sub(loss)).unwrap_or(3);
+            if reduced < 18 { 18 } else { reduced }
+        };
+        self.set_current_attribute(kind, next)
+    }
+
+    pub fn restore_attribute(&mut self, kind: AttributeKind) -> bool {
+        self.set_current_attribute(kind, self.maximum_attributes.value(kind))
+    }
+
+    fn set_current_attribute(&mut self, kind: AttributeKind, next: u16) -> bool {
+        let current = self.attributes.value(kind);
+        if current == next || next > self.maximum_attributes.value(kind) {
+            return false;
         }
         match kind {
             AttributeKind::Strength => self.attributes.strength = next,
@@ -355,8 +413,7 @@ impl CharacterProgress {
             AttributeKind::Constitution => self.attributes.constitution = next,
             AttributeKind::Charisma => self.attributes.charisma = next,
         }
-        self.pending_attribute_increases -= 1;
-        Some(next)
+        true
     }
 
     pub fn validate(&self, victorious: bool) -> bool {
@@ -379,7 +436,19 @@ impl CharacterProgress {
                 self.attributes.charisma,
             ]
             .into_iter()
-            .all(|value| (3..=Self::attribute_cap(victorious)).contains(&value))
+            .zip([
+                self.maximum_attributes.strength,
+                self.maximum_attributes.intelligence,
+                self.maximum_attributes.wisdom,
+                self.maximum_attributes.dexterity,
+                self.maximum_attributes.constitution,
+                self.maximum_attributes.charisma,
+            ])
+            .all(|(value, maximum)| {
+                (3..=Self::attribute_cap(victorious)).contains(&value)
+                    && (3..=Self::attribute_cap(victorious)).contains(&maximum)
+                    && value <= maximum
+            })
             && self.pending_attribute_increases <= self.max_level / 5
             && self.skills.iter().all(|(id, skill)| {
                 !id.is_empty()
@@ -737,11 +806,13 @@ mod tests {
             Some(14)
         );
         progress.attributes.strength = 18;
+        progress.maximum_attributes.strength = 18;
         assert_eq!(
             progress.increase_attribute(AttributeKind::Strength, false),
             Some(28)
         );
         progress.attributes.strength = PRE_VICTORY_ATTRIBUTE_CAP;
+        progress.maximum_attributes.strength = PRE_VICTORY_ATTRIBUTE_CAP;
         assert_eq!(
             progress.increase_attribute(AttributeKind::Strength, false),
             None
@@ -752,5 +823,21 @@ mod tests {
             Some(14)
         );
         assert_eq!(progress.pending_attribute_increases, 0);
+    }
+
+    #[test]
+    fn attribute_drain_preserves_floor_and_only_rolls_above_18() {
+        for (current, expected, draws) in [(3, 3, 0), (13, 12, 0), (38, 33, 1)] {
+            let mut progress = CharacterProgress::new(1, 10);
+            progress.attributes.strength = current;
+            progress.maximum_attributes.strength = 100;
+            let mut rng = RfbRng::seeded(99);
+            assert_eq!(
+                progress.drain_attribute(AttributeKind::Strength, &mut rng),
+                current != 3
+            );
+            assert_eq!(progress.attributes.strength, expected);
+            assert_eq!(rng.draw_counter, draws);
+        }
     }
 }

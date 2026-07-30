@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.121";
+pub const PROTOCOL_VERSION: &str = "1.122";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -901,6 +901,8 @@ pub enum AttributeKindDto {
 #[serde(rename_all = "camelCase")]
 pub struct AttributeValueDto {
     pub natural: u16,
+    #[serde(default)]
+    pub maximum_natural: u16,
     pub effective: u16,
     pub index: u8,
 }
@@ -2659,6 +2661,8 @@ pub struct NaturalAttributeSetSaveDto {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlayerProgressSaveDto {
     pub attributes: NaturalAttributeSetSaveDto,
+    #[serde(default)]
+    pub maximum_attributes: Option<NaturalAttributeSetSaveDto>,
     pub experience: u64,
     #[serde(default)]
     pub maximum_experience: u64,

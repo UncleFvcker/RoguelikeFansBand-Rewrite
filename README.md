@@ -158,6 +158,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v136：Thermal 药水](design/contract-v136-potion-thermal-resistance.md)
 - [Contract v137：Resistance 药水](design/contract-v137-potion-basic-resistance.md)
 - [Contract v138：Speed 药水](design/contract-v138-potion-speed.md)
+- [Contract v146：属性损伤与恢复](design/contract-v146-attribute-drain-restoration.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -181,7 +182,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v145`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v146`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -373,6 +374,8 @@ P93 / contract-v143 接入 Restore Life Levels Potion。窄 `restore-life-levels
 P94 / contract-v144 接入 Blindness Potion 与 Blindness Food。窄 `apply-blindness` 固定先抽一次 `bounded(55)` 抗性 RNG，拥有 Blindness 免疫时短路持续时间；未抵抗时按来源抽取 `1d100+99` 或 `1d25+24` 并 Extend Blindness。只有首次新增状态才 Aware，已有状态延长保持 Tried-only。协议保持 1.121、demo 1.135.0、state hash Schema 保持 v54、active baseline 448 条 exact、零 waiver，内置 content hash 为 `9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5`。legacy importer 映射 tval 75/sval 7 与 tval 80/sval 1，使 `consumable-effect` 68→66，`food-nutrition` 保持 28。详见[Contract v144](design/contract-v144-potion-blindness.md)。
 
 P95 / contract-v145 接入 Detonations Potion。窄 `apply-detonation` 依原版顺序掷 `50d20`，绕过护甲与 Physical resistance、保留既有 `incomingDamagePercent`，存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding；直接伤害致死时不施加后续状态，合法使用无条件 Aware。协议保持 1.121、demo 1.136.0、state hash Schema 保持 v54、active baseline 449 条 exact、零 waiver，内置 content hash 为 `136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717`。legacy importer 映射 tval 75/sval 22，使 `consumable-effect` 66→65。详见[Contract v145](design/contract-v145-potion-detonations.md)。
+
+P96 / contract-v146 接入属性损伤与恢复。玩家进度分别保存当前自然属性与历史最大自然属性；六种 `drain-attribute` 按原版 18/xx 公式降低当前值，六种 `restore-attribute` 无 RNG 恢复至历史最大值。当前值为 3 时不再降低，旧存档缺最大属性时迁移为当前值，损坏的 current > maximum 存档拒绝载入。实际变化才 Aware，无变化仍消费并保持 Tried-only；属性变化复用既有 HP、资源上限和派生刷新。协议 1.122、demo 1.137.0、state hash Schema v55、active baseline 450 条 exact、零 waiver，内置 content hash 为 `ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b`。legacy importer 映射 tval 75/sval 16–21、42–47，使 `consumable-effect` 65→53；`food-nutrition` 保持 28，`scroll-effect` 保持 15。详见[Contract v146](design/contract-v146-attribute-drain-restoration.md)。
 
 ### 本地验证
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.frailty-tonic",
+  "nameKey": "item-demo-frailty-tonic-name",
+  "appearanceNameKey": "item-demo-unfamiliar-potion-name",
+  "descriptionKey": "item-demo-frailty-tonic-description",
+  "glyph": "!",
+  "weightTenthsPound": 4,
+  "maxStack": 20,
+  "useAction": {
+    "effect": {
+      "type": "drain-attribute",
+      "attribute": "strength"
+    }
+  },
+  "tags": ["attribute-drain", "consumable", "potion"]
+}

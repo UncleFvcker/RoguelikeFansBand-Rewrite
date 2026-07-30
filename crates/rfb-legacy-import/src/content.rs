@@ -1379,6 +1379,54 @@ fn fixed_consumable_use_action_with_terrain(
             "type": "restore-life-levels",
             "lifeForceAmount": 150
         }),
+        (75, 16) => serde_json::json!({
+            "type": "drain-attribute",
+            "attribute": "strength"
+        }),
+        (75, 17) => serde_json::json!({
+            "type": "drain-attribute",
+            "attribute": "intelligence"
+        }),
+        (75, 18) => serde_json::json!({
+            "type": "drain-attribute",
+            "attribute": "wisdom"
+        }),
+        (75, 19) => serde_json::json!({
+            "type": "drain-attribute",
+            "attribute": "dexterity"
+        }),
+        (75, 20) => serde_json::json!({
+            "type": "drain-attribute",
+            "attribute": "constitution"
+        }),
+        (75, 21) => serde_json::json!({
+            "type": "drain-attribute",
+            "attribute": "charisma"
+        }),
+        (75, 42) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "strength"
+        }),
+        (75, 43) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "intelligence"
+        }),
+        (75, 44) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "wisdom"
+        }),
+        (75, 45) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "dexterity"
+        }),
+        (75, 46) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "constitution"
+        }),
+        (75, 47) => serde_json::json!({
+            "type": "restore-attribute",
+            "attribute": "charisma"
+        }),
         (75, 30) => serde_json::json!({
             "type": "apply-thermal-resistance",
             "durationDice": 1,
@@ -8993,6 +9041,36 @@ F:BRAND_VAMP | HOLD_LIFE
                 "lifeForceAmount": 150
             })
         );
+        for (sval, effect_type, attribute) in [
+            (16, "drain-attribute", "strength"),
+            (17, "drain-attribute", "intelligence"),
+            (18, "drain-attribute", "wisdom"),
+            (19, "drain-attribute", "dexterity"),
+            (20, "drain-attribute", "constitution"),
+            (21, "drain-attribute", "charisma"),
+            (42, "restore-attribute", "strength"),
+            (43, "restore-attribute", "intelligence"),
+            (44, "restore-attribute", "wisdom"),
+            (45, "restore-attribute", "dexterity"),
+            (46, "restore-attribute", "constitution"),
+            (47, "restore-attribute", "charisma"),
+        ] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 75,
+                    sval,
+                    ..LegacyItemEntry::default()
+                },
+                &format!("attribute-{sval}"),
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut report,
+            );
+            assert_eq!(
+                value["useAction"]["effect"],
+                serde_json::json!({"type": effect_type, "attribute": attribute})
+            );
+        }
         let thermal = item_json(
             &LegacyItemEntry {
                 tval: 75,

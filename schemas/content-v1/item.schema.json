@@ -214,6 +214,17 @@
       ],
       "type": "string"
     },
+    "ItemAttributeDefinition": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "string"
+    },
     "ItemChargeDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -785,6 +796,40 @@
           "required": [
             "type",
             "lifeForceAmount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "attribute": {
+              "$ref": "#/$defs/ItemAttributeDefinition"
+            },
+            "type": {
+              "const": "drain-attribute",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "attribute"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "attribute": {
+              "$ref": "#/$defs/ItemAttributeDefinition"
+            },
+            "type": {
+              "const": "restore-attribute",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "attribute"
           ],
           "type": "object"
         },

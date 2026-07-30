@@ -18,6 +18,12 @@ use rfb_protocol::{
 
 use crate::effect::DamageOutcome;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ItemAttributeChange {
+    Drained,
+    Restored,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ProjectileTrace {
     pub(crate) origin: Position,
@@ -497,6 +503,16 @@ pub(crate) enum DomainEvent {
     ItemRestoreLifeLevelsResolved {
         source_kind_id: String,
         display_name_key: String,
+        noticed: bool,
+    },
+    ItemAttributeChanged {
+        source_kind_id: String,
+        display_name_key: String,
+        attribute: crate::stats::AttributeKind,
+        change: ItemAttributeChange,
+        before: u16,
+        after: u16,
+        maximum: u16,
         noticed: bool,
     },
     ItemThermalResistanceResolved {
@@ -2073,6 +2089,52 @@ impl DomainEvent {
                 },
                 [("source", source_kind_id), ("nameKey", display_name_key)],
             ),
+            Self::ItemAttributeChanged {
+                source_kind_id,
+                display_name_key,
+                attribute,
+                change,
+                before,
+                after,
+                maximum,
+                noticed,
+            } => {
+                let (message_key, event_key, change_key) = match (change, noticed) {
+                    (ItemAttributeChange::Drained, true) => (
+                        "item.use-attribute-drained",
+                        "item-use-attribute-drained",
+                        "drained",
+                    ),
+                    (ItemAttributeChange::Drained, false) => (
+                        "item.use-attribute-drain-no-effect",
+                        "item-use-attribute-drain-no-effect",
+                        "drained",
+                    ),
+                    (ItemAttributeChange::Restored, true) => (
+                        "item.use-attribute-restored",
+                        "item-use-attribute-restored",
+                        "restored",
+                    ),
+                    (ItemAttributeChange::Restored, false) => (
+                        "item.use-attribute-restore-no-effect",
+                        "item-use-attribute-restore-no-effect",
+                        "restored",
+                    ),
+                };
+                dto(
+                    message_key,
+                    event_key,
+                    [
+                        ("source", source_kind_id),
+                        ("nameKey", display_name_key),
+                        ("attribute", attribute_kind_id(attribute).to_owned()),
+                        ("change", change_key.to_owned()),
+                        ("before", before.to_string()),
+                        ("after", after.to_string()),
+                        ("maximum", maximum.to_string()),
+                    ],
+                )
+            }
             Self::ItemThermalResistanceResolved {
                 source_kind_id,
                 display_name_key,

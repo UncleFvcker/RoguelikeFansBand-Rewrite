@@ -25,7 +25,7 @@ use crate::{
         apply_status, resolve_damage,
     },
     error::CoreError,
-    event::{DomainEvent, ProjectileTrace, project_events},
+    event::{DomainEvent, ItemAttributeChange, ProjectileTrace, project_events},
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_entity, actor_from_player, actor_from_runtime_spawn,
@@ -60,16 +60,16 @@ use rfb_content::{
     ContentCatalog, ContentPosition, DeviceRechargeProfileDefinition, DungeonDefinition,
     DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, DungeonInstanceLifecycle,
     EncounterEntryDefinition, EncounterFormation, EncounterTableDefinition, EquipmentBonuses,
-    EquipmentPassive, FloorLifecycle, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
-    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
-    ItemUseEffectDefinition, MonsterPackBehavior, PersonalityDefinition, ProceduralFloorDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
-    RaceDefinition, RetakeFloorPolicy, SkillKind, SkillSetDefinition, SlayLevel, SlayTarget,
-    StartingItemDefinition, StatModifiers, TaskObjectiveDefinition, TaskObjectiveKind,
-    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
-    TerrainFeaturePlacement, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
-    WeaponBrand,
+    EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
+    ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
+    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MonsterPackBehavior,
+    PersonalityDefinition, ProceduralFloorDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition, RetakeFloorPolicy,
+    SkillKind, SkillSetDefinition, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers,
+    TaskObjectiveDefinition, TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
+    TerrainFeatureEntryDefinition, TerrainFeaturePlacement, ThemeVaultCandidateDefinition,
+    VaultDefinition, VaultTransform, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -110,7 +110,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 137] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 138] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -248,13 +248,14 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 137] = [
     "48611b108dafc4b06836073ca6b5c6881779c653cbab569a7fdeaec82c1c707a",
     "8b3bdb097563d99b6433a5746c07d395b406d5c8d86616540e0126cd6af72404",
     "9f28bf79c8fc72bbcf97beec23da1c1fa0a10045b5c363defcb59e9a29457ed5",
+    "136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "136cc9508d1d45997f193c39689f8604e6e06db258e4a2d22e65b7a24b72f717";
+    "ffd8f8111a5b956a26a6af12bd242aad04a322bb996f587a08fae9db4488925b";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 54;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 55;
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
@@ -1198,15 +1199,45 @@ fn restore_character_progress(
     } else if skills != expected_skills {
         return Err(CoreError::InvalidSave("player skill state is invalid"));
     }
+    let attributes = AttributeSet {
+        strength: saved.attributes.strength,
+        intelligence: saved.attributes.intelligence,
+        wisdom: saved.attributes.wisdom,
+        dexterity: saved.attributes.dexterity,
+        constitution: saved.attributes.constitution,
+        charisma: saved.attributes.charisma,
+    };
+    let maximum_attributes = saved
+        .maximum_attributes
+        .as_ref()
+        .map(|maximum| AttributeSet {
+            strength: maximum.strength,
+            intelligence: maximum.intelligence,
+            wisdom: maximum.wisdom,
+            dexterity: maximum.dexterity,
+            constitution: maximum.constitution,
+            charisma: maximum.charisma,
+        })
+        .unwrap_or(attributes);
+    if ![
+        AttributeKind::Strength,
+        AttributeKind::Intelligence,
+        AttributeKind::Wisdom,
+        AttributeKind::Dexterity,
+        AttributeKind::Constitution,
+        AttributeKind::Charisma,
+    ]
+    .into_iter()
+    .all(|kind| {
+        let current = attributes.value(kind);
+        let maximum = maximum_attributes.value(kind);
+        current <= maximum
+    }) {
+        return Err(CoreError::InvalidSave("player attribute state is invalid"));
+    }
     Ok(CharacterProgress {
-        attributes: AttributeSet {
-            strength: saved.attributes.strength,
-            intelligence: saved.attributes.intelligence,
-            wisdom: saved.attributes.wisdom,
-            dexterity: saved.attributes.dexterity,
-            constitution: saved.attributes.constitution,
-            charisma: saved.attributes.charisma,
-        },
+        attributes,
+        maximum_attributes,
         experience: saved.experience,
         maximum_experience: if saved.maximum_experience == 0 {
             saved.experience
@@ -1739,6 +1770,7 @@ impl Game {
                 constitution: definition.attributes.constitution,
                 charisma: definition.attributes.charisma,
             };
+            progress.maximum_attributes = progress.attributes;
         }
         progress.replace_skills(character_skill_progress(
             &content,
@@ -3381,6 +3413,17 @@ impl Game {
             TechniqueAttribute::Dexterity => AttributeKind::Dexterity,
             TechniqueAttribute::Constitution => AttributeKind::Constitution,
             TechniqueAttribute::Charisma => AttributeKind::Charisma,
+        }
+    }
+
+    fn item_attribute_kind(attribute: &ItemAttributeDefinition) -> AttributeKind {
+        match attribute {
+            ItemAttributeDefinition::Strength => AttributeKind::Strength,
+            ItemAttributeDefinition::Intelligence => AttributeKind::Intelligence,
+            ItemAttributeDefinition::Wisdom => AttributeKind::Wisdom,
+            ItemAttributeDefinition::Dexterity => AttributeKind::Dexterity,
+            ItemAttributeDefinition::Constitution => AttributeKind::Constitution,
+            ItemAttributeDefinition::Charisma => AttributeKind::Charisma,
         }
     }
 
@@ -5544,6 +5587,7 @@ impl Game {
         let skills = self.effective_player_skill_progress();
         let value = |kind| AttributeValueDto {
             natural: natural.value(kind),
+            maximum_natural: self.progress.maximum_attributes.value(kind),
             effective: effective.value(kind),
             index: effective.index(kind),
         };
@@ -5702,8 +5746,30 @@ impl Game {
 
     fn increase_player_attribute(&mut self, attribute: AttributeKind) -> Option<(u16, u16, u8)> {
         let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
         let victorious = self.victory_level_cap_unlocked();
         self.progress.increase_attribute(attribute, victorious)?;
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        let effective = self.effective_player_attributes();
+        Some((
+            self.progress.attributes.value(attribute),
+            effective.value(attribute),
+            effective.index(attribute),
+        ))
+    }
+
+    fn player_resource_maxima(&self) -> BTreeMap<String, u32> {
+        self.resources
+            .iter()
+            .map(|(id, pool)| (id.clone(), pool.maximum))
+            .collect()
+    }
+
+    fn refresh_after_attribute_change(
+        &mut self,
+        previous_max_hp: i32,
+        previous_resource_maxima: &BTreeMap<String, u32>,
+    ) {
         let next_max_hp = self.effective_player_max_hp();
         if previous_max_hp > 0 && next_max_hp != previous_max_hp {
             self.player.hp = i32::try_from(
@@ -5719,13 +5785,21 @@ impl Game {
                 }
             });
         }
-        let effective = self.effective_player_attributes();
         self.refresh_player_resource_maxima();
-        Some((
-            self.progress.attributes.value(attribute),
-            effective.value(attribute),
-            effective.index(attribute),
-        ))
+        for (resource_id, previous_maximum) in previous_resource_maxima {
+            let Some(pool) = self.resources.get_mut(resource_id) else {
+                continue;
+            };
+            if *previous_maximum > 0 && pool.maximum != *previous_maximum {
+                pool.current = u32::try_from(
+                    u64::from(pool.current)
+                        .saturating_mul(u64::from(pool.maximum))
+                        .saturating_div(u64::from(*previous_maximum)),
+                )
+                .unwrap_or(u32::MAX)
+                .min(pool.maximum);
+            }
+        }
     }
 
     fn effective_player_max_hp(&self) -> i32 {
@@ -10555,6 +10629,8 @@ impl Game {
                 | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                 | ItemUseEffectDefinition::ApplyPoison { .. }
                 | ItemUseEffectDefinition::ApplyBlindness { .. }
+                | ItemUseEffectDefinition::DrainAttribute { .. }
+                | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::ApplyDetonation { .. }
                 | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
@@ -11052,6 +11128,8 @@ impl Game {
             | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
             | ItemUseEffectDefinition::ApplyStoneSkin { .. }
             | ItemUseEffectDefinition::RestoreLifeLevels { .. }
+            | ItemUseEffectDefinition::DrainAttribute { .. }
+            | ItemUseEffectDefinition::RestoreAttribute { .. }
             | ItemUseEffectDefinition::ApplyThermalResistance { .. }
             | ItemUseEffectDefinition::ApplyBasicResistance { .. }
             | ItemUseEffectDefinition::ApplyPoison { .. }
@@ -12124,6 +12202,18 @@ impl Game {
             ItemUseEffectDefinition::RestoreLifeLevels { life_force_amount } => {
                 self.resolve_item_restore_life_levels(source_kind_id, *life_force_amount, events)
             }
+            ItemUseEffectDefinition::DrainAttribute { attribute } => self
+                .resolve_item_drain_attribute(
+                    source_kind_id,
+                    Self::item_attribute_kind(attribute),
+                    events,
+                ),
+            ItemUseEffectDefinition::RestoreAttribute { attribute } => self
+                .resolve_item_restore_attribute(
+                    source_kind_id,
+                    Self::item_attribute_kind(attribute),
+                    events,
+                ),
             ItemUseEffectDefinition::ApplyThermalResistance {
                 duration_dice,
                 duration_sides,
@@ -12815,6 +12905,60 @@ impl Game {
         events.push(DomainEvent::ItemRestoreLifeLevelsResolved {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
+            noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_drain_attribute(
+        &mut self,
+        source_kind_id: &str,
+        attribute: AttributeKind,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let before = self.progress.attributes.value(attribute);
+        let noticed = self.progress.drain_attribute(attribute, &mut self.rng);
+        if noticed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemAttributeChanged {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            attribute,
+            change: ItemAttributeChange::Drained,
+            before,
+            after: self.progress.attributes.value(attribute),
+            maximum: self.progress.maximum_attributes.value(attribute),
+            noticed,
+        });
+        noticed
+    }
+
+    fn resolve_item_restore_attribute(
+        &mut self,
+        source_kind_id: &str,
+        attribute: AttributeKind,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let before = self.progress.attributes.value(attribute);
+        let noticed = self.progress.restore_attribute(attribute);
+        if noticed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemAttributeChanged {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            attribute,
+            change: ItemAttributeChange::Restored,
+            before,
+            after: self.progress.attributes.value(attribute),
+            maximum: self.progress.maximum_attributes.value(attribute),
             noticed,
         });
         noticed

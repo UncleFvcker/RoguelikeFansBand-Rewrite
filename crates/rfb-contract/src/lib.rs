@@ -20,7 +20,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 1;
-pub const ACTIVE_BASELINE: &str = "contract-v145";
+pub const ACTIVE_BASELINE: &str = "contract-v146";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -434,6 +434,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
         if let Some(attributes) = &fixture.preconditions.player_attributes {
             progress.attributes = *attributes;
+            progress.maximum_attributes = Some(*attributes);
         }
     }
     if fixture.preconditions.legacy_player_progress {
@@ -686,10 +687,29 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
 }
 
 pub fn verify(fixture: &ContractFixture) -> Result<(), ContractError> {
-    let expected = fixture
+    let mut expected = fixture
         .assertions
         .as_ref()
         .ok_or_else(|| ContractError::MissingAssertions(fixture.id.clone()))?;
+    let mut migrated_expected;
+    if let Some(player_attributes) = expected.final_state.player_attributes.as_ref()
+        && player_attributes.attributes.strength.maximum_natural == 0
+    {
+        migrated_expected = expected.clone();
+        if let Some(progress) = migrated_expected.final_state.player_attributes.as_mut() {
+            for value in [
+                &mut progress.attributes.strength,
+                &mut progress.attributes.intelligence,
+                &mut progress.attributes.wisdom,
+                &mut progress.attributes.dexterity,
+                &mut progress.attributes.constitution,
+                &mut progress.attributes.charisma,
+            ] {
+                value.maximum_natural = value.natural;
+            }
+        }
+        expected = &migrated_expected;
+    }
     let actual = observe(fixture)?;
     if &actual == expected {
         return Ok(());

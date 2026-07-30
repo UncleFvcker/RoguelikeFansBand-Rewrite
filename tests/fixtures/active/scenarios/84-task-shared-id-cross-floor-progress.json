@@ -304,7 +304,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0a87476ebca317aa62aca5d4a7021db48339dda351b703e2c621475100d02416"
+      "stateHash": "4b1721761ae384cce31dac48cd40bf6cbb8cf8ee21d66d1bcc90a6b5d08809ca"
     },
     "events": [
       {
@@ -5432,6 +5432,6 @@
     "removedEntities": [
       "demo.floor.echo-bounty-rift.task-target.1"
     ],
-    "saveRoundTripStateHash": "0a87476ebca317aa62aca5d4a7021db48339dda351b703e2c621475100d02416"
+    "saveRoundTripStateHash": "4b1721761ae384cce31dac48cd40bf6cbb8cf8ee21d66d1bcc90a6b5d08809ca"
   }
 }

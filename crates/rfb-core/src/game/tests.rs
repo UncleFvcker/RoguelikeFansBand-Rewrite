@@ -14443,6 +14443,34 @@ fn restore_life_uses_historical_experience_and_migrates_old_saves() {
 }
 
 #[test]
+fn attribute_history_migrates_old_saves_and_rejects_inverted_values() {
+    let mut legacy = Game::new(0).to_save();
+    let progress = legacy
+        .player
+        .progress
+        .as_mut()
+        .expect("player progress should be saved");
+    let strength = progress.attributes.strength;
+    progress.maximum_attributes = None;
+    let migrated = Game::from_save(legacy).expect("old progress should migrate");
+    assert_eq!(migrated.progress.maximum_attributes.strength, strength);
+
+    let mut invalid = migrated.to_save();
+    let progress = invalid
+        .player
+        .progress
+        .as_mut()
+        .expect("player progress should be saved");
+    let mut maximum = progress.attributes;
+    maximum.strength = progress.attributes.strength.saturating_sub(1);
+    progress.maximum_attributes = Some(maximum);
+    assert!(matches!(
+        Game::from_save(invalid),
+        Err(CoreError::InvalidSave("player attribute state is invalid"))
+    ));
+}
+
+#[test]
 fn nearby_genocide_filters_radius_resists_unique_and_is_deterministic() {
     let prepare = || {
         let mut game = Game::new(0);

@@ -2812,6 +2812,13 @@
           "maximum": 255,
           "minimum": 0
         },
+        "maximumNatural": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "natural": {
           "type": "integer",
           "format": "uint16",

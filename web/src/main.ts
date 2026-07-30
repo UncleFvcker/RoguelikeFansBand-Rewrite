@@ -1035,6 +1035,7 @@ function renderProgression(
       values.className = "attribute-value";
       values.textContent = localization.format("attribute-value", {
         natural: formatAttributeValue(value.natural),
+        maximumNatural: formatAttributeValue(value.maximumNatural),
         effective: formatAttributeValue(value.effective),
         index: value.index,
       });
@@ -2673,6 +2674,19 @@ function formatEvent(event: GameEventDto): string {
     case "item-use-restore-life-levels-no-effect":
       return localization.format("message-item-use-restore-life-levels-no-effect", {
         source: visibleItemName(event.args.nameKey, event.args.source),
+      });
+    case "item-use-attribute-drained":
+    case "item-use-attribute-drain-no-effect":
+    case "item-use-attribute-restored":
+    case "item-use-attribute-restore-no-effect":
+      return localization.format(`message-${event.messageKey}` as MessageKey, {
+        source: visibleItemName(event.args.nameKey, event.args.source),
+        attribute: localization.format(
+          `attribute-${event.args.attribute ?? "unknown"}` as MessageKey,
+        ),
+        before: event.args.before ?? "?",
+        after: event.args.after ?? "?",
+        maximum: event.args.maximum ?? "?",
       });
     case "item-use-poison-applied":
       return localization.format("message-item-use-poison-applied", {
