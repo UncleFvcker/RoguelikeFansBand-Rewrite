@@ -11,6 +11,7 @@ use rfb_protocol::StatModifiersDto;
 use crate::{
     error::CoreError,
     event::DomainEvent,
+    rng::RfbRng,
     state::ResourcePool,
     stats::{
         AttributeKind, AttributeSet, CharacterBuildIdentity, CharacterProgress, SkillProgress,
@@ -37,6 +38,149 @@ struct ExperienceGainPlan {
     amount: u64,
     progress: CharacterProgress,
     levels: Vec<u16>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct AttributeMutationOutcome {
+    pub(super) attribute: AttributeKind,
+    pub(super) before: u16,
+    pub(super) after: u16,
+    pub(super) maximum_before: u16,
+    pub(super) maximum_after: u16,
+    pub(super) changed: bool,
+}
+
+fn attribute_mutation_outcome(
+    progress: &CharacterProgress,
+    attribute: AttributeKind,
+    before: u16,
+    maximum_before: u16,
+    changed: bool,
+) -> AttributeMutationOutcome {
+    AttributeMutationOutcome {
+        attribute,
+        before,
+        after: progress.attributes.value(attribute),
+        maximum_before,
+        maximum_after: progress.maximum_attributes.value(attribute),
+        changed,
+    }
+}
+
+pub(super) fn apply_attribute_drain(
+    progress: &mut CharacterProgress,
+    attribute: AttributeKind,
+    rng: &mut RfbRng,
+) -> AttributeMutationOutcome {
+    let before = progress.attributes.value(attribute);
+    let maximum_before = progress.maximum_attributes.value(attribute);
+    let changed = progress.drain_attribute(attribute, rng);
+    attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
+}
+
+pub(super) fn apply_attribute_restoration(
+    progress: &mut CharacterProgress,
+    attribute: AttributeKind,
+) -> AttributeMutationOutcome {
+    let before = progress.attributes.value(attribute);
+    let maximum_before = progress.maximum_attributes.value(attribute);
+    let changed = progress.restore_attribute(attribute);
+    attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
+}
+
+pub(super) fn apply_permanent_attribute_increase(
+    progress: &mut CharacterProgress,
+    attribute: AttributeKind,
+    victorious: bool,
+    rng: &mut RfbRng,
+) -> AttributeMutationOutcome {
+    let before = progress.attributes.value(attribute);
+    let maximum_before = progress.maximum_attributes.value(attribute);
+    let changed = progress.increase_attribute_permanently(attribute, victorious, rng);
+    attribute_mutation_outcome(progress, attribute, before, maximum_before, changed)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct ExperienceRestorationOutcome {
+    pub(super) before: u64,
+    pub(super) after: u64,
+}
+
+pub(super) fn apply_experience_restoration(
+    progress: &mut CharacterProgress,
+) -> ExperienceRestorationOutcome {
+    let before = progress.experience;
+    progress.experience = progress.maximum_experience;
+    ExperienceRestorationOutcome {
+        before,
+        after: progress.experience,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LifeForceRestoration {
+    Add(u16),
+    AtLeast(u16),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct LifeForceRestorationRequest {
+    restoration: LifeForceRestoration,
+}
+
+impl LifeForceRestorationRequest {
+    pub(super) const fn add(amount: u16) -> Self {
+        Self {
+            restoration: LifeForceRestoration::Add(amount),
+        }
+    }
+
+    pub(super) const fn at_least(minimum: u16) -> Self {
+        Self {
+            restoration: LifeForceRestoration::AtLeast(minimum),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct LifeForceRestorationOutcome {
+    pub(super) before: u16,
+    pub(super) after: u16,
+}
+
+pub(super) fn apply_life_force_restoration(
+    progress: &mut CharacterProgress,
+    request: LifeForceRestorationRequest,
+) -> LifeForceRestorationOutcome {
+    let before = progress.life_force;
+    progress.life_force = match request.restoration {
+        LifeForceRestoration::Add(amount) => progress.life_force.saturating_add(amount).min(1_000),
+        LifeForceRestoration::AtLeast(minimum) => progress.life_force.max(minimum).min(1_000),
+    };
+    LifeForceRestorationOutcome {
+        before,
+        after: progress.life_force,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct LearningCapacityIncreaseOutcome {
+    pub(super) before: u16,
+    pub(super) after: u16,
+}
+
+pub(super) fn apply_learning_capacity_increase(
+    bonus_capacity: &mut u16,
+    eligible: bool,
+) -> LearningCapacityIncreaseOutcome {
+    let before = *bonus_capacity;
+    if eligible {
+        *bonus_capacity = bonus_capacity.saturating_add(1);
+    }
+    LearningCapacityIncreaseOutcome {
+        before,
+        after: *bonus_capacity,
+    }
 }
 
 pub(super) fn resolve_character_build(
@@ -512,5 +656,65 @@ impl Game {
                 pool.current = rescale_u32(*previous_current, *previous_maximum, pool.maximum);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn progression_capabilities_report_bounded_source_neutral_outcomes() {
+        let mut progress = CharacterProgress::new(0, 10);
+        progress.attributes.strength = 8;
+        progress.maximum_attributes.strength = 13;
+        let attribute = apply_attribute_restoration(&mut progress, AttributeKind::Strength);
+        assert_eq!(attribute.before, 8);
+        assert_eq!(attribute.after, 13);
+        assert_eq!(attribute.maximum_before, 13);
+        assert_eq!(attribute.maximum_after, 13);
+        assert!(attribute.changed);
+
+        progress.experience = 40;
+        progress.maximum_experience = 100;
+        assert_eq!(
+            apply_experience_restoration(&mut progress),
+            ExperienceRestorationOutcome {
+                before: 40,
+                after: 100,
+            }
+        );
+
+        progress.life_force = 900;
+        assert_eq!(
+            apply_life_force_restoration(&mut progress, LifeForceRestorationRequest::add(150),),
+            LifeForceRestorationOutcome {
+                before: 900,
+                after: 1_000,
+            }
+        );
+        assert_eq!(
+            apply_life_force_restoration(&mut progress, LifeForceRestorationRequest::at_least(700),),
+            LifeForceRestorationOutcome {
+                before: 1_000,
+                after: 1_000,
+            }
+        );
+
+        let mut bonus_capacity = 2;
+        assert_eq!(
+            apply_learning_capacity_increase(&mut bonus_capacity, false),
+            LearningCapacityIncreaseOutcome {
+                before: 2,
+                after: 2,
+            }
+        );
+        assert_eq!(
+            apply_learning_capacity_increase(&mut bonus_capacity, true),
+            LearningCapacityIncreaseOutcome {
+                before: 2,
+                after: 3,
+            }
+        );
     }
 }

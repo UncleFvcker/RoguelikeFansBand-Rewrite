@@ -1403,8 +1403,8 @@ impl Game {
         }
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
-        let before = self.progress.attributes.value(attribute);
-        let noticed = self.progress.drain_attribute(attribute, &mut self.rng);
+        let outcome = apply_attribute_drain(&mut self.progress, attribute, &mut self.rng);
+        let noticed = outcome.changed;
         if noticed {
             self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
             self.mark_item_aware(source_kind_id);
@@ -1412,11 +1412,11 @@ impl Game {
         events.push(DomainEvent::ItemAttributeChanged {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
-            attribute,
+            attribute: outcome.attribute,
             change: ItemAttributeChange::Drained,
-            before,
-            after: self.progress.attributes.value(attribute),
-            maximum: self.progress.maximum_attributes.value(attribute),
+            before: outcome.before,
+            after: outcome.after,
+            maximum: outcome.maximum_after,
             noticed,
         });
         noticed
@@ -1430,8 +1430,8 @@ impl Game {
     ) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
-        let before = self.progress.attributes.value(attribute);
-        let noticed = self.progress.restore_attribute(attribute);
+        let outcome = apply_attribute_restoration(&mut self.progress, attribute);
+        let noticed = outcome.changed;
         if noticed {
             self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
             self.mark_item_aware(source_kind_id);
@@ -1439,11 +1439,11 @@ impl Game {
         events.push(DomainEvent::ItemAttributeChanged {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
-            attribute,
+            attribute: outcome.attribute,
             change: ItemAttributeChange::Restored,
-            before,
-            after: self.progress.attributes.value(attribute),
-            maximum: self.progress.maximum_attributes.value(attribute),
+            before: outcome.before,
+            after: outcome.after,
+            maximum: outcome.maximum_after,
             noticed,
         });
         noticed
@@ -1462,22 +1462,21 @@ impl Game {
         let mut resolutions = Vec::with_capacity(attributes.len());
 
         for &attribute in attributes {
-            let before = self.progress.attributes.value(attribute);
-            let maximum_before = self.progress.maximum_attributes.value(attribute);
-            let changed =
-                self.progress
-                    .increase_attribute_permanently(attribute, victorious, &mut self.rng);
-            let after = self.progress.attributes.value(attribute);
-            let maximum = self.progress.maximum_attributes.value(attribute);
-            let change = if maximum > maximum_before {
+            let outcome = apply_permanent_attribute_increase(
+                &mut self.progress,
+                attribute,
+                victorious,
+                &mut self.rng,
+            );
+            let change = if outcome.maximum_after > outcome.maximum_before {
                 ItemAttributeChange::Increased
-            } else if after > before {
+            } else if outcome.after > outcome.before {
                 ItemAttributeChange::Restored
             } else {
                 ItemAttributeChange::Increased
             };
-            resolutions.push((attribute, change, before, after, maximum, changed));
-            noticed = changed || noticed;
+            resolutions.push((outcome, change));
+            noticed = outcome.changed || noticed;
         }
 
         if noticed {
@@ -1485,16 +1484,16 @@ impl Game {
             self.mark_item_aware(source_kind_id);
         }
         let display_name_key = self.item_display_name_key(source_kind_id);
-        for (attribute, change, before, after, maximum, changed) in resolutions {
+        for (outcome, change) in resolutions {
             events.push(DomainEvent::ItemAttributeChanged {
                 source_kind_id: source_kind_id.to_owned(),
                 display_name_key: display_name_key.clone(),
-                attribute,
+                attribute: outcome.attribute,
                 change,
-                before,
-                after,
-                maximum,
-                noticed: changed,
+                before: outcome.before,
+                after: outcome.after,
+                maximum: outcome.maximum_after,
+                noticed: outcome.changed,
             });
         }
         noticed
@@ -2227,7 +2226,8 @@ impl Game {
             AttributeKind::Constitution,
             AttributeKind::Charisma,
         ] {
-            restored = self.progress.restore_attribute(attribute) || restored;
+            restored =
+                apply_attribute_restoration(&mut self.progress, attribute).changed || restored;
         }
         if restored {
             self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
@@ -2240,17 +2240,13 @@ impl Game {
         life_force_amount: u16,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let experience_before = self.progress.experience;
-        let life_force_before = self.progress.life_force;
-        self.progress.experience = self.progress.maximum_experience;
+        let experience = apply_experience_restoration(&mut self.progress);
         self.apply_player_experience(0, events);
-        self.progress.life_force = self
-            .progress
-            .life_force
-            .saturating_add(life_force_amount)
-            .min(1_000);
-        self.progress.experience != experience_before
-            || self.progress.life_force != life_force_before
+        let life_force = apply_life_force_restoration(
+            &mut self.progress,
+            LifeForceRestorationRequest::add(life_force_amount),
+        );
+        experience.after != experience.before || life_force.after != life_force.before
     }
 
     pub(super) fn resolve_item_healing(
@@ -3069,10 +3065,11 @@ impl Game {
         let before = self
             .casting_profile()
             .map_or(0, |profile| self.ability_learning_capacity(profile));
-        if self.uses_spell_scrolls() {
-            self.bonus_spell_learning_capacity =
-                self.bonus_spell_learning_capacity.saturating_add(1);
-        }
+        let eligible = self.uses_spell_scrolls();
+        let bonus =
+            apply_learning_capacity_increase(&mut self.bonus_spell_learning_capacity, eligible);
+        debug_assert_eq!(bonus.after, self.bonus_spell_learning_capacity);
+        debug_assert!(bonus.after >= bonus.before);
         let after = self
             .casting_profile()
             .map_or(0, |profile| self.ability_learning_capacity(profile));

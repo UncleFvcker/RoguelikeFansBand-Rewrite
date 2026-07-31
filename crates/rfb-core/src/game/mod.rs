@@ -130,8 +130,11 @@ use inventory::{ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome};
 #[cfg(test)]
 use item_use::ItemUsePlan;
 use progression::{
-    build_definitions, character_skill_progress, combine_percentages, initial_character_attributes,
-    initial_resource_pool, profile_resource_maximum, resolve_character_build,
+    LifeForceRestorationRequest, apply_attribute_drain, apply_attribute_restoration,
+    apply_experience_restoration, apply_learning_capacity_increase, apply_life_force_restoration,
+    apply_permanent_attribute_increase, build_definitions, character_skill_progress,
+    combine_percentages, initial_character_attributes, initial_resource_pool,
+    profile_resource_maximum, resolve_character_build,
 };
 use status_effects::{
     ability_status_stacking_dto, apply_ability_status_effect, remove_ability_status_effect,

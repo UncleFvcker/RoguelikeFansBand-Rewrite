@@ -1873,10 +1873,11 @@ impl Game {
         let AbilityEffectDefinition::RestoreVitality { life_force } = ability.effect else {
             unreachable!("vitality executor requires a restore vitality effect");
         };
-        let experience_before = self.progress.experience;
-        let life_force_before = self.progress.life_force;
-        self.progress.experience = self.progress.maximum_experience;
-        self.progress.life_force = self.progress.life_force.max(life_force).min(1_000);
+        let experience = apply_experience_restoration(&mut self.progress);
+        let life_force = apply_life_force_restoration(
+            &mut self.progress,
+            LifeForceRestorationRequest::at_least(life_force),
+        );
         self.apply_player_experience(0, events);
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
@@ -1885,10 +1886,10 @@ impl Game {
                 target_kind_id: None,
                 effects: vec![AbilityEffectResolutionDto::RestoreVitality {
                     effect_index: 0,
-                    experience_before,
-                    experience_after: self.progress.experience,
-                    life_force_before,
-                    life_force_after: self.progress.life_force,
+                    experience_before: experience.before,
+                    experience_after: experience.after,
+                    life_force_before: life_force.before,
+                    life_force_after: life_force.after,
                 }],
             },
             trace: None,
