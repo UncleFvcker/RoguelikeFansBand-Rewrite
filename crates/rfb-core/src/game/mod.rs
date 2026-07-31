@@ -127,7 +127,8 @@ use floor::{
     floor_dungeon_id, parse_dungeon_instance_ordinal,
 };
 use inventory::{
-    CurseEquippedItemRequest, EquippedItemCurseTarget, ItemEnchantmentRequest,
+    CurseEquippedItemRequest, DeviceRechargeRequest, EquippedItemCurseTarget,
+    InventoryItemRechargeOutcome, InventoryItemRechargeRequest, ItemEnchantmentRequest,
     ItemIdentificationRequest, ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome,
     RemoveEquippedCursesRequest,
 };
@@ -835,6 +836,27 @@ fn item_curse_severity_dto(value: ItemCurseSeverityDefinition) -> ItemCurseSever
         ItemCurseSeverityDefinition::Normal => ItemCurseSeverityDto::Normal,
         ItemCurseSeverityDefinition::Heavy => ItemCurseSeverityDto::Heavy,
         ItemCurseSeverityDefinition::Permanent => ItemCurseSeverityDto::Permanent,
+    }
+}
+
+fn device_recharge_resolved_event(
+    outcome: InventoryItemRechargeOutcome,
+    source_id: String,
+    source_is_item: bool,
+    source_destroyed: bool,
+) -> DomainEvent {
+    DomainEvent::DeviceRechargeResolved {
+        target_item_id: outcome.target_item_id,
+        target_kind_id: outcome.target_kind_id,
+        source_id,
+        source_is_item,
+        attempted: outcome.attempted,
+        target_before: outcome.target_before,
+        target_after: outcome.target_after,
+        succeeded: outcome.succeeded,
+        failure_one_in: outcome.failure_one_in,
+        failure_roll: outcome.failure_roll,
+        source_destroyed,
     }
 }
 
@@ -4954,23 +4976,29 @@ impl Game {
                 let attempted = power.min(pool.current).min(missing);
                 pool.current -= attempted;
                 self.resources_touched.insert(profile.resource_id.clone());
-                events.push(self.resolve_recharge_target(
+                let outcome = self.recharge_inventory_item_from_resource(
                     target_item_id,
+                    InventoryItemRechargeRequest::new(attempted, power),
+                );
+                events.push(device_recharge_resolved_event(
+                    outcome,
                     profile.resource_id,
                     false,
-                    attempted,
-                    power,
                     false,
                 ));
             }
             DeviceRechargeSourceDto::Item { item_id } => {
-                self.recharge_inventory_item_from_device(
+                let outcome = self.recharge_inventory_item_from_device(
                     target_item_id,
                     item_id,
-                    power,
-                    profile.source_item_destruction_one_in,
-                    events,
+                    DeviceRechargeRequest::new(power, profile.source_item_destruction_one_in),
                 );
+                events.push(device_recharge_resolved_event(
+                    outcome.target,
+                    outcome.source_kind_id,
+                    true,
+                    outcome.source_destroyed,
+                ));
             }
         }
     }
@@ -5091,27 +5119,6 @@ impl Game {
                     target_glyph,
                 )
                 .is_none()
-    }
-
-    fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
-        item.location == ItemLocation::Inventory
-            && item.activation.is_some()
-            && self
-                .content
-                .item(&item.kind_id)
-                .is_some_and(|definition| definition.device_generation.is_some())
-            && item
-                .charges
-                .is_some_and(|charges| charges.current < charges.maximum)
-    }
-
-    fn item_can_supply_recharge(&self, item: &ItemInstance) -> bool {
-        item.location == ItemLocation::Inventory
-            && self
-                .content
-                .item(&item.kind_id)
-                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "device"))
-            && item.charges.is_some_and(|charges| charges.current > 0)
     }
 
     fn item_effect_path(

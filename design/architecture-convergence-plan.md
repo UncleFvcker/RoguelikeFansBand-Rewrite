@@ -487,6 +487,8 @@ Equipped-item curse application and removal now commit through typed inventory-o
 
 The curse source migration maps the armor/weapon blight and ordinary/greater cleansing scrolls to self-input programs. Target category and heavy-removal policy lower unchanged; candidate RNG, severity changes, permanent retention, consumption, awareness, and events remain in their established runtime owners.
 
+Recharge now uses typed inventory-owner operations for resource-to-device target mutation and device-to-device source settlement plus target mutation. The owner retains device eligibility, source charge/destruction, artifact protection, success RNG, charge bounds, failure depletion, and recovery-progress rules. Resource payment, recharging-scroll consumption, source identity, and event projection remain in their distinct callers, so the owner receives neither awareness nor a source-policy flag.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
