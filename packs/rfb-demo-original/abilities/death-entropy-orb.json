@@ -4,12 +4,11 @@
   "id": "demo.ability.death-entropy-orb",
   "nameKey": "ability-demo-death-entropy-orb-name",
   "descriptionKey": "ability-demo-death-entropy-orb-description",
-  "minimumLevel": 12,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 12,
-  "baseFailurePercent": 40,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -29,5 +28,11 @@
       "maximum": 3
     }
   ],
-  "tags": ["area", "death", "drain", "living", "spell"]
+  "tags": [
+    "area",
+    "death",
+    "drain",
+    "living",
+    "spell"
+  ]
 }

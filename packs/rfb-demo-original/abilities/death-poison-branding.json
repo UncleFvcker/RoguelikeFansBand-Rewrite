@@ -4,15 +4,18 @@
   "id": "demo.ability.death-poison-branding",
   "nameKey": "ability-demo-death-poison-branding-name",
   "descriptionKey": "ability-demo-death-poison-branding-description",
-  "minimumLevel": 30,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 75,
-  "baseFailurePercent": 80,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.death-poison-branding",
-  "tags": ["brand", "death", "poison", "spell"]
+  "tags": [
+    "brand",
+    "death",
+    "poison",
+    "spell"
+  ]
 }

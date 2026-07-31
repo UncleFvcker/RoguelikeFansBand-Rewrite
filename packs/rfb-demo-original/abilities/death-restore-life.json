@@ -4,11 +4,18 @@
   "id": "demo.ability.death-restore-life",
   "nameKey": "ability-demo-death-restore-life-name",
   "descriptionKey": "ability-demo-death-restore-life-description",
-  "minimumLevel": 42,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 50,
-  "baseFailurePercent": 75,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-restore-life",
-  "tags": ["death", "experience", "restoration", "spell"]
+  "tags": [
+    "death",
+    "experience",
+    "restoration",
+    "spell"
+  ]
 }

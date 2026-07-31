@@ -4,21 +4,16 @@
   "id": "demo.ability.crescent-cut",
   "nameKey": "ability-demo-crescent-cut-name",
   "descriptionKey": "ability-demo-crescent-cut-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.tempo",
-  "resourceCost": 4,
-  "baseFailurePercent": 12,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 1,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.crescent-cut",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["melee", "technique"]
+  "tags": [
+    "melee",
+    "technique"
+  ]
 }

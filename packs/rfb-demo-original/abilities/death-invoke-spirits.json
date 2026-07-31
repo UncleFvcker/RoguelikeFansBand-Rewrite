@@ -4,11 +4,18 @@
   "id": "demo.ability.death-invoke-spirits",
   "nameKey": "ability-demo-death-invoke-spirits-name",
   "descriptionKey": "ability-demo-death-invoke-spirits-description",
-  "minimumLevel": 10,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 15,
-  "baseFailurePercent": 80,
-  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
   "abilityProgramId": "demo.ability-program.death-invoke-spirits",
-  "tags": ["death", "random", "spell", "spirits"]
+  "tags": [
+    "death",
+    "random",
+    "spell",
+    "spirits"
+  ]
 }

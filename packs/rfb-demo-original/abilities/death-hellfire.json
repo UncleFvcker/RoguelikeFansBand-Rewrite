@@ -4,15 +4,38 @@
   "id": "demo.ability.death-hellfire",
   "nameKey": "ability-demo-death-hellfire-name",
   "descriptionKey": "ability-demo-death-hellfire-description",
-  "minimumLevel": 45,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 58,
-  "baseFailurePercent": 85,
-  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
   "abilityProgramId": "demo.ability-program.death-hellfire",
   "levelScaling": [
-    { "effectIndex": 0, "field": "damage-bonus", "multiplier": 600, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 },
-    { "effectIndex": 0, "field": "radius", "multiplier": 9, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 600,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 9,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
   ],
-  "tags": ["area", "death", "nether", "spell"]
+  "tags": [
+    "area",
+    "death",
+    "nether",
+    "spell"
+  ]
 }

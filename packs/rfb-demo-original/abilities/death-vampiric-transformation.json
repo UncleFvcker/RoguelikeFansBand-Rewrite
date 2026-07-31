@@ -4,15 +4,39 @@
   "id": "demo.ability.death-vampiric-transformation",
   "nameKey": "ability-demo-death-vampiric-transformation-name",
   "descriptionKey": "ability-demo-death-vampiric-transformation-description",
-  "minimumLevel": 35,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 40,
-  "baseFailurePercent": 80,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-vampiric-transformation",
   "levelScaling": [
-    { "effectIndex": 0, "field": "status-duration-ticks", "multiplier": 25, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 },
-    { "effectIndex": 0, "field": "status-duration-sides", "multiplier": 25, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+    {
+      "effectIndex": 0,
+      "field": "status-duration-ticks",
+      "multiplier": 25,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    },
+    {
+      "effectIndex": 0,
+      "field": "status-duration-sides",
+      "multiplier": 25,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
   ],
-  "tags": ["death", "race", "spell", "status", "vampire"]
+  "tags": [
+    "death",
+    "race",
+    "spell",
+    "status",
+    "vampire"
+  ]
 }

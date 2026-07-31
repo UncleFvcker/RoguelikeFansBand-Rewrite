@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-fan",
   "nameKey": "ability-demo-echo-fan-name",
   "descriptionKey": "ability-demo-echo-fan-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 6,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.echo-fan",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["cone", "electricity", "spell"]
+  "tags": [
+    "cone",
+    "electricity",
+    "spell"
+  ]
 }

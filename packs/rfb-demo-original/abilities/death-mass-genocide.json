@@ -4,14 +4,28 @@
   "id": "demo.ability.death-mass-genocide",
   "nameKey": "ability-demo-death-mass-genocide-name",
   "descriptionKey": "ability-demo-death-mass-genocide-description",
-  "minimumLevel": 43,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 75,
-  "baseFailurePercent": 80,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-mass-genocide",
   "levelScaling": [
-    { "effectIndex": 0, "field": "genocide-power", "multiplier": 150, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+    {
+      "effectIndex": 0,
+      "field": "genocide-power",
+      "multiplier": 150,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
   ],
-  "tags": ["death", "genocide", "spell"]
+  "tags": [
+    "death",
+    "genocide",
+    "spell"
+  ]
 }

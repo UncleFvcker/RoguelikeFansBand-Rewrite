@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-rampart",
   "nameKey": "ability-demo-echo-rampart-name",
   "descriptionKey": "ability-demo-echo-rampart-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 6,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["position"],
+    "modes": [
+      "position"
+    ],
     "range": 4,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.echo-rampart",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["creation", "spell", "terrain"]
+  "tags": [
+    "creation",
+    "spell",
+    "terrain"
+  ]
 }

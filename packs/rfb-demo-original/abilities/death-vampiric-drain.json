@@ -4,12 +4,10 @@
   "id": "demo.ability.death-vampiric-drain",
   "nameKey": "ability-demo-death-vampiric-drain-name",
   "descriptionKey": "ability-demo-death-vampiric-drain-description",
-  "minimumLevel": 32,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 30,
-  "baseFailurePercent": 60,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -30,5 +28,10 @@
       "divisor": 1
     }
   ],
-  "tags": ["death", "drain", "living", "spell"]
+  "tags": [
+    "death",
+    "drain",
+    "living",
+    "spell"
+  ]
 }

@@ -4,14 +4,28 @@
   "id": "demo.ability.death-nether-wave",
   "nameKey": "ability-demo-death-nether-wave-name",
   "descriptionKey": "ability-demo-death-nether-wave-description",
-  "minimumLevel": 38,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 35,
-  "baseFailurePercent": 70,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-nether-wave",
   "levelScaling": [
-    { "effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 3, "divisor": 1 }
+    {
+      "effectIndex": 0,
+      "field": "damage-sides",
+      "levelOffset": 1,
+      "multiplier": 3,
+      "divisor": 1
+    }
   ],
-  "tags": ["death", "living", "nether", "spell", "visible"]
+  "tags": [
+    "death",
+    "living",
+    "nether",
+    "spell",
+    "visible"
+  ]
 }

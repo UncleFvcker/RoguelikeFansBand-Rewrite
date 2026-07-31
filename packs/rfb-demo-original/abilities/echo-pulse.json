@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-pulse",
   "nameKey": "ability-demo-echo-pulse-name",
   "descriptionKey": "ability-demo-echo-pulse-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 3,
-  "baseFailurePercent": 10,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.echo-pulse",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["detection", "spell", "transient-knowledge"]
+  "tags": [
+    "detection",
+    "spell",
+    "transient-knowledge"
+  ]
 }

@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-sight",
   "nameKey": "ability-demo-echo-sight-name",
   "descriptionKey": "ability-demo-echo-sight-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 4,
-  "baseFailurePercent": 15,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.echo-sight",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["detection", "persistent-knowledge", "spell"]
+  "tags": [
+    "detection",
+    "persistent-knowledge",
+    "spell"
+  ]
 }

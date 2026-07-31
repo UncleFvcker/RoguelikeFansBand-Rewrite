@@ -4,12 +4,11 @@
   "id": "demo.ability.death-horrify",
   "nameKey": "ability-demo-death-horrify-name",
   "descriptionKey": "ability-demo-death-horrify-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -29,5 +28,10 @@
       "divisor": 5
     }
   ],
-  "tags": ["death", "fear", "spell", "stun"]
+  "tags": [
+    "death",
+    "fear",
+    "spell",
+    "stun"
+  ]
 }

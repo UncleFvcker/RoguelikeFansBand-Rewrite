@@ -4,14 +4,30 @@
   "id": "demo.ability.death-darkness-storm",
   "nameKey": "ability-demo-death-darkness-storm-name",
   "descriptionKey": "ability-demo-death-darkness-storm-description",
-  "minimumLevel": 40,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 40,
-  "baseFailurePercent": 70,
-  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
   "abilityProgramId": "demo.ability-program.death-darkness-storm",
   "levelScaling": [
-    { "effectIndex": 0, "field": "damage-bonus", "multiplier": 200, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 200,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
   ],
-  "tags": ["area", "dark", "death", "prorated", "spell"]
+  "tags": [
+    "area",
+    "dark",
+    "death",
+    "prorated",
+    "spell"
+  ]
 }

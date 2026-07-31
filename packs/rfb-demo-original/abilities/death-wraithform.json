@@ -4,15 +4,39 @@
   "id": "demo.ability.death-wraithform",
   "nameKey": "ability-demo-death-wraithform-name",
   "descriptionKey": "ability-demo-death-wraithform-description",
-  "minimumLevel": 47,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 100,
-  "baseFailurePercent": 90,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-wraithform",
   "levelScaling": [
-    { "effectIndex": 0, "field": "status-duration-ticks", "multiplier": 24, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 },
-    { "effectIndex": 0, "field": "status-duration-sides", "multiplier": 24, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+    {
+      "effectIndex": 0,
+      "field": "status-duration-ticks",
+      "multiplier": 24,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    },
+    {
+      "effectIndex": 0,
+      "field": "status-duration-sides",
+      "multiplier": 24,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
   ],
-  "tags": ["death", "spell", "status", "wall-passage", "wraith"]
+  "tags": [
+    "death",
+    "spell",
+    "status",
+    "wall-passage",
+    "wraith"
+  ]
 }

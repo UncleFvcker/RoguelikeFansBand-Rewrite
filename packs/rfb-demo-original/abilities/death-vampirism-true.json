@@ -4,11 +4,19 @@
   "id": "demo.ability.death-vampirism-true",
   "nameKey": "ability-demo-death-vampirism-true-name",
   "descriptionKey": "ability-demo-death-vampirism-true-description",
-  "minimumLevel": 36,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 35,
-  "baseFailurePercent": 60,
-  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
   "abilityProgramId": "demo.ability-program.death-vampirism-true",
-  "tags": ["death", "drain", "repeat", "spell", "vampiric"]
+  "tags": [
+    "death",
+    "drain",
+    "repeat",
+    "spell",
+    "vampiric"
+  ]
 }

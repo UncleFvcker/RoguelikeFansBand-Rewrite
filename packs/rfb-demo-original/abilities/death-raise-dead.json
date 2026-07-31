@@ -4,14 +4,26 @@
   "id": "demo.ability.death-raise-dead",
   "nameKey": "ability-demo-death-raise-dead-name",
   "descriptionKey": "ability-demo-death-raise-dead-description",
-  "minimumLevel": 25,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 66,
-  "baseFailurePercent": 95,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-raise-dead",
   "levelScaling": [
-    { "effectIndex": 0, "field": "summon-maximum-level", "multiplier": 3, "divisor": 2 }
+    {
+      "effectIndex": 0,
+      "field": "summon-maximum-level",
+      "multiplier": 3,
+      "divisor": 2
+    }
   ],
-  "tags": ["death", "spell", "summon", "undead"]
+  "tags": [
+    "death",
+    "spell",
+    "summon",
+    "undead"
+  ]
 }

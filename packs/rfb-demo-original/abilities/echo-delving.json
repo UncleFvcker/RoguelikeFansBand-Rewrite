@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-delving",
   "nameKey": "ability-demo-echo-delving-name",
   "descriptionKey": "ability-demo-echo-delving-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 5,
-  "baseFailurePercent": 20,
   "target": {
-    "modes": ["position"],
+    "modes": [
+      "position"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.echo-delving",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["digging", "spell", "terrain"]
+  "tags": [
+    "digging",
+    "spell",
+    "terrain"
+  ]
 }

@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-step",
   "nameKey": "ability-demo-echo-step-name",
   "descriptionKey": "ability-demo-echo-step-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 4,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["position"],
+    "modes": [
+      "position"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.echo-step",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["mobility", "spell", "teleport"]
+  "tags": [
+    "mobility",
+    "spell",
+    "teleport"
+  ]
 }

@@ -4,12 +4,11 @@
   "id": "demo.ability.death-stinking-cloud",
   "nameKey": "ability-demo-death-stinking-cloud-name",
   "descriptionKey": "ability-demo-death-stinking-cloud-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -22,5 +21,9 @@
       "divisor": 2
     }
   ],
-  "tags": ["death", "poison", "spell"]
+  "tags": [
+    "death",
+    "poison",
+    "spell"
+  ]
 }

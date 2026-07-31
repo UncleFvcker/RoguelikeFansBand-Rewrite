@@ -4,21 +4,17 @@
   "id": "demo.ability.surging-tempo",
   "nameKey": "ability-demo-surging-tempo-name",
   "descriptionKey": "ability-demo-surging-tempo-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.tempo",
-  "resourceCost": 6,
-  "baseFailurePercent": 15,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.surging-tempo",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["haste", "status", "technique"]
+  "tags": [
+    "haste",
+    "status",
+    "technique"
+  ]
 }

@@ -4,12 +4,11 @@
   "id": "demo.ability.death-malediction",
   "nameKey": "ability-demo-death-malediction-name",
   "descriptionKey": "ability-demo-death-malediction-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -23,5 +22,9 @@
       "divisor": 5
     }
   ],
-  "tags": ["curse", "death", "spell"]
+  "tags": [
+    "curse",
+    "death",
+    "spell"
+  ]
 }

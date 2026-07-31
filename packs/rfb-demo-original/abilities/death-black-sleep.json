@@ -4,12 +4,11 @@
   "id": "demo.ability.death-black-sleep",
   "nameKey": "ability-demo-death-black-sleep-name",
   "descriptionKey": "ability-demo-death-black-sleep-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -23,5 +22,9 @@
       "divisor": 1
     }
   ],
-  "tags": ["death", "sleep", "spell"]
+  "tags": [
+    "death",
+    "sleep",
+    "spell"
+  ]
 }

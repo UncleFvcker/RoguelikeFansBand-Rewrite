@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-quickening",
   "nameKey": "ability-demo-echo-quickening-name",
   "descriptionKey": "ability-demo-echo-quickening-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 5,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.echo-quickening",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["haste", "spell", "status"]
+  "tags": [
+    "haste",
+    "spell",
+    "status"
+  ]
 }

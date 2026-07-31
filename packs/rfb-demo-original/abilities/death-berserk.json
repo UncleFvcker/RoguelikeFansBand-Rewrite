@@ -4,14 +4,26 @@
   "id": "demo.ability.death-berserk",
   "nameKey": "ability-demo-death-berserk-name",
   "descriptionKey": "ability-demo-death-berserk-description",
-  "minimumLevel": 10,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 20,
-  "baseFailurePercent": 80,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-berserk",
   "levelScaling": [
-    { "effectIndex": 0, "field": "status-melee-damage", "multiplier": 1, "divisor": 5 }
+    {
+      "effectIndex": 0,
+      "field": "status-melee-damage",
+      "multiplier": 1,
+      "divisor": 5
+    }
   ],
-  "tags": ["berserk", "death", "spell", "status"]
+  "tags": [
+    "berserk",
+    "death",
+    "spell",
+    "status"
+  ]
 }

@@ -4,11 +4,19 @@
   "id": "demo.ability.death-vampiric-branding",
   "nameKey": "ability-demo-death-vampiric-branding-name",
   "descriptionKey": "ability-demo-death-vampiric-branding-description",
-  "minimumLevel": 34,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 90,
-  "baseFailurePercent": 70,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-vampiric-branding",
-  "tags": ["brand", "death", "permanent", "spell", "vampiric"]
+  "tags": [
+    "brand",
+    "death",
+    "permanent",
+    "spell",
+    "vampiric"
+  ]
 }

@@ -4,14 +4,28 @@
   "id": "demo.ability.death-dark-bolt",
   "nameKey": "ability-demo-death-dark-bolt-name",
   "descriptionKey": "ability-demo-death-dark-bolt-description",
-  "minimumLevel": 11,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 11,
-  "baseFailurePercent": 30,
-  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
   "abilityProgramId": "demo.ability-program.death-dark-bolt",
   "levelScaling": [
-    { "effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4 }
+    {
+      "effectIndex": 0,
+      "field": "damage-dice",
+      "levelOffset": 5,
+      "multiplier": 1,
+      "divisor": 4
+    }
   ],
-  "tags": ["beam", "bolt", "dark", "death", "spell"]
+  "tags": [
+    "beam",
+    "bolt",
+    "dark",
+    "death",
+    "spell"
+  ]
 }

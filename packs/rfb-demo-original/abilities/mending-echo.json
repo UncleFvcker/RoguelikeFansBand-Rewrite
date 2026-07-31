@@ -4,25 +4,16 @@
   "id": "demo.ability.mending-echo",
   "nameKey": "ability-demo-mending-echo-name",
   "descriptionKey": "ability-demo-mending-echo-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 4,
-  "baseFailurePercent": 30,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.mending-echo",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "cooldown": {
-    "turns": 2,
-    "groupId": "demo.cooldown.mending"
-  },
-  "tags": ["healing", "spell"]
+  "tags": [
+    "healing",
+    "spell"
+  ]
 }

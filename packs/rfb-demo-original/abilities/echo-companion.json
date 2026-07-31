@@ -4,21 +4,17 @@
   "id": "demo.ability.echo-companion",
   "nameKey": "ability-demo-echo-companion-name",
   "descriptionKey": "ability-demo-echo-companion-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 6,
-  "baseFailurePercent": 20,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.echo-companion",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["companion", "spell", "summon"]
+  "tags": [
+    "companion",
+    "spell",
+    "summon"
+  ]
 }

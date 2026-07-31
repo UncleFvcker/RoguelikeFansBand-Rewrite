@@ -4,12 +4,10 @@
   "id": "demo.ability.death-cloud-kill",
   "nameKey": "ability-demo-death-cloud-kill-name",
   "descriptionKey": "ability-demo-death-cloud-kill-description",
-  "minimumLevel": 18,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 15,
-  "baseFailurePercent": 50,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
@@ -28,5 +26,10 @@
       "divisor": 10
     }
   ],
-  "tags": ["area", "death", "poison", "spell"]
+  "tags": [
+    "area",
+    "death",
+    "poison",
+    "spell"
+  ]
 }

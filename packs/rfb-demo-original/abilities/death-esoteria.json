@@ -4,14 +4,28 @@
   "id": "demo.ability.death-esoteria",
   "nameKey": "ability-demo-death-esoteria-name",
   "descriptionKey": "ability-demo-death-esoteria-description",
-  "minimumLevel": 30,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 40,
-  "baseFailurePercent": 95,
-  "target": { "modes": ["item"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "item"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-esoteria",
   "levelScaling": [
-    { "effectIndex": 0, "field": "identify-power", "multiplier": 50, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
+    {
+      "effectIndex": 0,
+      "field": "identify-power",
+      "multiplier": 50,
+      "divisor": 1,
+      "curve": "prorated",
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
   ],
-  "tags": ["death", "identify", "spell"]
+  "tags": [
+    "death",
+    "identify",
+    "spell"
+  ]
 }

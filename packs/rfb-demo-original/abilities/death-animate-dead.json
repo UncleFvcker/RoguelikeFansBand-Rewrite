@@ -4,15 +4,18 @@
   "id": "demo.ability.death-animate-dead",
   "nameKey": "ability-demo-death-animate-dead-name",
   "descriptionKey": "ability-demo-death-animate-dead-description",
-  "minimumLevel": 36,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 35,
-  "baseFailurePercent": 80,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.death-animate-dead",
-  "tags": ["death", "spell", "summon", "undead"]
+  "tags": [
+    "death",
+    "spell",
+    "summon",
+    "undead"
+  ]
 }

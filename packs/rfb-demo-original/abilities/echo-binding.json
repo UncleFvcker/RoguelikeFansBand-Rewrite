@@ -4,21 +4,18 @@
   "id": "demo.ability.echo-binding",
   "nameKey": "ability-demo-echo-binding-name",
   "descriptionKey": "ability-demo-echo-binding-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 4,
-  "baseFailurePercent": 30,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.echo-binding",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["cold", "spell", "status"]
+  "tags": [
+    "cold",
+    "spell",
+    "status"
+  ]
 }

@@ -4,21 +4,18 @@
   "id": "demo.ability.echo-burst",
   "nameKey": "ability-demo-echo-burst-name",
   "descriptionKey": "ability-demo-echo-burst-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 5,
-  "baseFailurePercent": 20,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.echo-burst",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["area", "electricity", "spell"]
+  "tags": [
+    "area",
+    "electricity",
+    "spell"
+  ]
 }

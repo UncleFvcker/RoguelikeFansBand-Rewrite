@@ -4,12 +4,11 @@
   "id": "demo.ability.death-enslave-undead",
   "nameKey": "ability-demo-death-enslave-undead-name",
   "descriptionKey": "ability-demo-death-enslave-undead-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -23,5 +22,10 @@
       "divisor": 1
     }
   ],
-  "tags": ["control", "death", "spell", "undead"]
+  "tags": [
+    "control",
+    "death",
+    "spell",
+    "undead"
+  ]
 }

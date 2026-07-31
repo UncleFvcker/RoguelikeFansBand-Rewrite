@@ -4,12 +4,10 @@
   "id": "demo.ability.death-nether-bolt",
   "nameKey": "ability-demo-death-nether-bolt-name",
   "descriptionKey": "ability-demo-death-nether-bolt-description",
-  "minimumLevel": 13,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 12,
-  "baseFailurePercent": 30,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -23,5 +21,11 @@
       "divisor": 4
     }
   ],
-  "tags": ["beam", "bolt", "death", "nether", "spell"]
+  "tags": [
+    "beam",
+    "bolt",
+    "death",
+    "nether",
+    "spell"
+  ]
 }

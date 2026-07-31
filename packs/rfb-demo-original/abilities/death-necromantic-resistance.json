@@ -4,15 +4,17 @@
   "id": "demo.ability.death-necromantic-resistance",
   "nameKey": "ability-demo-death-necromantic-resistance-name",
   "descriptionKey": "ability-demo-death-necromantic-resistance-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.death-necromantic-resistance",
-  "tags": ["death", "resistance", "spell"]
+  "tags": [
+    "death",
+    "resistance",
+    "spell"
+  ]
 }

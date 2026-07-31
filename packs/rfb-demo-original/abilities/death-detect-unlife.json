@@ -4,15 +4,17 @@
   "id": "demo.ability.death-detect-unlife",
   "nameKey": "ability-demo-death-detect-unlife-name",
   "descriptionKey": "ability-demo-death-detect-unlife-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 1,
-  "baseFailurePercent": 5,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.death-detect-unlife",
-  "tags": ["death", "detection", "spell"]
+  "tags": [
+    "death",
+    "detection",
+    "spell"
+  ]
 }

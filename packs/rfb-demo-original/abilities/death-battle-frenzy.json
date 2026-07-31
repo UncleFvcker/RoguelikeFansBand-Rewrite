@@ -4,15 +4,34 @@
   "id": "demo.ability.death-battle-frenzy",
   "nameKey": "ability-demo-death-battle-frenzy-name",
   "descriptionKey": "ability-demo-death-battle-frenzy-description",
-  "minimumLevel": 30,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 25,
-  "baseFailurePercent": 75,
-  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
   "abilityProgramId": "demo.ability-program.death-battle-frenzy",
   "levelScaling": [
-    { "effectIndex": 2, "field": "status-duration-ticks", "multiplier": 1, "divisor": 2 },
-    { "effectIndex": 2, "field": "status-duration-sides", "multiplier": 1, "divisor": 2 }
+    {
+      "effectIndex": 2,
+      "field": "status-duration-ticks",
+      "multiplier": 1,
+      "divisor": 2
+    },
+    {
+      "effectIndex": 2,
+      "field": "status-duration-sides",
+      "multiplier": 1,
+      "divisor": 2
+    }
   ],
-  "tags": ["blessed", "death", "haste", "hero", "spell", "status"]
+  "tags": [
+    "blessed",
+    "death",
+    "haste",
+    "hero",
+    "spell",
+    "status"
+  ]
 }

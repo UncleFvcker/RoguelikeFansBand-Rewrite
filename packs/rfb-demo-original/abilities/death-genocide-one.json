@@ -4,12 +4,10 @@
   "id": "demo.ability.death-genocide-one",
   "nameKey": "ability-demo-death-genocide-one-name",
   "descriptionKey": "ability-demo-death-genocide-one-description",
-  "minimumLevel": 24,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 21,
-  "baseFailurePercent": 60,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 8,
     "requiresLineOfEffect": true
   },
@@ -23,5 +21,9 @@
       "divisor": 1
     }
   ],
-  "tags": ["death", "genocide", "spell"]
+  "tags": [
+    "death",
+    "genocide",
+    "spell"
+  ]
 }

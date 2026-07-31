@@ -4,14 +4,26 @@
   "id": "demo.ability.death-death-ray",
   "nameKey": "ability-demo-death-death-ray-name",
   "descriptionKey": "ability-demo-death-death-ray-description",
-  "minimumLevel": 20,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 20,
-  "baseFailurePercent": 75,
-  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
   "abilityProgramId": "demo.ability-program.death-death-ray",
   "levelScaling": [
-    { "effectIndex": 0, "field": "death-ray-power", "multiplier": 2, "divisor": 1 }
+    {
+      "effectIndex": 0,
+      "field": "death-ray-power",
+      "multiplier": 2,
+      "divisor": 1
+    }
   ],
-  "tags": ["death", "death-ray", "living", "spell"]
+  "tags": [
+    "death",
+    "death-ray",
+    "living",
+    "spell"
+  ]
 }
