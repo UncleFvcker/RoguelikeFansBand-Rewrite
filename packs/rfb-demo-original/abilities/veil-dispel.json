@@ -16,10 +16,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "remove-status",
-    "statusKindId": "rfb.status.haste"
-  },
+  "abilityProgramId": "demo.ability-program.veil-dispel",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

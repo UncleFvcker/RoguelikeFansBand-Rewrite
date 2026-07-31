@@ -587,6 +587,8 @@ The direct self-status leaf sub-batch moves `death-necromantic-resistance`, `dea
 
 The direct cast-target status sub-batch moves `death-black-sleep`, `gloom-veil`, `mind-fog`, and `numbing-grasp` to four `cast-target` ability programs. The player book keeps Black Sleep's resource, failure, target, and level-scaling policy, while the gloom weaver keeps its actor-owned candidate order, weights, frequency, and tactical policy for the other three abilities. Lowering preserves the existing sleep power scaling and selected status execution. The canonical content hash remains unchanged; focused player scaling/sleep and monster selection tests, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
 
+The direct status-removal leaf sub-batch moves `veil-dispel` to one `cast-target` ability program. The veil warden retains the ability in its actor-owned `monsterCasting` list with unchanged candidate weight and tactical policy, while the program owns only removal of `rfb.status.haste`. Lowering preserves the selected execution and the exact monster-dispels-haste contract scenario. The canonical content hash remains unchanged; the shared status capability test, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
