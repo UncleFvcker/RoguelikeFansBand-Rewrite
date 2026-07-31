@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+use rfb_protocol::TerrainInteractionUnavailableReasonDto;
+
 use super::support::*;
 use super::*;
 
@@ -741,6 +743,84 @@ fn previous_v57_floor_without_connection_state_uses_legacy_stairs_without_rebuil
         .expect("legacy stairs should resolve")
         .expect("legacy stairs should transition");
     assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-2");
+}
+
+#[test]
+fn terrain_interaction_plans_reject_unsupported_actions_without_rng() {
+    let mut game = Game::new(42);
+    for direction in TERRAIN_INTERACTION_DIRECTIONS {
+        let position = game.position_in_direction(direction);
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+        game.revealed_terrain.remove(&position);
+    }
+    let terrain_before = game.terrain.clone();
+    let revealed_before = game.revealed_terrain.clone();
+    let draws_before = game.rng_draw_counter();
+
+    assert!(game.open_door(Direction::North).is_none());
+    assert!(game.close_door(Direction::North).is_none());
+    assert!(game.bash_door(Direction::North).is_none());
+    assert!(game.disarm_trap(Direction::North).is_none());
+    assert!(game.dig_terrain(Direction::North).is_none());
+    assert!(game.search_hidden_terrain().is_empty());
+
+    assert_eq!(game.terrain, terrain_before);
+    assert_eq!(game.revealed_terrain, revealed_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn checked_terrain_plans_commit_disarm_and_dig_targets() {
+    let mut game = Game::new(27);
+    let trap_position = game.position_in_direction(Direction::South);
+    let trap_id = "demo.terrain.trap-echo-snare";
+    let disarmed_id = game
+        .content
+        .terrain(trap_id)
+        .and_then(|terrain| terrain.trap.as_ref())
+        .expect("test trap should define disarm behavior")
+        .disarm_to_terrain_id
+        .clone();
+    replace_terrain(&mut game, trap_position, trap_id);
+    game.revealed_terrain.insert(trap_position);
+    let draws_before_disarm = game.rng_draw_counter();
+
+    let disarmed_position = (0..64)
+        .find_map(|_| match game.disarm_trap(Direction::South) {
+            Some(TrapDisarmOutcome::Succeeded { position }) => Some(position),
+            Some(TrapDisarmOutcome::Failed { .. }) => None,
+            None => panic!("revealed trap should remain disarmable until success"),
+        })
+        .expect("fixed seed should eventually disarm the trap");
+    assert_eq!(disarmed_position, trap_position);
+    assert_eq!(game.terrain_at(trap_position), disarmed_id);
+    assert!(!game.revealed_terrain.contains(&trap_position));
+    assert!(game.rng_draw_counter() > draws_before_disarm);
+
+    let dig_position = game.position_in_direction(Direction::SouthEast);
+    let dig_id = "demo.terrain.echo-rubble";
+    let dug_id = game
+        .content
+        .terrain(dig_id)
+        .expect("test terrain should exist")
+        .dig_to_terrain_id
+        .clone()
+        .expect("test terrain should define a dig target");
+    replace_terrain(&mut game, dig_position, dig_id);
+    game.revealed_terrain.insert(dig_position);
+    let draws_before_dig = game.rng_draw_counter();
+
+    let dug_position = (0..64)
+        .find_map(|_| match game.dig_terrain(Direction::SouthEast) {
+            Some(TerrainDigOutcome::Succeeded { position }) => Some(position),
+            Some(TerrainDigOutcome::Failed { .. }) => None,
+            None => panic!("diggable terrain should remain available until success"),
+        })
+        .expect("fixed seed should eventually dig the terrain");
+    assert_eq!(dug_position, dig_position);
+    assert_eq!(game.terrain_at(dig_position), dug_id);
+    assert!(!game.revealed_terrain.contains(&dig_position));
+    assert!(game.rng_draw_counter() > draws_before_dig);
 }
 
 #[test]

@@ -1,8 +1,8 @@
 # Architecture Convergence Plan
 
-Status: phases 0-9 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, inventory plan/commit operations, frontend composition, character progression, and task/campaign transition plans.
+Status: phases 0-10 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, inventory and terrain plan/commit operations, frontend composition, character progression, and task/campaign transition plans.
 
-This plan was initially based on repository state at commit `82d1eea5` on 2026-07-30 and was refreshed from the Phase 9 base commit `97249a91` on 2026-07-31. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
+This plan was initially based on repository state at commit `82d1eea5` on 2026-07-30 and was refreshed from the Phase 10 base commit `e9899b3c` on 2026-07-31. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
 
 ## 1. Current architecture
 
@@ -44,7 +44,7 @@ Domain code must not depend on Tauri, TypeScript, DOM APIs, or PixiJS. `rfb-save
 
 ### The `Game` aggregate today
 
-At the initial audited commit, `crates/rfb-core/src/game/mod.rs` contained 26,254 lines. After Phase 9 it contains 22,127 lines, with progression calculations and command planning in a 516-line `progression.rs` and task/campaign planning in a 492-line `tasks.rs`. `Game` is the correct authoritative aggregate root, but its implementation is still the home of most domain behavior.
+At the initial audited commit, `crates/rfb-core/src/game/mod.rs` contained 26,254 lines. After Phase 10 it contains 21,856 lines, with progression calculations and command planning in a 516-line `progression.rs`, task/campaign planning in a 492-line `tasks.rs`, and terrain-interaction planning in a 386-line `terrain.rs`. `Game` is the correct authoritative aggregate root, but its implementation is still the home of most domain behavior.
 
 `Game` currently owns:
 
@@ -238,7 +238,7 @@ At Phase 3 completion, runtime `TaskState`, `DungeonState`, `CampaignState`, ite
 
 Implementation used three compatibility-gated batches. The first changed `tests.rs` into the directory-backed `tests/mod.rs` without changing content. The second moved the eight file-header helpers into `tests/support.rs`. The third moved all remaining top-level helpers and all 268 unchanged test functions into 14 domain modules. A mechanical block comparison verified the pre/post test-function set with SHA-256 `8c5deab5547c37ae614c7550ebb7edc9c61748b27da8cb9b7a6263f36d693616` before compilation.
 
-The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. After the Phase 8 and Phase 9 boundary tests, core contains 272 game tests and 295 tests overall, with no ignored tests; replay and contract guards remain unchanged.
+The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. After the Phase 8-10 boundary tests, core contains 274 game tests and 297 tests overall, with no ignored tests; replay and contract guards remain unchanged.
 
 ### Phase 5: pure world-generation calculations (completed)
 
@@ -330,6 +330,22 @@ Implementation used two compatibility-gated parts. Pure functions in `progressio
 Campaign victory, counts, score, victory transition, and retirement transition now use explicit campaign, dungeon, task, status, surface, and turn inputs. `Game` commits the planned campaign state, appends `CampaignVictorious` before `PlayerLevelCapUnlocked`, and retains experience-unlock orchestration. Death and loot still produce the authoritative events consumed by task reduction and remain in `mod.rs`. The extraction reduced `game/mod.rs` from 22,425 to 22,127 lines, added a 492-line `tasks.rs`, and added two focused zero-RNG/order tests, bringing core to 295 tests.
 
 The complete Phase 9 acceptance matrix passed on 2026-07-31: formatting, protocol and content generators, source-pack verification, focused task/replay/contract tests, workspace check/clippy/test, all 54 frontend tests, TypeScript and UI builds, Tauri all-targets check, the Windows release build, and desktop WebDriver E2E. Generated bindings, schemas, content hashes, fixtures, protocol versions, save versions, and state-hash schemas remain unchanged.
+
+### Phase 10: terrain interaction plans (completed)
+
+- Scope: extract explicit read-only plans for opening and closing doors, bashing doors, disarming traps, digging terrain, and ordered active-search candidates; keep the existing `Game` methods as authoritative RNG and commit adapters.
+- Not in scope: trap triggering or damage, passive perception during movement, ability-driven terrain transformation, item-driven trap/door destruction, generation, pathfinding, protocol/content changes, or event projection changes.
+- Files: `game/terrain.rs`, `game/mod.rs`, world tests, and this plan.
+- Risk: changing concealed-versus-known terrain lookup, eight-direction search order, occupancy priority, check difficulty sources, RNG draw count/order, revealed-terrain cleanup, changed-cell/event ordering, or failed-action world-time semantics.
+- Acceptance: unsupported and occupied interactions remain zero RNG before scheduling; exact open/close/bash/search/disarm/dig behavior, interaction DTO ordering, terrain persistence, fixtures, replay/hash, generators, workspace checks, frontend build/tests, and Tauri release/E2E remain unchanged.
+- Rollback: any terrain/revealed state, RNG draw, event order, state hash, save/replay/fixture, collision/visibility, or interaction DTO difference; a planner needs unrelated mutable state; or visibility must expand beyond `pub(super)`.
+- Tests: focused world terrain-interaction tests, fixtures 65-71 through the contract suite, all core/replay tests, then the full section 4 matrix.
+
+`terrain.rs` now owns an immutable interaction context over content, terrain, revealed positions, entities, items, map bounds, and player origin. Pure planners preserve the original distinctions: open, bash, and dig inspect known terrain; close inspects authoritative terrain; disarm requires a revealed authoritative trap; and active search enumerates unrevealed authoritative candidates in the existing eight-direction order. Actor occupancy still takes priority over ground-item occupancy, and every plan owns its stable position, terrain index, source, target, difficulty, and revealed-knowledge cleanup policy.
+
+The `Game` adapters remain the authority for derived player skills, check RNG, terrain and revealed-state commits, changed cells, domain events, scheduling, turn/revision updates, save/hash state, and snapshot projection. Checked mutations commit only after success; unsupported or occupied targets return before RNG. Trap triggering and damage, passive perception, ability terrain transforms, item terrain effects, movement, and generation remain with their existing owners. No crate or external public API was added; the module exposes only the `pub(super)` outcomes and adapters required by dispatch and snapshot projection.
+
+The extraction reduced `game/mod.rs` from 22,127 to 21,856 lines and added a 386-line `terrain.rs`. Two focused tests cover zero-RNG rejection across all six operations and checked disarm/dig commits, bringing core to 297 tests. The complete Phase 10 acceptance matrix passed on 2026-07-31: 20 focused world tests, all core/replay/contract tests, formatting, generators, source-pack verification, workspace check/clippy/test, all 54 frontend tests, TypeScript and UI builds, Tauri all-targets check, Windows release build, and desktop WebDriver E2E. Fixtures 65-71, generated files, content hash, protocol/save versions, and state-hash schema remain unchanged.
 
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 

@@ -87,8 +87,7 @@ use rfb_protocol::{
     ResourceGainSourceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
     RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto,
     SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto, TargetSelection,
-    TargetSpecDto, TaskStatusKindDto, TerrainInteractionUnavailableReasonDto, ThrowProfileDto,
-    WeaponBrandDto,
+    TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
 };
 
 mod inventory;
@@ -96,6 +95,7 @@ mod persistence;
 mod progression;
 mod snapshot;
 mod tasks;
+mod terrain;
 mod validation;
 mod world;
 
@@ -109,6 +109,7 @@ use tasks::{
     floor_task_id, initial_task_states, task_objectives, task_resolution_for_departure,
     task_state_after_departure, task_succeeded,
 };
+use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOutcome};
 use validation::{
     floor_connections_are_valid, floor_regions_are_valid, monster_packs_are_valid,
     revealed_terrain_is_valid, rolled_affixes_are_valid,
@@ -18886,134 +18887,6 @@ impl Game {
         })
     }
 
-    fn disarm_trap(&mut self, direction: Direction) -> Option<TrapDisarmOutcome> {
-        let position = self.position_in_direction(direction);
-        let index = self.index(position)?;
-        if !self.revealed_terrain.contains(&position)
-            || self
-                .terrain_interaction_unavailable_reason(position)
-                .is_some()
-        {
-            return None;
-        }
-        let terrain = self.content.terrain(&self.terrain[index])?;
-        let source_id = terrain.id.clone();
-        let trap = terrain.trap.as_ref()?;
-        let target_id = trap.disarm_to_terrain_id.clone();
-        let difficulty = trap.disarm_check_difficulty;
-        let ability = self.player_derived_stats().disarm_skill;
-        let mut difficulty_pipeline = DerivedStatsPipeline::new();
-        difficulty_pipeline.add(
-            StatKind::ActionDifficulty,
-            StatLayer::Environment,
-            &source_id,
-            difficulty,
-        );
-        let check = resolve_check(
-            &mut self.rng,
-            CheckContext {
-                kind: CheckKind::DisarmTrap,
-                actor_id: self.player.id.clone(),
-                target_id: Some(source_id),
-                ability,
-                difficulty: difficulty_pipeline
-                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-            },
-        );
-        if !check.succeeded() {
-            return Some(TrapDisarmOutcome::Failed { position });
-        }
-        self.terrain[index] = target_id;
-        self.revealed_terrain.remove(&position);
-        Some(TrapDisarmOutcome::Succeeded { position })
-    }
-
-    fn dig_terrain(&mut self, direction: Direction) -> Option<TerrainDigOutcome> {
-        let position = self.position_in_direction(direction);
-        let index = self.index(position)?;
-        if self
-            .terrain_interaction_unavailable_reason(position)
-            .is_some()
-        {
-            return None;
-        }
-        let terrain = self.content.terrain(self.known_terrain_at(position))?;
-        let source_id = terrain.id.clone();
-        let target_id = terrain.dig_to_terrain_id.clone()?;
-        let difficulty = terrain.dig_check_difficulty?;
-        let ability = self.player_derived_stats().dig_skill;
-        let mut difficulty_pipeline = DerivedStatsPipeline::new();
-        difficulty_pipeline.add(
-            StatKind::ActionDifficulty,
-            StatLayer::Environment,
-            &source_id,
-            difficulty,
-        );
-        let check = resolve_check(
-            &mut self.rng,
-            CheckContext {
-                kind: CheckKind::DigTerrain,
-                actor_id: self.player.id.clone(),
-                target_id: Some(source_id),
-                ability,
-                difficulty: difficulty_pipeline
-                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-            },
-        );
-        if !check.succeeded() {
-            return Some(TerrainDigOutcome::Failed { position });
-        }
-        self.terrain[index] = target_id;
-        self.revealed_terrain.remove(&position);
-        Some(TerrainDigOutcome::Succeeded { position })
-    }
-
-    fn search_hidden_terrain(&mut self) -> Vec<Position> {
-        let candidates = TERRAIN_INTERACTION_DIRECTIONS
-            .into_iter()
-            .filter_map(|direction| {
-                let position = self.position_in_direction(direction);
-                let index = self.index(position)?;
-                if self.revealed_terrain.contains(&position) {
-                    return None;
-                }
-                let terrain = self.content.terrain(&self.terrain[index])?;
-                Some((
-                    position,
-                    terrain.id.clone(),
-                    terrain.search_check_difficulty?,
-                ))
-            })
-            .collect::<Vec<_>>();
-        let ability = self.player_derived_stats().search_skill;
-        let mut discovered = Vec::new();
-        for (position, terrain_id, difficulty) in candidates {
-            let mut difficulty_pipeline = DerivedStatsPipeline::new();
-            difficulty_pipeline.add(
-                StatKind::ActionDifficulty,
-                StatLayer::Environment,
-                &terrain_id,
-                difficulty,
-            );
-            let check = resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::SearchTerrain,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(terrain_id),
-                    ability: ability.clone(),
-                    difficulty: difficulty_pipeline
-                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-                },
-            );
-            if check.succeeded() {
-                self.revealed_terrain.insert(position);
-                discovered.push(position);
-            }
-        }
-        discovered
-    }
-
     fn relocate_player(
         &mut self,
         destination: Position,
@@ -19107,129 +18980,6 @@ impl Game {
             }
         }
         discovered
-    }
-
-    fn terrain_interaction_unavailable_reason(
-        &self,
-        position: Position,
-    ) -> Option<TerrainInteractionUnavailableReasonDto> {
-        if self
-            .entities
-            .iter()
-            .any(|entity| entity.position == position)
-        {
-            return Some(TerrainInteractionUnavailableReasonDto::OccupiedByActor);
-        }
-        if self.items.iter().any(|item| {
-            matches!(item.location, ItemLocation::Ground(item_position) if item_position == position)
-        }) {
-            return Some(TerrainInteractionUnavailableReasonDto::OccupiedByItem);
-        }
-        None
-    }
-
-    fn open_door(&mut self, direction: rfb_protocol::Direction) -> Option<DoorOpenOutcome> {
-        let position = self.position_in_direction(direction);
-        let index = self.index(position)?;
-        if self
-            .terrain_interaction_unavailable_reason(position)
-            .is_some()
-        {
-            return None;
-        }
-        let terrain = self.content.terrain(self.known_terrain_at(position))?;
-        let source_id = terrain.id.clone();
-        let target_id = terrain.open_to_terrain_id.clone()?;
-        let difficulty = terrain.open_check_difficulty;
-        if let Some(difficulty) = difficulty {
-            let stats = self.player_derived_stats();
-            let mut difficulty_pipeline = DerivedStatsPipeline::new();
-            difficulty_pipeline.add(
-                StatKind::ActionDifficulty,
-                StatLayer::Environment,
-                &source_id,
-                difficulty,
-            );
-            let check = resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::UnlockDoor,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(source_id),
-                    ability: stats.door_skill,
-                    difficulty: difficulty_pipeline
-                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-                },
-            );
-            if !check.succeeded() {
-                return Some(DoorOpenOutcome::UnlockFailed { position });
-            }
-        }
-        self.terrain[index] = target_id;
-        self.revealed_terrain.remove(&position);
-        Some(if difficulty.is_some() {
-            DoorOpenOutcome::Unlocked { position }
-        } else {
-            DoorOpenOutcome::Opened { position }
-        })
-    }
-
-    fn bash_door(&mut self, direction: rfb_protocol::Direction) -> Option<DoorBashOutcome> {
-        let position = self.position_in_direction(direction);
-        let index = self.index(position)?;
-        if self
-            .terrain_interaction_unavailable_reason(position)
-            .is_some()
-        {
-            return None;
-        }
-        let terrain = self.content.terrain(self.known_terrain_at(position))?;
-        let source_id = terrain.id.clone();
-        let target_id = terrain.bash_to_terrain_id.clone()?;
-        let difficulty = terrain.bash_check_difficulty?;
-        let stats = self.player_derived_stats();
-        let mut difficulty_pipeline = DerivedStatsPipeline::new();
-        difficulty_pipeline.add(
-            StatKind::ActionDifficulty,
-            StatLayer::Environment,
-            &source_id,
-            difficulty,
-        );
-        let check = resolve_check(
-            &mut self.rng,
-            CheckContext {
-                kind: CheckKind::BashDoor,
-                actor_id: self.player.id.clone(),
-                target_id: Some(source_id),
-                ability: stats.bash_power,
-                difficulty: difficulty_pipeline
-                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-            },
-        );
-        if !check.succeeded() {
-            return Some(DoorBashOutcome::Failed { position });
-        }
-        self.terrain[index] = target_id;
-        self.revealed_terrain.remove(&position);
-        Some(DoorBashOutcome::Succeeded { position })
-    }
-
-    fn close_door(&mut self, direction: rfb_protocol::Direction) -> Option<Position> {
-        let position = self.position_in_direction(direction);
-        let index = self.index(position)?;
-        if self
-            .terrain_interaction_unavailable_reason(position)
-            .is_some()
-        {
-            return None;
-        }
-        let target_id = self
-            .content
-            .terrain(&self.terrain[index])?
-            .close_to_terrain_id
-            .clone()?;
-        self.terrain[index] = target_id;
-        Some(position)
     }
 
     fn position_in_direction(&self, direction: rfb_protocol::Direction) -> Position {
@@ -20056,22 +19806,12 @@ struct ActorDerivedStats {
     dig_skill: DerivedStat,
 }
 
-enum TrapDisarmOutcome {
-    Succeeded { position: Position },
-    Failed { position: Position },
-}
-
 enum PlayerTrapOutcome {
     Resisted,
     Triggered {
         source_kind_id: String,
         damage: DamageOutcome,
     },
-}
-
-enum TerrainDigOutcome {
-    Succeeded { position: Position },
-    Failed { position: Position },
 }
 
 type ActorIdentity = (String, String);
@@ -20085,17 +19825,6 @@ struct FloorTransitionOutcome {
     task_resumed: Option<String>,
     summons_followed: Vec<ActorIdentity>,
     summons_could_not_follow: Vec<ActorIdentity>,
-}
-
-enum DoorOpenOutcome {
-    Opened { position: Position },
-    Unlocked { position: Position },
-    UnlockFailed { position: Position },
-}
-
-enum DoorBashOutcome {
-    Succeeded { position: Position },
-    Failed { position: Position },
 }
 
 #[derive(Clone)]
