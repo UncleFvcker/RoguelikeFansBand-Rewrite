@@ -5230,41 +5230,13 @@ impl Game {
                     downward_targets,
                 },
             ) => {
-                let prefer_upward = self.rng.bounded(2) == 0;
-                let targets = if prefer_upward {
-                    if upward_targets.is_empty() {
-                        downward_targets
-                    } else {
-                        upward_targets
-                    }
-                } else if downward_targets.is_empty() {
-                    upward_targets
-                } else {
-                    downward_targets
-                };
-                let target_index = if targets.len() == 1 {
-                    0
-                } else {
-                    usize::try_from(self.rng.bounded(targets.len() as u64))
-                        .expect("bounded floor target index must fit usize")
-                };
-                let target = targets[target_index].clone();
-                let from_floor_id = self.current_floor_id.clone();
-                let transition = self
-                    .transition_floor(
-                        target.floor_id,
-                        target.arrival_connection_id,
-                        target.departure_connection_id,
-                        false,
-                    )?
-                    .expect("planned floor teleport must remain available");
-                self.mark_item_aware(&kind_id);
-                events.push(DomainEvent::ItemTeleportedLevel {
-                    source_kind_id: kind_id,
-                    from_floor_id,
-                    to_floor_id: transition.to_floor_id.clone(),
-                });
-                self.record_floor_transition(transition, events, changed);
+                self.resolve_item_level_teleport(
+                    kind_id,
+                    upward_targets,
+                    downward_targets,
+                    events,
+                    changed,
+                )?;
             }
             (
                 ItemUseEffectDefinition::Recall {
