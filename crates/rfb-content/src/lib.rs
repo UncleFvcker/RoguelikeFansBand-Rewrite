@@ -1990,10 +1990,7 @@ struct SourceItemUseActionDefinition {
     device_check_difficulty: Option<i32>,
     #[serde(default)]
     charges: Option<ItemChargeDefinition>,
-    #[serde(default)]
-    effect: Option<ItemUseEffectDefinition>,
-    #[serde(default)]
-    effect_program_id: Option<String>,
+    effect_program_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -2012,10 +2009,7 @@ struct SourceItemDeviceActivationDefinition {
     device_check_difficulty: i32,
     charges: ItemDeviceChargeRangeDefinition,
     target: AbilityTargetDefinition,
-    #[serde(default)]
-    effect: Option<ItemUseEffectDefinition>,
-    #[serde(default)]
-    effect_program_id: Option<String>,
+    effect_program_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -3371,30 +3365,17 @@ fn effect_program_input_for_step(
 
 fn resolve_source_item_effect(
     owner_id: &str,
-    inline: Option<ItemUseEffectDefinition>,
-    effect_program_id: Option<String>,
+    effect_program_id: String,
     programs: &BTreeMap<String, ResolvedEffectProgram>,
-) -> Result<
-    (
-        ItemUseEffectDefinition,
-        Option<EffectProgramInputDefinition>,
-    ),
-    ContentError,
-> {
-    match (inline, effect_program_id) {
-        (Some(effect), None) => Ok((effect, None)),
-        (None, Some(program_id)) => {
-            validate_definition_id(&program_id, "effect")?;
-            programs
-                .get(&program_id)
-                .map(|program| (program.effect.clone(), Some(program.input)))
-                .ok_or_else(|| ContentError::DanglingReference {
-                    owner: owner_id.to_owned(),
-                    target: program_id,
-                })
-        }
-        _ => Err(ContentError::InvalidItemUseAction(owner_id.to_owned())),
-    }
+) -> Result<(ItemUseEffectDefinition, EffectProgramInputDefinition), ContentError> {
+    validate_definition_id(&effect_program_id, "effect")?;
+    programs
+        .get(&effect_program_id)
+        .map(|program| (program.effect.clone(), program.input))
+        .ok_or_else(|| ContentError::DanglingReference {
+            owner: owner_id.to_owned(),
+            target: effect_program_id,
+        })
 }
 
 fn effect_program_input_matches_device_target(
@@ -3438,8 +3419,7 @@ impl SourceItemUseActionDefinition {
         owner_id: &str,
         programs: &BTreeMap<String, ResolvedEffectProgram>,
     ) -> Result<ItemUseActionDefinition, ContentError> {
-        let (effect, _) =
-            resolve_source_item_effect(owner_id, self.effect, self.effect_program_id, programs)?;
+        let (effect, _) = resolve_source_item_effect(owner_id, self.effect_program_id, programs)?;
         Ok(ItemUseActionDefinition {
             device_check_difficulty: self.device_check_difficulty,
             charges: self.charges,
@@ -3454,10 +3434,8 @@ impl SourceItemDeviceActivationDefinition {
         programs: &BTreeMap<String, ResolvedEffectProgram>,
     ) -> Result<ItemDeviceActivationDefinition, ContentError> {
         let (effect, program_input) =
-            resolve_source_item_effect(&self.id, self.effect, self.effect_program_id, programs)?;
-        if program_input
-            .is_some_and(|input| !effect_program_input_matches_device_target(input, &self.target))
-        {
+            resolve_source_item_effect(&self.id, self.effect_program_id, programs)?;
+        if !effect_program_input_matches_device_target(program_input, &self.target) {
             return Err(ContentError::InvalidItemUseAction(self.id));
         }
         Ok(ItemDeviceActivationDefinition {
@@ -9477,7 +9455,7 @@ mod tests {
     }
 
     #[test]
-    fn effect_program_bindings_require_exactly_one_resolvable_source() {
+    fn effect_program_bindings_require_a_resolvable_program_reference() {
         let programs = compile_effect_program_catalog(vec![effect_program(
             "demo.effect.healing",
             EffectProgramInputDefinition::SelfTarget,
@@ -9487,37 +9465,38 @@ mod tests {
 
         let (effect, input) = resolve_source_item_effect(
             "demo.item.test",
-            None,
-            Some("demo.effect.healing".to_owned()),
+            "demo.effect.healing".to_owned(),
             &programs,
         )
         .expect("reference should resolve");
         assert_eq!(effect, ItemUseEffectDefinition::Heal { amount: 4 });
-        assert_eq!(input, Some(EffectProgramInputDefinition::SelfTarget));
+        assert_eq!(input, EffectProgramInputDefinition::SelfTarget);
 
         assert!(matches!(
-            resolve_source_item_effect("demo.item.test", None, None, &programs),
-            Err(ContentError::InvalidItemUseAction(id)) if id == "demo.item.test"
-        ));
-        assert!(matches!(
             resolve_source_item_effect(
                 "demo.item.test",
-                Some(ItemUseEffectDefinition::Heal { amount: 1 }),
-                Some("demo.effect.healing".to_owned()),
-                &programs,
-            ),
-            Err(ContentError::InvalidItemUseAction(id)) if id == "demo.item.test"
-        ));
-        assert!(matches!(
-            resolve_source_item_effect(
-                "demo.item.test",
-                None,
-                Some("demo.effect.missing".to_owned()),
+                "demo.effect.missing".to_owned(),
                 &programs,
             ),
             Err(ContentError::DanglingReference { owner, target })
                 if owner == "demo.item.test" && target == "demo.effect.missing"
         ));
+
+        assert!(
+            serde_json::from_value::<SourceItemUseActionDefinition>(serde_json::json!({
+                "effectProgramId": "demo.effect.healing"
+            }))
+            .is_ok()
+        );
+        assert!(
+            serde_json::from_value::<SourceItemUseActionDefinition>(serde_json::json!({})).is_err()
+        );
+        assert!(
+            serde_json::from_value::<SourceItemUseActionDefinition>(serde_json::json!({
+                "effect": { "type": "heal", "amount": 1 }
+            }))
+            .is_err()
+        );
     }
 
     #[test]

@@ -6927,6 +6927,118 @@ pub fn convert_content(
     }
 }
 
+fn effect_program_from_inline(
+    id: &str,
+    effect: serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let steps = if effect.get("type").and_then(serde_json::Value::as_str) == Some("sequence") {
+        effect
+            .get("effects")
+            .and_then(serde_json::Value::as_array)
+            .cloned()
+            .ok_or_else(|| format!("{id} sequence has no effects array"))?
+    } else {
+        vec![effect]
+    };
+    let mut input = None;
+    for step in &steps {
+        let step_type = step
+            .get("type")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| format!("{id} step has no effect type"))?;
+        let step_input = match step_type {
+            "damage" => "actor",
+            "identify-item" | "enchant-item" | "recharge-from-device" => "item",
+            "genocide" => "glyph",
+            _ => "self",
+        };
+        if input
+            .replace(step_input)
+            .is_some_and(|input| input != step_input)
+        {
+            return Err(format!("{id} mixes incompatible effect inputs"));
+        }
+    }
+    let input = input.ok_or_else(|| format!("{id} has no effect steps"))?;
+    Ok(serde_json::json!({
+        "$schema": format!("{SCHEMA_BASE}/effect-program.schema.json"),
+        "formatVersion": 1,
+        "id": id,
+        "input": input,
+        "steps": steps,
+    }))
+}
+
+fn extract_item_effect_programs(
+    item_files: &mut [(String, serde_json::Value)],
+) -> Result<Vec<(String, serde_json::Value)>, String> {
+    let mut programs = BTreeMap::new();
+    for (file_name, item) in item_files {
+        let stem = file_name
+            .strip_suffix(".json")
+            .ok_or_else(|| format!("item source file {file_name} has no .json suffix"))?;
+
+        if let Some(action) = item
+            .get_mut("useAction")
+            .and_then(serde_json::Value::as_object_mut)
+        {
+            let effect = action
+                .remove("effect")
+                .ok_or_else(|| format!("{file_name} useAction has no inline effect"))?;
+            let program_id = format!("rfb-legacy.effect.{stem}.use");
+            action.insert(
+                "effectProgramId".to_owned(),
+                serde_json::Value::String(program_id.clone()),
+            );
+            let program = effect_program_from_inline(&program_id, effect)?;
+            if programs
+                .insert(format!("{stem}-use.json"), program)
+                .is_some()
+            {
+                return Err(format!("duplicate effect program for {file_name}"));
+            }
+        }
+
+        let Some(activations) = item
+            .get_mut("deviceGeneration")
+            .and_then(|generation| generation.get_mut("activations"))
+            .and_then(serde_json::Value::as_array_mut)
+        else {
+            continue;
+        };
+        for activation in activations {
+            let activation = activation
+                .as_object_mut()
+                .ok_or_else(|| format!("{file_name} has a non-object device activation"))?;
+            let activation_id = activation
+                .get("id")
+                .and_then(serde_json::Value::as_str)
+                .ok_or_else(|| format!("{file_name} device activation has no id"))?
+                .to_owned();
+            let activation_stem = activation_id
+                .rsplit('.')
+                .next()
+                .ok_or_else(|| format!("{activation_id} has no stable id suffix"))?;
+            let program_id = format!("rfb-legacy.effect.{stem}.{activation_stem}");
+            let effect = activation
+                .remove("effect")
+                .ok_or_else(|| format!("{activation_id} has no inline effect"))?;
+            activation.insert(
+                "effectProgramId".to_owned(),
+                serde_json::Value::String(program_id.clone()),
+            );
+            let program = effect_program_from_inline(&program_id, effect)?;
+            if programs
+                .insert(format!("{stem}-{activation_stem}.json"), program)
+                .is_some()
+            {
+                return Err(format!("duplicate effect program for {activation_id}"));
+            }
+        }
+    }
+    Ok(programs.into_iter().collect())
+}
+
 pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImportError> {
     let canonical_source = source
         .canonicalize()
@@ -7044,7 +7156,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
             }
         }));
     }
-    let outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
+    let mut outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
+    let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
+        .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
 
     let terrain_dir = output.join("terrain");
     let actor_dir = output.join("actors");
@@ -7054,6 +7168,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         ("abilities", &outcome.ability_files),
         ("abilityBooks", &outcome.ability_book_files),
         ("resources", &outcome.resource_files),
+        ("effectPrograms", &effect_program_files),
         ("items", &outcome.item_files),
         ("affixes", &outcome.affix_files),
         ("races", &outcome.race_files),
@@ -7121,6 +7236,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     }
     if !outcome.class_files.is_empty() {
         content_roots.push("classes");
+    }
+    if !effect_program_files.is_empty() {
+        content_roots.push("effectPrograms");
     }
     if !outcome.item_files.is_empty() {
         content_roots.push("items");
@@ -8082,6 +8200,81 @@ W:5:0:0:150:80
         assert_eq!(harp["equipmentSlot"], "launcher");
         assert!(harp.get("projectileProfile").is_none());
         assert_eq!(outcome.report.item_behavior_gaps["launcher-unpaired"], 1);
+    }
+
+    #[test]
+    fn item_effect_program_extraction_emits_flat_typed_references() {
+        let mut items = vec![
+            (
+                "clarity.json".to_owned(),
+                serde_json::json!({
+                    "id": "rfb-legacy.item.clarity",
+                    "useAction": {
+                        "effect": {
+                            "type": "sequence",
+                            "effects": [
+                                { "type": "restore-resource-full", "resourceId": LEGACY_MANA_RESOURCE_ID },
+                                { "type": "remove-status", "statusKindId": "rfb.status.confusion" }
+                            ]
+                        }
+                    }
+                }),
+            ),
+            (
+                "wand.json".to_owned(),
+                serde_json::json!({
+                    "id": "rfb-legacy.item.wand",
+                    "deviceGeneration": {
+                        "activations": [{
+                            "id": "rfb-legacy.device-activation.frost-bolt",
+                            "effect": {
+                                "type": "damage",
+                                "damageDice": 3,
+                                "damageSides": 6,
+                                "damageType": "cold"
+                            }
+                        }]
+                    }
+                }),
+            ),
+        ];
+
+        let programs = extract_item_effect_programs(&mut items)
+            .expect("item effects should extract into source programs");
+        assert_eq!(
+            items[0].1["useAction"]["effectProgramId"],
+            "rfb-legacy.effect.clarity.use"
+        );
+        assert!(items[0].1["useAction"].get("effect").is_none());
+        assert_eq!(
+            items[1].1["deviceGeneration"]["activations"][0]["effectProgramId"],
+            "rfb-legacy.effect.wand.frost-bolt"
+        );
+        assert!(
+            items[1].1["deviceGeneration"]["activations"][0]
+                .get("effect")
+                .is_none()
+        );
+
+        assert_eq!(programs.len(), 2);
+        let clarity = programs
+            .iter()
+            .find(|(name, _)| name == "clarity-use.json")
+            .map(|(_, value)| value)
+            .expect("clarity program should be emitted");
+        assert_eq!(clarity["input"], "self");
+        assert_eq!(clarity["steps"].as_array().map(Vec::len), Some(2));
+        assert_eq!(clarity["steps"][0]["type"], "restore-resource-full");
+        assert!(clarity.get("effect").is_none());
+
+        let frost = programs
+            .iter()
+            .find(|(name, _)| name == "wand-frost-bolt.json")
+            .map(|(_, value)| value)
+            .expect("device program should be emitted");
+        assert_eq!(frost["input"], "actor");
+        assert_eq!(frost["steps"].as_array().map(Vec::len), Some(1));
+        assert_eq!(frost["steps"][0]["type"], "damage");
     }
 
     #[test]
