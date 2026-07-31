@@ -472,7 +472,7 @@ impl Game {
                     .retain(|status| status.kind_id != STATUS_SLEEP);
             }
             if hostile_in_los {
-                apply_status(
+                apply_status_application(
                     &mut self.entities[index].statuses,
                     StatusApplication {
                         status: StatusInstance {
@@ -2319,29 +2319,18 @@ impl Game {
         status_kind_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let max_hp = self.effective_player_max_hp();
-        let player = &mut self.player;
-        let outcome = apply_effect(
-            &mut EffectTarget {
-                hp: &mut player.hp,
-                max_hp,
-                resistances: &player.resistances,
-                statuses: &mut player.statuses,
-            },
-            EffectSpec::RemoveStatus {
-                kind_id: status_kind_id.to_owned(),
-            },
+        let outcome = apply_status_removal(
+            &mut self.player.statuses,
+            StatusRemovalRequest::new(status_kind_id),
         );
-        let EffectOutcome::StatusRemoved { removed, .. } = outcome else {
-            unreachable!("status removal must produce a status outcome");
-        };
+        let removed = outcome.removed;
         if removed {
             self.mark_item_aware(source_kind_id);
         }
         events.push(DomainEvent::ItemStatusRemoved {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
-            status_kind_id: status_kind_id.to_owned(),
+            status_kind_id: outcome.kind_id,
             removed,
         });
         removed
@@ -2470,7 +2459,7 @@ impl Game {
         let change = if self.player_status_immunities().contains(STATUS_SLOW) {
             StatusChange::Unchanged
         } else {
-            apply_status(
+            apply_status_application(
                 &mut self.player.statuses,
                 StatusApplication {
                     status: StatusInstance {
@@ -2490,6 +2479,7 @@ impl Game {
                     stacking: StatusStacking::KeepStrongest,
                 },
             )
+            .change
         };
         let noticed = matches!(change, StatusChange::Added);
         if noticed {
@@ -2526,7 +2516,7 @@ impl Game {
                 .expect("validated speed duration must fit u32")
                 .saturating_add(duration_bonus)
         };
-        let change = apply_status(
+        let change = apply_status_application(
             &mut self.player.statuses,
             StatusApplication {
                 status: StatusInstance {
@@ -2545,7 +2535,8 @@ impl Game {
                 },
                 stacking: StatusStacking::Extend,
             },
-        );
+        )
+        .change;
         let noticed = matches!(change, StatusChange::Added);
         if noticed {
             self.mark_item_aware(source_kind_id);
@@ -2823,7 +2814,7 @@ impl Game {
         let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
             .expect("validated thermal duration must fit u32")
             .saturating_add(duration_bonus);
-        let change = apply_status(
+        let change = apply_status_application(
             &mut self.player.statuses,
             StatusApplication {
                 status: StatusInstance {
@@ -2845,7 +2836,8 @@ impl Game {
                 },
                 stacking: StatusStacking::Extend,
             },
-        );
+        )
+        .change;
         let noticed = matches!(change, StatusChange::Added);
         if noticed {
             self.mark_item_aware(source_kind_id);
@@ -2872,7 +2864,7 @@ impl Game {
         let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
             .expect("validated resistance duration must fit u32")
             .saturating_add(duration_bonus);
-        apply_status(
+        apply_status_application(
             &mut self.player.statuses,
             StatusApplication {
                 status: StatusInstance {
@@ -2928,7 +2920,7 @@ impl Game {
             let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
                 .expect("validated poison duration must fit u32")
                 .saturating_add(duration_bonus);
-            apply_status(
+            apply_status_application(
                 &mut self.player.statuses,
                 StatusApplication {
                     status: StatusInstance {
@@ -2981,7 +2973,7 @@ impl Game {
             let duration = u32::try_from(self.roll_damage(duration_dice, duration_sides))
                 .expect("validated blindness duration must fit u32")
                 .saturating_add(duration_bonus);
-            let change = apply_status(
+            let change = apply_status_application(
                 &mut self.player.statuses,
                 StatusApplication {
                     status: StatusInstance {
@@ -3000,7 +2992,8 @@ impl Game {
                     },
                     stacking: StatusStacking::Extend,
                 },
-            );
+            )
+            .change;
             let noticed = matches!(change, StatusChange::Added);
             if noticed {
                 self.mark_item_aware(source_kind_id);

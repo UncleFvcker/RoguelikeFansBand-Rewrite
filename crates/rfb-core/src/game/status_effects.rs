@@ -163,14 +163,9 @@ pub(super) fn apply_ability_status_effect(
             change: AbilityStatusChangeDto::Immune,
         };
     }
-    let outcome = apply_effect(
-        &mut EffectTarget {
-            hp: &mut actor.hp,
-            max_hp: actor.max_hp,
-            resistances: &actor.resistances,
-            statuses: &mut actor.statuses,
-        },
-        EffectSpec::ApplyStatus(Box::new(StatusApplication {
+    let outcome = apply_status_application(
+        &mut actor.statuses,
+        StatusApplication {
             status: StatusInstance {
                 kind_id: status_kind_id.to_owned(),
                 intensity,
@@ -194,14 +189,11 @@ pub(super) fn apply_ability_status_effect(
                 incoming_damage_percent,
             },
             stacking: ability_status_stacking(stacking),
-        })),
+        },
     );
-    let EffectOutcome::StatusApplied { change, .. } = outcome else {
-        unreachable!("status application effects must produce status outcomes");
-    };
     AbilityEffectResolutionDto::ApplyStatus {
         effect_index,
-        status_kind_id: status_kind_id.to_owned(),
+        status_kind_id: outcome.kind_id,
         intensity,
         requested_duration_ticks,
         applied_duration_ticks,
@@ -217,7 +209,7 @@ pub(super) fn apply_ability_status_effect(
         granted_race_id: granted_race_id.map(str::to_owned),
         grants_wall_passage,
         incoming_damage_percent,
-        change: ability_status_change_dto(change),
+        change: ability_status_change_dto(outcome.change),
     }
 }
 
@@ -226,23 +218,13 @@ pub(super) fn remove_ability_status_effect(
     effect_index: u8,
     status_kind_id: &str,
 ) -> AbilityEffectResolutionDto {
-    let outcome = apply_effect(
-        &mut EffectTarget {
-            hp: &mut actor.hp,
-            max_hp: actor.max_hp,
-            resistances: &actor.resistances,
-            statuses: &mut actor.statuses,
-        },
-        EffectSpec::RemoveStatus {
-            kind_id: status_kind_id.to_owned(),
-        },
+    let outcome = apply_status_removal(
+        &mut actor.statuses,
+        StatusRemovalRequest::new(status_kind_id),
     );
-    let EffectOutcome::StatusRemoved { removed, .. } = outcome else {
-        unreachable!("status removal effects must produce status outcomes");
-    };
     AbilityEffectResolutionDto::RemoveStatus {
         effect_index,
-        status_kind_id: status_kind_id.to_owned(),
-        removed,
+        status_kind_id: outcome.kind_id,
+        removed: outcome.removed,
     }
 }
