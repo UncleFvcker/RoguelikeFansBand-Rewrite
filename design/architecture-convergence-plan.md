@@ -634,6 +634,8 @@ Gate 1 records root-level downstream compilation as the public-API guard: the co
 
 The boundary-characterization gate adds no production code. One default-feature test locks all 23 supported roots and the first-error sequence from compiled metadata through pack ID/version/title and terrain schema/version validation; one schema-feature test locks the 24 generated document names and order. The content suite now has 34 default-feature tests and 35 schema-feature tests. Demo source verification retains pack version `1.140.0` and hash `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`; formatting, schema freshness, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 contract fixtures pass. Gate 2 test organization is next.
 
+The first test-organization sub-batch moves the complete crate-root test module unchanged into `rfb-content/src/tests/mod.rs`. No test body, assertion, helper visibility, or production code changes; `lib.rs` now declares only the private test child module. The same 34 default-feature and 35 schema-feature tests pass, schema output remains current, and demo source verification retains the canonical hash. Domain test modules remain the second Gate 2 sub-batch.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
