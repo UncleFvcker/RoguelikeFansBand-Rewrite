@@ -9,9 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "reset-recall"
-    }
+    "effectProgramId": "demo.effect.reset-recall"
   },
   "tags": ["consumable", "recall", "scroll", "teleport"]
 }

@@ -9,12 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "recall",
-      "delayDice": 1,
-      "delaySides": 21,
-      "delayBonus": 14
-    }
+    "effectProgramId": "demo.effect.recall-homeward"
   },
   "tags": ["consumable", "recall", "scroll", "teleport"]
 }
