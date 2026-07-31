@@ -4135,60 +4135,20 @@ impl Game {
                 )?;
             }
             (
-                AbilityEffectDefinition::AreaDamage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                    radius,
-                    target_category,
-                },
+                AbilityEffectDefinition::AreaDamage { .. },
                 AbilityTargetPlan::Projectile {
                     path,
                     stop_at_actor,
                 },
             ) => {
-                let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
-                let center = trace.landing;
-                let (affected_positions, targets) =
-                    self.area_damage_targets(center, radius, target_category.as_deref());
-                changed.extend(affected_positions.iter().copied());
-                let base_raw_damage = self
-                    .roll_damage(damage_dice, damage_sides)
-                    .saturating_add(i32::from(damage_bonus))
-                    .max(0);
-                events.push(DomainEvent::AbilityAreaDamage {
-                    ability_id: ability.id.clone(),
-                    resolution: AbilityAreaDamageResolutionDto {
-                        center,
-                        radius,
-                        base_raw_damage,
-                        damage_type: DamageType::from(damage_type).into(),
-                        affected_positions,
-                        target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
-                    },
-                    trace: trace.clone(),
-                });
-                for (entity_id, distance) in targets {
-                    let Some(index) = self
-                        .entities
-                        .iter()
-                        .position(|entity| entity.id == entity_id && entity.hp > 0)
-                    else {
-                        continue;
-                    };
-                    let falloff_damage = rfb_area_damage(base_raw_damage, distance);
-                    self.resolve_ability_damage_to_entity(
-                        index,
-                        &ability.id,
-                        DamageType::from(damage_type),
-                        falloff_damage,
-                        trace.clone(),
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                }
+                self.resolve_player_area_damage_effect(
+                    &ability,
+                    path,
+                    stop_at_actor,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
             (
                 AbilityEffectDefinition::BeamDamage {
