@@ -9,14 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "detect",
-      "subject": "terrain",
-      "category": "trap",
-      "radius": 8,
-      "persistent": true,
-      "throughWalls": true
-    }
+    "effectProgramId": "demo.effect.detect-traps-through-walls"
   },
   "tags": ["consumable", "knowledge", "scroll"]
 }

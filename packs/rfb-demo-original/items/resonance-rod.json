@@ -27,13 +27,7 @@
           "range": 0,
           "requiresLineOfEffect": false
         },
-        "effect": {
-          "type": "detect",
-          "subject": "terrain",
-          "category": "trap",
-          "radius": 8,
-          "persistent": true
-        }
+        "effectProgramId": "demo.effect.detect-traps"
       }
     ]
   },
