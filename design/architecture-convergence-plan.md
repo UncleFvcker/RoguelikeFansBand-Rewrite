@@ -1,6 +1,6 @@
 # Architecture Convergence Plan
 
-Status: phases 0-4 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, and test organization.
+Status: phases 0-6 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, and the first command-domain plan/commit boundary.
 
 This plan is based on repository state at commit `82d1eea5` on 2026-07-30. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
 
@@ -168,10 +168,17 @@ The first implemented structure is deliberately small:
 ```text
 crates/rfb-core/src/game/
   mod.rs          # state, construction, dispatch, domain mutations
+  inventory.rs    # inventory/equipment plans, commits, item knowledge
   persistence.rs  # save projection, state hash, restoration, migrations
   snapshot.rs     # public snapshot and read-only protocol projections
   validation.rs   # command preflight and pure state-invariant predicates
-  tests.rs        # assertions unchanged; projection DTO imports are explicit
+  world/
+    mod.rs        # private world-generation module boundary
+    geometry.rs   # pathing, transforms, terrain geometry/connectivity
+    generation.rs # ordered candidates, local terrain edits, region budgets
+  tests/
+    mod.rs        # domain test organization
+    support.rs    # centralized test-only helpers
 ```
 
 No duplicate implementation or forwarding “manager” is retained.
@@ -240,7 +247,7 @@ Implementation used three compatibility-gated batches. The first changed `tests.
 
 The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. Core still contains 268 game tests and 291 tests overall, with no ignored tests; replay and contract guards remain unchanged.
 
-### Phase 5: pure world-generation calculations
+### Phase 5: pure world-generation calculations (completed)
 
 - Scope: extract geometry, transforms, candidate enumeration, connectivity, and budget allocation using explicit parameters and ordered collections; leave RNG draws, IDs, state lookup, and commits in `Game`.
 - Not in scope: changing algorithms, maps, weights, random draw counts, floor lifecycle, or content.
@@ -250,7 +257,11 @@ The support module contains 23 existing helper functions with `pub(super)` visib
 - Rollback: any terrain/entity/item/connection ordering or RNG counter difference.
 - Tests: generation-focused core tests, fixtures, replay/hash suite, full workspace matrix.
 
-### Phase 6: one command domain at a time
+Implementation used two compatibility-gated extraction batches. The first moved maze anchors, distances, and paths; vault dimensions, coordinate transforms, entrances, and connector paths; and terrain indexing, walkability, and connectivity into `world/geometry.rs`. The second moved ordered room, formation, maze, vault, terrain-feature, and wall candidate construction; vault painting; room/corridor carving; primary connection selection; room-to-region assignment; and actor/loot budget allocation into `world/generation.rs`.
+
+All extracted functions consume explicit inputs and preserve their original collection types, iteration order, sorting, assertions, and local terrain mutation order. RNG draws, weighted and spatial selection, generated floor-connection placement, item/entity ID allocation, aggregate state lookup, floor lifecycle, and authoritative state commits remain in `Game`. The world modules add no crate or external public API: their callable surface is restricted to `pub(in crate::game)`, and the child modules themselves are `pub(super)`.
+
+### Phase 6: one command domain at a time (completed)
 
 - Scope: choose one cohesive domain after phase 5 evidence, likely inventory/equipment/knowledge before combat; introduce explicit plans/outcomes only where current dependencies support them.
 - Not in scope: simultaneous combat, ability, item, task, and dispatcher redesign; plugin traits; new content.
@@ -259,6 +270,10 @@ The support module contains 23 existing helper functions with `pub(super)` visib
 - Acceptance: command/event/save/replay/hash compatibility is exact and diff remains reviewable.
 - Rollback: outcome needs the entire mutable `Game`, public surface expands broadly, or more than one domain must change together.
 - Tests: domain command tests, zero-RNG rejection tests, replay/fixtures/hash, full workspace matrix.
+
+The first command-domain extraction chose the low-coupling inventory, equipment, appraisal, and item-knowledge boundary. `inventory.rs` now plans and commits `PickUp`, `Drop`, `DropQuantity`, `Equip`, `Unequip`, and `Appraise` operations. Pure planners receive explicit item, content, body-slot, position, capacity, and knowledge inputs and decide ordered stack transfers, stable batch membership, split requirements, equipment-slot selection, replacement, and unequip targets before mutation.
+
+`Game` remains the transaction owner. It still allocates split-stack IDs, applies planned item location and quantity changes, clamps HP, refreshes resource maxima, emits domain events, advances scheduling, and commits the command revision. Item-use, throwing, recharging, enchantment, curse application/removal, combat, status, death, loot, RNG draws, and all cross-domain effect chains remain in `mod.rs`. Existing item-knowledge state and local appraisal/awareness operations moved with the domain, while persistence and snapshot consumers retain their previous effective visibility. No crate or external public API was added.
 
 ### Phase 7: frontend composition
 
