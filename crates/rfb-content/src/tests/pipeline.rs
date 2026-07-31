@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn source_roots_and_validation_precedence_are_stable() {
     assert_eq!(
-        SUPPORTED_ROOTS,
+        crate::source::SUPPORTED_ROOTS,
         [
             "abilities",
             "abilityBooks",

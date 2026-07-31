@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use super::*;
 
 fn original_pack_path() -> PathBuf {
