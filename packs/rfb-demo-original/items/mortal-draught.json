@@ -9,10 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "self-life-loss",
-      "amount": 5000
-    }
+    "effectProgramId": "demo.effect.mortal-life-loss"
   },
   "tags": [
     "consumable",

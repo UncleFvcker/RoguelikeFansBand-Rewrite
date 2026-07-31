@@ -519,6 +519,8 @@ The genocide source migration maps glyph-selected and nearby mass genocide to gl
 
 The confusing-strike source migration maps its preparation scroll to a self-input program. Preparation state, the later melee-hit consumption boundary, target resistance, source consumption, awareness, and events remain in their existing item/combat owners.
 
+The direct-life-loss source migration maps the mortal draught to a self-input program. Its fixed amount lowers unchanged and deliberately remains on the explicit HP-loss bypass path rather than ordinary resistance/damage reduction; consumption, awareness, player death, and events remain runtime-owned.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
