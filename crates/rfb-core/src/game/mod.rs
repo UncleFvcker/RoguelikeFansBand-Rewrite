@@ -5085,80 +5085,17 @@ impl Game {
                 );
             }
             (
-                ItemUseEffectDefinition::Damage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                },
-                ItemUsePlan::Projectile { path },
-            ) => {
-                let profile_id =
-                    profile_id.expect("dynamic damage activation must carry a profile ID");
-                let (trace, target_index) = self.trace_projectile_path(path);
-                self.mark_item_aware(&kind_id);
-                let Some(target_index) = target_index else {
-                    events.push(DomainEvent::ItemActivationLanded {
-                        source_kind_id: kind_id,
-                        profile_id,
-                        trace,
-                    });
-                    return Ok(());
-                };
-                let target_kind_id = self.entities[target_index].kind_id.clone();
-                let target_position = self.entities[target_index].position;
-                let definition = self
-                    .content
-                    .actor(&target_kind_id)
-                    .expect("activation target definition must remain available")
-                    .clone();
-                let target_stats =
-                    self.actor_derived_stats(&self.entities[target_index], &definition, false);
-                let raw_damage = self
-                    .roll_damage(damage_dice, damage_sides)
-                    .saturating_add(i32::from(damage_bonus))
-                    .max(0);
-                let damage_type = DamageType::from(damage_type);
-                let resistance = self.entities[target_index].resistances.level(damage_type);
-                let damage = resolve_armored_damage(
-                    raw_damage,
-                    damage_type,
-                    target_stats.armor_class.value,
-                    resistance,
-                );
-                self.entities[target_index].alerted = true;
-                let application = plan_damage_application(
-                    &self.entities[target_index],
-                    damage,
-                    FatalityPolicy::AtOrBelowZero,
-                );
-                commit_damage_application(&mut self.entities[target_index], &application);
-                changed.insert(target_position);
-                self.wake_entity_after_damage(target_index, damage.applied, events);
-                if application.fatal {
-                    self.resolve_actor_death(
-                        target_index,
-                        DomainEvent::ItemActivationSlew {
-                            source_kind_id: kind_id,
-                            profile_id,
-                            target_kind_id,
-                            damage,
-                            trace,
-                        },
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                } else {
-                    events.push(DomainEvent::ItemActivationHit {
-                        source_kind_id: kind_id,
-                        profile_id,
-                        target_kind_id,
-                        damage,
-                        trace,
-                    });
-                }
-            }
+                effect @ ItemUseEffectDefinition::Damage { .. },
+                plan @ ItemUsePlan::Projectile { .. },
+            ) => self.resolve_item_activation_damage(
+                kind_id,
+                profile_id,
+                effect,
+                plan,
+                events,
+                changed,
+                removed_entities,
+            )?,
             (
                 ItemUseEffectDefinition::DispelCategory { category, damage },
                 ItemUsePlan::VisibleActors { actor_ids },
