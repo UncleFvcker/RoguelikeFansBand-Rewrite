@@ -1032,6 +1032,36 @@ impl Game {
             resolution: HealingResolutionDto { requested, applied },
         });
     }
+
+    pub(super) fn resolve_player_restore_vitality_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::RestoreVitality { life_force } = ability.effect else {
+            unreachable!("vitality executor requires a restore vitality effect");
+        };
+        let experience_before = self.progress.experience;
+        let life_force_before = self.progress.life_force;
+        self.progress.experience = self.progress.maximum_experience;
+        self.progress.life_force = self.progress.life_force.max(life_force).min(1_000);
+        self.apply_player_experience(0, events);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::RestoreVitality {
+                    effect_index: 0,
+                    experience_before,
+                    experience_after: self.progress.experience,
+                    life_force_before,
+                    life_force_after: self.progress.life_force,
+                }],
+            },
+            trace: None,
+        });
+    }
 }
 
 impl Game {

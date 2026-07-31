@@ -4222,30 +4222,8 @@ impl Game {
                     trace: None,
                 });
             }
-            (
-                AbilityEffectDefinition::RestoreVitality { life_force },
-                AbilityTargetPlan::SelfTarget,
-            ) => {
-                let experience_before = self.progress.experience;
-                let life_force_before = self.progress.life_force;
-                self.progress.experience = self.progress.maximum_experience;
-                self.progress.life_force = self.progress.life_force.max(life_force).min(1_000);
-                self.apply_player_experience(0, events);
-                events.push(DomainEvent::AbilityEffectsResolved {
-                    ability_id: ability.id,
-                    resolution: AbilityEffectsResolutionDto {
-                        target_entity_id: None,
-                        target_kind_id: None,
-                        effects: vec![AbilityEffectResolutionDto::RestoreVitality {
-                            effect_index: 0,
-                            experience_before,
-                            experience_after: self.progress.experience,
-                            life_force_before,
-                            life_force_after: self.progress.life_force,
-                        }],
-                    },
-                    trace: None,
-                });
+            (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_restore_vitality_effect(&ability, events);
             }
             (AbilityEffectDefinition::VisibleDamage { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_visible_damage_effect(
