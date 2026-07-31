@@ -9,7 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": { "type": "curse-equipped-item", "target": "armor" }
+    "effectProgramId": "demo.effect.curse-equipped-armor"
   },
   "tags": ["consumable", "curse", "scroll"]
 }

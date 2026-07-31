@@ -485,6 +485,8 @@ The numeric-enchantment source migration maps the accuracy, impact, armor temper
 
 Equipped-item curse application and removal now commit through typed inventory-owner requests. The owner retains stable slot/item candidate ordering, target-category filtering, artifact resistance RNG, severity mutation, heavy-removal policy, and permanent-curse reporting. Item adapters map the content target, decide source awareness from the outcome, and project the existing events without passing source IDs into the owner.
 
+The curse source migration maps the armor/weapon blight and ordinary/greater cleansing scrolls to self-input programs. Target category and heavy-removal policy lower unchanged; candidate RNG, severity changes, permanent retention, consumption, awareness, and events remain in their established runtime owners.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
