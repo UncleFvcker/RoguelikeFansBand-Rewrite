@@ -491,6 +491,8 @@ Recharge now uses typed inventory-owner operations for resource-to-device target
 
 The recharge source migration maps the recharging scroll to an item-input program with its original power. The special two-device preflight, scroll payment, source-destruction roll, target success roll, awareness, and recharge event order remain unchanged at runtime.
 
+The combat/world gate begins by reusing the Phase 12 damage/death pipeline for item activation damage rather than adding another capability. Frost and spark wand activations now reference actor-input programs; target/path preflight, device checks, charges, damage RNG, resistance, death, awareness, trace, and events remain in the existing item adapter and combat owners.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

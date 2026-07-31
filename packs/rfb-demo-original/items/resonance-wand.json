@@ -27,12 +27,7 @@
           "range": 8,
           "requiresLineOfEffect": true
         },
-        "effect": {
-          "type": "damage",
-          "damageDice": 3,
-          "damageSides": 6,
-          "damageType": "cold"
-        }
+        "effectProgramId": "demo.effect.frost-bolt"
       },
       {
         "id": "demo.device-activation.spark-bolt",
@@ -47,12 +42,7 @@
           "range": 8,
           "requiresLineOfEffect": true
         },
-        "effect": {
-          "type": "damage",
-          "damageDice": 2,
-          "damageSides": 6,
-          "damageType": "physical"
-        }
+        "effectProgramId": "demo.effect.spark-bolt"
       }
     ]
   },
