@@ -1081,6 +1081,68 @@ impl Game {
         events.extend(self.relocate_player(destination, changed));
     }
 
+    pub(super) fn resolve_player_summon_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        positions: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Summon {
+            actor_kind_id,
+            count,
+            duration_turns,
+            hostile,
+            ..
+        } = &ability.effect
+        else {
+            unreachable!("summon executor requires a fixed summon effect");
+        };
+        debug_assert_eq!(usize::from(*count), positions.len());
+        let definition = self
+            .content
+            .actor(actor_kind_id)
+            .expect("validated summon actor must remain available")
+            .clone();
+        let mut entity_ids = Vec::with_capacity(positions.len());
+        for (ordinal, position) in positions.iter().copied().enumerate() {
+            let id = self.summon_entity_id(&ability.id, ordinal);
+            let mut entity = actor_from_runtime_spawn(
+                &id,
+                actor_kind_id,
+                position,
+                definition.max_hp,
+                definition.speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            entity.resistances = definition_resistance_profile(&definition);
+            if !hostile {
+                entity.summon = Some(SummonIdentity {
+                    owner_id: self.player.id.clone(),
+                    source_ability_id: ability.id.clone(),
+                    remaining_turns: *duration_turns,
+                });
+            }
+            changed.insert(position);
+            entity_ids.push(id);
+            self.entities.push(entity);
+        }
+        events.push(DomainEvent::AbilitySummoned {
+            ability_id: ability.id.clone(),
+            resolution: AbilitySummonResolutionDto {
+                owner_id: self.player.id.clone(),
+                actor_kind_id: actor_kind_id.clone(),
+                entity_ids,
+                positions,
+                duration_turns: *duration_turns,
+                hostile: *hostile,
+                group: false,
+                summoned_kind_ids: Vec::new(),
+            },
+        });
+    }
+
     pub(super) fn resolve_player_detection_effect(
         &mut self,
         ability: &AbilityDefinition,

@@ -3901,59 +3901,8 @@ impl Game {
             (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
                 self.resolve_player_teleport_effect(&ability, destination, events, changed);
             }
-            (
-                AbilityEffectDefinition::Summon {
-                    actor_kind_id,
-                    count,
-                    duration_turns,
-                    hostile,
-                    ..
-                },
-                AbilityTargetPlan::Summon { positions },
-            ) => {
-                debug_assert_eq!(usize::from(count), positions.len());
-                let definition = self
-                    .content
-                    .actor(&actor_kind_id)
-                    .expect("validated summon actor must remain available")
-                    .clone();
-                let mut entity_ids = Vec::with_capacity(positions.len());
-                for (ordinal, position) in positions.iter().copied().enumerate() {
-                    let id = self.summon_entity_id(&ability.id, ordinal);
-                    let mut entity = actor_from_runtime_spawn(
-                        &id,
-                        &actor_kind_id,
-                        position,
-                        definition.max_hp,
-                        definition.speed,
-                        INITIAL_MONSTER_ENERGY_NEED,
-                        true,
-                    );
-                    entity.resistances = definition_resistance_profile(&definition);
-                    if !hostile {
-                        entity.summon = Some(SummonIdentity {
-                            owner_id: self.player.id.clone(),
-                            source_ability_id: ability.id.clone(),
-                            remaining_turns: duration_turns,
-                        });
-                    }
-                    changed.insert(position);
-                    entity_ids.push(id);
-                    self.entities.push(entity);
-                }
-                events.push(DomainEvent::AbilitySummoned {
-                    ability_id: ability.id,
-                    resolution: AbilitySummonResolutionDto {
-                        owner_id: self.player.id.clone(),
-                        actor_kind_id,
-                        entity_ids,
-                        positions,
-                        duration_turns,
-                        hostile,
-                        group: false,
-                        summoned_kind_ids: Vec::new(),
-                    },
-                });
+            (AbilityEffectDefinition::Summon { .. }, AbilityTargetPlan::Summon { positions }) => {
+                self.resolve_player_summon_effect(&ability, positions, events, changed);
             }
             (
                 AbilityEffectDefinition::SummonCategory {
