@@ -2260,19 +2260,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let max_hp = self.effective_player_max_hp();
-        let player = &mut self.player;
-        let outcome = apply_effect(
-            &mut EffectTarget {
-                hp: &mut player.hp,
-                max_hp,
-                resistances: &player.resistances,
-                statuses: &mut player.statuses,
-            },
-            EffectSpec::Heal { amount },
-        );
-        let EffectOutcome::Healed { requested, applied } = outcome else {
-            unreachable!("healing effects must produce healing outcomes");
-        };
+        let outcome = apply_healing(&mut self.player.hp, max_hp, HealingRequest::amount(amount));
+        let requested = outcome.requested;
+        let applied = outcome.applied;
         if applied > 0 {
             self.mark_item_aware(source_kind_id);
         }

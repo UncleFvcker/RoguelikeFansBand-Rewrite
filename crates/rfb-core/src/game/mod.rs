@@ -113,7 +113,9 @@ mod world;
 
 #[cfg(test)]
 use abilities::AbilityTargetPlan;
-use capabilities::{ResourceRestorationRequest, apply_resource_restoration};
+use capabilities::{
+    HealingRequest, ResourceRestorationRequest, apply_healing, apply_resource_restoration,
+};
 use damage::{
     FatalityPolicy, commit_damage_application, plan_damage_application, process_actor_status_tick,
     scale_damage_outcome,
