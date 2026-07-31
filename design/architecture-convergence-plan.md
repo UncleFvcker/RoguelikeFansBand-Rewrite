@@ -571,6 +571,8 @@ Phase 14 uses independently committed and pushed gates:
 8. **Legacy removal and consolidation.** Require program references and player bindings, delete inline ability-effect/player-field source paths, remove only genuinely superseded execution helpers, and decide separately whether the compiled runtime representation needs a versioned split.
 9. **Acceptance.** Run focused monster/player tests after every family, then the complete formatting, generators, source verification, workspace check/clippy/test, 33 replay, 454 fixture, frontend, Tauri release, and desktop E2E matrix.
 
+The first runtime gate moves the complete already-selected ability dispatcher and its target-resolution helpers from `game/mod.rs` into `monster_abilities.rs`. Category summon, self/projectile/area/beam/cone execution, displacement, hostile effect application, player effect application, defeated-summon cleanup, RNG, event, and result order are unchanged. Only the dispatcher is exposed `pub(super)`; its helpers remain private. `game/mod.rs` falls from 13,418 to 12,550 lines and `monster_abilities.rs` grows from 439 to 1,307 lines. All 11 monster AI tests, 33 replay tests, and all 454 contract fixtures pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
