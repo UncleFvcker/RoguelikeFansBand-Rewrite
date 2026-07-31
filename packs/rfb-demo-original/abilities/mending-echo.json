@@ -13,10 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "heal",
-    "amount": 6
-  },
+  "abilityProgramId": "demo.ability-program.mending-echo",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

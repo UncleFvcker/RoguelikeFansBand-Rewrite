@@ -581,6 +581,8 @@ The ability-program contract sub-batch adds the optional source-only `abilityPro
 
 The source-compiler ownership follow-up moves the complete ability-program contract and its tests to `rfb-content/src/ability_programs.rs`, and moves the existing item `effectPrograms` contract, input matching, catalog validation, and tests to `rfb-content/src/effect_programs.rs`. Item source binding remains in `lib.rs`; the Program module exposes only crate-private compiled catalogs and lowering helpers while the existing public `rfb_content::*` type paths remain stable through re-exports. `rfb-content/src/lib.rs` falls from 12,875 to 12,067 lines; the focused modules contain 503 and 370 lines respectively. Generated schemas and compiled content remain byte-identical.
 
+The first leaf migration moves `demo.ability.mending-echo` from an inline `Heal` effect to `demo.ability-program.mending-echo`. The same ability remains referenced by the player's Stillwater Notes book and the echo cantor's actor-owned `monsterCasting` list, proving that one lowered Program can serve both transaction shells without owning player resource/failure/proficiency/cooldown policy or monster frequency/weight/utility policy. The source pack now enables the `abilityPrograms` root, while the compiled content hash remains unchanged.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
