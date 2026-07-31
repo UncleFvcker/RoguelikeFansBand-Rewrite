@@ -19,6 +19,7 @@ mod effect_programs;
 mod player_ability_bindings;
 #[cfg(feature = "schemas")]
 mod schemas;
+mod source;
 
 pub use ability_programs::{
     AbilityProgramDefinition, AbilityProgramInputDefinition, AbilityProgramStepDefinition,
@@ -29,17 +30,14 @@ pub use catalog::{CompiledContentV1, ContentCatalog, ContentLockV1, ContentSumma
 pub use effect_programs::{
     EffectProgramDefinition, EffectProgramInputDefinition, EffectProgramStepDefinition,
 };
-use effect_programs::{
-    ResolvedEffectProgram, compile_effect_program_catalog,
-    effect_program_input_matches_device_target, resolve_source_item_effect,
-    validate_effect_program_catalog,
-};
+use effect_programs::{compile_effect_program_catalog, validate_effect_program_catalog};
 pub use player_ability_bindings::PlayerAbilityBindingDefinition;
 use player_ability_bindings::{
     compile_player_ability_binding_catalog, validate_player_ability_binding_references,
 };
 #[cfg(feature = "schemas")]
 pub use schemas::generated_schema_documents;
+use source::{SourceItemDefinition, compile_source_item};
 
 pub const CONTENT_FORMAT: &str = "rfb-content";
 pub const CONTENT_FORMAT_VERSION: u16 = 1;
@@ -1924,110 +1922,6 @@ pub struct ItemDefinition {
     pub tags: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemas", derive(JsonSchema))]
-#[cfg_attr(feature = "schemas", schemars(title = "ItemDefinition"))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct SourceItemDefinition {
-    #[serde(rename = "$schema")]
-    schema: String,
-    format_version: u16,
-    id: String,
-    name_key: String,
-    #[serde(default)]
-    appearance_name_key: Option<String>,
-    description_key: String,
-    glyph: String,
-    weight_tenths_pound: u16,
-    max_stack: u32,
-    #[serde(default)]
-    equipment_slot: Option<String>,
-    /// Curse stamped onto newly generated instances. Save data remains
-    /// authoritative after generation and never re-derives this field.
-    #[serde(default)]
-    initial_curse: Option<ItemCurseSeverityDefinition>,
-    #[serde(default)]
-    modifiers: StatModifiers,
-    #[serde(default)]
-    equipment_bonuses: EquipmentBonuses,
-    #[serde(default)]
-    melee_profile: Option<AttackProfileDefinition>,
-    #[serde(default)]
-    projectile_profile: Option<ProjectileProfileDefinition>,
-    #[serde(default)]
-    throw_profile: Option<ThrowProfileDefinition>,
-    #[serde(default)]
-    use_action: Option<SourceItemUseActionDefinition>,
-    #[serde(default)]
-    device_generation: Option<SourceItemDeviceGenerationDefinition>,
-    #[serde(default)]
-    ability_book_id: Option<String>,
-    #[serde(default)]
-    break_chance_percent: u8,
-    /// Defensive resistance tiers granted while the item is equipped.
-    #[serde(default)]
-    resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
-    /// Status kind ids the wearer is immune to while the item is equipped.
-    #[serde(default)]
-    status_immunities: Vec<String>,
-    /// Target categories receiving an original-compatible slay or kill
-    /// multiplier from melee weapon dice while this item is equipped.
-    #[serde(default)]
-    slays: BTreeMap<SlayTarget, SlayLevel>,
-    /// Elemental brands applied to melee weapon dice while this item is
-    /// equipped.
-    #[serde(default)]
-    brands: BTreeSet<WeaponBrand>,
-    /// Passive capabilities granted while this item is equipped.
-    #[serde(default)]
-    passives: BTreeSet<EquipmentPassive>,
-    tags: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemas", derive(JsonSchema))]
-#[cfg_attr(feature = "schemas", schemars(rename = "ItemUseActionDefinition"))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct SourceItemUseActionDefinition {
-    #[serde(default)]
-    device_check_difficulty: Option<i32>,
-    #[serde(default)]
-    charges: Option<ItemChargeDefinition>,
-    effect_program_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemas", derive(JsonSchema))]
-#[cfg_attr(
-    feature = "schemas",
-    schemars(rename = "ItemDeviceActivationDefinition")
-)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct SourceItemDeviceActivationDefinition {
-    id: String,
-    name_key: String,
-    weight: u32,
-    min_depth: u16,
-    max_depth: u16,
-    device_check_difficulty: i32,
-    charges: ItemDeviceChargeRangeDefinition,
-    target: AbilityTargetDefinition,
-    effect_program_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemas", derive(JsonSchema))]
-#[cfg_attr(
-    feature = "schemas",
-    schemars(rename = "ItemDeviceGenerationDefinition")
-)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct SourceItemDeviceGenerationDefinition {
-    activations: Vec<SourceItemDeviceActivationDefinition>,
-    #[serde(default)]
-    recovery: Option<ItemDeviceRecoveryDefinition>,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -2878,105 +2772,6 @@ pub struct ProceduralNestDefinition {
     pub spawn_count: u16,
 }
 
-impl SourceItemUseActionDefinition {
-    fn into_compiled(
-        self,
-        owner_id: &str,
-        programs: &BTreeMap<String, ResolvedEffectProgram>,
-    ) -> Result<ItemUseActionDefinition, ContentError> {
-        let (effect, _) = resolve_source_item_effect(owner_id, self.effect_program_id, programs)?;
-        Ok(ItemUseActionDefinition {
-            device_check_difficulty: self.device_check_difficulty,
-            charges: self.charges,
-            effect,
-        })
-    }
-}
-
-impl SourceItemDeviceActivationDefinition {
-    fn into_compiled(
-        self,
-        programs: &BTreeMap<String, ResolvedEffectProgram>,
-    ) -> Result<ItemDeviceActivationDefinition, ContentError> {
-        let (effect, program_input) =
-            resolve_source_item_effect(&self.id, self.effect_program_id, programs)?;
-        if !effect_program_input_matches_device_target(program_input, &self.target) {
-            return Err(ContentError::InvalidItemUseAction(self.id));
-        }
-        Ok(ItemDeviceActivationDefinition {
-            id: self.id,
-            name_key: self.name_key,
-            weight: self.weight,
-            min_depth: self.min_depth,
-            max_depth: self.max_depth,
-            device_check_difficulty: self.device_check_difficulty,
-            charges: self.charges,
-            target: self.target,
-            effect,
-        })
-    }
-}
-
-impl SourceItemDeviceGenerationDefinition {
-    fn into_compiled(
-        self,
-        programs: &BTreeMap<String, ResolvedEffectProgram>,
-    ) -> Result<ItemDeviceGenerationDefinition, ContentError> {
-        Ok(ItemDeviceGenerationDefinition {
-            activations: self
-                .activations
-                .into_iter()
-                .map(|activation| activation.into_compiled(programs))
-                .collect::<Result<Vec<_>, _>>()?,
-            recovery: self.recovery,
-        })
-    }
-}
-
-impl SourceItemDefinition {
-    fn into_compiled(
-        self,
-        programs: &BTreeMap<String, ResolvedEffectProgram>,
-    ) -> Result<ItemDefinition, ContentError> {
-        let use_action = self
-            .use_action
-            .map(|action| action.into_compiled(&self.id, programs))
-            .transpose()?;
-        let device_generation = self
-            .device_generation
-            .map(|generation| generation.into_compiled(programs))
-            .transpose()?;
-        Ok(ItemDefinition {
-            schema: self.schema,
-            format_version: self.format_version,
-            id: self.id,
-            name_key: self.name_key,
-            appearance_name_key: self.appearance_name_key,
-            description_key: self.description_key,
-            glyph: self.glyph,
-            weight_tenths_pound: self.weight_tenths_pound,
-            max_stack: self.max_stack,
-            equipment_slot: self.equipment_slot,
-            initial_curse: self.initial_curse,
-            modifiers: self.modifiers,
-            equipment_bonuses: self.equipment_bonuses,
-            melee_profile: self.melee_profile,
-            projectile_profile: self.projectile_profile,
-            throw_profile: self.throw_profile,
-            use_action,
-            device_generation,
-            ability_book_id: self.ability_book_id,
-            break_chance_percent: self.break_chance_percent,
-            resistances: self.resistances,
-            status_immunities: self.status_immunities,
-            slays: self.slays,
-            brands: self.brands,
-            passives: self.passives,
-            tags: self.tags,
-        })
-    }
-}
-
 pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
     let metadata = fs::symlink_metadata(root)?;
     if !metadata.is_dir() || metadata.file_type().is_symlink() {
@@ -2996,7 +2791,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         compile_effect_program_catalog(load_root(root, "effectPrograms", &roots, &mut budget)?)?;
     let items = load_root::<SourceItemDefinition>(root, "items", &roots, &mut budget)?
         .into_iter()
-        .map(|item| item.into_compiled(&effect_programs))
+        .map(|item| compile_source_item(item, &effect_programs))
         .collect::<Result<Vec<_>, _>>()?;
     let ability_programs =
         compile_ability_program_catalog(load_root(root, "abilityPrograms", &roots, &mut budget)?)?;

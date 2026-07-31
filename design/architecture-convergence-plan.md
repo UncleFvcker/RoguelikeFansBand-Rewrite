@@ -644,6 +644,8 @@ The schema-boundary gate moves the explicit 24-document vector and schema JSON f
 
 The catalog-boundary gate moves `CompiledContentV1`, `ContentCatalog`, `ContentSummary`, `ContentLockV1`, stable `BTreeMap` index construction, and every catalog query into the private 397-line `catalog.rs`. All four types remain root-re-exported; source compilation, validation, and artifact byte handling remain in their existing owners. `lib.rs` falls from 8,953 to 8,572 lines. Catalog lookup characterization, canonical bytes and demo hash, schema output, both content feature matrices, workspace checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures remain unchanged. Gate 6 source compilation is next.
 
+The first source-compiler sub-batch moves the source-only item, use-action, device-activation, and device-generation DTOs plus their Effect Program lowering into the private 222-line `source/items.rs`. An 18-line `source/mod.rs` temporarily exposes one crate-internal item compile adapter to the still-root-owned pack compiler; the DTOs remain absent from the external API. The Effect Program compatibility test imports its source DTO through this private owner. `lib.rs` falls from 8,572 to 8,367 lines. Both content feature matrices, source verification, schema freshness, workspace checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass with canonical bytes and demo hash unchanged. Source loading and compiler orchestration remain the second Gate 6 sub-batch.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

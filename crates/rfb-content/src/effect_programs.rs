@@ -203,7 +203,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     use super::*;
-    use crate::{CONTENT_FORMAT_VERSION, SourceItemUseActionDefinition, compile_pack_dir};
+    use crate::{CONTENT_FORMAT_VERSION, compile_pack_dir, source::SourceItemUseActionDefinition};
 
     fn original_pack_path() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR"))
