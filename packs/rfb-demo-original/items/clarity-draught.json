@@ -9,22 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "sequence",
-      "effects": [
-        {
-          "type": "restore-resource-dice",
-          "resourceId": "demo.resource.mana",
-          "dice": 3,
-          "sides": 6,
-          "bonus": 3
-        },
-        {
-          "type": "remove-status",
-          "statusKindId": "rfb.status.confusion"
-        }
-      ]
-    }
+    "effectProgramId": "demo.effect.clarity-restoration"
   },
   "tags": ["clarity", "consumable", "potion"]
 }

@@ -9,19 +9,7 @@
   "weightTenthsPound": 5,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "sequence",
-      "effects": [
-        {
-          "type": "restore-resource-full",
-          "resourceId": "demo.resource.mana"
-        },
-        {
-          "type": "remove-status",
-          "statusKindId": "rfb.status.berserk"
-        }
-      ]
-    }
+    "effectProgramId": "demo.effect.perfect-focus-restoration"
   },
   "tags": ["clarity", "consumable", "potion"]
 }
