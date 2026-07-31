@@ -4022,41 +4022,8 @@ impl Game {
                     resolution,
                 });
             }
-            (
-                AbilityEffectDefinition::Detect {
-                    subject,
-                    category,
-                    radius,
-                    persistent,
-                },
-                AbilityTargetPlan::Detect,
-            ) => {
-                let (detected_positions, detected_entity_ids) = match subject {
-                    AbilityDetectSubjectDefinition::Terrain => (
-                        self.detect_terrain_positions(&category, radius, persistent, false),
-                        Vec::new(),
-                    ),
-                    AbilityDetectSubjectDefinition::Actor => {
-                        self.detect_actor_positions(&category, radius)
-                    }
-                    AbilityDetectSubjectDefinition::Item => {
-                        self.detect_item_positions(&category, radius, false)
-                    }
-                };
-                if persistent {
-                    changed.extend(detected_positions.iter().copied());
-                }
-                events.push(DomainEvent::AbilityDetected {
-                    ability_id: ability.id,
-                    resolution: AbilityDetectResolutionDto {
-                        subject: ability_detect_subject_dto(subject),
-                        category,
-                        radius,
-                        persistent,
-                        detected_positions,
-                        detected_entity_ids,
-                    },
-                });
+            (AbilityEffectDefinition::Detect { .. }, AbilityTargetPlan::Detect) => {
+                self.resolve_player_detection_effect(&ability, events, changed);
             }
             (
                 AbilityEffectDefinition::TransformTerrain {

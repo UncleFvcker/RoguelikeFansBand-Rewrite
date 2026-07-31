@@ -1080,6 +1080,47 @@ impl Game {
         });
         events.extend(self.relocate_player(destination, changed));
     }
+
+    pub(super) fn resolve_player_detection_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Detect {
+            subject,
+            category,
+            radius,
+            persistent,
+        } = &ability.effect
+        else {
+            unreachable!("detection executor requires a detection effect");
+        };
+        let (detected_positions, detected_entity_ids) = match subject {
+            AbilityDetectSubjectDefinition::Terrain => (
+                self.detect_terrain_positions(category, *radius, *persistent, false),
+                Vec::new(),
+            ),
+            AbilityDetectSubjectDefinition::Actor => self.detect_actor_positions(category, *radius),
+            AbilityDetectSubjectDefinition::Item => {
+                self.detect_item_positions(category, *radius, false)
+            }
+        };
+        if *persistent {
+            changed.extend(detected_positions.iter().copied());
+        }
+        events.push(DomainEvent::AbilityDetected {
+            ability_id: ability.id.clone(),
+            resolution: AbilityDetectResolutionDto {
+                subject: ability_detect_subject_dto(*subject),
+                category: category.clone(),
+                radius: *radius,
+                persistent: *persistent,
+                detected_positions,
+                detected_entity_ids,
+            },
+        });
+    }
 }
 
 impl Game {
