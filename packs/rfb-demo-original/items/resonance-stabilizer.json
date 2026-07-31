@@ -10,10 +10,7 @@
   "maxStack": 5,
   "useAction": {
     "deviceCheckDifficulty": 60,
-    "effect": {
-      "type": "heal",
-      "amount": 6
-    }
+    "effectProgramId": "demo.effect.moderate-healing"
   },
   "tags": ["consumable", "device", "prototype"]
 }

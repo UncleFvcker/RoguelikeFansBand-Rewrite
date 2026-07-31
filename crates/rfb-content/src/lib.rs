@@ -10068,6 +10068,21 @@ mod tests {
                 .and_then(|action| action.device_check_difficulty),
             Some(60)
         );
+        assert!(matches!(
+            catalog
+                .item("demo.item.resonance-stabilizer")
+                .and_then(|item| item.use_action.as_ref())
+                .map(|action| &action.effect),
+            Some(ItemUseEffectDefinition::Heal { amount: 6 })
+        ));
+        assert!(matches!(
+            catalog
+                .item("demo.item.resonance-staff")
+                .and_then(|item| item.device_generation.as_ref())
+                .and_then(|generation| generation.activations.first())
+                .map(|activation| &activation.effect),
+            Some(ItemUseEffectDefinition::Heal { amount: 50 })
+        ));
         assert_eq!(
             catalog
                 .actor("demo.actor.echo-listener")

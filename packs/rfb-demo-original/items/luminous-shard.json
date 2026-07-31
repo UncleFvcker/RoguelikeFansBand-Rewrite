@@ -16,10 +16,7 @@
     "damageType": "physical"
   },
   "useAction": {
-    "effect": {
-      "type": "heal",
-      "amount": 4
-    }
+    "effectProgramId": "demo.effect.minor-healing"
   },
   "tags": ["consumable", "crystal", "light-source"]
 }

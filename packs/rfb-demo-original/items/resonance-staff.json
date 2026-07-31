@@ -27,10 +27,7 @@
           "range": 0,
           "requiresLineOfEffect": false
         },
-        "effect": {
-          "type": "heal",
-          "amount": 50
-        }
+        "effectProgramId": "demo.effect.major-healing"
       }
     ]
   },
