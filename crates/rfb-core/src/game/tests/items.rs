@@ -3864,6 +3864,17 @@ fn recall_round_trip_clears_the_old_instance_and_creates_a_new_one() {
             .iter()
             .any(|event| event.kind == "item.recall-triggered")
     );
+    let recall_event = update
+        .events
+        .iter()
+        .position(|event| event.kind == "item.recall-triggered")
+        .expect("recall trigger event should be projected");
+    let floor_event = update
+        .events
+        .iter()
+        .position(|event| event.kind == "floor.transition")
+        .expect("floor transition event should be projected");
+    assert!(recall_event < floor_event);
     assert!(
         game.stored_floors
             .values()

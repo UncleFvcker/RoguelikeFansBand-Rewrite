@@ -44,8 +44,6 @@ use crate::{
         DerivedStatsPipeline, StatBounds, StatKind, StatLayer,
     },
 };
-#[cfg(test)]
-use rfb_content::TerrainFeaturePlacement;
 use rfb_content::{
     AbilityDefinition, AbilityDetectSubjectDefinition, AbilityEffectDefinition,
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
@@ -53,17 +51,20 @@ use rfb_content::{
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CastingAttribute,
     CastingProfileDefinition, ContentCatalog, ContentPosition, DeviceRechargeProfileDefinition,
-    DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
     DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
     EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
     ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
     ItemSummonSelectorDefinition, ItemUseEffectDefinition, MonsterPackBehavior,
     ProceduralFloorDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
     ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, RetakeFloorPolicy, SkillKind, SlayLevel, SlayTarget,
+    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TechniqueProfileDefinition, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
     VaultDefinition, VaultTransform, WeaponBrand,
+};
+#[cfg(test)]
+use rfb_content::{
+    DungeonEntryRequirementDefinition, DungeonEntryTaskStatus, TerrainFeaturePlacement,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -90,6 +91,7 @@ use rfb_protocol::{
     TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
 };
 
+mod floor;
 mod inventory;
 mod persistence;
 mod progression;
@@ -99,15 +101,18 @@ mod terrain;
 mod validation;
 mod world;
 
+use floor::{
+    FloorTransitionTarget, RecallUseAction, dungeon_instance_id, dungeon_instance_storage_key,
+    floor_dungeon_id, parse_dungeon_instance_ordinal,
+};
 use inventory::{ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome};
 use progression::{
     build_definitions, character_skill_progress, combine_percentages, initial_character_attributes,
     initial_resource_pool, profile_resource_maximum, resolve_character_build,
 };
 use tasks::{
-    CampaignState, TaskResolution, TaskState, abandoned_task_state, activated_task_state,
-    floor_task_id, initial_task_states, task_objectives, task_resolution_for_departure,
-    task_state_after_departure, task_succeeded,
+    CampaignState, TaskState, abandoned_task_state, floor_task_id, initial_task_states,
+    task_objectives,
 };
 use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOutcome};
 use validation::{
@@ -400,10 +405,8 @@ enum ItemUsePlan {
         upward_targets: Vec<FloorTransitionTarget>,
         downward_targets: Vec<FloorTransitionTarget>,
     },
-    Recall {
-        cancel: bool,
-    },
-    ResetRecall,
+    Recall(RecallUseAction),
+    ResetRecall(floor::RecallDestination),
 }
 
 const RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN: u16 = 3;
@@ -429,13 +432,6 @@ struct CategorySummonSpec<'a> {
     group_count_sides: u8,
     group_count_bonus: u8,
     duration_turns: u16,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct FloorTransitionTarget {
-    floor_id: String,
-    arrival_connection_id: Option<String>,
-    departure_connection_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -701,32 +697,6 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
             )
         })
         .collect()
-}
-
-fn dungeon_instance_storage_key(instance_id: Option<&str>, floor_id: &str) -> String {
-    match instance_id {
-        Some(instance_id) => format!("{instance_id}::{floor_id}"),
-        None => floor_id.to_owned(),
-    }
-}
-
-fn floor_dungeon_id(world: &rfb_content::WorldDefinition, floor_id: &str) -> Option<String> {
-    world
-        .procedural_floors
-        .iter()
-        .find(|floor| floor.id == floor_id)
-        .and_then(|floor| floor.dungeon_id.clone())
-}
-
-fn dungeon_instance_id(dungeon_id: &str, ordinal: u32) -> String {
-    format!("{dungeon_id}.instance.{ordinal}")
-}
-
-fn parse_dungeon_instance_ordinal(instance_id: &str, dungeon_id: &str) -> Option<u32> {
-    instance_id
-        .strip_prefix(&format!("{dungeon_id}.instance."))
-        .and_then(|ordinal| ordinal.parse::<u32>().ok())
-        .filter(|ordinal| *ordinal > 0)
 }
 
 /// The engine's standard humanoid body: the slot roster every player uses
@@ -6565,146 +6535,6 @@ impl Game {
         candidates.into_iter().map(|entry| entry.3).collect()
     }
 
-    fn teleport_level_targets(&self) -> (Vec<FloorTransitionTarget>, Vec<FloorTransitionTarget>) {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        if self.current_floor_id == world.initial_floor_id {
-            let downward = self
-                .recall
-                .as_ref()
-                .filter(|recall| recall.remaining_turns.is_none())
-                .and_then(|recall| {
-                    let floor = world.procedural_floors.iter().find(|floor| {
-                        floor.id == recall.floor_id
-                            && floor.lifecycle == FloorLifecycle::Dungeon
-                            && floor.dungeon_id.as_deref() == Some(recall.dungeon_id.as_str())
-                    })?;
-                    let dungeon = world
-                        .dungeons
-                        .iter()
-                        .find(|dungeon| dungeon.id == recall.dungeon_id)?;
-                    self.dungeon_entry_requirements_met(dungeon)
-                        .then_some(FloorTransitionTarget {
-                            floor_id: floor.id.clone(),
-                            arrival_connection_id: None,
-                            departure_connection_id: None,
-                        })
-                })
-                .into_iter()
-                .collect();
-            return (Vec::new(), downward);
-        }
-
-        let Some(current) = world
-            .procedural_floors
-            .iter()
-            .find(|floor| floor.id == self.current_floor_id)
-            .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
-        else {
-            return (Vec::new(), Vec::new());
-        };
-        let current_dungeon_id = current.dungeon_id.as_deref();
-        let mut upward = Vec::new();
-        let mut downward = Vec::new();
-        for state in &self.floor_connections {
-            let Some(connection) = current
-                .connections
-                .iter()
-                .find(|connection| connection.id == state.id)
-            else {
-                continue;
-            };
-            let target_floor_id = state
-                .target_floor_id
-                .as_ref()
-                .unwrap_or(&connection.target_floor_id);
-            let target_depth = if target_floor_id == &world.initial_floor_id {
-                Some(0)
-            } else {
-                world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| {
-                        floor.id == *target_floor_id
-                            && floor.lifecycle == FloorLifecycle::Dungeon
-                            && floor.dungeon_id.as_deref() == current_dungeon_id
-                    })
-                    .map(|floor| floor.depth)
-            };
-            let Some(target_depth) = target_depth else {
-                continue;
-            };
-            let target = FloorTransitionTarget {
-                floor_id: target_floor_id.clone(),
-                arrival_connection_id: state
-                    .target_connection_id
-                    .clone()
-                    .or_else(|| connection.target_connection_id.clone()),
-                departure_connection_id: Some(state.id.clone()),
-            };
-            if target_depth < current.depth {
-                upward.push(target);
-            } else if target_depth > current.depth {
-                downward.push(target);
-            }
-        }
-        if upward.is_empty() {
-            upward.push(FloorTransitionTarget {
-                floor_id: current.return_floor_id.clone(),
-                arrival_connection_id: None,
-                departure_connection_id: None,
-            });
-        }
-        if downward.is_empty()
-            && let Some(next_floor_id) = &current.next_floor_id
-        {
-            downward.push(FloorTransitionTarget {
-                floor_id: next_floor_id.clone(),
-                arrival_connection_id: None,
-                departure_connection_id: None,
-            });
-        }
-        upward.sort();
-        upward.dedup();
-        downward.sort();
-        downward.dedup();
-        (upward, downward)
-    }
-
-    fn recall_use_plan(&self) -> Option<bool> {
-        let recall = self.recall.as_ref()?;
-        if recall.remaining_turns.is_some() {
-            return Some(true);
-        }
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        if self.current_floor_id == world.initial_floor_id {
-            let dungeon = world
-                .dungeons
-                .iter()
-                .find(|dungeon| dungeon.id == recall.dungeon_id)?;
-            return self
-                .dungeon_entry_requirements_met(dungeon)
-                .then_some(false);
-        }
-        floor_dungeon_id(world, &self.current_floor_id).map(|_| false)
-    }
-
-    fn can_reset_recall(&self) -> bool {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        self.recall
-            .as_ref()
-            .is_none_or(|recall| recall.remaining_turns.is_none())
-            && floor_dungeon_id(world, &self.current_floor_id).is_some()
-    }
-
     fn detect_terrain_positions(
         &mut self,
         category: &str,
@@ -8454,48 +8284,35 @@ impl Game {
                     delay_sides,
                     delay_bonus,
                 },
-                ItemUsePlan::Recall { cancel },
+                ItemUsePlan::Recall(action),
             ) => {
                 self.mark_item_aware(&kind_id);
-                if cancel {
-                    self.recall
-                        .as_mut()
-                        .expect("planned recall cancellation must retain its destination")
-                        .remaining_turns = None;
-                    events.push(DomainEvent::ItemRecallCancelled {
-                        source_kind_id: kind_id,
-                    });
-                } else {
-                    let rolled_delay = u16::try_from(self.roll_damage(delay_dice, delay_sides))
-                        .expect("validated recall delay roll must fit u16")
-                        .saturating_add(delay_bonus);
-                    let delay = self.debug_recall_delay_turns.unwrap_or(rolled_delay).max(1);
-                    let recall = self
-                        .recall
-                        .as_mut()
-                        .expect("planned recall must retain its destination");
-                    recall.remaining_turns = Some(delay.saturating_add(1));
-                    events.push(DomainEvent::ItemRecallStarted {
-                        source_kind_id: kind_id,
-                        dungeon_id: recall.dungeon_id.clone(),
-                        floor_id: recall.floor_id.clone(),
-                        turns: delay,
-                    });
+                match action {
+                    RecallUseAction::Cancel => {
+                        self.cancel_recall();
+                        events.push(DomainEvent::ItemRecallCancelled {
+                            source_kind_id: kind_id,
+                        });
+                    }
+                    RecallUseAction::Start => {
+                        let rolled_delay = u16::try_from(self.roll_damage(delay_dice, delay_sides))
+                            .expect("validated recall delay roll must fit u16")
+                            .saturating_add(delay_bonus);
+                        let delay = self.debug_recall_delay_turns.unwrap_or(rolled_delay).max(1);
+                        let destination = self.start_recall(delay);
+                        events.push(DomainEvent::ItemRecallStarted {
+                            source_kind_id: kind_id,
+                            dungeon_id: destination.dungeon_id,
+                            floor_id: destination.floor_id,
+                            turns: delay,
+                        });
+                    }
                 }
             }
-            (ItemUseEffectDefinition::ResetRecall, ItemUsePlan::ResetRecall) => {
-                let world = self
-                    .content
-                    .world(&self.world_id)
-                    .expect("active world must remain available");
-                let dungeon_id = floor_dungeon_id(world, &self.current_floor_id)
-                    .expect("planned recall reset must be on a dungeon floor");
-                let floor_id = self.current_floor_id.clone();
-                self.recall = Some(RecallStateDto {
-                    dungeon_id: dungeon_id.clone(),
-                    floor_id: floor_id.clone(),
-                    remaining_turns: None,
-                });
+            (ItemUseEffectDefinition::ResetRecall, ItemUsePlan::ResetRecall(destination)) => {
+                let dungeon_id = destination.dungeon_id.clone();
+                let floor_id = destination.floor_id.clone();
+                self.reset_recall(destination);
                 self.mark_item_aware(&kind_id);
                 events.push(DomainEvent::ItemRecallReset {
                     source_kind_id: kind_id,
@@ -8649,10 +8466,11 @@ impl Game {
             ItemUseEffectDefinition::Recall { .. } => self_target
                 .then(|| self.recall_use_plan())
                 .flatten()
-                .map(|cancel| ItemUsePlan::Recall { cancel }),
-            ItemUseEffectDefinition::ResetRecall => {
-                (self_target && self.can_reset_recall()).then_some(ItemUsePlan::ResetRecall)
-            }
+                .map(ItemUsePlan::Recall),
+            ItemUseEffectDefinition::ResetRecall => self_target
+                .then(|| self.recall_reset_plan())
+                .flatten()
+                .map(ItemUsePlan::ResetRecall),
         }
     }
 
@@ -11440,55 +11258,6 @@ impl Game {
         if !self.player_is_dead() {
             self.advance_recall(events, changed)?;
         }
-        Ok(())
-    }
-
-    fn advance_recall(
-        &mut self,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-    ) -> Result<(), CoreError> {
-        let Some(remaining_turns) = self
-            .recall
-            .as_ref()
-            .and_then(|recall| recall.remaining_turns)
-        else {
-            return Ok(());
-        };
-        if remaining_turns > 1 {
-            self.recall
-                .as_mut()
-                .expect("pending recall must retain its destination")
-                .remaining_turns = Some(remaining_turns - 1);
-            return Ok(());
-        }
-
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        let from_floor_id = self.current_floor_id.clone();
-        let target_floor_id = if self.current_floor_id == world.initial_floor_id {
-            self.recall
-                .as_ref()
-                .expect("pending recall must retain its destination")
-                .floor_id
-                .clone()
-        } else {
-            world.initial_floor_id.clone()
-        };
-        self.recall
-            .as_mut()
-            .expect("pending recall must retain its destination")
-            .remaining_turns = None;
-        let Some(transition) = self.transition_floor(target_floor_id, None, None, false)? else {
-            return Ok(());
-        };
-        events.push(DomainEvent::RecallTriggered {
-            from_floor_id,
-            to_floor_id: transition.to_floor_id.clone(),
-        });
-        self.record_floor_transition(transition, events, changed);
         Ok(())
     }
 
@@ -15642,74 +15411,6 @@ impl Game {
         sources
     }
 
-    fn discard_stored_task_floors(&mut self, members: &[ProceduralFloorDefinition]) {
-        let mut discarded_item_ids = BTreeSet::new();
-        for definition in members {
-            if let Some(floor) = self.stored_floors.remove(&definition.id) {
-                discarded_item_ids.extend(floor.items.into_iter().map(|item| item.id));
-            }
-        }
-        self.item_property_knowledge
-            .retain(|item_id, _| !discarded_item_ids.contains(item_id));
-    }
-
-    fn discard_stored_dungeon_instance(&mut self, instance_id: &str) {
-        let mut discarded_item_ids = BTreeSet::new();
-        self.stored_floors.retain(|_, floor| {
-            if floor.dungeon_instance_id.as_deref() == Some(instance_id) {
-                discarded_item_ids.extend(floor.items.iter().map(|item| item.id.clone()));
-                false
-            } else {
-                true
-            }
-        });
-        self.item_property_knowledge
-            .retain(|item_id, _| !discarded_item_ids.contains(item_id));
-    }
-
-    fn take_retained_dungeon_instance(
-        &mut self,
-        dungeon_id: &str,
-        lifecycle: &DungeonInstanceLifecycle,
-    ) -> Result<Option<String>, CoreError> {
-        let Some(state) = self.dungeon_states.get(dungeon_id) else {
-            return Err(CoreError::InvalidSave("dungeon state is missing"));
-        };
-        let Some(instance_id) = state.retained_instance_id.clone() else {
-            return Ok(None);
-        };
-        let retained_at_turn = state
-            .retained_at_turn
-            .ok_or(CoreError::InvalidSave("retained dungeon turn is missing"))?;
-        if !self
-            .stored_floors
-            .values()
-            .any(|floor| floor.dungeon_instance_id.as_deref() == Some(instance_id.as_str()))
-        {
-            return Err(CoreError::InvalidSave(
-                "retained dungeon instance is missing",
-            ));
-        }
-        let expired = matches!(
-            lifecycle,
-            DungeonInstanceLifecycle::TurnTtl { ttl_turns }
-                if self.turn.saturating_sub(retained_at_turn) >= *ttl_turns
-        );
-        if expired {
-            self.discard_stored_dungeon_instance(&instance_id);
-            if let Some(state) = self.dungeon_states.get_mut(dungeon_id) {
-                state.retained_instance_id = None;
-                state.retained_at_turn = None;
-            }
-            return Ok(None);
-        }
-        if let Some(state) = self.dungeon_states.get_mut(dungeon_id) {
-            state.retained_instance_id = None;
-            state.retained_at_turn = None;
-        }
-        Ok(Some(instance_id))
-    }
-
     fn abandon_paused_task(&mut self, task_id: &str) -> Option<Vec<Position>> {
         let world = self.content.world(&self.world_id)?;
         if self.current_floor_id != world.initial_floor_id
@@ -15760,700 +15461,6 @@ impl Game {
             .expect("paused task state must remain available");
         *state = abandoned_task_state(state, initial_required);
         Some(changed.into_iter().collect())
-    }
-
-    fn dungeon_entry_requirements_met(&self, dungeon: &DungeonDefinition) -> bool {
-        dungeon
-            .entry_requirements
-            .iter()
-            .all(|requirement| match requirement {
-                DungeonEntryRequirementDefinition::TaskStatus { task_id, status } => {
-                    self.task_states.get(task_id).is_some_and(|state| {
-                        matches!(
-                            (state.status, status),
-                            (
-                                TaskStatusKindDto::Available,
-                                DungeonEntryTaskStatus::Available
-                            ) | (TaskStatusKindDto::Active, DungeonEntryTaskStatus::Active)
-                                | (TaskStatusKindDto::Paused, DungeonEntryTaskStatus::Paused)
-                                | (
-                                    TaskStatusKindDto::Completed,
-                                    DungeonEntryTaskStatus::Completed
-                                )
-                                | (TaskStatusKindDto::Failed, DungeonEntryTaskStatus::Failed)
-                                | (
-                                    TaskStatusKindDto::Abandoned,
-                                    DungeonEntryTaskStatus::Abandoned
-                                )
-                        )
-                    })
-                }
-                DungeonEntryRequirementDefinition::DungeonConquered { dungeon_id } => self
-                    .dungeon_states
-                    .get(dungeon_id)
-                    .is_some_and(|state| state.guardian_defeated),
-                DungeonEntryRequirementDefinition::CarriedItem {
-                    item_kind_id,
-                    quantity,
-                } => {
-                    self.items
-                        .iter()
-                        .filter(|item| {
-                            item.kind_id == *item_kind_id
-                                && matches!(
-                                    item.location,
-                                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
-                                )
-                        })
-                        .fold(0_u32, |total, item| total.saturating_add(item.quantity))
-                        >= *quantity
-                }
-            })
-    }
-
-    fn record_floor_transition(
-        &self,
-        transition: FloorTransitionOutcome,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-    ) {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                changed.insert(Position {
-                    x: i32::from(x),
-                    y: i32::from(y),
-                });
-            }
-        }
-        events.push(DomainEvent::FloorTransitioned {
-            from_floor_id: transition.from_floor_id,
-            to_floor_id: transition.to_floor_id,
-        });
-        for (entity_id, target_kind_id) in transition.summons_followed {
-            events.push(DomainEvent::SummonFollowedFloor {
-                entity_id,
-                target_kind_id,
-            });
-        }
-        for (entity_id, target_kind_id) in transition.summons_could_not_follow {
-            events.push(DomainEvent::SummonCouldNotFollow {
-                entity_id,
-                target_kind_id,
-            });
-        }
-        if transition.expedition_ended {
-            events.push(DomainEvent::DungeonExpeditionEnded);
-        }
-        if let Some(floor_id) = transition.task_resumed {
-            events.push(DomainEvent::TaskResumed { floor_id });
-        }
-        if let Some(floor_id) = transition.task_paused {
-            events.push(DomainEvent::TaskPaused { floor_id });
-        }
-        if let Some((floor_id, resolution)) = transition.one_shot_closed {
-            events.push(match resolution {
-                TaskResolution::Completed => DomainEvent::TaskCompleted {
-                    floor_id: floor_id.clone(),
-                },
-                TaskResolution::Failed => DomainEvent::TaskFailed {
-                    floor_id: floor_id.clone(),
-                },
-                TaskResolution::Abandoned => DomainEvent::TaskAbandoned {
-                    floor_id: floor_id.clone(),
-                },
-            });
-            if resolution == TaskResolution::Completed
-                && let Some(reward) = self
-                    .content
-                    .world(&self.world_id)
-                    .and_then(|world| {
-                        world
-                            .procedural_floors
-                            .iter()
-                            .find(|floor| floor_task_id(floor) == floor_id)
-                    })
-                    .and_then(|floor| {
-                        self.content.world(&self.world_id).and_then(|world| {
-                            world
-                                .procedural_floors
-                                .iter()
-                                .filter(|member| floor_task_id(member) == floor_task_id(floor))
-                                .find_map(|member| member.task_reward.as_ref())
-                        })
-                    })
-            {
-                events.push(DomainEvent::TaskRewarded {
-                    item_kind_id: reward.item_kind_id.clone(),
-                    quantity: reward.quantity,
-                });
-            }
-            events.push(DomainEvent::OneShotFloorClosed { floor_id });
-        }
-    }
-
-    fn traverse_stairs(
-        &mut self,
-        abandon_task: bool,
-    ) -> Result<Option<FloorTransitionOutcome>, CoreError> {
-        let terrain_id = self.terrain_at(self.player.position).to_owned();
-        let terrain = self
-            .content
-            .terrain(&terrain_id)
-            .expect("active terrain must remain available");
-        let world = self
-            .content
-            .world(&self.world_id)
-            .cloned()
-            .expect("active world must remain available");
-        let initial_floor_id = world.initial_floor_id.clone();
-        let procedural_floors = world.procedural_floors.clone();
-        if abandon_task
-            && !procedural_floors.iter().any(|floor| {
-                floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::OneShot
-            })
-        {
-            return Ok(None);
-        }
-        let (target_floor_id, arrival_connection_id, departure_connection_id) = if abandon_task {
-            (initial_floor_id.clone(), None, None)
-        } else if self.current_floor_id == initial_floor_id {
-            let Some(target) = procedural_floors.iter().find(|floor| {
-                floor.return_floor_id == initial_floor_id
-                    && floor.entry_terrain_id.as_deref() == Some(terrain_id.as_str())
-            }) else {
-                return Ok(None);
-            };
-            (target.id.clone(), target.entry_connection_id.clone(), None)
-        } else if let Some(current) = procedural_floors
-            .iter()
-            .find(|floor| floor.id == self.current_floor_id)
-        {
-            if let Some(connection_state) = self
-                .floor_connections
-                .iter()
-                .find(|connection| connection.position == self.player.position)
-            {
-                let connection = current
-                    .connections
-                    .iter()
-                    .find(|connection| connection.id == connection_state.id)
-                    .ok_or(CoreError::InvalidSave(
-                        "active floor connection is missing from content",
-                    ))?;
-                let target_floor_id = connection_state
-                    .target_floor_id
-                    .clone()
-                    .unwrap_or_else(|| connection.target_floor_id.clone());
-                let target_connection_id = if connection_state.target_floor_id.is_some() {
-                    connection_state.target_connection_id.clone()
-                } else {
-                    connection.target_connection_id.clone()
-                };
-                (
-                    target_floor_id,
-                    target_connection_id,
-                    Some(connection_state.id.clone()),
-                )
-            } else if terrain.tags.iter().any(|tag| tag == "stairs-up") {
-                (current.return_floor_id.clone(), None, None)
-            } else if terrain.tags.iter().any(|tag| tag == "stairs-down") {
-                (
-                    current.next_floor_id.clone().ok_or(CoreError::InvalidSave(
-                        "downward floor connection is missing",
-                    ))?,
-                    None,
-                    None,
-                )
-            } else {
-                return Ok(None);
-            }
-        } else {
-            return Ok(None);
-        };
-
-        self.transition_floor(
-            target_floor_id,
-            arrival_connection_id,
-            departure_connection_id,
-            abandon_task,
-        )
-    }
-
-    fn transition_floor(
-        &mut self,
-        target_floor_id: String,
-        arrival_connection_id: Option<String>,
-        departure_connection_id: Option<String>,
-        abandon_task: bool,
-    ) -> Result<Option<FloorTransitionOutcome>, CoreError> {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .cloned()
-            .expect("active world must remain available");
-        let initial_floor_id = world.initial_floor_id.clone();
-        let procedural_floors = world.procedural_floors.clone();
-        let initial_task_states_by_id = initial_task_states(&world);
-
-        if self.current_floor_id == initial_floor_id
-            && let Some(target) = procedural_floors.iter().find(|floor| {
-                floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::Dungeon
-            })
-        {
-            let dungeon = world
-                .dungeons
-                .iter()
-                .find(|dungeon| target.dungeon_id.as_deref() == Some(dungeon.id.as_str()))
-                .expect("validated dungeon floor must retain its dungeon definition");
-            if !self.dungeon_entry_requirements_met(dungeon) {
-                return Ok(None);
-            }
-        }
-
-        if let Some(target) = procedural_floors
-            .iter()
-            .find(|floor| floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::OneShot)
-        {
-            let task_id = floor_task_id(target);
-            let state = self
-                .task_states
-                .get(task_id)
-                .expect("target task state must remain available");
-            if state.status == TaskStatusKindDto::Paused
-                && target
-                    .max_retakes
-                    .is_some_and(|maximum| state.retakes_used >= maximum)
-            {
-                return Ok(None);
-            }
-            let required_floor_id = task_objectives(&world, task_id)
-                .get(usize::try_from(state.stage_index).unwrap_or(usize::MAX))
-                .and_then(|objective| objective.floor_id.as_deref());
-            if required_floor_id.is_some_and(|floor_id| floor_id != target_floor_id) {
-                return Ok(None);
-            }
-        }
-
-        let from_floor_id = self.current_floor_id.clone();
-        let from_dungeon_instance_id = self.current_dungeon_instance_id.clone();
-        let source_definition = procedural_floors
-            .iter()
-            .find(|floor| floor.id == from_floor_id);
-        let expedition_ended = target_floor_id == initial_floor_id
-            && source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Dungeon);
-        let mut allocated_dungeon_instance = None;
-        let target_dungeon_instance_id = if let Some(target) = procedural_floors
-            .iter()
-            .find(|floor| floor.id == target_floor_id)
-            .filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
-        {
-            let dungeon_id = target
-                .dungeon_id
-                .as_deref()
-                .expect("dungeon floor must retain a dungeon ID");
-            let lifecycle = world
-                .dungeons
-                .iter()
-                .find(|dungeon| dungeon.id == dungeon_id)
-                .expect("validated dungeon floor must retain its definition")
-                .instance_lifecycle
-                .clone();
-            if source_definition
-                .is_some_and(|source| source.dungeon_id.as_deref() == Some(dungeon_id))
-            {
-                from_dungeon_instance_id.clone()
-            } else if from_floor_id == initial_floor_id {
-                if let Some(instance_id) =
-                    self.take_retained_dungeon_instance(dungeon_id, &lifecycle)?
-                {
-                    Some(instance_id)
-                } else {
-                    let state = self
-                        .dungeon_states
-                        .get(dungeon_id)
-                        .expect("target dungeon state must remain available");
-                    let ordinal = state
-                        .next_instance_ordinal
-                        .checked_add(1)
-                        .ok_or(CoreError::InvalidSave("dungeon instance ordinal overflow"))?;
-                    allocated_dungeon_instance = Some((dungeon_id.to_owned(), ordinal));
-                    Some(dungeon_instance_id(dungeon_id, ordinal))
-                }
-            } else {
-                return Err(CoreError::InvalidSave(
-                    "cross-dungeon floor transition is invalid",
-                ));
-            }
-        } else {
-            None
-        };
-        let one_shot_source = source_definition
-            .filter(|floor| {
-                target_floor_id == initial_floor_id && floor.lifecycle == FloorLifecycle::OneShot
-            })
-            .cloned();
-        let one_shot_task_id = one_shot_source
-            .as_ref()
-            .map(floor_task_id)
-            .map(str::to_owned);
-        let task_members = one_shot_task_id.as_ref().map_or_else(Vec::new, |task_id| {
-            procedural_floors
-                .iter()
-                .filter(|floor| {
-                    floor.lifecycle == FloorLifecycle::OneShot && floor_task_id(floor) == task_id
-                })
-                .cloned()
-                .collect::<Vec<_>>()
-        });
-        let task_succeeded = one_shot_task_id.as_ref().is_some_and(|task_id| {
-            self.task_states
-                .get(task_id)
-                .is_some_and(|state| task_succeeded(&world, task_id, state))
-        });
-        if !abandon_task
-            && one_shot_source.as_ref().is_some_and(|floor| {
-                !floor.retakeable && !floor.allow_early_task_exit && !task_succeeded
-            })
-        {
-            return Ok(None);
-        }
-        let task_resolution = task_resolution_for_departure(
-            one_shot_source.as_ref().map(|floor| floor.retakeable),
-            abandon_task,
-            task_succeeded,
-        );
-        let mut following_summons = Vec::new();
-        let mut remaining_entities = Vec::with_capacity(self.entities.len());
-        for entity in std::mem::take(&mut self.entities) {
-            let follows = entity.hp > 0
-                && self.actor_is_player_aligned(&entity)
-                && chebyshev_distance(entity.position, self.player.position) <= 2;
-            if follows {
-                following_summons.push(entity);
-            } else {
-                remaining_entities.push(entity);
-            }
-        }
-        following_summons.sort_by(|left, right| left.id.cmp(&right.id));
-        self.entities = remaining_entities;
-        let all_items = std::mem::take(&mut self.items);
-        let (floor_items, global_items): (Vec<_>, Vec<_>) =
-            all_items.into_iter().partition(|item| {
-                matches!(
-                    item.location,
-                    ItemLocation::Ground(_) | ItemLocation::CarriedBy { .. }
-                )
-            });
-        let current = FloorState {
-            id: from_floor_id.clone(),
-            dungeon_instance_id: from_dungeon_instance_id.clone(),
-            width: self.width,
-            height: self.height,
-            terrain: std::mem::take(&mut self.terrain),
-            player_position: self.player.position,
-            entities: std::mem::take(&mut self.entities),
-            items: floor_items,
-            explored: std::mem::take(&mut self.explored),
-            revealed_terrain: std::mem::take(&mut self.revealed_terrain),
-            connections: std::mem::take(&mut self.floor_connections),
-            regions: std::mem::take(&mut self.floor_regions),
-        };
-        let from_storage_key =
-            dungeon_instance_storage_key(from_dungeon_instance_id.as_deref(), &from_floor_id);
-        self.stored_floors.insert(from_storage_key.clone(), current);
-
-        let task_resumed = procedural_floors
-            .iter()
-            .find(|floor| {
-                floor.id == target_floor_id
-                    && floor.lifecycle == FloorLifecycle::OneShot
-                    && floor.retakeable
-            })
-            .is_some_and(|floor| {
-                self.task_states
-                    .get(floor_task_id(floor))
-                    .is_some_and(|state| state.status == TaskStatusKindDto::Paused)
-            });
-        if task_resumed
-            && let Some(target) = procedural_floors
-                .iter()
-                .find(|floor| floor.id == target_floor_id)
-            && target.retake_floor_policy == RetakeFloorPolicy::RegenerateFloor
-        {
-            let resumed_task_id = floor_task_id(target);
-            let resumed_members = procedural_floors
-                .iter()
-                .filter(|floor| {
-                    floor.lifecycle == FloorLifecycle::OneShot
-                        && floor_task_id(floor) == resumed_task_id
-                })
-                .cloned()
-                .collect::<Vec<_>>();
-            self.discard_stored_task_floors(&resumed_members);
-        }
-        let target_storage_key =
-            dungeon_instance_storage_key(target_dungeon_instance_id.as_deref(), &target_floor_id);
-        let mut destination_was_generated = false;
-        let mut destination = if let Some(floor) = self.stored_floors.remove(&target_storage_key) {
-            floor
-        } else if let Some(definition) = procedural_floors
-            .iter()
-            .find(|floor| floor.id == target_floor_id)
-        {
-            destination_was_generated = true;
-            self.generate_procedural_floor(definition, target_dungeon_instance_id.clone())?
-        } else {
-            return Err(CoreError::InvalidSave("return floor state is missing"));
-        };
-        if destination_was_generated
-            && let (Some(arrival_connection_id), Some(departure_connection_id)) = (
-                arrival_connection_id.as_ref(),
-                departure_connection_id.as_ref(),
-            )
-            && let Some(connection) = destination
-                .connections
-                .iter_mut()
-                .find(|connection| connection.id == *arrival_connection_id)
-        {
-            connection.target_floor_id = Some(from_floor_id.clone());
-            connection.target_connection_id = Some(departure_connection_id.clone());
-        }
-        if let Some(arrival_connection_id) = arrival_connection_id {
-            if let Some(connection) = destination
-                .connections
-                .iter()
-                .find(|connection| connection.id == arrival_connection_id)
-            {
-                destination.player_position = connection.position;
-            } else if !destination.connections.is_empty() {
-                return Err(CoreError::InvalidSave(
-                    "destination floor connection is missing",
-                ));
-            }
-        }
-        if let Some((dungeon_id, ordinal)) = allocated_dungeon_instance {
-            self.dungeon_states
-                .get_mut(&dungeon_id)
-                .expect("target dungeon state must remain available")
-                .next_instance_ordinal = ordinal;
-        }
-        if expedition_ended {
-            let instance_id = from_dungeon_instance_id
-                .clone()
-                .ok_or(CoreError::InvalidSave(
-                    "active dungeon floor is missing its instance ID",
-                ))?;
-            let dungeon_id = source_definition
-                .and_then(|floor| floor.dungeon_id.as_deref())
-                .ok_or(CoreError::InvalidSave(
-                    "active dungeon floor is missing its dungeon ID",
-                ))?;
-            let lifecycle = world
-                .dungeons
-                .iter()
-                .find(|dungeon| dungeon.id == dungeon_id)
-                .expect("validated dungeon floor must retain its definition")
-                .instance_lifecycle
-                .clone();
-            if lifecycle == DungeonInstanceLifecycle::ResetOnSurface {
-                self.discard_stored_dungeon_instance(&instance_id);
-            } else {
-                let state = self
-                    .dungeon_states
-                    .get_mut(dungeon_id)
-                    .expect("active dungeon state must remain available");
-                state.retained_instance_id = Some(instance_id);
-                state.retained_at_turn = Some(self.turn.saturating_add(1));
-            }
-        }
-        if one_shot_source.is_some()
-            && let Some(task_resolution) = task_resolution
-        {
-            self.discard_stored_task_floors(&task_members);
-            for definition in &task_members {
-                if let (Some(entry_id), Some(result_id)) = (
-                    definition.entry_terrain_id.as_deref(),
-                    match task_resolution {
-                        TaskResolution::Completed => {
-                            definition.completed_entry_terrain_id.as_deref()
-                        }
-                        TaskResolution::Failed => definition.failed_entry_terrain_id.as_deref(),
-                        TaskResolution::Abandoned => {
-                            definition.abandoned_entry_terrain_id.as_deref()
-                        }
-                    },
-                ) {
-                    for terrain_id in &mut destination.terrain {
-                        if terrain_id == entry_id {
-                            *terrain_id = result_id.to_owned();
-                        }
-                    }
-                }
-            }
-            if task_resolution == TaskResolution::Completed
-                && let Some(reward) = task_members
-                    .iter()
-                    .find_map(|definition| definition.task_reward.as_ref())
-            {
-                let (activation, charges) = initial_item_runtime_state(
-                    &self.content,
-                    &mut self.rng,
-                    &reward.item_kind_id,
-                    1,
-                );
-                destination.items.push(ItemInstance {
-                    id: reward.item_instance_id.clone(),
-                    kind_id: reward.item_kind_id.clone(),
-                    quantity: reward.quantity,
-                    quality: ItemQualityDto::Ordinary,
-                    affix_ids: Vec::new(),
-                    rolled_affixes: Vec::new(),
-                    enchantments: ItemEnchantmentsDto::default(),
-                    curse: initial_item_curse(&self.content, &reward.item_kind_id),
-                    activation,
-                    charges,
-                    device_recovery_progress: 0,
-                    location: ItemLocation::Ground(destination.player_position),
-                });
-            }
-        }
-        if let Some(task_id) = &one_shot_task_id {
-            let state = self
-                .task_states
-                .get_mut(task_id)
-                .expect("active task state must remain available");
-            *state = task_state_after_departure(
-                state,
-                task_resolution,
-                initial_task_states_by_id[task_id].required,
-            );
-        }
-        if let Some(target) = procedural_floors
-            .iter()
-            .find(|floor| floor.id == target_floor_id && floor.lifecycle == FloorLifecycle::OneShot)
-        {
-            let state = self
-                .task_states
-                .get_mut(floor_task_id(target))
-                .expect("target task state must remain available");
-            *state = activated_task_state(state, &target.id, task_resumed);
-        }
-        self.activate_floor(destination, global_items);
-        let (summons_followed, summons_could_not_follow) =
-            self.place_following_summons(following_summons, &from_storage_key);
-        if self.summon_command.mode == SummonCommandModeDto::Guard {
-            self.summon_command.guard_position = Some(self.player.position);
-        }
-        Ok(Some(FloorTransitionOutcome {
-            from_floor_id,
-            to_floor_id: target_floor_id.clone(),
-            expedition_ended,
-            one_shot_closed: one_shot_source.as_ref().and_then(|floor| {
-                task_resolution.map(|resolution| (floor_task_id(floor).to_owned(), resolution))
-            }),
-            task_paused: one_shot_source
-                .filter(|floor| task_resolution.is_none() && floor.retakeable)
-                .map(|floor| floor_task_id(&floor).to_owned()),
-            task_resumed: task_resumed.then(|| {
-                procedural_floors
-                    .iter()
-                    .find(|floor| floor.id == target_floor_id)
-                    .map(floor_task_id)
-                    .unwrap_or(&target_floor_id)
-                    .to_owned()
-            }),
-            summons_followed,
-            summons_could_not_follow,
-        }))
-    }
-
-    fn place_following_summons(
-        &mut self,
-        following_summons: Vec<Actor>,
-        from_storage_key: &str,
-    ) -> (Vec<ActorIdentity>, Vec<ActorIdentity>) {
-        if following_summons.is_empty() {
-            return (Vec::new(), Vec::new());
-        }
-        let positions = self.open_positions_around(self.player.position, 5);
-        if positions.len() < following_summons.len() {
-            let summaries = following_summons
-                .iter()
-                .map(|entity| (entity.id.clone(), entity.kind_id.clone()))
-                .collect::<Vec<_>>();
-            if let Some(source) = self.stored_floors.get_mut(from_storage_key) {
-                source.entities.extend(following_summons);
-                source
-                    .entities
-                    .sort_by(|left, right| left.id.cmp(&right.id));
-                return (Vec::new(), summaries);
-            }
-            return (Vec::new(), summaries);
-        }
-        let mut followed = Vec::with_capacity(following_summons.len());
-        for (mut entity, position) in following_summons.into_iter().zip(positions) {
-            entity.position = position;
-            followed.push((entity.id.clone(), entity.kind_id.clone()));
-            self.entities.push(entity);
-        }
-        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
-        (followed, Vec::new())
-    }
-
-    fn activate_floor(&mut self, floor: FloorState, mut global_items: Vec<ItemInstance>) {
-        self.current_floor_id = floor.id;
-        self.current_dungeon_instance_id = floor.dungeon_instance_id;
-        self.width = floor.width;
-        self.height = floor.height;
-        self.terrain = floor.terrain;
-        self.player.position = floor.player_position;
-        self.entities = floor.entities;
-        global_items.extend(floor.items);
-        self.items = global_items;
-        self.explored = floor.explored;
-        self.revealed_terrain = floor.revealed_terrain;
-        self.floor_connections = floor.connections;
-        self.floor_regions = floor.regions;
-        self.update_recall_destination_for_current_floor();
-        self.reveal_current_visibility();
-    }
-
-    fn update_recall_destination_for_current_floor(&mut self) {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        let Some(current) = world.procedural_floors.iter().find(|floor| {
-            floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::Dungeon
-        }) else {
-            return;
-        };
-        let dungeon_id = current
-            .dungeon_id
-            .as_ref()
-            .expect("validated dungeon floor must retain its dungeon ID")
-            .clone();
-        let should_update = self.recall.as_ref().is_none_or(|recall| {
-            if recall.dungeon_id != dungeon_id {
-                return true;
-            }
-            world
-                .procedural_floors
-                .iter()
-                .find(|floor| floor.id == recall.floor_id)
-                .is_none_or(|destination| current.depth >= destination.depth)
-        });
-        if should_update {
-            let remaining_turns = self
-                .recall
-                .as_ref()
-                .and_then(|recall| recall.remaining_turns);
-            self.recall = Some(RecallStateDto {
-                dungeon_id,
-                floor_id: current.id.clone(),
-                remaining_turns,
-            });
-        }
     }
 
     fn generate_procedural_floor(
@@ -19812,19 +18819,6 @@ enum PlayerTrapOutcome {
         source_kind_id: String,
         damage: DamageOutcome,
     },
-}
-
-type ActorIdentity = (String, String);
-
-struct FloorTransitionOutcome {
-    from_floor_id: String,
-    to_floor_id: String,
-    expedition_ended: bool,
-    one_shot_closed: Option<(String, TaskResolution)>,
-    task_paused: Option<String>,
-    task_resumed: Option<String>,
-    summons_followed: Vec<ActorIdentity>,
-    summons_could_not_follow: Vec<ActorIdentity>,
 }
 
 #[derive(Clone)]
