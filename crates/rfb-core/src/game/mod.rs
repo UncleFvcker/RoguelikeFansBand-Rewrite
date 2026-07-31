@@ -4110,32 +4110,12 @@ impl Game {
                 self.clamp_player_hp_to_effective_max();
             }
             (
-                AbilityEffectDefinition::Damage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                },
+                AbilityEffectDefinition::Damage { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
-                let (trace, target_index) = self.trace_projectile_path(path);
-                let Some(index) = target_index else {
-                    events.push(DomainEvent::AbilityLanded {
-                        ability_id: ability.id,
-                        trace,
-                    });
-                    return Ok(());
-                };
-                let raw_damage = self
-                    .roll_damage(damage_dice, damage_sides)
-                    .saturating_add(i32::from(damage_bonus))
-                    .max(0);
-                self.resolve_ability_damage_to_entity(
-                    index,
-                    &ability.id,
-                    DamageType::from(damage_type),
-                    raw_damage,
-                    trace,
+                self.resolve_player_projectile_damage_effect(
+                    &ability,
+                    path,
                     events,
                     changed,
                     removed_entities,

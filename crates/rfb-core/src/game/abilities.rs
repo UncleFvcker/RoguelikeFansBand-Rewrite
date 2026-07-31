@@ -250,6 +250,50 @@ impl Game {
 }
 
 impl Game {
+    pub(super) fn resolve_player_projectile_damage_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::Damage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+        } = &ability.effect
+        else {
+            unreachable!("player projectile damage executor requires a damage effect");
+        };
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace,
+            });
+            return Ok(());
+        };
+        let raw_damage = self
+            .roll_damage(*damage_dice, *damage_sides)
+            .saturating_add(i32::from(*damage_bonus))
+            .max(0);
+        self.resolve_ability_damage_to_entity(
+            index,
+            &ability.id,
+            DamageType::from(*damage_type),
+            raw_damage,
+            trace,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(())
+    }
+}
+
+impl Game {
     pub(super) fn ability_target_plan(
         &self,
         ability: &AbilityDefinition,
