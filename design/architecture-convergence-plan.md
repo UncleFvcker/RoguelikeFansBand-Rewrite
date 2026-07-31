@@ -275,7 +275,7 @@ The first command-domain extraction chose the low-coupling inventory, equipment,
 
 `Game` remains the transaction owner. It still allocates split-stack IDs, applies planned item location and quantity changes, clamps HP, refreshes resource maxima, emits domain events, advances scheduling, and commits the command revision. Item-use, throwing, recharging, enchantment, curse application/removal, combat, status, death, loot, RNG draws, and all cross-domain effect chains remain in `mod.rs`. Existing item-knowledge state and local appraisal/awareness operations moved with the domain, while persistence and snapshot consumers retain their previous effective visibility. No crate or external public API was added.
 
-### Phase 7: frontend composition
+### Phase 7: frontend composition (completed)
 
 - Scope: extract one low-risk unit at a time, beginning with message formatting/panel state, then save panel, DOM registry, app state, targeting/input, dispatcher, and remaining panels.
 - Not in scope: framework migration, visual redesign, DOM contract changes, renderer changes, or protocol changes.
@@ -284,6 +284,29 @@ The first command-domain extraction chose the low-coupling inventory, equipment,
 - Acceptance: exact visible behavior, DOM IDs, keyboard controls, command envelopes, native save behavior, render diagnostics, frontend tests/build, and Tauri E2E.
 - Rollback: extraction requires protocol/DOM changes or introduces multiple sources of session truth.
 - Tests: `npm test`, `npm run typecheck`, `npm run build:ui`, `npm run e2e`, plus protocol check.
+
+Implementation proceeded in dependency order and reduced `web/src/main.ts` from the 3,707-line
+baseline to 429 lines. Pure localized event and item presentation now lives in `event-format.ts`;
+bounded message history and DOM rendering live in `message-panel.ts`; native slot persistence and
+its controls live in `save-panel.ts`; and `app-dom.ts` resolves the existing DOM contract once into
+a frozen, typed registry. All existing element IDs, localization keys, diagnostic `data-*`
+attributes, and visible output remain unchanged.
+
+`AppState` is the sole owner of busy and terminal flags, current snapshot/update, map dimensions,
+inventory/equipment selections, and targeting/terrain-interaction state. `InputController` owns the
+keyboard, resize, target-toggle, targeting, and terrain-mode listener lifetime. `GameSession` owns
+the single command transaction path, including terminal gating, busy-state recovery, core dispatch,
+and ordered update application. No gameplay panel or input path invokes `TauriNativeTransport`
+directly.
+
+The remaining UI composition is split by responsibility: `settings-panel.ts` owns persisted input,
+tileset, camera, zoom, and locale controls; `status-panel.ts` owns status, progression, resources,
+abilities, summons, tasks, and campaign views; and `inventory-panel.ts` owns inventory/equipment
+rendering, selection, item dialogs, recharge selection, and inventory commands. Each controller has
+idempotent listener installation and explicit disposal. The extraction added focused tests for DOM
+contract failure, state defaults, command transaction ordering and recovery, keyboard presets,
+inventory quantities/recharge pairing, settings validation, status formatting, message history,
+save error categories, and localized presentation, bringing the frontend suite to 54 tests.
 
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
