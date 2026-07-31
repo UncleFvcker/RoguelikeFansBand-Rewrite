@@ -1143,6 +1143,80 @@ impl Game {
         });
     }
 
+    pub(super) fn resolve_player_category_summon_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        friendly_candidate_kind_ids: Vec<String>,
+        hostile_candidate_kind_ids: Vec<String>,
+        positions: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::SummonCategory {
+            category,
+            upgraded_category,
+            upgrade_at_level,
+            count_dice,
+            count_sides,
+            count_bonus,
+            hostile_chance_percent,
+            friendly_group_chance_percent,
+            hostile_group_chance_percent,
+            group_count_dice,
+            group_count_sides,
+            group_count_bonus,
+            duration_turns,
+            ..
+        } = &ability.effect
+        else {
+            unreachable!("category summon executor requires a category summon effect");
+        };
+        let hostile = match *hostile_chance_percent {
+            0 => false,
+            100 => true,
+            chance => self.rng.bounded(100) < u64::from(chance),
+        };
+        let group_chance = if hostile {
+            *hostile_group_chance_percent
+        } else {
+            *friendly_group_chance_percent
+        };
+        let candidates = if hostile {
+            hostile_candidate_kind_ids
+        } else {
+            friendly_candidate_kind_ids
+        };
+        let selected_category = upgraded_category
+            .as_deref()
+            .zip(*upgrade_at_level)
+            .filter(|(_, level)| self.progress.level >= *level)
+            .map_or(category.as_str(), |(category, _)| category);
+        let owner_id = self.player.id.clone();
+        let resolution = self.resolve_category_summon(
+            CategorySummonSpec {
+                source_id: &ability.id,
+                owner_id: &owner_id,
+                category: selected_category,
+                count_dice: *count_dice,
+                count_sides: *count_sides,
+                count_bonus: *count_bonus,
+                hostile,
+                group_chance_percent: group_chance,
+                group_count_dice: *group_count_dice,
+                group_count_sides: *group_count_sides,
+                group_count_bonus: *group_count_bonus,
+                duration_turns: *duration_turns,
+            },
+            candidates,
+            positions,
+            changed,
+        );
+        events.push(DomainEvent::AbilitySummoned {
+            ability_id: ability.id.clone(),
+            resolution,
+        });
+    }
+
     pub(super) fn resolve_player_detection_effect(
         &mut self,
         ability: &AbilityDefinition,

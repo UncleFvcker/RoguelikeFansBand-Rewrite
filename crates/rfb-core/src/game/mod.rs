@@ -3905,71 +3905,21 @@ impl Game {
                 self.resolve_player_summon_effect(&ability, positions, events, changed);
             }
             (
-                AbilityEffectDefinition::SummonCategory {
-                    category,
-                    upgraded_category,
-                    upgrade_at_level,
-                    count_dice,
-                    count_sides,
-                    count_bonus,
-                    hostile_chance_percent,
-                    friendly_group_chance_percent,
-                    hostile_group_chance_percent,
-                    group_count_dice,
-                    group_count_sides,
-                    group_count_bonus,
-                    duration_turns,
-                    ..
-                },
+                AbilityEffectDefinition::SummonCategory { .. },
                 AbilityTargetPlan::SummonCategory {
                     friendly_candidate_kind_ids,
                     hostile_candidate_kind_ids,
                     positions,
                 },
             ) => {
-                let hostile = match hostile_chance_percent {
-                    0 => false,
-                    100 => true,
-                    chance => self.rng.bounded(100) < u64::from(chance),
-                };
-                let group_chance = if hostile {
-                    hostile_group_chance_percent
-                } else {
-                    friendly_group_chance_percent
-                };
-                let candidates = if hostile {
-                    hostile_candidate_kind_ids
-                } else {
-                    friendly_candidate_kind_ids
-                };
-                let selected_category = upgraded_category
-                    .zip(upgrade_at_level)
-                    .filter(|(_, level)| self.progress.level >= *level)
-                    .map_or(category, |(category, _)| category);
-                let owner_id = self.player.id.clone();
-                let resolution = self.resolve_category_summon(
-                    CategorySummonSpec {
-                        source_id: &ability.id,
-                        owner_id: &owner_id,
-                        category: &selected_category,
-                        count_dice,
-                        count_sides,
-                        count_bonus,
-                        hostile,
-                        group_chance_percent: group_chance,
-                        group_count_dice,
-                        group_count_sides,
-                        group_count_bonus,
-                        duration_turns,
-                    },
-                    candidates,
+                self.resolve_player_category_summon_effect(
+                    &ability,
+                    friendly_candidate_kind_ids,
+                    hostile_candidate_kind_ids,
                     positions,
+                    events,
                     changed,
                 );
-                events.push(DomainEvent::AbilitySummoned {
-                    ability_id: ability.id,
-                    resolution,
-                });
             }
             (AbilityEffectDefinition::Detect { .. }, AbilityTargetPlan::Detect) => {
                 self.resolve_player_detection_effect(&ability, events, changed);
