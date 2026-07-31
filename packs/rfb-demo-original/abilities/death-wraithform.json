@@ -9,17 +9,7 @@
   "resourceCost": 100,
   "baseFailurePercent": 90,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.wraithform",
-    "intensity": 1,
-    "durationTicks": 1,
-    "durationDice": 1,
-    "durationSides": 1,
-    "stacking": "replace",
-    "grantsWallPassage": true,
-    "incomingDamagePercent": 50
-  },
+  "abilityProgramId": "demo.ability-program.death-wraithform",
   "levelScaling": [
     { "effectIndex": 0, "field": "status-duration-ticks", "multiplier": 24, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 },
     { "effectIndex": 0, "field": "status-duration-sides", "multiplier": 24, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }

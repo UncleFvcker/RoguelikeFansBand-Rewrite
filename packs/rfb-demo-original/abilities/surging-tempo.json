@@ -13,13 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.haste",
-    "intensity": 1,
-    "durationTicks": 25,
-    "stacking": "extend"
-  },
+  "abilityProgramId": "demo.ability-program.surging-tempo",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

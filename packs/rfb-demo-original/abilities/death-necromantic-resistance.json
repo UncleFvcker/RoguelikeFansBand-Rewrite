@@ -13,16 +13,6 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.necromantic-resistance",
-    "intensity": 1,
-    "durationTicks": 300,
-    "stacking": "replace",
-    "grantedResistances": {
-      "cold": "resistant",
-      "poison": "resistant"
-    }
-  },
+  "abilityProgramId": "demo.ability-program.death-necromantic-resistance",
   "tags": ["death", "resistance", "spell"]
 }

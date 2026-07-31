@@ -13,13 +13,6 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.poison-branding",
-    "intensity": 1,
-    "durationTicks": 500,
-    "stacking": "replace",
-    "grantedBrands": ["poison"]
-  },
+  "abilityProgramId": "demo.ability-program.death-poison-branding",
   "tags": ["brand", "death", "poison", "spell"]
 }

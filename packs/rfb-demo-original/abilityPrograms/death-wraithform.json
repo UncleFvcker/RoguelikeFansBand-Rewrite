@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.death-wraithform",
+  "input": "self",
+  "steps": [
+    {
+      "type": "apply-status",
+      "statusKindId": "rfb.status.wraithform",
+      "intensity": 1,
+      "durationTicks": 1,
+      "durationDice": 1,
+      "durationSides": 1,
+      "stacking": "replace",
+      "grantsWallPassage": true,
+      "incomingDamagePercent": 50
+    }
+  ]
+}

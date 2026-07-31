@@ -9,16 +9,7 @@
   "resourceCost": 40,
   "baseFailurePercent": 80,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.vampiric-transformation",
-    "intensity": 1,
-    "durationTicks": 10,
-    "durationDice": 1,
-    "durationSides": 10,
-    "stacking": "replace",
-    "grantedRaceId": "demo.race.vampire-lord"
-  },
+  "abilityProgramId": "demo.ability-program.death-vampiric-transformation",
   "levelScaling": [
     { "effectIndex": 0, "field": "status-duration-ticks", "multiplier": 25, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 },
     { "effectIndex": 0, "field": "status-duration-sides", "multiplier": 25, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }

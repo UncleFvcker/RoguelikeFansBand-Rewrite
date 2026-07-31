@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.death-necromantic-resistance",
+  "input": "self",
+  "steps": [
+    {
+      "type": "apply-status",
+      "statusKindId": "rfb.status.necromantic-resistance",
+      "intensity": 1,
+      "durationTicks": 300,
+      "stacking": "replace",
+      "grantedResistances": {
+        "cold": "resistant",
+        "poison": "resistant"
+      }
+    }
+  ]
+}
