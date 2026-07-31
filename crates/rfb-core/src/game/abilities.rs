@@ -926,6 +926,176 @@ impl Game {
         }
     }
 
+    pub(super) fn resolve_player_actor_status_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        target_plan: AbilityTargetPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        debug_assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::ApplyStatus { .. }
+                | AbilityEffectDefinition::RemoveStatus { .. }
+        ));
+        match target_plan {
+            AbilityTargetPlan::SelfTarget => {
+                let resolution = match &ability.effect {
+                    AbilityEffectDefinition::ApplyStatus {
+                        status_kind_id,
+                        intensity,
+                        duration_ticks,
+                        duration_dice,
+                        duration_sides,
+                        stacking,
+                        resistance_type,
+                        power,
+                        granted_resistances,
+                        granted_brands,
+                        granted_modifiers,
+                        granted_equipment_bonuses,
+                        granted_status_immunities,
+                        granted_race_id,
+                        grants_wall_passage,
+                        incoming_damage_percent,
+                    } => apply_ability_status_effect(
+                        &mut self.player,
+                        &ability.id,
+                        0,
+                        status_kind_id,
+                        *intensity,
+                        *duration_ticks,
+                        *duration_dice,
+                        *duration_sides,
+                        *stacking,
+                        *resistance_type,
+                        *power,
+                        granted_resistances,
+                        granted_brands,
+                        granted_modifiers,
+                        granted_equipment_bonuses,
+                        granted_status_immunities,
+                        granted_race_id.as_deref(),
+                        *grants_wall_passage,
+                        *incoming_damage_percent,
+                        None,
+                        None,
+                        &mut self.rng,
+                    ),
+                    AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+                        remove_ability_status_effect(&mut self.player, 0, status_kind_id)
+                    }
+                    _ => unreachable!("actor status executor requires a status effect"),
+                };
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id: ability.id.clone(),
+                    resolution: AbilityEffectsResolutionDto {
+                        target_entity_id: Some(self.player.id.clone()),
+                        target_kind_id: Some(self.player.kind_id.clone()),
+                        effects: vec![resolution],
+                    },
+                    trace: None,
+                });
+                self.refresh_player_resource_maxima();
+            }
+            AbilityTargetPlan::Projectile { path, .. } => {
+                let (trace, target_index) = self.trace_projectile_path(path);
+                let Some(target_index) = target_index else {
+                    events.push(DomainEvent::AbilityLanded {
+                        ability_id: ability.id.clone(),
+                        trace: trace.clone(),
+                    });
+                    events.push(DomainEvent::AbilityEffectsResolved {
+                        ability_id: ability.id.clone(),
+                        resolution: AbilityEffectsResolutionDto {
+                            target_entity_id: None,
+                            target_kind_id: None,
+                            effects: vec![AbilityEffectResolutionDto::Skipped {
+                                effect_index: 0,
+                                reason: AbilityEffectSkipReasonDto::NoTarget,
+                            }],
+                        },
+                        trace: Some(trace),
+                    });
+                    return;
+                };
+                let target_entity_id = self.entities[target_index].id.clone();
+                let target_kind_id = self.entities[target_index].kind_id.clone();
+                let resolution = match &ability.effect {
+                    AbilityEffectDefinition::ApplyStatus {
+                        status_kind_id,
+                        intensity,
+                        duration_ticks,
+                        duration_dice,
+                        duration_sides,
+                        stacking,
+                        resistance_type,
+                        power,
+                        granted_resistances,
+                        granted_brands,
+                        granted_modifiers,
+                        granted_equipment_bonuses,
+                        granted_status_immunities,
+                        granted_race_id,
+                        grants_wall_passage,
+                        incoming_damage_percent,
+                    } => {
+                        let target_level = self
+                            .content
+                            .actor(&target_kind_id)
+                            .map(|definition| definition.level);
+                        self.entities[target_index].alerted = true;
+                        changed.insert(self.entities[target_index].position);
+                        apply_ability_status_effect(
+                            &mut self.entities[target_index],
+                            &ability.id,
+                            0,
+                            status_kind_id,
+                            *intensity,
+                            *duration_ticks,
+                            *duration_dice,
+                            *duration_sides,
+                            *stacking,
+                            *resistance_type,
+                            *power,
+                            granted_resistances,
+                            granted_brands,
+                            granted_modifiers,
+                            granted_equipment_bonuses,
+                            granted_status_immunities,
+                            granted_race_id.as_deref(),
+                            *grants_wall_passage,
+                            *incoming_damage_percent,
+                            target_level,
+                            None,
+                            &mut self.rng,
+                        )
+                    }
+                    AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
+                        self.entities[target_index].alerted = true;
+                        changed.insert(self.entities[target_index].position);
+                        remove_ability_status_effect(
+                            &mut self.entities[target_index],
+                            0,
+                            status_kind_id,
+                        )
+                    }
+                    _ => unreachable!("actor status executor requires a status effect"),
+                };
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id: ability.id.clone(),
+                    resolution: AbilityEffectsResolutionDto {
+                        target_entity_id: Some(target_entity_id),
+                        target_kind_id: Some(target_kind_id),
+                        effects: vec![resolution],
+                    },
+                    trace: Some(trace),
+                });
+            }
+            _ => unreachable!("actor status effects require a self or projectile target plan"),
+        }
+    }
+
     pub(super) fn resolve_player_visible_status_effect(
         &mut self,
         ability: &AbilityDefinition,

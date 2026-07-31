@@ -3932,15 +3932,19 @@ impl Game {
                     &ability, center, positions, events, changed,
                 );
             }
-            (effect, target_plan)
-                if matches!(
-                    effect,
-                    AbilityEffectDefinition::ApplyStatus { .. }
-                        | AbilityEffectDefinition::RemoveStatus { .. }
-                        | AbilityEffectDefinition::Control { .. }
-                        | AbilityEffectDefinition::Sequence { .. }
-                ) =>
-            {
+            (
+                AbilityEffectDefinition::ApplyStatus { .. }
+                | AbilityEffectDefinition::RemoveStatus { .. },
+                target_plan,
+            ) => {
+                self.resolve_player_actor_status_effect(&ability, target_plan, events, changed);
+                self.clamp_player_hp_to_effective_max();
+            }
+            (
+                effect @ (AbilityEffectDefinition::Control { .. }
+                | AbilityEffectDefinition::Sequence { .. }),
+                target_plan,
+            ) => {
                 self.resolve_ability_actor_effects(
                     &ability.id,
                     &effect,
