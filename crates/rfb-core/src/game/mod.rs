@@ -4410,30 +4410,16 @@ impl Game {
                 });
             }
             (
-                AbilityEffectDefinition::DrainLife {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                    target_category,
-                    repeat,
-                },
+                AbilityEffectDefinition::DrainLife { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
-                for _ in 0..repeat {
-                    self.resolve_ability_drain_life(
-                        &ability.id,
-                        path.clone(),
-                        damage_dice,
-                        damage_sides,
-                        damage_bonus,
-                        DamageType::from(damage_type),
-                        &target_category,
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                }
+                self.resolve_player_drain_life_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
             (
                 AbilityEffectDefinition::Genocide {
@@ -4494,105 +4480,6 @@ impl Game {
             }
             _ => unreachable!("validated ability target plan must match its effect"),
         }
-        Ok(())
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_drain_life(
-        &mut self,
-        ability_id: &str,
-        path: Vec<Position>,
-        damage_dice: u16,
-        damage_sides: u16,
-        damage_bonus: u16,
-        damage_type: DamageType,
-        target_category: &str,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let (trace, target_index) = self.trace_projectile_path(path);
-        let Some(target_index) = target_index else {
-            events.push(DomainEvent::AbilityLanded {
-                ability_id: ability_id.to_owned(),
-                trace: trace.clone(),
-            });
-            events.push(DomainEvent::AbilityEffectsResolved {
-                ability_id: ability_id.to_owned(),
-                resolution: AbilityEffectsResolutionDto {
-                    target_entity_id: None,
-                    target_kind_id: None,
-                    effects: vec![AbilityEffectResolutionDto::Skipped {
-                        effect_index: 0,
-                        reason: AbilityEffectSkipReasonDto::NoTarget,
-                    }],
-                },
-                trace: Some(trace),
-            });
-            return Ok(());
-        };
-        let target_entity_id = self.entities[target_index].id.clone();
-        let target_kind_id = self.entities[target_index].kind_id.clone();
-        let eligible = self
-            .content
-            .actor(&target_kind_id)
-            .is_some_and(|definition| actor_matches_category(definition, target_category));
-        if !eligible {
-            events.push(DomainEvent::AbilityEffectsResolved {
-                ability_id: ability_id.to_owned(),
-                resolution: AbilityEffectsResolutionDto {
-                    target_entity_id: Some(target_entity_id),
-                    target_kind_id: Some(target_kind_id),
-                    effects: vec![AbilityEffectResolutionDto::Skipped {
-                        effect_index: 0,
-                        reason: AbilityEffectSkipReasonDto::Ineligible,
-                    }],
-                },
-                trace: Some(trace),
-            });
-            return Ok(());
-        }
-        let hp_before = self.entities[target_index].hp.max(0);
-        let raw_damage = self
-            .roll_damage(damage_dice, damage_sides)
-            .saturating_add(i32::from(damage_bonus))
-            .max(0);
-        let damage = self.resolve_ability_damage_to_entity(
-            target_index,
-            ability_id,
-            damage_type,
-            raw_damage,
-            trace.clone(),
-            events,
-            changed,
-            removed_entities,
-        )?;
-        let requested = damage.applied.min(hp_before);
-        let max_hp = self.effective_player_max_hp();
-        let EffectOutcome::Healed { requested, applied } = apply_effect(
-            &mut EffectTarget {
-                hp: &mut self.player.hp,
-                max_hp,
-                resistances: &self.player.resistances,
-                statuses: &mut self.player.statuses,
-            },
-            EffectSpec::Heal { amount: requested },
-        ) else {
-            unreachable!("drain life healing must produce a healing outcome");
-        };
-        events.push(DomainEvent::AbilityEffectsResolved {
-            ability_id: ability_id.to_owned(),
-            resolution: AbilityEffectsResolutionDto {
-                target_entity_id: Some(target_entity_id),
-                target_kind_id: Some(target_kind_id),
-                effects: vec![AbilityEffectResolutionDto::DrainLife {
-                    effect_index: 0,
-                    resolution: damage.into(),
-                    healing: HealingResolutionDto { requested, applied },
-                }],
-            },
-            trace: Some(trace),
-        });
         Ok(())
     }
 

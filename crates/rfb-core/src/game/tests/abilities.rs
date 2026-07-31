@@ -3370,6 +3370,26 @@ fn cloud_kill_centers_on_the_caster_and_entropy_filters_nonliving_targets() {
 
 #[test]
 fn vampiric_drain_heals_actual_life_and_rejects_nonliving_targets() {
+    let drain_ability = |game: &Game| {
+        let mut ability = game
+            .content
+            .ability("demo.ability.death-vampiric-drain")
+            .expect("vampiric drain should exist")
+            .clone();
+        let AbilityEffectDefinition::DrainLife { damage_type, .. } = ability.effect else {
+            unreachable!("vampiric drain must retain its effect family");
+        };
+        ability.id = "test.ability.vampiric-drain".to_owned();
+        ability.effect = AbilityEffectDefinition::DrainLife {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 99,
+            damage_type,
+            target_category: "living".to_owned(),
+            repeat: 1,
+        };
+        ability
+    };
     let mut game = Game::new(11);
     clear_monsters(&mut game);
     let definition = game
@@ -3390,14 +3410,10 @@ fn vampiric_drain_heals_actual_life_and_rejects_nonliving_targets() {
     ));
     game.player.hp = 1;
     let mut events = Vec::new();
-    game.resolve_ability_drain_life(
-        "test.ability.vampiric-drain",
+    let ability = drain_ability(&game);
+    game.resolve_player_drain_life_effect(
+        &ability,
         vec![position],
-        1,
-        1,
-        99,
-        DamageType::Physical,
-        "living",
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -3435,15 +3451,11 @@ fn vampiric_drain_heals_actual_life_and_rejects_nonliving_targets() {
     let hp_before = nonliving.entities[0].hp;
     let draws_before = nonliving.rng.draw_counter;
     let mut events = Vec::new();
+    let ability = drain_ability(&nonliving);
     nonliving
-        .resolve_ability_drain_life(
-            "test.ability.vampiric-drain",
+        .resolve_player_drain_life_effect(
+            &ability,
             vec![position],
-            1,
-            1,
-            99,
-            DamageType::Physical,
-            "living",
             &mut events,
             &mut BTreeSet::new(),
             &mut Vec::new(),
