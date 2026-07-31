@@ -331,3 +331,125 @@ impl Game {
         }
     }
 }
+
+impl Game {
+    pub(super) fn resolve_item_restorative_resource_effect(
+        &mut self,
+        source_kind_id: &str,
+        effect: &ItemUseEffectDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        match effect {
+            ItemUseEffectDefinition::Heal { amount } => {
+                let amount = i32::try_from(*amount).expect("validated healing amount must fit i32");
+                self.resolve_item_healing(source_kind_id, amount, events)
+            }
+            ItemUseEffectDefinition::HealDice { dice, sides } => {
+                let amount = self.roll_damage(*dice, *sides);
+                self.resolve_item_healing(source_kind_id, amount, events)
+            }
+            ItemUseEffectDefinition::RestoreResource {
+                resource_id,
+                amount,
+            } => self.resolve_item_resource_restoration(
+                source_kind_id,
+                resource_id,
+                *amount,
+                false,
+                events,
+            ),
+            ItemUseEffectDefinition::RestoreResourceDice {
+                resource_id,
+                dice,
+                sides,
+                bonus,
+            } => {
+                let rolled = u32::try_from(self.roll_damage(*dice, *sides))
+                    .expect("validated resource restoration roll must fit u32")
+                    .saturating_add(*bonus);
+                self.resolve_item_resource_restoration(
+                    source_kind_id,
+                    resource_id,
+                    rolled,
+                    false,
+                    events,
+                )
+            }
+            ItemUseEffectDefinition::RestoreResourceFull { resource_id } => {
+                self.resolve_item_resource_restoration(source_kind_id, resource_id, 0, true, events)
+            }
+            _ => {
+                unreachable!("restorative resource executor requires healing or resource recovery")
+            }
+        }
+    }
+
+    pub(super) fn resolve_item_healing(
+        &mut self,
+        source_kind_id: &str,
+        amount: i32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let max_hp = self.effective_player_max_hp();
+        let player = &mut self.player;
+        let outcome = apply_effect(
+            &mut EffectTarget {
+                hp: &mut player.hp,
+                max_hp,
+                resistances: &player.resistances,
+                statuses: &mut player.statuses,
+            },
+            EffectSpec::Heal { amount },
+        );
+        let EffectOutcome::Healed { requested, applied } = outcome else {
+            unreachable!("healing effects must produce healing outcomes");
+        };
+        if applied > 0 {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemUsed {
+            display_name_key: self.item_display_name_key(source_kind_id),
+            source_kind_id: source_kind_id.to_owned(),
+            requested,
+            applied,
+        });
+        applied > 0
+    }
+
+    fn resolve_item_resource_restoration(
+        &mut self,
+        source_kind_id: &str,
+        resource_id: &str,
+        requested: u32,
+        full: bool,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let (before, after) = if let Some(pool) = self.resources.get_mut(resource_id) {
+            let before = pool.current;
+            pool.current = if full {
+                pool.maximum
+            } else {
+                pool.current.saturating_add(requested).min(pool.maximum)
+            };
+            (before, pool.current)
+        } else {
+            (0, 0)
+        };
+        let recovered = after.saturating_sub(before);
+        if recovered > 0 {
+            self.resources_touched.insert(resource_id.to_owned());
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemResourceRestored {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            resolution: ResourceRecoveryResolutionDto {
+                resource_id: resource_id.to_owned(),
+                before,
+                after,
+                recovered,
+            },
+        });
+        recovered > 0
+    }
+}
