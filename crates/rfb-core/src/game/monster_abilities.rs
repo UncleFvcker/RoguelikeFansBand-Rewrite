@@ -3,6 +3,72 @@
 use super::*;
 
 impl Game {
+    pub(super) fn resolve_monster_fixed_summon_plan(
+        &mut self,
+        source_index: usize,
+        plan: &MonsterAbilityPlan,
+        changed: &mut BTreeSet<Position>,
+    ) -> MonsterAbilityPlanResolution {
+        let MonsterAbilityTargetPlan::Summon { positions } = &plan.target else {
+            unreachable!("monster fixed summon executor requires a summon target plan")
+        };
+        let AbilityEffectDefinition::Summon {
+            ref actor_kind_id,
+            duration_turns,
+            ..
+        } = plan.ability.effect
+        else {
+            unreachable!("monster summon plan must retain a summon effect");
+        };
+        let definition = self
+            .content
+            .actor(actor_kind_id)
+            .expect("validated summoned actor must remain available")
+            .clone();
+        let owner_id = self.entities[source_index].id.clone();
+        let mut entity_ids = Vec::with_capacity(positions.len());
+        for (ordinal, position) in positions.iter().copied().enumerate() {
+            let id = self.summon_entity_id(&plan.ability.id, ordinal);
+            let mut entity = actor_from_runtime_spawn(
+                &id,
+                actor_kind_id,
+                position,
+                definition.max_hp,
+                definition.speed,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            entity.resistances = definition_resistance_profile(&definition);
+            entity.summon = Some(SummonIdentity {
+                owner_id: owner_id.clone(),
+                source_ability_id: plan.ability.id.clone(),
+                remaining_turns: duration_turns,
+            });
+            changed.insert(position);
+            entity_ids.push(id);
+            self.entities.push(entity);
+        }
+        let summon = AbilitySummonResolutionDto {
+            owner_id: owner_id.clone(),
+            actor_kind_id: actor_kind_id.clone(),
+            entity_ids,
+            positions: positions.clone(),
+            duration_turns,
+            hostile: false,
+            group: false,
+            summoned_kind_ids: Vec::new(),
+        };
+        MonsterAbilityPlanResolution {
+            target_entity_id: owner_id,
+            target_kind_id: self.entities[source_index].kind_id.clone(),
+            affected_positions: positions.clone(),
+            summon: Some(summon),
+            effects: Vec::new(),
+            targets: Vec::new(),
+            trace: None,
+        }
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_monster_cone_damage_plan(
         &mut self,
