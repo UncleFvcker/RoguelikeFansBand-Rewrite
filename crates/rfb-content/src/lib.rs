@@ -15,6 +15,7 @@ use thiserror::Error;
 
 mod ability_programs;
 mod effect_programs;
+mod player_ability_bindings;
 
 pub use ability_programs::{
     AbilityProgramDefinition, AbilityProgramInputDefinition, AbilityProgramStepDefinition,
@@ -27,6 +28,10 @@ use effect_programs::{
     ResolvedEffectProgram, compile_effect_program_catalog,
     effect_program_input_matches_device_target, resolve_source_item_effect,
     validate_effect_program_catalog,
+};
+pub use player_ability_bindings::PlayerAbilityBindingDefinition;
+use player_ability_bindings::{
+    compile_player_ability_binding_catalog, validate_player_ability_binding_references,
 };
 
 pub const CONTENT_FORMAT: &str = "rfb-content";
@@ -53,6 +58,7 @@ pub const BUILD_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Ro
 pub const RESOURCE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/resource.schema.json";
 pub const ABILITY_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json";
 pub const ABILITY_PROGRAM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json";
+pub const PLAYER_ABILITY_BINDING_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json";
 pub const ABILITY_BOOK_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json";
 
 const fn default_actor_speed() -> u16 {
@@ -66,7 +72,7 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 22] = [
+const SUPPORTED_ROOTS: [&str; 23] = [
     "abilities",
     "abilityBooks",
     "abilityPrograms",
@@ -79,6 +85,7 @@ const SUPPORTED_ROOTS: [&str; 22] = [
     "items",
     "lootTables",
     "personalities",
+    "playerAbilityBindings",
     "races",
     "regionTables",
     "resources",
@@ -3411,10 +3418,17 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         .collect::<Result<Vec<_>, _>>()?;
     let ability_programs =
         compile_ability_program_catalog(load_root(root, "abilityPrograms", &roots, &mut budget)?)?;
+    let player_ability_bindings = compile_player_ability_binding_catalog(load_root(
+        root,
+        "playerAbilityBindings",
+        &roots,
+        &mut budget,
+    )?)?;
     let abilities = load_root::<SourceAbilityDefinition>(root, "abilities", &roots, &mut budget)?
         .into_iter()
-        .map(|ability| ability.into_compiled(&ability_programs))
+        .map(|ability| ability.into_compiled(&ability_programs, &player_ability_bindings))
         .collect::<Result<Vec<_>, _>>()?;
+    validate_player_ability_binding_references(&player_ability_bindings, &abilities)?;
     let content = CompiledContentV1 {
         format: CONTENT_FORMAT.to_owned(),
         format_version: CONTENT_FORMAT_VERSION,
@@ -8921,6 +8935,11 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             schema_for!(AbilityProgramDefinition),
         )?,
         schema_document(
+            "player-ability-binding.schema.json",
+            PLAYER_ABILITY_BINDING_SCHEMA,
+            schema_for!(PlayerAbilityBindingDefinition),
+        )?,
+        schema_document(
             "ability-book.schema.json",
             ABILITY_BOOK_SCHEMA,
             schema_for!(AbilityBookDefinition),
@@ -9109,6 +9128,10 @@ pub enum ContentError {
     InvalidEffectProgram(String),
     #[error("ability program definition is invalid: {0}")]
     InvalidAbilityProgram(String),
+    #[error("player ability binding is duplicated for ability: {0}")]
+    DuplicatePlayerAbilityBinding(String),
+    #[error("player ability binding definition is invalid: {0}")]
+    InvalidPlayerAbilityBinding(String),
     #[error("resource definition is invalid: {0}")]
     InvalidResource(String),
     #[error("ability definition is invalid: {0}")]

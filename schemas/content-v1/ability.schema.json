@@ -1723,7 +1723,10 @@
       "format": "uint8",
       "maximum": 255,
       "minimum": 0,
-      "type": "integer"
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "cooldown": {
       "anyOf": [
@@ -1768,27 +1771,37 @@
       "format": "uint16",
       "maximum": 65535,
       "minimum": 0,
-      "type": "integer"
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "nameKey": {
       "type": "string"
     },
     "proficiency": {
-      "$ref": "#/$defs/AbilityProficiencyDefinition",
-      "default": {
-        "cap": 1600,
-        "failureGain": 0,
-        "initial": 0,
-        "successGain": 128
-      }
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AbilityProficiencyDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "resourceCost": {
       "format": "uint32",
       "minimum": 0,
-      "type": "integer"
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "resourceId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "tags": {
       "items": {
@@ -1806,10 +1819,6 @@
     "id",
     "nameKey",
     "descriptionKey",
-    "minimumLevel",
-    "resourceId",
-    "resourceCost",
-    "baseFailurePercent",
     "target",
     "tags"
   ],

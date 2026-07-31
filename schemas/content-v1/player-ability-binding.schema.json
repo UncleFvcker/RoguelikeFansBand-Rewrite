@@ -1,0 +1,128 @@
+{
+  "$defs": {
+    "AbilityCooldownDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "groupId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "turns": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "turns"
+      ],
+      "type": "object"
+    },
+    "AbilityProficiencyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "cap": {
+          "default": 1600,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "failureGain": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "initial": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "successGain": {
+          "default": 128,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "abilityId": {
+      "type": "string"
+    },
+    "baseFailurePercent": {
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "cooldown": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AbilityCooldownDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "minimumLevel": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "proficiency": {
+      "$ref": "#/$defs/AbilityProficiencyDefinition",
+      "default": {
+        "cap": 1600,
+        "failureGain": 0,
+        "initial": 0,
+        "successGain": 128
+      }
+    },
+    "resourceCost": {
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "resourceId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "abilityId",
+    "minimumLevel",
+    "resourceId",
+    "resourceCost",
+    "baseFailurePercent"
+  ],
+  "title": "PlayerAbilityBindingDefinition",
+  "type": "object"
+}
