@@ -573,6 +573,8 @@ Phase 14 uses independently committed and pushed gates:
 
 The first runtime gate moves the complete already-selected ability dispatcher and its target-resolution helpers from `game/mod.rs` into `monster_abilities.rs`. Category summon, self/projectile/area/beam/cone execution, displacement, hostile effect application, player effect application, defeated-summon cleanup, RNG, event, and result order are unchanged. Only the dispatcher is exposed `pub(super)`; its helpers remain private. `game/mod.rs` falls from 13,418 to 12,550 lines and `monster_abilities.rs` grows from 439 to 1,307 lines. All 11 monster AI tests, 33 replay tests, and all 454 contract fixtures pass.
 
+The target-planning sub-batch moves the zero-mutation ability plan, targeted plan, projectile trace, and path trace into `monster_abilities.rs`. The shared row-major displacement candidate enumeration remains in the aggregate because item banishment also consumes it. Only `monster_ability_plan` crosses the module boundary; plan helper order and rejection facts remain unchanged. `game/mod.rs` falls again to 12,032 lines and `monster_abilities.rs` reaches 1,824 lines, with the same focused, replay, and fixture matrix green.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

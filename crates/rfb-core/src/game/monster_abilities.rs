@@ -1304,4 +1304,521 @@ impl Game {
         }
         resolutions
     }
+    pub(super) fn monster_ability_plan(
+        &self,
+        index: usize,
+        ability: AbilityDefinition,
+        base_weight: u32,
+    ) -> Result<MonsterAbilityPlan, MonsterAbilityPlanRejection> {
+        let origin = self.entities[index].position;
+        let (target, enemy_target_count, friendly_risk_count) = match &ability.effect {
+            AbilityEffectDefinition::Heal { .. } => (MonsterAbilityTargetPlan::SelfTarget, 0, 0),
+            AbilityEffectDefinition::Summon { count, radius, .. } => {
+                let positions = self
+                    .summon_positions_around(origin, *count, *radius)
+                    .ok_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })?;
+                (MonsterAbilityTargetPlan::Summon { positions }, 0, 0)
+            }
+            AbilityEffectDefinition::SummonCategory {
+                category,
+                maximum_level,
+                count_dice,
+                count_sides,
+                count_bonus,
+                radius,
+                ..
+            } => {
+                // Candidate kinds enumerate in stable id order and are
+                // filtered without RNG; the per-summon kind draws happen at
+                // execution time.
+                let candidate_kind_ids = self
+                    .content
+                    .actor_definitions()
+                    .filter(|definition| {
+                        definition.role == ActorRole::Monster
+                            && definition.level <= u32::from(*maximum_level)
+                            && definition.tags.iter().any(|tag| tag == category)
+                    })
+                    .map(|definition| definition.id.clone())
+                    .collect::<Vec<_>>();
+                if candidate_kind_ids.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let maximum_count = usize::from(*count_dice) * usize::from(*count_sides)
+                    + usize::from(*count_bonus);
+                let positions = self
+                    .open_positions_around(origin, *radius)
+                    .into_iter()
+                    .take(maximum_count)
+                    .collect::<Vec<_>>();
+                if positions.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::SummonCategory {
+                        candidate_kind_ids,
+                        positions,
+                    },
+                    0,
+                    0,
+                )
+            }
+            AbilityEffectDefinition::ApplyStatus { .. }
+            | AbilityEffectDefinition::RemoveStatus { .. }
+            | AbilityEffectDefinition::Sequence { .. }
+                if ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget) =>
+            {
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
+            AbilityEffectDefinition::BlinkSelf { radius } => {
+                let radius = u32::from(*radius);
+                let destinations = self.displacement_destinations(index, |position| {
+                    origin
+                        .x
+                        .abs_diff(position.x)
+                        .max(origin.y.abs_diff(position.y))
+                        <= radius
+                });
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (MonsterAbilityTargetPlan::BlinkSelf { destinations }, 0, 0)
+            }
+            AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
+                let player = self.player.position;
+                let escape_candidates = |minimum: u32| {
+                    self.displacement_destinations(index, |position| {
+                        player
+                            .x
+                            .abs_diff(position.x)
+                            .max(player.y.abs_diff(position.y))
+                            >= minimum
+                    })
+                };
+                let minimum = u32::from(*minimum_distance);
+                let mut destinations = escape_candidates(minimum);
+                if destinations.is_empty() {
+                    // The half-distance fallback keeps cramped floors escapable.
+                    destinations = escape_candidates(minimum.div_ceil(2));
+                }
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (MonsterAbilityTargetPlan::EscapeSelf { destinations }, 0, 0)
+            }
+            AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::AreaDamage { .. }
+            | AbilityEffectDefinition::BeamDamage { .. }
+            | AbilityEffectDefinition::ConeDamage { .. }
+            | AbilityEffectDefinition::BreathDamage { .. }
+            | AbilityEffectDefinition::CurseDamage { .. }
+            | AbilityEffectDefinition::TeleportAway { .. }
+            | AbilityEffectDefinition::DrainResource { .. }
+            | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::ApplyStatus { .. }
+            | AbilityEffectDefinition::RemoveStatus { .. }
+            | AbilityEffectDefinition::Sequence { .. }
+            | AbilityEffectDefinition::TeleportTarget => {
+                let mut first_rejection = None;
+                let mut selected = None;
+                for hostile_target in self.monster_hostile_targets(index) {
+                    match self.monster_targeted_ability_plan(index, &ability, hostile_target) {
+                        Ok(plan) => {
+                            selected = Some(plan);
+                            break;
+                        }
+                        Err(rejection) => {
+                            first_rejection.get_or_insert(rejection);
+                        }
+                    }
+                }
+                selected.ok_or_else(|| {
+                    first_rejection.unwrap_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })
+                })?
+            }
+            _ => {
+                return Err(MonsterAbilityPlanRejection {
+                    reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                });
+            }
+        };
+        let utility_multiplier = self
+            .monster_ability_utility_multiplier(index, &ability, &target)
+            .ok_or(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoUtility,
+                enemy_target_count,
+                friendly_risk_count,
+            })?;
+        let target_position = monster_plan_target(&target).map(MonsterHostileTarget::position);
+        let distance_multiplier = if !matches!(
+            target,
+            MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. }
+        ) && target_position.is_some_and(|position| {
+            origin
+                .x
+                .abs_diff(position.x)
+                .max(origin.y.abs_diff(position.y))
+                >= 3
+        }) {
+            2
+        } else {
+            1
+        };
+        let target_multiplier = u32::from(enemy_target_count.max(1));
+        let resistance_percent = self.monster_ability_resistance_percent(index, &ability, &target);
+        if resistance_percent == 0 {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoUtility,
+                enemy_target_count,
+                friendly_risk_count,
+            });
+        }
+        let weighted = base_weight
+            .saturating_mul(utility_multiplier)
+            .saturating_mul(distance_multiplier)
+            .saturating_mul(target_multiplier)
+            .saturating_mul(resistance_percent)
+            / 100;
+        Ok(MonsterAbilityPlan {
+            ability,
+            base_weight,
+            effective_weight: weighted.max(1),
+            enemy_target_count,
+            friendly_risk_count,
+            target,
+        })
+    }
+
+    fn monster_targeted_ability_plan(
+        &self,
+        source_index: usize,
+        ability: &AbilityDefinition,
+        target: MonsterHostileTarget,
+    ) -> Result<(MonsterAbilityTargetPlan, u16, u16), MonsterAbilityPlanRejection> {
+        let origin = self.entities[source_index].position;
+        let target_position = target.position();
+        let (plan, affected_positions) = match &ability.effect {
+            AbilityEffectDefinition::AreaDamage { radius, .. } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, false, false)?;
+                let affected_positions = self
+                    .area_damage_cells(target_position, *radius)
+                    .into_iter()
+                    .map(|(_, position)| position)
+                    .collect::<Vec<_>>();
+                (
+                    MonsterAbilityTargetPlan::Area {
+                        target,
+                        trace,
+                        affected_positions: affected_positions.clone(),
+                    },
+                    affected_positions,
+                )
+            }
+            AbilityEffectDefinition::BeamDamage { .. } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, false, true)?;
+                let affected_positions = trace.traversed.clone();
+                (
+                    MonsterAbilityTargetPlan::Beam {
+                        target,
+                        trace,
+                        affected_positions: affected_positions.clone(),
+                    },
+                    affected_positions,
+                )
+            }
+            AbilityEffectDefinition::ConeDamage { radius, .. }
+            | AbilityEffectDefinition::BreathDamage { radius, .. } => {
+                let direction = direction_toward(origin, target_position).ok_or(
+                    MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    },
+                )?;
+                let (dx, dy) = direction.delta();
+                let path = (1..=ability.target.range)
+                    .map(|step| Position {
+                        x: origin.x + dx * i32::from(step),
+                        y: origin.y + dy * i32::from(step),
+                    })
+                    .collect::<Vec<_>>();
+                let trace = self.trace_monster_path(origin, path);
+                let cells = self.cone_damage_cells(origin, &trace.traversed, direction, *radius);
+                if !cells
+                    .iter()
+                    .any(|(_, _, position)| *position == target_position)
+                {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::OutOfRange,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let affected_positions = cells
+                    .into_iter()
+                    .map(|(_, _, position)| position)
+                    .collect::<Vec<_>>();
+                (
+                    MonsterAbilityTargetPlan::Cone {
+                        target,
+                        trace,
+                        affected_positions: affected_positions.clone(),
+                    },
+                    affected_positions,
+                )
+            }
+            AbilityEffectDefinition::Damage { .. }
+            | AbilityEffectDefinition::CurseDamage { .. }
+            | AbilityEffectDefinition::DrainResource { .. }
+            | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::ApplyStatus { .. }
+            | AbilityEffectDefinition::RemoveStatus { .. }
+            | AbilityEffectDefinition::Sequence { .. } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                (
+                    MonsterAbilityTargetPlan::Projectile { target, trace },
+                    vec![target_position],
+                )
+            }
+            AbilityEffectDefinition::TeleportAway { minimum_distance } => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                // The banished target lands away from the caster; candidates
+                // collect without RNG and the halved fallback mirrors
+                // teleport-self on cramped floors.
+                let banish_candidates = |minimum: u32| {
+                    let mut candidates = Vec::new();
+                    for y in 0..self.height {
+                        for x in 0..self.width {
+                            let position = Position {
+                                x: i32::from(x),
+                                y: i32::from(y),
+                            };
+                            if position == self.player.position
+                                || !self.is_walkable(position)
+                                || origin
+                                    .x
+                                    .abs_diff(position.x)
+                                    .max(origin.y.abs_diff(position.y))
+                                    < minimum
+                                || self
+                                    .entities
+                                    .iter()
+                                    .any(|entity| entity.hp > 0 && entity.position == position)
+                            {
+                                continue;
+                            }
+                            candidates.push(position);
+                        }
+                    }
+                    candidates
+                };
+                let minimum = u32::from(*minimum_distance);
+                let mut destinations = banish_candidates(minimum);
+                if destinations.is_empty() {
+                    destinations = banish_candidates(minimum.div_ceil(2));
+                }
+                if destinations.is_empty() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (
+                    MonsterAbilityTargetPlan::BanishTarget {
+                        target,
+                        trace,
+                        destinations,
+                    },
+                    vec![target_position],
+                )
+            }
+            AbilityEffectDefinition::TeleportTarget => {
+                let trace =
+                    self.monster_projectile_trace(source_index, ability, &target, true, false)?;
+                // The dragged target lands on the first open cell adjacent to
+                // the caster, in the canonical eight-direction order.
+                const DELTAS: [(i32, i32); 8] = [
+                    (0, -1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                    (0, 1),
+                    (-1, 1),
+                    (-1, 0),
+                    (-1, -1),
+                ];
+                let destination = DELTAS
+                    .iter()
+                    .map(|(dx, dy)| Position {
+                        x: origin.x + dx,
+                        y: origin.y + dy,
+                    })
+                    .find(|position| {
+                        self.index(*position).is_some()
+                            && self.is_walkable(*position)
+                            && *position != self.player.position
+                            && !self
+                                .entities
+                                .iter()
+                                .any(|entity| entity.hp > 0 && entity.position == *position)
+                    })
+                    .ok_or(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    })?;
+                (
+                    MonsterAbilityTargetPlan::DragTarget {
+                        target,
+                        trace,
+                        destination,
+                    },
+                    vec![target_position],
+                )
+            }
+            _ => {
+                return Err(MonsterAbilityPlanRejection {
+                    reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                });
+            }
+        };
+        let (enemy_target_count, friendly_risk_count) =
+            self.monster_footprint_faction_counts(source_index, &affected_positions);
+        if friendly_risk_count > 0 {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::FriendlyRisk,
+                enemy_target_count,
+                friendly_risk_count,
+            });
+        }
+        Ok((plan, enemy_target_count, friendly_risk_count))
+    }
+
+    fn monster_projectile_trace(
+        &self,
+        index: usize,
+        ability: &AbilityDefinition,
+        hostile_target: &MonsterHostileTarget,
+        clean_shot: bool,
+        continue_through_target: bool,
+    ) -> Result<ProjectileTrace, MonsterAbilityPlanRejection> {
+        let origin = self.entities[index].position;
+        let target = hostile_target.position();
+        if target == origin
+            || self.index(target).is_none()
+            || origin.x.abs_diff(target.x).max(origin.y.abs_diff(target.y))
+                > u32::from(ability.target.range)
+        {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::OutOfRange,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
+        }
+        let path = if continue_through_target {
+            projectile_path_through_target(origin, target, ability.target.range)
+        } else {
+            projectile_path_between(origin, target, ability.target.range)
+        }
+        .ok_or(MonsterAbilityPlanRejection {
+            reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+            enemy_target_count: 0,
+            friendly_risk_count: 0,
+        })?;
+        let trace = self.trace_monster_path(origin, path);
+        if !trace.traversed.contains(&target) {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::Blocked,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
+        }
+        if clean_shot {
+            for position in trace
+                .traversed
+                .iter()
+                .filter(|position| **position != target)
+            {
+                if let Some((candidate_index, _)) =
+                    self.entities
+                        .iter()
+                        .enumerate()
+                        .find(|(candidate_index, entity)| {
+                            *candidate_index != index
+                                && entity.hp > 0
+                                && entity.position == *position
+                        })
+                {
+                    let enemy = self.entity_is_player_aligned(candidate_index);
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: if enemy {
+                            MonsterAbilityRejectionReasonDto::Blocked
+                        } else {
+                            MonsterAbilityRejectionReasonDto::FriendlyRisk
+                        },
+                        enemy_target_count: u16::from(enemy),
+                        friendly_risk_count: u16::from(!enemy),
+                    });
+                }
+            }
+        }
+        Ok(trace)
+    }
+
+    fn trace_monster_path(&self, origin: Position, path: Vec<Position>) -> ProjectileTrace {
+        let mut impact = origin;
+        let mut landing = origin;
+        let mut traversed = Vec::new();
+        for position in path {
+            if self.index(position).is_none() || !self.is_walkable(position) {
+                impact = position;
+                break;
+            }
+            impact = position;
+            landing = position;
+            traversed.push(position);
+        }
+        ProjectileTrace {
+            origin,
+            impact,
+            landing,
+            traversed,
+        }
+    }
 }
