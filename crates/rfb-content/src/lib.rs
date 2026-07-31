@@ -19,6 +19,7 @@ pub const PACK_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/Rog
 pub const TERRAIN_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json";
 pub const ACTOR_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json";
 pub const ITEM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json";
+pub const EFFECT_PROGRAM_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json";
 pub const AFFIX_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json";
 pub const ENCOUNTER_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json";
 pub const LOOT_TABLE_SCHEMA: &str = "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json";
@@ -48,13 +49,14 @@ const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
 const MAX_COMPILED_PAYLOAD_LENGTH: usize = 32 * 1024 * 1024;
-const SUPPORTED_ROOTS: [&str; 20] = [
+const SUPPORTED_ROOTS: [&str; 21] = [
     "abilities",
     "abilityBooks",
     "actors",
     "affixes",
     "builds",
     "classes",
+    "effectPrograms",
     "encounterTables",
     "items",
     "lootTables",
@@ -1764,6 +1766,31 @@ pub enum ItemUseEffectDefinition {
     ResetRecall,
 }
 
+pub type EffectProgramStepDefinition = ItemUseEffectDefinition;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum EffectProgramInputDefinition {
+    #[serde(rename = "self")]
+    SelfTarget,
+    Actor,
+    Item,
+    Glyph,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EffectProgramDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub input: EffectProgramInputDefinition,
+    pub steps: Vec<EffectProgramStepDefinition>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -1892,6 +1919,116 @@ pub struct ItemDefinition {
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[cfg_attr(feature = "schemas", schemars(title = "ItemDefinition"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SourceItemDefinition {
+    #[serde(rename = "$schema")]
+    schema: String,
+    format_version: u16,
+    id: String,
+    name_key: String,
+    #[serde(default)]
+    appearance_name_key: Option<String>,
+    description_key: String,
+    glyph: String,
+    weight_tenths_pound: u16,
+    max_stack: u32,
+    #[serde(default)]
+    equipment_slot: Option<String>,
+    /// Curse stamped onto newly generated instances. Save data remains
+    /// authoritative after generation and never re-derives this field.
+    #[serde(default)]
+    initial_curse: Option<ItemCurseSeverityDefinition>,
+    #[serde(default)]
+    modifiers: StatModifiers,
+    #[serde(default)]
+    equipment_bonuses: EquipmentBonuses,
+    #[serde(default)]
+    melee_profile: Option<AttackProfileDefinition>,
+    #[serde(default)]
+    projectile_profile: Option<ProjectileProfileDefinition>,
+    #[serde(default)]
+    throw_profile: Option<ThrowProfileDefinition>,
+    #[serde(default)]
+    use_action: Option<SourceItemUseActionDefinition>,
+    #[serde(default)]
+    device_generation: Option<SourceItemDeviceGenerationDefinition>,
+    #[serde(default)]
+    ability_book_id: Option<String>,
+    #[serde(default)]
+    break_chance_percent: u8,
+    /// Defensive resistance tiers granted while the item is equipped.
+    #[serde(default)]
+    resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    /// Status kind ids the wearer is immune to while the item is equipped.
+    #[serde(default)]
+    status_immunities: Vec<String>,
+    /// Target categories receiving an original-compatible slay or kill
+    /// multiplier from melee weapon dice while this item is equipped.
+    #[serde(default)]
+    slays: BTreeMap<SlayTarget, SlayLevel>,
+    /// Elemental brands applied to melee weapon dice while this item is
+    /// equipped.
+    #[serde(default)]
+    brands: BTreeSet<WeaponBrand>,
+    /// Passive capabilities granted while this item is equipped.
+    #[serde(default)]
+    passives: BTreeSet<EquipmentPassive>,
+    tags: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[cfg_attr(feature = "schemas", schemars(rename = "ItemUseActionDefinition"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SourceItemUseActionDefinition {
+    #[serde(default)]
+    device_check_difficulty: Option<i32>,
+    #[serde(default)]
+    charges: Option<ItemChargeDefinition>,
+    #[serde(default)]
+    effect: Option<ItemUseEffectDefinition>,
+    #[serde(default)]
+    effect_program_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[cfg_attr(
+    feature = "schemas",
+    schemars(rename = "ItemDeviceActivationDefinition")
+)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SourceItemDeviceActivationDefinition {
+    id: String,
+    name_key: String,
+    weight: u32,
+    min_depth: u16,
+    max_depth: u16,
+    device_check_difficulty: i32,
+    charges: ItemDeviceChargeRangeDefinition,
+    target: AbilityTargetDefinition,
+    #[serde(default)]
+    effect: Option<ItemUseEffectDefinition>,
+    #[serde(default)]
+    effect_program_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[cfg_attr(
+    feature = "schemas",
+    schemars(rename = "ItemDeviceGenerationDefinition")
+)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SourceItemDeviceGenerationDefinition {
+    activations: Vec<SourceItemDeviceActivationDefinition>,
+    #[serde(default)]
+    recovery: Option<ItemDeviceRecoveryDefinition>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -3165,6 +3302,282 @@ impl ContentCatalog {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ResolvedEffectProgram {
+    input: EffectProgramInputDefinition,
+    effect: ItemUseEffectDefinition,
+}
+
+fn compile_effect_program_catalog(
+    definitions: Vec<EffectProgramDefinition>,
+) -> Result<BTreeMap<String, ResolvedEffectProgram>, ContentError> {
+    let mut programs = BTreeMap::new();
+    for definition in definitions {
+        require_schema(&definition.schema, EFFECT_PROGRAM_SCHEMA, &definition.id)?;
+        require_format_version(definition.format_version, &definition.id)?;
+        validate_definition_id(&definition.id, "effect")?;
+        if !(1..=8).contains(&definition.steps.len())
+            || definition
+                .steps
+                .iter()
+                .any(|step| effect_program_input_for_step(step) != Some(definition.input))
+        {
+            return Err(ContentError::InvalidEffectProgram(definition.id));
+        }
+
+        let effect = if definition.steps.len() == 1 {
+            definition
+                .steps
+                .into_iter()
+                .next()
+                .ok_or_else(|| ContentError::InvalidEffectProgram(definition.id.clone()))?
+        } else {
+            ItemUseEffectDefinition::Sequence {
+                effects: definition.steps,
+            }
+        };
+        let id = definition.id;
+        if programs
+            .insert(
+                id.clone(),
+                ResolvedEffectProgram {
+                    input: definition.input,
+                    effect,
+                },
+            )
+            .is_some()
+        {
+            return Err(ContentError::DuplicateDefinitionId(id));
+        }
+    }
+    Ok(programs)
+}
+
+fn effect_program_input_for_step(
+    effect: &ItemUseEffectDefinition,
+) -> Option<EffectProgramInputDefinition> {
+    match effect {
+        ItemUseEffectDefinition::Sequence { .. } => None,
+        ItemUseEffectDefinition::Damage { .. } => Some(EffectProgramInputDefinition::Actor),
+        ItemUseEffectDefinition::IdentifyItem { .. }
+        | ItemUseEffectDefinition::EnchantItem { .. }
+        | ItemUseEffectDefinition::RechargeFromDevice { .. } => {
+            Some(EffectProgramInputDefinition::Item)
+        }
+        ItemUseEffectDefinition::Genocide { .. } => Some(EffectProgramInputDefinition::Glyph),
+        _ => Some(EffectProgramInputDefinition::SelfTarget),
+    }
+}
+
+fn resolve_source_item_effect(
+    owner_id: &str,
+    inline: Option<ItemUseEffectDefinition>,
+    effect_program_id: Option<String>,
+    programs: &BTreeMap<String, ResolvedEffectProgram>,
+) -> Result<
+    (
+        ItemUseEffectDefinition,
+        Option<EffectProgramInputDefinition>,
+    ),
+    ContentError,
+> {
+    match (inline, effect_program_id) {
+        (Some(effect), None) => Ok((effect, None)),
+        (None, Some(program_id)) => {
+            validate_definition_id(&program_id, "effect")?;
+            programs
+                .get(&program_id)
+                .map(|program| (program.effect.clone(), Some(program.input)))
+                .ok_or_else(|| ContentError::DanglingReference {
+                    owner: owner_id.to_owned(),
+                    target: program_id,
+                })
+        }
+        _ => Err(ContentError::InvalidItemUseAction(owner_id.to_owned())),
+    }
+}
+
+fn effect_program_input_matches_device_target(
+    input: EffectProgramInputDefinition,
+    target: &AbilityTargetDefinition,
+) -> bool {
+    match input {
+        EffectProgramInputDefinition::SelfTarget => {
+            target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
+                && target.range == 0
+                && !target.requires_line_of_effect
+        }
+        EffectProgramInputDefinition::Actor => {
+            !target.modes.is_empty()
+                && !target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget)
+                && target.modes.iter().all(|mode| {
+                    matches!(
+                        mode,
+                        AbilityTargetModeDefinition::Direction
+                            | AbilityTargetModeDefinition::Position
+                            | AbilityTargetModeDefinition::Entity
+                    )
+                })
+                && (1..=64).contains(&target.range)
+                && target.requires_line_of_effect
+        }
+        EffectProgramInputDefinition::Item => {
+            target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
+                && target.range == 0
+                && !target.requires_line_of_effect
+        }
+        EffectProgramInputDefinition::Glyph => false,
+    }
+}
+
+impl SourceItemUseActionDefinition {
+    fn into_compiled(
+        self,
+        owner_id: &str,
+        programs: &BTreeMap<String, ResolvedEffectProgram>,
+    ) -> Result<ItemUseActionDefinition, ContentError> {
+        let (effect, _) =
+            resolve_source_item_effect(owner_id, self.effect, self.effect_program_id, programs)?;
+        Ok(ItemUseActionDefinition {
+            device_check_difficulty: self.device_check_difficulty,
+            charges: self.charges,
+            effect,
+        })
+    }
+}
+
+impl SourceItemDeviceActivationDefinition {
+    fn into_compiled(
+        self,
+        programs: &BTreeMap<String, ResolvedEffectProgram>,
+    ) -> Result<ItemDeviceActivationDefinition, ContentError> {
+        let (effect, program_input) =
+            resolve_source_item_effect(&self.id, self.effect, self.effect_program_id, programs)?;
+        if program_input
+            .is_some_and(|input| !effect_program_input_matches_device_target(input, &self.target))
+        {
+            return Err(ContentError::InvalidItemUseAction(self.id));
+        }
+        Ok(ItemDeviceActivationDefinition {
+            id: self.id,
+            name_key: self.name_key,
+            weight: self.weight,
+            min_depth: self.min_depth,
+            max_depth: self.max_depth,
+            device_check_difficulty: self.device_check_difficulty,
+            charges: self.charges,
+            target: self.target,
+            effect,
+        })
+    }
+}
+
+impl SourceItemDeviceGenerationDefinition {
+    fn into_compiled(
+        self,
+        programs: &BTreeMap<String, ResolvedEffectProgram>,
+    ) -> Result<ItemDeviceGenerationDefinition, ContentError> {
+        Ok(ItemDeviceGenerationDefinition {
+            activations: self
+                .activations
+                .into_iter()
+                .map(|activation| activation.into_compiled(programs))
+                .collect::<Result<Vec<_>, _>>()?,
+            recovery: self.recovery,
+        })
+    }
+}
+
+impl SourceItemDefinition {
+    fn into_compiled(
+        self,
+        programs: &BTreeMap<String, ResolvedEffectProgram>,
+    ) -> Result<ItemDefinition, ContentError> {
+        let use_action = self
+            .use_action
+            .map(|action| action.into_compiled(&self.id, programs))
+            .transpose()?;
+        let device_generation = self
+            .device_generation
+            .map(|generation| generation.into_compiled(programs))
+            .transpose()?;
+        Ok(ItemDefinition {
+            schema: self.schema,
+            format_version: self.format_version,
+            id: self.id,
+            name_key: self.name_key,
+            appearance_name_key: self.appearance_name_key,
+            description_key: self.description_key,
+            glyph: self.glyph,
+            weight_tenths_pound: self.weight_tenths_pound,
+            max_stack: self.max_stack,
+            equipment_slot: self.equipment_slot,
+            initial_curse: self.initial_curse,
+            modifiers: self.modifiers,
+            equipment_bonuses: self.equipment_bonuses,
+            melee_profile: self.melee_profile,
+            projectile_profile: self.projectile_profile,
+            throw_profile: self.throw_profile,
+            use_action,
+            device_generation,
+            ability_book_id: self.ability_book_id,
+            break_chance_percent: self.break_chance_percent,
+            resistances: self.resistances,
+            status_immunities: self.status_immunities,
+            slays: self.slays,
+            brands: self.brands,
+            passives: self.passives,
+            tags: self.tags,
+        })
+    }
+}
+
+fn validate_effect_program_catalog(
+    programs: &BTreeMap<String, ResolvedEffectProgram>,
+    content: &CompiledContentV1,
+) -> Result<(), ContentError> {
+    let terrain_tags = content
+        .terrain
+        .iter()
+        .map(|terrain| {
+            (
+                terrain.id.clone(),
+                terrain.tags.iter().cloned().collect::<BTreeSet<_>>(),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let actor_tag_values = content
+        .actors
+        .iter()
+        .flat_map(|actor| actor.tags.iter().cloned())
+        .collect::<BTreeSet<_>>();
+    let item_tag_values = content
+        .items
+        .iter()
+        .flat_map(|item| item.tags.iter().cloned())
+        .collect::<BTreeSet<_>>();
+    let resource_ids = content
+        .resources
+        .iter()
+        .map(|resource| resource.id.clone())
+        .collect::<BTreeSet<_>>();
+
+    for (id, program) in programs {
+        if !valid_item_effect(
+            &program.effect,
+            &terrain_tags,
+            &actor_tag_values,
+            &item_tag_values,
+            &resource_ids,
+        ) {
+            return Err(ContentError::InvalidEffectProgram(id.clone()));
+        }
+    }
+    Ok(())
+}
+
 pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
     let metadata = fs::symlink_metadata(root)?;
     if !metadata.is_dir() || metadata.file_type().is_symlink() {
@@ -3180,6 +3593,12 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         .iter()
         .map(String::as_str)
         .collect::<BTreeSet<_>>();
+    let effect_programs =
+        compile_effect_program_catalog(load_root(root, "effectPrograms", &roots, &mut budget)?)?;
+    let items = load_root::<SourceItemDefinition>(root, "items", &roots, &mut budget)?
+        .into_iter()
+        .map(|item| item.into_compiled(&effect_programs))
+        .collect::<Result<Vec<_>, _>>()?;
     let content = CompiledContentV1 {
         format: CONTENT_FORMAT.to_owned(),
         format_version: CONTENT_FORMAT_VERSION,
@@ -3191,7 +3610,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         terrain: load_root(root, "terrain", &roots, &mut budget)?,
         actors: load_root(root, "actors", &roots, &mut budget)?,
         affixes: load_root(root, "affixes", &roots, &mut budget)?,
-        items: load_root(root, "items", &roots, &mut budget)?,
+        items,
         resources: load_root(root, "resources", &roots, &mut budget)?,
         abilities: load_root(root, "abilities", &roots, &mut budget)?,
         ability_books: load_root(root, "abilityBooks", &roots, &mut budget)?,
@@ -3209,6 +3628,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         vaults: load_root(root, "vaults", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };
+    validate_effect_program_catalog(&effect_programs, &content)?;
     encode_content(content)
 }
 
@@ -8659,7 +9079,16 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             ACTOR_SCHEMA,
             schema_for!(ActorDefinition),
         )?,
-        schema_document("item.schema.json", ITEM_SCHEMA, schema_for!(ItemDefinition))?,
+        schema_document(
+            "item.schema.json",
+            ITEM_SCHEMA,
+            schema_for!(SourceItemDefinition),
+        )?,
+        schema_document(
+            "effect-program.schema.json",
+            EFFECT_PROGRAM_SCHEMA,
+            schema_for!(EffectProgramDefinition),
+        )?,
         schema_document(
             "resource.schema.json",
             RESOURCE_SCHEMA,
@@ -8855,6 +9284,8 @@ pub enum ContentError {
     InvalidThrowProfile(String),
     #[error("item use action is invalid: {0}")]
     InvalidItemUseAction(String),
+    #[error("effect program definition is invalid: {0}")]
+    InvalidEffectProgram(String),
     #[error("resource definition is invalid: {0}")]
     InvalidResource(String),
     #[error("ability definition is invalid: {0}")]
@@ -8985,6 +9416,160 @@ mod tests {
         assert_eq!(first.content.terrain_feature_tables.len(), 1);
         assert_eq!(first.content.vaults.len(), 6);
         assert_eq!(first.content.worlds.len(), 1);
+    }
+
+    fn effect_program(
+        id: &str,
+        input: EffectProgramInputDefinition,
+        steps: Vec<ItemUseEffectDefinition>,
+    ) -> EffectProgramDefinition {
+        EffectProgramDefinition {
+            schema: EFFECT_PROGRAM_SCHEMA.to_owned(),
+            format_version: CONTENT_FORMAT_VERSION,
+            id: id.to_owned(),
+            input,
+            steps,
+        }
+    }
+
+    #[test]
+    fn effect_program_catalog_requires_unique_flat_typed_programs() {
+        let healing = effect_program(
+            "demo.effect.healing",
+            EffectProgramInputDefinition::SelfTarget,
+            vec![ItemUseEffectDefinition::Heal { amount: 4 }],
+        );
+        let programs =
+            compile_effect_program_catalog(vec![healing.clone()]).expect("program should compile");
+        assert_eq!(
+            programs.get("demo.effect.healing"),
+            Some(&ResolvedEffectProgram {
+                input: EffectProgramInputDefinition::SelfTarget,
+                effect: ItemUseEffectDefinition::Heal { amount: 4 },
+            })
+        );
+
+        assert!(matches!(
+            compile_effect_program_catalog(vec![healing.clone(), healing]),
+            Err(ContentError::DuplicateDefinitionId(id)) if id == "demo.effect.healing"
+        ));
+        assert!(matches!(
+            compile_effect_program_catalog(vec![effect_program(
+                "demo.effect.wrong-input",
+                EffectProgramInputDefinition::Actor,
+                vec![ItemUseEffectDefinition::Heal { amount: 4 }],
+            )]),
+            Err(ContentError::InvalidEffectProgram(id)) if id == "demo.effect.wrong-input"
+        ));
+        assert!(matches!(
+            compile_effect_program_catalog(vec![effect_program(
+                "demo.effect.nested",
+                EffectProgramInputDefinition::SelfTarget,
+                vec![ItemUseEffectDefinition::Sequence {
+                    effects: vec![
+                        ItemUseEffectDefinition::Heal { amount: 1 },
+                        ItemUseEffectDefinition::Heal { amount: 1 },
+                    ],
+                }],
+            )]),
+            Err(ContentError::InvalidEffectProgram(id)) if id == "demo.effect.nested"
+        ));
+    }
+
+    #[test]
+    fn effect_program_bindings_require_exactly_one_resolvable_source() {
+        let programs = compile_effect_program_catalog(vec![effect_program(
+            "demo.effect.healing",
+            EffectProgramInputDefinition::SelfTarget,
+            vec![ItemUseEffectDefinition::Heal { amount: 4 }],
+        )])
+        .expect("program should compile");
+
+        let (effect, input) = resolve_source_item_effect(
+            "demo.item.test",
+            None,
+            Some("demo.effect.healing".to_owned()),
+            &programs,
+        )
+        .expect("reference should resolve");
+        assert_eq!(effect, ItemUseEffectDefinition::Heal { amount: 4 });
+        assert_eq!(input, Some(EffectProgramInputDefinition::SelfTarget));
+
+        assert!(matches!(
+            resolve_source_item_effect("demo.item.test", None, None, &programs),
+            Err(ContentError::InvalidItemUseAction(id)) if id == "demo.item.test"
+        ));
+        assert!(matches!(
+            resolve_source_item_effect(
+                "demo.item.test",
+                Some(ItemUseEffectDefinition::Heal { amount: 1 }),
+                Some("demo.effect.healing".to_owned()),
+                &programs,
+            ),
+            Err(ContentError::InvalidItemUseAction(id)) if id == "demo.item.test"
+        ));
+        assert!(matches!(
+            resolve_source_item_effect(
+                "demo.item.test",
+                None,
+                Some("demo.effect.missing".to_owned()),
+                &programs,
+            ),
+            Err(ContentError::DanglingReference { owner, target })
+                if owner == "demo.item.test" && target == "demo.effect.missing"
+        ));
+    }
+
+    #[test]
+    fn effect_program_catalog_validates_unreferenced_effect_parameters() {
+        let artifact =
+            compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+        let programs = compile_effect_program_catalog(vec![effect_program(
+            "demo.effect.invalid-healing",
+            EffectProgramInputDefinition::SelfTarget,
+            vec![ItemUseEffectDefinition::Heal { amount: 0 }],
+        )])
+        .expect("structural program contract should compile");
+
+        assert!(matches!(
+            validate_effect_program_catalog(&programs, &artifact.content),
+            Err(ContentError::InvalidEffectProgram(id)) if id == "demo.effect.invalid-healing"
+        ));
+    }
+
+    #[test]
+    fn effect_program_input_must_match_device_target_policy() {
+        let self_target = AbilityTargetDefinition {
+            modes: vec![AbilityTargetModeDefinition::SelfTarget],
+            range: 0,
+            requires_line_of_effect: false,
+        };
+        let actor_target = AbilityTargetDefinition {
+            modes: vec![
+                AbilityTargetModeDefinition::Direction,
+                AbilityTargetModeDefinition::Position,
+                AbilityTargetModeDefinition::Entity,
+            ],
+            range: 8,
+            requires_line_of_effect: true,
+        };
+
+        assert!(effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::SelfTarget,
+            &self_target,
+        ));
+        assert!(effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Actor,
+            &actor_target,
+        ));
+        assert!(!effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Actor,
+            &self_target,
+        ));
+        assert!(!effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Glyph,
+            &self_target,
+        ));
     }
 
     #[test]
