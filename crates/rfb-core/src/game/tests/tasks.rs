@@ -416,6 +416,71 @@ fn guardian_mirrors_share_conquest_and_are_removed_from_other_final_floors() {
 }
 
 #[test]
+fn staged_task_event_reduction_advances_once_without_rng() {
+    let mut game = Game::new(42);
+    let active_floor_id = game.current_floor_id.clone();
+    let state = game
+        .task_states
+        .get_mut("demo.task.echo-chain")
+        .expect("staged task should exist");
+    state.status = TaskStatusKindDto::Active;
+    state.stage_index = 1;
+    state.current = 0;
+    state.required = 1;
+    state.active_floor_id = Some(active_floor_id);
+    let draws_before = game.rng_draw_counter();
+
+    game.apply_task_events(&[DomainEvent::FloorTransitioned {
+        from_floor_id: "demo.floor.echo-chain-rift".to_owned(),
+        to_floor_id: "demo.floor.echo-chain-vault-rift".to_owned(),
+    }])
+    .expect("task event reduction should succeed");
+
+    let state = &game.task_states["demo.task.echo-chain"];
+    assert_eq!(state.status, TaskStatusKindDto::Active);
+    assert_eq!(state.stage_index, 2);
+    assert_eq!(state.current, 0);
+    assert_eq!(state.required, 2);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn campaign_victory_plan_commits_ordered_events_once_without_rng() {
+    let mut game = Game::new(42);
+    let victory_dungeon_ids = game
+        .campaign_definition()
+        .expect("demo world should define a campaign")
+        .victory_dungeon_ids
+        .clone();
+    for dungeon_id in victory_dungeon_ids {
+        game.dungeon_states
+            .get_mut(&dungeon_id)
+            .expect("victory dungeon state should exist")
+            .guardian_defeated = true;
+    }
+    let draws_before = game.rng_draw_counter();
+    let victory_turn = game.turn.saturating_add(1);
+    let mut events = Vec::new();
+
+    game.apply_campaign_events(&mut events);
+
+    assert_eq!(game.campaign_state.status, CampaignStatusDto::Victorious);
+    assert_eq!(game.campaign_state.victory_turn, Some(victory_turn));
+    assert!(matches!(
+        events.as_slice(),
+        [
+            DomainEvent::CampaignVictorious { .. },
+            DomainEvent::PlayerLevelCapUnlocked { .. }
+        ]
+    ));
+    assert_eq!(game.rng_draw_counter(), draws_before);
+
+    game.apply_campaign_events(&mut events);
+    assert_eq!(events.len(), 2);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
 fn campaign_guardian_death_emits_victory_and_old_save_derives_it() {
     let mut game = Game::new(49);
     for damage_type in [

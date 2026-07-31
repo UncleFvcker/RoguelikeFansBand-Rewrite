@@ -1,8 +1,8 @@
 # Architecture Convergence Plan
 
-Status: phases 0-8 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, inventory plan/commit operations, frontend composition, and character progression calculations and plans.
+Status: phases 0-9 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, inventory plan/commit operations, frontend composition, character progression, and task/campaign transition plans.
 
-This plan was initially based on repository state at commit `82d1eea5` on 2026-07-30 and was refreshed from the Phase 8 base commit `d8ccc389` on 2026-07-31. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
+This plan was initially based on repository state at commit `82d1eea5` on 2026-07-30 and was refreshed from the Phase 9 base commit `97249a91` on 2026-07-31. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
 
 ## 1. Current architecture
 
@@ -44,7 +44,7 @@ Domain code must not depend on Tauri, TypeScript, DOM APIs, or PixiJS. `rfb-save
 
 ### The `Game` aggregate today
 
-At the initial audited commit, `crates/rfb-core/src/game/mod.rs` contained 26,254 lines. After Phase 8 it contains 22,425 lines, with progression calculations and command planning in a 516-line `progression.rs`. `Game` is the correct authoritative aggregate root, but its implementation is still the home of most domain behavior.
+At the initial audited commit, `crates/rfb-core/src/game/mod.rs` contained 26,254 lines. After Phase 9 it contains 22,127 lines, with progression calculations and command planning in a 516-line `progression.rs` and task/campaign planning in a 492-line `tasks.rs`. `Game` is the correct authoritative aggregate root, but its implementation is still the home of most domain behavior.
 
 `Game` currently owns:
 
@@ -163,6 +163,7 @@ crates/rfb-core/src/game/
   persistence.rs  # save projection, state hash, restoration, migrations
   progression.rs  # build/progression calculations and explicit growth plans
   snapshot.rs     # public snapshot and read-only protocol projections
+  tasks.rs        # task reduction and task/campaign transition plans
   validation.rs   # command preflight and pure state-invariant predicates
   world/
     mod.rs        # private world-generation module boundary
@@ -223,7 +224,7 @@ The domain calculations consumed by these views remain in `mod.rs`: derived stat
 
 Implementation was split into three compatibility-gated batches. The first moved `to_save`, the borrowed state-hash representation, `state_hash`, and their player/knowledge/task/dungeon/campaign projections. The second moved `from_save` and `from_save_with_content` with their existing content-hash migration sequence intact. The third moved the persistence-only dungeon, campaign, task, character-progress, and item-knowledge restoration parsers plus `TaskRestoreContext`.
 
-Runtime `TaskState`, `DungeonState`, `CampaignState`, item-knowledge state, build/body-slot rules, ability-state restoration, task objective calculations, loaded-state validation, and content lookup remain owned by `mod.rs`. Component DTO conversion remains in `rfb-core/src/save.rs`, and the checksummed container remains in `rfb-save`. The four existing public persistence methods retain their signatures; all new helpers and representations in `persistence.rs` are private.
+At Phase 3 completion, runtime `TaskState`, `DungeonState`, `CampaignState`, item-knowledge state, build/body-slot rules, ability-state restoration, task objective calculations, loaded-state validation, and content lookup remained owned by `mod.rs`; Phase 9 later moved the task/campaign state and calculation boundary. Component DTO conversion remains in `rfb-core/src/save.rs`, and the checksummed container remains in `rfb-save`. The four existing public persistence methods retain their signatures; all new helpers and representations in `persistence.rs` are private.
 
 ### Phase 4: centralized test support and domain test modules (completed)
 
@@ -237,7 +238,7 @@ Runtime `TaskState`, `DungeonState`, `CampaignState`, item-knowledge state, buil
 
 Implementation used three compatibility-gated batches. The first changed `tests.rs` into the directory-backed `tests/mod.rs` without changing content. The second moved the eight file-header helpers into `tests/support.rs`. The third moved all remaining top-level helpers and all 268 unchanged test functions into 14 domain modules. A mechanical block comparison verified the pre/post test-function set with SHA-256 `8c5deab5547c37ae614c7550ebb7edc9c61748b27da8cb9b7a6263f36d693616` before compilation.
 
-The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. After the two Phase 8 command-boundary tests, core contains 270 game tests and 293 tests overall, with no ignored tests; replay and contract guards remain unchanged.
+The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. After the Phase 8 and Phase 9 boundary tests, core contains 272 game tests and 295 tests overall, with no ignored tests; replay and contract guards remain unchanged.
 
 ### Phase 5: pure world-generation calculations (completed)
 
@@ -313,6 +314,22 @@ save error categories, and localized presentation, bringing the frontend suite t
 Implementation used two compatibility-gated parts. Pure functions in `progression.rs` now resolve build definitions and initial attributes; aggregate skills in existing `BTreeMap` order; compose build percentages and attribute modifiers; calculate character HP and profile resource maxima; initialize resource pools; scale experience; and preserve the original saturating proportional HP/resource calculations. Read-only `Game` adapters retain temporary granted-race selection and explicit access to equipment and status inputs.
 
 `IncreaseAttribute` and experience gain now plan against cloned `CharacterProgress` values before mutation. `Game` commits the planned authoritative fields, refreshes skills and resources, rescales current HP/resources, and emits the existing events in their original order. Item effects continue to own their RNG-backed attribute behavior and only reuse the existing `pub(super)` resource snapshot/refresh adapters. Death, campaign transitions, RNG, IDs, scheduling, revision updates, and public event projection remain outside the module. The extraction reduced `game/mod.rs` from the Phase 7 post-extraction 22,817 lines to 22,425 lines and added two focused zero-RNG command tests, bringing core to 293 tests.
+
+### Phase 9: task and campaign transitions (completed)
+
+- Scope: extract task objective lookup and success predicates, initial task states, command-event reduction, task departure/activation/abandonment outcomes, campaign victory/count/score calculations, and explicit victory/retirement plans.
+- Not in scope: death resolution, loot generation, task reward item construction, terrain replacement, stored-floor cleanup, dungeon instance lifecycle, RNG, ID allocation, protocol/content changes, or event projection changes.
+- Files: `game/tasks.rs`, `game/mod.rs`, task tests, and this plan.
+- Risk: changing ordered event interpretation, staged-task rollover, task retake counts, campaign bonus/penalty timing, victory event order, or save/migration validation.
+- Acceptance: staged and retakeable task fixtures, guardian/campaign/retirement fixtures, zero-RNG task reduction, ordered victory events, save/hash/replay compatibility, generators, workspace checks, frontend build/tests, and Tauri release/E2E remain unchanged.
+- Rollback: any task state, score, RNG draw, event order, state hash, save/replay/fixture, floor reward, or terrain difference; a planner needs mutable `Game`; or visibility must expand beyond `pub(super)`.
+- Tests: task-focused core tests, all core/replay/contract tests, then the full section 4 matrix.
+
+`tasks.rs` now owns the private `TaskState` and `CampaignState` representations plus pure planners over explicit immutable inputs. Task event reduction receives the current world, task states, floor ID, items, entities, and ordered domain events, then returns one state replacement for `Game` to commit. Task completion, pause, failure, abandonment, activation, and retake calculations return cloned state outcomes; floor storage, terrain changes, and reward generation remain in the floor-transition transaction.
+
+Campaign victory, counts, score, victory transition, and retirement transition now use explicit campaign, dungeon, task, status, surface, and turn inputs. `Game` commits the planned campaign state, appends `CampaignVictorious` before `PlayerLevelCapUnlocked`, and retains experience-unlock orchestration. Death and loot still produce the authoritative events consumed by task reduction and remain in `mod.rs`. The extraction reduced `game/mod.rs` from 22,425 to 22,127 lines, added a 492-line `tasks.rs`, and added two focused zero-RNG/order tests, bringing core to 295 tests.
+
+The complete Phase 9 acceptance matrix passed on 2026-07-31: formatting, protocol and content generators, source-pack verification, focused task/replay/contract tests, workspace check/clippy/test, all 54 frontend tests, TypeScript and UI builds, Tauri all-targets check, the Windows release build, and desktop WebDriver E2E. Generated bindings, schemas, content hashes, fixtures, protocol versions, save versions, and state-hash schemas remain unchanged.
 
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 

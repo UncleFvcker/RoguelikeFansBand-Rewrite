@@ -51,20 +51,19 @@ use rfb_content::{
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilityStatusStackingDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
-    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CampaignDefinition,
-    CastingAttribute, CastingProfileDefinition, ContentCatalog, ContentPosition,
-    DeviceRechargeProfileDefinition, DungeonDefinition, DungeonEntryRequirementDefinition,
-    DungeonEntryTaskStatus, DungeonInstanceLifecycle, EncounterEntryDefinition,
-    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
-    ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
-    ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
-    ItemUseEffectDefinition, MonsterPackBehavior, ProceduralFloorDefinition, ProceduralLayoutMode,
-    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RetakeFloorPolicy, SkillKind,
-    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveDefinition,
-    TaskObjectiveKind, TechniqueAttribute, TechniqueProfileDefinition,
-    TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, VaultDefinition, VaultTransform,
-    WeaponBrand,
+    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CastingAttribute,
+    CastingProfileDefinition, ContentCatalog, ContentPosition, DeviceRechargeProfileDefinition,
+    DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
+    DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
+    EquipmentPassive, FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
+    ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
+    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MonsterPackBehavior,
+    ProceduralFloorDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomShape,
+    ProceduralStreamerCandidateDefinition, RetakeFloorPolicy, SkillKind, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TechniqueProfileDefinition, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
+    VaultDefinition, VaultTransform, WeaponBrand,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -96,6 +95,7 @@ mod inventory;
 mod persistence;
 mod progression;
 mod snapshot;
+mod tasks;
 mod validation;
 mod world;
 
@@ -103,6 +103,11 @@ use inventory::{ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome};
 use progression::{
     build_definitions, character_skill_progress, combine_percentages, initial_character_attributes,
     initial_resource_pool, profile_resource_maximum, resolve_character_build,
+};
+use tasks::{
+    CampaignState, TaskResolution, TaskState, abandoned_task_state, activated_task_state,
+    floor_task_id, initial_task_states, task_objectives, task_resolution_for_departure,
+    task_state_after_departure, task_succeeded,
 };
 use validation::{
     floor_connections_are_valid, floor_regions_are_valid, monster_packs_are_valid,
@@ -670,45 +675,12 @@ struct GeneratedRegion {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct TaskState {
-    status: TaskStatusKindDto,
-    stage_index: u32,
-    current: u32,
-    required: u32,
-    active_floor_id: Option<String>,
-    retakes_used: u16,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 struct DungeonState {
     guardian_defeated: bool,
     entrance_guardian_defeated: bool,
     next_instance_ordinal: u32,
     retained_instance_id: Option<String>,
     retained_at_turn: Option<u32>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct CampaignState {
-    status: CampaignStatusDto,
-    victory_turn: Option<u32>,
-    retired_turn: Option<u32>,
-    final_score: Option<u64>,
-}
-
-impl Default for CampaignState {
-    fn default() -> Self {
-        Self {
-            status: CampaignStatusDto::Active,
-            victory_turn: None,
-            retired_turn: None,
-            final_score: None,
-        }
-    }
-}
-
-fn floor_task_id(floor: &ProceduralFloorDefinition) -> &str {
-    floor.task_id.as_deref().unwrap_or(&floor.id)
 }
 
 fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
@@ -754,70 +726,6 @@ fn parse_dungeon_instance_ordinal(instance_id: &str, dungeon_id: &str) -> Option
         .strip_prefix(&format!("{dungeon_id}.instance."))
         .and_then(|ordinal| ordinal.parse::<u32>().ok())
         .filter(|ordinal| *ordinal > 0)
-}
-
-fn task_objectives<'a>(
-    world: &'a rfb_content::WorldDefinition,
-    task_id: &str,
-) -> Vec<&'a TaskObjectiveDefinition> {
-    if let Some(stages) = world
-        .procedural_floors
-        .iter()
-        .find(|floor| floor_task_id(floor) == task_id && !floor.task_stages.is_empty())
-        .map(|floor| floor.task_stages.iter().collect::<Vec<_>>())
-    {
-        return stages;
-    }
-    world
-        .procedural_floors
-        .iter()
-        .find(|floor| floor_task_id(floor) == task_id)
-        .and_then(|floor| floor.task_objective.as_ref())
-        .into_iter()
-        .collect()
-}
-
-fn task_succeeded(world: &rfb_content::WorldDefinition, task_id: &str, state: &TaskState) -> bool {
-    let objectives = task_objectives(world, task_id);
-    usize::try_from(state.stage_index)
-        .ok()
-        .is_some_and(|stage| stage + 1 == objectives.len())
-        && state.current >= state.required
-}
-
-fn task_death_target_kind(event: &DomainEvent) -> Option<&str> {
-    match event {
-        DomainEvent::PlayerSlew { target_kind_id, .. }
-        | DomainEvent::SummonSlew { target_kind_id, .. }
-        | DomainEvent::ProjectileSlew { target_kind_id, .. }
-        | DomainEvent::ItemThrowSlew { target_kind_id, .. }
-        | DomainEvent::VengeanceSlew { target_kind_id, .. }
-        | DomainEvent::EntityDiedFromStatus { target_kind_id, .. } => Some(target_kind_id.as_str()),
-        _ => None,
-    }
-}
-
-fn initial_task_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, TaskState> {
-    let mut states = BTreeMap::new();
-    for floor in world
-        .procedural_floors
-        .iter()
-        .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot)
-    {
-        states
-            .entry(floor_task_id(floor).to_owned())
-            .or_insert_with(|| TaskState {
-                status: TaskStatusKindDto::Available,
-                stage_index: 0,
-                current: 0,
-                required: task_objectives(world, floor_task_id(floor))
-                    .first()
-                    .map_or(1, |objective| objective.required),
-                active_floor_id: None,
-                retakes_used: 0,
-            });
-    }
-    states
 }
 
 /// The engine's standard humanoid body: the slot roster every player uses
@@ -1647,16 +1555,7 @@ impl Game {
                 }),
             },
             GameAction::Retire => {
-                let on_surface = self.content.world(&self.world_id).is_some_and(|world| {
-                    self.current_floor_id == world.initial_floor_id
-                        && self.current_dungeon_instance_id.is_none()
-                });
-                if self.campaign_state.status == CampaignStatusDto::Victorious && on_surface {
-                    let retired_turn = self.turn.saturating_add(1);
-                    let score = self.campaign_score_at(retired_turn);
-                    self.campaign_state.status = CampaignStatusDto::Retired;
-                    self.campaign_state.retired_turn = Some(retired_turn);
-                    self.campaign_state.final_score = Some(score);
+                if let Some(score) = self.retire_campaign() {
                     events.push(DomainEvent::CampaignRetired { score });
                 } else {
                     events.push(DomainEvent::CampaignRetireUnavailable);
@@ -3272,77 +3171,6 @@ impl Game {
         (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
             .then(|| self.item_throw_profile(item))
             .flatten()
-    }
-
-    fn campaign_definition(&self) -> Option<&CampaignDefinition> {
-        self.content
-            .world(&self.world_id)
-            .and_then(|world| world.campaign.as_ref())
-    }
-
-    fn campaign_victory_reached(&self) -> bool {
-        self.campaign_definition().is_some_and(|campaign| {
-            campaign.victory_dungeon_ids.iter().all(|dungeon_id| {
-                self.dungeon_states
-                    .get(dungeon_id)
-                    .is_some_and(|state| state.guardian_defeated)
-            })
-        })
-    }
-
-    fn campaign_counts(&self) -> (u32, u32) {
-        let conquered = self
-            .dungeon_states
-            .values()
-            .filter(|state| state.guardian_defeated)
-            .count()
-            .try_into()
-            .unwrap_or(u32::MAX);
-        let completed = self
-            .task_states
-            .values()
-            .filter(|state| state.status == TaskStatusKindDto::Completed)
-            .count()
-            .try_into()
-            .unwrap_or(u32::MAX);
-        (conquered, completed)
-    }
-
-    fn campaign_score_at(&self, turn: u32) -> u64 {
-        let Some(campaign) = self.campaign_definition() else {
-            return 0;
-        };
-        let (conquered, completed) = self.campaign_counts();
-        let base = u64::from(conquered)
-            .saturating_mul(u64::from(campaign.dungeon_conquest_points))
-            .saturating_add(
-                u64::from(completed).saturating_mul(u64::from(campaign.task_completion_points)),
-            )
-            .saturating_add(if self.campaign_state.status != CampaignStatusDto::Active {
-                u64::from(campaign.victory_bonus)
-            } else {
-                0
-            });
-        let penalty = u64::from(turn / campaign.turn_penalty_interval)
-            .saturating_mul(u64::from(campaign.turn_penalty_points));
-        base.saturating_sub(penalty)
-    }
-
-    fn apply_campaign_events(&mut self, events: &mut Vec<DomainEvent>) {
-        if self.campaign_state.status == CampaignStatusDto::Active
-            && self.campaign_victory_reached()
-        {
-            self.campaign_state.status = CampaignStatusDto::Victorious;
-            self.campaign_state.victory_turn = Some(self.turn.saturating_add(1));
-            events.push(DomainEvent::CampaignVictorious {
-                score: self.campaign_score_at(self.turn.saturating_add(1)),
-            });
-            events.push(DomainEvent::PlayerLevelCapUnlocked {
-                level_cap: CharacterProgress::level_cap(true),
-                attribute_index_cap: CharacterProgress::attribute_index_cap(true),
-            });
-            self.apply_player_experience(0, events);
-        }
     }
 
     fn equipment_modifiers(&self) -> StatModifiersDto {
@@ -15560,93 +15388,6 @@ impl Game {
         Ok(())
     }
 
-    fn active_task_objective(
-        &self,
-    ) -> Result<Option<(String, TaskObjectiveDefinition, Option<u32>)>, CoreError> {
-        let Some((task_id, stage_index)) = self.task_states.iter().find_map(|(task_id, state)| {
-            (state.status == TaskStatusKindDto::Active
-                && state.active_floor_id.as_deref() == Some(self.current_floor_id.as_str()))
-            .then_some((task_id, state.stage_index))
-        }) else {
-            return Ok(None);
-        };
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available");
-        let objectives = task_objectives(world, task_id);
-        let stage = usize::try_from(stage_index).ok();
-        let objective = stage
-            .and_then(|stage| objectives.get(stage))
-            .copied()
-            .cloned()
-            .ok_or_else(|| {
-                CoreError::Invariant(format!(
-                    "active task {task_id} references missing objective stage {stage_index}"
-                ))
-            })?;
-        let next_required = stage
-            .and_then(|stage| stage.checked_add(1))
-            .and_then(|stage| objectives.get(stage))
-            .map(|objective| objective.required);
-        Ok(Some((task_id.clone(), objective, next_required)))
-    }
-
-    fn apply_task_events(&mut self, events: &[DomainEvent]) -> Result<(), CoreError> {
-        let Some((task_id, objective, next_required)) = self.active_task_objective()? else {
-            return Ok(());
-        };
-        let increment = match objective.kind {
-            TaskObjectiveKind::CollectItem => events.iter().any(|event| {
-                matches!(event, DomainEvent::ItemPickedUp { .. })
-                    && objective.item_instance_id.as_ref().is_some_and(|id| {
-                        self.items.iter().any(|item| {
-                            &item.id == id
-                                && matches!(
-                                    item.location,
-                                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
-                                )
-                        })
-                    })
-            }) as u32,
-            TaskObjectiveKind::EnterFloor => events.iter().any(|event| {
-                matches!(
-                    event,
-                    DomainEvent::FloorTransitioned { to_floor_id, .. }
-                        if objective.floor_id.as_deref() == Some(to_floor_id.as_str())
-                )
-            }) as u32,
-            TaskObjectiveKind::KillActor => events.iter().any(|event| {
-                task_death_target_kind(event).is_some()
-                    && objective
-                        .actor_instance_id
-                        .as_ref()
-                        .is_some_and(|id| !self.entities.iter().any(|entity| &entity.id == id))
-            }) as u32,
-            TaskObjectiveKind::KillActorKind => events
-                .iter()
-                .filter(|event| task_death_target_kind(event) == objective.actor_kind_id.as_deref())
-                .count()
-                .try_into()
-                .unwrap_or(u32::MAX),
-        };
-        if increment > 0 {
-            let state = self
-                .task_states
-                .get_mut(&task_id)
-                .expect("active task state must remain available");
-            state.current = state.current.saturating_add(increment).min(state.required);
-            if state.current >= state.required
-                && let Some(next_required) = next_required
-            {
-                state.stage_index = state.stage_index.saturating_add(1);
-                state.current = 0;
-                state.required = next_required;
-            }
-        }
-        Ok(())
-    }
-
     fn generate_death_loot(&mut self, actor: &Actor) -> Result<Vec<ItemInstance>, CoreError> {
         let Some(table_id) = self
             .content
@@ -16016,11 +15757,7 @@ impl Game {
             .task_states
             .get_mut(task_id)
             .expect("paused task state must remain available");
-        state.status = TaskStatusKindDto::Abandoned;
-        state.stage_index = 0;
-        state.current = 0;
-        state.required = initial_required;
-        state.active_floor_id = None;
+        *state = abandoned_task_state(state, initial_required);
         Some(changed.into_iter().collect())
     }
 
@@ -16379,20 +16116,11 @@ impl Game {
         {
             return Ok(None);
         }
-        let task_resolution = if one_shot_source.is_none() {
-            None
-        } else if abandon_task {
-            Some(TaskResolution::Abandoned)
-        } else if task_succeeded {
-            Some(TaskResolution::Completed)
-        } else if one_shot_source
-            .as_ref()
-            .is_some_and(|floor| floor.retakeable)
-        {
-            None
-        } else {
-            Some(TaskResolution::Failed)
-        };
+        let task_resolution = task_resolution_for_departure(
+            one_shot_source.as_ref().map(|floor| floor.retakeable),
+            abandon_task,
+            task_succeeded,
+        );
         let mut following_summons = Vec::new();
         let mut remaining_entities = Vec::with_capacity(self.entities.len());
         for entity in std::mem::take(&mut self.entities) {
@@ -16593,26 +16321,11 @@ impl Game {
                 .task_states
                 .get_mut(task_id)
                 .expect("active task state must remain available");
-            state.active_floor_id = None;
-            state.status = match task_resolution {
-                Some(TaskResolution::Completed) => {
-                    state.current = state.required;
-                    TaskStatusKindDto::Completed
-                }
-                Some(TaskResolution::Failed) => {
-                    state.stage_index = 0;
-                    state.current = 0;
-                    state.required = initial_task_states_by_id[task_id].required;
-                    TaskStatusKindDto::Failed
-                }
-                Some(TaskResolution::Abandoned) => {
-                    state.stage_index = 0;
-                    state.current = 0;
-                    state.required = initial_task_states_by_id[task_id].required;
-                    TaskStatusKindDto::Abandoned
-                }
-                None => TaskStatusKindDto::Paused,
-            };
+            *state = task_state_after_departure(
+                state,
+                task_resolution,
+                initial_task_states_by_id[task_id].required,
+            );
         }
         if let Some(target) = procedural_floors
             .iter()
@@ -16622,11 +16335,7 @@ impl Game {
                 .task_states
                 .get_mut(floor_task_id(target))
                 .expect("target task state must remain available");
-            if task_resumed {
-                state.retakes_used = state.retakes_used.saturating_add(1);
-            }
-            state.status = TaskStatusKindDto::Active;
-            state.active_floor_id = Some(target.id.clone());
+            *state = activated_task_state(state, &target.id, task_resumed);
         }
         self.activate_floor(destination, global_items);
         let (summons_followed, summons_could_not_follow) =
@@ -20376,13 +20085,6 @@ struct FloorTransitionOutcome {
     task_resumed: Option<String>,
     summons_followed: Vec<ActorIdentity>,
     summons_could_not_follow: Vec<ActorIdentity>,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum TaskResolution {
-    Completed,
-    Failed,
-    Abandoned,
 }
 
 enum DoorOpenOutcome {
