@@ -48,6 +48,194 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    fn item_is_valid_enchant_target(
+        &self,
+        source_item_id: &str,
+        target_item_id: &str,
+        effect: &ItemUseEffectDefinition,
+    ) -> bool {
+        if source_item_id == target_item_id {
+            return false;
+        }
+        let ItemUseEffectDefinition::EnchantItem {
+            to_hit,
+            to_damage,
+            to_armor,
+        } = effect
+        else {
+            return false;
+        };
+        self.items.iter().any(|item| {
+            if item.id != target_item_id
+                || item.quantity == 0
+                || !matches!(
+                    &item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                ) && !matches!(
+                    &item.location,
+                    ItemLocation::Ground(position) if *position == self.player.position
+                )
+            {
+                return false;
+            }
+            let Some(definition) = self.content.item(&item.kind_id) else {
+                return false;
+            };
+            if definition.tags.iter().any(|tag| tag == "no-enchant") {
+                return false;
+            }
+            if to_armor.is_some() {
+                definition.tags.iter().any(|tag| tag == "armor")
+            } else if to_hit.is_some() || to_damage.is_some() {
+                definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "weapon" | "launcher" | "ammunition"))
+            } else {
+                false
+            }
+        })
+    }
+
+    pub(super) fn resolve_item_enchantment(
+        &mut self,
+        source_kind_id: &str,
+        target_item_id: &str,
+        to_hit: Option<ItemEnchantmentRollDefinition>,
+        to_damage: Option<ItemEnchantmentRollDefinition>,
+        to_armor: Option<ItemEnchantmentRollDefinition>,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        self.mark_item_aware(source_kind_id);
+        let resolution = self.enchant_item_instance(target_item_id, to_hit, to_damage, to_armor);
+        events.push(DomainEvent::ItemEnchanted {
+            source_kind_id: source_kind_id.to_owned(),
+            resolution,
+        });
+    }
+
+    fn enchant_item_instance(
+        &mut self,
+        item_id: &str,
+        to_hit: Option<ItemEnchantmentRollDefinition>,
+        to_damage: Option<ItemEnchantmentRollDefinition>,
+        to_armor: Option<ItemEnchantmentRollDefinition>,
+    ) -> ItemEnchantmentResolutionDto {
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned enchantment target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let quantity = item.quantity;
+        let definition = self
+            .content
+            .item(&item_kind_id)
+            .expect("planned enchantment kind must remain available");
+        let artifact = definition.tags.iter().any(|tag| tag == "artifact");
+        let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
+        let before = item.enchantments;
+
+        let hit_attempts = self.roll_item_enchantment_attempts(to_hit);
+        let damage_attempts = self.roll_item_enchantment_attempts(to_damage);
+        let armor_attempts = self.roll_item_enchantment_attempts(to_armor);
+        let to_hit = self.resolve_item_enchantment_component(
+            before.to_hit,
+            hit_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        let to_damage = self.resolve_item_enchantment_component(
+            before.to_damage,
+            damage_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        let to_armor = self.resolve_item_enchantment_component(
+            before.to_armor,
+            armor_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        self.items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .expect("planned enchantment target must remain available")
+            .enchantments = ItemEnchantmentsDto {
+            to_hit: to_hit.after,
+            to_damage: to_damage.after,
+            to_armor: to_armor.after,
+        };
+        ItemEnchantmentResolutionDto {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            to_hit,
+            to_damage,
+            to_armor,
+        }
+    }
+
+    fn roll_item_enchantment_attempts(
+        &mut self,
+        roll: Option<ItemEnchantmentRollDefinition>,
+    ) -> u16 {
+        let Some(roll) = roll else {
+            return 0;
+        };
+        let rolled = if roll.dice == 0 {
+            0
+        } else {
+            u16::try_from(self.roll_damage(roll.dice, roll.sides))
+                .expect("validated enchantment roll must fit u16")
+        };
+        rolled.saturating_add(roll.bonus)
+    }
+
+    pub(super) fn resolve_item_enchantment_component(
+        &mut self,
+        before: u16,
+        attempts: u16,
+        quantity: u32,
+        ammunition: bool,
+        artifact: bool,
+    ) -> ItemEnchantmentComponentResolutionDto {
+        const FAILURE_PER_THOUSAND: [u16; 16] = [
+            5, 10, 50, 100, 200, 300, 400, 500, 650, 800, 950, 987, 993, 995, 998, 1000,
+        ];
+        let mut after = before;
+        let pile_probability = if ammunition {
+            u64::from(quantity).saturating_mul(100) / 20
+        } else {
+            u64::from(quantity).saturating_mul(100)
+        }
+        .max(1);
+        for _ in 0..attempts {
+            if self.rng.bounded(pile_probability) >= 100 {
+                continue;
+            }
+            let failure = FAILURE_PER_THOUSAND
+                .get(usize::from(after))
+                .copied()
+                .unwrap_or(1000);
+            if self.rng.bounded(1000).saturating_add(1) <= u64::from(failure) {
+                continue;
+            }
+            if artifact && self.rng.bounded(100) >= 50 {
+                continue;
+            }
+            after = after.saturating_add(1).min(15);
+        }
+        ItemEnchantmentComponentResolutionDto {
+            attempts,
+            successes: after.saturating_sub(before),
+            before,
+            after,
+        }
+    }
+
     fn item_is_valid_identify_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
         source_item_id != target_item_id
             && self.items.iter().any(|item| {
