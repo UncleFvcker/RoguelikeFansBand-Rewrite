@@ -3723,16 +3723,13 @@ fn ordinary_death_creates_a_corpse_and_animate_dead_consumes_it_persistently() {
     }));
 
     let mut events = Vec::new();
-    game.resolve_ability_animate_dead(
-        "demo.ability.death-animate-dead",
-        "demo.actor.risen-thrall",
-        "demo.item.corpse-remains",
-        8,
-        8,
-        &mut events,
-        &mut BTreeSet::new(),
-    )
-    .expect("animate dead should resolve");
+    let ability = game
+        .content
+        .ability("demo.ability.death-animate-dead")
+        .expect("animate dead ability should exist")
+        .clone();
+    game.resolve_player_animate_dead_effect(&ability, &mut events, &mut BTreeSet::new())
+        .expect("animate dead should resolve");
     assert!(
         game.items
             .iter()

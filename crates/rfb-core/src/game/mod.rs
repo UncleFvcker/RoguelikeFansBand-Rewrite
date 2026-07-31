@@ -4191,24 +4191,8 @@ impl Game {
                     removed_entities,
                 );
             }
-            (
-                AbilityEffectDefinition::AnimateDead {
-                    actor_kind_id,
-                    corpse_item_kind_id,
-                    radius,
-                    count,
-                },
-                AbilityTargetPlan::SelfTarget,
-            ) => {
-                self.resolve_ability_animate_dead(
-                    &ability.id,
-                    &actor_kind_id,
-                    &corpse_item_kind_id,
-                    radius,
-                    count,
-                    events,
-                    changed,
-                )?;
+            (AbilityEffectDefinition::AnimateDead { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_animate_dead_effect(&ability, events, changed)?;
             }
             _ => unreachable!("validated ability target plan must match its effect"),
         }
@@ -4415,91 +4399,6 @@ impl Game {
             resisted_entity_ids,
             fatigue_damage,
         }
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_animate_dead(
-        &mut self,
-        ability_id: &str,
-        actor_kind_id: &str,
-        corpse_item_kind_id: &str,
-        radius: u8,
-        count: u8,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-    ) -> Result<(), CoreError> {
-        let origin = self.player.position;
-        let mut corpses = self
-            .items
-            .iter()
-            .filter_map(|item| match item.location {
-                ItemLocation::Ground(position)
-                    if item.kind_id == corpse_item_kind_id
-                        && chebyshev_distance(origin, position) <= u32::from(radius) =>
-                {
-                    Some((
-                        chebyshev_distance(origin, position),
-                        position.y,
-                        position.x,
-                        item.id.clone(),
-                        position,
-                    ))
-                }
-                _ => None,
-            })
-            .collect::<Vec<_>>();
-        corpses.sort();
-        corpses.truncate(usize::from(count));
-        let consumed_corpse_item_ids = corpses
-            .iter()
-            .map(|corpse| corpse.3.clone())
-            .collect::<Vec<_>>();
-        self.items
-            .retain(|item| !consumed_corpse_item_ids.contains(&item.id));
-        for item_id in &consumed_corpse_item_ids {
-            self.item_property_knowledge.remove(item_id);
-        }
-        let definition = self
-            .content
-            .actor(actor_kind_id)
-            .expect("validated animated actor must remain available")
-            .clone();
-        let mut entity_ids = Vec::with_capacity(corpses.len());
-        let mut positions = Vec::with_capacity(corpses.len());
-        for (ordinal, (_, _, _, _, position)) in corpses.into_iter().enumerate() {
-            let id = self.summon_entity_id(ability_id, ordinal);
-            let mut entity = actor_from_runtime_spawn(
-                &id,
-                actor_kind_id,
-                position,
-                definition.max_hp,
-                definition.speed,
-                INITIAL_MONSTER_ENERGY_NEED,
-                true,
-            );
-            entity.resistances = definition_resistance_profile(&definition);
-            entity.controller_id = Some(self.player.id.clone());
-            self.entities.push(entity);
-            changed.insert(position);
-            entity_ids.push(id);
-            positions.push(position);
-        }
-        events.push(DomainEvent::AbilityEffectsResolved {
-            ability_id: ability_id.to_owned(),
-            resolution: AbilityEffectsResolutionDto {
-                target_entity_id: Some(self.player.id.clone()),
-                target_kind_id: Some(self.player.kind_id.clone()),
-                effects: vec![AbilityEffectResolutionDto::AnimateDead {
-                    effect_index: 0,
-                    actor_kind_id: actor_kind_id.to_owned(),
-                    consumed_corpse_item_ids,
-                    entity_ids,
-                    positions,
-                }],
-            },
-            trace: None,
-        });
-        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
