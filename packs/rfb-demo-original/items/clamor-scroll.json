@@ -9,9 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "aggravate-monsters"
-    }
+    "effectProgramId": "demo.effect.aggravate-monsters"
   },
   "tags": ["aggravation", "consumable", "scroll"]
 }

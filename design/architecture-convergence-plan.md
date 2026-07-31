@@ -499,6 +499,8 @@ The self-centered blast source migration maps aether rupture, cinder surge, and 
 
 The dispel source migration maps the undead dispel scroll to a self-input program. Category and damage lower unchanged; the visible actor snapshot, stable ordering, resist-all gate, damage/death commits, consumption, awareness, and events remain in the item adapter and combat owners.
 
+The aggravation source migration maps the clamor scroll to a self-input program. Entity alertness mutation, changed cells, consumption, unconditional awareness, and event ordering remain in the existing item/world adapter.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
