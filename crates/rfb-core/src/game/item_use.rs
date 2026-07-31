@@ -48,6 +48,117 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    fn adjacent_terrain_creation_replacements(
+        &self,
+        source_terrain_ids: &[String],
+        target_terrain_id: &str,
+    ) -> Vec<(Position, String)> {
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .chain(self.items.iter().filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some(position),
+                ItemLocation::Inventory
+                | ItemLocation::Equipped { .. }
+                | ItemLocation::CarriedBy { .. } => None,
+            }))
+            .collect::<BTreeSet<_>>();
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(*direction);
+                let index = self.index(position)?;
+                (!occupied.contains(&position)
+                    && !connections.contains(&position)
+                    && source_terrain_ids.contains(&self.terrain[index]))
+                .then(|| (position, target_terrain_id.to_owned()))
+            })
+            .collect()
+    }
+
+    fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
+        TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(*direction);
+                let terrain = self
+                    .index(position)
+                    .and_then(|index| self.content.terrain(&self.terrain[index]))?;
+                let target_terrain_id = if let Some(trap) = &terrain.trap {
+                    Some(trap.disarm_to_terrain_id.clone())
+                } else if terrain.tags.iter().any(|tag| tag == "door") {
+                    terrain.bash_to_terrain_id.clone()
+                } else {
+                    None
+                }?;
+                Some((position, target_terrain_id))
+            })
+            .collect()
+    }
+
+    pub(super) fn resolve_item_adjacent_terrain_creation(
+        &mut self,
+        source_kind_id: &str,
+        replacements: Vec<(Position, String)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let affected_positions = replacements
+            .into_iter()
+            .map(|(position, target_terrain_id)| {
+                let index = self
+                    .index(position)
+                    .expect("planned terrain creation must remain in bounds");
+                self.terrain[index] = target_terrain_id;
+                self.revealed_terrain.remove(&position);
+                changed.insert(position);
+                position
+            })
+            .collect::<Vec<_>>();
+        if !affected_positions.is_empty() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemCreatedAdjacentTerrain {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            affected_positions,
+        });
+    }
+
+    pub(super) fn resolve_item_adjacent_trap_door_destruction(
+        &mut self,
+        source_kind_id: &str,
+        replacements: Vec<(Position, String)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let affected_positions = replacements
+            .into_iter()
+            .map(|(position, target_terrain_id)| {
+                let index = self
+                    .index(position)
+                    .expect("planned terrain replacement must remain in bounds");
+                self.terrain[index] = target_terrain_id;
+                self.revealed_terrain.remove(&position);
+                changed.insert(position);
+                position
+            })
+            .collect();
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemDestroyedAdjacentTrapsAndDoors {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            affected_positions,
+        });
+    }
+
     pub(super) fn resolve_item_detection(
         &mut self,
         source_kind_id: String,
