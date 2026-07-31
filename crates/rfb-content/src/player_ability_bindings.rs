@@ -8,8 +8,10 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     AbilityCooldownDefinition, AbilityDefinition, AbilityProficiencyDefinition, ContentError,
-    PLAYER_ABILITY_BINDING_SCHEMA, require_format_version, require_schema, validate_definition_id,
-    validate_id,
+    PLAYER_ABILITY_BINDING_SCHEMA,
+};
+use crate::validation::{
+    require_format_version, require_schema, validate_definition_id, validate_id,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

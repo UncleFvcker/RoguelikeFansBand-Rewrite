@@ -9,10 +9,10 @@ use serde::{Deserialize, Serialize};
 use super::{
     ABILITY_PROGRAM_SCHEMA, AbilityDefinition, AbilityEffectDefinition,
     AbilityGenocideScopeDefinition, AbilityLevelScalingDefinition, AbilityRandomTargetDefinition,
-    AbilityTargetDefinition, AbilityTargetModeDefinition, ContentError, require_format_version,
-    require_schema, validate_definition_id,
+    AbilityTargetDefinition, AbilityTargetModeDefinition, ContentError,
 };
 use crate::player_ability_bindings::ResolvedPlayerAbilityBinding;
+use crate::validation::{require_format_version, require_schema, validate_definition_id};
 
 pub type AbilityProgramStepDefinition = AbilityEffectDefinition;
 

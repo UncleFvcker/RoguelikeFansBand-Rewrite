@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use super::*;
+use crate::validation::{validate_and_normalize, validate_semver};
 
 fn original_pack_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

@@ -8,8 +8,10 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     AbilityTargetDefinition, AbilityTargetModeDefinition, CompiledContentV1, ContentError,
-    EFFECT_PROGRAM_SCHEMA, ItemUseEffectDefinition, require_format_version, require_schema,
-    valid_item_effect, validate_definition_id,
+    EFFECT_PROGRAM_SCHEMA, ItemUseEffectDefinition,
+};
+use crate::validation::{
+    require_format_version, require_schema, valid_item_effect, validate_definition_id,
 };
 
 pub type EffectProgramStepDefinition = ItemUseEffectDefinition;

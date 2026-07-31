@@ -4,7 +4,8 @@ use std::{fs::File, io::Read, path::Path};
 
 use sha2::{Digest, Sha256};
 
-use super::{CompiledContentV1, ContentError, ContentSummary, validate_and_normalize};
+use super::{CompiledContentV1, ContentError, ContentSummary};
+use crate::validation::validate_and_normalize;
 
 const MAGIC: &[u8; 8] = b"RFBCONT\0";
 const CONTAINER_VERSION: u16 = 1;

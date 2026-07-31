@@ -20,8 +20,10 @@ use crate::{
     player_ability_bindings::{
         compile_player_ability_binding_catalog, validate_player_ability_binding_references,
     },
-    require_format_version, require_schema, validate_id, validate_message_key,
-    validate_pack_relations, validate_semver,
+    validation::{
+        require_format_version, require_schema, validate_id, validate_message_key,
+        validate_pack_relations, validate_semver,
+    },
 };
 
 pub(crate) use items::SourceItemDefinition;
