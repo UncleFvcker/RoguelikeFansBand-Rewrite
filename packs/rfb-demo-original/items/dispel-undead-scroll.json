@@ -9,11 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "dispel-category",
-      "category": "undead",
-      "damage": 80
-    }
+    "effectProgramId": "demo.effect.dispel-undead"
   },
   "tags": ["consumable", "dispel", "scroll", "undead"]
 }
