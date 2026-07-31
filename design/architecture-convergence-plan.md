@@ -493,6 +493,8 @@ The recharge source migration maps the recharging scroll to an item-input progra
 
 The combat/world gate begins by reusing the Phase 12 damage/death pipeline for item activation damage rather than adding another capability. Frost and spark wand activations now reference actor-input programs; target/path preflight, device checks, charges, damage RNG, resistance, death, awareness, trace, and events remain in the existing item adapter and combat owners.
 
+The detonation source migration maps the shatterburst draught to a self-input program. Damage dice and subsequent stun/bleeding specifications lower unchanged, while roll order, player damage, status stacking, consumption, awareness, and events remain in the item adapter and established damage/status owners.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

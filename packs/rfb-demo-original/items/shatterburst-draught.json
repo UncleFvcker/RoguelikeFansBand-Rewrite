@@ -9,13 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-detonation",
-      "damageDice": 50,
-      "damageSides": 20,
-      "stunTicks": 75,
-      "bleedingTicks": 5000
-    }
+    "effectProgramId": "demo.effect.shatterburst-detonation"
   },
   "tags": [
     "consumable",
