@@ -4175,59 +4175,16 @@ impl Game {
                 )?;
             }
             (
-                AbilityEffectDefinition::ConeDamage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                    radius,
-                },
-                AbilityTargetPlan::Cone {
-                    path,
-                    direction,
-                    radius: planned_radius,
-                },
+                AbilityEffectDefinition::ConeDamage { .. },
+                target_plan @ AbilityTargetPlan::Cone { .. },
             ) => {
-                debug_assert_eq!(radius, planned_radius);
-                let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
-                let (affected_positions, targets) =
-                    self.cone_damage_targets(&trace.traversed, direction, radius);
-                changed.extend(affected_positions.iter().copied());
-                let base_raw_damage = self
-                    .roll_damage(damage_dice, damage_sides)
-                    .saturating_add(i32::from(damage_bonus))
-                    .max(0);
-                events.push(DomainEvent::AbilityConeDamage {
-                    ability_id: ability.id.clone(),
-                    resolution: AbilityConeDamageResolutionDto {
-                        radius,
-                        base_raw_damage,
-                        damage_type: DamageType::from(damage_type).into(),
-                        affected_positions,
-                        target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
-                    },
-                    trace: trace.clone(),
-                });
-                for (entity_id, lateral_distance) in targets {
-                    let Some(index) = self
-                        .entities
-                        .iter()
-                        .position(|entity| entity.id == entity_id && entity.hp > 0)
-                    else {
-                        continue;
-                    };
-                    let falloff_damage = rfb_area_damage(base_raw_damage, lateral_distance);
-                    self.resolve_ability_damage_to_entity(
-                        index,
-                        &ability.id,
-                        DamageType::from(damage_type),
-                        falloff_damage,
-                        trace.clone(),
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                }
+                self.resolve_player_cone_damage_effect(
+                    &ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
             (AbilityEffectDefinition::Heal { amount }, AbilityTargetPlan::SelfTarget) => {
                 let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
