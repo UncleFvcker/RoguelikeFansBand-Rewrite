@@ -638,6 +638,8 @@ The first test-organization sub-batch moves the complete crate-root test module 
 
 The domain test-organization sub-batch completes Gate 2. The 17-line `tests/mod.rs` retains only the shared original-pack path and private module declarations; unchanged test bodies now live in `abilities.rs`, `actors.rs`, `catalog.rs`, `items.rs`, `pipeline.rs`, `validation.rs`, and `world.rs`. No production visibility or test support abstraction was added. Both content feature matrices, source verification, schema freshness, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass with the canonical demo hash unchanged. Gate 3 artifact ownership is next.
 
+The artifact-boundary gate moves `CompiledArtifact`, its summary projection, fixed container constants, MessagePack encode/decode, SHA-256 verification, bounded compiled-file reads, and byte helpers into the private 148-line `artifact.rs`. The existing functions and type remain root-re-exported, while `CompiledContentV1`, `ContentSummary`, `ContentError`, and validation retain their current owners until their later gates. `lib.rs` falls from 9,224 to 9,085 lines. Canonical round-trip bytes, checksum rejection, demo hash, schema output, both content test matrices, workspace checks, zero-warning Clippy, 33 replay tests, and all 454 fixtures remain unchanged. Gate 4 schema ownership is next.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
