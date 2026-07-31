@@ -4151,51 +4151,16 @@ impl Game {
                 )?;
             }
             (
-                AbilityEffectDefinition::BeamDamage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                },
+                AbilityEffectDefinition::BeamDamage { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
-                let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
-                let affected_positions = trace.traversed.clone();
-                let targets = self.beam_damage_targets(&affected_positions);
-                changed.extend(affected_positions.iter().copied());
-                let base_raw_damage = self
-                    .roll_damage(damage_dice, damage_sides)
-                    .saturating_add(i32::from(damage_bonus))
-                    .max(0);
-                events.push(DomainEvent::AbilityBeamDamage {
-                    ability_id: ability.id.clone(),
-                    resolution: AbilityBeamDamageResolutionDto {
-                        base_raw_damage,
-                        damage_type: DamageType::from(damage_type).into(),
-                        affected_positions,
-                        target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
-                    },
-                    trace: trace.clone(),
-                });
-                for entity_id in targets {
-                    let Some(index) = self
-                        .entities
-                        .iter()
-                        .position(|entity| entity.id == entity_id && entity.hp > 0)
-                    else {
-                        continue;
-                    };
-                    self.resolve_ability_damage_to_entity(
-                        index,
-                        &ability.id,
-                        DamageType::from(damage_type),
-                        base_raw_damage,
-                        trace.clone(),
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                }
+                self.resolve_player_beam_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
             (
                 AbilityEffectDefinition::BoltOrBeamDamage {
