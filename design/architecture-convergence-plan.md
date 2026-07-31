@@ -550,6 +550,27 @@ Implementation must use the following compatibility gates. One effect family is 
 
 Phase 13 gates 1-12 are complete, and gate 13 remains paused after fixed summons. All Phase 13B gates are complete and accepted. Monster category summons and the remaining monster effect families resume only in a later explicit phase; they are not part of the item-program consolidation.
 
+### Phase 14: monster ability execution and ability programs (active)
+
+- Purpose: separate an ability's identity and target contract from its configured function, and separate monster ability choice from execution of the selected function. Player, monster, and item sources may reuse the same concrete capabilities without sharing their transaction policy.
+- Monster ownership decision: `ActorDefinition.monsterCasting` remains an intrinsic monster property. Frequency, smart-casting mode, preferred distance, flee threshold, ordered ability candidates, and candidate weights stay in the actor source and runtime definition. No monster-profile content root or indirection is introduced.
+- Ability source boundary: source abilities retain stable identity, presentation, target contract, and tags but reference a flat typed ability program instead of embedding an effect. Player-only minimum level, resource/cost, failure, proficiency, and cooldown configuration moves to a source-only player ability binding. The compiler may lower these separated sources into the existing canonical runtime definition until the final compatibility gate.
+- Runtime ownership: monster AI owns candidate enumeration, viability, utility, frequency and weighted selection; `monster_abilities.rs` owns zero-mutation target planning and execution of an already-selected ability; existing capability, combat, status, inventory, progression, terrain, floor, summon, task, RNG, allocation, and event owners retain their established authority. The selected executor cannot inspect or alter candidate weight, frequency, preferred distance, flee policy, or AI memory policy.
+- Program rule: ability programs are source-only, strongly typed, flat, ordered, and lowered at compile time. They cannot contain scripts, runtime handler names, recursive program references, free-form parameter maps, loops, or policy bags. A dedicated ability-program source schema is preferred over widening item programs into a universal effect engine; both adapters reuse concrete capabilities underneath.
+- Compatibility: preserve ability IDs, monster actor definitions, candidate and target order, frequency/weight/utility RNG, cooldown timing, player costs/failure/proficiency, effect RNG, damage/death/status/summon order, events, replays, saves, protocol and state hashes. Source schema changes are expected; canonical compiled bytes and content hash remain fixed until an explicitly isolated final representation switch proves a versioned change is necessary.
+
+Phase 14 uses independently committed and pushed gates:
+
+1. **Boundary record and characterization.** Freeze player binding fields, monster candidate/selection policy, target planning, selected execution, RNG, cooldown, and event order. Move no production code.
+2. **Runtime selection/execution boundary.** Move monster candidate/utility/selection code to `monster_ai.rs` and all remaining selected target-plan execution to `monster_abilities.rs`. `Game` retains turn coordination and final commits; behavior and content remain unchanged.
+3. **Ability program contract.** Add a source-only ability program root, typed input/step validation, deterministic indexing, and an inline/reference compatibility bridge that lowers to the unchanged runtime `AbilityEffectDefinition`.
+4. **Leaf program migration.** Migrate healing/status, projectile damage/resource, area/beam/cone/breath, displacement/control/knowledge, summon/animate/genocide, and other exceptional leaves one family per commit. Reuse existing domain owners before adding any capability.
+5. **Ordered program migration.** Migrate sequence and random-choice definitions only after their leaves are stable, preserving flat order, branch RNG, target re-planning, relookup after death, trace aggregation, and no-op behavior.
+6. **Player ability binding contract.** Add source-only bindings for minimum level, resource/cost, failure, proficiency, and cooldown; migrate book and innate player abilities while monster-only abilities remain unbound. Lower through the compatibility compiler without changing player runtime behavior.
+7. **Legacy importer migration.** Emit ability programs and player bindings deterministically while leaving actor `monsterCasting` inline. Compile the fixed-source real import and preserve its established behavior/hash through lowering.
+8. **Legacy removal and consolidation.** Require program references and player bindings, delete inline ability-effect/player-field source paths, remove only genuinely superseded execution helpers, and decide separately whether the compiled runtime representation needs a versioned split.
+9. **Acceptance.** Run focused monster/player tests after every family, then the complete formatting, generators, source verification, workspace check/clippy/test, 33 replay, 454 fixture, frontend, Tauri release, and desktop E2E matrix.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
