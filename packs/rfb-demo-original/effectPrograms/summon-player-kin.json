@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.summon-player-kin",
+  "input": "self",
+  "steps": [
+    {
+      "type": "summon-category",
+      "selector": { "type": "player-kin" },
+      "maximumLevelSource": "player-level",
+      "countDice": 1,
+      "countSides": 1,
+      "groupChancePercent": 50,
+      "groupCountDice": 1,
+      "groupCountSides": 3,
+      "groupCountBonus": 1,
+      "radius": 2,
+      "durationTurns": 0
+    }
+  ]
+}
