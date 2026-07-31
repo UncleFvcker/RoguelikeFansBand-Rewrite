@@ -636,6 +636,8 @@ The boundary-characterization gate adds no production code. One default-feature 
 
 The first test-organization sub-batch moves the complete crate-root test module unchanged into `rfb-content/src/tests/mod.rs`. No test body, assertion, helper visibility, or production code changes; `lib.rs` now declares only the private test child module. The same 34 default-feature and 35 schema-feature tests pass, schema output remains current, and demo source verification retains the canonical hash. Domain test modules remain the second Gate 2 sub-batch.
 
+The domain test-organization sub-batch completes Gate 2. The 17-line `tests/mod.rs` retains only the shared original-pack path and private module declarations; unchanged test bodies now live in `abilities.rs`, `actors.rs`, `catalog.rs`, `items.rs`, `pipeline.rs`, `validation.rs`, and `world.rs`. No production visibility or test support abstraction was added. Both content feature matrices, source verification, schema freshness, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass with the canonical demo hash unchanged. Gate 3 artifact ownership is next.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

@@ -1,0 +1,147 @@
+use super::*;
+
+#[test]
+fn player_carry_capacity_is_positive_and_monsters_cannot_declare_one() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut invalid = artifact.content.clone();
+    let player = invalid
+        .actors
+        .iter_mut()
+        .find(|actor| actor.role == ActorRole::Player)
+        .expect("fixture should contain a player actor");
+    player.carry_capacity_tenths_pound = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidActorCarryCapacity(_))
+    ));
+
+    let mut invalid = artifact.content.clone();
+    let monster = invalid
+        .actors
+        .iter_mut()
+        .find(|actor| actor.role == ActorRole::Monster)
+        .expect("fixture should contain a monster actor");
+    monster.carry_capacity_tenths_pound = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidActorCarryCapacity(_))
+    ));
+}
+
+#[test]
+fn melee_routines_require_monsters_and_valid_blow_profiles() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut invalid = artifact.content.clone();
+    let hound = invalid
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-hound")
+        .expect("fixture should contain the echo hound");
+    hound.role = ActorRole::Player;
+    hound.experience_value = 0;
+    hound.carry_capacity_tenths_pound = 100;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidMeleeRoutine(_))
+    ));
+
+    let mut invalid = artifact.content;
+    let hound = invalid
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-hound")
+        .expect("fixture should contain the echo hound");
+    hound
+        .melee_routine
+        .as_mut()
+        .expect("hound should have a melee routine")
+        .blows[0]
+        .damage_dice = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidMeleeRoutine(_))
+    ));
+}
+
+#[test]
+fn monster_casting_requires_weighted_supported_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut invalid_frequency = artifact.content.clone();
+    invalid_frequency
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-cantor")
+        .expect("fixture should contain the echo cantor")
+        .monster_casting
+        .as_mut()
+        .expect("echo cantor should cast")
+        .frequency_percent = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_frequency),
+        Err(ContentError::InvalidMonsterCasting(_))
+    ));
+
+    let mut invalid_tactics = artifact.content.clone();
+    let casting = invalid_tactics
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-cantor")
+        .expect("fixture should contain the echo cantor")
+        .monster_casting
+        .as_mut()
+        .expect("echo cantor should cast");
+    casting.preferred_distance = Some(1);
+    casting.flee_hp_percent = 100;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_tactics),
+        Err(ContentError::InvalidMonsterCasting(_))
+    ));
+
+    let mut duplicate_ability = artifact.content.clone();
+    let casting = duplicate_ability
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-cantor")
+        .expect("fixture should contain the echo cantor")
+        .monster_casting
+        .as_mut()
+        .expect("echo cantor should cast");
+    casting.abilities.push(casting.abilities[0].clone());
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_ability),
+        Err(ContentError::InvalidMonsterCasting(_))
+    ));
+
+    let mut dangling_ability = artifact.content.clone();
+    dangling_ability
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-cantor")
+        .expect("fixture should contain the echo cantor")
+        .monster_casting
+        .as_mut()
+        .expect("echo cantor should cast")
+        .abilities[0]
+        .ability_id = "demo.ability.missing".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut dangling_ability),
+        Err(ContentError::DanglingReference { .. })
+    ));
+
+    let mut unsupported_ability = artifact.content;
+    unsupported_ability
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.echo-cantor")
+        .expect("fixture should contain the echo cantor")
+        .monster_casting
+        .as_mut()
+        .expect("echo cantor should cast")
+        .abilities[0]
+        .ability_id = "demo.ability.echo-step".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut unsupported_ability),
+        Err(ContentError::InvalidMonsterCasting(_))
+    ));
+}
