@@ -4056,19 +4056,8 @@ impl Game {
             ) => {
                 self.resolve_player_enchant_equipped_weapon_effect(&ability, events);
             }
-            (AbilityEffectDefinition::NoOp { reason }, _) => {
-                events.push(DomainEvent::AbilityEffectsResolved {
-                    ability_id: ability.id.clone(),
-                    resolution: AbilityEffectsResolutionDto {
-                        target_entity_id: None,
-                        target_kind_id: None,
-                        effects: vec![AbilityEffectResolutionDto::NoOp {
-                            effect_index: 0,
-                            reason,
-                        }],
-                    },
-                    trace: None,
-                });
+            (AbilityEffectDefinition::NoOp { .. }, _) => {
+                self.resolve_player_no_op_effect(&ability, events);
             }
             (
                 AbilityEffectDefinition::DrainLife { .. },

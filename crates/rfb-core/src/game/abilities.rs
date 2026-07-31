@@ -191,61 +191,82 @@ impl Game {
             resolution: resolution.clone(),
         });
 
-        if let AbilityEffectDefinition::RandomChoice {
+        if matches!(
+            &ability.effect,
+            AbilityEffectDefinition::RandomChoice { .. }
+        ) {
+            self.select_player_random_choice_branch(
+                &mut ability,
+                &target,
+                &mut target_plan,
+                events,
+            );
+        }
+
+        self.resolve_player_ability_effect(ability, target_plan, events, changed, removed_entities)
+    }
+
+    fn select_player_random_choice_branch(
+        &mut self,
+        ability: &mut AbilityDefinition,
+        target: &TargetSelection,
+        target_plan: &mut AbilityTargetPlan,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::RandomChoice {
             roll_sides,
             level_bonus_divisor,
             branches,
         } = ability.effect.clone()
-        {
-            let base_roll = u16::try_from(self.rng.bounded(u64::from(roll_sides)) + 1)
-                .expect("random ability roll must fit u16");
-            let level_bonus = self
-                .progress
-                .level
-                .checked_div(level_bonus_divisor)
-                .unwrap_or(0);
-            let roll = base_roll.saturating_add(level_bonus);
-            let (branch_index, branch) = branches
-                .iter()
-                .enumerate()
-                .find(|(_, branch)| roll <= branch.maximum_roll)
-                .expect("validated random ability branches must cover every roll");
-            events.push(DomainEvent::AbilityEffectsResolved {
-                ability_id: ability.id.clone(),
-                resolution: AbilityEffectsResolutionDto {
-                    target_entity_id: None,
-                    target_kind_id: None,
-                    effects: vec![AbilityEffectResolutionDto::RandomChoice {
-                        effect_index: 0,
-                        roll,
-                        branch_index: u16::try_from(branch_index)
-                            .expect("validated random branch index must fit u16"),
-                        maximum_roll: branch.maximum_roll,
-                    }],
-                },
-                trace: None,
-            });
-            ability.effect = (*branch.effect).clone();
-            match branch.target {
-                AbilityRandomTargetDefinition::CastTarget => {
-                    if !matches!(ability.effect, AbilityEffectDefinition::NoOp { .. }) {
-                        target_plan = self
-                            .ability_target_plan(&ability, &target)
-                            .expect("validated random branch must accept the cast target");
-                    }
-                }
-                AbilityRandomTargetDefinition::SelfTarget => {
-                    ability.target.modes = vec![AbilityTargetModeDefinition::SelfTarget];
-                    ability.target.range = 0;
-                    ability.target.requires_line_of_effect = false;
-                    target_plan = self
-                        .ability_target_plan(&ability, &TargetSelection::SelfTarget)
-                        .expect("validated random branch must accept a self target");
+        else {
+            unreachable!("random choice selector requires a random choice effect");
+        };
+        let base_roll = u16::try_from(self.rng.bounded(u64::from(roll_sides)) + 1)
+            .expect("random ability roll must fit u16");
+        let level_bonus = self
+            .progress
+            .level
+            .checked_div(level_bonus_divisor)
+            .unwrap_or(0);
+        let roll = base_roll.saturating_add(level_bonus);
+        let (branch_index, branch) = branches
+            .iter()
+            .enumerate()
+            .find(|(_, branch)| roll <= branch.maximum_roll)
+            .expect("validated random ability branches must cover every roll");
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::RandomChoice {
+                    effect_index: 0,
+                    roll,
+                    branch_index: u16::try_from(branch_index)
+                        .expect("validated random branch index must fit u16"),
+                    maximum_roll: branch.maximum_roll,
+                }],
+            },
+            trace: None,
+        });
+        ability.effect = (*branch.effect).clone();
+        match branch.target {
+            AbilityRandomTargetDefinition::CastTarget => {
+                if !matches!(ability.effect, AbilityEffectDefinition::NoOp { .. }) {
+                    *target_plan = self
+                        .ability_target_plan(ability, target)
+                        .expect("validated random branch must accept the cast target");
                 }
             }
+            AbilityRandomTargetDefinition::SelfTarget => {
+                ability.target.modes = vec![AbilityTargetModeDefinition::SelfTarget];
+                ability.target.range = 0;
+                ability.target.requires_line_of_effect = false;
+                *target_plan = self
+                    .ability_target_plan(ability, &TargetSelection::SelfTarget)
+                    .expect("validated random branch must accept a self target");
+            }
         }
-
-        self.resolve_player_ability_effect(ability, target_plan, events, changed, removed_entities)
     }
 }
 
@@ -1607,6 +1628,28 @@ impl Game {
                     item_kind_id,
                     affix_id: affix_id.clone(),
                     added,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    pub(super) fn resolve_player_no_op_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::NoOp { reason } = &ability.effect else {
+            unreachable!("no-op executor requires a no-op effect");
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::NoOp {
+                    effect_index: 0,
+                    reason: reason.clone(),
                 }],
             },
             trace: None,
