@@ -13,22 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "sequence",
-    "effects": [
-      {
-        "type": "apply-status",
-        "statusKindId": "rfb.status.haste",
-        "intensity": 1,
-        "durationTicks": 30,
-        "stacking": "extend"
-      },
-      {
-        "type": "remove-status",
-        "statusKindId": "rfb.status.slow"
-      }
-    ]
-  },
+  "abilityProgramId": "demo.ability-program.echo-quickening",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

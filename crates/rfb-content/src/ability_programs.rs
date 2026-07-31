@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use super::{
     ABILITY_PROGRAM_SCHEMA, AbilityCooldownDefinition, AbilityDefinition, AbilityEffectDefinition,
     AbilityGenocideScopeDefinition, AbilityLevelScalingDefinition, AbilityProficiencyDefinition,
-    AbilityTargetDefinition, AbilityTargetModeDefinition, ContentError, require_format_version,
-    require_schema, validate_definition_id,
+    AbilityRandomTargetDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
+    ContentError, require_format_version, require_schema, validate_definition_id,
 };
 
 pub type AbilityProgramStepDefinition = AbilityEffectDefinition;
@@ -80,17 +80,22 @@ pub(super) fn compile_ability_program_catalog(
         require_schema(&definition.schema, ABILITY_PROGRAM_SCHEMA, &definition.id)?;
         require_format_version(definition.format_version, &definition.id)?;
         validate_definition_id(&definition.id, "ability-program")?;
-        if !(1..=8).contains(&definition.steps.len())
-            || definition
-                .steps
-                .iter()
-                .any(|step| !ability_program_input_accepts_step(definition.input, step))
-            || (definition.steps.len() > 1
-                && definition
-                    .steps
-                    .iter()
-                    .any(|step| !ability_program_step_is_composable(definition.input, step)))
-        {
+        let valid_steps = match definition.steps.as_slice() {
+            [random_choice @ AbilityEffectDefinition::RandomChoice { .. }] => {
+                ability_program_top_level_random_choice_is_valid(definition.input, random_choice)
+            }
+            steps => {
+                (1..=8).contains(&steps.len())
+                    && steps
+                        .iter()
+                        .all(|step| ability_program_input_accepts_step(definition.input, step))
+                    && (steps.len() == 1
+                        || steps
+                            .iter()
+                            .all(|step| ability_program_step_is_composable(definition.input, step)))
+            }
+        };
+        if !valid_steps {
             return Err(ContentError::InvalidAbilityProgram(definition.id));
         }
 
@@ -120,6 +125,62 @@ pub(super) fn compile_ability_program_catalog(
         }
     }
     Ok(programs)
+}
+
+fn ability_program_top_level_random_choice_is_valid(
+    input: AbilityProgramInputDefinition,
+    effect: &AbilityEffectDefinition,
+) -> bool {
+    let AbilityEffectDefinition::RandomChoice {
+        roll_sides,
+        level_bonus_divisor,
+        branches,
+    } = effect
+    else {
+        return false;
+    };
+    if input != AbilityProgramInputDefinition::CastTarget {
+        return false;
+    }
+
+    let maximum_roll = u32::from(*roll_sides)
+        + if *level_bonus_divisor == 0 {
+            0
+        } else {
+            100 / u32::from(*level_bonus_divisor)
+        };
+    (2..=10_000).contains(roll_sides)
+        && (*level_bonus_divisor == 0 || *level_bonus_divisor <= 100)
+        && (2..=64).contains(&branches.len())
+        && branches.iter().all(|branch| match branch.target {
+            AbilityRandomTargetDefinition::SelfTarget => matches!(
+                branch.effect.as_ref(),
+                AbilityEffectDefinition::Heal { .. }
+                    | AbilityEffectDefinition::ApplyStatus { .. }
+                    | AbilityEffectDefinition::Summon { .. }
+                    | AbilityEffectDefinition::VisibleDamage { .. }
+                    | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                    | AbilityEffectDefinition::EnchantEquippedWeapon { .. }
+                    | AbilityEffectDefinition::NoOp { .. }
+            ),
+            AbilityRandomTargetDefinition::CastTarget => matches!(
+                branch.effect.as_ref(),
+                AbilityEffectDefinition::Damage { .. }
+                    | AbilityEffectDefinition::AreaDamage { .. }
+                    | AbilityEffectDefinition::BeamDamage { .. }
+                    | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                    | AbilityEffectDefinition::ApplyStatus { .. }
+                    | AbilityEffectDefinition::DrainLife { .. }
+                    | AbilityEffectDefinition::Genocide { .. }
+                    | AbilityEffectDefinition::NoOp { .. }
+            ),
+        })
+        && branches
+            .windows(2)
+            .all(|pair| pair[0].maximum_roll < pair[1].maximum_roll)
+        && branches
+            .last()
+            .is_some_and(|branch| u32::from(branch.maximum_roll) >= maximum_roll)
 }
 
 fn ability_program_input_accepts_step(
@@ -297,7 +358,9 @@ impl SourceAbilityDefinition {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ABILITY_SCHEMA, ActorDamageType, CONTENT_FORMAT_VERSION};
+    use crate::{
+        ABILITY_SCHEMA, AbilityRandomBranchDefinition, ActorDamageType, CONTENT_FORMAT_VERSION,
+    };
 
     fn ability_program(
         id: &str,
@@ -417,6 +480,78 @@ mod tests {
             )]),
             Err(ContentError::InvalidAbilityProgram(id))
                 if id == "demo.ability-program.invalid-composition"
+        ));
+
+        let random_choice = AbilityEffectDefinition::RandomChoice {
+            roll_sides: 2,
+            level_bonus_divisor: 0,
+            branches: vec![
+                AbilityRandomBranchDefinition {
+                    maximum_roll: 1,
+                    target: AbilityRandomTargetDefinition::SelfTarget,
+                    effect: Box::new(AbilityEffectDefinition::Heal { amount: 1 }),
+                },
+                AbilityRandomBranchDefinition {
+                    maximum_roll: 2,
+                    target: AbilityRandomTargetDefinition::CastTarget,
+                    effect: Box::new(AbilityEffectDefinition::Damage {
+                        damage_dice: 1,
+                        damage_sides: 2,
+                        damage_bonus: 0,
+                        damage_type: ActorDamageType::Physical,
+                    }),
+                },
+            ],
+        };
+        let random_programs = compile_ability_program_catalog(vec![ability_program(
+            "demo.ability-program.random",
+            AbilityProgramInputDefinition::CastTarget,
+            vec![random_choice.clone()],
+        )])
+        .expect("one top-level random choice should compile");
+        assert_eq!(
+            random_programs
+                .get("demo.ability-program.random")
+                .map(|program| &program.effect),
+            Some(&random_choice)
+        );
+
+        let mut nested_random_choice = random_choice.clone();
+        let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut nested_random_choice
+        else {
+            unreachable!("test effect should remain random choice");
+        };
+        *branches[0].effect = AbilityEffectDefinition::Sequence {
+            effects: vec![
+                AbilityEffectDefinition::Heal { amount: 1 },
+                AbilityEffectDefinition::Heal { amount: 1 },
+            ],
+        };
+        assert!(matches!(
+            compile_ability_program_catalog(vec![ability_program(
+                "demo.ability-program.nested-random",
+                AbilityProgramInputDefinition::CastTarget,
+                vec![nested_random_choice],
+            )]),
+            Err(ContentError::InvalidAbilityProgram(id))
+                if id == "demo.ability-program.nested-random"
+        ));
+        assert!(matches!(
+            compile_ability_program_catalog(vec![ability_program(
+                "demo.ability-program.mixed-random",
+                AbilityProgramInputDefinition::CastTarget,
+                vec![
+                    random_choice,
+                    AbilityEffectDefinition::Damage {
+                        damage_dice: 1,
+                        damage_sides: 2,
+                        damage_bonus: 0,
+                        damage_type: ActorDamageType::Physical,
+                    },
+                ],
+            )]),
+            Err(ContentError::InvalidAbilityProgram(id))
+                if id == "demo.ability-program.mixed-random"
         ));
     }
 

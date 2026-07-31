@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.echo-binding",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "damage",
+      "damageDice": 1,
+      "damageSides": 2,
+      "damageType": "cold"
+    },
+    {
+      "type": "apply-status",
+      "statusKindId": "rfb.status.slow",
+      "intensity": 1,
+      "durationTicks": 30,
+      "stacking": "keep-strongest",
+      "resistanceType": "cold"
+    }
+  ]
+}

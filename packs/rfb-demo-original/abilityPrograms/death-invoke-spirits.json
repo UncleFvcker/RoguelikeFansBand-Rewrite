@@ -1,0 +1,246 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.death-invoke-spirits",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "random-choice",
+      "rollSides": 100,
+      "levelBonusDivisor": 5,
+      "branches": [
+        {
+          "maximumRoll": 7,
+          "target": "self-target",
+          "effect": {
+            "type": "summon",
+            "actorKindId": "demo.actor.risen-thrall",
+            "count": 1,
+            "radius": 2,
+            "durationTurns": 0,
+            "hostile": true
+          }
+        },
+        {
+          "maximumRoll": 13,
+          "target": "self-target",
+          "effect": {
+            "type": "apply-status",
+            "statusKindId": "rfb.status.fear",
+            "intensity": 3,
+            "durationTicks": 50,
+            "stacking": "keep-strongest"
+          }
+        },
+        {
+          "maximumRoll": 25,
+          "target": "self-target",
+          "effect": {
+            "type": "apply-status",
+            "statusKindId": "rfb.status.confusion",
+            "intensity": 1,
+            "durationTicks": 4,
+            "durationDice": 1,
+            "durationSides": 4,
+            "stacking": "extend"
+          }
+        },
+        {
+          "maximumRoll": 30,
+          "effect": {
+            "type": "no-op",
+            "reason": "actor-polymorph-pending"
+          }
+        },
+        {
+          "maximumRoll": 35,
+          "effect": {
+            "type": "bolt-or-beam-damage",
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "beamChancePercent": 0
+          }
+        },
+        {
+          "maximumRoll": 40,
+          "effect": {
+            "type": "apply-status",
+            "statusKindId": "rfb.status.confusion",
+            "intensity": 1,
+            "durationTicks": 10,
+            "stacking": "keep-strongest"
+          }
+        },
+        {
+          "maximumRoll": 45,
+          "effect": {
+            "type": "area-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 24,
+            "damageType": "poison",
+            "radius": 3
+          }
+        },
+        {
+          "maximumRoll": 50,
+          "effect": {
+            "type": "no-op",
+            "reason": "line-light-pending"
+          }
+        },
+        {
+          "maximumRoll": 55,
+          "effect": {
+            "type": "bolt-or-beam-damage",
+            "damageDice": 4,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "beamChancePercent": 0
+          }
+        },
+        {
+          "maximumRoll": 60,
+          "effect": {
+            "type": "bolt-or-beam-damage",
+            "damageDice": 6,
+            "damageSides": 8,
+            "damageType": "cold",
+            "beamChancePercent": 0
+          }
+        },
+        {
+          "maximumRoll": 65,
+          "effect": {
+            "type": "bolt-or-beam-damage",
+            "damageDice": 7,
+            "damageSides": 8,
+            "damageType": "acid",
+            "beamChancePercent": 0
+          }
+        },
+        {
+          "maximumRoll": 70,
+          "effect": {
+            "type": "bolt-or-beam-damage",
+            "damageDice": 9,
+            "damageSides": 8,
+            "damageType": "fire",
+            "beamChancePercent": 0
+          }
+        },
+        {
+          "maximumRoll": 75,
+          "effect": {
+            "type": "drain-life",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 74,
+            "damageType": "nether",
+            "targetCategory": "living"
+          }
+        },
+        {
+          "maximumRoll": 80,
+          "effect": {
+            "type": "area-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 34,
+            "damageType": "electricity",
+            "radius": 2
+          }
+        },
+        {
+          "maximumRoll": 85,
+          "effect": {
+            "type": "area-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 49,
+            "damageType": "acid",
+            "radius": 2
+          }
+        },
+        {
+          "maximumRoll": 90,
+          "effect": {
+            "type": "area-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 79,
+            "damageType": "ice",
+            "radius": 3
+          }
+        },
+        {
+          "maximumRoll": 95,
+          "effect": {
+            "type": "area-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 89,
+            "damageType": "fire",
+            "radius": 3
+          }
+        },
+        {
+          "maximumRoll": 100,
+          "effect": {
+            "type": "drain-life",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 109,
+            "damageType": "nether",
+            "targetCategory": "living"
+          }
+        },
+        {
+          "maximumRoll": 103,
+          "target": "self-target",
+          "effect": {
+            "type": "no-op",
+            "reason": "earthquake-pending"
+          }
+        },
+        {
+          "maximumRoll": 105,
+          "target": "self-target",
+          "effect": {
+            "type": "no-op",
+            "reason": "destroy-area-pending"
+          }
+        },
+        {
+          "maximumRoll": 107,
+          "effect": {
+            "type": "genocide",
+            "scope": "glyph",
+            "power": 60
+          }
+        },
+        {
+          "maximumRoll": 109,
+          "target": "self-target",
+          "effect": {
+            "type": "visible-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 119
+          }
+        },
+        {
+          "maximumRoll": 120,
+          "target": "self-target",
+          "effect": {
+            "type": "visible-damage",
+            "damageDice": 1,
+            "damageSides": 1,
+            "damageBonus": 149
+          }
+        }
+      ]
+    }
+  ]
+}

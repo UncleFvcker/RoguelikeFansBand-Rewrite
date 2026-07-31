@@ -13,26 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "sequence",
-    "effects": [
-      {
-        "type": "damage",
-        "damageDice": 2,
-        "damageSides": 3,
-        "damageBonus": 1,
-        "damageType": "psi"
-      },
-      {
-        "type": "apply-status",
-        "statusKindId": "rfb.status.confusion",
-        "intensity": 1,
-        "durationTicks": 80,
-        "stacking": "extend",
-        "resistanceType": "psi"
-      }
-    ]
-  },
+  "abilityProgramId": "demo.ability-program.psi-lash",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

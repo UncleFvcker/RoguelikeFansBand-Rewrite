@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.death-berserk",
+  "input": "self",
+  "steps": [
+    {
+      "type": "apply-status",
+      "statusKindId": "rfb.status.berserk",
+      "intensity": 1,
+      "durationTicks": 25,
+      "durationDice": 1,
+      "durationSides": 25,
+      "stacking": "replace",
+      "grantedModifiers": {
+        "defense": -10,
+        "maxHp": 30
+      },
+      "grantedEquipmentBonuses": {
+        "meleeSkill": 12,
+        "meleeDamage": 3,
+        "rangedSkill": -12,
+        "throwingSkill": -20,
+        "deviceSkill": -20,
+        "savingThrowSkill": -30,
+        "stealthSkill": -7,
+        "searchSkill": -15,
+        "perceptionSkill": -15,
+        "diggingSkill": 30
+      },
+      "grantedStatusImmunities": [
+        "rfb.status.fear"
+      ]
+    },
+    {
+      "type": "heal",
+      "amount": 30
+    }
+  ]
+}

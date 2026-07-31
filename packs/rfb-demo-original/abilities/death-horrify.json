@@ -13,26 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "sequence",
-    "effects": [
-      {
-        "type": "apply-status",
-        "statusKindId": "rfb.status.fear",
-        "intensity": 1,
-        "durationTicks": 200,
-        "stacking": "extend",
-        "power": 2
-      },
-      {
-        "type": "apply-status",
-        "statusKindId": "rfb.status.stun",
-        "intensity": 1,
-        "durationTicks": 5,
-        "stacking": "extend"
-      }
-    ]
-  },
+  "abilityProgramId": "demo.ability-program.death-horrify",
   "levelScaling": [
     {
       "effectIndex": 0,
