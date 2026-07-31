@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "random-teleport",
-      "maximumDistance": 10
-    }
+    "effectProgramId": "demo.effect.random-teleport-short"
   },
   "tags": ["consumable", "scroll", "teleport"]
 }

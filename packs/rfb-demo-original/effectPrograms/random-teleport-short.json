@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.random-teleport-short",
+  "input": "self",
+  "steps": [
+    { "type": "random-teleport", "maximumDistance": 10 }
+  ]
+}
