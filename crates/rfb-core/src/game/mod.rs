@@ -126,7 +126,9 @@ use floor::{
     FloorTransitionTarget, RecallUseAction, dungeon_instance_id, dungeon_instance_storage_key,
     floor_dungeon_id, parse_dungeon_instance_ordinal,
 };
-use inventory::{ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome};
+use inventory::{
+    ItemIdentificationRequest, ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome,
+};
 #[cfg(test)]
 use item_use::ItemUsePlan;
 use progression::{

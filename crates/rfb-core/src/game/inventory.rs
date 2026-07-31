@@ -24,6 +24,25 @@ pub(super) struct ItemPropertyKnowledgeState {
     pub(super) known_affix_ids: BTreeSet<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct ItemIdentificationRequest {
+    full: bool,
+}
+
+impl ItemIdentificationRequest {
+    pub(super) const fn new(full: bool) -> Self {
+        Self { full }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct ItemIdentificationOutcome {
+    pub(super) item_id: String,
+    pub(super) item_kind_id: String,
+    pub(super) full: bool,
+    pub(super) changed: bool,
+}
+
 pub(super) enum PickUpOutcome {
     Picked {
         kind_id: String,
@@ -290,6 +309,49 @@ impl Game {
             .or_default()
             .appraised = true;
         Some((kind_id, quality))
+    }
+
+    pub(super) fn identify_item_instance(
+        &mut self,
+        item_id: &str,
+        request: ItemIdentificationRequest,
+    ) -> ItemIdentificationOutcome {
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned identify target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let affix_ids = item
+            .affix_ids
+            .iter()
+            .cloned()
+            .chain(
+                item.rolled_affixes
+                    .iter()
+                    .map(|rolled| rolled.affix_id.clone()),
+            )
+            .collect::<BTreeSet<_>>();
+        let awareness_before = self.item_knowledge_dto(&item_kind_id);
+        let property_before = self.item_property_knowledge.get(item_id).cloned();
+        self.mark_item_aware(&item_kind_id);
+        let knowledge = self
+            .item_property_knowledge
+            .entry(item_id.to_owned())
+            .or_default();
+        knowledge.appraised = true;
+        if request.full {
+            knowledge.identified = true;
+            knowledge.known_affix_ids.extend(affix_ids);
+        }
+        let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
+            || property_before.as_ref() != self.item_property_knowledge.get(item_id);
+        ItemIdentificationOutcome {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            full: request.full,
+            changed,
+        }
     }
 
     pub(super) fn drop_inventory_quantity(

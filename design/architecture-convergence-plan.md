@@ -475,6 +475,8 @@ The attribute and progression capability sub-batch keeps domain ownership in `ga
 
 The matching attribute/progression source migration maps ten leaf items to semantic programs for strength drain/restoration/increase, all-attribute augmentation/restoration, life-level and complete vitality restoration, restorative feast, life restoration, and spell-learning capacity. Compiler lowering preserves the original leaf variants and parameters. Sustain, attribute RNG, derived-stat refresh, progression events, item awareness, and the fixed internal ordering of compound restorative leaves remain runtime adapter concerns.
 
+The knowledge/inventory gate begins with identification. The inventory owner now exposes a source-neutral full-or-appraise request and an outcome containing only the affected instance, kind, mode, and whether knowledge changed. Item and player-ability adapters share that mutation while retaining their own targeting, RNG, source awareness, and event projection; the owner no longer returns an item-use protocol DTO.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

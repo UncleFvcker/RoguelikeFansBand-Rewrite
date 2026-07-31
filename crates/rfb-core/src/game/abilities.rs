@@ -1764,7 +1764,8 @@ impl Game {
         let roll = u16::try_from(self.rng.bounded(u64::from(full_identify_roll_sides)) + 1)
             .expect("validated identify roll must fit u16");
         let full = roll <= full_identify_power;
-        let identification = self.identify_item_instance(item_id, full);
+        let identification =
+            self.identify_item_instance(item_id, ItemIdentificationRequest::new(full));
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
