@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "identify-item",
-      "full": false
-    }
+    "effectProgramId": "demo.effect.appraise-item"
   },
   "tags": ["consumable", "knowledge", "scroll"]
 }

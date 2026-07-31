@@ -477,6 +477,8 @@ The matching attribute/progression source migration maps ten leaf items to seman
 
 The knowledge/inventory gate begins with identification. The inventory owner now exposes a source-neutral full-or-appraise request and an outcome containing only the affected instance, kind, mode, and whether knowledge changed. Item and player-ability adapters share that mutation while retaining their own targeting, RNG, source awareness, and event projection; the owner no longer returns an item-use protocol DTO.
 
+The identification source migration maps the appraisal and revelation scrolls to item-input programs. Their `full` modes lower to the unchanged identify variants, while target validation, source consumption, source awareness, property knowledge, and item/ability event projection remain runtime concerns.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
