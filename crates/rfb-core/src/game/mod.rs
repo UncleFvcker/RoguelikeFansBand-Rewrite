@@ -5404,65 +5404,6 @@ impl Game {
         Ok(())
     }
 
-    fn resolve_item_aggravation(
-        &mut self,
-        source_kind_id: &str,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-    ) {
-        let origin = self.player.position;
-        let sight_radius =
-            u32::try_from(VISIBILITY_RADIUS).expect("positive visibility radius must fit u32");
-        for index in 0..self.entities.len() {
-            if self.entities[index].hp <= 0 {
-                continue;
-            }
-            let position = self.entities[index].position;
-            let distance = rfb_distance(origin, position);
-            let nearby = distance < sight_radius.saturating_mul(2);
-            let hostile_in_los = distance <= sight_radius
-                && !self.actor_is_player_aligned(&self.entities[index])
-                && has_line_of_sight(self, origin, position);
-            if !nearby && !hostile_in_los {
-                continue;
-            }
-            if nearby {
-                self.entities[index].alerted = true;
-                self.entities[index]
-                    .statuses
-                    .retain(|status| status.kind_id != STATUS_SLEEP);
-            }
-            if hostile_in_los {
-                apply_status(
-                    &mut self.entities[index].statuses,
-                    StatusApplication {
-                        status: StatusInstance {
-                            kind_id: STATUS_HASTE.to_owned(),
-                            intensity: 1,
-                            remaining_ticks: 100,
-                            source_id: Some(source_kind_id.to_owned()),
-                            granted_resistances: BTreeMap::new(),
-                            granted_brands: BTreeSet::new(),
-                            granted_modifiers: StatModifiersDto::default(),
-                            granted_equipment_bonuses: EquipmentBonusesDto::default(),
-                            granted_status_immunities: BTreeSet::new(),
-                            granted_race_id: None,
-                            grants_wall_passage: false,
-                            incoming_damage_percent: 100,
-                        },
-                        stacking: StatusStacking::Extend,
-                    },
-                );
-            }
-            changed.insert(position);
-        }
-        self.mark_item_aware(source_kind_id);
-        events.push(DomainEvent::ItemAggravated {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-        });
-    }
-
     fn resolve_item_mass_genocide(
         &mut self,
         source_kind_id: &str,
