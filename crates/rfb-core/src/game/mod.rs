@@ -4272,79 +4272,8 @@ impl Game {
                     removed_entities,
                 )?;
             }
-            (
-                AbilityEffectDefinition::VisibleApplyStatus {
-                    status_kind_id,
-                    intensity,
-                    duration_ticks,
-                    stacking,
-                    target_category,
-                },
-                AbilityTargetPlan::SelfTarget,
-            ) => {
-                let target_ids = self
-                    .entities
-                    .iter()
-                    .filter(|entity| {
-                        entity.hp > 0
-                            && self.is_visible(entity.position)
-                            && target_category.as_ref().is_none_or(|category| {
-                                self.content
-                                    .actor(&entity.kind_id)
-                                    .is_some_and(|definition| {
-                                        actor_matches_category(definition, category)
-                                    })
-                            })
-                    })
-                    .map(|entity| entity.id.clone())
-                    .collect::<Vec<_>>();
-                let empty_resistances = BTreeMap::new();
-                let empty_brands = BTreeSet::new();
-                let empty_immunities = BTreeSet::new();
-                for entity_id in target_ids {
-                    let Some(index) = self
-                        .entities
-                        .iter()
-                        .position(|entity| entity.id == entity_id && entity.hp > 0)
-                    else {
-                        continue;
-                    };
-                    let target_kind_id = self.entities[index].kind_id.clone();
-                    let resolution = apply_ability_status_effect(
-                        &mut self.entities[index],
-                        &ability.id,
-                        0,
-                        &status_kind_id,
-                        intensity,
-                        duration_ticks,
-                        0,
-                        0,
-                        stacking,
-                        None,
-                        None,
-                        &empty_resistances,
-                        &empty_brands,
-                        &StatModifiers::default(),
-                        &EquipmentBonuses::default(),
-                        &empty_immunities,
-                        None,
-                        false,
-                        100,
-                        None,
-                        None,
-                        &mut self.rng,
-                    );
-                    changed.insert(self.entities[index].position);
-                    events.push(DomainEvent::AbilityEffectsResolved {
-                        ability_id: ability.id.clone(),
-                        resolution: AbilityEffectsResolutionDto {
-                            target_entity_id: Some(entity_id),
-                            target_kind_id: Some(target_kind_id),
-                            effects: vec![resolution],
-                        },
-                        trace: None,
-                    });
-                }
+            (AbilityEffectDefinition::VisibleApplyStatus { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_visible_status_effect(&ability, events, changed);
             }
             (
                 AbilityEffectDefinition::EnchantEquippedWeapon { affix_id },
