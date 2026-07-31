@@ -562,6 +562,83 @@ impl Game {
         }
         Ok(())
     }
+
+    pub(super) fn resolve_player_visible_damage_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::VisibleDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+            target_category,
+        } = &ability.effect
+        else {
+            unreachable!("visible damage executor requires a visible damage effect");
+        };
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self.is_visible(entity.position)
+                    && target_category.as_ref().is_none_or(|category| {
+                        self.content
+                            .actor(&entity.kind_id)
+                            .is_some_and(|definition| actor_matches_category(definition, category))
+                    })
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        let affected_positions = target_ids
+            .iter()
+            .filter_map(|id| self.entities.iter().find(|entity| &entity.id == id))
+            .map(|entity| entity.position)
+            .collect::<Vec<_>>();
+        let base_raw_damage = self
+            .roll_damage(*damage_dice, *damage_sides)
+            .saturating_add(i32::from(*damage_bonus))
+            .max(0);
+        events.push(DomainEvent::AbilityVisibleDamage {
+            ability_id: ability.id.clone(),
+            resolution: AbilityVisibleDamageResolutionDto {
+                base_raw_damage,
+                damage_type: DamageType::from(*damage_type).into(),
+                affected_positions,
+                target_count: u16::try_from(target_ids.len()).unwrap_or(u16::MAX),
+            },
+        });
+        let trace = ProjectileTrace {
+            origin: self.player.position,
+            impact: self.player.position,
+            landing: self.player.position,
+            traversed: Vec::new(),
+        };
+        for entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            self.resolve_ability_damage_to_entity(
+                index,
+                &ability.id,
+                DamageType::from(*damage_type),
+                base_raw_damage,
+                trace.clone(),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
 }
 
 impl Game {
