@@ -4186,41 +4186,6 @@ impl Game {
         candidates.into_iter().map(|entry| entry.3).collect()
     }
 
-    fn random_teleport_candidates(&self, maximum_distance: u16) -> Vec<Position> {
-        let origin = self.player.position;
-        let occupied = self
-            .entities
-            .iter()
-            .filter(|entity| entity.hp > 0)
-            .map(|entity| entity.position)
-            .collect::<BTreeSet<_>>();
-        let mut candidates = Vec::new();
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let position = Position {
-                    x: i32::from(x),
-                    y: i32::from(y),
-                };
-                let distance = chebyshev_distance(origin, position);
-                if distance > 0
-                    && distance <= u32::from(maximum_distance)
-                    && self.is_walkable(position)
-                    && !occupied.contains(&position)
-                {
-                    candidates.push((
-                        std::cmp::Reverse(distance),
-                        position.y,
-                        position.x,
-                        position,
-                    ));
-                }
-            }
-        }
-        candidates.sort_unstable();
-        candidates.truncate(candidates.len().div_ceil(2));
-        candidates.into_iter().map(|entry| entry.3).collect()
-    }
-
     fn detect_terrain_positions(
         &mut self,
         category: &str,
@@ -5256,20 +5221,7 @@ impl Game {
                 ItemUseEffectDefinition::RandomTeleport { .. },
                 ItemUsePlan::RandomTeleport { candidates },
             ) => {
-                let candidate_index = usize::try_from(self.rng.bounded(candidates.len() as u64))
-                    .expect("bounded teleport candidate index must fit usize");
-                let destination = candidates[candidate_index];
-                let origin = self.player.position;
-                self.mark_item_aware(&kind_id);
-                events.push(DomainEvent::ItemTeleported {
-                    source_kind_id: kind_id,
-                    profile_id,
-                    resolution: AbilityTeleportResolutionDto {
-                        from: origin,
-                        to: destination,
-                    },
-                });
-                events.extend(self.relocate_player(destination, changed));
+                self.resolve_item_random_teleport(kind_id, profile_id, candidates, events, changed);
             }
             (
                 ItemUseEffectDefinition::TeleportLevel,

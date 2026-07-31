@@ -48,6 +48,65 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    fn random_teleport_candidates(&self, maximum_distance: u16) -> Vec<Position> {
+        let origin = self.player.position;
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .collect::<BTreeSet<_>>();
+        let mut candidates = Vec::new();
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                let distance = chebyshev_distance(origin, position);
+                if distance > 0
+                    && distance <= u32::from(maximum_distance)
+                    && self.is_walkable(position)
+                    && !occupied.contains(&position)
+                {
+                    candidates.push((
+                        std::cmp::Reverse(distance),
+                        position.y,
+                        position.x,
+                        position,
+                    ));
+                }
+            }
+        }
+        candidates.sort_unstable();
+        candidates.truncate(candidates.len().div_ceil(2));
+        candidates.into_iter().map(|entry| entry.3).collect()
+    }
+
+    pub(super) fn resolve_item_random_teleport(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        candidates: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let candidate_index = usize::try_from(self.rng.bounded(candidates.len() as u64))
+            .expect("bounded teleport candidate index must fit usize");
+        let destination = candidates[candidate_index];
+        let origin = self.player.position;
+        self.mark_item_aware(&source_kind_id);
+        events.push(DomainEvent::ItemTeleported {
+            source_kind_id,
+            profile_id,
+            resolution: AbilityTeleportResolutionDto {
+                from: origin,
+                to: destination,
+            },
+        });
+        events.extend(self.relocate_player(destination, changed));
+    }
+
     pub(super) fn item_category_summon_plan(
         &self,
         effect: &ItemUseEffectDefinition,
