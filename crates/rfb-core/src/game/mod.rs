@@ -4026,32 +4026,12 @@ impl Game {
                 self.resolve_player_detection_effect(&ability, events, changed);
             }
             (
-                AbilityEffectDefinition::TransformTerrain {
-                    source_terrain_ids,
-                    target_terrain_id,
-                    radius,
-                },
+                AbilityEffectDefinition::TransformTerrain { .. },
                 AbilityTargetPlan::TerrainTransform { center, positions },
             ) => {
-                for position in &positions {
-                    let index = self
-                        .index(*position)
-                        .expect("planned terrain transformation must remain in bounds");
-                    debug_assert!(source_terrain_ids.contains(&self.terrain[index]));
-                    self.terrain[index].clone_from(&target_terrain_id);
-                    self.revealed_terrain.remove(position);
-                    changed.insert(*position);
-                }
-                events.push(DomainEvent::AbilityTerrainTransformed {
-                    ability_id: ability.id,
-                    resolution: AbilityTerrainTransformResolutionDto {
-                        center,
-                        radius,
-                        source_terrain_ids,
-                        target_terrain_id,
-                        transformed_positions: positions,
-                    },
-                });
+                self.resolve_player_terrain_transform_effect(
+                    &ability, center, positions, events, changed,
+                );
             }
             (effect, target_plan)
                 if matches!(

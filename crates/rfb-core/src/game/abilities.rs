@@ -1121,6 +1121,43 @@ impl Game {
             },
         });
     }
+
+    pub(super) fn resolve_player_terrain_transform_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        center: Position,
+        positions: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::TransformTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+            radius,
+        } = &ability.effect
+        else {
+            unreachable!("terrain executor requires a terrain transform effect");
+        };
+        for position in &positions {
+            let index = self
+                .index(*position)
+                .expect("planned terrain transformation must remain in bounds");
+            debug_assert!(source_terrain_ids.contains(&self.terrain[index]));
+            self.terrain[index].clone_from(target_terrain_id);
+            self.revealed_terrain.remove(position);
+            changed.insert(*position);
+        }
+        events.push(DomainEvent::AbilityTerrainTransformed {
+            ability_id: ability.id.clone(),
+            resolution: AbilityTerrainTransformResolutionDto {
+                center,
+                radius: *radius,
+                source_terrain_ids: source_terrain_ids.clone(),
+                target_terrain_id: target_terrain_id.clone(),
+                transformed_positions: positions,
+            },
+        });
+    }
 }
 
 impl Game {
