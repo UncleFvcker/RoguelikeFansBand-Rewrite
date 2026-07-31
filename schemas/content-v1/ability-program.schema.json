@@ -1,27 +1,5 @@
 {
   "$defs": {
-    "AbilityCooldownDefinition": {
-      "additionalProperties": false,
-      "properties": {
-        "groupId": {
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "turns": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "turns"
-      ],
-      "type": "object"
-    },
     "AbilityDetectSubjectDefinition": {
       "enum": [
         "terrain",
@@ -1319,131 +1297,13 @@
       ],
       "type": "string"
     },
-    "AbilityLevelScalingCurveDefinition": {
+    "AbilityProgramInputDefinition": {
       "enum": [
-        "linear",
-        "prorated"
+        "self",
+        "cast-target",
+        "item"
       ],
       "type": "string"
-    },
-    "AbilityLevelScalingDefinition": {
-      "additionalProperties": false,
-      "properties": {
-        "cubicWeight": {
-          "default": 0,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "curve": {
-          "$ref": "#/$defs/AbilityLevelScalingCurveDefinition",
-          "default": "linear"
-        },
-        "divisor": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "effectIndex": {
-          "format": "uint8",
-          "maximum": 255,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "field": {
-          "$ref": "#/$defs/AbilityLevelScalingField"
-        },
-        "levelOffset": {
-          "default": 0,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "maximum": {
-          "default": null,
-          "format": "uint64",
-          "minimum": 0,
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "multiplier": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "quadraticWeight": {
-          "default": 0,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "effectIndex",
-        "field",
-        "multiplier",
-        "divisor"
-      ],
-      "type": "object"
-    },
-    "AbilityLevelScalingField": {
-      "enum": [
-        "damage-dice",
-        "damage-sides",
-        "damage-bonus",
-        "death-ray-power",
-        "identify-power",
-        "radius",
-        "beam-chance-percent",
-        "status-intensity",
-        "status-duration-ticks",
-        "status-duration-sides",
-        "status-power",
-        "status-melee-damage",
-        "control-power",
-        "genocide-power",
-        "summon-maximum-level"
-      ],
-      "type": "string"
-    },
-    "AbilityProficiencyDefinition": {
-      "additionalProperties": false,
-      "properties": {
-        "cap": {
-          "default": 1600,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "failureGain": {
-          "default": 0,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "initial": {
-          "default": 0,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "successGain": {
-          "default": 128,
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "type": "object"
     },
     "AbilityRandomBranchDefinition": {
       "additionalProperties": false,
@@ -1480,42 +1340,6 @@
         "replace",
         "extend",
         "keep-strongest"
-      ],
-      "type": "string"
-    },
-    "AbilityTargetDefinition": {
-      "additionalProperties": false,
-      "properties": {
-        "modes": {
-          "items": {
-            "$ref": "#/$defs/AbilityTargetModeDefinition"
-          },
-          "type": "array"
-        },
-        "range": {
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0,
-          "type": "integer"
-        },
-        "requiresLineOfEffect": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "modes",
-        "range",
-        "requiresLineOfEffect"
-      ],
-      "type": "object"
-    },
-    "AbilityTargetModeDefinition": {
-      "enum": [
-        "direction",
-        "position",
-        "entity",
-        "item",
-        "self"
       ],
       "type": "string"
     },
@@ -1706,48 +1530,12 @@
       "type": "string"
     }
   },
-  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
     "$schema": {
       "type": "string"
-    },
-    "abilityProgramId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "baseFailurePercent": {
-      "format": "uint8",
-      "maximum": 255,
-      "minimum": 0,
-      "type": "integer"
-    },
-    "cooldown": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/AbilityCooldownDefinition"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "descriptionKey": {
-      "type": "string"
-    },
-    "effect": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/AbilityEffectDefinition"
-        },
-        {
-          "type": "null"
-        }
-      ]
     },
     "formatVersion": {
       "format": "uint16",
@@ -1758,61 +1546,23 @@
     "id": {
       "type": "string"
     },
-    "levelScaling": {
+    "input": {
+      "$ref": "#/$defs/AbilityProgramInputDefinition"
+    },
+    "steps": {
       "items": {
-        "$ref": "#/$defs/AbilityLevelScalingDefinition"
+        "$ref": "#/$defs/AbilityEffectDefinition"
       },
       "type": "array"
-    },
-    "minimumLevel": {
-      "format": "uint16",
-      "maximum": 65535,
-      "minimum": 0,
-      "type": "integer"
-    },
-    "nameKey": {
-      "type": "string"
-    },
-    "proficiency": {
-      "$ref": "#/$defs/AbilityProficiencyDefinition",
-      "default": {
-        "cap": 1600,
-        "failureGain": 0,
-        "initial": 0,
-        "successGain": 128
-      }
-    },
-    "resourceCost": {
-      "format": "uint32",
-      "minimum": 0,
-      "type": "integer"
-    },
-    "resourceId": {
-      "type": "string"
-    },
-    "tags": {
-      "items": {
-        "type": "string"
-      },
-      "type": "array"
-    },
-    "target": {
-      "$ref": "#/$defs/AbilityTargetDefinition"
     }
   },
   "required": [
     "$schema",
     "formatVersion",
     "id",
-    "nameKey",
-    "descriptionKey",
-    "minimumLevel",
-    "resourceId",
-    "resourceCost",
-    "baseFailurePercent",
-    "target",
-    "tags"
+    "input",
+    "steps"
   ],
-  "title": "AbilityDefinition",
+  "title": "AbilityProgramDefinition",
   "type": "object"
 }
