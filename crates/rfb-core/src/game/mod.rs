@@ -4030,35 +4030,8 @@ impl Game {
             (AbilityEffectDefinition::Heal { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_healing_effect(&ability, events);
             }
-            (
-                AbilityEffectDefinition::IdentifyItem {
-                    full_identify_power,
-                    full_identify_roll_sides,
-                },
-                AbilityTargetPlan::Item { item_id },
-            ) => {
-                let roll = u16::try_from(self.rng.bounded(u64::from(full_identify_roll_sides)) + 1)
-                    .expect("validated identify roll must fit u16");
-                let full = roll <= full_identify_power;
-                let identification = self.identify_item_instance(&item_id, full);
-                events.push(DomainEvent::AbilityEffectsResolved {
-                    ability_id: ability.id,
-                    resolution: AbilityEffectsResolutionDto {
-                        target_entity_id: None,
-                        target_kind_id: None,
-                        effects: vec![AbilityEffectResolutionDto::IdentifyItem {
-                            effect_index: 0,
-                            item_id: identification.item_id,
-                            item_kind_id: identification.item_kind_id,
-                            full_identify_power,
-                            full_identify_roll_sides,
-                            roll,
-                            full,
-                            changed: identification.changed,
-                        }],
-                    },
-                    trace: None,
-                });
+            (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
+                self.resolve_player_identify_item_effect(&ability, &item_id, events);
             }
             (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_restore_vitality_effect(&ability, events);

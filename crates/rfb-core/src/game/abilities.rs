@@ -1033,6 +1033,43 @@ impl Game {
         });
     }
 
+    pub(super) fn resolve_player_identify_item_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::IdentifyItem {
+            full_identify_power,
+            full_identify_roll_sides,
+        } = ability.effect
+        else {
+            unreachable!("item identification executor requires an identify item effect");
+        };
+        let roll = u16::try_from(self.rng.bounded(u64::from(full_identify_roll_sides)) + 1)
+            .expect("validated identify roll must fit u16");
+        let full = roll <= full_identify_power;
+        let identification = self.identify_item_instance(item_id, full);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::IdentifyItem {
+                    effect_index: 0,
+                    item_id: identification.item_id,
+                    item_kind_id: identification.item_kind_id,
+                    full_identify_power,
+                    full_identify_roll_sides,
+                    roll,
+                    full,
+                    changed: identification.changed,
+                }],
+            },
+            trace: None,
+        });
+    }
+
     pub(super) fn resolve_player_restore_vitality_effect(
         &mut self,
         ability: &AbilityDefinition,
