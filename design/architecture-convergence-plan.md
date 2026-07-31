@@ -505,6 +505,8 @@ The banishment source migration maps the banishment scroll to a self-input progr
 
 The detection source migration maps map, item, through-wall trap, and device trap detection to separate self-input programs. Subject, category, radius, persistence, and wall policy lower unchanged; perception queries, revealed knowledge, changed cells, device charges, consumption, awareness, and source-specific events remain with their existing owners.
 
+The terrain source migration maps stone/verdant ring creation and adjacent trap/door destruction to self-input programs. Source/target terrain IDs lower unchanged; candidate preflight, occupancy and border filters, terrain mutation, changed-cell ordering, consumption, awareness, and events remain with the Phase 10 terrain owner and item adapter.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

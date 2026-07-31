@@ -9,15 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "create-adjacent-terrain",
-      "sourceTerrainIds": [
-        "demo.terrain.floor",
-        "demo.terrain.resonance-cavern",
-        "demo.terrain.resonant-floor"
-      ],
-      "targetTerrainId": "demo.terrain.wall"
-    }
+    "effectProgramId": "demo.effect.create-stone-ring"
   },
   "tags": ["consumable", "scroll", "terrain"]
 }

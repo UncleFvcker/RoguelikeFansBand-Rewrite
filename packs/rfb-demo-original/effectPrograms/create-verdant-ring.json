@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.create-verdant-ring",
+  "input": "self",
+  "steps": [
+    {
+      "type": "create-adjacent-terrain",
+      "sourceTerrainIds": [
+        "demo.terrain.floor",
+        "demo.terrain.resonance-cavern",
+        "demo.terrain.resonant-floor"
+      ],
+      "targetTerrainId": "demo.terrain.echo-tree"
+    }
+  ]
+}
