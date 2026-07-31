@@ -518,6 +518,183 @@ impl Game {
         }
     }
 
+    pub(super) fn resolve_item_vitality_restoration_effect(
+        &mut self,
+        source_kind_id: &str,
+        effect: &ItemUseEffectDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        match effect {
+            ItemUseEffectDefinition::RestoreLifeLevels { life_force_amount } => {
+                self.resolve_item_restore_life_levels(source_kind_id, *life_force_amount, events)
+            }
+            ItemUseEffectDefinition::RestoreAllAttributes => {
+                let noticed = self.restore_all_player_attributes();
+                if noticed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                events.push(DomainEvent::ItemRestorationResolved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    noticed,
+                });
+                noticed
+            }
+            ItemUseEffectDefinition::RestoreAllVitality { life_force_amount } => {
+                let attributes_restored = self.restore_all_player_attributes();
+                let vitality_restored =
+                    self.restore_player_experience_and_life_force(*life_force_amount, events);
+                let noticed = attributes_restored || vitality_restored;
+                if noticed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                events.push(DomainEvent::ItemRestorationResolved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    noticed,
+                });
+                noticed
+            }
+            ItemUseEffectDefinition::ApplyRestorativeFeast {
+                healing_dice,
+                healing_sides,
+            } => {
+                if let Some(index) = self
+                    .player
+                    .statuses
+                    .iter()
+                    .position(|status| status.kind_id == STATUS_POISON)
+                {
+                    let before = self.player.statuses[index].remaining_ticks;
+                    let reduction = (before / 5).max(100);
+                    let after = before.saturating_sub(reduction);
+                    if after == 0 {
+                        self.player.statuses.remove(index);
+                    } else {
+                        self.player.statuses[index].remaining_ticks = after;
+                    }
+                }
+                let healing = self.roll_damage(*healing_dice, *healing_sides);
+                let max_hp = self.effective_player_max_hp();
+                let player = &mut self.player;
+                apply_effect(
+                    &mut EffectTarget {
+                        hp: &mut player.hp,
+                        max_hp,
+                        resistances: &player.resistances,
+                        statuses: &mut player.statuses,
+                    },
+                    EffectSpec::Heal { amount: healing },
+                );
+                self.restore_all_player_attributes();
+                self.restore_player_experience_and_life_force(0, events);
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemRestorationResolved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    noticed: true,
+                });
+                true
+            }
+            ItemUseEffectDefinition::ApplyLifeRestoration {
+                healing_amount,
+                life_force_amount,
+            } => {
+                self.restore_player_experience_and_life_force(*life_force_amount, events);
+                self.player.statuses.retain(|status| {
+                    !matches!(
+                        status.kind_id.as_str(),
+                        STATUS_POISON
+                            | STATUS_BLINDNESS
+                            | STATUS_CONFUSION
+                            | STATUS_STUN
+                            | STATUS_BLEEDING
+                            | STATUS_SLOW
+                            | "rfb.status.berserk"
+                    )
+                });
+                self.restore_all_player_attributes();
+                let amount = i32::try_from(*healing_amount)
+                    .expect("validated life restoration amount must fit i32");
+                let max_hp = self.effective_player_max_hp();
+                let player = &mut self.player;
+                apply_effect(
+                    &mut EffectTarget {
+                        hp: &mut player.hp,
+                        max_hp,
+                        resistances: &player.resistances,
+                        statuses: &mut player.statuses,
+                    },
+                    EffectSpec::Heal { amount },
+                );
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemRestorationResolved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    noticed: true,
+                });
+                true
+            }
+            _ => unreachable!("vitality restoration executor requires a restoration effect"),
+        }
+    }
+
+    fn resolve_item_restore_life_levels(
+        &mut self,
+        source_kind_id: &str,
+        life_force_amount: u16,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let noticed = self.restore_player_experience_and_life_force(life_force_amount, events);
+        if noticed {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemRestoreLifeLevelsResolved {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            noticed,
+        });
+        noticed
+    }
+
+    fn restore_all_player_attributes(&mut self) -> bool {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let mut restored = false;
+        for attribute in [
+            AttributeKind::Strength,
+            AttributeKind::Intelligence,
+            AttributeKind::Wisdom,
+            AttributeKind::Dexterity,
+            AttributeKind::Constitution,
+            AttributeKind::Charisma,
+        ] {
+            restored = self.progress.restore_attribute(attribute) || restored;
+        }
+        if restored {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        }
+        restored
+    }
+
+    fn restore_player_experience_and_life_force(
+        &mut self,
+        life_force_amount: u16,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let experience_before = self.progress.experience;
+        let life_force_before = self.progress.life_force;
+        self.progress.experience = self.progress.maximum_experience;
+        self.apply_player_experience(0, events);
+        self.progress.life_force = self
+            .progress
+            .life_force
+            .saturating_add(life_force_amount)
+            .min(1_000);
+        self.progress.experience != experience_before
+            || self.progress.life_force != life_force_before
+    }
+
     pub(super) fn resolve_item_healing(
         &mut self,
         source_kind_id: &str,
