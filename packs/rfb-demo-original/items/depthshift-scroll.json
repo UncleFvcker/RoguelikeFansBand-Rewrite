@@ -9,9 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "teleport-level"
-    }
+    "effectProgramId": "demo.effect.teleport-level"
   },
   "tags": ["consumable", "scroll", "teleport"]
 }
