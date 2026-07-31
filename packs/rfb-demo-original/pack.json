@@ -6,5 +6,5 @@
   "titleKey": "pack-demo-original-title",
   "dependencies": [],
   "loadAfter": [],
-  "contentRoots": ["abilities", "abilityBooks", "actors", "affixes", "builds", "classes", "encounterTables", "items", "lootTables", "personalities", "races", "regionTables", "resources", "skills", "skillSets", "terrain", "terrainFeatureTables", "themeTables", "vaults", "worlds"]
+  "contentRoots": ["abilities", "abilityBooks", "actors", "affixes", "builds", "classes", "effectPrograms", "encounterTables", "items", "lootTables", "personalities", "races", "regionTables", "resources", "skills", "skillSets", "terrain", "terrainFeatureTables", "themeTables", "vaults", "worlds"]
 }

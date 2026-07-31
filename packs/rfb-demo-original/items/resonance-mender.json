@@ -15,11 +15,7 @@
       "maximum": 3,
       "cost": 1
     },
-    "effect": {
-      "type": "heal-dice",
-      "dice": 2,
-      "sides": 4
-    }
+    "effectProgramId": "demo.effect.resonance-mender"
   },
   "tags": ["device", "prototype"]
 }
