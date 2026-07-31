@@ -652,6 +652,8 @@ The validation-ownership bootstrap sub-batch moves the unchanged contiguous vali
 
 The shared-validation sub-batch moves the terminal scalar, semantic-version, ID, text, glyph, tag, bounded-property, reference, role, and position helpers into the private 314-line `validation/shared.rs`. Seven established sibling-module entry points retain `pub(crate)` visibility, twelve orchestration helpers are limited to `pub(super)`, and the SemVer identifier parser remains file-private. The 4,950-line parent keeps the unchanged ordered orchestration and concrete domain checks. Both content feature matrices, schema freshness, source verification with the canonical demo hash, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass.
 
+The actor-validation sub-batch moves actor schema, text, glyph, status-immunity, stat, carry-capacity, awareness, actor-owned `monsterCasting`, melee-routine, loot/corpse reference-shape, tag, and ID checks into the private 148-line `validation/actors.rs`. The function receives only the mutable actor slice and global ID set, then returns six explicitly typed indexes and deferred-reference vectors consumed later in the unchanged orchestration order. No generic validation context is introduced, and every actor's casting frequency, tactical parameters, ordered ability list, and weights remain actor-owned. The parent falls to 4,846 lines. Both content feature matrices, schema freshness, source verification with the canonical demo hash, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
