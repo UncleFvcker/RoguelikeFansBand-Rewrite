@@ -9,11 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "enchant-item",
-      "toHit": { "dice": 1, "sides": 3, "bonus": 3 },
-      "toDamage": { "dice": 1, "sides": 3, "bonus": 3 }
-    }
+    "effectProgramId": "demo.effect.enchant-masterwork-weapon"
   },
   "tags": ["consumable", "enchantment", "scroll"]
 }

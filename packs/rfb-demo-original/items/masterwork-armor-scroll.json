@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "enchant-item",
-      "toArmor": { "dice": 1, "sides": 3, "bonus": 3 }
-    }
+    "effectProgramId": "demo.effect.enchant-masterwork-armor"
   },
   "tags": ["consumable", "enchantment", "scroll"]
 }

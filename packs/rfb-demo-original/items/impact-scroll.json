@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "enchant-item",
-      "toDamage": { "dice": 0, "sides": 0, "bonus": 1 }
-    }
+    "effectProgramId": "demo.effect.enchant-impact"
   },
   "tags": ["consumable", "enchantment", "scroll"]
 }

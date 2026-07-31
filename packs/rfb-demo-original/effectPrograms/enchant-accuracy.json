@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.enchant-accuracy",
+  "input": "item",
+  "steps": [
+    { "type": "enchant-item", "toHit": { "dice": 0, "sides": 0, "bonus": 1 } }
+  ]
+}

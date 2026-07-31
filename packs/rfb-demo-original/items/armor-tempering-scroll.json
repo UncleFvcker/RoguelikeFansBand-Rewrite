@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "enchant-item",
-      "toArmor": { "dice": 0, "sides": 0, "bonus": 1 }
-    }
+    "effectProgramId": "demo.effect.enchant-armor"
   },
   "tags": ["consumable", "enchantment", "scroll"]
 }
