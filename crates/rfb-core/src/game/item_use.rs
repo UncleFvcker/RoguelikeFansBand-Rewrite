@@ -1165,75 +1165,38 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) {
         self.mark_item_aware(source_kind_id);
-        let resolution = self.enchant_item_instance(target_item_id, to_hit, to_damage, to_armor);
-        events.push(DomainEvent::ItemEnchanted {
-            source_kind_id: source_kind_id.to_owned(),
-            resolution,
-        });
-    }
-
-    fn enchant_item_instance(
-        &mut self,
-        item_id: &str,
-        to_hit: Option<ItemEnchantmentRollDefinition>,
-        to_damage: Option<ItemEnchantmentRollDefinition>,
-        to_armor: Option<ItemEnchantmentRollDefinition>,
-    ) -> ItemEnchantmentResolutionDto {
-        let item = self
-            .items
-            .iter()
-            .find(|item| item.id == item_id)
-            .expect("planned enchantment target must remain available");
-        let item_kind_id = item.kind_id.clone();
-        let quantity = item.quantity;
-        let definition = self
-            .content
-            .item(&item_kind_id)
-            .expect("planned enchantment kind must remain available");
-        let artifact = definition.tags.iter().any(|tag| tag == "artifact");
-        let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
-        let before = item.enchantments;
-
         let hit_attempts = self.roll_item_enchantment_attempts(to_hit);
         let damage_attempts = self.roll_item_enchantment_attempts(to_damage);
         let armor_attempts = self.roll_item_enchantment_attempts(to_armor);
-        let to_hit = self.resolve_item_enchantment_component(
-            before.to_hit,
-            hit_attempts,
-            quantity,
-            ammunition,
-            artifact,
+        let outcome = self.enchant_item_instance(
+            target_item_id,
+            ItemEnchantmentRequest::new(hit_attempts, damage_attempts, armor_attempts),
         );
-        let to_damage = self.resolve_item_enchantment_component(
-            before.to_damage,
-            damage_attempts,
-            quantity,
-            ammunition,
-            artifact,
-        );
-        let to_armor = self.resolve_item_enchantment_component(
-            before.to_armor,
-            armor_attempts,
-            quantity,
-            ammunition,
-            artifact,
-        );
-        self.items
-            .iter_mut()
-            .find(|item| item.id == item_id)
-            .expect("planned enchantment target must remain available")
-            .enchantments = ItemEnchantmentsDto {
-            to_hit: to_hit.after,
-            to_damage: to_damage.after,
-            to_armor: to_armor.after,
-        };
-        ItemEnchantmentResolutionDto {
-            item_id: item_id.to_owned(),
-            item_kind_id,
-            to_hit,
-            to_damage,
-            to_armor,
-        }
+        events.push(DomainEvent::ItemEnchanted {
+            source_kind_id: source_kind_id.to_owned(),
+            resolution: ItemEnchantmentResolutionDto {
+                item_id: outcome.item_id,
+                item_kind_id: outcome.item_kind_id,
+                to_hit: ItemEnchantmentComponentResolutionDto {
+                    attempts: outcome.to_hit.attempts,
+                    successes: outcome.to_hit.successes,
+                    before: outcome.to_hit.before,
+                    after: outcome.to_hit.after,
+                },
+                to_damage: ItemEnchantmentComponentResolutionDto {
+                    attempts: outcome.to_damage.attempts,
+                    successes: outcome.to_damage.successes,
+                    before: outcome.to_damage.before,
+                    after: outcome.to_damage.after,
+                },
+                to_armor: ItemEnchantmentComponentResolutionDto {
+                    attempts: outcome.to_armor.attempts,
+                    successes: outcome.to_armor.successes,
+                    before: outcome.to_armor.before,
+                    after: outcome.to_armor.after,
+                },
+            },
+        });
     }
 
     fn roll_item_enchantment_attempts(
@@ -1250,48 +1213,6 @@ impl Game {
                 .expect("validated enchantment roll must fit u16")
         };
         rolled.saturating_add(roll.bonus)
-    }
-
-    pub(super) fn resolve_item_enchantment_component(
-        &mut self,
-        before: u16,
-        attempts: u16,
-        quantity: u32,
-        ammunition: bool,
-        artifact: bool,
-    ) -> ItemEnchantmentComponentResolutionDto {
-        const FAILURE_PER_THOUSAND: [u16; 16] = [
-            5, 10, 50, 100, 200, 300, 400, 500, 650, 800, 950, 987, 993, 995, 998, 1000,
-        ];
-        let mut after = before;
-        let pile_probability = if ammunition {
-            u64::from(quantity).saturating_mul(100) / 20
-        } else {
-            u64::from(quantity).saturating_mul(100)
-        }
-        .max(1);
-        for _ in 0..attempts {
-            if self.rng.bounded(pile_probability) >= 100 {
-                continue;
-            }
-            let failure = FAILURE_PER_THOUSAND
-                .get(usize::from(after))
-                .copied()
-                .unwrap_or(1000);
-            if self.rng.bounded(1000).saturating_add(1) <= u64::from(failure) {
-                continue;
-            }
-            if artifact && self.rng.bounded(100) >= 50 {
-                continue;
-            }
-            after = after.saturating_add(1).min(15);
-        }
-        ItemEnchantmentComponentResolutionDto {
-            attempts,
-            successes: after.saturating_sub(before),
-            before,
-            after,
-        }
     }
 
     fn item_is_valid_identify_target(&self, source_item_id: &str, target_item_id: &str) -> bool {

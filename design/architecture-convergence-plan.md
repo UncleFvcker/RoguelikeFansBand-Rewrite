@@ -479,6 +479,8 @@ The knowledge/inventory gate begins with identification. The inventory owner now
 
 The identification source migration maps the appraisal and revelation scrolls to item-input programs. Their `full` modes lower to the unchanged identify variants, while target validation, source consumption, source awareness, property knowledge, and item/ability event projection remain runtime concerns.
 
+Numeric enchantment now commits through the inventory owner. The item adapter rolls the three configured attempt counts in the original order and passes a typed request to the owner, which retains stack quantity, ammunition, artifact, failure-curve, and enchantment mutation authority. Its source-neutral component outcomes are projected to the existing item event only after the mutation; targeting, consumption, awareness, and configured dice remain item concerns.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

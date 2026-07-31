@@ -2,7 +2,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::ContentCatalog;
-use rfb_protocol::{ItemCurseSeverityDto, ItemKnowledgeDto, ItemQualityDto, Position};
+use rfb_protocol::{
+    ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeDto, ItemQualityDto, Position,
+};
 
 use crate::{
     error::CoreError,
@@ -41,6 +43,44 @@ pub(super) struct ItemIdentificationOutcome {
     pub(super) item_kind_id: String,
     pub(super) full: bool,
     pub(super) changed: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct ItemEnchantmentRequest {
+    to_hit_attempts: u16,
+    to_damage_attempts: u16,
+    to_armor_attempts: u16,
+}
+
+impl ItemEnchantmentRequest {
+    pub(super) const fn new(
+        to_hit_attempts: u16,
+        to_damage_attempts: u16,
+        to_armor_attempts: u16,
+    ) -> Self {
+        Self {
+            to_hit_attempts,
+            to_damage_attempts,
+            to_armor_attempts,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct ItemEnchantmentComponentOutcome {
+    pub(super) attempts: u16,
+    pub(super) successes: u16,
+    pub(super) before: u16,
+    pub(super) after: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct ItemEnchantmentOutcome {
+    pub(super) item_id: String,
+    pub(super) item_kind_id: String,
+    pub(super) to_hit: ItemEnchantmentComponentOutcome,
+    pub(super) to_damage: ItemEnchantmentComponentOutcome,
+    pub(super) to_armor: ItemEnchantmentComponentOutcome,
 }
 
 pub(super) enum PickUpOutcome {
@@ -351,6 +391,107 @@ impl Game {
             item_kind_id,
             full: request.full,
             changed,
+        }
+    }
+
+    pub(super) fn enchant_item_instance(
+        &mut self,
+        item_id: &str,
+        request: ItemEnchantmentRequest,
+    ) -> ItemEnchantmentOutcome {
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned enchantment target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let quantity = item.quantity;
+        let definition = self
+            .content
+            .item(&item_kind_id)
+            .expect("planned enchantment kind must remain available");
+        let artifact = definition.tags.iter().any(|tag| tag == "artifact");
+        let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
+        let before = item.enchantments;
+
+        let to_hit = self.resolve_item_enchantment_component(
+            before.to_hit,
+            request.to_hit_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        let to_damage = self.resolve_item_enchantment_component(
+            before.to_damage,
+            request.to_damage_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        let to_armor = self.resolve_item_enchantment_component(
+            before.to_armor,
+            request.to_armor_attempts,
+            quantity,
+            ammunition,
+            artifact,
+        );
+        self.items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .expect("planned enchantment target must remain available")
+            .enchantments = ItemEnchantmentsDto {
+            to_hit: to_hit.after,
+            to_damage: to_damage.after,
+            to_armor: to_armor.after,
+        };
+        ItemEnchantmentOutcome {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            to_hit,
+            to_damage,
+            to_armor,
+        }
+    }
+
+    pub(super) fn resolve_item_enchantment_component(
+        &mut self,
+        before: u16,
+        attempts: u16,
+        quantity: u32,
+        ammunition: bool,
+        artifact: bool,
+    ) -> ItemEnchantmentComponentOutcome {
+        const FAILURE_PER_THOUSAND: [u16; 16] = [
+            5, 10, 50, 100, 200, 300, 400, 500, 650, 800, 950, 987, 993, 995, 998, 1000,
+        ];
+        let mut after = before;
+        let pile_probability = if ammunition {
+            u64::from(quantity).saturating_mul(100) / 20
+        } else {
+            u64::from(quantity).saturating_mul(100)
+        }
+        .max(1);
+        for _ in 0..attempts {
+            if self.rng.bounded(pile_probability) >= 100 {
+                continue;
+            }
+            let failure = FAILURE_PER_THOUSAND
+                .get(usize::from(after))
+                .copied()
+                .unwrap_or(1000);
+            if self.rng.bounded(1000).saturating_add(1) <= u64::from(failure) {
+                continue;
+            }
+            if artifact && self.rng.bounded(100) >= 50 {
+                continue;
+            }
+            after = after.saturating_add(1).min(15);
+        }
+        ItemEnchantmentComponentOutcome {
+            attempts,
+            successes: after.saturating_sub(before),
+            before,
+            after,
         }
     }
 
