@@ -591,6 +591,8 @@ The direct status-removal leaf sub-batch moves `veil-dispel` to one `cast-target
 
 The direct damage leaf sub-batch moves `cinder-bolt`, `crescent-cut`, `death-malediction`, `harmonic-spark`, and `resonant-bolt` to five `cast-target` ability programs. Source abilities retain position/entity or direction targeting, player resource/failure/proficiency policy, monster candidate policy, and Death Malediction's level-scaling entry. Programs own only the unchanged damage dice, bonus, and type specifications. Focused player projectile, monster flat-bonus, directional technique, and level-scaling tests pass; the canonical content hash, 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures remain unchanged. Resource drain and bolt-or-beam probability semantics remain inline for later independent sub-batches.
 
+The resource-drain leaf sub-batch moves `veil-drain` to one `cast-target` ability program. The veil warden retains frequency, candidate weight, target planning, resource selection, utility, and healing from the actual drained amount; the program owns only the requested amount of five. Lowering preserves the exact monster-drains-mana contract outcome and event projection. The canonical content hash remains unchanged; the focused monster utility test, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

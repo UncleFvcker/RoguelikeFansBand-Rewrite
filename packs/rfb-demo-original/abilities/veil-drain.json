@@ -16,10 +16,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "drain-resource",
-    "amount": 5
-  },
+  "abilityProgramId": "demo.ability-program.veil-drain",
   "proficiency": {
     "initial": 0,
     "cap": 1600,
