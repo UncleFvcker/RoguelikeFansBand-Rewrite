@@ -21,8 +21,7 @@ use crate::{
         STATUS_BASIC_RESISTANCE, STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
         STATUS_HASTE, STATUS_PARALYSIS, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_SLEEP,
         STATUS_SLOW, STATUS_STUN, STATUS_THERMAL_RESISTANCE, STATUS_VENGEANCE, StatusApplication,
-        StatusChange, StatusInstance, StatusStacking, advance_status_ticks, apply_effect,
-        apply_status, resolve_damage,
+        StatusChange, StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{DomainEvent, ItemAttributeChange, ProjectileTrace, project_events},
@@ -91,9 +90,15 @@ use rfb_protocol::{
     TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
 };
 
+mod damage;
+mod death;
+mod environment_combat;
 mod floor;
 mod inventory;
+mod item_combat;
+mod monster_combat;
 mod persistence;
+mod player_combat;
 mod progression;
 mod snapshot;
 mod tasks;
@@ -101,6 +106,11 @@ mod terrain;
 mod validation;
 mod world;
 
+use damage::{
+    FatalityPolicy, commit_damage_application, plan_damage_application, process_actor_status_tick,
+    scale_damage_outcome,
+};
+use environment_combat::PlayerTrapOutcome;
 use floor::{
     FloorTransitionTarget, RecallUseAction, dungeon_instance_id, dungeon_instance_storage_key,
     floor_dungeon_id, parse_dungeon_instance_ordinal,
@@ -2469,49 +2479,6 @@ impl Game {
         recovered
     }
 
-    fn gain_player_melee_resources(
-        &mut self,
-        source: ResourceGainSourceDto,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        let resource_ids = self.resources.keys().cloned().collect::<Vec<_>>();
-        for resource_id in resource_ids {
-            let amount = {
-                let definition = self
-                    .content
-                    .resource(&resource_id)
-                    .expect("player resource definition must remain available");
-                match source {
-                    ResourceGainSourceDto::MeleeHit => definition.melee_hit_gain_amount,
-                    ResourceGainSourceDto::MeleeKill => definition.melee_kill_gain_amount,
-                }
-            };
-            if amount == 0 {
-                continue;
-            }
-            // A capped gain still counts as touching the pool so the turn
-            // decay never erodes a resource that is being actively fed.
-            self.resources_touched.insert(resource_id.clone());
-            let pool = self
-                .resources
-                .get_mut(&resource_id)
-                .expect("player resource pool must remain available");
-            let before = pool.current;
-            pool.current = pool.current.saturating_add(amount).min(pool.maximum);
-            if pool.current > before {
-                events.push(DomainEvent::ResourceGained {
-                    resolution: ResourceGainResolutionDto {
-                        resource_id: resource_id.clone(),
-                        source,
-                        before,
-                        after: pool.current,
-                        gained: pool.current - before,
-                    },
-                });
-            }
-        }
-    }
-
     fn decay_player_resources(&mut self) {
         let resource_ids = self.resources.keys().cloned().collect::<Vec<_>>();
         for resource_id in resource_ids {
@@ -3920,110 +3887,6 @@ impl Game {
         }
     }
 
-    fn resolve_player_projectile(
-        &mut self,
-        target: TargetSelection,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let Some(profile) = self.player_projectile_profile() else {
-            events.push(DomainEvent::ProjectileUnavailable);
-            return Ok(());
-        };
-        let Some(path) = self.projectile_path(&target, profile.range) else {
-            events.push(DomainEvent::ProjectileTargetUnavailable);
-            return Ok(());
-        };
-        let Some(ammunition) = self.take_inventory_item_kind(&profile.ammo_kind_id)? else {
-            events.push(DomainEvent::ProjectileAmmoUnavailable {
-                ammo_kind_id: profile.ammo_kind_id,
-            });
-            return Ok(());
-        };
-        let (trace, target_index) = self.trace_projectile_path(path);
-        if let Some(index) = target_index {
-            let definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
-                .expect("projectile target definition must remain available")
-                .clone();
-            let target_kind_id = definition.id.clone();
-            self.entities[index].alerted = true;
-            let attacker = self.player_derived_stats();
-            let ranged_skill = attacker.ranged_skill.with_modifier(
-                StatLayer::Equipment,
-                profile.ammo_kind_id.clone(),
-                i32::from(profile.ammunition_to_hit),
-                StatBounds::NON_NEGATIVE,
-            );
-            let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-            changed.insert(self.entities[index].position);
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::ProjectileHit,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(self.entities[index].id.clone()),
-                    ability: ranged_skill,
-                    difficulty: target.armor_class.clone(),
-                },
-            )
-            .succeeded()
-            {
-                events.push(DomainEvent::ProjectileMissed {
-                    target_kind_id,
-                    trace: trace.clone(),
-                });
-            } else {
-                let raw_damage = self
-                    .roll_damage(profile.damage_dice, profile.damage_sides)
-                    .saturating_add(profile.to_damage)
-                    .max(0);
-                let resistance = self.entities[index].resistances.level(profile.damage_type);
-                let damage = resolve_armored_damage(
-                    raw_damage,
-                    profile.damage_type,
-                    target.armor_class.value,
-                    resistance,
-                );
-                self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-                events.push(DomainEvent::ProjectileHit {
-                    target_kind_id: target_kind_id.clone(),
-                    damage,
-                    trace: trace.clone(),
-                });
-                self.wake_entity_after_damage(index, damage.applied, events);
-                if self.entities[index].hp <= 0 {
-                    self.resolve_actor_death(
-                        index,
-                        DomainEvent::ProjectileSlew {
-                            target_kind_id,
-                            damage,
-                            trace: trace.clone(),
-                        },
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                }
-            }
-        } else {
-            events.push(DomainEvent::ProjectileLanded {
-                trace: trace.clone(),
-            });
-        }
-        self.settle_projectile_ammunition(
-            ammunition,
-            trace.landing,
-            target_index.is_some(),
-            profile.ammo_break_chance_percent,
-            events,
-            changed,
-        );
-        Ok(())
-    }
-
     fn study_player_ability(
         &mut self,
         book_item_id: &str,
@@ -5257,10 +5120,13 @@ impl Game {
                 ResistanceLevel::Normal,
             );
             self.entities[target_index].alerted = true;
-            self.entities[target_index].hp = self.entities[target_index]
-                .hp
-                .saturating_sub(damage.applied);
-            changed.insert(self.entities[target_index].position);
+            let application = plan_damage_application(
+                &self.entities[target_index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[target_index], &application);
+            changed.insert(application.position);
             events.push(DomainEvent::AbilityHit {
                 ability_id: ability_id.to_owned(),
                 target_kind_id: target_kind_id.clone(),
@@ -5268,7 +5134,7 @@ impl Game {
                 trace: trace.clone(),
             });
             self.wake_entity_after_damage(target_index, damage.applied, events);
-            if self.entities[target_index].hp <= 0 {
+            if application.fatal {
                 self.resolve_actor_death(
                     target_index,
                     DomainEvent::AbilitySlew {
@@ -6795,59 +6661,6 @@ impl Game {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_damage_to_entity(
-        &mut self,
-        index: usize,
-        ability_id: &str,
-        damage_type: DamageType,
-        raw_damage: i32,
-        trace: ProjectileTrace,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<DamageOutcome, CoreError> {
-        let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
-            .expect("ability target definition must remain available")
-            .clone();
-        let target_kind_id = definition.id.clone();
-        self.entities[index].alerted = true;
-        changed.insert(self.entities[index].position);
-        let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let resistance = self.entities[index].resistances.level(damage_type);
-        let damage = resolve_armored_damage(
-            raw_damage,
-            damage_type,
-            target.armor_class.value,
-            resistance,
-        );
-        self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-        events.push(DomainEvent::AbilityHit {
-            ability_id: ability_id.to_owned(),
-            target_kind_id: target_kind_id.clone(),
-            damage,
-            trace: trace.clone(),
-        });
-        self.wake_entity_after_damage(index, damage.applied, events);
-        if self.entities[index].hp <= 0 {
-            self.resolve_actor_death(
-                index,
-                DomainEvent::AbilitySlew {
-                    ability_id: ability_id.to_owned(),
-                    target_kind_id,
-                    damage,
-                    trace,
-                },
-                events,
-                changed,
-                removed_entities,
-            )?;
-        }
-        Ok(damage)
-    }
-
     fn ability_path(
         &self,
         ability: &AbilityDefinition,
@@ -7233,131 +7046,6 @@ impl Game {
         self.items.push(ammunition);
         changed.insert(landing);
         events.push(DomainEvent::ProjectileAmmoRecovered { ammo_kind_id });
-    }
-
-    fn throw_inventory_item(
-        &mut self,
-        item_id: &str,
-        direction: rfb_protocol::Direction,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let Some(item) = self.items.iter().find(|item| {
-            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
-        }) else {
-            events.push(DomainEvent::ItemThrowUnavailable);
-            return Ok(());
-        };
-        let definition = self
-            .content
-            .item(&item.kind_id)
-            .expect("throwable item definition must remain available");
-        let range = throw_range(definition.weight_tenths_pound);
-        let profile = definition
-            .throw_profile
-            .as_ref()
-            .map(|profile| ResolvedThrowProfile {
-                to_hit: profile
-                    .to_hit
-                    .saturating_add(i32::from(item.enchantments.to_hit)),
-                to_damage: profile
-                    .to_damage
-                    .saturating_add(i32::from(item.enchantments.to_damage)),
-                damage_dice: profile.damage_dice,
-                damage_sides: profile.damage_sides,
-                damage_type: DamageType::from(profile.damage_type),
-            });
-        let Some(mut thrown) = self.take_inventory_item(item_id)? else {
-            events.push(DomainEvent::ItemThrowUnavailable);
-            return Ok(());
-        };
-        let source_kind_id = thrown.kind_id.clone();
-        self.mark_item_tried(&source_kind_id);
-        let path = self
-            .projectile_path(&TargetSelection::Direction { direction }, range)
-            .expect("direction targeting must always produce a path");
-        let (trace, target_index) = self.trace_projectile_path(path);
-        let landing = trace.landing;
-        if let (Some(profile), Some(index)) = (profile, target_index) {
-            let target_definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
-                .expect("throw target definition must remain available")
-                .clone();
-            let target_kind_id = target_definition.id.clone();
-            self.entities[index].alerted = true;
-            let attacker = self.player_derived_stats();
-            let target = self.actor_derived_stats(&self.entities[index], &target_definition, false);
-            let ability = attacker.throwing_skill.with_modifier(
-                StatLayer::Equipment,
-                &thrown.id,
-                profile.to_hit,
-                StatBounds::NON_NEGATIVE,
-            );
-            changed.insert(self.entities[index].position);
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::ThrowHit,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(self.entities[index].id.clone()),
-                    ability,
-                    difficulty: target.armor_class.clone(),
-                },
-            )
-            .succeeded()
-            {
-                events.push(DomainEvent::ItemThrowMissed {
-                    source_kind_id: source_kind_id.clone(),
-                    target_kind_id,
-                    trace: trace.clone(),
-                });
-            } else {
-                let raw_damage = self
-                    .roll_damage(profile.damage_dice, profile.damage_sides)
-                    .saturating_add(profile.to_damage)
-                    .max(0);
-                let resistance = self.entities[index].resistances.level(profile.damage_type);
-                let damage = resolve_armored_damage(
-                    raw_damage,
-                    profile.damage_type,
-                    target.armor_class.value,
-                    resistance,
-                );
-                self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-                events.push(DomainEvent::ItemThrowHit {
-                    source_kind_id: source_kind_id.clone(),
-                    target_kind_id: target_kind_id.clone(),
-                    damage,
-                    trace: trace.clone(),
-                });
-                self.wake_entity_after_damage(index, damage.applied, events);
-                if self.entities[index].hp <= 0 {
-                    self.resolve_actor_death(
-                        index,
-                        DomainEvent::ItemThrowSlew {
-                            source_kind_id: source_kind_id.clone(),
-                            target_kind_id,
-                            damage,
-                            trace: trace.clone(),
-                        },
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                }
-            }
-        } else {
-            events.push(DomainEvent::ItemThrown {
-                target_kind_id: source_kind_id,
-                trace,
-            });
-        }
-        thrown.location = ItemLocation::Ground(landing);
-        self.items.push(thrown);
-        changed.insert(landing);
-        Ok(())
     }
 
     fn take_inventory_item(&mut self, item_id: &str) -> Result<Option<ItemInstance>, CoreError> {
@@ -8019,12 +7707,15 @@ impl Game {
                     resistance,
                 );
                 self.entities[target_index].alerted = true;
-                self.entities[target_index].hp = self.entities[target_index]
-                    .hp
-                    .saturating_sub(damage.applied);
+                let application = plan_damage_application(
+                    &self.entities[target_index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[target_index], &application);
                 changed.insert(target_position);
                 self.wake_entity_after_damage(target_index, damage.applied, events);
-                if self.entities[target_index].hp <= 0 {
+                if application.fatal {
                     self.resolve_actor_death(
                         target_index,
                         DomainEvent::ItemActivationSlew {
@@ -8675,177 +8366,6 @@ impl Game {
             })
             .map(|entity| entity.id.clone())
             .collect()
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_item_dispel_category(
-        &mut self,
-        source_kind_id: &str,
-        category: &str,
-        amount: u32,
-        actor_ids: Vec<String>,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let mut affected = false;
-        for actor_id in actor_ids {
-            let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == actor_id && entity.hp > 0)
-            else {
-                continue;
-            };
-            let definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
-                .expect("item dispel target definition must remain available")
-                .clone();
-            if !actor_matches_category(&definition, category)
-                || definition.tags.iter().any(|tag| tag == "resist-all")
-            {
-                continue;
-            }
-
-            affected = true;
-            let target_kind_id = definition.id;
-            let target_position = self.entities[index].position;
-            let damage = resolve_damage(
-                DamagePacket::new(
-                    i32::try_from(amount).expect("validated item dispel damage must fit i32"),
-                    DamageType::HolyFire,
-                ),
-                ResistanceLevel::Normal,
-            );
-            self.entities[index].alerted = true;
-            self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-            changed.insert(target_position);
-            self.wake_entity_after_damage(index, damage.applied, events);
-            if self.entities[index].hp <= 0 {
-                self.resolve_actor_death(
-                    index,
-                    DomainEvent::ItemDispelSlew {
-                        source_kind_id: source_kind_id.to_owned(),
-                        target_kind_id,
-                        damage,
-                    },
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-            } else {
-                events.push(DomainEvent::ItemDispelHit {
-                    source_kind_id: source_kind_id.to_owned(),
-                    target_kind_id,
-                    damage,
-                });
-            }
-        }
-        if affected {
-            self.mark_item_aware(source_kind_id);
-        } else {
-            events.push(DomainEvent::ItemDispelNoEffect {
-                source_kind_id: source_kind_id.to_owned(),
-            });
-        }
-        Ok(())
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_item_elemental_blast(
-        &mut self,
-        source_kind_id: &str,
-        base_damage: u32,
-        damage_type: DamageType,
-        radius: u8,
-        backlash_sides: u16,
-        backlash_bonus: u16,
-        backlash_damage_type: DamageType,
-        backlash_uses_resistance: bool,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        self.mark_item_aware(source_kind_id);
-        let (affected_positions, targets) =
-            self.area_damage_targets(self.player.position, radius, None);
-        changed.extend(affected_positions);
-        events.push(DomainEvent::ItemElementalBlast {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            target_count: targets.len(),
-        });
-        let base_damage =
-            i32::try_from(base_damage).expect("validated elemental blast damage must fit i32");
-        for (actor_id, distance) in targets {
-            let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == actor_id && entity.hp > 0)
-            else {
-                continue;
-            };
-            let definition = self
-                .content
-                .actor(&self.entities[index].kind_id)
-                .expect("elemental blast target definition must remain available")
-                .clone();
-            let target_kind_id = definition.id.clone();
-            let target_position = self.entities[index].position;
-            let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-            let resistance = self.entities[index].resistances.level(damage_type);
-            let damage = resolve_armored_damage(
-                rfb_area_damage(base_damage, distance),
-                damage_type,
-                target.armor_class.value,
-                resistance,
-            );
-            self.entities[index].alerted = true;
-            self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-            changed.insert(target_position);
-            self.wake_entity_after_damage(index, damage.applied, events);
-            if self.entities[index].hp <= 0 {
-                self.resolve_actor_death(
-                    index,
-                    DomainEvent::ItemElementalBlastSlew {
-                        source_kind_id: source_kind_id.to_owned(),
-                        target_kind_id,
-                        damage,
-                    },
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-            } else {
-                events.push(DomainEvent::ItemElementalBlastHit {
-                    source_kind_id: source_kind_id.to_owned(),
-                    target_kind_id,
-                    damage,
-                });
-            }
-        }
-
-        let backlash_raw = self
-            .roll_damage(1, backlash_sides)
-            .saturating_add(i32::from(backlash_bonus));
-        let backlash_resistance = if backlash_uses_resistance {
-            self.effective_player_resistances()
-                .level(backlash_damage_type)
-        } else {
-            ResistanceLevel::Normal
-        };
-        let backlash = self.reduce_player_damage(resolve_damage(
-            DamagePacket::new(backlash_raw, backlash_damage_type),
-            backlash_resistance,
-        ));
-        self.player.hp = self.player.hp.saturating_sub(backlash.applied);
-        events.push(DomainEvent::ItemElementalBlastBacklash {
-            source_kind_id: source_kind_id.to_owned(),
-            damage: backlash,
-            fatal: self.player_is_dead(),
-        });
-        Ok(())
     }
 
     fn resolve_item_banish_visible(
@@ -10619,78 +10139,6 @@ impl Game {
         noticed
     }
 
-    fn resolve_item_detonation(
-        &mut self,
-        source_kind_id: &str,
-        damage_dice: u16,
-        damage_sides: u16,
-        stun_ticks: u32,
-        bleeding_ticks: u32,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        let raw_damage = self.roll_damage(damage_dice, damage_sides);
-        let damage = self.reduce_player_damage(resolve_damage(
-            DamagePacket::new(raw_damage, DamageType::Physical),
-            ResistanceLevel::Normal,
-        ));
-        self.player.hp = self.player.hp.saturating_sub(damage.applied);
-        let fatal = self.player_is_dead();
-        if !fatal {
-            let immunities = self.player_status_immunities();
-            if !immunities.contains(STATUS_STUN) {
-                apply_status(
-                    &mut self.player.statuses,
-                    StatusApplication {
-                        status: StatusInstance {
-                            kind_id: STATUS_STUN.to_owned(),
-                            intensity: 1,
-                            remaining_ticks: stun_ticks,
-                            source_id: Some(source_kind_id.to_owned()),
-                            granted_resistances: BTreeMap::new(),
-                            granted_brands: BTreeSet::new(),
-                            granted_modifiers: StatModifiersDto::default(),
-                            granted_equipment_bonuses: EquipmentBonusesDto::default(),
-                            granted_status_immunities: BTreeSet::new(),
-                            granted_race_id: None,
-                            grants_wall_passage: false,
-                            incoming_damage_percent: 100,
-                        },
-                        stacking: StatusStacking::KeepStrongest,
-                    },
-                );
-            }
-            if !immunities.contains(STATUS_BLEEDING) {
-                apply_status(
-                    &mut self.player.statuses,
-                    StatusApplication {
-                        status: StatusInstance {
-                            kind_id: STATUS_BLEEDING.to_owned(),
-                            intensity: 1,
-                            remaining_ticks: bleeding_ticks,
-                            source_id: Some(source_kind_id.to_owned()),
-                            granted_resistances: BTreeMap::new(),
-                            granted_brands: BTreeSet::new(),
-                            granted_modifiers: StatModifiersDto::default(),
-                            granted_equipment_bonuses: EquipmentBonusesDto::default(),
-                            granted_status_immunities: BTreeSet::new(),
-                            granted_race_id: None,
-                            grants_wall_passage: false,
-                            incoming_damage_percent: 100,
-                        },
-                        stacking: StatusStacking::Extend,
-                    },
-                );
-            }
-        }
-        self.mark_item_aware(source_kind_id);
-        events.push(DomainEvent::ItemDetonation {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            damage,
-            fatal,
-        });
-    }
-
     fn resolve_item_life_loss(
         &mut self,
         source_kind_id: &str,
@@ -11061,173 +10509,6 @@ impl Game {
             },
         )
         .succeeded()
-    }
-
-    fn resolve_player_melee(
-        &mut self,
-        index: usize,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
-            .expect("monster actor definition must remain available")
-            .clone();
-        let target_kind = self.entities[index].kind_id.clone();
-        self.entities[index].alerted = true;
-        let attacker = self.player_derived_stats();
-        let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let profile = self.player_melee_profile(&attacker);
-        let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
-            self.items
-                .iter()
-                .find(|item| &item.id == item_id)
-                .is_some_and(|item| {
-                    self.item_passives(item)
-                        .contains(&EquipmentPassive::Vampiric)
-                })
-        });
-        let mut vampiric_drain_remaining = 50_i32;
-        let damage_multiplier =
-            self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
-        for _ in 0..profile.attacks {
-            if attacker.melee_skill.value <= 0
-                || !resolve_check(
-                    &mut self.rng,
-                    CheckContext {
-                        kind: CheckKind::MeleeHit,
-                        actor_id: self.player.id.clone(),
-                        target_id: Some(self.entities[index].id.clone()),
-                        ability: attacker.melee_skill.clone(),
-                        difficulty: target.armor_class.clone(),
-                    },
-                )
-                .succeeded()
-            {
-                events.push(DomainEvent::PlayerMeleeMissed {
-                    target_kind_id: target_kind.clone(),
-                });
-                continue;
-            }
-
-            let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
-            let rolled_damage = weapon_damage
-                .saturating_mul(damage_multiplier)
-                .saturating_div(10)
-                .saturating_add(profile.to_damage)
-                .max(0);
-            let damage_type = profile.damage_type;
-            let resistance = self.entities[index].resistances.level(damage_type);
-            let damage = resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
-            self.entities[index].hp = self.entities[index].hp.saturating_sub(damage.applied);
-            events.push(DomainEvent::PlayerMeleeHit {
-                target_kind_id: target_kind.clone(),
-                damage,
-            });
-            self.wake_entity_after_damage(index, damage.applied, events);
-            if vampiric_weapon
-                && vampiric_drain_remaining > 0
-                && damage.applied > 5
-                && actor_matches_category(&definition, "living")
-            {
-                let requested = self
-                    .roll_damage(
-                        2,
-                        u16::try_from(damage.applied / 6)
-                            .expect("positive vampiric healing die must fit u16"),
-                    )
-                    .min(vampiric_drain_remaining);
-                vampiric_drain_remaining = vampiric_drain_remaining.saturating_sub(requested);
-                let max_hp = self.effective_player_max_hp();
-                let EffectOutcome::Healed { requested, applied } = apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut self.player.hp,
-                        max_hp,
-                        resistances: &self.player.resistances,
-                        statuses: &mut self.player.statuses,
-                    },
-                    EffectSpec::Heal { amount: requested },
-                ) else {
-                    unreachable!("vampiric melee healing must produce a healing outcome");
-                };
-                events.push(DomainEvent::PlayerVampiricHealed {
-                    resolution: HealingResolutionDto { requested, applied },
-                });
-            }
-            self.gain_player_melee_resources(ResourceGainSourceDto::MeleeHit, events);
-            if self.entities[index].hp <= 0 {
-                self.resolve_actor_death(
-                    index,
-                    DomainEvent::PlayerSlew {
-                        target_kind_id: target_kind.clone(),
-                        damage,
-                    },
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-                self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
-                break;
-            }
-            self.resolve_confusing_strike(index, &definition, events);
-        }
-        Ok(())
-    }
-
-    fn resolve_confusing_strike(
-        &mut self,
-        index: usize,
-        definition: &rfb_content::ActorDefinition,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        if !self.confusing_strike_ready {
-            return;
-        }
-        self.confusing_strike_ready = false;
-        let target_kind_id = self.entities[index].kind_id.clone();
-        if definition
-            .status_immunities
-            .iter()
-            .any(|status| status == STATUS_CONFUSION)
-        {
-            events.push(DomainEvent::ConfusingStrikeImmune { target_kind_id });
-            return;
-        }
-        if self.rng.bounded(100) < u64::from(definition.level) {
-            events.push(DomainEvent::ConfusingStrikeResisted { target_kind_id });
-            return;
-        }
-        let duration = 10_u32.saturating_add(
-            u32::try_from(self.rng.bounded(u64::from(self.progress.level.max(1))))
-                .expect("confusing strike duration roll must fit u32")
-                / 5,
-        );
-        apply_status(
-            &mut self.entities[index].statuses,
-            StatusApplication {
-                status: StatusInstance {
-                    kind_id: STATUS_CONFUSION.to_owned(),
-                    intensity: 1,
-                    remaining_ticks: duration,
-                    source_id: None,
-                    granted_resistances: BTreeMap::new(),
-                    granted_brands: BTreeSet::new(),
-                    granted_modifiers: StatModifiersDto::default(),
-                    granted_equipment_bonuses: EquipmentBonusesDto::default(),
-                    granted_status_immunities: BTreeSet::new(),
-                    granted_race_id: None,
-                    grants_wall_passage: false,
-                    incoming_damage_percent: 100,
-                },
-                stacking: StatusStacking::Extend,
-            },
-        );
-        events.push(DomainEvent::ConfusingStrikeApplied {
-            target_kind_id,
-            duration,
-        });
     }
 
     fn advance_until_player_ready(
@@ -11848,105 +11129,6 @@ impl Game {
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
-    }
-
-    fn resolve_player_summon_melee(
-        &mut self,
-        source_index: usize,
-        target_entity_id: &str,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let source_entity_id = self.entities[source_index].id.clone();
-        let source_kind_id = self.entities[source_index].kind_id.clone();
-        let definition = self
-            .content
-            .actor(&source_kind_id)
-            .expect("summon actor definition must remain available")
-            .clone();
-        let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
-        for blow in resolved_melee_blows(&definition) {
-            let Some(target_index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == target_entity_id && entity.hp > 0)
-            else {
-                break;
-            };
-            let target_kind_id = self.entities[target_index].kind_id.clone();
-            let target_position = self.entities[target_index].position;
-            let target_definition = self
-                .content
-                .actor(&target_kind_id)
-                .expect("summon melee target definition must remain available");
-            let target_stats =
-                self.actor_derived_stats(&self.entities[target_index], target_definition, false);
-            let ability = attacker.melee_skill.with_modifier(
-                StatLayer::Base,
-                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
-                blow.to_hit,
-                StatBounds::NON_NEGATIVE,
-            );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: source_entity_id.clone(),
-                    target_id: Some(target_entity_id.to_owned()),
-                    ability,
-                    difficulty: target_stats.armor_class.clone(),
-                },
-            )
-            .succeeded()
-            {
-                events.push(DomainEvent::SummonMeleeMissed {
-                    source_kind_id: source_kind_id.clone(),
-                    target_kind_id,
-                    method_id: blow.method_id,
-                });
-                continue;
-            }
-
-            self.entities[target_index].alerted = true;
-            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
-            let resistance = self.entities[target_index]
-                .resistances
-                .level(blow.damage_type);
-            let damage = resolve_armored_damage(
-                raw_damage,
-                blow.damage_type,
-                target_stats.armor_class.value,
-                resistance,
-            );
-            self.entities[target_index].hp = self.entities[target_index]
-                .hp
-                .saturating_sub(damage.applied);
-            changed.insert(target_position);
-            self.wake_entity_after_damage(target_index, damage.applied, events);
-            if self.entities[target_index].hp <= 0 {
-                self.resolve_actor_death(
-                    target_index,
-                    DomainEvent::SummonSlew {
-                        source_kind_id: source_kind_id.clone(),
-                        target_kind_id,
-                        method_id: blow.method_id,
-                        damage,
-                    },
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-                break;
-            }
-            events.push(DomainEvent::SummonMeleeHit {
-                source_kind_id: source_kind_id.clone(),
-                target_kind_id,
-                method_id: blow.method_id,
-                damage,
-            });
-        }
-        Ok(())
     }
 
     #[cfg(test)]
@@ -14205,113 +13387,6 @@ impl Game {
         resolutions
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_monster_damage_to_hostile(
-        &mut self,
-        source_entity_id: &str,
-        source_kind_id: &str,
-        ability_id: &str,
-        effect_index: u8,
-        raw_damage: i32,
-        prepared_damage: i32,
-        damage_type: DamageType,
-        target: &MonsterHostileTarget,
-        events: &mut Vec<DomainEvent>,
-    ) -> AbilityEffectResolutionDto {
-        if target.is_player() {
-            return self.resolve_monster_damage_to_player(
-                source_entity_id,
-                source_kind_id,
-                ability_id,
-                effect_index,
-                raw_damage,
-                prepared_damage,
-                damage_type,
-                events,
-            );
-        }
-        let Some(target_index) = self
-            .entities
-            .iter()
-            .position(|entity| entity.id == target.entity_id() && entity.hp > 0)
-        else {
-            return AbilityEffectResolutionDto::Skipped {
-                effect_index,
-                reason: AbilityEffectSkipReasonDto::TargetDead,
-            };
-        };
-        let resistance = self.entities[target_index].resistances.level(damage_type);
-        let damage = resolve_damage(
-            DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
-            resistance,
-        );
-        self.entities[target_index].hp = self.entities[target_index]
-            .hp
-            .saturating_sub(damage.applied);
-        self.wake_entity_after_damage(target_index, damage.applied, events);
-        AbilityEffectResolutionDto::Damage {
-            effect_index,
-            resolution: damage.into(),
-        }
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_monster_damage_to_player(
-        &mut self,
-        source_entity_id: &str,
-        source_kind_id: &str,
-        ability_id: &str,
-        effect_index: u8,
-        raw_damage: i32,
-        prepared_damage: i32,
-        damage_type: DamageType,
-        events: &mut Vec<DomainEvent>,
-    ) -> AbilityEffectResolutionDto {
-        let resistance = self.effective_player_resistances().level(damage_type);
-        self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
-        let damage = self.reduce_player_damage(resolve_damage(
-            DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
-            resistance,
-        ));
-        self.player.hp = self.player.hp.saturating_sub(damage.applied);
-        if self.player_is_dead() {
-            events.push(DomainEvent::PlayerDied {
-                source_kind_id: source_kind_id.to_owned(),
-                method_id: Some(ability_id.to_owned()),
-                damage,
-            });
-        }
-        AbilityEffectResolutionDto::Damage {
-            effect_index,
-            resolution: damage.into(),
-        }
-    }
-
-    fn record_monster_player_resistance(
-        &mut self,
-        source_entity_id: &str,
-        damage_type: DamageType,
-        resistance: ResistanceLevel,
-    ) {
-        let Some(source_index) = self
-            .entities
-            .iter()
-            .position(|entity| entity.id == source_entity_id)
-        else {
-            return;
-        };
-        let smart = self
-            .content
-            .actor(&self.entities[source_index].kind_id)
-            .and_then(|actor| actor.monster_casting.as_ref())
-            .is_some_and(|casting| casting.smart);
-        if smart {
-            self.entities[source_index]
-                .observed_player_resistances
-                .insert(damage_type, resistance);
-        }
-    }
-
     fn resolve_monster_detection(&mut self, index: usize, events: &mut Vec<DomainEvent>) -> bool {
         let kind_id = self.entities[index].kind_id.clone();
         let Some(awareness) = self
@@ -14369,285 +13444,6 @@ impl Game {
             self.entities[index].alerted = true;
             true
         }
-    }
-
-    fn resolve_monster_melee_target(
-        &mut self,
-        source_index: usize,
-        target: &MonsterHostileTarget,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        if target.is_player() {
-            let source_entity_id = self.entities[source_index].id.clone();
-            let player_hp_before = self.player.hp;
-            self.resolve_monster_melee(source_index, events);
-            self.resolve_vengeance_retaliation(
-                &source_entity_id,
-                player_hp_before.saturating_sub(self.player.hp),
-                events,
-                changed,
-                removed_entities,
-            )?;
-            return Ok(());
-        }
-        let source_kind_id = self.entities[source_index].kind_id.clone();
-        let definition = self
-            .content
-            .actor(&source_kind_id)
-            .expect("monster actor definition must remain available")
-            .clone();
-        let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
-        for blow in resolved_melee_blows(&definition) {
-            let Some(target_index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == target.entity_id() && entity.hp > 0)
-            else {
-                break;
-            };
-            let target_definition = self
-                .content
-                .actor(&self.entities[target_index].kind_id)
-                .expect("monster melee target definition must remain available");
-            let target_stats =
-                self.actor_derived_stats(&self.entities[target_index], target_definition, false);
-            let ability = attacker.melee_skill.with_modifier(
-                StatLayer::Base,
-                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
-                blow.to_hit,
-                StatBounds::NON_NEGATIVE,
-            );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.entities[source_index].id.clone(),
-                    target_id: Some(target.entity_id().to_owned()),
-                    ability,
-                    difficulty: target_stats.armor_class.clone(),
-                },
-            )
-            .succeeded()
-            {
-                events.push(DomainEvent::MonsterMeleeEntityMissed {
-                    source_kind_id: source_kind_id.clone(),
-                    target_kind_id: target.kind_id().to_owned(),
-                    method_id: blow.method_id,
-                });
-                continue;
-            }
-
-            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
-            let resistance = self.entities[target_index]
-                .resistances
-                .level(blow.damage_type);
-            let damage = resolve_armored_damage(
-                raw_damage,
-                blow.damage_type,
-                target_stats.armor_class.value,
-                resistance,
-            );
-            self.entities[target_index].hp = self.entities[target_index]
-                .hp
-                .saturating_sub(damage.applied);
-            self.wake_entity_after_damage(target_index, damage.applied, events);
-            if self.entities[target_index].hp <= 0 {
-                events.push(DomainEvent::MonsterMeleeEntitySlew {
-                    source_kind_id: source_kind_id.clone(),
-                    target_kind_id: target.kind_id().to_owned(),
-                    method_id: blow.method_id,
-                    damage,
-                });
-                let removed = self.entities.remove(target_index);
-                changed.insert(removed.position);
-                removed_entities.push(removed.id);
-                break;
-            }
-            events.push(DomainEvent::MonsterMeleeEntityHit {
-                source_kind_id: source_kind_id.clone(),
-                target_kind_id: target.kind_id().to_owned(),
-                method_id: blow.method_id,
-                damage,
-            });
-        }
-        Ok(())
-    }
-
-    fn resolve_monster_melee(&mut self, index: usize, events: &mut Vec<DomainEvent>) {
-        let kind_id = self.entities[index].kind_id.clone();
-        let definition = self
-            .content
-            .actor(&kind_id)
-            .expect("monster actor definition must remain available")
-            .clone();
-        let attacker = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let target = self.player_derived_stats();
-        let armor_class = target.armor_class.value;
-        for blow in resolved_melee_blows(&definition) {
-            let ability = attacker.melee_skill.with_modifier(
-                StatLayer::Base,
-                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
-                blow.to_hit,
-                StatBounds::NON_NEGATIVE,
-            );
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::MeleeHit,
-                    actor_id: self.entities[index].id.clone(),
-                    target_id: Some(self.player.id.clone()),
-                    ability,
-                    difficulty: target.armor_class.clone(),
-                },
-            )
-            .succeeded()
-            {
-                events.push(DomainEvent::MonsterMeleeMissed {
-                    source_kind_id: kind_id.clone(),
-                    method_id: blow.method_id,
-                });
-                continue;
-            }
-
-            if self.protection_from_evil_repels(&definition) {
-                events.push(DomainEvent::MonsterMeleeRepelled {
-                    source_kind_id: kind_id.clone(),
-                    method_id: blow.method_id,
-                });
-                continue;
-            }
-
-            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
-            let resistance = self.effective_player_resistances().level(blow.damage_type);
-            let damage = self.reduce_player_damage(resolve_armored_damage(
-                raw_damage,
-                blow.damage_type,
-                armor_class,
-                resistance,
-            ));
-            self.player.hp = self.player.hp.saturating_sub(damage.applied);
-            events.push(DomainEvent::MonsterMeleeHit {
-                source_kind_id: kind_id.clone(),
-                method_id: blow.method_id.clone(),
-                damage,
-            });
-            if self.player_is_dead() {
-                events.push(DomainEvent::PlayerDied {
-                    source_kind_id: kind_id.clone(),
-                    method_id: blow.method_id,
-                    damage,
-                });
-                break;
-            }
-        }
-    }
-
-    fn protection_from_evil_repels(&mut self, definition: &rfb_content::ActorDefinition) -> bool {
-        if !self.player_has_status_kind(STATUS_PROTECTION_FROM_EVIL)
-            || !definition.tags.iter().any(|tag| tag == "evil")
-        {
-            return false;
-        }
-
-        const ORIGINAL_SAVE_ADJUSTMENT: [i32; 38] = [
-            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
-        ];
-        let wisdom_index = usize::from(
-            self.effective_player_attributes()
-                .index(AttributeKind::Wisdom),
-        )
-        .min(ORIGINAL_SAVE_ADJUSTMENT.len() - 1);
-        let player_power = i64::from(self.progress.level)
-            .saturating_add(i64::from(ORIGINAL_SAVE_ADJUSTMENT[wisdom_index]))
-            .max(1) as u64;
-        let monster_power = u64::from(if definition.tags.iter().any(|tag| tag == "unique") {
-            definition.level.saturating_add(definition.level / 5)
-        } else {
-            definition.level
-        })
-        .max(1);
-        let player_roll = self.rng.bounded(player_power).saturating_add(1);
-        let monster_roll = self.rng.bounded(monster_power).saturating_add(1);
-        if player_roll <= monster_roll {
-            return false;
-        }
-        self.rng.bounded(3) != 0
-    }
-
-    fn resolve_vengeance_retaliation(
-        &mut self,
-        source_entity_id: &str,
-        applied_damage: i32,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        if applied_damage <= 0
-            || self.player_is_dead()
-            || !self.player_has_status_kind(STATUS_VENGEANCE)
-        {
-            return Ok(());
-        }
-        let source_index = self
-            .entities
-            .iter()
-            .position(|entity| entity.id == source_entity_id && entity.hp > 0)
-            .ok_or_else(|| {
-                CoreError::Invariant(format!(
-                    "vengeance source actor {source_entity_id} is missing"
-                ))
-            })?;
-        let target_kind_id = self.entities[source_index].kind_id.clone();
-        let target_position = self.entities[source_index].position;
-        let damage = resolve_damage(
-            DamagePacket::new(applied_damage, DamageType::Physical),
-            ResistanceLevel::Normal,
-        );
-        self.entities[source_index].hp = self.entities[source_index]
-            .hp
-            .saturating_sub(damage.applied);
-        changed.insert(target_position);
-        if self.entities[source_index].hp <= 0 {
-            self.resolve_actor_death(
-                source_index,
-                DomainEvent::VengeanceSlew {
-                    target_kind_id,
-                    damage,
-                },
-                events,
-                changed,
-                removed_entities,
-            )?;
-        } else {
-            events.push(DomainEvent::VengeanceHit {
-                target_kind_id,
-                damage,
-            });
-        }
-
-        let status_index = self
-            .player
-            .statuses
-            .iter()
-            .position(|status| status.kind_id == STATUS_VENGEANCE)
-            .ok_or_else(|| {
-                CoreError::Invariant(
-                    "active vengeance status disappeared during retaliation".into(),
-                )
-            })?;
-        self.player.statuses[status_index].remaining_ticks = self.player.statuses[status_index]
-            .remaining_ticks
-            .saturating_sub(5);
-        if self.player.statuses[status_index].remaining_ticks == 0 {
-            self.player.statuses.remove(status_index);
-            events.push(DomainEvent::PlayerStatusExpired {
-                status_kind_id: STATUS_VENGEANCE.to_owned(),
-            });
-        }
-        Ok(())
     }
 
     fn next_monster_step(&self, index: usize) -> Option<Position> {
@@ -14973,189 +13769,6 @@ impl Game {
             items.extend(generated);
         }
         Ok(items)
-    }
-
-    fn resolve_actor_death(
-        &mut self,
-        index: usize,
-        death_event: DomainEvent,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let actor = self.entities[index].clone();
-        let corpse_kind_id = self
-            .content
-            .actor(&actor.kind_id)
-            .and_then(|definition| definition.corpse_item_kind_id.clone());
-        let corpse = if let Some(kind_id) = corpse_kind_id {
-            let (activation, charges) =
-                initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, 1);
-            Some(ItemInstance {
-                id: self.allocate_item_instance_id()?,
-                activation,
-                charges,
-                device_recovery_progress: 0,
-                curse: initial_item_curse(&self.content, &kind_id),
-                kind_id,
-                quantity: 1,
-                quality: ItemQualityDto::Ordinary,
-                affix_ids: Vec::new(),
-                rolled_affixes: Vec::new(),
-                enchantments: ItemEnchantmentsDto::default(),
-                location: ItemLocation::Ground(actor.position),
-            })
-        } else {
-            None
-        };
-        let generated = self.generate_death_loot(&actor)?;
-        let mut carried = self
-            .items
-            .iter()
-            .filter_map(|item| match &item.location {
-                ItemLocation::CarriedBy { actor_id } if actor_id == &actor.id => {
-                    Some((item.id.clone(), item.kind_id.clone(), item.quantity))
-                }
-                _ => None,
-            })
-            .collect::<Vec<_>>();
-        carried.sort_by(|left, right| left.0.cmp(&right.0));
-        let has_drops = !carried.is_empty() || !generated.is_empty() || corpse.is_some();
-        let dissolved_pack_id = actor
-            .pack
-            .as_ref()
-            .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()));
-
-        let removed = self.entities.remove(index);
-        if let Some(pack_id) = dissolved_pack_id {
-            for entity in &mut self.entities {
-                if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
-                    entity.pack = None;
-                }
-            }
-        }
-        removed_entities.push(removed.id.clone());
-        events.push(death_event);
-        let experience_value = self
-            .content
-            .actor(&removed.kind_id)
-            .expect("removed actor definition must remain available")
-            .experience_value;
-        self.apply_player_experience(experience_value, events);
-        let defeated_guardian = self
-            .content
-            .world(&self.world_id)
-            .and_then(|world| {
-                world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| floor.id == self.current_floor_id)
-            })
-            .and_then(|floor| {
-                floor.guardian.as_ref().and_then(|guardian| {
-                    (guardian.instance_id == removed.id).then(|| {
-                        (
-                            floor
-                                .dungeon_id
-                                .clone()
-                                .expect("guardian floor must have a dungeon ID"),
-                            floor.id.clone(),
-                            guardian.actor_kind_id.clone(),
-                        )
-                    })
-                })
-            });
-        if let Some((dungeon_id, floor_id, target_kind_id)) = defeated_guardian {
-            let state = self
-                .dungeon_states
-                .get_mut(&dungeon_id)
-                .expect("guardian dungeon state must remain available");
-            let first_defeat = !state.guardian_defeated;
-            if first_defeat {
-                state.guardian_defeated = true;
-                events.push(DomainEvent::DungeonGuardianDefeated {
-                    dungeon_id: dungeon_id.clone(),
-                    floor_id,
-                    target_kind_id,
-                });
-                let mirror_ids = self
-                    .content
-                    .world(&self.world_id)
-                    .expect("active world must remain available")
-                    .procedural_floors
-                    .iter()
-                    .filter(|floor| {
-                        floor.dungeon_id.as_deref() == Some(dungeon_id.as_str())
-                            && floor.final_floor
-                    })
-                    .filter_map(|floor| {
-                        floor
-                            .guardian
-                            .as_ref()
-                            .map(|guardian| guardian.instance_id.as_str())
-                    })
-                    .collect::<BTreeSet<_>>();
-                for floor in self.stored_floors.values_mut() {
-                    floor
-                        .entities
-                        .retain(|entity| !mirror_ids.contains(entity.id.as_str()));
-                    floor.items.retain(|item| {
-                        !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if mirror_ids.contains(actor_id.as_str()))
-                    });
-                }
-            }
-        }
-        let defeated_entrance_guardian = self.content.world(&self.world_id).and_then(|world| {
-            world.dungeons.iter().find_map(|dungeon| {
-                dungeon.entrance_guardian.as_ref().and_then(|guardian| {
-                    (self.current_floor_id == world.initial_floor_id
-                        && guardian.instance_id == removed.id)
-                        .then(|| (dungeon.id.clone(), guardian.actor_kind_id.clone()))
-                })
-            })
-        });
-        if let Some((dungeon_id, target_kind_id)) = defeated_entrance_guardian {
-            let state = self
-                .dungeon_states
-                .get_mut(&dungeon_id)
-                .expect("entrance guardian dungeon state must remain available");
-            if !state.entrance_guardian_defeated {
-                state.entrance_guardian_defeated = true;
-                events.push(DomainEvent::DungeonEntranceGuardianDefeated {
-                    dungeon_id,
-                    target_kind_id,
-                });
-            }
-        }
-
-        for (item_id, target_kind_id, quantity) in carried {
-            let item = self
-                .items
-                .iter_mut()
-                .find(|item| item.id == item_id)
-                .expect("carried item collected from authoritative item set");
-            item.location = ItemLocation::Ground(removed.position);
-            events.push(DomainEvent::LootDropped {
-                source_kind_id: removed.kind_id.clone(),
-                target_kind_id,
-                quantity,
-            });
-        }
-        for item in generated {
-            events.push(DomainEvent::LootDropped {
-                source_kind_id: removed.kind_id.clone(),
-                target_kind_id: item.kind_id.clone(),
-                quantity: item.quantity,
-            });
-            self.items.push(item);
-        }
-        if let Some(corpse) = corpse {
-            self.items.push(corpse);
-        }
-        if has_drops {
-            changed.insert(removed.position);
-        }
-        Ok(())
     }
 
     fn generate_death_loot(&mut self, actor: &Actor) -> Result<Vec<ItemInstance>, CoreError> {
@@ -17835,65 +16448,6 @@ impl Game {
         }
     }
 
-    fn trigger_player_trap(
-        &mut self,
-        position: Position,
-        events: &mut Vec<DomainEvent>,
-    ) -> Option<PlayerTrapOutcome> {
-        let index = self.index(position)?;
-        let terrain = self.content.terrain(&self.terrain[index])?;
-        let source_kind_id = terrain.id.clone();
-        let trap = terrain.trap.clone()?;
-        self.revealed_terrain.insert(position);
-        if let Some(difficulty) = trap.saving_throw_difficulty {
-            let ability = self.player_derived_stats().saving_throw_skill;
-            let mut difficulty_pipeline = DerivedStatsPipeline::new();
-            difficulty_pipeline.add(
-                StatKind::ActionDifficulty,
-                StatLayer::Environment,
-                &source_kind_id,
-                difficulty,
-            );
-            let check = resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::SavingThrow,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(source_kind_id.clone()),
-                    ability,
-                    difficulty: difficulty_pipeline
-                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-                },
-            );
-            let succeeded = check.succeeded();
-            let skill_id = self
-                .content
-                .skill_by_kind(SkillKind::SavingThrow)
-                .expect("validated saving throw skill must remain available")
-                .id
-                .clone();
-            events.push(DomainEvent::SavingThrowChecked {
-                source_kind_id: source_kind_id.clone(),
-                position,
-                succeeded,
-                resolution: check.to_dto(skill_id),
-            });
-            if succeeded {
-                return Some(PlayerTrapOutcome::Resisted);
-            }
-        }
-        let damage = self.reduce_player_damage(resolve_damage(
-            DamagePacket::new(trap.damage, trap.damage_type.into()),
-            self.effective_player_resistances()
-                .level(trap.damage_type.into()),
-        ));
-        self.player.hp = self.player.hp.saturating_sub(damage.applied);
-        Some(PlayerTrapOutcome::Triggered {
-            source_kind_id,
-            damage,
-        })
-    }
-
     fn relocate_player(
         &mut self,
         destination: Position,
@@ -18778,19 +17332,6 @@ impl Game {
     }
 }
 
-struct ActorStatusTick {
-    damage: Vec<StatusDamageTick>,
-    expired: Vec<String>,
-    fatal_damage: Option<StatusDamageTick>,
-    awakened: bool,
-}
-
-#[derive(Clone)]
-struct StatusDamageTick {
-    status_kind_id: String,
-    outcome: DamageOutcome,
-}
-
 struct ActorDerivedStats {
     max_hp: DerivedStat,
     attack: DerivedStat,
@@ -18811,14 +17352,6 @@ struct ActorDerivedStats {
     perception_skill: DerivedStat,
     disarm_skill: DerivedStat,
     dig_skill: DerivedStat,
-}
-
-enum PlayerTrapOutcome {
-    Resisted,
-    Triggered {
-        source_kind_id: String,
-        damage: DamageOutcome,
-    },
 }
 
 #[derive(Clone)]
@@ -20115,80 +18648,6 @@ fn add_equipment_stat(
 
 fn derived_speed(speed: &DerivedStat) -> u16 {
     u16::try_from(speed.value).expect("derived actor speed must fit u16")
-}
-
-fn process_actor_status_tick(
-    actor: &mut Actor,
-    lethal_at_zero: bool,
-    incoming_damage_percent: u8,
-) -> ActorStatusTick {
-    let periodic = actor
-        .statuses
-        .iter()
-        .filter_map(|status| {
-            let damage_type = match status.kind_id.as_str() {
-                STATUS_BLEEDING => DamageType::Physical,
-                STATUS_POISON => DamageType::Poison,
-                _ => return None,
-            };
-            Some((
-                status.kind_id.clone(),
-                i32::from(status.intensity),
-                damage_type,
-            ))
-        })
-        .collect::<Vec<_>>();
-    let mut damage = Vec::new();
-    let mut fatal_damage = None;
-    let mut awakened = false;
-    for (status_kind_id, amount, damage_type) in periodic {
-        let outcome = scale_damage_outcome(
-            resolve_damage(
-                DamagePacket::new(amount, damage_type),
-                actor.resistances.level(damage_type),
-            ),
-            incoming_damage_percent,
-        );
-        actor.hp = actor.hp.saturating_sub(outcome.applied);
-        let damage_tick = StatusDamageTick {
-            status_kind_id: status_kind_id.clone(),
-            outcome,
-        };
-        if outcome.applied > 0 && actor.hp > 0 {
-            let before = actor.statuses.len();
-            actor
-                .statuses
-                .retain(|status| status.kind_id != STATUS_SLEEP);
-            awakened |= actor.statuses.len() != before;
-        }
-        damage.push(damage_tick.clone());
-        if actor.hp < 0 || (lethal_at_zero && actor.hp == 0) {
-            fatal_damage = Some(damage_tick);
-            break;
-        }
-    }
-    let expired = advance_status_ticks(&mut actor.statuses, 1);
-    ActorStatusTick {
-        damage,
-        expired,
-        fatal_damage,
-        awakened,
-    }
-}
-
-fn scale_damage_outcome(mut damage: DamageOutcome, percent: u8) -> DamageOutcome {
-    let original_applied = damage.applied;
-    damage.applied = i32::try_from(
-        i64::from(original_applied)
-            .saturating_mul(i64::from(percent))
-            .saturating_add(99)
-            .saturating_div(100),
-    )
-    .unwrap_or(i32::MAX);
-    damage.resistance_delta = damage
-        .resistance_delta
-        .saturating_add(original_applied.saturating_sub(damage.applied));
-    damage
 }
 
 fn squared_distance(left: Position, right: Position) -> i32 {

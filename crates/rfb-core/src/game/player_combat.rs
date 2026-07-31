@@ -1,0 +1,616 @@
+// SPDX-License-Identifier: MPL-2.0
+
+use super::*;
+
+impl Game {
+    pub(super) fn gain_player_melee_resources(
+        &mut self,
+        source: ResourceGainSourceDto,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resource_ids = self.resources.keys().cloned().collect::<Vec<_>>();
+        for resource_id in resource_ids {
+            let amount = {
+                let definition = self
+                    .content
+                    .resource(&resource_id)
+                    .expect("player resource definition must remain available");
+                match source {
+                    ResourceGainSourceDto::MeleeHit => definition.melee_hit_gain_amount,
+                    ResourceGainSourceDto::MeleeKill => definition.melee_kill_gain_amount,
+                }
+            };
+            if amount == 0 {
+                continue;
+            }
+            // A capped gain still counts as touching the pool so the turn
+            // decay never erodes a resource that is being actively fed.
+            self.resources_touched.insert(resource_id.clone());
+            let pool = self
+                .resources
+                .get_mut(&resource_id)
+                .expect("player resource pool must remain available");
+            let before = pool.current;
+            pool.current = pool.current.saturating_add(amount).min(pool.maximum);
+            if pool.current > before {
+                events.push(DomainEvent::ResourceGained {
+                    resolution: ResourceGainResolutionDto {
+                        resource_id: resource_id.clone(),
+                        source,
+                        before,
+                        after: pool.current,
+                        gained: pool.current - before,
+                    },
+                });
+            }
+        }
+    }
+
+    pub(super) fn resolve_player_projectile(
+        &mut self,
+        target: TargetSelection,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let Some(profile) = self.player_projectile_profile() else {
+            events.push(DomainEvent::ProjectileUnavailable);
+            return Ok(());
+        };
+        let Some(path) = self.projectile_path(&target, profile.range) else {
+            events.push(DomainEvent::ProjectileTargetUnavailable);
+            return Ok(());
+        };
+        let Some(ammunition) = self.take_inventory_item_kind(&profile.ammo_kind_id)? else {
+            events.push(DomainEvent::ProjectileAmmoUnavailable {
+                ammo_kind_id: profile.ammo_kind_id,
+            });
+            return Ok(());
+        };
+        let (trace, target_index) = self.trace_projectile_path(path);
+        if let Some(index) = target_index {
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("projectile target definition must remain available")
+                .clone();
+            let target_kind_id = definition.id.clone();
+            self.entities[index].alerted = true;
+            let attacker = self.player_derived_stats();
+            let ranged_skill = attacker.ranged_skill.with_modifier(
+                StatLayer::Equipment,
+                profile.ammo_kind_id.clone(),
+                i32::from(profile.ammunition_to_hit),
+                StatBounds::NON_NEGATIVE,
+            );
+            let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+            changed.insert(self.entities[index].position);
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::ProjectileHit,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(self.entities[index].id.clone()),
+                    ability: ranged_skill,
+                    difficulty: target.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::ProjectileMissed {
+                    target_kind_id,
+                    trace: trace.clone(),
+                });
+            } else {
+                let raw_damage = self
+                    .roll_damage(profile.damage_dice, profile.damage_sides)
+                    .saturating_add(profile.to_damage)
+                    .max(0);
+                let resistance = self.entities[index].resistances.level(profile.damage_type);
+                let damage = resolve_armored_damage(
+                    raw_damage,
+                    profile.damage_type,
+                    target.armor_class.value,
+                    resistance,
+                );
+                let application = plan_damage_application(
+                    &self.entities[index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[index], &application);
+                events.push(DomainEvent::ProjectileHit {
+                    target_kind_id: target_kind_id.clone(),
+                    damage,
+                    trace: trace.clone(),
+                });
+                self.wake_entity_after_damage(index, damage.applied, events);
+                if application.fatal {
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::ProjectileSlew {
+                            target_kind_id,
+                            damage,
+                            trace: trace.clone(),
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+        } else {
+            events.push(DomainEvent::ProjectileLanded {
+                trace: trace.clone(),
+            });
+        }
+        self.settle_projectile_ammunition(
+            ammunition,
+            trace.landing,
+            target_index.is_some(),
+            profile.ammo_break_chance_percent,
+            events,
+            changed,
+        );
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_ability_damage_to_entity(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        damage_type: DamageType,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<DamageOutcome, CoreError> {
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("ability target definition must remain available")
+            .clone();
+        let target_kind_id = definition.id.clone();
+        self.entities[index].alerted = true;
+        changed.insert(self.entities[index].position);
+        let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+        let resistance = self.entities[index].resistances.level(damage_type);
+        let damage = resolve_armored_damage(
+            raw_damage,
+            damage_type,
+            target.armor_class.value,
+            resistance,
+        );
+        let application =
+            plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
+        commit_damage_application(&mut self.entities[index], &application);
+        events.push(DomainEvent::AbilityHit {
+            ability_id: ability_id.to_owned(),
+            target_kind_id: target_kind_id.clone(),
+            damage,
+            trace: trace.clone(),
+        });
+        self.wake_entity_after_damage(index, damage.applied, events);
+        if application.fatal {
+            self.resolve_actor_death(
+                index,
+                DomainEvent::AbilitySlew {
+                    ability_id: ability_id.to_owned(),
+                    target_kind_id,
+                    damage,
+                    trace,
+                },
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(damage)
+    }
+
+    pub(super) fn throw_inventory_item(
+        &mut self,
+        item_id: &str,
+        direction: rfb_protocol::Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
+        }) else {
+            events.push(DomainEvent::ItemThrowUnavailable);
+            return Ok(());
+        };
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .expect("throwable item definition must remain available");
+        let range = throw_range(definition.weight_tenths_pound);
+        let profile = definition
+            .throw_profile
+            .as_ref()
+            .map(|profile| ResolvedThrowProfile {
+                to_hit: profile
+                    .to_hit
+                    .saturating_add(i32::from(item.enchantments.to_hit)),
+                to_damage: profile
+                    .to_damage
+                    .saturating_add(i32::from(item.enchantments.to_damage)),
+                damage_dice: profile.damage_dice,
+                damage_sides: profile.damage_sides,
+                damage_type: DamageType::from(profile.damage_type),
+            });
+        let Some(mut thrown) = self.take_inventory_item(item_id)? else {
+            events.push(DomainEvent::ItemThrowUnavailable);
+            return Ok(());
+        };
+        let source_kind_id = thrown.kind_id.clone();
+        self.mark_item_tried(&source_kind_id);
+        let path = self
+            .projectile_path(&TargetSelection::Direction { direction }, range)
+            .expect("direction targeting must always produce a path");
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let landing = trace.landing;
+        if let (Some(profile), Some(index)) = (profile, target_index) {
+            let target_definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("throw target definition must remain available")
+                .clone();
+            let target_kind_id = target_definition.id.clone();
+            self.entities[index].alerted = true;
+            let attacker = self.player_derived_stats();
+            let target = self.actor_derived_stats(&self.entities[index], &target_definition, false);
+            let ability = attacker.throwing_skill.with_modifier(
+                StatLayer::Equipment,
+                &thrown.id,
+                profile.to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+            changed.insert(self.entities[index].position);
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::ThrowHit,
+                    actor_id: self.player.id.clone(),
+                    target_id: Some(self.entities[index].id.clone()),
+                    ability,
+                    difficulty: target.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::ItemThrowMissed {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id,
+                    trace: trace.clone(),
+                });
+            } else {
+                let raw_damage = self
+                    .roll_damage(profile.damage_dice, profile.damage_sides)
+                    .saturating_add(profile.to_damage)
+                    .max(0);
+                let resistance = self.entities[index].resistances.level(profile.damage_type);
+                let damage = resolve_armored_damage(
+                    raw_damage,
+                    profile.damage_type,
+                    target.armor_class.value,
+                    resistance,
+                );
+                let application = plan_damage_application(
+                    &self.entities[index],
+                    damage,
+                    FatalityPolicy::AtOrBelowZero,
+                );
+                commit_damage_application(&mut self.entities[index], &application);
+                events.push(DomainEvent::ItemThrowHit {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id: target_kind_id.clone(),
+                    damage,
+                    trace: trace.clone(),
+                });
+                self.wake_entity_after_damage(index, damage.applied, events);
+                if application.fatal {
+                    self.resolve_actor_death(
+                        index,
+                        DomainEvent::ItemThrowSlew {
+                            source_kind_id: source_kind_id.clone(),
+                            target_kind_id,
+                            damage,
+                            trace: trace.clone(),
+                        },
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+        } else {
+            events.push(DomainEvent::ItemThrown {
+                target_kind_id: source_kind_id,
+                trace,
+            });
+        }
+        thrown.location = ItemLocation::Ground(landing);
+        self.items.push(thrown);
+        changed.insert(landing);
+        Ok(())
+    }
+
+    pub(super) fn resolve_player_melee(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let definition = self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .expect("monster actor definition must remain available")
+            .clone();
+        let target_kind = self.entities[index].kind_id.clone();
+        self.entities[index].alerted = true;
+        let attacker = self.player_derived_stats();
+        let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+        let profile = self.player_melee_profile(&attacker);
+        let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
+            self.items
+                .iter()
+                .find(|item| &item.id == item_id)
+                .is_some_and(|item| {
+                    self.item_passives(item)
+                        .contains(&EquipmentPassive::Vampiric)
+                })
+        });
+        let mut vampiric_drain_remaining = 50_i32;
+        let damage_multiplier =
+            self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
+        for _ in 0..profile.attacks {
+            if attacker.melee_skill.value <= 0
+                || !resolve_check(
+                    &mut self.rng,
+                    CheckContext {
+                        kind: CheckKind::MeleeHit,
+                        actor_id: self.player.id.clone(),
+                        target_id: Some(self.entities[index].id.clone()),
+                        ability: attacker.melee_skill.clone(),
+                        difficulty: target.armor_class.clone(),
+                    },
+                )
+                .succeeded()
+            {
+                events.push(DomainEvent::PlayerMeleeMissed {
+                    target_kind_id: target_kind.clone(),
+                });
+                continue;
+            }
+
+            let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
+            let rolled_damage = weapon_damage
+                .saturating_mul(damage_multiplier)
+                .saturating_div(10)
+                .saturating_add(profile.to_damage)
+                .max(0);
+            let damage_type = profile.damage_type;
+            let resistance = self.entities[index].resistances.level(damage_type);
+            let damage = resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
+            let application = plan_damage_application(
+                &self.entities[index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[index], &application);
+            events.push(DomainEvent::PlayerMeleeHit {
+                target_kind_id: target_kind.clone(),
+                damage,
+            });
+            self.wake_entity_after_damage(index, damage.applied, events);
+            if vampiric_weapon
+                && vampiric_drain_remaining > 0
+                && damage.applied > 5
+                && actor_matches_category(&definition, "living")
+            {
+                let requested = self
+                    .roll_damage(
+                        2,
+                        u16::try_from(damage.applied / 6)
+                            .expect("positive vampiric healing die must fit u16"),
+                    )
+                    .min(vampiric_drain_remaining);
+                vampiric_drain_remaining = vampiric_drain_remaining.saturating_sub(requested);
+                let max_hp = self.effective_player_max_hp();
+                let EffectOutcome::Healed { requested, applied } = apply_effect(
+                    &mut EffectTarget {
+                        hp: &mut self.player.hp,
+                        max_hp,
+                        resistances: &self.player.resistances,
+                        statuses: &mut self.player.statuses,
+                    },
+                    EffectSpec::Heal { amount: requested },
+                ) else {
+                    unreachable!("vampiric melee healing must produce a healing outcome");
+                };
+                events.push(DomainEvent::PlayerVampiricHealed {
+                    resolution: HealingResolutionDto { requested, applied },
+                });
+            }
+            self.gain_player_melee_resources(ResourceGainSourceDto::MeleeHit, events);
+            if application.fatal {
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::PlayerSlew {
+                        target_kind_id: target_kind.clone(),
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.gain_player_melee_resources(ResourceGainSourceDto::MeleeKill, events);
+                break;
+            }
+            self.resolve_confusing_strike(index, &definition, events);
+        }
+        Ok(())
+    }
+
+    pub(super) fn resolve_confusing_strike(
+        &mut self,
+        index: usize,
+        definition: &rfb_content::ActorDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if !self.confusing_strike_ready {
+            return;
+        }
+        self.confusing_strike_ready = false;
+        let target_kind_id = self.entities[index].kind_id.clone();
+        if definition
+            .status_immunities
+            .iter()
+            .any(|status| status == STATUS_CONFUSION)
+        {
+            events.push(DomainEvent::ConfusingStrikeImmune { target_kind_id });
+            return;
+        }
+        if self.rng.bounded(100) < u64::from(definition.level) {
+            events.push(DomainEvent::ConfusingStrikeResisted { target_kind_id });
+            return;
+        }
+        let duration = 10_u32.saturating_add(
+            u32::try_from(self.rng.bounded(u64::from(self.progress.level.max(1))))
+                .expect("confusing strike duration roll must fit u32")
+                / 5,
+        );
+        apply_status(
+            &mut self.entities[index].statuses,
+            StatusApplication {
+                status: StatusInstance {
+                    kind_id: STATUS_CONFUSION.to_owned(),
+                    intensity: 1,
+                    remaining_ticks: duration,
+                    source_id: None,
+                    granted_resistances: BTreeMap::new(),
+                    granted_brands: BTreeSet::new(),
+                    granted_modifiers: StatModifiersDto::default(),
+                    granted_equipment_bonuses: EquipmentBonusesDto::default(),
+                    granted_status_immunities: BTreeSet::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                },
+                stacking: StatusStacking::Extend,
+            },
+        );
+        events.push(DomainEvent::ConfusingStrikeApplied {
+            target_kind_id,
+            duration,
+        });
+    }
+
+    pub(super) fn resolve_player_summon_melee(
+        &mut self,
+        source_index: usize,
+        target_entity_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let source_entity_id = self.entities[source_index].id.clone();
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&source_kind_id)
+            .expect("summon actor definition must remain available")
+            .clone();
+        let attacker = self.actor_derived_stats(&self.entities[source_index], &definition, false);
+        for blow in resolved_melee_blows(&definition) {
+            let Some(target_index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+            else {
+                break;
+            };
+            let target_kind_id = self.entities[target_index].kind_id.clone();
+            let target_position = self.entities[target_index].position;
+            let target_definition = self
+                .content
+                .actor(&target_kind_id)
+                .expect("summon melee target definition must remain available");
+            let target_stats =
+                self.actor_derived_stats(&self.entities[target_index], target_definition, false);
+            let ability = attacker.melee_skill.with_modifier(
+                StatLayer::Base,
+                blow.method_id.as_deref().unwrap_or(definition.id.as_str()),
+                blow.to_hit,
+                StatBounds::NON_NEGATIVE,
+            );
+            if !resolve_check(
+                &mut self.rng,
+                CheckContext {
+                    kind: CheckKind::MeleeHit,
+                    actor_id: source_entity_id.clone(),
+                    target_id: Some(target_entity_id.to_owned()),
+                    ability,
+                    difficulty: target_stats.armor_class.clone(),
+                },
+            )
+            .succeeded()
+            {
+                events.push(DomainEvent::SummonMeleeMissed {
+                    source_kind_id: source_kind_id.clone(),
+                    target_kind_id,
+                    method_id: blow.method_id,
+                });
+                continue;
+            }
+
+            self.entities[target_index].alerted = true;
+            let raw_damage = self.roll_damage(blow.damage_dice, blow.damage_sides);
+            let resistance = self.entities[target_index]
+                .resistances
+                .level(blow.damage_type);
+            let damage = resolve_armored_damage(
+                raw_damage,
+                blow.damage_type,
+                target_stats.armor_class.value,
+                resistance,
+            );
+            let application = plan_damage_application(
+                &self.entities[target_index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[target_index], &application);
+            changed.insert(target_position);
+            self.wake_entity_after_damage(target_index, damage.applied, events);
+            if application.fatal {
+                self.resolve_actor_death(
+                    target_index,
+                    DomainEvent::SummonSlew {
+                        source_kind_id: source_kind_id.clone(),
+                        target_kind_id,
+                        method_id: blow.method_id,
+                        damage,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                break;
+            }
+            events.push(DomainEvent::SummonMeleeHit {
+                source_kind_id: source_kind_id.clone(),
+                target_kind_id,
+                method_id: blow.method_id,
+                damage,
+            });
+        }
+        Ok(())
+    }
+}
