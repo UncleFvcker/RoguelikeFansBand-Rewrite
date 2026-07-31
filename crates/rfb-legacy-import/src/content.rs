@@ -7039,6 +7039,152 @@ fn extract_item_effect_programs(
     Ok(programs.into_iter().collect())
 }
 
+struct ExtractedAbilitySources {
+    program_files: Vec<(String, serde_json::Value)>,
+    player_binding_files: Vec<(String, serde_json::Value)>,
+}
+
+fn extract_ability_programs_and_player_bindings(
+    ability_files: &mut [(String, serde_json::Value)],
+    ability_book_files: &[(String, serde_json::Value)],
+    class_files: &[(String, serde_json::Value)],
+) -> Result<ExtractedAbilitySources, String> {
+    let mut player_ability_ids = BTreeSet::new();
+    for (file_name, book) in ability_book_files {
+        let ability_ids = book
+            .get("abilityIds")
+            .and_then(serde_json::Value::as_array)
+            .ok_or_else(|| format!("{file_name} ability book has no abilityIds array"))?;
+        for ability_id in ability_ids {
+            let ability_id = ability_id
+                .as_str()
+                .ok_or_else(|| format!("{file_name} ability book has a non-string ability id"))?;
+            player_ability_ids.insert(ability_id.to_owned());
+        }
+    }
+    for (file_name, class) in class_files {
+        let Some(profiles) = class.get("techniqueProfiles") else {
+            continue;
+        };
+        let profiles = profiles
+            .as_array()
+            .ok_or_else(|| format!("{file_name} class has non-array techniqueProfiles"))?;
+        for profile in profiles {
+            let ability_ids = profile
+                .get("innateAbilityIds")
+                .and_then(serde_json::Value::as_array)
+                .ok_or_else(|| {
+                    format!("{file_name} technique profile has no innateAbilityIds array")
+                })?;
+            for ability_id in ability_ids {
+                let ability_id = ability_id.as_str().ok_or_else(|| {
+                    format!("{file_name} technique profile has a non-string ability id")
+                })?;
+                player_ability_ids.insert(ability_id.to_owned());
+            }
+        }
+    }
+
+    let mut unresolved_player_ability_ids = player_ability_ids.clone();
+    let mut programs = BTreeMap::new();
+    let mut bindings = BTreeMap::new();
+    for (file_name, ability) in ability_files {
+        let stem = file_name
+            .strip_suffix(".json")
+            .ok_or_else(|| format!("ability source file {file_name} has no .json suffix"))?;
+        let ability = ability
+            .as_object_mut()
+            .ok_or_else(|| format!("{file_name} ability source is not an object"))?;
+        let ability_id = ability
+            .get("id")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| format!("{file_name} ability source has no id"))?
+            .to_owned();
+        let target_modes = ability
+            .get("target")
+            .and_then(|target| target.get("modes"))
+            .and_then(serde_json::Value::as_array)
+            .ok_or_else(|| format!("{file_name} ability source has no target modes"))?;
+        let input = match target_modes.as_slice() {
+            [mode] if mode.as_str() == Some("self") => "self",
+            [mode] if mode.as_str() == Some("item") => "item",
+            modes if !modes.is_empty() => "cast-target",
+            _ => return Err(format!("{file_name} ability source has empty target modes")),
+        };
+        let effect = ability
+            .remove("effect")
+            .ok_or_else(|| format!("{file_name} ability source has no inline effect"))?;
+        let steps = if effect.get("type").and_then(serde_json::Value::as_str) == Some("sequence") {
+            effect
+                .get("effects")
+                .and_then(serde_json::Value::as_array)
+                .cloned()
+                .ok_or_else(|| format!("{file_name} sequence has no effects array"))?
+        } else {
+            vec![effect]
+        };
+        let program_id = format!("rfb-legacy.ability-program.{stem}");
+        ability.insert(
+            "abilityProgramId".to_owned(),
+            serde_json::Value::String(program_id.clone()),
+        );
+        let program = serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/ability-program.schema.json"),
+            "formatVersion": 1,
+            "id": program_id,
+            "input": input,
+            "steps": steps,
+        });
+        if programs.insert(file_name.clone(), program).is_some() {
+            return Err(format!("duplicate ability program for {file_name}"));
+        }
+
+        if !player_ability_ids.contains(&ability_id) {
+            continue;
+        }
+        unresolved_player_ability_ids.remove(&ability_id);
+        let minimum_level = ability
+            .remove("minimumLevel")
+            .ok_or_else(|| format!("{file_name} player ability has no minimumLevel"))?;
+        let resource_id = ability
+            .remove("resourceId")
+            .ok_or_else(|| format!("{file_name} player ability has no resourceId"))?;
+        let resource_cost = ability
+            .remove("resourceCost")
+            .ok_or_else(|| format!("{file_name} player ability has no resourceCost"))?;
+        let base_failure_percent = ability
+            .remove("baseFailurePercent")
+            .ok_or_else(|| format!("{file_name} player ability has no baseFailurePercent"))?;
+        let mut binding = serde_json::json!({
+            "$schema": format!("{SCHEMA_BASE}/player-ability-binding.schema.json"),
+            "formatVersion": 1,
+            "abilityId": ability_id,
+            "minimumLevel": minimum_level,
+            "resourceId": resource_id,
+            "resourceCost": resource_cost,
+            "baseFailurePercent": base_failure_percent,
+        });
+        for optional_field in ["proficiency", "cooldown"] {
+            if let Some(value) = ability.remove(optional_field) {
+                binding[optional_field] = value;
+            }
+        }
+        if bindings.insert(file_name.clone(), binding).is_some() {
+            return Err(format!("duplicate player ability binding for {file_name}"));
+        }
+    }
+    if let Some(ability_id) = unresolved_player_ability_ids.into_iter().next() {
+        return Err(format!(
+            "player ability reference has no generated ability source: {ability_id}"
+        ));
+    }
+
+    Ok(ExtractedAbilitySources {
+        program_files: programs.into_iter().collect(),
+        player_binding_files: bindings.into_iter().collect(),
+    })
+}
+
 pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImportError> {
     let canonical_source = source
         .canonicalize()
@@ -7159,6 +7305,14 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let mut outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
     let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
+    let extracted_ability_sources = extract_ability_programs_and_player_bindings(
+        &mut outcome.ability_files,
+        &outcome.ability_book_files,
+        &outcome.class_files,
+    )
+    .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
+    let ability_program_files = extracted_ability_sources.program_files;
+    let player_ability_binding_files = extracted_ability_sources.player_binding_files;
 
     let terrain_dir = output.join("terrain");
     let actor_dir = output.join("actors");
@@ -7167,6 +7321,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     for (directory, files) in [
         ("abilities", &outcome.ability_files),
         ("abilityBooks", &outcome.ability_book_files),
+        ("abilityPrograms", &ability_program_files),
         ("resources", &outcome.resource_files),
         ("effectPrograms", &effect_program_files),
         ("items", &outcome.item_files),
@@ -7174,6 +7329,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         ("races", &outcome.race_files),
         ("classes", &outcome.class_files),
         ("personalities", &outcome.personality_files),
+        ("playerAbilityBindings", &player_ability_binding_files),
         ("skills", &outcome.skill_files),
         ("skillSets", &outcome.skill_set_files),
     ] {
@@ -7230,6 +7386,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     if !outcome.ability_book_files.is_empty() {
         content_roots.push("abilityBooks");
     }
+    if !ability_program_files.is_empty() {
+        content_roots.push("abilityPrograms");
+    }
     content_roots.push("actors");
     if !outcome.affix_files.is_empty() {
         content_roots.push("affixes");
@@ -7245,6 +7404,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     }
     if !outcome.personality_files.is_empty() {
         content_roots.push("personalities");
+    }
+    if !player_ability_binding_files.is_empty() {
+        content_roots.push("playerAbilityBindings");
     }
     if !outcome.race_files.is_empty() {
         content_roots.push("races");
@@ -8275,6 +8437,133 @@ W:5:0:0:150:80
         assert_eq!(frost["input"], "actor");
         assert_eq!(frost["steps"].as_array().map(Vec::len), Some(1));
         assert_eq!(frost["steps"][0]["type"], "damage");
+    }
+
+    #[test]
+    fn ability_extraction_emits_programs_and_player_bindings() {
+        fn ability(
+            id: &str,
+            target: serde_json::Value,
+            effect: serde_json::Value,
+        ) -> serde_json::Value {
+            serde_json::json!({
+                "id": id,
+                "minimumLevel": 3,
+                "resourceId": LEGACY_RESOURCE_ID,
+                "resourceCost": 5,
+                "baseFailurePercent": 20,
+                "target": target,
+                "effect": effect,
+            })
+        }
+
+        let mut abilities = vec![
+            (
+                "book-spell.json".to_owned(),
+                ability(
+                    "rfb-legacy.ability.book-spell",
+                    serde_json::json!({
+                        "modes": ["self"],
+                        "range": 0,
+                        "requiresLineOfEffect": false,
+                    }),
+                    serde_json::json!({
+                        "type": "sequence",
+                        "effects": [
+                            { "type": "heal", "amount": 4 },
+                            { "type": "remove-status", "statusKindId": "rfb.status.fear" },
+                        ],
+                    }),
+                ),
+            ),
+            (
+                "innate.json".to_owned(),
+                ability(
+                    "rfb-legacy.ability.innate",
+                    serde_json::json!({
+                        "modes": ["entity"],
+                        "range": 6,
+                        "requiresLineOfEffect": true,
+                    }),
+                    serde_json::json!({
+                        "type": "damage",
+                        "damageDice": 1,
+                        "damageSides": 4,
+                        "damageType": "physical",
+                    }),
+                ),
+            ),
+            (
+                "monster-only.json".to_owned(),
+                ability(
+                    "rfb-legacy.ability.monster-only",
+                    serde_json::json!({
+                        "modes": ["entity"],
+                        "range": 6,
+                        "requiresLineOfEffect": true,
+                    }),
+                    serde_json::json!({
+                        "type": "damage",
+                        "damageDice": 1,
+                        "damageSides": 4,
+                        "damageType": "physical",
+                    }),
+                ),
+            ),
+        ];
+        let books = vec![(
+            "book.json".to_owned(),
+            serde_json::json!({
+                "abilityIds": ["rfb-legacy.ability.book-spell"],
+            }),
+        )];
+        let classes = vec![(
+            "class.json".to_owned(),
+            serde_json::json!({
+                "techniqueProfiles": [{
+                    "innateAbilityIds": ["rfb-legacy.ability.innate"],
+                }],
+            }),
+        )];
+
+        let extracted =
+            extract_ability_programs_and_player_bindings(&mut abilities, &books, &classes)
+                .expect("ability source policy should extract deterministically");
+        let programs = extracted.program_files;
+        let bindings = extracted.player_binding_files;
+
+        assert_eq!(programs.len(), 3);
+        assert_eq!(bindings.len(), 2);
+        assert_eq!(
+            abilities[0].1["abilityProgramId"],
+            "rfb-legacy.ability-program.book-spell"
+        );
+        assert!(abilities[0].1.get("effect").is_none());
+        assert!(abilities[0].1.get("minimumLevel").is_none());
+        assert_eq!(abilities[2].1["minimumLevel"], 3);
+
+        let book_program = programs
+            .iter()
+            .find(|(name, _)| name == "book-spell.json")
+            .map(|(_, value)| value)
+            .expect("book Program should be emitted");
+        assert_eq!(book_program["input"], "self");
+        assert_eq!(book_program["steps"].as_array().map(Vec::len), Some(2));
+        let monster_program = programs
+            .iter()
+            .find(|(name, _)| name == "monster-only.json")
+            .map(|(_, value)| value)
+            .expect("monster Program should be emitted");
+        assert_eq!(monster_program["input"], "cast-target");
+
+        let book_binding = bindings
+            .iter()
+            .find(|(name, _)| name == "book-spell.json")
+            .map(|(_, value)| value)
+            .expect("book player binding should be emitted");
+        assert_eq!(book_binding["abilityId"], "rfb-legacy.ability.book-spell");
+        assert_eq!(book_binding["resourceCost"], 5);
+        assert!(bindings.iter().all(|(name, _)| name != "monster-only.json"));
     }
 
     #[test]
