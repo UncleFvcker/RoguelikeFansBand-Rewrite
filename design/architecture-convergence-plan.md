@@ -1,8 +1,8 @@
 # Architecture Convergence Plan
 
-Status: phases 0-6 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, and the first command-domain plan/commit boundary.
+Status: phases 0-8 complete; the implemented boundary covers protocol projection, validation, persistence orchestration, test organization, pure world-generation calculations, inventory plan/commit operations, frontend composition, and character progression calculations and plans.
 
-This plan is based on repository state at commit `82d1eea5` on 2026-07-30. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
+This plan was initially based on repository state at commit `82d1eea5` on 2026-07-30 and was refreshed from the Phase 8 base commit `d8ccc389` on 2026-07-31. It is a behavior-preserving convergence plan, not an engine migration or a rewrite of `rfb-core`.
 
 ## 1. Current architecture
 
@@ -44,7 +44,7 @@ Domain code must not depend on Tauri, TypeScript, DOM APIs, or PixiJS. `rfb-save
 
 ### The `Game` aggregate today
 
-At the audited commit, `crates/rfb-core/src/game/mod.rs` contained 26,254 lines. `Game` is the correct authoritative aggregate root, but its implementation is also the home of most domain behavior.
+At the initial audited commit, `crates/rfb-core/src/game/mod.rs` contained 26,254 lines. After Phase 8 it contains 22,425 lines, with progression calculations and command planning in a 516-line `progression.rs`. `Game` is the correct authoritative aggregate root, but its implementation is still the home of most domain behavior.
 
 `Game` currently owns:
 
@@ -106,20 +106,11 @@ The external compatibility layers are stronger and must remain primary refactor 
 
 Future test work should reduce direct state mutation only when a repeated setup pattern has stable semantics. A general `TestGameBuilder` was not introduced in Phase 4 because the current tests intentionally exercise many distinct historical and malformed states; assigning shared defaults would risk masking those invariants. New support abstractions should be added only for proven repetition and must preserve direct access for compatibility and corruption tests.
 
-### Frontend concentration
+### Frontend composition
 
-`web/src/main.ts` contains 3,707 lines. It owns:
+After Phase 7, `web/src/main.ts` contains 429 lines and acts as the composition root for startup, diagnostics, localization, transport, renderer, state, controllers, and panels. `AppState` owns session truth, `GameSession` owns the single command transaction path, and `InputController` owns input and targeting listener lifetime. Message, save, settings, status, and inventory presentation are separated into focused modules.
 
-- the Tauri transport, renderer, native-save storage, crash diagnostics, localization, and startup;
-- session flags (`busy`, death/campaign end, map dimensions, current snapshot/update);
-- inventory/equipment selections and native-save list state;
-- targeting intent, cursor state, and terrain-interaction mode;
-- all DOM lookups and most event listeners;
-- command dispatch, snapshot/update application, every panel renderer, item dialogs, event formatting, messages, keyboard mapping, and settings persistence.
-
-Existing modules already establish sound lower boundaries: `RenderWorld` consumes authoritative cells, `MapRenderer` composes it with a `RendererBackend`, `PixiRendererBackend` renders only, targeting and terrain interaction logic are pure modules, and `TauriNativeTransport` only performs IPC. The remaining concentration is application/controller and UI composition.
-
-Frontend extraction order should be: pure event/item formatting; message panel; save panel; immutable DOM registry; application/session state; input/targeting controller; command dispatcher; finally panel renderers. No new state framework and no DOM or interaction redesign is justified.
+The lower boundaries remain unchanged: `RenderWorld` consumes authoritative cells, `MapRenderer` composes it with a `RendererBackend`, `PixiRendererBackend` renders only, targeting and terrain interaction logic are pure modules, and `TauriNativeTransport` only performs IPC. No gameplay panel or input path invokes the transport directly. The frontend suite contains 54 focused tests in addition to typecheck, production build, native release build, and desktop E2E coverage.
 
 ### Risks and non-problems
 
@@ -170,6 +161,7 @@ crates/rfb-core/src/game/
   mod.rs          # state, construction, dispatch, domain mutations
   inventory.rs    # inventory/equipment plans, commits, item knowledge
   persistence.rs  # save projection, state hash, restoration, migrations
+  progression.rs  # build/progression calculations and explicit growth plans
   snapshot.rs     # public snapshot and read-only protocol projections
   validation.rs   # command preflight and pure state-invariant predicates
   world/
@@ -245,7 +237,7 @@ Runtime `TaskState`, `DungeonState`, `CampaignState`, item-knowledge state, buil
 
 Implementation used three compatibility-gated batches. The first changed `tests.rs` into the directory-backed `tests/mod.rs` without changing content. The second moved the eight file-header helpers into `tests/support.rs`. The third moved all remaining top-level helpers and all 268 unchanged test functions into 14 domain modules. A mechanical block comparison verified the pre/post test-function set with SHA-256 `8c5deab5547c37ae614c7550ebb7edc9c61748b27da8cb9b7a6263f36d693616` before compilation.
 
-The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. Core still contains 268 game tests and 291 tests overall, with no ignored tests; replay and contract guards remain unchanged.
+The support module contains 23 existing helper functions with `pub(super)` visibility, including command dispatch, floor traversal, controlled item/summon setup, ability/result lookup, skill-check assertions, snapshot lookup, and invariant assertions. No helper adds a new default or production API. After the two Phase 8 command-boundary tests, core contains 270 game tests and 293 tests overall, with no ignored tests; replay and contract guards remain unchanged.
 
 ### Phase 5: pure world-generation calculations (completed)
 
@@ -307,6 +299,20 @@ idempotent listener installation and explicit disposal. The extraction added foc
 contract failure, state defaults, command transaction ordering and recovery, keyboard presets,
 inventory quantities/recharge pairing, settings validation, status formatting, message history,
 save error categories, and localized presentation, bringing the frontend suite to 54 tests.
+
+### Phase 8: character progression calculations and plans (completed)
+
+- Scope: extract character-build lookup, initial attributes, ordered skill aggregation, percentage composition, effective attributes, HP/resource maxima, experience scaling, and proportional HP/resource refresh calculations; introduce explicit plans for experience gain and `IncreaseAttribute` before authoritative mutation.
+- Not in scope: item-driven attribute drain/restore/permanent growth, campaign transition/scoring, death reward ownership, the combat derived-stat pipeline, ability effects, RNG, ID allocation, protocol/content changes, or new public APIs.
+- Files: `game/progression.rs`, `game/mod.rs`, progression tests, and this plan.
+- Risk: changing saturation or rounding points, skill-map ordering, temporary-race overlays, HP/resource proportional scaling, event order, or zero-RNG rejection behavior.
+- Acceptance: exact build/progression snapshots, level and skill growth, successful and unavailable attribute commands, migration/save/hash/replay/fixture compatibility, generators, workspace checks, frontend build/tests, and Tauri release/E2E remain unchanged.
+- Rollback: any RNG draw, event order, state hash, save/replay/fixture, resource ratio, or effective-stat difference; a planner needs mutable `Game`; or visibility must expand beyond `pub(super)`.
+- Tests: progression-focused core tests, all core/replay/contract tests, then the full section 4 matrix.
+
+Implementation used two compatibility-gated parts. Pure functions in `progression.rs` now resolve build definitions and initial attributes; aggregate skills in existing `BTreeMap` order; compose build percentages and attribute modifiers; calculate character HP and profile resource maxima; initialize resource pools; scale experience; and preserve the original saturating proportional HP/resource calculations. Read-only `Game` adapters retain temporary granted-race selection and explicit access to equipment and status inputs.
+
+`IncreaseAttribute` and experience gain now plan against cloned `CharacterProgress` values before mutation. `Game` commits the planned authoritative fields, refreshes skills and resources, rescales current HP/resources, and emits the existing events in their original order. Item effects continue to own their RNG-backed attribute behavior and only reuse the existing `pub(super)` resource snapshot/refresh adapters. Death, campaign transitions, RNG, IDs, scheduling, revision updates, and public event projection remain outside the module. The extraction reduced `game/mod.rs` from the Phase 7 post-extraction 22,817 lines to 22,425 lines and added two focused zero-RNG command tests, bringing core to 293 tests.
 
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 

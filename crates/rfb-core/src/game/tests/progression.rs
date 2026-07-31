@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+use rfb_protocol::AttributeKindDto;
 
 #[test]
 fn default_character_build_preserves_the_v70_player_baseline() {
@@ -145,6 +146,95 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         Game::new_with_build(17, "demo.build.missing"),
         Err(CoreError::UnknownCharacterBuild(_))
     ));
+}
+
+#[test]
+fn attribute_increase_command_commits_growth_without_rng_or_world_progression() {
+    let mut game =
+        Game::new_with_build(96, "demo.build.scholar").expect("scholar build should create");
+    game.apply_player_experience(100, &mut Vec::new());
+    assert!(game.progress.pending_attribute_increases > 0);
+
+    let resource = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("scholar should have mana");
+    resource.current = resource.maximum / 3;
+    let resource_before = *resource;
+    let natural_before = game.progress.attributes.intelligence;
+    let pending_before = game.progress.pending_attribute_increases;
+    let draws_before = game.rng_draw_counter();
+    let world_tick_before = game.world_tick;
+    let energy_before = game.player.energy_need;
+    let turn_before = game.turn;
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::IncreaseAttribute {
+            attribute: AttributeKindDto::Intelligence,
+        },
+    );
+
+    let resource_after = game
+        .resources
+        .get("demo.resource.mana")
+        .expect("scholar should retain mana");
+    assert!(game.progress.attributes.intelligence > natural_before);
+    assert_eq!(
+        game.progress.pending_attribute_increases,
+        pending_before - 1
+    );
+    assert!(resource_after.maximum > resource_before.maximum);
+    assert_eq!(
+        resource_after.current,
+        u32::try_from(
+            u64::from(resource_before.current) * u64::from(resource_after.maximum)
+                / u64::from(resource_before.maximum)
+        )
+        .expect("scaled resource value should fit u32")
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert_eq!(game.world_tick, world_tick_before);
+    assert_eq!(game.player.energy_need, energy_before);
+    assert_eq!(game.turn, turn_before + 1);
+    assert_eq!(update.events.len(), 1);
+    assert_eq!(update.events[0].kind, "player.attribute-increased");
+    assert_eq!(
+        update.events[0].args.get("pendingAttributeIncreases"),
+        Some(&game.progress.pending_attribute_increases.to_string())
+    );
+}
+
+#[test]
+fn unavailable_attribute_increase_rejects_without_mutation_or_rng() {
+    let mut game = Game::new(42);
+    assert_eq!(game.progress.pending_attribute_increases, 0);
+    let progress_before = game.progress.clone();
+    let resources_before = game.resources.clone();
+    let hp_before = game.player.hp;
+    let draws_before = game.rng_draw_counter();
+    let world_tick_before = game.world_tick;
+    let energy_before = game.player.energy_need;
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::IncreaseAttribute {
+            attribute: AttributeKindDto::Strength,
+        },
+    );
+
+    assert_eq!(game.progress, progress_before);
+    assert_eq!(game.resources, resources_before);
+    assert_eq!(game.player.hp, hp_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert_eq!(game.world_tick, world_tick_before);
+    assert_eq!(game.player.energy_need, energy_before);
+    assert!(update.changed_cells.is_empty());
+    assert_eq!(update.events.len(), 1);
+    assert_eq!(
+        update.events[0].kind,
+        "player.attribute-increase-unavailable"
+    );
 }
 
 #[test]
