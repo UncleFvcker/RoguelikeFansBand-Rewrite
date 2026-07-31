@@ -9,11 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "mass-genocide",
-      "power": 300,
-      "radius": 20
-    }
+    "effectProgramId": "demo.effect.mass-genocide"
   },
   "tags": ["consumable", "genocide", "scroll"]
 }

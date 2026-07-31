@@ -515,6 +515,8 @@ The recall source migration maps homeward recall and recall-destination reset to
 
 The category-summon source migration maps hostile general/undead summons and friendly kin/pet summons to separate self-input programs. Selector, level source, count/group rolls, hostility, unique policy, radius, and duration lower unchanged; candidates, placement, RNG, ID allocation, ownership, consumption, awareness, and events remain runtime-owned. Monster category-summon execution remains paused.
 
+The genocide source migration maps glyph-selected and nearby mass genocide to glyph- and self-input programs respectively. Power/radius lower unchanged; target ordering, unique resistance, removal bypass semantics, fatigue, task/reward exclusions, consumption, awareness, and events remain in the explicit genocide adapters.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

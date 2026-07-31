@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "genocide",
-      "power": 300
-    }
+    "effectProgramId": "demo.effect.glyph-genocide"
   },
   "tags": ["consumable", "genocide", "scroll"]
 }

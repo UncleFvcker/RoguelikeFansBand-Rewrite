@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.mass-genocide",
+  "input": "self",
+  "steps": [
+    { "type": "mass-genocide", "power": 300, "radius": 20 }
+  ]
+}
