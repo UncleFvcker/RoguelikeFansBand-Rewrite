@@ -5040,66 +5040,6 @@ impl Game {
         Ok(())
     }
 
-    fn resolve_ability_control(
-        &mut self,
-        target_index: usize,
-        effect_index: u8,
-        category: &str,
-        power: u16,
-    ) -> AbilityEffectResolutionDto {
-        let target_entity_id = self.entities[target_index].id.clone();
-        let target_kind_id = self.entities[target_index].kind_id.clone();
-        let definition = self
-            .content
-            .actor(&target_kind_id)
-            .expect("controlled actor definition must remain available");
-        let target_level = definition.level;
-        let eligible = definition.tags.iter().any(|tag| tag == category);
-        let already_controlled = self.entity_is_player_aligned(target_index);
-        let (roll, outcome) = if already_controlled {
-            (None, AbilityControlOutcomeDto::AlreadyControlled)
-        } else if !eligible {
-            (None, AbilityControlOutcomeDto::Ineligible)
-        } else {
-            let range = power.saturating_sub(10).max(1);
-            let roll = u16::try_from(self.rng.bounded(u64::from(range)) + 1)
-                .expect("validated control power roll must fit u16");
-            if target_level > u32::from(roll).saturating_add(10) {
-                (Some(roll), AbilityControlOutcomeDto::Resisted)
-            } else {
-                let pack = self.entities[target_index].pack.clone();
-                if let Some(pack) = pack {
-                    if pack.role == MonsterPackRoleDto::Leader || pack.leader_id == target_entity_id
-                    {
-                        for entity in &mut self.entities {
-                            if entity
-                                .pack
-                                .as_ref()
-                                .is_some_and(|identity| identity.id == pack.id)
-                            {
-                                entity.pack = None;
-                            }
-                        }
-                    } else {
-                        self.entities[target_index].pack = None;
-                    }
-                }
-                self.entities[target_index].controller_id = Some(self.player.id.clone());
-                (Some(roll), AbilityControlOutcomeDto::Controlled)
-            }
-        };
-        AbilityEffectResolutionDto::Control {
-            effect_index,
-            category: category.to_owned(),
-            power,
-            target_entity_id,
-            target_kind_id,
-            target_level,
-            roll,
-            outcome,
-        }
-    }
-
     fn summon_category_candidate_kind_ids(
         &self,
         category: &str,
