@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-speed",
-      "durationDice": 1,
-      "durationSides": 25,
-      "durationBonus": 15
-    }
+    "effectProgramId": "demo.effect.speed"
   },
   "tags": ["consumable", "haste", "potion", "speed"]
 }

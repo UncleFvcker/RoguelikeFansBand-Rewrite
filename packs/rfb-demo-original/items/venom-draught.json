@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-poison",
-      "durationDice": 1,
-      "durationSides": 15,
-      "durationBonus": 9
-    }
+    "effectProgramId": "demo.effect.poison"
   },
   "tags": [
     "consumable",

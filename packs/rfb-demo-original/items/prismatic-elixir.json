@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-basic-resistance",
-      "durationDice": 1,
-      "durationSides": 20,
-      "durationBonus": 20
-    }
+    "effectProgramId": "demo.effect.basic-resistance"
   },
   "tags": [
     "acid",

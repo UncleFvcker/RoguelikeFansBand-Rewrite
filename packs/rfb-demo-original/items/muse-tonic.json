@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-poetic-inspiration",
-      "durationDice": 1,
-      "durationSides": 100,
-      "durationBonus": 100
-    }
+    "effectProgramId": "demo.effect.poetic-inspiration"
   },
   "tags": ["consumable", "poetic-inspiration", "potion"]
 }

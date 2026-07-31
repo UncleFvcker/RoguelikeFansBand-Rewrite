@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-berserk-strength",
-      "durationDice": 1,
-      "durationSides": 25,
-      "durationBonus": 25
-    }
+    "effectProgramId": "demo.effect.berserk-strength"
   },
   "tags": ["berserk", "consumable", "potion"]
 }

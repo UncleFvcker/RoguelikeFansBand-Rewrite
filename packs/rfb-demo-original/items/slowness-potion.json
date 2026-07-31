@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-slowness",
-      "durationDice": 1,
-      "durationSides": 25,
-      "durationBonus": 15
-    }
+    "effectProgramId": "demo.effect.slowness"
   },
   "tags": ["consumable", "potion", "slowness"]
 }

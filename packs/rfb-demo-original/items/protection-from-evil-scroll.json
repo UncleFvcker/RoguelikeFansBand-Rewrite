@@ -9,9 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "protection-from-evil"
-    }
+    "effectProgramId": "demo.effect.protection-from-evil"
   },
   "tags": [
     "consumable",

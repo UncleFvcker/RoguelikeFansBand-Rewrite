@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-thermal-resistance",
-      "durationDice": 1,
-      "durationSides": 10,
-      "durationBonus": 10
-    }
+    "effectProgramId": "demo.effect.thermal-resistance"
   },
   "tags": ["cold", "consumable", "fire", "potion", "resistance"]
 }

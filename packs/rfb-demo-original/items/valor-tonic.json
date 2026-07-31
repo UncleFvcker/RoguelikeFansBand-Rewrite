@@ -9,12 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-heroism",
-      "durationDice": 1,
-      "durationSides": 25,
-      "durationBonus": 25
-    }
+    "effectProgramId": "demo.effect.heroism"
   },
   "tags": ["consumable", "heroism", "potion"]
 }

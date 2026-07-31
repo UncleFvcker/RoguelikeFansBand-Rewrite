@@ -9,12 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "bless",
-      "durationDice": 1,
-      "durationSides": 12,
-      "durationBonus": 6
-    }
+    "effectProgramId": "demo.effect.blessing"
   },
   "tags": ["blessing", "consumable", "scroll"]
 }
