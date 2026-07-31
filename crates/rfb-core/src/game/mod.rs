@@ -5588,27 +5588,13 @@ impl Game {
                 );
             }
             (ItemUseEffectDefinition::CurseEquippedItem { target }, ItemUsePlan::SelfTarget) => {
-                let resolution = self.curse_equipped_item(target);
-                if resolution.item_id.is_some() {
-                    self.mark_item_aware(&kind_id);
-                }
-                events.push(DomainEvent::ItemCursed {
-                    source_kind_id: kind_id,
-                    resolution,
-                });
+                self.resolve_item_curse(&kind_id, target, events);
             }
             (
                 ItemUseEffectDefinition::RemoveEquippedCurses { include_heavy },
                 ItemUsePlan::SelfTarget,
             ) => {
-                let resolution = self.remove_equipped_curses(include_heavy);
-                if include_heavy || !resolution.removed_item_ids.is_empty() {
-                    self.mark_item_aware(&kind_id);
-                }
-                events.push(DomainEvent::ItemCursesRemoved {
-                    source_kind_id: kind_id,
-                    resolution,
-                });
+                self.resolve_item_curse_removal(&kind_id, include_heavy, events);
             }
             (
                 ItemUseEffectDefinition::RandomTeleport { .. },
@@ -6080,105 +6066,6 @@ impl Game {
             category: category.to_owned(),
             candidate_kind_ids,
             positions,
-        }
-    }
-
-    fn curse_equipped_item(&mut self, target: ItemCurseTargetDefinition) -> ItemCurseResolutionDto {
-        let mut candidates = self
-            .items
-            .iter()
-            .enumerate()
-            .filter_map(|(index, item)| {
-                let ItemLocation::Equipped { slot_id } = &item.location else {
-                    return None;
-                };
-                let definition = self.content.item(&item.kind_id)?;
-                let matches_target = match target {
-                    ItemCurseTargetDefinition::Weapon => {
-                        definition.tags.iter().any(|tag| tag == "weapon")
-                    }
-                    ItemCurseTargetDefinition::Armor => {
-                        definition.tags.iter().any(|tag| tag == "armor")
-                    }
-                };
-                matches_target.then(|| (slot_id.clone(), item.id.clone(), index))
-            })
-            .collect::<Vec<_>>();
-        candidates.sort_by(|left, right| left.0.cmp(&right.0).then_with(|| left.1.cmp(&right.1)));
-        if candidates.is_empty() {
-            return ItemCurseResolutionDto {
-                item_id: None,
-                item_kind_id: None,
-                before: None,
-                after: None,
-                resisted: false,
-            };
-        }
-        let candidate_index = if candidates.len() == 1 {
-            0
-        } else {
-            usize::try_from(self.rng.bounded(candidates.len() as u64))
-                .expect("curse target index must fit usize")
-        };
-        let item_index = candidates[candidate_index].2;
-        let item_id = self.items[item_index].id.clone();
-        let item_kind_id = self.items[item_index].kind_id.clone();
-        let artifact = self
-            .content
-            .item(&item_kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
-        let resisted = artifact
-            && if self.debug_item_curses_land {
-                false
-            } else if self.debug_item_curses_resisted {
-                true
-            } else {
-                self.rng.bounded(100) < 50
-            };
-        let before = self.items[item_index].curse;
-        if !resisted {
-            self.items[item_index].curse =
-                Some(before.map_or(ItemCurseSeverityDto::Normal, |severity| {
-                    severity.max(ItemCurseSeverityDto::Normal)
-                }));
-        }
-        ItemCurseResolutionDto {
-            item_id: Some(item_id),
-            item_kind_id: Some(item_kind_id),
-            before,
-            after: self.items[item_index].curse,
-            resisted,
-        }
-    }
-
-    fn remove_equipped_curses(&mut self, include_heavy: bool) -> ItemCurseRemovalResolutionDto {
-        let mut removed_item_ids = Vec::new();
-        let mut retained_permanent_item_ids = Vec::new();
-        for item in &mut self.items {
-            if !matches!(item.location, ItemLocation::Equipped { .. }) {
-                continue;
-            }
-            match item.curse {
-                Some(ItemCurseSeverityDto::Normal) => {
-                    item.curse = None;
-                    removed_item_ids.push(item.id.clone());
-                }
-                Some(ItemCurseSeverityDto::Heavy) if include_heavy => {
-                    item.curse = None;
-                    removed_item_ids.push(item.id.clone());
-                }
-                Some(ItemCurseSeverityDto::Permanent) => {
-                    retained_permanent_item_ids.push(item.id.clone());
-                }
-                Some(ItemCurseSeverityDto::Heavy) | None => {}
-            }
-        }
-        removed_item_ids.sort();
-        retained_permanent_item_ids.sort();
-        ItemCurseRemovalResolutionDto {
-            include_heavy,
-            removed_item_ids,
-            retained_permanent_item_ids,
         }
     }
 
