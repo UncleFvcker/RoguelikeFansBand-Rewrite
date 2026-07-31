@@ -9,10 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "recharge-from-device",
-      "power": 100
-    }
+    "effectProgramId": "demo.effect.recharge-from-device"
   },
   "tags": ["consumable", "recharging", "scroll"]
 }
