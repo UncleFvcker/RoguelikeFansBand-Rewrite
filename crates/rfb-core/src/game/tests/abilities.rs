@@ -4955,10 +4955,15 @@ fn death_ray_enforces_living_unique_and_level_gates() {
         ));
         let mut events = Vec::new();
         let mut removed = Vec::new();
-        game.resolve_ability_death_ray(
-            "demo.ability.death-death-ray",
+        let mut ability = game
+            .content
+            .ability("demo.ability.death-death-ray")
+            .expect("death ray should exist")
+            .clone();
+        ability.effect = AbilityEffectDefinition::DeathRay { power: 100 };
+        game.resolve_player_death_ray_effect(
+            &ability,
             vec![Position { x: 4, y: 3 }],
-            100,
             &mut events,
             &mut BTreeSet::new(),
             &mut removed,

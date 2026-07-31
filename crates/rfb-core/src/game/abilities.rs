@@ -639,6 +639,126 @@ impl Game {
         }
         Ok(())
     }
+
+    pub(super) fn resolve_player_death_ray_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::DeathRay { power } = ability.effect else {
+            unreachable!("death ray executor requires a death ray effect");
+        };
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace,
+            });
+            return Ok(());
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&target_kind_id)
+            .expect("death ray target definition must remain available")
+            .clone();
+        let living = actor_matches_category(&definition, "living");
+        let unique = definition.tags.iter().any(|tag| tag == "unique");
+        let unique_roll = if living && unique {
+            Some(
+                u16::try_from(self.rng.bounded(888) + 1)
+                    .expect("death ray unique roll must fit u16"),
+            )
+        } else {
+            None
+        };
+        let unique_resisted = unique_roll.is_some_and(|roll| roll != 666);
+        let (target_level_roll, caster_level_roll) = if living && !unique_resisted {
+            (
+                Some(
+                    u16::try_from(self.rng.bounded(20) + 1)
+                        .expect("death ray target roll must fit u16"),
+                ),
+                Some(
+                    u32::try_from(self.rng.bounded(u64::from(power.max(1))) + 1)
+                        .expect("validated death ray caster roll must fit u32"),
+                ),
+            )
+        } else {
+            (None, None)
+        };
+        let resisted = !living
+            || unique_resisted
+            || target_level_roll.zip(caster_level_roll).is_some_and(
+                |(target_roll, caster_roll)| {
+                    definition.level.saturating_add(u32::from(target_roll)) > caster_roll
+                },
+            );
+        let damage = if resisted {
+            None
+        } else {
+            let raw_damage = i32::from(self.progress.level).saturating_mul(200);
+            let damage = resolve_damage(
+                DamagePacket::new(raw_damage, DamageType::Curse),
+                ResistanceLevel::Normal,
+            );
+            self.entities[target_index].alerted = true;
+            let application = plan_damage_application(
+                &self.entities[target_index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[target_index], &application);
+            changed.insert(application.position);
+            events.push(DomainEvent::AbilityHit {
+                ability_id: ability.id.clone(),
+                target_kind_id: target_kind_id.clone(),
+                damage,
+                trace: trace.clone(),
+            });
+            self.wake_entity_after_damage(target_index, damage.applied, events);
+            if application.fatal {
+                self.resolve_actor_death(
+                    target_index,
+                    DomainEvent::AbilitySlew {
+                        ability_id: ability.id.clone(),
+                        target_kind_id: target_kind_id.clone(),
+                        damage,
+                        trace: trace.clone(),
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            Some(damage.into())
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![AbilityEffectResolutionDto::DeathRay {
+                    effect_index: 0,
+                    power,
+                    target_level: definition.level,
+                    living,
+                    unique,
+                    unique_roll,
+                    target_level_roll,
+                    caster_level_roll,
+                    resisted,
+                    resolution: damage,
+                }],
+            },
+            trace: Some(trace),
+        });
+        Ok(())
+    }
 }
 
 impl Game {
