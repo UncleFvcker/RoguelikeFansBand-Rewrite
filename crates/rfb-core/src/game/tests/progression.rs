@@ -454,15 +454,12 @@ fn wraithform_passes_walls_halves_spell_damage_and_expires_in_place() {
         .expect("Wraithform should exist")
         .clone();
     Game::apply_player_level_scaling(&mut ability, 47);
-    game.resolve_ability_actor_effects(
-        &ability.id,
-        &ability.effect,
+    game.resolve_player_actor_status_effect(
+        &ability,
         AbilityTargetPlan::SelfTarget,
         &mut Vec::new(),
         &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("Wraithform should resolve");
+    );
     assert!(game.player_can_pass_walls());
     dispatch_next(
         &mut game,

@@ -2787,9 +2787,8 @@ fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
             .expect("Berserk should exist")
             .clone();
         Game::apply_player_level_scaling(&mut ability, 40);
-        game.resolve_ability_actor_effects(
-            &ability.id,
-            &ability.effect,
+        game.resolve_player_ordered_sequence_effect(
+            &ability,
             AbilityTargetPlan::SelfTarget,
             &mut Vec::new(),
             &mut BTreeSet::new(),
@@ -2845,9 +2844,8 @@ fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
         .clone();
     Game::apply_player_level_scaling(&mut ability, 40);
     frenzy
-        .resolve_ability_actor_effects(
-            &ability.id,
-            &ability.effect,
+        .resolve_player_ordered_sequence_effect(
+            &ability,
             AbilityTargetPlan::SelfTarget,
             &mut Vec::new(),
             &mut BTreeSet::new(),
@@ -5253,15 +5251,12 @@ fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
         .expect("Vampiric Transformation should exist")
         .clone();
     Game::apply_player_level_scaling(&mut ability, 35);
-    game.resolve_ability_actor_effects(
-        &ability.id,
-        &ability.effect,
+    game.resolve_player_actor_status_effect(
+        &ability,
         AbilityTargetPlan::SelfTarget,
         &mut Vec::new(),
         &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("Vampiric Transformation should resolve");
+    );
 
     let transformed = game.snapshot().player;
     assert_eq!(game.body_slots, body_slots);
