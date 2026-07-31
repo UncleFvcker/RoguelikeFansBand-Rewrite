@@ -650,6 +650,8 @@ The second source-compiler sub-batch completes Gate 6 by moving source size/file
 
 The validation-ownership bootstrap sub-batch moves the unchanged contiguous validation implementation, from item-effect checks through position/reference helpers, into the private 5,244-line `validation/mod.rs`. `ContentError` remains at the crate root, while nine sibling-module entry helpers use only `pub(crate)` visibility and every caller imports them explicitly from the new owner. Validation orchestration, local map/set construction, normalization order, and first-error precedence are unchanged; domain splitting remains in later Gate 7 sub-batches. `lib.rs` falls from 8,162 to 2,928 lines. Both content feature matrices, schema freshness, source verification with the canonical demo hash, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass.
 
+The shared-validation sub-batch moves the terminal scalar, semantic-version, ID, text, glyph, tag, bounded-property, reference, role, and position helpers into the private 314-line `validation/shared.rs`. Seven established sibling-module entry points retain `pub(crate)` visibility, twelve orchestration helpers are limited to `pub(super)`, and the SemVer identifier parser remains file-private. The 4,950-line parent keeps the unchanged ordered orchestration and concrete domain checks. Both content feature matrices, schema freshness, source verification with the canonical demo hash, workspace all-target checks, zero-warning Clippy, all 33 replay tests, and all 454 fixtures pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
