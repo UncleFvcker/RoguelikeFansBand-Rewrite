@@ -48,6 +48,78 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    fn item_is_valid_identify_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+        source_item_id != target_item_id
+            && self.items.iter().any(|item| {
+                item.id == target_item_id
+                    && item.quantity > 0
+                    && match &item.location {
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
+                        ItemLocation::Ground(position) => *position == self.player.position,
+                        ItemLocation::CarriedBy { .. } => false,
+                    }
+            })
+    }
+
+    pub(super) fn resolve_item_identification(
+        &mut self,
+        source_kind_id: &str,
+        target_item_id: &str,
+        full: bool,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        self.mark_item_aware(source_kind_id);
+        let resolution = self.identify_item_instance(target_item_id, full);
+        events.push(DomainEvent::ItemIdentified {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            resolution,
+        });
+    }
+
+    pub(super) fn identify_item_instance(
+        &mut self,
+        item_id: &str,
+        full: bool,
+    ) -> ItemIdentifyResolutionDto {
+        let item = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("planned identify target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let affix_ids = item
+            .affix_ids
+            .iter()
+            .cloned()
+            .chain(
+                item.rolled_affixes
+                    .iter()
+                    .map(|rolled| rolled.affix_id.clone()),
+            )
+            .collect::<BTreeSet<_>>();
+        let awareness_before = self.item_knowledge_dto(&item_kind_id);
+        let property_before = self.item_property_knowledge.get(item_id).cloned();
+        self.mark_item_aware(&item_kind_id);
+        let knowledge = self
+            .item_property_knowledge
+            .entry(item_id.to_owned())
+            .or_default();
+        knowledge.appraised = true;
+        if full {
+            knowledge.identified = true;
+            knowledge.known_affix_ids.extend(affix_ids);
+        }
+        let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
+            || property_before.as_ref() != self.item_property_knowledge.get(item_id);
+        ItemIdentifyResolutionDto {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            full,
+            changed,
+        }
+    }
+
     pub(super) fn item_attribute_kind(attribute: &ItemAttributeDefinition) -> AttributeKind {
         match attribute {
             ItemAttributeDefinition::Strength => AttributeKind::Strength,
