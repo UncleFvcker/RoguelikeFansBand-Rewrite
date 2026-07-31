@@ -1062,6 +1062,24 @@ impl Game {
             trace: None,
         });
     }
+
+    pub(super) fn resolve_player_teleport_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        destination: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let from = self.player.position;
+        events.push(DomainEvent::AbilityTeleported {
+            ability_id: ability.id.clone(),
+            resolution: AbilityTeleportResolutionDto {
+                from,
+                to: destination,
+            },
+        });
+        events.extend(self.relocate_player(destination, changed));
+    }
 }
 
 impl Game {

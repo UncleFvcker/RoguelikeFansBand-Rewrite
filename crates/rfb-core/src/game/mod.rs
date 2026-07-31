@@ -3899,15 +3899,7 @@ impl Game {
     ) -> Result<(), CoreError> {
         match (ability.effect.clone(), target_plan) {
             (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
-                let from = self.player.position;
-                events.push(DomainEvent::AbilityTeleported {
-                    ability_id: ability.id,
-                    resolution: AbilityTeleportResolutionDto {
-                        from,
-                        to: destination,
-                    },
-                });
-                events.extend(self.relocate_player(destination, changed));
+                self.resolve_player_teleport_effect(&ability, destination, events, changed);
             }
             (
                 AbilityEffectDefinition::Summon {
