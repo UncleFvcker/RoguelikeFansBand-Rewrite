@@ -13,12 +13,7 @@
     "range": 1,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "damage",
-    "damageDice": 3,
-    "damageSides": 4,
-    "damageType": "physical"
-  },
+  "abilityProgramId": "demo.ability-program.crescent-cut",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

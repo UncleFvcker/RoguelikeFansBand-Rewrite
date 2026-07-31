@@ -13,13 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "damage",
-    "damageDice": 2,
-    "damageSides": 3,
-    "damageBonus": 3,
-    "damageType": "fire"
-  },
+  "abilityProgramId": "demo.ability-program.cinder-bolt",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

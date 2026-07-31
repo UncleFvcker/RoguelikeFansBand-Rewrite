@@ -589,6 +589,8 @@ The direct cast-target status sub-batch moves `death-black-sleep`, `gloom-veil`,
 
 The direct status-removal leaf sub-batch moves `veil-dispel` to one `cast-target` ability program. The veil warden retains the ability in its actor-owned `monsterCasting` list with unchanged candidate weight and tactical policy, while the program owns only removal of `rfb.status.haste`. Lowering preserves the selected execution and the exact monster-dispels-haste contract scenario. The canonical content hash remains unchanged; the shared status capability test, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
 
+The direct damage leaf sub-batch moves `cinder-bolt`, `crescent-cut`, `death-malediction`, `harmonic-spark`, and `resonant-bolt` to five `cast-target` ability programs. Source abilities retain position/entity or direction targeting, player resource/failure/proficiency policy, monster candidate policy, and Death Malediction's level-scaling entry. Programs own only the unchanged damage dice, bonus, and type specifications. Focused player projectile, monster flat-bonus, directional technique, and level-scaling tests pass; the canonical content hash, 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures remain unchanged. Resource drain and bolt-or-beam probability semantics remain inline for later independent sub-batches.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
