@@ -6919,77 +6919,15 @@ impl Game {
                     trace: Some(trace.clone()),
                 }
             }
-            MonsterAbilityTargetPlan::Area {
-                target,
-                trace,
-                affected_positions,
-            } => {
-                let AbilityEffectDefinition::AreaDamage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                    ..
-                } = &plan.ability.effect
-                else {
-                    unreachable!("monster area plan must retain an area effect");
-                };
-                let raw_damage = self
-                    .roll_damage(*damage_dice, *damage_sides)
-                    .saturating_add(i32::from(*damage_bonus))
-                    .max(0);
-                let target_actors =
-                    self.monster_targets_in_footprint(source_index, target, affected_positions);
-                let mut targets = Vec::with_capacity(target_actors.len());
-                for affected_target in target_actors {
-                    let position = affected_target.position();
-                    let distance = target
-                        .position()
-                        .x
-                        .abs_diff(position.x)
-                        .max(target.position().y.abs_diff(position.y));
-                    let prepared = rfb_area_damage(raw_damage, distance);
-                    let effect = self.resolve_monster_damage_to_hostile(
-                        &source_entity_id,
-                        source_kind_id,
-                        &plan.ability.id,
-                        0,
-                        raw_damage,
-                        prepared,
-                        DamageType::from(*damage_type),
-                        &affected_target,
-                        events,
-                    );
-                    changed.insert(position);
-                    targets.push(MonsterAbilityTargetResolutionDto {
-                        target_entity_id: affected_target.entity_id().to_owned(),
-                        target_kind_id: affected_target.kind_id().to_owned(),
-                        target_position: position,
-                        effects: vec![effect],
-                    });
-                }
-                let effects = targets
-                    .iter()
-                    .find(|resolution| resolution.target_entity_id == target.entity_id())
-                    .map(|resolution| resolution.effects.clone())
-                    .unwrap_or_default();
-                self.remove_defeated_player_summons(
-                    targets
-                        .iter()
-                        .map(|target| target.target_entity_id.as_str()),
-                    changed,
-                    removed_entities,
-                );
-                MonsterAbilityPlanResolution {
-                    target_entity_id: target.entity_id().to_owned(),
-                    target_kind_id: target.kind_id().to_owned(),
-                    affected_positions: affected_positions.clone(),
-                    summon: None,
-                    effects,
-                    targets,
-                    trace: Some(trace.clone()),
-                }
-            }
+            MonsterAbilityTargetPlan::Area { .. } => self.resolve_monster_area_damage_plan(
+                source_index,
+                &source_entity_id,
+                source_kind_id,
+                plan,
+                events,
+                changed,
+                removed_entities,
+            ),
             MonsterAbilityTargetPlan::Beam {
                 target,
                 trace,
