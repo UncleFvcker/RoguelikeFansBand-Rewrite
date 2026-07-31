@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::item_use::ItemUsePlan;
 use super::*;
 
 impl Game {
