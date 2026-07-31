@@ -48,6 +48,130 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    pub(super) fn item_category_summon_plan(
+        &self,
+        effect: &ItemUseEffectDefinition,
+    ) -> ItemUsePlan {
+        let ItemUseEffectDefinition::SummonCategory {
+            selector,
+            maximum_level_source,
+            count_dice,
+            count_sides,
+            count_bonus,
+            group_chance_percent,
+            group_count_dice,
+            group_count_sides,
+            group_count_bonus,
+            allow_unique,
+            radius,
+            ..
+        } = effect
+        else {
+            unreachable!("item summon planning requires a category summon effect");
+        };
+        let resolved_kin_category = self
+            .character_definitions()
+            .and_then(|(_, race, _, _)| race.kin_category.as_deref());
+        let category = match selector {
+            ItemSummonSelectorDefinition::AnyMonster => "any-monster",
+            ItemSummonSelectorDefinition::Category { category } => category,
+            ItemSummonSelectorDefinition::PlayerKin => {
+                resolved_kin_category.unwrap_or("player-kin")
+            }
+        };
+        let maximum_level = match maximum_level_source {
+            ItemSummonLevelSourceDefinition::DungeonDepth => {
+                self.floor_depth(&self.current_floor_id).max(1)
+            }
+            ItemSummonLevelSourceDefinition::PlayerLevel => self.progress.level.max(1),
+        };
+        let candidate_kind_ids = if category == "player-kin" {
+            Vec::new()
+        } else {
+            self.summon_category_candidate_kind_ids(category, None, maximum_level, *allow_unique)
+        };
+        let normal_maximum =
+            usize::from(*count_dice) * usize::from(*count_sides) + usize::from(*count_bonus);
+        let group_maximum = if *group_chance_percent == 0 {
+            0
+        } else {
+            usize::from(*group_count_dice) * usize::from(*group_count_sides)
+                + usize::from(*group_count_bonus)
+        };
+        let positions = self
+            .open_positions_around(self.player.position, *radius)
+            .into_iter()
+            .take(normal_maximum.max(group_maximum))
+            .collect();
+        ItemUsePlan::SummonCategory {
+            category: category.to_owned(),
+            candidate_kind_ids,
+            positions,
+        }
+    }
+
+    pub(super) fn resolve_item_category_summon(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        effect: ItemUseEffectDefinition,
+        plan: ItemUsePlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let ItemUseEffectDefinition::SummonCategory {
+            count_dice,
+            count_sides,
+            count_bonus,
+            hostile,
+            group_chance_percent,
+            group_count_dice,
+            group_count_sides,
+            group_count_bonus,
+            duration_turns,
+            ..
+        } = effect
+        else {
+            unreachable!("item summon executor requires a category summon effect")
+        };
+        let ItemUsePlan::SummonCategory {
+            category,
+            candidate_kind_ids,
+            positions,
+        } = plan
+        else {
+            unreachable!("item summon executor requires a category summon plan")
+        };
+        let owner_id = self.player.id.clone();
+        let resolution = self.resolve_category_summon(
+            CategorySummonSpec {
+                source_id: &source_kind_id,
+                owner_id: &owner_id,
+                category: &category,
+                count_dice,
+                count_sides,
+                count_bonus,
+                hostile,
+                group_chance_percent,
+                group_count_dice,
+                group_count_sides,
+                group_count_bonus,
+                duration_turns,
+            },
+            candidate_kind_ids,
+            positions,
+            changed,
+        );
+        if !resolution.entity_ids.is_empty() {
+            self.mark_item_aware(&source_kind_id);
+        }
+        events.push(DomainEvent::ItemSummoned {
+            source_kind_id,
+            profile_id,
+            resolution,
+        });
+    }
+
     fn item_visible_actor_ids(&self) -> Vec<String> {
         self.entities
             .iter()
