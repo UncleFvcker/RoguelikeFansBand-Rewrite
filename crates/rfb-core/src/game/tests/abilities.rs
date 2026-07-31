@@ -3262,19 +3262,34 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
         }
         game
     };
+    let make_ability = |game: &Game, id: &str, beam_chance_percent| {
+        let mut ability = game
+            .content
+            .ability("demo.ability.death-dark-bolt")
+            .expect("dark bolt should provide a bolt-or-beam definition")
+            .clone();
+        let AbilityEffectDefinition::BoltOrBeamDamage { damage_type, .. } = ability.effect else {
+            unreachable!("dark bolt must remain a bolt-or-beam ability");
+        };
+        ability.id = id.to_owned();
+        ability.effect = AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 3,
+            damage_type,
+            beam_chance_percent,
+        };
+        ability
+    };
     let path = vec![Position { x: 4, y: 3 }, Position { x: 5, y: 3 }];
 
     let mut beam = make_game();
+    let beam_ability = make_ability(&beam, "test.ability.beam", 100);
     let initial_hp = beam.entities[0].hp;
     let mut beam_events = Vec::new();
-    beam.resolve_ability_bolt_or_beam(
-        "test.ability.beam",
+    beam.resolve_player_bolt_or_beam_damage_effect(
+        &beam_ability,
         path.clone(),
-        1,
-        1,
-        3,
-        DamageType::Physical,
-        100,
         &mut beam_events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -3287,15 +3302,11 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
     )));
 
     let mut bolt = make_game();
+    let bolt_ability = make_ability(&bolt, "test.ability.bolt", 0);
     let mut bolt_events = Vec::new();
-    bolt.resolve_ability_bolt_or_beam(
-        "test.ability.bolt",
+    bolt.resolve_player_bolt_or_beam_damage_effect(
+        &bolt_ability,
         path,
-        1,
-        1,
-        3,
-        DamageType::Physical,
-        0,
         &mut bolt_events,
         &mut BTreeSet::new(),
         &mut Vec::new(),

@@ -4163,23 +4163,12 @@ impl Game {
                 )?;
             }
             (
-                AbilityEffectDefinition::BoltOrBeamDamage {
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    damage_type,
-                    beam_chance_percent,
-                },
+                AbilityEffectDefinition::BoltOrBeamDamage { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
-                self.resolve_ability_bolt_or_beam(
-                    &ability.id,
+                self.resolve_player_bolt_or_beam_damage_effect(
+                    &ability,
                     path,
-                    damage_dice,
-                    damage_sides,
-                    damage_bonus,
-                    DamageType::from(damage_type),
-                    beam_chance_percent,
                     events,
                     changed,
                     removed_entities,
@@ -4610,82 +4599,6 @@ impl Game {
                 )?;
             }
             _ => unreachable!("validated ability target plan must match its effect"),
-        }
-        Ok(())
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_bolt_or_beam(
-        &mut self,
-        ability_id: &str,
-        path: Vec<Position>,
-        damage_dice: u16,
-        damage_sides: u16,
-        damage_bonus: u16,
-        damage_type: DamageType,
-        beam_chance_percent: u8,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let beam = self.rng.bounded(100) < u64::from(beam_chance_percent);
-        let base_raw_damage = self
-            .roll_damage(damage_dice, damage_sides)
-            .saturating_add(i32::from(damage_bonus))
-            .max(0);
-        if beam {
-            let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
-            let affected_positions = trace.traversed.clone();
-            let targets = self.beam_damage_targets(&affected_positions);
-            changed.extend(affected_positions.iter().copied());
-            events.push(DomainEvent::AbilityBeamDamage {
-                ability_id: ability_id.to_owned(),
-                resolution: AbilityBeamDamageResolutionDto {
-                    base_raw_damage,
-                    damage_type: damage_type.into(),
-                    affected_positions,
-                    target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
-                },
-                trace: trace.clone(),
-            });
-            for entity_id in targets {
-                let Some(index) = self
-                    .entities
-                    .iter()
-                    .position(|entity| entity.id == entity_id && entity.hp > 0)
-                else {
-                    continue;
-                };
-                self.resolve_ability_damage_to_entity(
-                    index,
-                    ability_id,
-                    damage_type,
-                    base_raw_damage,
-                    trace.clone(),
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-            }
-        } else {
-            let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
-            let Some(index) = target_index else {
-                events.push(DomainEvent::AbilityLanded {
-                    ability_id: ability_id.to_owned(),
-                    trace,
-                });
-                return Ok(());
-            };
-            self.resolve_ability_damage_to_entity(
-                index,
-                ability_id,
-                damage_type,
-                base_raw_damage,
-                trace,
-                events,
-                changed,
-                removed_entities,
-            )?;
         }
         Ok(())
     }
