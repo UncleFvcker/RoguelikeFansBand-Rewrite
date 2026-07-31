@@ -4,6 +4,123 @@ use super::*;
 
 impl Game {
     #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_monster_cone_damage_plan(
+        &mut self,
+        source_index: usize,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let MonsterAbilityTargetPlan::Cone {
+            target,
+            trace,
+            affected_positions,
+        } = &plan.target
+        else {
+            unreachable!("monster cone executor requires a cone target plan")
+        };
+        let (raw_damage, damage_type, radius) = match &plan.ability.effect {
+            AbilityEffectDefinition::ConeDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+                radius,
+            } => (
+                self.roll_damage(*damage_dice, *damage_sides)
+                    .saturating_add(i32::from(*damage_bonus))
+                    .max(0),
+                damage_type,
+                radius,
+            ),
+            AbilityEffectDefinition::BreathDamage {
+                hp_percent,
+                max_damage,
+                damage_type,
+                radius,
+            } => {
+                // Breath scales with the caster's current vigor: no damage
+                // dice are rolled, and the elemental cap bounds a healthy caster.
+                let caster_hp = self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == source_entity_id)
+                    .map_or(0, |entity| entity.hp)
+                    .max(0);
+                let scaled = caster_hp
+                    .saturating_mul(i32::from(*hp_percent))
+                    .div_euclid(100);
+                (scaled.min(i32::from(*max_damage)), damage_type, radius)
+            }
+            _ => unreachable!("monster cone plan must retain a cone or breath effect"),
+        };
+        let origin = self
+            .entities
+            .iter()
+            .find(|entity| entity.id == source_entity_id)
+            .map_or(trace.origin, |entity| entity.position);
+        let direction = direction_toward(origin, target.position())
+            .expect("validated monster cone retains a direction");
+        let lateral_distances = self
+            .cone_damage_cells(origin, &trace.traversed, direction, *radius)
+            .into_iter()
+            .map(|(_, lateral, position)| (position, lateral))
+            .collect::<BTreeMap<_, _>>();
+        let target_actors =
+            self.monster_targets_in_footprint(source_index, target, affected_positions);
+        let mut targets = Vec::with_capacity(target_actors.len());
+        for affected_target in target_actors {
+            let lateral_distance = lateral_distances
+                .get(&affected_target.position())
+                .copied()
+                .unwrap_or(0);
+            let prepared = rfb_area_damage(raw_damage, lateral_distance);
+            let effect = self.resolve_monster_damage_to_hostile(
+                source_entity_id,
+                source_kind_id,
+                &plan.ability.id,
+                0,
+                raw_damage,
+                prepared,
+                DamageType::from(*damage_type),
+                &affected_target,
+                events,
+            );
+            changed.insert(affected_target.position());
+            targets.push(MonsterAbilityTargetResolutionDto {
+                target_entity_id: affected_target.entity_id().to_owned(),
+                target_kind_id: affected_target.kind_id().to_owned(),
+                target_position: affected_target.position(),
+                effects: vec![effect],
+            });
+        }
+        let effects = targets
+            .iter()
+            .find(|resolution| resolution.target_entity_id == target.entity_id())
+            .map(|resolution| resolution.effects.clone())
+            .unwrap_or_default();
+        self.remove_defeated_player_summons(
+            targets
+                .iter()
+                .map(|target| target.target_entity_id.as_str()),
+            changed,
+            removed_entities,
+        );
+        MonsterAbilityPlanResolution {
+            target_entity_id: target.entity_id().to_owned(),
+            target_kind_id: target.kind_id().to_owned(),
+            affected_positions: affected_positions.clone(),
+            summon: None,
+            effects,
+            targets,
+            trace: Some(trace.clone()),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_monster_beam_damage_plan(
         &mut self,
         source_index: usize,
