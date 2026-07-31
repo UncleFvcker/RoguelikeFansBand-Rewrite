@@ -9,7 +9,7 @@
   "resourceCost": 40,
   "baseFailurePercent": 70,
   "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
-  "effect": { "type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 99, "damageType": "dark", "radius": 4 },
+  "abilityProgramId": "demo.ability-program.death-darkness-storm",
   "levelScaling": [
     { "effectIndex": 0, "field": "damage-bonus", "multiplier": 200, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
   ],

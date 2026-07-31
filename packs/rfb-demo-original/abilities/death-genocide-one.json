@@ -13,11 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "genocide",
-    "scope": "single",
-    "power": 3
-  },
+  "abilityProgramId": "demo.ability-program.death-genocide-one",
   "levelScaling": [
     {
       "effectIndex": 0,

@@ -16,9 +16,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "teleport-target"
-  },
+  "abilityProgramId": "demo.ability-program.rift-drag",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

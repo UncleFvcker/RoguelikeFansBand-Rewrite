@@ -13,12 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "beam-damage",
-    "damageDice": 2,
-    "damageSides": 4,
-    "damageType": "electricity"
-  },
+  "abilityProgramId": "demo.ability-program.echo-lance",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

@@ -9,6 +9,6 @@
   "resourceCost": 90,
   "baseFailurePercent": 70,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": { "type": "enchant-equipped-weapon", "affixId": "demo.affix.vampiric" },
+  "abilityProgramId": "demo.ability-program.death-vampiric-branding",
   "tags": ["brand", "death", "permanent", "spell", "vampiric"]
 }

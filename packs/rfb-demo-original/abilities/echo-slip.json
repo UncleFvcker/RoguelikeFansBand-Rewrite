@@ -15,10 +15,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "blink-self",
-    "radius": 5
-  },
+  "abilityProgramId": "demo.ability-program.echo-slip",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

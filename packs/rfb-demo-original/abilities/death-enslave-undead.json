@@ -13,11 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "control",
-    "category": "undead",
-    "power": 2
-  },
+  "abilityProgramId": "demo.ability-program.death-enslave-undead",
   "levelScaling": [
     {
       "effectIndex": 0,

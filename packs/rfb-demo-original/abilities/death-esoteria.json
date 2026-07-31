@@ -9,7 +9,7 @@
   "resourceCost": 40,
   "baseFailurePercent": 95,
   "target": { "modes": ["item"], "range": 0, "requiresLineOfEffect": false },
-  "effect": { "type": "identify-item", "fullIdentifyPower": 0, "fullIdentifyRollSides": 50 },
+  "abilityProgramId": "demo.ability-program.death-esoteria",
   "levelScaling": [
     { "effectIndex": 0, "field": "identify-power", "multiplier": 50, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
   ],

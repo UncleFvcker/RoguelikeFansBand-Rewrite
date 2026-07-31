@@ -13,9 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "teleport"
-  },
+  "abilityProgramId": "demo.ability-program.echo-step",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

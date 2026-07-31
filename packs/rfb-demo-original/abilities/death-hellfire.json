@@ -9,7 +9,7 @@
   "resourceCost": 58,
   "baseFailurePercent": 85,
   "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
-  "effect": { "type": "area-damage", "damageDice": 1, "damageSides": 1, "damageBonus": 4, "damageType": "nether", "radius": 1 },
+  "abilityProgramId": "demo.ability-program.death-hellfire",
   "levelScaling": [
     { "effectIndex": 0, "field": "damage-bonus", "multiplier": 600, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 },
     { "effectIndex": 0, "field": "radius", "multiplier": 9, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }

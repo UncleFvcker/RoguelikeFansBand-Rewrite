@@ -595,6 +595,8 @@ The resource-drain leaf sub-batch moves `veil-drain` to one `cast-target` abilit
 
 The bolt-or-beam leaf sub-batch moves `death-dark-bolt` and `death-nether-bolt` to two `cast-target` ability programs. Source abilities retain direction targeting, player resource/failure policy, and damage-dice level scaling; programs own only the base damage specification and zero base beam chance. Existing player-level materialization still derives the same effective beam probability. The focused one-roll penetration and both Death-book projection tests pass; the canonical content hash, 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures remain unchanged.
 
+The remaining-leaf completion sub-batch moves all 42 still-inline non-composition abilities to single-step programs in one compatibility gate. It covers area, beam, cone, breath, curse, death-ray, drain-life and visible damage; detection, terrain transformation and displacement; control, amnesia, identification, vitality restoration and weapon branding; fixed/category summons, animate dead and genocide. The demo pack now has 61 program references, with only six `Sequence` definitions and one `RandomChoice` definition left inline for Gate 5. Source transaction policy and every existing domain owner remain unchanged. The canonical content hash stays fixed; all 32 content tests, schema freshness, all 307 core tests, 33 replay tests, all 454 contract fixtures, and all 27 legacy-import tests pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

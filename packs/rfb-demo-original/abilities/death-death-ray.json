@@ -9,7 +9,7 @@
   "resourceCost": 20,
   "baseFailurePercent": 75,
   "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
-  "effect": { "type": "death-ray", "power": 0 },
+  "abilityProgramId": "demo.ability-program.death-death-ray",
   "levelScaling": [
     { "effectIndex": 0, "field": "death-ray-power", "multiplier": 2, "divisor": 1 }
   ],

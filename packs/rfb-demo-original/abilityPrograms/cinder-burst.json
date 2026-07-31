@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.cinder-burst",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "area-damage",
+      "damageDice": 1,
+      "damageSides": 4,
+      "damageBonus": 2,
+      "damageType": "fire",
+      "radius": 2
+    }
+  ]
+}

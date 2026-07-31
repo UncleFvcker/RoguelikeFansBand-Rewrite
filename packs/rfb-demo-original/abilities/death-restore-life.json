@@ -9,6 +9,6 @@
   "resourceCost": 50,
   "baseFailurePercent": 75,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": { "type": "restore-vitality", "lifeForce": 1000 },
+  "abilityProgramId": "demo.ability-program.death-restore-life",
   "tags": ["death", "experience", "restoration", "spell"]
 }

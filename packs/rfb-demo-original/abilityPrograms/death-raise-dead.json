@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.death-raise-dead",
+  "input": "self",
+  "steps": [
+    {
+      "type": "summon-category",
+      "category": "undead",
+      "upgradedCategory": "high-undead",
+      "upgradeAtLevel": 48,
+      "maximumLevel": 0,
+      "countDice": 1,
+      "countSides": 1,
+      "hostileChancePercent": 67,
+      "friendlyGroupChancePercent": 33,
+      "hostileGroupChancePercent": 100,
+      "groupCountDice": 1,
+      "groupCountSides": 3,
+      "groupCountBonus": 1,
+      "allowUniqueHostile": true,
+      "radius": 2,
+      "durationTurns": 0
+    }
+  ]
+}

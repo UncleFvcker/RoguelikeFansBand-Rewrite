@@ -16,10 +16,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "teleport-away",
-    "minimumDistance": 8
-  },
+  "abilityProgramId": "demo.ability-program.veil-banish",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

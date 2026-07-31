@@ -13,17 +13,7 @@
     "range": 4,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "transform-terrain",
-    "sourceTerrainIds": [
-      "demo.terrain.floor",
-      "demo.terrain.resonance-cavern",
-      "demo.terrain.resonance-water-shallow",
-      "demo.terrain.resonant-floor"
-    ],
-    "targetTerrainId": "demo.terrain.echo-rubble",
-    "radius": 1
-  },
+  "abilityProgramId": "demo.ability-program.echo-rampart",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

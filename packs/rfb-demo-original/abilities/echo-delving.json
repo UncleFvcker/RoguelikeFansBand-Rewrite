@@ -13,17 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "transform-terrain",
-    "sourceTerrainIds": [
-      "demo.terrain.echo-rubble",
-      "demo.terrain.resonance-ruin",
-      "demo.terrain.resonance-vein",
-      "demo.terrain.wall"
-    ],
-    "targetTerrainId": "demo.terrain.floor",
-    "radius": 1
-  },
+  "abilityProgramId": "demo.ability-program.echo-delving",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

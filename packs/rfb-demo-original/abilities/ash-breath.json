@@ -13,13 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "breath-damage",
-    "hpPercent": 60,
-    "maxDamage": 6,
-    "damageType": "fire",
-    "radius": 2
-  },
+  "abilityProgramId": "demo.ability-program.ash-breath",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

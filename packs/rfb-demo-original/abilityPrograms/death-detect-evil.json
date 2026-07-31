@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.death-detect-evil",
+  "input": "self",
+  "steps": [
+    {
+      "type": "detect",
+      "subject": "actor",
+      "category": "evil",
+      "radius": 8
+    }
+  ]
+}

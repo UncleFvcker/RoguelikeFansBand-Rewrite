@@ -13,13 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "area-damage",
-    "damageDice": 2,
-    "damageSides": 4,
-    "damageType": "electricity",
-    "radius": 2
-  },
+  "abilityProgramId": "demo.ability-program.echo-burst",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

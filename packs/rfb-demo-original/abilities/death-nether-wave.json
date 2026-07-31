@@ -9,7 +9,7 @@
   "resourceCost": 35,
   "baseFailurePercent": 70,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": { "type": "visible-damage", "damageDice": 1, "damageSides": 3, "damageType": "nether", "targetCategory": "living" },
+  "abilityProgramId": "demo.ability-program.death-nether-wave",
   "levelScaling": [
     { "effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 3, "divisor": 1 }
   ],

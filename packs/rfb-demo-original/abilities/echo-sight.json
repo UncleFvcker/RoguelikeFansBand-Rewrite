@@ -13,12 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "detect",
-    "category": "hidden",
-    "radius": 6,
-    "persistent": true
-  },
+  "abilityProgramId": "demo.ability-program.echo-sight",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

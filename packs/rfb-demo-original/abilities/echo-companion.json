@@ -13,13 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "summon",
-    "actorKindId": "demo.actor.echo-companion",
-    "count": 2,
-    "radius": 2,
-    "durationTurns": 5
-  },
+  "abilityProgramId": "demo.ability-program.echo-companion",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

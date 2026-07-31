@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.echo-sight",
+  "input": "self",
+  "steps": [
+    {
+      "type": "detect",
+      "category": "hidden",
+      "radius": 6,
+      "persistent": true
+    }
+  ]
+}

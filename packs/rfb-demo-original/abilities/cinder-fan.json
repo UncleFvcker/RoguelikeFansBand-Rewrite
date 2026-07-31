@@ -13,14 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "cone-damage",
-    "damageDice": 1,
-    "damageSides": 3,
-    "damageBonus": 2,
-    "damageType": "fire",
-    "radius": 2
-  },
+  "abilityProgramId": "demo.ability-program.cinder-fan",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

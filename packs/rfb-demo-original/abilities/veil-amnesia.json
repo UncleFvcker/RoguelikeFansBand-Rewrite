@@ -16,9 +16,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "amnesia"
-  },
+  "abilityProgramId": "demo.ability-program.veil-amnesia",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

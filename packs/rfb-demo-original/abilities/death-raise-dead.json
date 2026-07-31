@@ -9,24 +9,7 @@
   "resourceCost": 66,
   "baseFailurePercent": 95,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": {
-    "type": "summon-category",
-    "category": "undead",
-    "upgradedCategory": "high-undead",
-    "upgradeAtLevel": 48,
-    "maximumLevel": 0,
-    "countDice": 1,
-    "countSides": 1,
-    "hostileChancePercent": 67,
-    "friendlyGroupChancePercent": 33,
-    "hostileGroupChancePercent": 100,
-    "groupCountDice": 1,
-    "groupCountSides": 3,
-    "groupCountBonus": 1,
-    "allowUniqueHostile": true,
-    "radius": 2,
-    "durationTurns": 0
-  },
+  "abilityProgramId": "demo.ability-program.death-raise-dead",
   "levelScaling": [
     { "effectIndex": 0, "field": "summon-maximum-level", "multiplier": 3, "divisor": 2 }
   ],

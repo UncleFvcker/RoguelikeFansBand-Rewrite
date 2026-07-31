@@ -16,12 +16,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "curse-damage",
-    "damageDice": 2,
-    "damageSides": 4,
-    "damageBonus": 1
-  },
+  "abilityProgramId": "demo.ability-program.woe-curse",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

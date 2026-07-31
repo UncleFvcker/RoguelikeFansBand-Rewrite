@@ -13,11 +13,6 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "detect",
-    "subject": "actor",
-    "category": "evil",
-    "radius": 8
-  },
+  "abilityProgramId": "demo.ability-program.death-detect-evil",
   "tags": ["death", "detection", "spell"]
 }

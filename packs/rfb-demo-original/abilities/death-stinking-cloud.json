@@ -13,14 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "area-damage",
-    "damageDice": 1,
-    "damageSides": 1,
-    "damageBonus": 9,
-    "damageType": "poison",
-    "radius": 2
-  },
+  "abilityProgramId": "demo.ability-program.death-stinking-cloud",
   "levelScaling": [
     {
       "effectIndex": 0,

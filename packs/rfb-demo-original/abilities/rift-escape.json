@@ -15,10 +15,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "teleport-self",
-    "minimumDistance": 8
-  },
+  "abilityProgramId": "demo.ability-program.rift-escape",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

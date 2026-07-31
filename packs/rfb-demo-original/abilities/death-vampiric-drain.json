@@ -13,14 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "drain-life",
-    "damageDice": 1,
-    "damageSides": 2,
-    "damageBonus": 2,
-    "damageType": "physical",
-    "targetCategory": "living"
-  },
+  "abilityProgramId": "demo.ability-program.death-vampiric-drain",
   "levelScaling": [
     {
       "effectIndex": 0,

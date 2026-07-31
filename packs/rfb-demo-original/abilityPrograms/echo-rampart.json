@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.echo-rampart",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "transform-terrain",
+      "sourceTerrainIds": [
+        "demo.terrain.floor",
+        "demo.terrain.resonance-cavern",
+        "demo.terrain.resonance-water-shallow",
+        "demo.terrain.resonant-floor"
+      ],
+      "targetTerrainId": "demo.terrain.echo-rubble",
+      "radius": 1
+    }
+  ]
+}

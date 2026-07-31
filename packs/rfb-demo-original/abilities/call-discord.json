@@ -13,13 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "summon",
-    "actorKindId": "demo.actor.discordant-echo",
-    "count": 2,
-    "radius": 2,
-    "durationTurns": 5
-  },
+  "abilityProgramId": "demo.ability-program.call-discord",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

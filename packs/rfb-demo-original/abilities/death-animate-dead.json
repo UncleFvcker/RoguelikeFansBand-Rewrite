@@ -13,12 +13,6 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "animate-dead",
-    "actorKindId": "demo.actor.risen-thrall",
-    "corpseItemKindId": "demo.item.corpse-remains",
-    "radius": 8,
-    "count": 8
-  },
+  "abilityProgramId": "demo.ability-program.death-animate-dead",
   "tags": ["death", "spell", "summon", "undead"]
 }

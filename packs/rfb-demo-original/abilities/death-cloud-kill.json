@@ -13,14 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "area-damage",
-    "damageDice": 1,
-    "damageSides": 1,
-    "damageBonus": 59,
-    "damageType": "poison",
-    "radius": 2
-  },
+  "abilityProgramId": "demo.ability-program.death-cloud-kill",
   "levelScaling": [
     {
       "effectIndex": 0,

@@ -9,6 +9,6 @@
   "resourceCost": 35,
   "baseFailurePercent": 60,
   "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
-  "effect": { "type": "drain-life", "damageDice": 1, "damageSides": 1, "damageBonus": 99, "damageType": "nether", "targetCategory": "living", "repeat": 3 },
+  "abilityProgramId": "demo.ability-program.death-vampirism-true",
   "tags": ["death", "drain", "repeat", "spell", "vampiric"]
 }

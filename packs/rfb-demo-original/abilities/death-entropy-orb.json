@@ -13,14 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "area-damage",
-    "damageDice": 3,
-    "damageSides": 6,
-    "damageType": "physical",
-    "radius": 2,
-    "targetCategory": "living"
-  },
+  "abilityProgramId": "demo.ability-program.death-entropy-orb",
   "levelScaling": [
     {
       "effectIndex": 0,

@@ -13,12 +13,7 @@
     "range": 0,
     "requiresLineOfEffect": false
   },
-  "effect": {
-    "type": "detect",
-    "category": "perception-cue",
-    "radius": 4,
-    "persistent": false
-  },
+  "abilityProgramId": "demo.ability-program.echo-pulse",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

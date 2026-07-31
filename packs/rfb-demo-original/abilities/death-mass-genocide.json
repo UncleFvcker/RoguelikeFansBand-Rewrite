@@ -9,7 +9,7 @@
   "resourceCost": 75,
   "baseFailurePercent": 80,
   "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-  "effect": { "type": "genocide", "scope": "nearby", "power": 0, "radius": 20 },
+  "abilityProgramId": "demo.ability-program.death-mass-genocide",
   "levelScaling": [
     { "effectIndex": 0, "field": "genocide-power", "multiplier": 150, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2 }
   ],
