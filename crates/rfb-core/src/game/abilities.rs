@@ -926,6 +926,55 @@ impl Game {
         }
     }
 
+    pub(super) fn resolve_player_control_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        target_plan: AbilityTargetPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Control { category, power } = &ability.effect else {
+            unreachable!("control executor requires a control effect");
+        };
+        let AbilityTargetPlan::Projectile { path, .. } = target_plan else {
+            unreachable!("control effects require a projectile target plan");
+        };
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(target_index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace: trace.clone(),
+            });
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::Skipped {
+                        effect_index: 0,
+                        reason: AbilityEffectSkipReasonDto::NoTarget,
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return;
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        self.entities[target_index].alerted = true;
+        changed.insert(self.entities[target_index].position);
+        let resolution = self.resolve_ability_control(target_index, 0, category, *power);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![resolution],
+            },
+            trace: Some(trace),
+        });
+    }
+
     pub(super) fn resolve_player_actor_status_effect(
         &mut self,
         ability: &AbilityDefinition,

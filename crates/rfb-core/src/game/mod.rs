@@ -3940,11 +3940,11 @@ impl Game {
                 self.resolve_player_actor_status_effect(&ability, target_plan, events, changed);
                 self.clamp_player_hp_to_effective_max();
             }
-            (
-                effect @ (AbilityEffectDefinition::Control { .. }
-                | AbilityEffectDefinition::Sequence { .. }),
-                target_plan,
-            ) => {
+            (AbilityEffectDefinition::Control { .. }, target_plan) => {
+                self.resolve_player_control_effect(&ability, target_plan, events, changed);
+                self.clamp_player_hp_to_effective_max();
+            }
+            (effect @ AbilityEffectDefinition::Sequence { .. }, target_plan) => {
                 self.resolve_ability_actor_effects(
                     &ability.id,
                     &effect,
