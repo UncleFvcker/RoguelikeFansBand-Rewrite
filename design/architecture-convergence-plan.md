@@ -517,6 +517,8 @@ The category-summon source migration maps hostile general/undead summons and fri
 
 The genocide source migration maps glyph-selected and nearby mass genocide to glyph- and self-input programs respectively. Power/radius lower unchanged; target ordering, unique resistance, removal bypass semantics, fatigue, task/reward exclusions, consumption, awareness, and events remain in the explicit genocide adapters.
 
+The confusing-strike source migration maps its preparation scroll to a self-input program. Preparation state, the later melee-hit consumption boundary, target resistance, source consumption, awareness, and events remain in their existing item/combat owners.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
