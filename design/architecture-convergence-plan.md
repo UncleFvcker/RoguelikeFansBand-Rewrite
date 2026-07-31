@@ -593,6 +593,8 @@ The direct damage leaf sub-batch moves `cinder-bolt`, `crescent-cut`, `death-mal
 
 The resource-drain leaf sub-batch moves `veil-drain` to one `cast-target` ability program. The veil warden retains frequency, candidate weight, target planning, resource selection, utility, and healing from the actual drained amount; the program owns only the requested amount of five. Lowering preserves the exact monster-drains-mana contract outcome and event projection. The canonical content hash remains unchanged; the focused monster utility test, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
 
+The bolt-or-beam leaf sub-batch moves `death-dark-bolt` and `death-nether-bolt` to two `cast-target` ability programs. Source abilities retain direction targeting, player resource/failure policy, and damage-dice level scaling; programs own only the base damage specification and zero base beam chance. Existing player-level materialization still derives the same effective beam probability. The focused one-roll penetration and both Death-book projection tests pass; the canonical content hash, 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures remain unchanged.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

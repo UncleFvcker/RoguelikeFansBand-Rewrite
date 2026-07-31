@@ -9,7 +9,7 @@
   "resourceCost": 11,
   "baseFailurePercent": 30,
   "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
-  "effect": { "type": "bolt-or-beam-damage", "damageDice": 4, "damageSides": 8, "damageType": "dark", "beamChancePercent": 0 },
+  "abilityProgramId": "demo.ability-program.death-dark-bolt",
   "levelScaling": [
     { "effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4 }
   ],

@@ -13,13 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "bolt-or-beam-damage",
-    "damageDice": 8,
-    "damageSides": 8,
-    "damageType": "nether",
-    "beamChancePercent": 0
-  },
+  "abilityProgramId": "demo.ability-program.death-nether-bolt",
   "levelScaling": [
     {
       "effectIndex": 0,
