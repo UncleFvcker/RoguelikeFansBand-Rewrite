@@ -48,6 +48,58 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    pub(super) fn resolve_item_recall(
+        &mut self,
+        source_kind_id: String,
+        effect: ItemUseEffectDefinition,
+        plan: ItemUsePlan,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        match (effect, plan) {
+            (
+                ItemUseEffectDefinition::Recall {
+                    delay_dice,
+                    delay_sides,
+                    delay_bonus,
+                },
+                ItemUsePlan::Recall(action),
+            ) => {
+                self.mark_item_aware(&source_kind_id);
+                match action {
+                    RecallUseAction::Cancel => {
+                        self.cancel_recall();
+                        events.push(DomainEvent::ItemRecallCancelled { source_kind_id });
+                    }
+                    RecallUseAction::Start => {
+                        let rolled_delay = u16::try_from(self.roll_damage(delay_dice, delay_sides))
+                            .expect("validated recall delay roll must fit u16")
+                            .saturating_add(delay_bonus);
+                        let delay = self.debug_recall_delay_turns.unwrap_or(rolled_delay).max(1);
+                        let destination = self.start_recall(delay);
+                        events.push(DomainEvent::ItemRecallStarted {
+                            source_kind_id,
+                            dungeon_id: destination.dungeon_id,
+                            floor_id: destination.floor_id,
+                            turns: delay,
+                        });
+                    }
+                }
+            }
+            (ItemUseEffectDefinition::ResetRecall, ItemUsePlan::ResetRecall(destination)) => {
+                let dungeon_id = destination.dungeon_id.clone();
+                let floor_id = destination.floor_id.clone();
+                self.reset_recall(destination);
+                self.mark_item_aware(&source_kind_id);
+                events.push(DomainEvent::ItemRecallReset {
+                    source_kind_id,
+                    dungeon_id,
+                    floor_id,
+                });
+            }
+            _ => unreachable!("item recall executor requires a matching recall plan"),
+        }
+    }
+
     pub(super) fn resolve_item_level_teleport(
         &mut self,
         source_kind_id: String,

@@ -5239,47 +5239,10 @@ impl Game {
                 )?;
             }
             (
-                ItemUseEffectDefinition::Recall {
-                    delay_dice,
-                    delay_sides,
-                    delay_bonus,
-                },
-                ItemUsePlan::Recall(action),
-            ) => {
-                self.mark_item_aware(&kind_id);
-                match action {
-                    RecallUseAction::Cancel => {
-                        self.cancel_recall();
-                        events.push(DomainEvent::ItemRecallCancelled {
-                            source_kind_id: kind_id,
-                        });
-                    }
-                    RecallUseAction::Start => {
-                        let rolled_delay = u16::try_from(self.roll_damage(delay_dice, delay_sides))
-                            .expect("validated recall delay roll must fit u16")
-                            .saturating_add(delay_bonus);
-                        let delay = self.debug_recall_delay_turns.unwrap_or(rolled_delay).max(1);
-                        let destination = self.start_recall(delay);
-                        events.push(DomainEvent::ItemRecallStarted {
-                            source_kind_id: kind_id,
-                            dungeon_id: destination.dungeon_id,
-                            floor_id: destination.floor_id,
-                            turns: delay,
-                        });
-                    }
-                }
-            }
-            (ItemUseEffectDefinition::ResetRecall, ItemUsePlan::ResetRecall(destination)) => {
-                let dungeon_id = destination.dungeon_id.clone();
-                let floor_id = destination.floor_id.clone();
-                self.reset_recall(destination);
-                self.mark_item_aware(&kind_id);
-                events.push(DomainEvent::ItemRecallReset {
-                    source_kind_id: kind_id,
-                    dungeon_id,
-                    floor_id,
-                });
-            }
+                effect @ (ItemUseEffectDefinition::Recall { .. }
+                | ItemUseEffectDefinition::ResetRecall),
+                plan @ (ItemUsePlan::Recall(_) | ItemUsePlan::ResetRecall(_)),
+            ) => self.resolve_item_recall(kind_id, effect, plan, events),
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(())
