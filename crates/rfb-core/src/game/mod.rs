@@ -91,6 +91,7 @@ use rfb_protocol::{
 };
 
 mod abilities;
+mod capabilities;
 mod damage;
 mod death;
 mod environment_combat;
@@ -112,6 +113,7 @@ mod world;
 
 #[cfg(test)]
 use abilities::AbilityTargetPlan;
+use capabilities::{ResourceRestorationRequest, apply_resource_restoration};
 use damage::{
     FatalityPolicy, commit_damage_application, plan_damage_application, process_actor_status_tick,
     scale_damage_outcome,

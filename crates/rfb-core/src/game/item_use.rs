@@ -2046,9 +2046,7 @@ impl Game {
                 amount,
             } => self.resolve_item_resource_restoration(
                 source_kind_id,
-                resource_id,
-                *amount,
-                false,
+                ResourceRestorationRequest::amount(resource_id, *amount),
                 events,
             ),
             ItemUseEffectDefinition::RestoreResourceDice {
@@ -2062,15 +2060,16 @@ impl Game {
                     .saturating_add(*bonus);
                 self.resolve_item_resource_restoration(
                     source_kind_id,
-                    resource_id,
-                    rolled,
-                    false,
+                    ResourceRestorationRequest::amount(resource_id, rolled),
                     events,
                 )
             }
-            ItemUseEffectDefinition::RestoreResourceFull { resource_id } => {
-                self.resolve_item_resource_restoration(source_kind_id, resource_id, 0, true, events)
-            }
+            ItemUseEffectDefinition::RestoreResourceFull { resource_id } => self
+                .resolve_item_resource_restoration(
+                    source_kind_id,
+                    ResourceRestorationRequest::full(resource_id),
+                    events,
+                ),
             _ => {
                 unreachable!("restorative resource executor requires healing or resource recovery")
             }
@@ -2289,38 +2288,25 @@ impl Game {
     fn resolve_item_resource_restoration(
         &mut self,
         source_kind_id: &str,
-        resource_id: &str,
-        requested: u32,
-        full: bool,
+        request: ResourceRestorationRequest<'_>,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let (before, after) = if let Some(pool) = self.resources.get_mut(resource_id) {
-            let before = pool.current;
-            pool.current = if full {
-                pool.maximum
-            } else {
-                pool.current.saturating_add(requested).min(pool.maximum)
-            };
-            (before, pool.current)
-        } else {
-            (0, 0)
-        };
-        let recovered = after.saturating_sub(before);
-        if recovered > 0 {
-            self.resources_touched.insert(resource_id.to_owned());
+        let outcome =
+            apply_resource_restoration(&mut self.resources, &mut self.resources_touched, request);
+        if outcome.recovered > 0 {
             self.mark_item_aware(source_kind_id);
         }
         events.push(DomainEvent::ItemResourceRestored {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
             resolution: ResourceRecoveryResolutionDto {
-                resource_id: resource_id.to_owned(),
-                before,
-                after,
-                recovered,
+                resource_id: outcome.resource_id,
+                before: outcome.before,
+                after: outcome.after,
+                recovered: outcome.recovered,
             },
         });
-        recovered > 0
+        outcome.recovered > 0
     }
 
     pub(super) fn resolve_item_confusing_strike_preparation(
