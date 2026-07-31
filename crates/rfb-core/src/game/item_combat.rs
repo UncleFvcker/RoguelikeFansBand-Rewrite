@@ -348,4 +348,21 @@ impl Game {
             fatal,
         });
     }
+
+    pub(super) fn resolve_item_life_loss(
+        &mut self,
+        source_kind_id: &str,
+        amount: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let amount = i32::try_from(amount).expect("validated life loss must fit i32");
+        self.player.hp = self.player.hp.saturating_sub(amount);
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemLifeLost {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            amount,
+            fatal: self.player_is_dead(),
+        });
+    }
 }

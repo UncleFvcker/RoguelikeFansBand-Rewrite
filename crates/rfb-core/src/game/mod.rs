@@ -4998,8 +4998,6 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreAttribute { .. }
                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
                 | ItemUseEffectDefinition::AugmentAttributes
-                | ItemUseEffectDefinition::ApplyDetonation { .. }
-                | ItemUseEffectDefinition::SelfLifeLoss { .. }
                 | ItemUseEffectDefinition::Vengeance { .. }
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
@@ -5038,6 +5036,25 @@ impl Game {
                     changed,
                     removed_entities,
                 )?;
+            }
+            (
+                ItemUseEffectDefinition::ApplyDetonation {
+                    damage_dice,
+                    damage_sides,
+                    stun_ticks,
+                    bleeding_ticks,
+                },
+                ItemUsePlan::SelfTarget,
+            ) => self.resolve_item_detonation(
+                &kind_id,
+                damage_dice,
+                damage_sides,
+                stun_ticks,
+                bleeding_ticks,
+                events,
+            ),
+            (ItemUseEffectDefinition::SelfLifeLoss { amount }, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_life_loss(&kind_id, amount, events);
             }
             (ItemUseEffectDefinition::AggravateMonsters, ItemUsePlan::SelfTarget) => {
                 self.resolve_item_aggravation(&kind_id, events, changed);
@@ -5458,23 +5475,6 @@ impl Game {
                 unreachable!("projected item effects cannot resolve as self restoration")
             }
         }
-    }
-
-    fn resolve_item_life_loss(
-        &mut self,
-        source_kind_id: &str,
-        amount: u32,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        let amount = i32::try_from(amount).expect("validated life loss must fit i32");
-        self.player.hp = self.player.hp.saturating_sub(amount);
-        self.mark_item_aware(source_kind_id);
-        events.push(DomainEvent::ItemLifeLost {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            amount,
-            fatal: self.player_is_dead(),
-        });
     }
 
     fn item_charge_is_insufficient(&self, item_id: &str) -> bool {
