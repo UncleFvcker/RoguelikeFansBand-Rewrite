@@ -271,6 +271,223 @@ impl Game {
 }
 
 impl Game {
+    fn resolve_player_ability_effect(
+        &mut self,
+        ability: AbilityDefinition,
+        target_plan: AbilityTargetPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
+                self.resolve_player_teleport_effect(&ability, destination, events, changed);
+            }
+            (AbilityEffectDefinition::Summon { .. }, AbilityTargetPlan::Summon { positions }) => {
+                self.resolve_player_summon_effect(&ability, positions, events, changed);
+            }
+            (
+                AbilityEffectDefinition::SummonCategory { .. },
+                AbilityTargetPlan::SummonCategory {
+                    friendly_candidate_kind_ids,
+                    hostile_candidate_kind_ids,
+                    positions,
+                },
+            ) => {
+                self.resolve_player_category_summon_effect(
+                    &ability,
+                    friendly_candidate_kind_ids,
+                    hostile_candidate_kind_ids,
+                    positions,
+                    events,
+                    changed,
+                );
+            }
+            (AbilityEffectDefinition::Detect { .. }, AbilityTargetPlan::Detect) => {
+                self.resolve_player_detection_effect(&ability, events, changed);
+            }
+            (
+                AbilityEffectDefinition::TransformTerrain { .. },
+                AbilityTargetPlan::TerrainTransform { center, positions },
+            ) => {
+                self.resolve_player_terrain_transform_effect(
+                    &ability, center, positions, events, changed,
+                );
+            }
+            (
+                AbilityEffectDefinition::ApplyStatus { .. }
+                | AbilityEffectDefinition::RemoveStatus { .. },
+                target_plan,
+            ) => {
+                self.resolve_player_actor_status_effect(&ability, target_plan, events, changed);
+                self.clamp_player_hp_to_effective_max();
+            }
+            (AbilityEffectDefinition::Control { .. }, target_plan) => {
+                self.resolve_player_control_effect(&ability, target_plan, events, changed);
+                self.clamp_player_hp_to_effective_max();
+            }
+            (AbilityEffectDefinition::Sequence { .. }, target_plan) => {
+                self.resolve_player_ordered_sequence_effect(
+                    &ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.clamp_player_hp_to_effective_max();
+            }
+            (
+                AbilityEffectDefinition::Damage { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_projectile_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::DeathRay { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_death_ray_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::AreaDamage { .. },
+                AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor,
+                },
+            ) => {
+                self.resolve_player_area_damage_effect(
+                    &ability,
+                    path,
+                    stop_at_actor,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::BeamDamage { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_beam_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::BoltOrBeamDamage { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_bolt_or_beam_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::ConeDamage { .. },
+                target_plan @ AbilityTargetPlan::Cone { .. },
+            ) => {
+                self.resolve_player_cone_damage_effect(
+                    &ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (AbilityEffectDefinition::Heal { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_healing_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
+                self.resolve_player_identify_item_effect(&ability, &item_id, events);
+            }
+            (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_restore_vitality_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::VisibleDamage { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_visible_damage_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (AbilityEffectDefinition::VisibleApplyStatus { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_visible_status_effect(&ability, events, changed);
+            }
+            (
+                AbilityEffectDefinition::EnchantEquippedWeapon { .. },
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                self.resolve_player_enchant_equipped_weapon_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::NoOp { .. }, _) => {
+                self.resolve_player_no_op_effect(&ability, events);
+            }
+            (
+                AbilityEffectDefinition::DrainLife { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_drain_life_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::Genocide { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_genocide_effect(
+                    &ability,
+                    Some(path),
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (
+                AbilityEffectDefinition::Genocide {
+                    scope: AbilityGenocideScopeDefinition::Nearby,
+                    ..
+                },
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                self.resolve_player_genocide_effect(
+                    &ability,
+                    None,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::AnimateDead { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_animate_dead_effect(&ability, events, changed)?;
+            }
+            _ => unreachable!("validated ability target plan must match its effect"),
+        }
+        Ok(())
+    }
+
     pub(super) fn resolve_player_projectile_damage_effect(
         &mut self,
         ability: &AbilityDefinition,
