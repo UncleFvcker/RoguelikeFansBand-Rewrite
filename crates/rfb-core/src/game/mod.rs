@@ -4048,57 +4048,10 @@ impl Game {
                 self.resolve_player_visible_status_effect(&ability, events, changed);
             }
             (
-                AbilityEffectDefinition::EnchantEquippedWeapon { affix_id },
+                AbilityEffectDefinition::EnchantEquippedWeapon { .. },
                 AbilityTargetPlan::SelfTarget,
             ) => {
-                let weapon_index = self.items.iter().position(|item| {
-                    let ItemLocation::Equipped { slot_id } = &item.location else {
-                        return false;
-                    };
-                    self.body_slot_type(slot_id) == Some("weapon")
-                        && self
-                            .content
-                            .item(&item.kind_id)
-                            .is_some_and(|definition| definition.melee_profile.is_some())
-                });
-                let (item_id, item_kind_id, added) = if let Some(index) = weapon_index {
-                    let item_id = self.items[index].id.clone();
-                    let item_kind_id = self.items[index].kind_id.clone();
-                    let added = if self.items[index].affix_ids.contains(&affix_id) {
-                        false
-                    } else {
-                        self.items[index].affix_ids.push(affix_id.clone());
-                        self.items[index].affix_ids.sort();
-                        self.items[index].quality = ItemQualityDto::Fine;
-                        let knowledge = self
-                            .item_property_knowledge
-                            .entry(item_id.clone())
-                            .or_default();
-                        knowledge.appraised = true;
-                        knowledge.identified = true;
-                        knowledge.known_affix_ids.insert(affix_id.clone());
-                        true
-                    };
-                    (item_id, item_kind_id, added)
-                } else {
-                    (String::new(), String::new(), false)
-                };
-                self.clamp_player_hp_to_effective_max();
-                events.push(DomainEvent::AbilityEffectsResolved {
-                    ability_id: ability.id.clone(),
-                    resolution: AbilityEffectsResolutionDto {
-                        target_entity_id: None,
-                        target_kind_id: None,
-                        effects: vec![AbilityEffectResolutionDto::EnchantEquippedWeapon {
-                            effect_index: 0,
-                            item_id,
-                            item_kind_id,
-                            affix_id,
-                            added,
-                        }],
-                    },
-                    trace: None,
-                });
+                self.resolve_player_enchant_equipped_weapon_effect(&ability, events);
             }
             (AbilityEffectDefinition::NoOp { reason }, _) => {
                 events.push(DomainEvent::AbilityEffectsResolved {
