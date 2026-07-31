@@ -9,9 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "increase-spell-learning-capacity"
-    }
+    "effectProgramId": "demo.effect.increase-spell-learning-capacity"
   },
   "tags": ["consumable", "learning", "scroll"]
 }

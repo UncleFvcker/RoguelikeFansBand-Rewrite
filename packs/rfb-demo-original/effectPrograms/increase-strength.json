@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.increase-strength",
+  "input": "self",
+  "steps": [
+    { "type": "increase-attribute", "attribute": "strength" }
+  ]
+}

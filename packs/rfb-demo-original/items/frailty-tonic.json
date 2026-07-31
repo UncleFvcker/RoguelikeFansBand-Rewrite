@@ -9,10 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "drain-attribute",
-      "attribute": "strength"
-    }
+    "effectProgramId": "demo.effect.drain-strength"
   },
   "tags": ["attribute-drain", "consumable", "potion"]
 }

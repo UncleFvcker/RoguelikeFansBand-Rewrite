@@ -9,11 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-life-restoration",
-      "healingAmount": 5000,
-      "lifeForceAmount": 1000
-    }
+    "effectProgramId": "demo.effect.life-restoration"
   },
   "tags": ["attribute-restoration", "consumable", "experience", "healing", "potion", "restoration"]
 }

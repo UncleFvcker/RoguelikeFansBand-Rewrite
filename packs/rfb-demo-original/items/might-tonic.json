@@ -9,10 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "increase-attribute",
-      "attribute": "strength"
-    }
+    "effectProgramId": "demo.effect.increase-strength"
   },
   "tags": ["attribute-increase", "consumable", "potion"]
 }

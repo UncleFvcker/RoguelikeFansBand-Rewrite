@@ -9,11 +9,7 @@
   "weightTenthsPound": 2,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "apply-restorative-feast",
-      "healingDice": 15,
-      "healingSides": 15
-    }
+    "effectProgramId": "demo.effect.restorative-feast"
   },
   "tags": ["attribute-restoration", "consumable", "experience", "food", "healing", "poison"]
 }

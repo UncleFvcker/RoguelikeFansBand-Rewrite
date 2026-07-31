@@ -9,10 +9,7 @@
   "weightTenthsPound": 4,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "restore-life-levels",
-      "lifeForceAmount": 150
-    }
+    "effectProgramId": "demo.effect.restore-life-levels"
   },
   "tags": ["consumable", "experience", "potion", "restoration"]
 }

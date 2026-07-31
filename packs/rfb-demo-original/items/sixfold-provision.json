@@ -9,9 +9,7 @@
   "weightTenthsPound": 2,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "restore-all-attributes"
-    }
+    "effectProgramId": "demo.effect.restore-all-attributes"
   },
   "tags": ["attribute-restoration", "consumable", "food"]
 }
