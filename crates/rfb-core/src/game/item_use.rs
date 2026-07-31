@@ -48,6 +48,60 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    pub(super) fn resolve_item_detection(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        effect: ItemUseEffectDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let ItemUseEffectDefinition::Detect {
+            subject,
+            category,
+            radius,
+            persistent,
+            through_walls,
+        } = effect
+        else {
+            unreachable!("item detection executor requires a detection effect")
+        };
+        let (detected_positions, detected_entity_ids) = match subject {
+            AbilityDetectSubjectDefinition::Terrain => (
+                self.detect_terrain_positions(&category, radius, persistent, through_walls),
+                Vec::new(),
+            ),
+            AbilityDetectSubjectDefinition::Actor => self.detect_actor_positions(&category, radius),
+            AbilityDetectSubjectDefinition::Item => {
+                self.detect_item_positions(&category, radius, through_walls)
+            }
+        };
+        if persistent {
+            changed.extend(detected_positions.iter().copied());
+        }
+        self.mark_item_aware(&source_kind_id);
+        let resolution = AbilityDetectResolutionDto {
+            subject: ability_detect_subject_dto(subject),
+            category,
+            radius,
+            persistent,
+            detected_positions,
+            detected_entity_ids,
+        };
+        if let Some(profile_id) = profile_id {
+            events.push(DomainEvent::ItemActivationDetected {
+                source_kind_id,
+                profile_id,
+                resolution,
+            });
+        } else {
+            events.push(DomainEvent::ItemDetected {
+                source_kind_id,
+                resolution,
+            });
+        }
+    }
+
     pub(super) fn recharging_item_unavailable_reason(
         &self,
         item_id: &str,

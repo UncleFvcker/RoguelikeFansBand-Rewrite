@@ -5246,52 +5246,8 @@ impl Game {
                     changed,
                 );
             }
-            (
-                ItemUseEffectDefinition::Detect {
-                    subject,
-                    category,
-                    radius,
-                    persistent,
-                    through_walls,
-                },
-                ItemUsePlan::Detect,
-            ) => {
-                let (detected_positions, detected_entity_ids) = match subject {
-                    AbilityDetectSubjectDefinition::Terrain => (
-                        self.detect_terrain_positions(&category, radius, persistent, through_walls),
-                        Vec::new(),
-                    ),
-                    AbilityDetectSubjectDefinition::Actor => {
-                        self.detect_actor_positions(&category, radius)
-                    }
-                    AbilityDetectSubjectDefinition::Item => {
-                        self.detect_item_positions(&category, radius, through_walls)
-                    }
-                };
-                if persistent {
-                    changed.extend(detected_positions.iter().copied());
-                }
-                self.mark_item_aware(&kind_id);
-                let resolution = AbilityDetectResolutionDto {
-                    subject: ability_detect_subject_dto(subject),
-                    category,
-                    radius,
-                    persistent,
-                    detected_positions,
-                    detected_entity_ids,
-                };
-                if let Some(profile_id) = profile_id {
-                    events.push(DomainEvent::ItemActivationDetected {
-                        source_kind_id: kind_id,
-                        profile_id,
-                        resolution,
-                    });
-                } else {
-                    events.push(DomainEvent::ItemDetected {
-                        source_kind_id: kind_id,
-                        resolution,
-                    });
-                }
+            (effect @ ItemUseEffectDefinition::Detect { .. }, ItemUsePlan::Detect) => {
+                self.resolve_item_detection(kind_id, profile_id, effect, events, changed);
             }
             (
                 ItemUseEffectDefinition::SummonCategory {
