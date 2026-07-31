@@ -9,16 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "self-centered-elemental-blast",
-      "baseDamage": 666,
-      "damageType": "fire",
-      "radius": 4,
-      "backlashSides": 25,
-      "backlashBonus": 25,
-      "backlashDamageType": "fire",
-      "backlashUsesResistance": true
-    }
+    "effectProgramId": "demo.effect.cinder-surge"
   },
   "tags": ["consumable", "fire", "scroll"]
 }

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.rime-surge",
+  "input": "self",
+  "steps": [
+    {
+      "type": "self-centered-elemental-blast",
+      "baseDamage": 800,
+      "damageType": "ice",
+      "radius": 4,
+      "backlashSides": 30,
+      "backlashBonus": 30,
+      "backlashDamageType": "cold",
+      "backlashUsesResistance": true
+    }
+  ]
+}

@@ -9,16 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "self-centered-elemental-blast",
-      "baseDamage": 800,
-      "damageType": "ice",
-      "radius": 4,
-      "backlashSides": 30,
-      "backlashBonus": 30,
-      "backlashDamageType": "cold",
-      "backlashUsesResistance": true
-    }
+    "effectProgramId": "demo.effect.rime-surge"
   },
   "tags": ["cold", "consumable", "scroll"]
 }

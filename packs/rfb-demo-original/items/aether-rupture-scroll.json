@@ -9,16 +9,7 @@
   "weightTenthsPound": 1,
   "maxStack": 20,
   "useAction": {
-    "effect": {
-      "type": "self-centered-elemental-blast",
-      "baseDamage": 1100,
-      "damageType": "mana",
-      "radius": 4,
-      "backlashSides": 50,
-      "backlashBonus": 50,
-      "backlashDamageType": "mana",
-      "backlashUsesResistance": false
-    }
+    "effectProgramId": "demo.effect.aether-rupture"
   },
   "tags": ["consumable", "mana", "scroll"]
 }
