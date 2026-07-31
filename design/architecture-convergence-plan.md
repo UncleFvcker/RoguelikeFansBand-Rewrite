@@ -483,6 +483,8 @@ Numeric enchantment now commits through the inventory owner. The item adapter ro
 
 The numeric-enchantment source migration maps the accuracy, impact, armor tempering, masterwork weapon, and masterwork armor scrolls to item-input programs. The configured component order and attempt rolls lower unchanged, preserving target rules, pile/artifact gates, consumption, awareness, and event projection.
 
+Equipped-item curse application and removal now commit through typed inventory-owner requests. The owner retains stable slot/item candidate ordering, target-category filtering, artifact resistance RNG, severity mutation, heavy-removal policy, and permanent-curse reporting. Item adapters map the content target, decide source awareness from the outcome, and project the existing events without passing source IDs into the owner.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.

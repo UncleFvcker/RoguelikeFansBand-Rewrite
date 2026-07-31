@@ -83,6 +83,50 @@ pub(super) struct ItemEnchantmentOutcome {
     pub(super) to_armor: ItemEnchantmentComponentOutcome,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum EquippedItemCurseTarget {
+    Weapon,
+    Armor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct CurseEquippedItemRequest {
+    target: EquippedItemCurseTarget,
+}
+
+impl CurseEquippedItemRequest {
+    pub(super) const fn new(target: EquippedItemCurseTarget) -> Self {
+        Self { target }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct CurseEquippedItemOutcome {
+    pub(super) item_id: Option<String>,
+    pub(super) item_kind_id: Option<String>,
+    pub(super) before: Option<ItemCurseSeverityDto>,
+    pub(super) after: Option<ItemCurseSeverityDto>,
+    pub(super) resisted: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct RemoveEquippedCursesRequest {
+    include_heavy: bool,
+}
+
+impl RemoveEquippedCursesRequest {
+    pub(super) const fn new(include_heavy: bool) -> Self {
+        Self { include_heavy }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct RemoveEquippedCursesOutcome {
+    pub(super) include_heavy: bool,
+    pub(super) removed_item_ids: Vec<String>,
+    pub(super) retained_permanent_item_ids: Vec<String>,
+}
+
 pub(super) enum PickUpOutcome {
     Picked {
         kind_id: String,
@@ -492,6 +536,111 @@ impl Game {
             successes: after.saturating_sub(before),
             before,
             after,
+        }
+    }
+
+    pub(super) fn curse_equipped_item(
+        &mut self,
+        request: CurseEquippedItemRequest,
+    ) -> CurseEquippedItemOutcome {
+        let mut candidates = self
+            .items
+            .iter()
+            .enumerate()
+            .filter_map(|(index, item)| {
+                let ItemLocation::Equipped { slot_id } = &item.location else {
+                    return None;
+                };
+                let definition = self.content.item(&item.kind_id)?;
+                let matches_target = match request.target {
+                    EquippedItemCurseTarget::Weapon => {
+                        definition.tags.iter().any(|tag| tag == "weapon")
+                    }
+                    EquippedItemCurseTarget::Armor => {
+                        definition.tags.iter().any(|tag| tag == "armor")
+                    }
+                };
+                matches_target.then(|| (slot_id.clone(), item.id.clone(), index))
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| left.0.cmp(&right.0).then_with(|| left.1.cmp(&right.1)));
+        if candidates.is_empty() {
+            return CurseEquippedItemOutcome {
+                item_id: None,
+                item_kind_id: None,
+                before: None,
+                after: None,
+                resisted: false,
+            };
+        }
+        let candidate_index = if candidates.len() == 1 {
+            0
+        } else {
+            usize::try_from(self.rng.bounded(candidates.len() as u64))
+                .expect("curse target index must fit usize")
+        };
+        let item_index = candidates[candidate_index].2;
+        let item_id = self.items[item_index].id.clone();
+        let item_kind_id = self.items[item_index].kind_id.clone();
+        let artifact = self
+            .content
+            .item(&item_kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let resisted = artifact
+            && if self.debug_item_curses_land {
+                false
+            } else if self.debug_item_curses_resisted {
+                true
+            } else {
+                self.rng.bounded(100) < 50
+            };
+        let before = self.items[item_index].curse;
+        if !resisted {
+            self.items[item_index].curse =
+                Some(before.map_or(ItemCurseSeverityDto::Normal, |severity| {
+                    severity.max(ItemCurseSeverityDto::Normal)
+                }));
+        }
+        CurseEquippedItemOutcome {
+            item_id: Some(item_id),
+            item_kind_id: Some(item_kind_id),
+            before,
+            after: self.items[item_index].curse,
+            resisted,
+        }
+    }
+
+    pub(super) fn remove_equipped_curses(
+        &mut self,
+        request: RemoveEquippedCursesRequest,
+    ) -> RemoveEquippedCursesOutcome {
+        let mut removed_item_ids = Vec::new();
+        let mut retained_permanent_item_ids = Vec::new();
+        for item in &mut self.items {
+            if !matches!(item.location, ItemLocation::Equipped { .. }) {
+                continue;
+            }
+            match item.curse {
+                Some(ItemCurseSeverityDto::Normal) => {
+                    item.curse = None;
+                    removed_item_ids.push(item.id.clone());
+                }
+                Some(ItemCurseSeverityDto::Heavy) if request.include_heavy => {
+                    item.curse = None;
+                    removed_item_ids.push(item.id.clone());
+                }
+                Some(ItemCurseSeverityDto::Permanent) => {
+                    retained_permanent_item_ids.push(item.id.clone());
+                }
+                Some(ItemCurseSeverityDto::Heavy) | None => {}
+            }
+        }
+        removed_item_ids.sort();
+        retained_permanent_item_ids.sort();
+        RemoveEquippedCursesOutcome {
+            include_heavy: request.include_heavy,
+            removed_item_ids,
+            retained_permanent_item_ids,
         }
     }
 

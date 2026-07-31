@@ -127,8 +127,9 @@ use floor::{
     floor_dungeon_id, parse_dungeon_instance_ordinal,
 };
 use inventory::{
-    ItemEnchantmentRequest, ItemIdentificationRequest, ItemKnowledgeState,
-    ItemPropertyKnowledgeState, PickUpOutcome,
+    CurseEquippedItemRequest, EquippedItemCurseTarget, ItemEnchantmentRequest,
+    ItemIdentificationRequest, ItemKnowledgeState, ItemPropertyKnowledgeState, PickUpOutcome,
+    RemoveEquippedCursesRequest,
 };
 #[cfg(test)]
 use item_use::ItemUsePlan;
