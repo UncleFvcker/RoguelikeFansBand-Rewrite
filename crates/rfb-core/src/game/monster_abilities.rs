@@ -1304,7 +1304,7 @@ impl Game {
         }
         resolutions
     }
-    pub(super) fn monster_ability_plan(
+    pub(super) fn monster_ability_target_plan(
         &self,
         index: usize,
         ability: AbilityDefinition,
@@ -1471,47 +1471,10 @@ impl Game {
                 });
             }
         };
-        let utility_multiplier = self
-            .monster_ability_utility_multiplier(index, &ability, &target)
-            .ok_or(MonsterAbilityPlanRejection {
-                reason: MonsterAbilityRejectionReasonDto::NoUtility,
-                enemy_target_count,
-                friendly_risk_count,
-            })?;
-        let target_position = monster_plan_target(&target).map(MonsterHostileTarget::position);
-        let distance_multiplier = if !matches!(
-            target,
-            MonsterAbilityTargetPlan::SelfTarget | MonsterAbilityTargetPlan::Summon { .. }
-        ) && target_position.is_some_and(|position| {
-            origin
-                .x
-                .abs_diff(position.x)
-                .max(origin.y.abs_diff(position.y))
-                >= 3
-        }) {
-            2
-        } else {
-            1
-        };
-        let target_multiplier = u32::from(enemy_target_count.max(1));
-        let resistance_percent = self.monster_ability_resistance_percent(index, &ability, &target);
-        if resistance_percent == 0 {
-            return Err(MonsterAbilityPlanRejection {
-                reason: MonsterAbilityRejectionReasonDto::NoUtility,
-                enemy_target_count,
-                friendly_risk_count,
-            });
-        }
-        let weighted = base_weight
-            .saturating_mul(utility_multiplier)
-            .saturating_mul(distance_multiplier)
-            .saturating_mul(target_multiplier)
-            .saturating_mul(resistance_percent)
-            / 100;
         Ok(MonsterAbilityPlan {
             ability,
             base_weight,
-            effective_weight: weighted.max(1),
+            effective_weight: base_weight,
             enemy_target_count,
             friendly_risk_count,
             target,
@@ -1728,6 +1691,30 @@ impl Game {
             });
         }
         Ok((plan, enemy_target_count, friendly_risk_count))
+    }
+
+    fn monster_footprint_faction_counts(
+        &self,
+        source_index: usize,
+        affected_positions: &[Position],
+    ) -> (u16, u16) {
+        let mut enemies =
+            u16::from(affected_positions.contains(&self.player.position) && !self.player_is_dead());
+        let mut friendlies = 0_u16;
+        for (index, entity) in self.entities.iter().enumerate() {
+            if index == source_index
+                || entity.hp <= 0
+                || !affected_positions.contains(&entity.position)
+            {
+                continue;
+            }
+            if self.entity_is_player_aligned(index) {
+                enemies = enemies.saturating_add(1);
+            } else {
+                friendlies = friendlies.saturating_add(1);
+            }
+        }
+        (enemies, friendlies)
     }
 
     fn monster_projectile_trace(

@@ -575,6 +575,8 @@ The first runtime gate moves the complete already-selected ability dispatcher an
 
 The target-planning sub-batch moves the zero-mutation ability plan, targeted plan, projectile trace, and path trace into `monster_abilities.rs`. The shared row-major displacement candidate enumeration remains in the aggregate because item banishment also consumes it. Only `monster_ability_plan` crosses the module boundary; plan helper order and rejection facts remain unchanged. `game/mod.rs` falls again to 12,032 lines and `monster_abilities.rs` reaches 1,824 lines, with the same focused, replay, and fixture matrix green.
 
+The AI-ownership sub-batch completes the runtime boundary without moving `monsterCasting` away from the actor. `monster_ai.rs` now owns frequency and weighted selection, candidate DTO projection, utility filtering, distance and target-count weighting, observed-resistance policy, cooldown commit, and the selected-cast transaction. `monster_abilities.rs::monster_ability_target_plan` returns only the zero-mutation target and footprint facts with the base weight; the AI wrapper applies policy before selection. Footprint faction counting stays beside target planning, while ordinary movement, detection, hostile-target enumeration, shared displacement candidates, and overall turn coordination remain in the aggregate. `game/mod.rs` falls to 11,601 lines, `monster_abilities.rs` settles at 1,811 lines, and the new `monster_ai.rs` contains 467 lines. All 11 focused monster AI tests, 33 replay tests, all 454 contract fixtures, and the core all-target check pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30
