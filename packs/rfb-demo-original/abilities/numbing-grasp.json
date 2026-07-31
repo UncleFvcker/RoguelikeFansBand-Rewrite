@@ -13,13 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.paralysis",
-    "intensity": 1,
-    "durationTicks": 20,
-    "stacking": "extend"
-  },
+  "abilityProgramId": "demo.ability-program.numbing-grasp",
   "proficiency": {
     "initial": 0,
     "cap": 1600,

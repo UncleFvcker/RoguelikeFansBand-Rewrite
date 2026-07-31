@@ -13,14 +13,7 @@
     "range": 8,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.sleep",
-    "intensity": 1,
-    "durationTicks": 500,
-    "stacking": "keep-strongest",
-    "power": 2
-  },
+  "abilityProgramId": "demo.ability-program.death-black-sleep",
   "levelScaling": [
     {
       "effectIndex": 0,

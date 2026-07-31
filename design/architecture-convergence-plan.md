@@ -585,6 +585,8 @@ The first leaf migration moves `demo.ability.mending-echo` from an inline `Heal`
 
 The direct self-status leaf sub-batch moves `death-necromantic-resistance`, `death-poison-branding`, `death-vampiric-transformation`, `death-wraithform`, and `surging-tempo` to five `self` ability programs. Status parameters remain byte-identical after lowering, while player costs, failure, proficiency, target policy, tags, and level-scaling definitions remain on the source ability. The transformation and wraithform scaling entries still address lowered effect index zero. The canonical content hash remains `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`; focused status/scaling/runtime tests, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
 
+The direct cast-target status sub-batch moves `death-black-sleep`, `gloom-veil`, `mind-fog`, and `numbing-grasp` to four `cast-target` ability programs. The player book keeps Black Sleep's resource, failure, target, and level-scaling policy, while the gloom weaver keeps its actor-owned candidate order, weights, frequency, and tactical policy for the other three abilities. Lowering preserves the existing sleep power scaling and selected status execution. The canonical content hash remains unchanged; focused player scaling/sleep and monster selection tests, all 32 content tests, schema freshness, 33 replay tests, and all 454 contract fixtures pass.
+
 Only one phase is active at a time. A phase does not begin until the prior phase passes its complete acceptance matrix.
 
 ## 4. Baseline on 2026-07-30

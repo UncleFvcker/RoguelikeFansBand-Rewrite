@@ -13,13 +13,7 @@
     "range": 6,
     "requiresLineOfEffect": true
   },
-  "effect": {
-    "type": "apply-status",
-    "statusKindId": "rfb.status.blindness",
-    "intensity": 1,
-    "durationTicks": 80,
-    "stacking": "extend"
-  },
+  "abilityProgramId": "demo.ability-program.gloom-veil",
   "proficiency": {
     "initial": 0,
     "cap": 1600,
