@@ -4,10 +4,6 @@
   "id": "demo.ability.rift-escape",
   "nameKey": "ability-demo-rift-escape-name",
   "descriptionKey": "ability-demo-rift-escape-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 2,
-  "baseFailurePercent": 15,
   "target": {
     "modes": [
       "self"
@@ -16,12 +12,6 @@
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.rift-escape",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
   "tags": [
     "mobility",
     "spell"

@@ -4,21 +4,18 @@
   "id": "demo.ability.cinder-burst",
   "nameKey": "ability-demo-cinder-burst-name",
   "descriptionKey": "ability-demo-cinder-burst-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 5,
-  "baseFailurePercent": 30,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.cinder-burst",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["area", "fire", "spell"]
+  "tags": [
+    "area",
+    "fire",
+    "spell"
+  ]
 }

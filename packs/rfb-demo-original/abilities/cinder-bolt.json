@@ -4,21 +4,17 @@
   "id": "demo.ability.cinder-bolt",
   "nameKey": "ability-demo-cinder-bolt-name",
   "descriptionKey": "ability-demo-cinder-bolt-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 3,
-  "baseFailurePercent": 35,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.cinder-bolt",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["fire", "spell"]
+  "tags": [
+    "fire",
+    "spell"
+  ]
 }

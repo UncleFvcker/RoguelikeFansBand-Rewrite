@@ -7,10 +7,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    ABILITY_PROGRAM_SCHEMA, AbilityCooldownDefinition, AbilityDefinition, AbilityEffectDefinition,
-    AbilityGenocideScopeDefinition, AbilityLevelScalingDefinition, AbilityProficiencyDefinition,
-    AbilityRandomTargetDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
-    ContentError, require_format_version, require_schema, validate_definition_id,
+    ABILITY_PROGRAM_SCHEMA, AbilityDefinition, AbilityEffectDefinition,
+    AbilityGenocideScopeDefinition, AbilityLevelScalingDefinition, AbilityRandomTargetDefinition,
+    AbilityTargetDefinition, AbilityTargetModeDefinition, ContentError, require_format_version,
+    require_schema, validate_definition_id,
 };
 use crate::player_ability_bindings::ResolvedPlayerAbilityBinding;
 
@@ -49,25 +49,10 @@ pub(super) struct SourceAbilityDefinition {
     id: String,
     name_key: String,
     description_key: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    minimum_level: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    resource_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    resource_cost: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    base_failure_percent: Option<u8>,
     target: AbilityTargetDefinition,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    effect: Option<AbilityEffectDefinition>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    ability_program_id: Option<String>,
+    ability_program_id: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     level_scaling: Vec<AbilityLevelScalingDefinition>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    proficiency: Option<AbilityProficiencyDefinition>,
-    #[serde(default)]
-    cooldown: Option<AbilityCooldownDefinition>,
     tags: Vec<String>,
 }
 
@@ -328,46 +313,14 @@ impl SourceAbilityDefinition {
         programs: &BTreeMap<String, ResolvedAbilityProgram>,
         player_bindings: &BTreeMap<String, ResolvedPlayerAbilityBinding>,
     ) -> Result<AbilityDefinition, ContentError> {
-        let player_binding = match (
-            self.minimum_level,
-            self.resource_id,
-            self.resource_cost,
-            self.base_failure_percent,
-        ) {
-            (
-                Some(minimum_level),
-                Some(resource_id),
-                Some(resource_cost),
-                Some(base_failure_percent),
-            ) if !player_bindings.contains_key(&self.id) => ResolvedPlayerAbilityBinding {
-                minimum_level,
-                resource_id,
-                resource_cost,
-                base_failure_percent,
-                proficiency: self.proficiency.unwrap_or_default(),
-                cooldown: self.cooldown,
-            },
-            (None, None, None, None) if self.proficiency.is_none() && self.cooldown.is_none() => {
-                player_bindings
-                    .get(&self.id)
-                    .cloned()
-                    .ok_or_else(|| ContentError::InvalidAbility(self.id.clone()))?
-            }
-            _ => return Err(ContentError::InvalidAbility(self.id)),
-        };
-        let effect = match (self.effect, self.ability_program_id) {
-            (Some(effect), None) => effect,
-            (None, Some(program_id)) => {
-                let program = resolve_source_ability_program(&self.id, program_id, programs)?;
-                if !ability_program_input_matches_target(program.input, &self.target) {
-                    return Err(ContentError::InvalidAbility(self.id));
-                }
-                program.effect
-            }
-            (Some(_), Some(_)) | (None, None) => {
-                return Err(ContentError::InvalidAbility(self.id));
-            }
-        };
+        let player_binding = player_bindings
+            .get(&self.id)
+            .cloned()
+            .ok_or_else(|| ContentError::InvalidAbility(self.id.clone()))?;
+        let program = resolve_source_ability_program(&self.id, self.ability_program_id, programs)?;
+        if !ability_program_input_matches_target(program.input, &self.target) {
+            return Err(ContentError::InvalidAbility(self.id));
+        }
         Ok(AbilityDefinition {
             schema: self.schema,
             format_version: self.format_version,
@@ -379,7 +332,7 @@ impl SourceAbilityDefinition {
             resource_cost: player_binding.resource_cost,
             base_failure_percent: player_binding.base_failure_percent,
             target: self.target,
-            effect,
+            effect: program.effect,
             level_scaling: self.level_scaling,
             proficiency: player_binding.proficiency,
             cooldown: player_binding.cooldown,
@@ -392,7 +345,8 @@ impl SourceAbilityDefinition {
 mod tests {
     use super::*;
     use crate::{
-        ABILITY_SCHEMA, AbilityRandomBranchDefinition, ActorDamageType, CONTENT_FORMAT_VERSION,
+        ABILITY_SCHEMA, AbilityProficiencyDefinition, AbilityRandomBranchDefinition,
+        ActorDamageType, CONTENT_FORMAT_VERSION,
     };
 
     fn ability_program(
@@ -411,8 +365,7 @@ mod tests {
 
     fn source_ability(
         target: AbilityTargetDefinition,
-        effect: Option<AbilityEffectDefinition>,
-        ability_program_id: Option<&str>,
+        ability_program_id: &str,
     ) -> SourceAbilityDefinition {
         SourceAbilityDefinition {
             schema: ABILITY_SCHEMA.to_owned(),
@@ -420,16 +373,9 @@ mod tests {
             id: "demo.ability.test".to_owned(),
             name_key: "ability-demo-test-name".to_owned(),
             description_key: "ability-demo-test-description".to_owned(),
-            minimum_level: Some(1),
-            resource_id: Some("demo.resource.mana".to_owned()),
-            resource_cost: Some(1),
-            base_failure_percent: Some(0),
             target,
-            effect,
-            ability_program_id: ability_program_id.map(str::to_owned),
+            ability_program_id: ability_program_id.to_owned(),
             level_scaling: Vec::new(),
-            proficiency: Some(AbilityProficiencyDefinition::default()),
-            cooldown: None,
             tags: vec!["test".to_owned()],
         }
     }
@@ -589,117 +535,79 @@ mod tests {
     }
 
     #[test]
-    fn ability_program_bindings_lower_without_changing_runtime_definitions() {
+    fn ability_program_references_and_casting_bindings_are_required() {
         let programs = compile_ability_program_catalog(vec![ability_program(
             "demo.ability-program.healing",
             AbilityProgramInputDefinition::SelfTarget,
             vec![AbilityEffectDefinition::Heal { amount: 4 }],
         )])
         .expect("ability program should compile");
-        let player_bindings = BTreeMap::new();
+        let player_bindings = BTreeMap::from([(
+            "demo.ability.test".to_owned(),
+            ResolvedPlayerAbilityBinding {
+                minimum_level: 1,
+                resource_id: "demo.resource.mana".to_owned(),
+                resource_cost: 1,
+                base_failure_percent: 0,
+                proficiency: AbilityProficiencyDefinition::default(),
+                cooldown: None,
+            },
+        )]);
         let self_target = AbilityTargetDefinition {
             modes: vec![AbilityTargetModeDefinition::SelfTarget],
             range: 0,
             requires_line_of_effect: false,
         };
 
-        let referenced_source = source_ability(
-            self_target.clone(),
-            None,
-            Some("demo.ability-program.healing"),
-        );
+        let referenced_source = source_ability(self_target.clone(), "demo.ability-program.healing");
         let referenced_json = serde_json::to_value(referenced_source)
             .expect("referenced source ability should serialize");
         assert!(referenced_json.get("effect").is_none());
+        assert!(referenced_json.get("minimumLevel").is_none());
         let referenced = serde_json::from_value::<SourceAbilityDefinition>(referenced_json)
             .expect("referenced source ability should deserialize")
             .into_compiled(&programs, &player_bindings)
-            .expect("ability program reference should lower");
+            .expect("Program and casting binding should lower");
         assert_eq!(
             referenced.effect,
             AbilityEffectDefinition::Heal { amount: 4 }
         );
-
-        let inline = source_ability(
-            self_target.clone(),
-            Some(AbilityEffectDefinition::Heal { amount: 4 }),
-            None,
-        )
-        .into_compiled(&programs, &player_bindings)
-        .expect("inline compatibility path should lower");
-        assert_eq!(referenced, inline);
-
-        let mut bound_source = source_ability(
-            self_target.clone(),
-            None,
-            Some("demo.ability-program.healing"),
-        );
-        bound_source.minimum_level = None;
-        bound_source.resource_id = None;
-        bound_source.resource_cost = None;
-        bound_source.base_failure_percent = None;
-        bound_source.proficiency = None;
-        let bound_player_policy = ResolvedPlayerAbilityBinding {
-            minimum_level: 1,
-            resource_id: "demo.resource.mana".to_owned(),
-            resource_cost: 1,
-            base_failure_percent: 0,
-            proficiency: AbilityProficiencyDefinition::default(),
-            cooldown: None,
-        };
-        let bound_player_bindings =
-            BTreeMap::from([("demo.ability.test".to_owned(), bound_player_policy)]);
-        let bound = bound_source
-            .into_compiled(&programs, &bound_player_bindings)
-            .expect("source-only player binding should lower");
-        assert_eq!(referenced, bound);
+        assert_eq!(referenced.minimum_level, 1);
+        assert_eq!(referenced.resource_id, "demo.resource.mana");
 
         assert!(matches!(
-            source_ability(
-                self_target.clone(),
-                None,
-                Some("demo.ability-program.healing"),
-            )
-            .into_compiled(&programs, &bound_player_bindings),
-            Err(ContentError::InvalidAbility(id)) if id == "demo.ability.test"
-        ));
-
-        let mut partial_policy = source_ability(
-            self_target.clone(),
-            None,
-            Some("demo.ability-program.healing"),
-        );
-        partial_policy.resource_cost = None;
-        assert!(matches!(
-            partial_policy.into_compiled(&programs, &BTreeMap::new()),
-            Err(ContentError::InvalidAbility(id)) if id == "demo.ability.test"
-        ));
-
-        assert!(matches!(
-            source_ability(
-                self_target.clone(),
-                Some(AbilityEffectDefinition::Heal { amount: 4 }),
-                Some("demo.ability-program.healing"),
-            )
-            .into_compiled(&programs, &player_bindings),
+            source_ability(self_target.clone(), "demo.ability-program.healing")
+                .into_compiled(&programs, &BTreeMap::new()),
             Err(ContentError::InvalidAbility(id)) if id == "demo.ability.test"
         ));
         assert!(matches!(
-            source_ability(self_target.clone(), None, None)
+            source_ability(self_target.clone(), "demo.ability-program.missing")
                 .into_compiled(&programs, &player_bindings),
-            Err(ContentError::InvalidAbility(id)) if id == "demo.ability.test"
-        ));
-        assert!(matches!(
-            source_ability(
-                self_target.clone(),
-                None,
-                Some("demo.ability-program.missing"),
-            )
-            .into_compiled(&programs, &player_bindings),
             Err(ContentError::DanglingReference { owner, target })
                 if owner == "demo.ability.test"
                     && target == "demo.ability-program.missing"
         ));
+
+        let serialized = serde_json::to_value(source_ability(
+            self_target.clone(),
+            "demo.ability-program.healing",
+        ))
+        .expect("source ability should serialize");
+        let mut missing_program = serialized.clone();
+        missing_program
+            .as_object_mut()
+            .expect("source ability should be an object")
+            .remove("abilityProgramId");
+        assert!(serde_json::from_value::<SourceAbilityDefinition>(missing_program).is_err());
+        let mut inline_effect = serialized;
+        inline_effect
+            .as_object_mut()
+            .expect("source ability should be an object")
+            .insert(
+                "effect".to_owned(),
+                serde_json::json!({ "type": "heal", "amount": 4 }),
+            );
+        assert!(serde_json::from_value::<SourceAbilityDefinition>(inline_effect).is_err());
 
         let cast_target = AbilityTargetDefinition {
             modes: vec![AbilityTargetModeDefinition::Entity],
@@ -707,12 +615,8 @@ mod tests {
             requires_line_of_effect: true,
         };
         assert!(matches!(
-            source_ability(
-                cast_target,
-                None,
-                Some("demo.ability-program.healing"),
-            )
-            .into_compiled(&programs, &player_bindings),
+            source_ability(cast_target, "demo.ability-program.healing")
+                .into_compiled(&programs, &player_bindings),
             Err(ContentError::InvalidAbility(id)) if id == "demo.ability.test"
         ));
     }

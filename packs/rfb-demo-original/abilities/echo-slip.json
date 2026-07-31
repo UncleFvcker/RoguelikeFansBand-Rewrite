@@ -4,10 +4,6 @@
   "id": "demo.ability.echo-slip",
   "nameKey": "ability-demo-echo-slip-name",
   "descriptionKey": "ability-demo-echo-slip-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 2,
-  "baseFailurePercent": 20,
   "target": {
     "modes": [
       "self"
@@ -16,12 +12,6 @@
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.echo-slip",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
   "tags": [
     "mobility",
     "spell"

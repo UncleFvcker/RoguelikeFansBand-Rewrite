@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.echo-slip",
+  "minimumLevel": 1,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 2,
+  "baseFailurePercent": 20,
+  "proficiency": {
+    "initial": 0,
+    "cap": 1600,
+    "successGain": 128,
+    "failureGain": 0
+  }
+}

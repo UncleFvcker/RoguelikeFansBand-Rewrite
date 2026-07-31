@@ -7046,46 +7046,7 @@ struct ExtractedAbilitySources {
 
 fn extract_ability_programs_and_player_bindings(
     ability_files: &mut [(String, serde_json::Value)],
-    ability_book_files: &[(String, serde_json::Value)],
-    class_files: &[(String, serde_json::Value)],
 ) -> Result<ExtractedAbilitySources, String> {
-    let mut player_ability_ids = BTreeSet::new();
-    for (file_name, book) in ability_book_files {
-        let ability_ids = book
-            .get("abilityIds")
-            .and_then(serde_json::Value::as_array)
-            .ok_or_else(|| format!("{file_name} ability book has no abilityIds array"))?;
-        for ability_id in ability_ids {
-            let ability_id = ability_id
-                .as_str()
-                .ok_or_else(|| format!("{file_name} ability book has a non-string ability id"))?;
-            player_ability_ids.insert(ability_id.to_owned());
-        }
-    }
-    for (file_name, class) in class_files {
-        let Some(profiles) = class.get("techniqueProfiles") else {
-            continue;
-        };
-        let profiles = profiles
-            .as_array()
-            .ok_or_else(|| format!("{file_name} class has non-array techniqueProfiles"))?;
-        for profile in profiles {
-            let ability_ids = profile
-                .get("innateAbilityIds")
-                .and_then(serde_json::Value::as_array)
-                .ok_or_else(|| {
-                    format!("{file_name} technique profile has no innateAbilityIds array")
-                })?;
-            for ability_id in ability_ids {
-                let ability_id = ability_id.as_str().ok_or_else(|| {
-                    format!("{file_name} technique profile has a non-string ability id")
-                })?;
-                player_ability_ids.insert(ability_id.to_owned());
-            }
-        }
-    }
-
-    let mut unresolved_player_ability_ids = player_ability_ids.clone();
     let mut programs = BTreeMap::new();
     let mut bindings = BTreeMap::new();
     for (file_name, ability) in ability_files {
@@ -7139,10 +7100,6 @@ fn extract_ability_programs_and_player_bindings(
             return Err(format!("duplicate ability program for {file_name}"));
         }
 
-        if !player_ability_ids.contains(&ability_id) {
-            continue;
-        }
-        unresolved_player_ability_ids.remove(&ability_id);
         let minimum_level = ability
             .remove("minimumLevel")
             .ok_or_else(|| format!("{file_name} player ability has no minimumLevel"))?;
@@ -7173,12 +7130,6 @@ fn extract_ability_programs_and_player_bindings(
             return Err(format!("duplicate player ability binding for {file_name}"));
         }
     }
-    if let Some(ability_id) = unresolved_player_ability_ids.into_iter().next() {
-        return Err(format!(
-            "player ability reference has no generated ability source: {ability_id}"
-        ));
-    }
-
     Ok(ExtractedAbilitySources {
         program_files: programs.into_iter().collect(),
         player_binding_files: bindings.into_iter().collect(),
@@ -7305,12 +7256,9 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let mut outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
     let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
-    let extracted_ability_sources = extract_ability_programs_and_player_bindings(
-        &mut outcome.ability_files,
-        &outcome.ability_book_files,
-        &outcome.class_files,
-    )
-    .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
+    let extracted_ability_sources =
+        extract_ability_programs_and_player_bindings(&mut outcome.ability_files)
+            .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
     let ability_program_files = extracted_ability_sources.program_files;
     let player_ability_binding_files = extracted_ability_sources.player_binding_files;
 
@@ -8440,7 +8388,7 @@ W:5:0:0:150:80
     }
 
     #[test]
-    fn ability_extraction_emits_programs_and_player_bindings() {
+    fn ability_extraction_emits_required_programs_and_casting_bindings() {
         fn ability(
             id: &str,
             target: serde_json::Value,
@@ -8511,36 +8459,20 @@ W:5:0:0:150:80
                 ),
             ),
         ];
-        let books = vec![(
-            "book.json".to_owned(),
-            serde_json::json!({
-                "abilityIds": ["rfb-legacy.ability.book-spell"],
-            }),
-        )];
-        let classes = vec![(
-            "class.json".to_owned(),
-            serde_json::json!({
-                "techniqueProfiles": [{
-                    "innateAbilityIds": ["rfb-legacy.ability.innate"],
-                }],
-            }),
-        )];
-
-        let extracted =
-            extract_ability_programs_and_player_bindings(&mut abilities, &books, &classes)
-                .expect("ability source policy should extract deterministically");
+        let extracted = extract_ability_programs_and_player_bindings(&mut abilities)
+            .expect("ability source policy should extract deterministically");
         let programs = extracted.program_files;
         let bindings = extracted.player_binding_files;
 
         assert_eq!(programs.len(), 3);
-        assert_eq!(bindings.len(), 2);
+        assert_eq!(bindings.len(), 3);
         assert_eq!(
             abilities[0].1["abilityProgramId"],
             "rfb-legacy.ability-program.book-spell"
         );
         assert!(abilities[0].1.get("effect").is_none());
         assert!(abilities[0].1.get("minimumLevel").is_none());
-        assert_eq!(abilities[2].1["minimumLevel"], 3);
+        assert!(abilities[2].1.get("minimumLevel").is_none());
 
         let book_program = programs
             .iter()
@@ -8563,7 +8495,15 @@ W:5:0:0:150:80
             .expect("book player binding should be emitted");
         assert_eq!(book_binding["abilityId"], "rfb-legacy.ability.book-spell");
         assert_eq!(book_binding["resourceCost"], 5);
-        assert!(bindings.iter().all(|(name, _)| name != "monster-only.json"));
+        let monster_binding = bindings
+            .iter()
+            .find(|(name, _)| name == "monster-only.json")
+            .map(|(_, value)| value)
+            .expect("monster-only casting policy should be emitted");
+        assert_eq!(
+            monster_binding["abilityId"],
+            "rfb-legacy.ability.monster-only"
+        );
     }
 
     #[test]

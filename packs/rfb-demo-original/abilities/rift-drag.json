@@ -4,10 +4,6 @@
   "id": "demo.ability.rift-drag",
   "nameKey": "ability-demo-rift-drag-name",
   "descriptionKey": "ability-demo-rift-drag-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 2,
-  "baseFailurePercent": 15,
   "target": {
     "modes": [
       "position",
@@ -17,12 +13,6 @@
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.rift-drag",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
   "tags": [
     "mobility",
     "spell"

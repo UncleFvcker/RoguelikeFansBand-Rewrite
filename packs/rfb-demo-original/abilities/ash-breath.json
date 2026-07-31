@@ -4,21 +4,17 @@
   "id": "demo.ability.ash-breath",
   "nameKey": "ability-demo-ash-breath-name",
   "descriptionKey": "ability-demo-ash-breath-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 4,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.ash-breath",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["breath", "fire", "spell"]
+  "tags": [
+    "breath",
+    "fire",
+    "spell"
+  ]
 }

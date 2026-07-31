@@ -4,21 +4,17 @@
   "id": "demo.ability.gloom-veil",
   "nameKey": "ability-demo-gloom-veil-name",
   "descriptionKey": "ability-demo-gloom-veil-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 2,
-  "baseFailurePercent": 20,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.gloom-veil",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["spell", "status"]
+  "tags": [
+    "spell",
+    "status"
+  ]
 }

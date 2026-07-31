@@ -4,21 +4,16 @@
   "id": "demo.ability.cantor-call",
   "nameKey": "ability-demo-cantor-call-name",
   "descriptionKey": "ability-demo-cantor-call-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 5,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.cantor-call",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["spell", "summon"]
+  "tags": [
+    "spell",
+    "summon"
+  ]
 }

@@ -4,21 +4,17 @@
   "id": "demo.ability.cinder-fan",
   "nameKey": "ability-demo-cinder-fan-name",
   "descriptionKey": "ability-demo-cinder-fan-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 6,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["direction"],
+    "modes": [
+      "direction"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.cinder-fan",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["cone", "fire", "spell"]
+  "tags": [
+    "cone",
+    "fire",
+    "spell"
+  ]
 }

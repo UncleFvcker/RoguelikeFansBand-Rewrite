@@ -4,21 +4,16 @@
   "id": "demo.ability.mote-call",
   "nameKey": "ability-demo-mote-call-name",
   "descriptionKey": "ability-demo-mote-call-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 5,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["self"],
+    "modes": [
+      "self"
+    ],
     "range": 0,
     "requiresLineOfEffect": false
   },
   "abilityProgramId": "demo.ability-program.mote-call",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["spell", "summon"]
+  "tags": [
+    "spell",
+    "summon"
+  ]
 }

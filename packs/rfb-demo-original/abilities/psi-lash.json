@@ -4,21 +4,17 @@
   "id": "demo.ability.psi-lash",
   "nameKey": "ability-demo-psi-lash-name",
   "descriptionKey": "ability-demo-psi-lash-description",
-  "minimumLevel": 1,
-  "resourceId": "demo.resource.mana",
-  "resourceCost": 4,
-  "baseFailurePercent": 25,
   "target": {
-    "modes": ["position", "entity"],
+    "modes": [
+      "position",
+      "entity"
+    ],
     "range": 6,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "demo.ability-program.psi-lash",
-  "proficiency": {
-    "initial": 0,
-    "cap": 1600,
-    "successGain": 128,
-    "failureGain": 0
-  },
-  "tags": ["psi", "spell"]
+  "tags": [
+    "psi",
+    "spell"
+  ]
 }
