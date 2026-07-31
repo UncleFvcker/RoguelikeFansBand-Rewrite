@@ -501,6 +501,8 @@ The dispel source migration maps the undead dispel scroll to a self-input progra
 
 The aggravation source migration maps the clamor scroll to a self-input program. Entity alertness mutation, changed cells, consumption, unconditional awareness, and event ordering remain in the existing item/world adapter.
 
+The banishment source migration maps the banishment scroll to a self-input program. Maximum distance lowers unchanged; the visible actor snapshot, resistance and destination RNG in stable actor order, relocation, consumption, awareness, and events remain runtime-owned.
+
 Implementation must use the following compatibility gates. One effect family is migrated per commit; any numbered gate containing multiple named families must be split further when the diff, RNG ownership, or review boundary is not locally obvious. No gate may introduce a speculative shared effect engine.
 
 1. **Call-site census and characterization only.** Record player ability, item, and monster ability entry points; their preflight, RNG, resource/charge, target, state, trace, awareness, and event contracts; and the existing owner of each downstream mutation. Add missing tests without moving production code.
