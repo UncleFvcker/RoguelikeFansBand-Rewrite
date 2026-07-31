@@ -5422,24 +5422,7 @@ impl Game {
                 self.resolve_item_confusing_strike_preparation(source_kind_id, events)
             }
             ItemUseEffectDefinition::IncreaseSpellLearningCapacity => {
-                let before = self
-                    .casting_profile()
-                    .map_or(0, |profile| self.ability_learning_capacity(profile));
-                if self.uses_spell_scrolls() {
-                    self.bonus_spell_learning_capacity =
-                        self.bonus_spell_learning_capacity.saturating_add(1);
-                }
-                let after = self
-                    .casting_profile()
-                    .map_or(0, |profile| self.ability_learning_capacity(profile));
-                self.mark_item_aware(source_kind_id);
-                events.push(DomainEvent::ItemSpellLearningCapacityChanged {
-                    source_kind_id: source_kind_id.to_owned(),
-                    display_name_key: self.item_display_name_key(source_kind_id),
-                    before,
-                    after,
-                });
-                true
+                self.resolve_item_spell_learning_capacity(source_kind_id, events)
             }
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 self.resolve_item_status_removal(source_kind_id, status_kind_id, events)

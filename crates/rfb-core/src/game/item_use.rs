@@ -2850,4 +2850,29 @@ impl Game {
             },
         });
     }
+
+    pub(super) fn resolve_item_spell_learning_capacity(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let before = self
+            .casting_profile()
+            .map_or(0, |profile| self.ability_learning_capacity(profile));
+        if self.uses_spell_scrolls() {
+            self.bonus_spell_learning_capacity =
+                self.bonus_spell_learning_capacity.saturating_add(1);
+        }
+        let after = self
+            .casting_profile()
+            .map_or(0, |profile| self.ability_learning_capacity(profile));
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemSpellLearningCapacityChanged {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            before,
+            after,
+        });
+        true
+    }
 }
