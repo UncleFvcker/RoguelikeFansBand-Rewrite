@@ -1217,6 +1217,112 @@ impl Game {
         });
     }
 
+    pub(super) fn resolve_player_genocide_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Option<Vec<Position>>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let AbilityEffectDefinition::Genocide {
+            scope,
+            power,
+            radius,
+        } = &ability.effect
+        else {
+            unreachable!("genocide executor requires a genocide effect");
+        };
+        let (trace, target_entity_id, target_kind_id, glyph) =
+            if *scope == AbilityGenocideScopeDefinition::Nearby {
+                (None, None, None, None)
+            } else {
+                let (trace, target_index) =
+                    self.trace_projectile_path(path.expect("targeted genocide must retain a path"));
+                let Some(target_index) = target_index else {
+                    events.push(DomainEvent::AbilityLanded {
+                        ability_id: ability.id.clone(),
+                        trace: trace.clone(),
+                    });
+                    events.push(DomainEvent::AbilityEffectsResolved {
+                        ability_id: ability.id.clone(),
+                        resolution: AbilityEffectsResolutionDto {
+                            target_entity_id: None,
+                            target_kind_id: None,
+                            effects: vec![AbilityEffectResolutionDto::Skipped {
+                                effect_index: 0,
+                                reason: AbilityEffectSkipReasonDto::NoTarget,
+                            }],
+                        },
+                        trace: Some(trace),
+                    });
+                    return;
+                };
+                let target_entity_id = self.entities[target_index].id.clone();
+                let target_kind_id = self.entities[target_index].kind_id.clone();
+                let glyph = self
+                    .content
+                    .actor(&target_kind_id)
+                    .map(|definition| definition.glyph.clone());
+                (
+                    Some(trace),
+                    Some(target_entity_id),
+                    Some(target_kind_id),
+                    glyph,
+                )
+            };
+        let mut candidate_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && match scope {
+                        AbilityGenocideScopeDefinition::Single => {
+                            target_entity_id.as_deref() == Some(entity.id.as_str())
+                        }
+                        AbilityGenocideScopeDefinition::Glyph => self
+                            .content
+                            .actor(&entity.kind_id)
+                            .zip(glyph.as_ref())
+                            .is_some_and(|(definition, glyph)| &definition.glyph == glyph),
+                        AbilityGenocideScopeDefinition::Nearby => {
+                            chebyshev_distance(self.player.position, entity.position)
+                                <= u32::from(*radius)
+                        }
+                    }
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        candidate_ids.sort();
+        let resolution = self.resolve_genocide_candidates(
+            candidate_ids,
+            *scope,
+            *power,
+            changed,
+            removed_entities,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id,
+                target_kind_id,
+                effects: vec![AbilityEffectResolutionDto::Genocide {
+                    effect_index: 0,
+                    scope: ability_genocide_scope_dto(*scope),
+                    power: *power,
+                    radius: *radius,
+                    glyph: matches!(scope, AbilityGenocideScopeDefinition::Glyph)
+                        .then_some(glyph)
+                        .flatten(),
+                    removed_entity_ids: resolution.removed_entity_ids,
+                    resisted_entity_ids: resolution.resisted_entity_ids,
+                    fatigue_damage: resolution.fatigue_damage,
+                }],
+            },
+            trace,
+        });
+    }
+
     pub(super) fn resolve_player_animate_dead_effect(
         &mut self,
         ability: &AbilityDefinition,

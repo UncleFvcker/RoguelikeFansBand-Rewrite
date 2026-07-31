@@ -388,12 +388,19 @@ fn nearby_genocide_filters_radius_resists_unique_and_is_deterministic() {
     let resolve = |game: &mut Game| {
         let mut events = Vec::new();
         let mut removed = Vec::new();
-        game.resolve_ability_genocide(
-            "demo.ability.death-mass-genocide",
+        let mut ability = game
+            .content
+            .ability("demo.ability.death-mass-genocide")
+            .expect("mass genocide ability should exist")
+            .clone();
+        ability.effect = AbilityEffectDefinition::Genocide {
+            scope: AbilityGenocideScopeDefinition::Nearby,
+            power: 1_000,
+            radius: 2,
+        };
+        game.resolve_player_genocide_effect(
+            &ability,
             None,
-            AbilityGenocideScopeDefinition::Nearby,
-            1_000,
-            2,
             &mut events,
             &mut BTreeSet::new(),
             &mut removed,

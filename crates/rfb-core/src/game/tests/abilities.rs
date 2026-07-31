@@ -3630,12 +3630,20 @@ fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
     let hp_before = game.player.hp;
     let mut events = Vec::new();
     let mut removed_entities = Vec::new();
-    game.resolve_ability_genocide(
-        "test.ability.genocide",
+    let mut ability = game
+        .content
+        .ability("demo.ability.death-genocide")
+        .expect("genocide ability should exist")
+        .clone();
+    ability.id = "test.ability.genocide".to_owned();
+    ability.effect = AbilityEffectDefinition::Genocide {
+        scope: AbilityGenocideScopeDefinition::Glyph,
+        power: 1_000,
+        radius: 0,
+    };
+    game.resolve_player_genocide_effect(
+        &ability,
         Some(vec![Position { x: 4, y: 3 }]),
-        AbilityGenocideScopeDefinition::Glyph,
-        1_000,
-        0,
         &mut events,
         &mut BTreeSet::new(),
         &mut removed_entities,

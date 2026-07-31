@@ -4154,19 +4154,12 @@ impl Game {
                 )?;
             }
             (
-                AbilityEffectDefinition::Genocide {
-                    scope,
-                    power,
-                    radius,
-                },
+                AbilityEffectDefinition::Genocide { .. },
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
-                self.resolve_ability_genocide(
-                    &ability.id,
+                self.resolve_player_genocide_effect(
+                    &ability,
                     Some(path),
-                    scope,
-                    power,
-                    radius,
                     events,
                     changed,
                     removed_entities,
@@ -4175,17 +4168,13 @@ impl Game {
             (
                 AbilityEffectDefinition::Genocide {
                     scope: AbilityGenocideScopeDefinition::Nearby,
-                    power,
-                    radius,
+                    ..
                 },
                 AbilityTargetPlan::SelfTarget,
             ) => {
-                self.resolve_ability_genocide(
-                    &ability.id,
+                self.resolve_player_genocide_effect(
+                    &ability,
                     None,
-                    AbilityGenocideScopeDefinition::Nearby,
-                    power,
-                    radius,
                     events,
                     changed,
                     removed_entities,
@@ -4197,108 +4186,6 @@ impl Game {
             _ => unreachable!("validated ability target plan must match its effect"),
         }
         Ok(())
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_genocide(
-        &mut self,
-        ability_id: &str,
-        path: Option<Vec<Position>>,
-        scope: AbilityGenocideScopeDefinition,
-        power: u16,
-        radius: u8,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) {
-        let (trace, target_entity_id, target_kind_id, glyph) =
-            if scope == AbilityGenocideScopeDefinition::Nearby {
-                (None, None, None, None)
-            } else {
-                let (trace, target_index) =
-                    self.trace_projectile_path(path.expect("targeted genocide must retain a path"));
-                let Some(target_index) = target_index else {
-                    events.push(DomainEvent::AbilityLanded {
-                        ability_id: ability_id.to_owned(),
-                        trace: trace.clone(),
-                    });
-                    events.push(DomainEvent::AbilityEffectsResolved {
-                        ability_id: ability_id.to_owned(),
-                        resolution: AbilityEffectsResolutionDto {
-                            target_entity_id: None,
-                            target_kind_id: None,
-                            effects: vec![AbilityEffectResolutionDto::Skipped {
-                                effect_index: 0,
-                                reason: AbilityEffectSkipReasonDto::NoTarget,
-                            }],
-                        },
-                        trace: Some(trace),
-                    });
-                    return;
-                };
-                let target_entity_id = self.entities[target_index].id.clone();
-                let target_kind_id = self.entities[target_index].kind_id.clone();
-                let glyph = self
-                    .content
-                    .actor(&target_kind_id)
-                    .map(|definition| definition.glyph.clone());
-                (
-                    Some(trace),
-                    Some(target_entity_id),
-                    Some(target_kind_id),
-                    glyph,
-                )
-            };
-        let mut candidate_ids = self
-            .entities
-            .iter()
-            .filter(|entity| {
-                entity.hp > 0
-                    && match scope {
-                        AbilityGenocideScopeDefinition::Single => {
-                            target_entity_id.as_deref() == Some(entity.id.as_str())
-                        }
-                        AbilityGenocideScopeDefinition::Glyph => self
-                            .content
-                            .actor(&entity.kind_id)
-                            .zip(glyph.as_ref())
-                            .is_some_and(|(definition, glyph)| &definition.glyph == glyph),
-                        AbilityGenocideScopeDefinition::Nearby => {
-                            chebyshev_distance(self.player.position, entity.position)
-                                <= u32::from(radius)
-                        }
-                    }
-            })
-            .map(|entity| entity.id.clone())
-            .collect::<Vec<_>>();
-        candidate_ids.sort();
-        let resolution = self.resolve_genocide_candidates(
-            candidate_ids,
-            scope,
-            power,
-            changed,
-            removed_entities,
-        );
-        events.push(DomainEvent::AbilityEffectsResolved {
-            ability_id: ability_id.to_owned(),
-            resolution: AbilityEffectsResolutionDto {
-                target_entity_id,
-                target_kind_id,
-                effects: vec![AbilityEffectResolutionDto::Genocide {
-                    effect_index: 0,
-                    scope: ability_genocide_scope_dto(scope),
-                    power,
-                    radius,
-                    glyph: matches!(scope, AbilityGenocideScopeDefinition::Glyph)
-                        .then_some(glyph)
-                        .flatten(),
-                    removed_entity_ids: resolution.removed_entity_ids,
-                    resisted_entity_ids: resolution.resisted_entity_ids,
-                    fatigue_damage: resolution.fatigue_damage,
-                }],
-            },
-            trace,
-        });
     }
 
     fn resolve_genocide_candidates(
