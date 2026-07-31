@@ -1004,6 +1004,34 @@ impl Game {
             });
         }
     }
+
+    pub(super) fn resolve_player_healing_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::Heal { amount } = ability.effect else {
+            unreachable!("player healing executor requires a healing effect");
+        };
+        let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
+        let max_hp = self.effective_player_max_hp();
+        let outcome = apply_effect(
+            &mut EffectTarget {
+                hp: &mut self.player.hp,
+                max_hp,
+                resistances: &self.player.resistances,
+                statuses: &mut self.player.statuses,
+            },
+            EffectSpec::Heal { amount },
+        );
+        let EffectOutcome::Healed { requested, applied } = outcome else {
+            unreachable!("healing abilities must produce healing outcomes");
+        };
+        events.push(DomainEvent::AbilityHealed {
+            ability_id: ability.id.clone(),
+            resolution: HealingResolutionDto { requested, applied },
+        });
+    }
 }
 
 impl Game {

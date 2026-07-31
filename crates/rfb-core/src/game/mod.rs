@@ -4189,25 +4189,8 @@ impl Game {
                     removed_entities,
                 )?;
             }
-            (AbilityEffectDefinition::Heal { amount }, AbilityTargetPlan::SelfTarget) => {
-                let amount = i32::try_from(amount).expect("validated healing amount must fit i32");
-                let max_hp = self.effective_player_max_hp();
-                let outcome = apply_effect(
-                    &mut EffectTarget {
-                        hp: &mut self.player.hp,
-                        max_hp,
-                        resistances: &self.player.resistances,
-                        statuses: &mut self.player.statuses,
-                    },
-                    EffectSpec::Heal { amount },
-                );
-                let EffectOutcome::Healed { requested, applied } = outcome else {
-                    unreachable!("healing abilities must produce healing outcomes");
-                };
-                events.push(DomainEvent::AbilityHealed {
-                    ability_id: ability.id,
-                    resolution: HealingResolutionDto { requested, applied },
-                });
+            (AbilityEffectDefinition::Heal { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_healing_effect(&ability, events);
             }
             (
                 AbilityEffectDefinition::IdentifyItem {
