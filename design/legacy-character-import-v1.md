@@ -17,6 +17,8 @@
 - **技能花名册**：8 条 `rfb-legacy.skill.*`（kind 与 RFB 枚举 1:1，maximum 1000），有角色产物时生成。
 - **b_info** → 槽类型映射：WEAPON_SHIELD 交替 weapon/shield（第 1/3/5…只手→weapon）、BOW→launcher、RING→ring（同类型多实例编号 ring-1/ring-2…）、AMULET/LITE/BODY_ARMOR/CLOAK/HELMET/GLOVES/BOOTS→amulet/light/body/cloak/head/gloves/boots；ANY/QUIVER/CAPTURE_BALL 无 RFB 对应，计 `bodySlotGaps`。全部 113 模板做缺口普查；**当前唯一绑定面是玩家种族×Standard**（12 槽，**刻意不含 RFB 原创 charm 槽**），其余模板经 r_info `Body:` 挂在怪物上，等附身/怪物种族玩法。
 
+> contract-v151 production amendment：上述 12 槽仍是 P48 批量导入工具的历史输出。用户指定的 `demo.race.rfb-human` 不经该批量产物，改为显式 13 槽 RFB Standard：在同一交替手槽近似上补回 `quiver` 实例；当前箭矢仍留在库存，直到箭袋行为实现。它仍不含原创 `charm`。
+
 ## 3. 实测（钉死 commit）
 
 - 种族：88 个 `*_get_race` 定义中 **67 个规整块导入**（21 个 rank 动态怪物种族按 race-code-dynamic 跳过）；抽查霍比特六维/技能/生命/经验与原版逐项一致。

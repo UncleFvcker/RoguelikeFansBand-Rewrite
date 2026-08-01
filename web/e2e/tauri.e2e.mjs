@@ -153,11 +153,11 @@ async function runScenario(driver) {
     };
   `);
   assert.match(titleState.title, /兽穴/);
-  assert.match(titleState.subtitle, /临时原创 Demo 构筑/);
+  assert.match(titleState.subtitle, /RFB 职业兼容切片“战士”/);
 
   await driver.execute(`
     document.querySelector("#session-new-game").click();
-    const build = document.querySelector("#session-build-explorer");
+    const build = document.querySelector("#session-build-warrior");
     build.checked = true;
     build.dispatchEvent(new Event("change", { bubbles: true }));
     const seed = document.querySelector("#session-seed");
@@ -180,23 +180,19 @@ async function runScenario(driver) {
       gameHidden: document.querySelector("#app")?.hidden,
     };
   `);
-  assert.equal(runSetup.buildId, "demo.build.explorer");
+  assert.equal(runSetup.buildId, "demo.build.warrior");
   assert.equal(runSetup.seed, "42");
   assert.equal(runSetup.seedLabel, "42");
   assert.equal(runSetup.titleHidden, true);
   assert.equal(runSetup.gameHidden, false);
   const initialGuidance = await driver.execute(`
     return {
-      objective: document.querySelector("#journey-panel")?.dataset.objectiveId,
       prompt: document.querySelector("#journey-panel")?.dataset.promptId,
       kind: document.querySelector("#journey-panel")?.dataset.promptKind,
-      title: document.querySelector("#journey-objective-title")?.textContent,
     };
   `);
-  assert.equal(initialGuidance.objective, "prepare");
   assert.equal(initialGuidance.prompt, "movement");
   assert.equal(initialGuidance.kind, "journey");
-  assert.match(initialGuidance.title, /准备/);
 
   await driver.execute(`
     const input = document.querySelector("#input-preset");
@@ -337,11 +333,10 @@ async function runScenario(driver) {
   assert.match(state.messages, /你将 5 个陌生的浅色碎片收入了背包/);
   const pickupGuidance = await driver.execute(`
     return {
-      objective: document.querySelector("#journey-panel")?.dataset.objectiveId,
       prompt: document.querySelector("#journey-panel")?.dataset.promptId,
     };
   `);
-  assert.deepEqual(pickupGuidance, { objective: "enter", prompt: "inventory" });
+  assert.deepEqual(pickupGuidance, { prompt: "inventory" });
 
   const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
   const nativeSaveHash = state.stateHash;
@@ -518,7 +513,7 @@ async function runScenario(driver) {
   assert.match(state.equipment, /攻击 \+2/);
   assert.match(state.equipment, /防御 \+1/);
   assert.match(state.equipment, /最大生命 \+4/);
-  assert.match(state.health, /10 \/ 14（装备 \+4）/);
+  assert.match(state.health, /33 \/ 37（装备 \+4）/);
   assert.equal(state.attack, "4（装备 +2）");
   assert.equal(state.defense, "2（装备 +1）");
   assert.match(state.messages, /装备在护符槽位/);
@@ -530,7 +525,7 @@ async function runScenario(driver) {
   );
   state = await readState(driver);
   assert.equal(state.inventoryStackCount, "2");
-  assert.equal(state.health, "10 / 10");
+  assert.equal(state.health, "33 / 33");
   assert.equal(state.attack, "2");
   assert.equal(state.defense, "1");
   assert.match(state.messages, /卸下了回声护符/);

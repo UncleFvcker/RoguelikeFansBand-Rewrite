@@ -12,9 +12,9 @@ export interface AppDom {
   readonly targetModeStatus: HTMLElement;
   readonly connectionStatus: HTMLElement;
   readonly journeyPanel: HTMLElement;
-  readonly journeyObjectiveTitle: HTMLElement;
-  readonly journeyObjectiveDetail: HTMLElement;
-  readonly journeyLocation: HTMLElement;
+  readonly journeyDungeonName: HTMLElement;
+  readonly journeyDepth: HTMLElement;
+  readonly journeyBoss: HTMLElement;
   readonly onboardingKind: HTMLElement;
   readonly onboardingTitle: HTMLElement;
   readonly onboardingDetail: HTMLElement;
@@ -86,9 +86,9 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     targetModeStatus: element<HTMLElement>(document, "target-mode-status"),
     connectionStatus: element<HTMLElement>(document, "connection-status"),
     journeyPanel: element<HTMLElement>(document, "journey-panel"),
-    journeyObjectiveTitle: element<HTMLElement>(document, "journey-objective-title"),
-    journeyObjectiveDetail: element<HTMLElement>(document, "journey-objective-detail"),
-    journeyLocation: element<HTMLElement>(document, "journey-location"),
+    journeyDungeonName: element<HTMLElement>(document, "journey-dungeon-name"),
+    journeyDepth: element<HTMLElement>(document, "journey-depth"),
+    journeyBoss: element<HTMLElement>(document, "journey-boss"),
     onboardingKind: element<HTMLElement>(document, "onboarding-kind"),
     onboardingTitle: element<HTMLElement>(document, "onboarding-title"),
     onboardingDetail: element<HTMLElement>(document, "onboarding-detail"),

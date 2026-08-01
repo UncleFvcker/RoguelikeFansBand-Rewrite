@@ -175,7 +175,7 @@ use world::geometry::{
 };
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 142] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 143] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -318,10 +318,11 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 142] = [
     "2b1bf5beabe42513d3ad70e0d536274a773babf391c085f3af4ca7a720a2e003",
     "a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c",
     "cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774",
+    "7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f";
+    "dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 55;

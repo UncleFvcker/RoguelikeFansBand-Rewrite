@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.broad-sword",
+  "nameKey": "item-demo-broad-sword-name",
+  "descriptionKey": "item-demo-broad-sword-description",
+  "glyph": "|",
+  "weightTenthsPound": 150,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 2,
+    "damageSides": 6,
+    "damageType": "physical"
+  },
+  "tags": ["equipment", "weapon", "rfb-compatibility"]
+}

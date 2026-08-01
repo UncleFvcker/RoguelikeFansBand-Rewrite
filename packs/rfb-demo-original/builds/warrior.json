@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.warrior",
+  "nameKey": "build-demo-warrior-name",
+  "descriptionKey": "build-demo-warrior-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.warrior",
+  "personalityId": "demo.personality.ordinary",
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": ["martial", "rfb-compatibility", "phase-17"]
+}

@@ -559,7 +559,7 @@ fn campaign_guardian_death_emits_victory_and_old_save_derives_it() {
 
 #[test]
 fn warrens_journey_conquers_returns_retires_and_round_trips() {
-    let mut game = Game::new_warrens_journey_with_build(49, "demo.build.explorer")
+    let mut game = Game::new_warrens_journey_with_build(49, "demo.build.warrior")
         .expect("Warrens journey should create");
     game.player
         .resistances

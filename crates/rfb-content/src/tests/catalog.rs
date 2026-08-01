@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.141.0");
+    assert_eq!(catalog.pack_version(), "1.142.0");
     assert_eq!(
         catalog.resource("demo.resource.mana").map(|resource| (
             resource.name_key.as_str(),
@@ -124,6 +124,31 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             "demo.class.warrior",
             "demo.personality.combat",
         ))
+    );
+    assert_eq!(
+        catalog.build("demo.build.warrior").map(|build| (
+            build.race_id.as_str(),
+            build.class_id.as_str(),
+            build.personality_id.as_str(),
+        )),
+        Some((
+            "demo.race.rfb-human",
+            "demo.class.warrior",
+            "demo.personality.ordinary",
+        ))
+    );
+    assert_eq!(
+        catalog.class("demo.class.warrior").map(|class| class
+            .starting_items
+            .iter()
+            .map(|item| (item.item_kind_id.as_str(), item.quantity, item.equipped))
+            .collect::<Vec<_>>()),
+        Some(vec![
+            ("demo.item.arrow", 22, false),
+            ("demo.item.broad-sword", 1, true),
+            ("demo.item.chain-mail", 1, true),
+            ("demo.item.short-bow", 1, true),
+        ])
     );
     assert_eq!(
         catalog

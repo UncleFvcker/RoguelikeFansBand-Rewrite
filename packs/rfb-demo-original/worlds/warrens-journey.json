@@ -16,10 +16,10 @@
   ],
   "player": {
     "instanceId": "demo.actor.warrens-player.1",
-    "kindId": "demo.actor.explorer",
+    "kindId": "demo.actor.warrior-player",
     "position": { "x": 3, "y": 3 }
   },
-  "playerBuildId": "demo.build.explorer",
+  "playerBuildId": "demo.build.warrior",
   "actors": [],
   "items": [
     {

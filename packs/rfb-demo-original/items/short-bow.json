@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.short-bow",
+  "nameKey": "item-demo-short-bow-name",
+  "descriptionKey": "item-demo-short-bow-description",
+  "glyph": "}",
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "projectileProfile": {
+    "range": 8,
+    "toHit": 0,
+    "toDamage": 0,
+    "damageDice": 3,
+    "damageSides": 4,
+    "damageType": "physical",
+    "ammoKindId": "demo.item.arrow"
+  },
+  "tags": ["equipment", "launcher", "rfb-compatibility"]
+}

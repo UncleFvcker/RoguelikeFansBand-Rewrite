@@ -10,12 +10,8 @@ import {
   randomSessionSeed,
 } from "./session-shell.ts";
 
-test("Gate 1 exposes only the three temporary demo build presets", () => {
-  assert.deepEqual(PLAYTEST_BUILD_IDS, [
-    "demo.build.explorer",
-    "demo.build.vanguard",
-    "demo.build.scholar",
-  ]);
+test("new character creation exposes only the first RFB Warrior slice", () => {
+  assert.deepEqual(PLAYTEST_BUILD_IDS, ["demo.build.warrior"]);
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });
 

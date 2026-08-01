@@ -291,7 +291,7 @@ button:disabled,
   margin-bottom: 1rem;
 }
 
-.journey-objective,
+.journey-dungeon,
 .onboarding-card {
   border: 1px solid rgb(103 137 168 / 28%);
   border-radius: 12px;
@@ -315,7 +315,7 @@ button:disabled,
   background: none;
 }
 
-.journey-location,
+.journey-depth,
 .onboarding-meta,
 .journey-label {
   color: #7994ad;
@@ -328,16 +328,20 @@ button:disabled,
   letter-spacing: 0.08em;
 }
 
-.journey-objective h2,
+.journey-dungeon h2,
 .onboarding-card h3 {
   margin: 0;
   color: #d7b56d;
 }
 
-.journey-objective > p:last-child,
+.journey-dungeon > p:last-child,
 .onboarding-card > p {
   margin: 0.45rem 0 0;
   line-height: 1.45;
+}
+
+.journey-boss {
+  color: #e7c982;
 }
 
 .onboarding-kind {

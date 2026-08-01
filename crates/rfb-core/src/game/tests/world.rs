@@ -7,7 +7,7 @@ use super::*;
 #[test]
 fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
     for seed in 0..16 {
-        let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.explorer")
+        let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
             .expect("Warrens journey should create");
         game.player
             .resistances

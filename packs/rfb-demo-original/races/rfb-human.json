@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "formatVersion": 1,
+  "id": "demo.race.rfb-human",
+  "nameKey": "race-demo-rfb-human-name",
+  "descriptionKey": "race-demo-rfb-human-description",
+  "skillSetId": "demo.skill-set.human",
+  "kinCategory": "kin-glyph-112",
+  "bodySlots": [
+    { "id": "right-hand", "slotType": "weapon" },
+    { "id": "left-hand", "slotType": "shield" },
+    { "id": "shooting", "slotType": "launcher" },
+    { "id": "quiver", "slotType": "quiver" },
+    { "id": "right-ring", "slotType": "ring" },
+    { "id": "left-ring", "slotType": "ring" },
+    { "id": "neck", "slotType": "amulet" },
+    { "id": "light", "slotType": "light" },
+    { "id": "body", "slotType": "body" },
+    { "id": "cloak", "slotType": "cloak" },
+    { "id": "head", "slotType": "head" },
+    { "id": "hands", "slotType": "gloves" },
+    { "id": "feet", "slotType": "boots" }
+  ],
+  "tags": ["humanoid", "rfb-compatibility", "standard-body"]
+}

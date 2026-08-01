@@ -9,6 +9,8 @@ use serde::Serialize;
 use tauri::Manager;
 
 use rfb_core::Game;
+#[cfg(feature = "webdriver")]
+use rfb_protocol::BodySlotSaveDto;
 use rfb_protocol::{
     CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, PROTOCOL_VERSION,
     SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1,
@@ -155,11 +157,21 @@ fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
     // The existing webdriver suite is a debug-only technical regression harness
     // over the original lab. Gate 6 replaces its scripted state assumptions with
     // the normal Warrens journey; production sessions already use Warrens above.
+    // Its historical charm scenario needs one debug-only slot that is not part
+    // of Warrior's production RFB Standard body.
     let mut payload = Game::new_with_build(seed, build_id)
         .map_err(|error| error.to_string())?
         .to_save();
     payload.entities.clear();
     payload.carried_items.clear();
+    payload.inventory.clear();
+    payload.equipment.clear();
+    payload.item_knowledge.clear();
+    payload.item_property_knowledge.clear();
+    payload.player.body_slots.push(BodySlotSaveDto {
+        id: "charm".to_owned(),
+        slot_type: "charm".to_owned(),
+    });
     payload
         .dungeon_states
         .iter_mut()
@@ -446,7 +458,7 @@ mod tests {
         let initial = state
             .initialize(
                 "42",
-                "demo.build.explorer",
+                "demo.build.warrior",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
             .expect("session should initialize");
@@ -467,7 +479,7 @@ mod tests {
             .expect("replay should decode");
         let verification = verify_replay(
             &replay,
-            initial_game(42, "demo.build.explorer").expect("initial game should create"),
+            initial_game(42, "demo.build.warrior").expect("initial game should create"),
         )
         .expect("exported replay should verify");
         let restored = AppState::default()
@@ -489,7 +501,7 @@ mod tests {
         let initial = state
             .initialize(
                 "42",
-                "demo.build.explorer",
+                "demo.build.warrior",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
             .expect("session should initialize");
@@ -510,7 +522,7 @@ mod tests {
         let initial = state
             .initialize(
                 "42",
-                "demo.build.explorer",
+                "demo.build.warrior",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
             .expect("session should initialize");
@@ -549,15 +561,15 @@ mod tests {
     }
 
     #[test]
-    fn native_session_uses_the_requested_demo_build() {
+    fn native_session_uses_the_requested_warrior_career() {
         let state = AppState::default();
         let snapshot = state
             .initialize(
                 "73",
-                "demo.build.vanguard",
+                "demo.build.warrior",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
-            .expect("vanguard session should initialize");
+            .expect("Warrior session should initialize");
 
         assert_eq!(
             snapshot
@@ -565,7 +577,7 @@ mod tests {
                 .build
                 .as_ref()
                 .map(|build| build.build_id.as_str()),
-            Some("demo.build.vanguard")
+            Some("demo.build.warrior")
         );
     }
 
@@ -576,7 +588,7 @@ mod tests {
         let invalid_seed = state
             .initialize(
                 "not-a-seed",
-                "demo.build.explorer",
+                "demo.build.warrior",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
             .expect_err("invalid seed should be rejected");

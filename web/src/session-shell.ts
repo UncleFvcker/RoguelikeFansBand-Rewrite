@@ -14,9 +14,7 @@ import { nativeSaveErrorKey } from "./save-panel.ts";
 import type { GameSnapshot } from "./protocol.ts";
 
 export const PLAYTEST_BUILD_IDS = [
-  "demo.build.explorer",
-  "demo.build.vanguard",
-  "demo.build.scholar",
+  "demo.build.warrior",
 ] as const;
 
 export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
@@ -39,9 +37,7 @@ interface SessionShellDom {
   readonly loadGameButton: HTMLButtonElement;
   readonly settingsButton: HTMLButtonElement;
   readonly exitButton: HTMLButtonElement;
-  readonly explorerBuild: HTMLInputElement;
-  readonly vanguardBuild: HTMLInputElement;
-  readonly scholarBuild: HTMLInputElement;
+  readonly warriorBuild: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
   readonly startGameButton: HTMLButtonElement;
@@ -289,11 +285,9 @@ export class SessionShell {
   }
 
   #selectedBuild(): PlaytestBuildId | undefined {
-    return [
-      this.#dom.explorerBuild,
-      this.#dom.vanguardBuild,
-      this.#dom.scholarBuild,
-    ].find((input) => input.checked)?.value as PlaytestBuildId | undefined;
+    return this.#dom.warriorBuild.checked
+      ? (this.#dom.warriorBuild.value as PlaytestBuildId)
+      : undefined;
   }
 
   #showView(view: SessionView): void {
@@ -444,9 +438,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     loadGameButton: element<HTMLButtonElement>(document, "session-load-game"),
     settingsButton: element<HTMLButtonElement>(document, "session-settings"),
     exitButton: element<HTMLButtonElement>(document, "session-exit"),
-    explorerBuild: element<HTMLInputElement>(document, "session-build-explorer"),
-    vanguardBuild: element<HTMLInputElement>(document, "session-build-vanguard"),
-    scholarBuild: element<HTMLInputElement>(document, "session-build-scholar"),
+    warriorBuild: element<HTMLInputElement>(document, "session-build-warrior"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),
     startGameButton: element<HTMLButtonElement>(document, "session-start-game"),

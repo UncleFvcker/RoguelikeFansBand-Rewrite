@@ -57,7 +57,7 @@
       "playerDefense": 6,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 209,
+      "playerCarriedWeightTenthsPound": 584,
       "playerCarryCapacityTenthsPound": 100,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -211,17 +211,17 @@
       "entityCount": 0,
       "groundItemCount": 5,
       "inventoryStackCount": 2,
-      "equipmentCount": 2,
+      "equipmentCount": 3,
       "inventory": [
         {
-          "id": "generated.item.2",
-          "kindId": "demo.item.resonance-pellet",
-          "displayNameKey": "item-demo-resonance-pellet-name",
+          "id": "generated.item.1",
+          "kindId": "demo.item.arrow",
+          "displayNameKey": "item-demo-arrow-name",
           "knowledge": "aware",
           "usable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 12,
+          "quantity": 22,
           "weightTenthsPound": 2,
           "equipmentSlot": null,
           "modifiers": {
@@ -240,18 +240,18 @@
         },
         {
           "id": "generated.item.3",
-          "kindId": "demo.item.resonance-sling",
-          "displayNameKey": "item-demo-resonance-sling-name",
+          "kindId": "demo.item.chain-mail",
+          "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "usable": false,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 15,
-          "equipmentSlot": "launcher",
+          "weightTenthsPound": 220,
+          "equipmentSlot": "body",
           "modifiers": {
             "attack": 0,
-            "defense": 0,
+            "defense": 14,
             "maxHp": 0,
             "strength": 0,
             "intelligence": 0,
@@ -261,28 +261,8 @@
             "charisma": 0,
             "speed": 0
           },
-          "identification": "unexamined",
-          "projectileProfile": {
-            "range": 6,
-            "toHit": 30,
-            "toDamage": 1,
-            "damage": {
-              "dice": 1,
-              "sides": 2,
-              "damageType": "physical"
-            },
-            "ammoKindId": "demo.item.resonance-pellet",
-            "targetSpec": {
-              "modes": [
-                "direction",
-                "position",
-                "entity"
-              ],
-              "range": 6,
-              "requiresLineOfEffect": true
-            },
-            "sourceItemId": "generated.item.3"
-          }
+          "identification": "identified",
+          "quality": "ordinary"
         }
       ],
       "equipment": [
@@ -310,12 +290,56 @@
           "quality": "ordinary"
         },
         {
-          "id": "generated.item.1",
-          "kindId": "demo.item.echo-blade",
-          "displayNameKey": "item-demo-echo-blade-name",
+          "id": "generated.item.4",
+          "kindId": "demo.item.short-bow",
+          "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "quantity": 1,
           "weightTenthsPound": 30,
+          "slotId": "launcher",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary",
+          "projectileProfile": {
+            "range": 8,
+            "toHit": 0,
+            "toDamage": 0,
+            "damage": {
+              "dice": 3,
+              "sides": 4,
+              "damageType": "physical"
+            },
+            "ammoKindId": "demo.item.arrow",
+            "targetSpec": {
+              "modes": [
+                "direction",
+                "position",
+                "entity"
+              ],
+              "range": 8,
+              "requiresLineOfEffect": true
+            },
+            "sourceItemId": "generated.item.4"
+          }
+        },
+        {
+          "id": "generated.item.2",
+          "kindId": "demo.item.broad-sword",
+          "displayNameKey": "item-demo-broad-sword-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 150,
           "slotId": "weapon",
           "modifiers": {
             "attack": 0,
@@ -332,15 +356,15 @@
           "identification": "identified",
           "quality": "ordinary",
           "meleeProfile": {
-            "attacks": 2,
-            "toHit": 10,
-            "toDamage": 1,
+            "attacks": 1,
+            "toHit": 0,
+            "toDamage": 0,
             "damage": {
-              "dice": 1,
-              "sides": 2,
+              "dice": 2,
+              "sides": 6,
               "damageType": "physical"
             },
-            "sourceItemId": "generated.item.1"
+            "sourceItemId": "generated.item.2"
           }
         }
       ],
@@ -353,7 +377,17 @@
       ],
       "itemPropertyKnowledge": [
         {
-          "itemId": "generated.item.1",
+          "itemId": "generated.item.2",
+          "appraised": true,
+          "identified": true
+        },
+        {
+          "itemId": "generated.item.3",
+          "appraised": true,
+          "identified": true
+        },
+        {
+          "itemId": "generated.item.4",
           "appraised": true,
           "identified": true
         },
@@ -363,7 +397,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 5,
+      "nextItemInstanceSerial": 6,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -431,13 +465,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5bfb283cac4745bdfda8bda6ac6df036fac2a87c8484e11512a8a7c5d16082eb"
+      "stateHash": "fc65899bfc91c4af8750e4f5b3589080b30ab1be5c44eb3b27d78e9228079fe4"
     },
     "events": [
       {
-        "kind": "item.equip",
-        "messageKey": "item-equip-success",
+        "kind": "item.equip.swap",
+        "messageKey": "item-equip-swap",
         "args": {
+          "replaced": "demo.item.chain-mail",
           "slot": "body",
           "target": "demo.item.burdened-mail"
         }
@@ -461,6 +496,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "5bfb283cac4745bdfda8bda6ac6df036fac2a87c8484e11512a8a7c5d16082eb"
+    "saveRoundTripStateHash": "fc65899bfc91c4af8750e4f5b3589080b30ab1be5c44eb3b27d78e9228079fe4"
   }
 }

@@ -1,5 +1,7 @@
 # Contract v150: Warrens first player journey
 
+> Historical Gate 3 baseline. Contract v151 supersedes its player-facing objective presentation and startup career, while preserving this Warrens topology and campaign contract.
+
 Status: Phase 17 Gate 3 completed baseline.
 
 Contract v150 changes the production player journey from the original Echo prototype to a bounded Warrens compatibility slice. Protocol remains `1.123`, the save container remains v1, and state hash Schema remains `55`. The demo pack advances to `1.141.0`; the active baseline contains 455 exact fixtures with zero waivers.

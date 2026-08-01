@@ -60,12 +60,12 @@ fn v70_save_migrates_default_build_and_skills_without_rng_drift() {
 
 #[test]
 fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
-    let vanguard =
-        Game::new_with_build(42, "demo.build.vanguard").expect("vanguard build should create");
-    let snapshot = vanguard.snapshot();
+    let warrior = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrior journey should create");
+    let snapshot = warrior.snapshot();
     assert_eq!(snapshot.player.build.as_ref().unwrap().life_percent, 115);
     assert_eq!(snapshot.player.max_hp, 33);
-    assert_eq!(snapshot.player.progress.attributes.strength.effective, 18);
+    assert_eq!(snapshot.player.progress.attributes.strength.effective, 17);
     assert_eq!(
         snapshot
             .player
@@ -74,12 +74,55 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
             .iter()
             .find(|skill| skill.id == "demo.skill.melee")
             .map(|skill| skill.current),
-        Some(78)
+        Some(73)
     );
-    assert_eq!(snapshot.player.melee_skill, 88);
-    assert_eq!(snapshot.inventory.len(), 2);
-    assert_eq!(snapshot.equipment.len(), 1);
-    assert_eq!(snapshot.equipment[0].kind_id, "demo.item.echo-blade");
+    assert_eq!(snapshot.player.melee_skill, 73);
+    assert_eq!(snapshot.player.carry_capacity_tenths_pound, 600);
+    assert_eq!(snapshot.player.carried_weight_tenths_pound, 444);
+    assert_eq!(
+        snapshot
+            .body_slots
+            .iter()
+            .map(|slot| (slot.id.as_str(), slot.slot_type.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            ("right-hand", "weapon"),
+            ("left-hand", "shield"),
+            ("shooting", "launcher"),
+            ("quiver", "quiver"),
+            ("right-ring", "ring"),
+            ("left-ring", "ring"),
+            ("neck", "amulet"),
+            ("light", "light"),
+            ("body", "body"),
+            ("cloak", "cloak"),
+            ("head", "head"),
+            ("hands", "gloves"),
+            ("feet", "boots"),
+        ]
+    );
+    assert_eq!(snapshot.inventory.len(), 1);
+    assert_eq!(snapshot.inventory[0].kind_id, "demo.item.arrow");
+    assert_eq!(snapshot.inventory[0].quantity, 22);
+    assert_eq!(snapshot.equipment.len(), 3);
+    assert!(
+        snapshot
+            .equipment
+            .iter()
+            .any(|item| item.kind_id == "demo.item.broad-sword")
+    );
+    assert!(
+        snapshot
+            .equipment
+            .iter()
+            .any(|item| item.kind_id == "demo.item.chain-mail")
+    );
+    assert!(
+        snapshot
+            .equipment
+            .iter()
+            .any(|item| item.kind_id == "demo.item.short-bow")
+    );
 
     let scholar =
         Game::new_with_build(42, "demo.build.scholar").expect("scholar build should create");
@@ -116,7 +159,7 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
             .find(|skill| skill.id == "demo.skill.device")
             .is_some_and(|skill| skill.current > 60)
     );
-    assert_eq!(vanguard.rng_draw_counter(), scholar.rng_draw_counter());
+    assert_eq!(warrior.rng_draw_counter(), 0);
 }
 
 #[test]

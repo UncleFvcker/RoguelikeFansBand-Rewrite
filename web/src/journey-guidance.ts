@@ -7,19 +7,11 @@ import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
 
 type JourneyState = GameSnapshot | GameUpdate;
 
-export type JourneyObjectiveId =
-  | "prepare"
-  | "enter"
-  | "descend"
-  | "guardian"
-  | "return"
-  | "retire"
-  | "complete";
-
-export interface JourneyObjective {
-  readonly id: JourneyObjectiveId;
-  readonly depth?: number;
-  readonly returningFromOtherFloor?: boolean;
+export interface JourneyDungeonStatus {
+  readonly dungeonNameKey: MessageKey;
+  readonly currentDepth?: number;
+  readonly maximumDepth?: number;
+  readonly bossNameKey?: MessageKey;
 }
 
 export type OnboardingPromptId =
@@ -49,9 +41,9 @@ export type GuidanceInteraction = "look" | "inventory" | "targeting" | "save";
 type GuidanceDom = Pick<
   AppDom,
   | "journeyPanel"
-  | "journeyObjectiveTitle"
-  | "journeyObjectiveDetail"
-  | "journeyLocation"
+  | "journeyDungeonName"
+  | "journeyDepth"
+  | "journeyBoss"
   | "onboardingKind"
   | "onboardingTitle"
   | "onboardingDetail"
@@ -143,22 +135,23 @@ const PROMPT_IDS = new Set<OnboardingPromptId>(
   ONBOARDING_PROMPTS.map((prompt) => prompt.id),
 );
 
-export function selectJourneyObjective(state: JourneyState): JourneyObjective {
-  if (state.campaign.status === "retired") return { id: "complete" };
-  if (state.campaign.status === "victorious") {
-    return state.floorId === "demo.floor.surface" ? { id: "retire" } : { id: "return" };
+export function selectJourneyDungeonStatus(
+  state: JourneyState,
+  knownWorldId?: string,
+): JourneyDungeonStatus {
+  const worldId = "worldId" in state ? state.worldId : knownWorldId;
+  if (worldId !== "demo.world.warrens-journey") {
+    return { dungeonNameKey: "journey-dungeon-none" };
   }
-
-  const depth = warrensDepth(state.floorId);
-  if (depth !== undefined) {
-    return depth >= 9 ? { id: "guardian", depth } : { id: "descend", depth };
-  }
-  if (state.floorId !== "demo.floor.surface") {
-    return { id: "enter", returningFromOtherFloor: true };
-  }
-  return state.inventory.length === 0 && state.equipment.length === 0
-    ? { id: "prepare" }
-    : { id: "enter" };
+  return {
+    dungeonNameKey: "dungeon-demo-warrens-name",
+    currentDepth: warrensDepth(state.floorId) ?? 0,
+    maximumDepth: 9,
+    bossNameKey:
+      state.campaign.status === "active"
+        ? "actor-demo-warrens-keeper-name"
+        : undefined,
+  };
 }
 
 export function selectOnboardingPrompt(
@@ -215,6 +208,7 @@ export class JourneyGuidance {
   readonly #completed: Set<OnboardingPromptId>;
   #hideOptional: boolean;
   #state: JourneyState | undefined;
+  #worldId: string | undefined;
   #currentPrompt: OnboardingPromptId | undefined;
   #installed = false;
 
@@ -248,21 +242,26 @@ export class JourneyGuidance {
 
   render(state: JourneyState): void {
     this.#state = state;
-    const objective = selectJourneyObjective(state);
-    this.#dom.journeyPanel.dataset.objectiveId = objective.id;
-    this.#dom.journeyObjectiveTitle.textContent = this.#localization.format(
-      `journey-objective-${objective.id}-title`,
+    if ("worldId" in state) this.#worldId = state.worldId;
+    const dungeon = selectJourneyDungeonStatus(state, this.#worldId);
+    this.#dom.journeyPanel.dataset.dungeon = dungeon.dungeonNameKey;
+    this.#dom.journeyDungeonName.textContent = this.#localization.format(
+      dungeon.dungeonNameKey,
     );
-    this.#dom.journeyObjectiveDetail.textContent = this.#localization.format(
-      objectiveDetailKey(objective),
-      objective.depth === undefined
-        ? undefined
-        : { depth: objective.depth, nextDepth: objective.depth + 1 },
-    );
-    this.#dom.journeyLocation.textContent = formatJourneyLocation(
-      this.#localization,
-      state.floorId,
-    );
+    this.#dom.journeyDepth.hidden =
+      dungeon.currentDepth === undefined || dungeon.maximumDepth === undefined;
+    this.#dom.journeyDepth.textContent = this.#dom.journeyDepth.hidden
+      ? ""
+      : this.#localization.format("journey-dungeon-depth", {
+          current: dungeon.currentDepth ?? 0,
+          maximum: dungeon.maximumDepth ?? 0,
+        });
+    this.#dom.journeyBoss.hidden = dungeon.bossNameKey === undefined;
+    this.#dom.journeyBoss.textContent = dungeon.bossNameKey
+      ? this.#localization.format("journey-dungeon-boss", {
+          boss: this.#localization.format(dungeon.bossNameKey),
+        })
+      : "";
 
     const prompt = selectOnboardingPrompt(state, this.#completed, this.#hideOptional);
     this.#currentPrompt = prompt?.id;
@@ -377,24 +376,6 @@ function promptApplies(prompt: OnboardingPromptId, state: JourneyState): boolean
 function promptControlKey(prompt: OnboardingPrompt, preset: InputPreset): MessageKey {
   if (prompt.id !== "movement") return prompt.controlKey;
   return `onboarding-movement-control-${preset}`;
-}
-
-function objectiveDetailKey(objective: JourneyObjective): MessageKey {
-  if (objective.id === "enter" && objective.returningFromOtherFloor) {
-    return "journey-objective-enter-return-detail";
-  }
-  return `journey-objective-${objective.id}-detail`;
-}
-
-function formatJourneyLocation(localization: Localization, floorId: string): string {
-  if (floorId === "demo.floor.surface") {
-    return localization.format("journey-location-surface");
-  }
-  const depth = warrensDepth(floorId);
-  if (depth !== undefined) {
-    return localization.format("journey-location-warrens", { depth });
-  }
-  return localization.format("journey-location-other", { floor: floorId });
 }
 
 function warrensDepth(floorId: string): number | undefined {

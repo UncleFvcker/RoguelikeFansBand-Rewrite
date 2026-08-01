@@ -6,7 +6,7 @@ import test from "node:test";
 
 import {
   completedPromptsForUpdate,
-  selectJourneyObjective,
+  selectJourneyDungeonStatus,
   selectOnboardingPrompt,
 } from "./journey-guidance.ts";
 
@@ -25,32 +25,39 @@ function state(overrides = {}) {
   };
 }
 
-test("journey objectives cover preparation through retirement from authoritative state", () => {
-  assert.deepEqual(selectJourneyObjective(state()), { id: "prepare" });
-  assert.deepEqual(selectJourneyObjective(state({ inventory: [{ id: "gear" }] })), {
-    id: "enter",
-  });
+test("journey status shows dungeon depth and only an undefeated boss", () => {
   assert.deepEqual(
-    selectJourneyObjective(state({ floorId: "demo.floor.warrens-depth-2" })),
-    { id: "descend", depth: 2 },
+    selectJourneyDungeonStatus(state()),
+    {
+      dungeonNameKey: "dungeon-demo-warrens-name",
+      currentDepth: 0,
+      maximumDepth: 9,
+      bossNameKey: "actor-demo-warrens-keeper-name",
+    },
   );
   assert.deepEqual(
-    selectJourneyObjective(state({ floorId: "demo.floor.warrens-depth-9" })),
-    { id: "guardian", depth: 9 },
+    selectJourneyDungeonStatus(state({ floorId: "demo.floor.warrens-depth-7" })),
+    {
+      dungeonNameKey: "dungeon-demo-warrens-name",
+      currentDepth: 7,
+      maximumDepth: 9,
+      bossNameKey: "actor-demo-warrens-keeper-name",
+    },
   );
   assert.deepEqual(
-    selectJourneyObjective(
-      state({ floorId: "demo.floor.warrens-depth-8", campaign: { status: "victorious" } }),
+    selectJourneyDungeonStatus(
+      state({ floorId: "demo.floor.warrens-depth-9", campaign: { status: "victorious" } }),
     ),
-    { id: "return" },
+    {
+      dungeonNameKey: "dungeon-demo-warrens-name",
+      currentDepth: 9,
+      maximumDepth: 9,
+      bossNameKey: undefined,
+    },
   );
   assert.deepEqual(
-    selectJourneyObjective(state({ campaign: { status: "victorious" } })),
-    { id: "retire" },
-  );
-  assert.deepEqual(
-    selectJourneyObjective(state({ campaign: { status: "retired" } })),
-    { id: "complete" },
+    selectJourneyDungeonStatus(state({ worldId: "demo.world.original-v1" })),
+    { dungeonNameKey: "journey-dungeon-none" },
   );
 });
 

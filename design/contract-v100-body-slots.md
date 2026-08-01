@@ -2,6 +2,8 @@
 
 状态：已实现。协议 1.100 / 内容包 1.91.0（hash `1380958f…`）/ state hash Schema v41 / 320 个 exact fixtures、零 waiver。
 
+> Historical engine-default baseline. Contract v151 leaves `STANDARD_BODY_SLOTS` unchanged for old content but gives production `demo.race.rfb-human` an explicit 13-slot RFB Standard approximation, including a quiver and excluding the original-demo charm.
+
 ## 1. 动机
 
 此前 RFB 的装备模型是"物品自声明槽字符串 + 同名槽只挂一件 + 玩家无槽位清单"——玩家隐式拥有一切槽、每种恰一个。原版（FrogComposband）以 `b_info.txt` 的 113 个身体模板按**种族/身体**绑定槽位清单（Standard 身体 14 槽：双持手 ×2、射击、箭袋、戒指 ×2、项链、光源、五件护甲），双戒指与光源槽在旧模型中无从表达（P45 光源神器的六维修正因此进了缺口报告）。

@@ -28,34 +28,17 @@
         <form id="session-new-game-view" class="session-view" hidden>
           <div class="session-view-heading">
             <h2 data-l10n-id="session-new-game-heading"></h2>
-            <p data-l10n-id="session-demo-build-notice"></p>
+            <p data-l10n-id="session-career-notice"></p>
           </div>
           <fieldset class="session-builds">
-            <legend data-l10n-id="session-build-label"></legend>
+            <legend data-l10n-id="session-career-label"></legend>
             <label class="session-build-card recommended">
-              <input id="session-build-explorer" type="radio" name="session-build" value="demo.build.explorer" checked />
+              <input id="session-build-warrior" type="radio" name="session-build" value="demo.build.warrior" checked />
               <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-explorer-name"></strong>
-                <span data-l10n-id="session-build-recommended"></span>
+                <strong data-l10n-id="build-demo-warrior-name"></strong>
+                <span data-l10n-id="session-career-first"></span>
               </span>
-              <span data-l10n-id="build-demo-explorer-description"></span>
-              <small data-l10n-id="session-build-temporary"></small>
-            </label>
-            <label class="session-build-card">
-              <input id="session-build-vanguard" type="radio" name="session-build" value="demo.build.vanguard" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-vanguard-name"></strong>
-              </span>
-              <span data-l10n-id="build-demo-vanguard-description"></span>
-              <small data-l10n-id="session-build-temporary"></small>
-            </label>
-            <label class="session-build-card">
-              <input id="session-build-scholar" type="radio" name="session-build" value="demo.build.scholar" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-scholar-name"></strong>
-              </span>
-              <span data-l10n-id="build-demo-scholar-description"></span>
-              <small data-l10n-id="session-build-temporary"></small>
+              <span data-l10n-id="build-demo-warrior-description"></span>
             </label>
           </fieldset>
           <label class="session-seed" for="session-seed">
@@ -142,14 +125,14 @@
       </header>
 
       <section id="journey-panel" class="journey-panel" aria-labelledby="journey-panel-title">
-        <div class="journey-objective">
+        <div class="journey-dungeon">
           <div class="panel-heading journey-heading">
             <span id="journey-panel-title" data-l10n-id="panel-journey-title"></span>
-            <span id="journey-location" class="journey-location"></span>
+            <span id="journey-depth" class="journey-depth"></span>
           </div>
-          <p class="journey-label" data-l10n-id="journey-primary-objective-label"></p>
-          <h2 id="journey-objective-title"></h2>
-          <p id="journey-objective-detail"></p>
+          <p class="journey-label" data-l10n-id="journey-current-dungeon-label"></p>
+          <h2 id="journey-dungeon-name"></h2>
+          <p id="journey-boss" class="journey-boss"></p>
         </div>
         <div class="onboarding-card" aria-live="polite">
           <div class="onboarding-meta">
