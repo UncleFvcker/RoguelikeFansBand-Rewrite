@@ -17,6 +17,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 设计文档
 
+- [Phase 17：完整玩家旅程纵向切片](design/release-vertical-slice.md)
 - [Rust/Tauri 重构计划](design/html-rewrite-plan.md)
 - [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
 - [Contract 基准更新与差异豁免政策](design/baseline-update-policy.md)

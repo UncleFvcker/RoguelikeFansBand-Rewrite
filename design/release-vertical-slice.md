@@ -1,122 +1,239 @@
-# Release Vertical Slice
+# Phase 17: Complete Player Journey Vertical Slice
 
-Status: release definition only. This document does not authorize new content or a behavior change in the current refactor.
+Status: Phase 17 is active. Gate 0 is complete against base commit `09291410`; Gate 1 is next. Gate 0 is a documentation and scope gate only: it changes no production behavior, protocol, save, replay, schema, fixture, or content bytes.
 
-## 1. Slice definition
+## 1. Gate 0 decisions
 
-The smallest credible external playtest should use the existing `demo.dungeon.echo-depths` expedition:
+Phase 17 turns the existing mechanics into one player-facing run that can be understood and completed without repository documentation, debug commands, direct state mutation, or save editing.
 
-- three logical depths using the already defined branch/mirror/shaft variants;
-- the existing `demo.actor.resonant-warden` as the final guardian;
-- the existing `demo.encounter-table.echo-depths` pool: Acid Seep, Echo Hound, Frost Wisp, Storm Spark, and Venom Spore;
-- the existing Echo Depths theme, vault, trap, terrain, and generation definitions;
-- the existing `demo.loot-table.echo-depth-1-room` and guardian loot, plus current starting/surface equipment;
-- existing build presets rather than new races, classes, personalities, abilities, monsters, or items.
+The following decisions are fixed for the first playable journey:
 
-This is deliberately smaller than the current ten-depth Resonance Descent campaign. It exercises procedural generation, branches, combat, loot, equipment, item knowledge, saving/loading, a final-floor guardian, dungeon conquest, scoring, and deterministic replay without importing any content.
+- **Journey target:** the existing three-depth `demo.dungeon.echo-depths`, including its branches, shafts, procedural content, and `demo.actor.resonant-warden` guardian.
+- **Complete ending:** defeating the guardian produces the victorious state; the player then returns to the surface and uses the existing `Retire` command to freeze the final score and reach the final result screen.
+- **Golden build:** `demo.build.explorer` is the recommended build and the only build whose balance and full completion block Phase 17 acceptance.
+- **Visible secondary presets:** the existing Vanguard and Scholar presets may be offered by the new-game shell, but parity between builds is not a release gate. Pathfinder, Duelist, and Tinkerer remain valid catalog content and can be exposed later without deleting or rewriting them.
+- **Session start:** launch must stop at a title/session shell instead of implicitly creating Explorer with seed `42`.
+- **Seed policy:** New Game generates a seed by default and records it once in the authoritative session/replay. An advanced explicit-seed input remains available for reproducibility.
+- **Failure path:** player death always reaches an actionable result state with restart, load, menu, and exit choices.
+- **Persistence:** native saves can be discovered and loaded before a new game is created; surface, mid-dungeon, pre-guardian, victorious, and retired states have explicit round-trip coverage.
+- **Content policy:** Phase 17 first reuses the current demo content. Later careers and items may be selected in small, journey-driven batches from the fixed RFB reference import, subject to the selection and licensing boundary in section 7. Bulk legacy import is not part of the phase.
 
-The compiled pack already contains 1 world, 4 races, 6 classes, 3 personalities, 6 build presets, 28 actors, 90 items, 68 abilities, 5 ability books, 48 terrain definitions, 6 encounter tables, 8 loot tables, 6 vaults, and 3 dungeons. Quantity is not the release blocker.
+The ten-depth `demo.dungeon.resonance-descent`, Archive Depths, and task-rift scenarios remain in the pack for system coverage but are not required for the first complete player journey.
 
-For the first playtest, expose a small preset choice using existing builds: Explorer for the baseline path, Vanguard for direct melee, and Scholar for the existing ability-book path. The other three existing builds remain valid content but are outside the slice acceptance matrix. No preset data is copied or changed.
-
-## 2. Current gaps
-
-The repository already has the authoritative dungeon run, save/load, native save slots, death state, campaign state, scoring, rendering, localization, and desktop packaging. It does not yet present them as a complete release flow:
-
-- desktop startup immediately creates the default Explorer session instead of showing new/load choices;
-- there is no user-facing build selection path even though six build definitions and `Game::new_with_build` exist;
-- campaign victory currently requires conquering the ten-depth `resonance-descent`, not the selected three-depth `echo-depths` slice;
-- death and victory prevent/limit further commands but do not provide a complete result -> restart/menu flow;
-- controls are present in the game UI, but first-run guidance is not staged around the initial actions;
-- external installer production exists for Windows NSIS in Tauri config, while release-signing/distribution and the Android CI artifact need a release checklist.
-
-Closing these gaps may require a later, explicitly reviewed release-scope change. It must reuse existing content and must not be bundled into architecture movement.
-
-## 3. Player flow
+## 2. Canonical player journey
 
 ```text
 Launch
--> choose New Game or an existing native save
--> for New Game, choose Explorer, Vanguard, or Scholar
--> see the surface, current objective, and contextual controls
--> enter Echo Depths
--> explore, fight, collect/use/equip existing items, and descend
--> traverse one of the existing depth-two branches or shaft routes
--> reach logical depth three and defeat the Resonant Warden
--> receive an explicit victory/result screen with score and turn count
--> start a new run, return to the main menu, or exit
+-> Title / Session Menu
+   -> Continue or Load an existing native save
+   -> New Game
+      -> choose Explorer (recommended), Vanguard, or Scholar
+      -> accept a generated seed or enter an explicit seed
+      -> confirm and create the authoritative session
+-> Surface onboarding
+   -> understand the current objective and controls
+   -> move, inspect, pick up, equip/use, and fight
+   -> understand HP, resources, inventory, equipment, and messages
+-> Enter Echo Depths
+   -> explore procedural depth one
+   -> collect and use loot; save and resume at least once
+   -> choose a depth-two branch or shaft route
+   -> reach logical depth three
+-> Defeat the Resonant Warden
+   -> receive an unambiguous victorious-state objective
+   -> return through normal floor connections to the surface
+-> Retire
+   -> see the frozen score, build, seed, turns, conquest, and outcome
+   -> start another run, return to menu, or exit
 
-At any safe point:
--> save to a native slot and exit
--> launch later and load the slot
--> resume at the same authoritative state
+At any playable checkpoint
+-> Save
+-> Exit or return to menu
+-> Load
+-> Resume the same authoritative state
 
-On death:
--> receive an explicit death/result screen
--> start a new run, return to the main menu, or exit
+On player death
+-> Death result
+-> restart with the same setup, start a new setup, load, return to menu, or exit
 ```
 
-## 4. Required release work
+The corresponding product state machine is:
 
-Only the following items are required for this slice:
+```mermaid
+stateDiagram-v2
+    [*] --> Title
+    Title --> NewGame: New Game
+    Title --> Loading: Continue / Load
+    NewGame --> Playing: Confirm build and seed
+    Loading --> Playing: Valid save restored
+    Playing --> Loading: Load another save
+    Playing --> DeathResult: Player dies
+    Playing --> VictoryReturn: Echo guardian defeated
+    VictoryReturn --> Playing: Return toward surface
+    Playing --> RetirementResult: Retire on surface
+    DeathResult --> NewGame: Restart / New Game
+    DeathResult --> Loading: Load
+    RetirementResult --> NewGame: New Game
+    DeathResult --> Title: Menu
+    RetirementResult --> Title: Menu
+    Title --> [*]: Exit
+    DeathResult --> [*]: Exit
+    RetirementResult --> [*]: Exit
+```
 
-1. A startup/session shell with New Game and Load Game, using existing native-save storage.
-2. A preset build selector wired through Tauri to existing `Game::new_with_build`; Explorer remains the default/fallback.
-3. A slice configuration that treats conquest of existing Echo Depths and defeat of its existing Resonant Warden as the playtest victory condition, without changing combat values or content definitions unrelated to campaign selection.
-4. Clear in-game objective and floor/depth feedback using existing snapshot/task/campaign information or the narrowest compatible projection needed.
-5. Contextual first-run prompts for movement, pickup/use/equip, combat/targeting, stairs, save, and current resources. They must use existing commands and localized text.
-6. Explicit death and victory result states showing outcome, build, score, turn count, and restart/menu/exit actions.
-7. Save/load coverage for surface, mid-dungeon, and pre/post-guardian states; corrupted/recovery-backup behavior remains visible and actionable.
-8. Visible feedback for every major command: rejection, damage/healing, item use, targeting, floor transition, save/load, death, and victory.
-9. A release checklist that produces and smoke-tests the Windows installer; keep Android artifact generation in CI if Android is included in the advertised test platforms.
-10. One end-to-end playthrough test that uses only normal UI commands and verifies new game -> dungeon -> guardian -> result -> restart/menu, plus a save/resume checkpoint.
+`VictoryReturn` is not a terminal simulation state. It is a visible objective layered over the existing `victorious` campaign state so the player can complete the established return-and-retire contract. `RetirementResult` is terminal for the run.
 
-The slice should continue to use deterministic seeds internally. A player-facing random seed can be generated by the host, but it must be recorded in the session/replay exactly once and must not alter core RNG semantics.
+## 3. What already exists
 
-## 5. Explicit non-goals
+The implementation is not waiting for a new game engine. The current repository already provides the mechanical spine:
 
-The playtest does not include:
+- six build presets and `Game::new_with_build` in the Rust core;
+- deterministic movement, combat, ranged attacks, throwing, abilities, items, equipment, knowledge, progression, and monster AI;
+- the three-depth Echo Depths expedition with branches, shafts, loot, encounters, a final guardian, and conquest scoring;
+- authoritative death, campaign active/victorious/retired states, surface-only retirement, and frozen score semantics;
+- versioned saves, native save slots with backup recovery, replay recording, state hashes, and deterministic fixtures;
+- localized command/event feedback, status/inventory/ability/task panels, renderer, Windows packaging, and a technical desktop E2E suite.
 
-- a town, wilderness, home storage, reputation, shops, or a large economy;
-- new races, classes, personalities, builds, monsters, bosses, items, potions, scrolls, artifacts, abilities, terrain, vaults, or dungeons;
-- bulk import of additional legacy content;
-- balance changes to existing actors, items, generation weights, damage, resources, or progression;
-- the full ten-depth Resonance Descent campaign as a release requirement;
-- the Archive Depths or task-rift content as a required route;
-- a complete lore codex, large narrative campaign, achievements, or online services;
-- React, Vue, Svelte, a new frontend state framework, or a visual redesign;
-- changes to save container format, replay format, state-hash semantics, or protocol without a separately justified compatibility review.
+The compiled demo pack at the Gate 0 baseline contains 1 world, 4 races, 6 classes, 3 personalities, 6 builds, 28 actors, 90 items, 68 abilities, 5 ability books, 48 terrain definitions, 6 encounter tables, 8 loot tables, 6 vaults, and 3 dungeons. Content quantity is not the current blocker.
 
-Existing out-of-slice content need not be deleted. The release shell should keep the intended run focused without invalidating saves or changing the compiled catalog solely to reduce visible counts.
+## 4. Flow blockers and ownership
 
-## 6. Acceptance criteria
+| ID | Severity | Current evidence | Required outcome | Gate |
+| --- | --- | --- | --- | --- |
+| PJ-01 | blocking | `web/src/main.ts` immediately calls `core.initialize("42")` | Launch presents New Game, Continue/Load, Settings, and Exit before creating a session | 1 |
+| PJ-02 | blocking | `CoreTransport.initialize` accepts only a seed and Tauri calls `Game::new(seed)` | A typed new-session request carries build and seed through every transport to `Game::new_with_build` | 1 |
+| PJ-03 | blocking | Native saves are rendered only after implicit initialization | Save discovery and load work from the title/session shell with no throwaway game | 1 |
+| PJ-04 | blocking | The built-in campaign requires ten-depth Resonance Descent | The playtest campaign treats Echo Depths conquest as victory while preserving the same victory/return/retire rules | 3 |
+| PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 |
+| PJ-06 | blocking | Controls exist but first-run actions and the primary objective are not staged | Contextual onboarding introduces the minimum action set and always shows the next journey objective | 2 |
+| PJ-07 | blocking | Desktop E2E is a technical command/storage/render smoke test and uses a webdriver-only altered initial state | Normal player commands prove menu -> new game -> Echo guardian -> return -> retire/result, including save/resume | 6 |
+| PJ-08 | high | No current evidence guarantees an ordinary Explorer can finish several fixed seeds without starvation, resource dead ends, or opaque difficulty spikes | Explorer completes the route on the acceptance seeds with no soft lock; necessary balance changes are bounded and recorded | 5 |
+| PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 |
+| PJ-10 | high | Existing builds and content are mechanically broad but not presented as a curated player choice | New-game choices explain role, starting strengths, complexity, and golden-path support level | 1 |
 
-The vertical slice is releasable when all of the following are true:
+A blocker is closed only by observable player behavior and automated evidence. A debug-only fixture, developer console action, or direct `Game` field mutation cannot close a player-journey blocker.
 
-- a new player can start without reading repository documentation;
-- New Game, build selection, Load Game, and exit are discoverable at launch;
-- Explorer, Vanguard, and Scholar can each enter and finish the same existing three-depth objective;
-- the player can understand current HP, resources, abilities, equipment, task/objective, floor, and available targeting mode;
-- all major operations produce visible localized feedback;
-- a player can complete a full run without debug commands or save-file editing;
-- native save/exit/load restores the same authoritative state and replay continuation remains verifiable;
-- death always reaches a result state and offers restart/menu/exit;
-- defeating the existing Resonant Warden reaches an unambiguous victory result and offers restart/menu/exit;
-- no known severity-1/flow-blocking defect remains in startup, dungeon progression, save/load, death, victory, or restart;
-- deterministic fixed-seed runs preserve command/event order and final state hash across direct core, replay verification, and Tauri transport;
-- protocol bindings, content schemas, save migrations, contract fixtures, Rust/frontend tests, Tauri E2E, and production builds pass;
-- a Windows installer can be generated and installed on a clean external-test machine; any advertised Android build is generated by CI and smoke-tested;
-- the release notes state that this is a focused Echo Depths playtest and do not imply the out-of-slice systems are complete.
+## 5. Phase 17 gate plan
 
-## 7. Release evidence
+### Gate 0: journey contract and blocker audit (complete)
 
-Before handing the build to external testers, archive:
+- select the three-depth Echo journey and full return/retire ending;
+- select Explorer as the acceptance build;
+- define session, victory, death, recovery, and result states;
+- record current capabilities, blockers, scope, content policy, and evidence requirements;
+- make no production or content change.
 
-- the source commit and built-in content hash;
-- protocol, save, replay, and state-hash schema versions;
-- full CI results and the installer checksum;
-- fixed-seed full-run replay(s), including one save/reload continuation;
-- a short manual smoke-test record for startup, each supported build, targeting, save/load, death, victory, restart, and exit;
-- known issues classified by whether they can block a complete run.
+### Gate 1: startup and new-session shell
 
-No acceptance criterion should be satisfied through a debug-only Tauri fixture, direct `Game` field mutation, or developer console command.
+- add explicit Title, New Game, Load/Continue, and Playing application states;
+- make native save listing/loading available before session creation;
+- replace seed-only initialization with a typed build-and-seed request across frontend, mock transport, Tauri IPC, and session construction;
+- expose Explorer as recommended and Vanguard/Scholar as secondary existing presets with localized summaries;
+- generate a seed by default, allow explicit seed entry, and display the committed seed in run metadata;
+- preserve save/replay determinism and provide focused frontend/Tauri tests for all legal and rejected transitions.
+
+Gate 1 must not add new careers, items, game rules, or campaign behavior.
+
+### Gate 2: onboarding and objective guidance
+
+- show one primary objective at all times: prepare, enter Echo Depths, descend, defeat the guardian, return, or retire;
+- stage contextual prompts for movement, inspect/look, pickup, inventory, equip/use, combat/targeting, stairs, resources, messages, and save;
+- mark prompts complete from actual observable commands/state, not from button dismissal alone;
+- distinguish mandatory journey guidance from optional help and allow experienced players to suppress repeated prompts;
+- provide localized, actionable feedback for rejected actions and unavailable targets.
+
+Onboarding may use frontend presentation state where it has no gameplay meaning. Authoritative objectives, victory, death, and progression remain Rust-owned.
+
+### Gate 3: Echo campaign and victory-return route
+
+- introduce the narrowest content/session configuration that selects Echo Depths as the playtest victory requirement;
+- preserve the existing guardian death, conquest, victory event, scoring, return connection, surface-only retirement, save, replay, and hash semantics;
+- present dungeon name, logical depth, branch context, guardian objective, and the post-victory instruction to return to the surface;
+- verify that every generated branch and shaft route can reach a final guardian and return normally;
+- add core/contract coverage for conquest -> victorious -> surface -> retired ordering.
+
+This gate does not shorten the dungeon through debug state, teleport the player to the guardian, or make the ten-depth campaign disappear from the catalog.
+
+### Gate 4: death, result, restart, and recovery
+
+- add dedicated death, victorious-return, and retirement-result presentation;
+- show outcome, build, seed, turns, score/conquest, and the most relevant death or victory event;
+- provide restart-same-setup, new setup, load, menu, and exit according to state;
+- reject dispatch after retirement while keeping menu/restart/load actions functional at the application shell;
+- make corrupt-save and backup-recovery outcomes visible and actionable from the title screen.
+
+### Gate 5: golden-path playability and bounded content
+
+- play and tune Explorer across a small declared fixed-seed matrix plus one generated-seed manual run;
+- check starting equipment, healing/escape supply, ammunition where relevant, item identification, encounter pressure, progression pace, guardian difficulty, and return safety;
+- fix only demonstrated journey blockers or severe pacing defects and record every balance change with before/after evidence;
+- use current demo content first; admit a small RFB-reference candidate batch only through section 7 and only when it closes a named journey need;
+- publish a normal-command manual runbook from title screen through retirement.
+
+### Gate 6: complete acceptance and playtest build
+
+- add a deterministic full-journey proof using normal commands and at least one native save/resume checkpoint;
+- cover title/new game/load, supported build selection, onboarding, death/recovery, victory-return, retirement, restart/menu, and exit at the appropriate test layers;
+- run formatting, bindings, schemas, source verification, Rust tests, contract fixtures, replay tests, frontend tests/typecheck/build, Tauri checks, Windows release build, and desktop E2E;
+- archive commit, content hash, protocol/save/hash versions, fixed-seed replay, installer checksum, smoke record, and classified known issues.
+
+## 6. Test strategy
+
+The journey is verified at several layers instead of relying on one brittle ten-minute UI script:
+
+- **Core/contract:** actual Echo campaign configuration, guardian/conquest/victory ordering, return-to-surface retirement, death, save round trips, replay, and final hashes.
+- **Frontend unit/integration:** session-shell transitions, new-game validation, build/seed selection, objective selection, result actions, and localized feedback.
+- **Tauri integration:** typed initialization, native save listing/loading without a prior session, restart/session replacement, and recovery errors.
+- **Desktop E2E:** normal UI from cold launch through new game, representative onboarding and dungeon actions, native save/resume, guardian/result/retirement checkpoints, and restart/menu. It must not claim full-journey acceptance through the existing webdriver-only state mutation.
+- **Manual runbook:** one uninterrupted ordinary Explorer playthrough on the advertised build, plus short startup checks for Vanguard and Scholar.
+
+Prepared saves may accelerate non-journey regression tests, but the acceptance evidence must include at least one replay whose command history begins with a normal new session and reaches retirement without direct state editing.
+
+## 7. Small-batch RFB content policy
+
+The user direction is to prefer a small selection from RFB when later careers or items are needed, rather than inventing or importing a large matrix at once. The following boundary makes that direction actionable without weakening the repository's current licensing policy:
+
+1. **Need first.** Every batch starts from a named player-journey need such as a simple melee role, a spell role, early healing, escape, identification, ammunition support, or a guardian reward. Raw importer coverage is not a reason to ship content.
+2. **Small budget.** The default review batch is at most two career/build candidates and eight to twelve item kinds. Larger batches require a new scope decision.
+3. **Fixed source.** Candidate extraction uses the existing fixed RFB reference commit and `rfb-legacy-import`; generated material remains under ignored `.local/` paths during evaluation.
+4. **Existing mechanics.** A candidate must be substantially expressible by the current definitions and effect programs. It is deferred if it would pull artifact activation, hunger/nutrition, a bespoke career resource, or another unrelated system into Phase 17.
+5. **Selection manifest.** Before implementation, record source identity, gameplay role, required rules, unresolved importer gaps, expected player-facing surface, balance purpose, and licensing disposition for every candidate.
+6. **Promotion boundary.** Names, descriptions, numeric data, maps, and assets from the legacy source do not enter the repository or release package unless their redistribution rights and provenance are explicitly approved and `design/licensing-and-assets.md` is updated. Until then they are local evaluation material only; an independently authored equivalent may fill the same gameplay role.
+7. **No hidden parity promise.** Selecting a career or item does not commit the project to its complete original ecosystem, every special case, or all neighboring content.
+
+The first complete Explorer journey does not depend on approving any legacy content batch. Candidate selection begins only after the Gate 2/3 playthrough exposes a concrete need, or after the complete journey is stable.
+
+## 8. Explicit non-goals
+
+Phase 17 does not include:
+
+- the full ten-depth Resonance Descent as the release route;
+- equal balance or full completion certification for all six existing builds;
+- a town, wilderness, shop, home, large economy, reputation, or broad quest campaign;
+- bulk import of races, careers, monsters, artifacts, ego items, consumables, spells, vaults, or dungeons;
+- artifact/ego activation, hunger/nutrition, a complete lore codex, achievements, or online services unless separately proven to block the journey;
+- a frontend framework migration, visual redesign, manager/service architecture, or more line-count-driven splitting of `game/mod.rs`;
+- a save-container, replay, or state-hash redesign unrelated to an unavoidable typed session/campaign requirement;
+- deleting out-of-slice demo content solely to make the playtest appear smaller.
+
+## 9. Phase acceptance criteria
+
+Phase 17 is complete only when all of the following are true:
+
+- a new player can launch and choose New Game or Load without reading repository documentation;
+- Explorer, seed choice, Continue/Load, Settings, and Exit are discoverable; Vanguard and Scholar can at least create valid sessions if exposed;
+- the player can understand the current objective, HP/resources, inventory/equipment, abilities, floor/depth, targeting mode, and important messages;
+- the normal UI supports the complete Explorer route from surface onboarding through Echo Depths, guardian victory, return to surface, retirement, and final result;
+- death always reaches an actionable result state and never leaves the shell stuck in a noninteractive game view;
+- native save/exit/load restores the same authoritative state at the declared checkpoints and replay continuation remains verifiable;
+- every required operation and rejection produces visible localized feedback;
+- no known severity-1 or flow-blocking defect remains in startup, onboarding, dungeon connectivity, combat/resource pacing, save/load, death, victory, return, retirement, restart, menu, or exit;
+- fixed-seed runs preserve command/event order and final state hash across direct core, replay verification, and Tauri transport;
+- the complete repository acceptance matrix and Windows playtest build pass;
+- release notes call the artifact a focused Echo Depths player-journey playtest and do not imply full RFB content parity.
+
+## 10. Gate 0 closure and Gate 1 entry
+
+Gate 0 closes with this document because the journey, terminal states, golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria are now explicit. No implementation blocker requires clarification before Gate 1.
+
+Gate 1 begins by characterizing the existing seed-only `CoreTransport` and Tauri initialization tests, then introduces the smallest typed new-session request and application-shell state machine. It must preserve the current `Game` aggregate boundary and existing save/replay behavior while removing the implicit startup session.
