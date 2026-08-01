@@ -464,9 +464,7 @@ impl Game {
             rejection_reason,
         }
     }
-}
 
-impl Game {
     pub(super) fn resolve_monster_detection(
         &mut self,
         index: usize,

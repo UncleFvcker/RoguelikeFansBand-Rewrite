@@ -400,9 +400,7 @@ impl Game {
         }
         None
     }
-}
 
-impl Game {
     /// Confusion scrambles one in-flight move: a bounded(4) draw of 0 keeps
     /// the intended direction (no event), anything else redirects to a
     /// bounded(8) draw over the canonical direction order. Both draws only
