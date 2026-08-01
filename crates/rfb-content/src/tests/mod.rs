@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use std::path::PathBuf;
+
 use super::*;
 use crate::validation::{validate_and_normalize, validate_semver};
 
