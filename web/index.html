@@ -124,6 +124,31 @@
         </div>
       </header>
 
+      <section id="journey-result" class="journey-result" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
+        <div class="result-card">
+          <p id="result-kind" class="result-kind"></p>
+          <h2 id="result-title"></h2>
+          <p id="result-detail" class="result-detail"></p>
+          <dl class="result-summary">
+            <div><dt data-l10n-id="result-build-label"></dt><dd id="result-build">--</dd></div>
+            <div><dt data-l10n-id="result-seed-label"></dt><dd id="result-seed">--</dd></div>
+            <div><dt data-l10n-id="result-turn-label"></dt><dd id="result-turn">0</dd></div>
+            <div><dt data-l10n-id="result-score-label"></dt><dd id="result-score">0</dd></div>
+            <div><dt data-l10n-id="result-dungeons-label"></dt><dd id="result-dungeons">0</dd></div>
+            <div><dt data-l10n-id="result-tasks-label"></dt><dd id="result-tasks">0</dd></div>
+          </dl>
+          <p id="result-error" class="result-error" aria-live="assertive"></p>
+          <div class="result-actions">
+            <button id="result-continue" class="primary-button" type="button" data-l10n-id="action-result-continue"></button>
+            <button id="result-restart" type="button" data-l10n-id="action-result-restart"></button>
+            <button id="result-new-game" type="button" data-l10n-id="action-result-new-game"></button>
+            <button id="result-load" type="button" data-l10n-id="action-result-load"></button>
+            <button id="result-menu" class="quiet-button" type="button" data-l10n-id="action-result-menu"></button>
+            <button id="result-exit" class="quiet-button" type="button" data-l10n-id="action-result-exit"></button>
+          </div>
+        </div>
+      </section>
+
       <section id="journey-panel" class="journey-panel" aria-labelledby="journey-panel-title">
         <div class="journey-dungeon">
           <div class="panel-heading journey-heading">

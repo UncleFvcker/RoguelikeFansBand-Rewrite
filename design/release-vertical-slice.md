@@ -1,6 +1,6 @@
 # Phase 17: Complete Player Journey Vertical Slice
 
-Status: Phase 17 is active. Gates 0-3 are complete; Gate 4 is next. Gate 0 fixed the original journey contract against base commit `09291410`. After Gate 2, the user replaced the original Echo target with RFB's Warrens as the first player flow and explicitly allowed Echo Depths to stay out of the release journey. Gate 3 completed that bounded content and campaign migration. The post-Gate-3 contract-v151 amendment then made RFB Warrior the sole production career, adopted RFB's Standard humanoid body for that build, and replaced the staged objective strip with factual dungeon/depth/Boss status. Contextual onboarding remains. Protocol, save/replay formats, and state-hash Schema do not change.
+Status: Phase 17 is active. Gates 0-4 are complete; Gate 5 is next. Gate 0 fixed the original journey contract against base commit `09291410`. After Gate 2, the user replaced the original Echo target with RFB's Warrens as the first player flow and explicitly allowed Echo Depths to stay out of the release journey. Gate 3 completed that bounded content and campaign migration. The post-Gate-3 contract-v151 amendment then made RFB Warrior the sole production career, adopted RFB's Standard humanoid body for that build, and replaced the staged objective strip with factual dungeon/depth/Boss status. Gate 4 completed the result, restart, and native-save recovery presentation. Contextual onboarding remains. Protocol, save/replay formats, and state-hash Schema do not change.
 
 ## 1. Gate 0 decisions
 
@@ -104,11 +104,11 @@ The compiled demo pack at the Gate 0 baseline contains 1 world, 4 races, 6 class
 | PJ-02 | blocking | `CoreTransport.initialize` accepted only a seed and Tauri called `Game::new(seed)` | A typed new-session request carries build and seed through every transport to `Game::new_with_build` | 1 | closed |
 | PJ-03 | blocking | Native saves were rendered only after implicit initialization | Save discovery and load work from the title/session shell with no throwaway game | 1 | closed |
 | PJ-04 | blocking | The original lab campaign requires ten-depth Resonance Descent and the Gate 0 Echo target was superseded | Production New Game selects the bounded Warrens world, where depth-nine guardian conquest uses the same victory/return/retire rules | 3 | closed |
-| PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 | open |
+| PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 | closed |
 | PJ-06 | blocking | Controls exist but first-run actions and dungeon context are not staged | Contextual onboarding introduces the minimum action set; a separate factual panel always shows current dungeon, depth/maximum depth, and an undefeated Boss when applicable | 2, 3 | closed |
 | PJ-07 | blocking | Desktop E2E remains a technical Original Lab smoke test after its new title/new-game/pre-session-load coverage | Normal player commands prove menu -> new game -> Warrens guardian -> return -> retire/result, including save/resume | 6 | open |
 | PJ-08 | high | No current evidence guarantees Warrior can finish several fixed seeds without starvation, resource dead ends, or opaque difficulty spikes | Warrior completes the route on the acceptance seeds with no soft lock; necessary balance changes are bounded and recorded | 5 | open |
-| PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 | open |
+| PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 | closed |
 | PJ-10 | high | Existing builds and content were mechanically broad but not presented as a curated player choice | New-game choices explain role, starting strengths, temporary status, and golden-path support level | 1 | closed |
 
 A blocker is closed only by observable player behavior and automated evidence. A debug-only fixture, developer console action, or direct `Game` field mutation cannot close a player-journey blocker.
@@ -169,13 +169,17 @@ The completed gate introduces `demo.world.warrens-journey` as the production New
 
 Normal dispatched stair commands prove all nine descents and returns for 16 fixed seeds. A separate full-flow core test crosses every floor, defeats the actual guardian, checks conquest-before-victory ordering, saves and restores at victory, returns through depths 8-1, retires on the surface, and round-trips the frozen hash. Contract v150 adds fixture 455 for Warren conquest and retirement with zero waivers. Contract v151 keeps that route, changes the fixture/build evidence to Warrior, adopts RFB Standard body slots, and makes the frontend show Warrens, logical depth out of nine, and the Boss only until defeat. Protocol `1.123`, save container v1, and state hash Schema `55` remain unchanged. Gate 3 closes PJ-04; PJ-09 remains open for Gate 4 result-state feedback.
 
-### Gate 4: death, result, restart, and recovery
+### Gate 4: death, result, restart, and recovery (complete)
 
 - add dedicated death, victorious-return, and retirement-result presentation;
 - show outcome, build, seed, turns, score/conquest, and the most relevant death or victory event;
 - provide restart-same-setup, new setup, load, menu, and exit according to state;
 - reject dispatch after retirement while keeping menu/restart/load actions functional at the application shell;
 - make corrupt-save and backup-recovery outcomes visible and actionable from the title screen.
+
+The completed gate adds one localized result surface for authoritative death, victorious-return, and retirement states. It reports the RFB Warrior build, known session seed, turn, score, conquered dungeons, completed tasks, and the matching transition event. Victory remains playable: Continue dismisses its one-time result and returns to the normal upward route. Death and retirement stay command-blocking while restart, new setup, load, menu, and exit remain available at the application layer.
+
+Restart reconstructs the exact typed build/seed request and replaces the active native session plus replay history. A terminal save whose original seed is unavailable never fabricates one; it disables same-setup restart and keeps New setup available. The title/load view identifies a recoverable backup by ordinal, exposes an explicit Recover action, and permits confirmed deletion of corrupt saves. Focused coverage raises the frontend suite from 63 to 65 tests and the Tauri suite from 16 to 17 tests. Contract v152 changes no protocol, save/replay payload, state-hash field, content definition, or exact fixture result; PJ-05 and PJ-09 are closed.
 
 ### Gate 5: golden-path playability and bounded content
 
@@ -247,8 +251,8 @@ Phase 17 is complete only when all of the following are true:
 - the complete repository acceptance matrix and Windows playtest build pass;
 - release notes call the artifact a focused Warrens compatibility journey and do not imply full RFB content parity.
 
-## 10. Gate 0-3 closure and Gate 4 entry
+## 10. Gate 0-4 closure and Gate 5 entry
 
-Gate 0 closed with the journey, terminal states, initial golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria explicit. Gate 1 closed PJ-01, PJ-02, PJ-03, and PJ-10 with a tested product shell and typed native initialization path. Gate 2 closed PJ-06 with interaction-derived contextual onboarding, optional-help suppression, a zero-turn look mode, and actionable rejection guidance. Gate 3 closed PJ-04 with the complete normal Warrens topology and campaign route. Contract-v151 then fixed Warrior, Standard body, its bounded source-aligned birth kit, and factual dungeon status as the production baseline.
+Gate 0 closed with the journey, terminal states, initial golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria explicit. Gate 1 closed PJ-01, PJ-02, PJ-03, and PJ-10 with a tested product shell and typed native initialization path. Gate 2 closed PJ-06 with interaction-derived contextual onboarding, optional-help suppression, a zero-turn look mode, and actionable rejection guidance. Gate 3 closed PJ-04 with the complete normal Warrens topology and campaign route. Contract-v151 then fixed Warrior, Standard body, its bounded source-aligned birth kit, and factual dungeon status as the production baseline. Gate 4 closed PJ-05 and PJ-09 with explicit result states, legal application actions, honest same-setup restart availability, and actionable native-save recovery.
 
-Gate 4 now begins from contract-v151. Production session construction selects `demo.world.warrens-journey` and `demo.build.warrior`; the world owns the one-dungeon victory requirement, while the race owns the Standard body. No parallel campaign-profile/body field or protocol version is needed. The original lab and old demo builds remain regression content rather than player-facing choices.
+Gate 5 begins from contract-v152. Production session construction selects `demo.world.warrens-journey` and `demo.build.warrior`; the world owns the one-dungeon victory requirement, while the race owns the Standard body. The next work is a fixed-seed Warrior playability matrix and one generated-seed manual run, with content or balance changes admitted only when the evidence identifies a concrete route blocker or severe pacing defect. The original lab and old demo builds remain regression content rather than player-facing choices.

@@ -165,6 +165,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v149：P98 组合恢复消耗品](design/contract-v149-restoration-combinations.md)
 - [Contract v150：Warrens 首个玩家流程](design/contract-v150-warrens-journey.md)
 - [Contract v151：RFB Warrior 与地牢状态面板](design/contract-v151-warrior-and-dungeon-status.md)
+- [Contract v152：玩家结果与恢复流程](design/contract-v152-player-results-and-recovery.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -188,7 +189,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v151`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v152`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -392,6 +393,8 @@ P98 / contract-v149 接入 Restoring Food、Restoring Potion、Ambrosia 与 Life
 Phase 17 Gate 3 / contract-v150 将生产首流程改为固定 RFB v1.3.0.7 行为参考下的 Warrens 兼容切片：独立世界包含九层正常上下行、早期鼠类/狗头人/座狼生态、狗头人领主、基础武器与治疗补给，以及胜利后逐层返程和地表退休。旧地图、文本、算法、精确数值表与素材未复制；Pest Control 因依赖城镇前置任务而暂缓。协议保持 1.123、demo 升至 1.141.0、state hash Schema 保持 v55、active baseline 455 条 exact、零 waiver，内置 content hash 为 `7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f`。详见[Contract v150](design/contract-v150-warrens-journey.md)。
 
 Phase 17 的 Gate 3 后产品修订 / contract-v151 取消准备、进入、深入、首领、返回、退休式阶段目标，改为只显示当前地牢、当前/最大深度，以及尚未击败的首领。新建角色只开放首个 RFB 职业切片 Warrior；六维、HP/生命/经验倍率、八项原版技能成长及阔剑/锁子甲/短弓/箭矢出生角色按固定源码核对，描述独立重写。Warrior 使用显式 RFB Standard 通用身体；高级职业能力和当前模型无法精确承载的弓倍率、护甲命中修正继续列为差异。协议保持 1.123、demo 升至 1.142.0、Schema 保持 v55、active baseline 455 条 exact、零 waiver，内置 content hash 为 `dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36`。详见[Contract v151](design/contract-v151-warrior-and-dungeon-status.md)。
+
+Phase 17 Gate 4 / contract-v152 为死亡、击败兽穴首领后的返程状态和地表退休增加独立结果页。结果页显示职业、已知 seed、回合、分数、征服地牢和任务数，并提供按状态合法的继续返程、同配置重开、新配置、读取、主菜单和退出操作；旧存档无法提供原始 seed 时不会伪造，而是禁用同配置重开。标题页同时把可恢复备份的序号和恢复操作直接显示出来，并允许确认删除损坏存档。协议、save/replay、Schema、内容包与 455 条 exact fixture 均不漂移，active baseline 升至 contract-v152。详见[Contract v152](design/contract-v152-player-results-and-recovery.md)。
 
 ### 本地验证
 

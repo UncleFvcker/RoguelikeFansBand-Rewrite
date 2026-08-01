@@ -22,7 +22,7 @@ export type SessionView = "title" | "new-game" | "load" | "settings";
 
 const MAX_SESSION_SEED = (1n << 64n) - 1n;
 
-type SessionStorage = Pick<NativeSaveStorage, "list" | "load">;
+type SessionStorage = Pick<NativeSaveStorage, "list" | "load" | "delete">;
 type DocumentLookup = Pick<Document, "getElementById">;
 
 interface SessionShellDom {
@@ -68,6 +68,7 @@ export class SessionShell {
   readonly #onInputPresetChange: (preset: InputPreset) => void;
   readonly #getInputPreset: () => InputPreset;
   readonly #randomSeed: () => string;
+  readonly #confirm: (message: string) => boolean;
   readonly #logError: (error: unknown) => void;
   #view: SessionView = "title";
   #busy = false;
@@ -87,6 +88,7 @@ export class SessionShell {
     onInputPresetChange: (preset: InputPreset) => void;
     getInputPreset: () => InputPreset;
     randomSeed?: () => string;
+    confirm?: (message: string) => boolean;
     logError?: (error: unknown) => void;
   }) {
     this.#dom = options.dom;
@@ -99,6 +101,7 @@ export class SessionShell {
     this.#onInputPresetChange = options.onInputPresetChange;
     this.#getInputPreset = options.getInputPreset;
     this.#randomSeed = options.randomSeed ?? randomSessionSeed;
+    this.#confirm = options.confirm ?? ((message) => window.confirm(message));
     this.#logError = options.logError ?? console.error;
   }
 
@@ -170,11 +173,29 @@ export class SessionShell {
     this.#dom.root.ownerDocument.documentElement.dataset.appMode = "playing";
   }
 
+  get restartRequest(): NewSessionRequest | undefined {
+    return this.#activeRequest ? { ...this.#activeRequest } : undefined;
+  }
+
+  showTitle(): void {
+    this.#showShell("title");
+    void this.#refresh();
+  }
+
+  showNewGame(randomizeSeed = false): void {
+    this.#showShell("new-game");
+    if (randomizeSeed) this.#dom.seedInput.value = this.#randomSeed();
+    this.#dom.seedInput.focus();
+  }
+
+  showLoad(): void {
+    this.#showShell("load");
+    void this.#refresh();
+  }
+
   readonly #openNewGame = (): void => {
     if (this.#busy) return;
-    this.#clearError();
-    this.#showView("new-game");
-    this.#dom.seedInput.focus();
+    this.showNewGame();
   };
 
   readonly #continueLatest = (): void => {
@@ -184,9 +205,7 @@ export class SessionShell {
 
   readonly #openLoad = (): void => {
     if (this.#busy) return;
-    this.#clearError();
-    this.#showView("load");
-    void this.#refresh();
+    this.showLoad();
   };
 
   readonly #openSettings = (): void => {
@@ -259,14 +278,48 @@ export class SessionShell {
   async #load(summary: NativeSaveSummary): Promise<void> {
     if (this.#busy || summary.status === "corrupt") return;
     this.#setBusy(true, "session-status-loading");
+    const previousRequest = this.#activeRequest;
+    this.#activeRequest = undefined;
     try {
       const result = await this.#storage.load(summary.slotId);
       await this.#onLoad(result, summary);
       this.showGame(result.snapshot);
     } catch (error) {
+      this.#activeRequest = previousRequest;
       this.#showError(error);
     } finally {
       this.#setBusy(false);
+    }
+  }
+
+  async #delete(summary: NativeSaveSummary): Promise<void> {
+    if (
+      this.#busy ||
+      !this.#confirm(
+        this.#localization.format("confirm-native-save-delete", {
+          name: summary.slotName,
+        }),
+      )
+    ) {
+      return;
+    }
+    this.#setBusy(true, "session-status-deleting-save");
+    let deleted = false;
+    try {
+      await this.#storage.delete(summary.slotId);
+      this.#saves = await this.#storage.list();
+      this.#renderSaves();
+      this.#clearError();
+      deleted = true;
+    } catch (error) {
+      this.#showError(error);
+    } finally {
+      this.#setBusy(false);
+      if (deleted) {
+        this.#dom.status.textContent = this.#localization.format("session-status-save-deleted", {
+          name: summary.slotName,
+        });
+      }
     }
   }
 
@@ -301,6 +354,14 @@ export class SessionShell {
     this.#updateControls();
   }
 
+  #showShell(view: SessionView): void {
+    if (this.#busy) return;
+    this.#clearError();
+    this.#dom.gameRoot.hidden = true;
+    this.#dom.root.hidden = false;
+    this.#showView(view);
+  }
+
   #setBusy(busy: boolean, statusKey?: string): void {
     this.#busy = busy;
     if (statusKey) this.#dom.status.textContent = this.#localization.format(statusKey);
@@ -320,7 +381,9 @@ export class SessionShell {
     for (const button of this.#dom.loadList.querySelectorAll<HTMLButtonElement>("button")) {
       const row = button.closest<HTMLElement>(".native-save-item");
       const summary = this.#saves.find((save) => save.slotId === row?.dataset.slotId);
-      button.disabled = this.#busy || summary?.status === "corrupt";
+      button.disabled =
+        this.#busy ||
+        (button.dataset.sessionLoadAction === "load" && summary?.status === "corrupt");
     }
   }
 
@@ -359,10 +422,25 @@ export class SessionShell {
       const load = this.#dom.loadList.ownerDocument.createElement("button");
       load.type = "button";
       load.dataset.sessionLoadAction = "load";
-      load.textContent = this.#localization.format("action-native-save-load");
+      load.textContent =
+        summary.status === "recoverable"
+          ? this.#localization.format("action-native-save-recover", {
+              backup: summary.recoveryBackup ?? "?",
+            })
+          : this.#localization.format("action-native-save-load");
       load.disabled = this.#busy || summary.status === "corrupt";
       load.addEventListener("click", () => void this.#load(summary));
-      actions.append(load);
+      const remove = this.#dom.loadList.ownerDocument.createElement("button");
+      remove.type = "button";
+      remove.dataset.sessionLoadAction = "delete";
+      remove.textContent = this.#localization.format(
+        summary.status === "corrupt"
+          ? "action-native-save-delete-corrupt"
+          : "action-native-save-delete",
+      );
+      remove.disabled = this.#busy;
+      remove.addEventListener("click", () => void this.#delete(summary));
+      actions.append(load, remove);
       row.append(header, metadata, actions);
       this.#dom.loadList.append(row);
     }
@@ -373,14 +451,20 @@ export class SessionShell {
     if (summary.turn === null || summary.savedAt === null) {
       return this.#localization.format("native-save-meta-unavailable");
     }
-    return this.#localization.format("native-save-meta", {
+    const metadata = this.#localization.format("native-save-meta", {
       location:
-        summary.locationKey === "world-demo-original-lab-name"
-          ? this.#localization.format("world-demo-original-lab-name")
+        summary.locationKey &&
+        this.#localization.hasMessage(this.#localization.locale, summary.locationKey)
+          ? this.#localization.format(summary.locationKey)
           : this.#localization.format("native-save-location-unknown"),
       turn: summary.turn,
       savedAt: this.#date(summary.savedAt),
     });
+    return summary.status === "recoverable"
+      ? `${metadata} · ${this.#localization.format("native-save-recovery-meta", {
+          backup: summary.recoveryBackup ?? "?",
+        })}`
+      : metadata;
   }
 
   #date(savedAt: string): string {

@@ -270,6 +270,102 @@ button:disabled,
   font-weight: 500;
 }
 
+.journey-result {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  overflow: auto;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgb(4 8 12 / 84%);
+  backdrop-filter: blur(8px);
+}
+
+.result-card {
+  width: min(46rem, 100%);
+  border: 1px solid rgb(103 137 168 / 48%);
+  border-radius: 18px;
+  padding: clamp(1.35rem, 4vw, 2.5rem);
+  background:
+    linear-gradient(145deg, rgb(22 35 47 / 98%), rgb(9 15 22 / 99%)),
+    #0d141c;
+  box-shadow: 0 36px 110px rgb(0 0 0 / 60%);
+}
+
+.result-kind {
+  margin: 0 0 0.45rem;
+  color: #79d4b1;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.journey-result[data-result-kind="death"] .result-kind {
+  color: #ff9292;
+}
+
+.journey-result[data-result-kind="victory-return"] .result-kind,
+.journey-result[data-result-kind="retired"] .result-kind {
+  color: #e7c982;
+}
+
+.result-card h2 {
+  margin: 0;
+  color: #eff7ff;
+  font-size: clamp(1.7rem, 5vw, 2.6rem);
+}
+
+.result-detail {
+  margin: 0.8rem 0 1.35rem;
+  color: #a9bbcc;
+  line-height: 1.65;
+}
+
+.result-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.result-summary > div {
+  min-width: 0;
+  border: 1px solid rgb(103 137 168 / 20%);
+  border-radius: 9px;
+  padding: 0.7rem;
+  background: rgb(7 13 19 / 52%);
+}
+
+.result-summary dt {
+  color: #71869a;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.result-summary dd {
+  overflow-wrap: anywhere;
+  margin: 0.3rem 0 0;
+  color: #d8e5f1;
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.result-error {
+  min-height: 1.25rem;
+  margin: 0.8rem 0 0;
+  color: #ff9292;
+  font-size: 0.82rem;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+}
+
 #app {
   width: min(1400px, 100%);
   margin: 0 auto;
@@ -1127,6 +1223,15 @@ h1 {
 
   .journey-panel {
     grid-template-columns: 1fr;
+  }
+
+  .result-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .result-actions,
+  .result-actions button {
+    width: 100%;
   }
 
   .header-actions,

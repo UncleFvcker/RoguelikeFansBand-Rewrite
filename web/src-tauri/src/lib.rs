@@ -582,6 +582,37 @@ mod tests {
     }
 
     #[test]
+    fn native_session_restart_replaces_state_and_replay_with_the_same_setup() {
+        let state = AppState::default();
+        let initial = state
+            .initialize(
+                "73",
+                "demo.build.warrior",
+                "2026-08-01T00:00:00Z".to_owned(),
+            )
+            .expect("Warrior session should initialize");
+        state
+            .dispatch(1, initial.revision, GameCommand::Wait)
+            .expect("first run should advance");
+
+        let restarted = state
+            .initialize(
+                "73",
+                "demo.build.warrior",
+                "2026-08-01T00:05:00Z".to_owned(),
+            )
+            .expect("same setup should replace the native session");
+        let replay = decode_replay(&state.export_replay().expect("replay should encode"))
+            .expect("replay should decode");
+
+        assert_eq!(restarted.revision, initial.revision);
+        assert_eq!(restarted.turn, initial.turn);
+        assert_eq!(restarted.state_hash, initial.state_hash);
+        assert!(replay.commands.is_empty());
+        assert!(replay.checkpoints.is_empty());
+    }
+
+    #[test]
     fn native_session_rejects_invalid_seed_and_unknown_build() {
         let state = AppState::default();
 

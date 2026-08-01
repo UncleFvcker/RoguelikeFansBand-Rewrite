@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v150 阶段性里程碑
+## 8. contract-v75–v152 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.123、内容包 1.142.0、contract-v151、save v1 和 state hash Schema v55；内容 hash 为 `dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36`。active baseline 包含 455 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.123、内容包 1.142.0、contract-v152、save v1 和 state hash Schema v55；内容 hash 为 `dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36`。active baseline 包含 455 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 49 种 terrain、32 种 actor、92 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、7 张 encounter table、10 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 49 种 terrain、33 种 actor、96 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、10 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |

@@ -22,6 +22,23 @@ export interface AppDom {
   readonly onboardingProgress: HTMLElement;
   readonly onboardingHideOptional: HTMLInputElement;
   readonly onboardingReset: HTMLButtonElement;
+  readonly journeyResult: HTMLElement;
+  readonly resultKind: HTMLElement;
+  readonly resultTitle: HTMLElement;
+  readonly resultDetail: HTMLElement;
+  readonly resultBuild: HTMLElement;
+  readonly resultSeed: HTMLElement;
+  readonly resultTurn: HTMLElement;
+  readonly resultScore: HTMLElement;
+  readonly resultDungeons: HTMLElement;
+  readonly resultTasks: HTMLElement;
+  readonly resultContinue: HTMLButtonElement;
+  readonly resultRestart: HTMLButtonElement;
+  readonly resultNewGame: HTMLButtonElement;
+  readonly resultLoad: HTMLButtonElement;
+  readonly resultMenu: HTMLButtonElement;
+  readonly resultExit: HTMLButtonElement;
+  readonly resultError: HTMLElement;
   readonly messageList: HTMLOListElement;
   readonly turnValue: HTMLElement;
   readonly hpValue: HTMLElement;
@@ -96,6 +113,23 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     onboardingProgress: element<HTMLElement>(document, "onboarding-progress"),
     onboardingHideOptional: element<HTMLInputElement>(document, "onboarding-hide-optional"),
     onboardingReset: element<HTMLButtonElement>(document, "onboarding-reset"),
+    journeyResult: element<HTMLElement>(document, "journey-result"),
+    resultKind: element<HTMLElement>(document, "result-kind"),
+    resultTitle: element<HTMLElement>(document, "result-title"),
+    resultDetail: element<HTMLElement>(document, "result-detail"),
+    resultBuild: element<HTMLElement>(document, "result-build"),
+    resultSeed: element<HTMLElement>(document, "result-seed"),
+    resultTurn: element<HTMLElement>(document, "result-turn"),
+    resultScore: element<HTMLElement>(document, "result-score"),
+    resultDungeons: element<HTMLElement>(document, "result-dungeons"),
+    resultTasks: element<HTMLElement>(document, "result-tasks"),
+    resultContinue: element<HTMLButtonElement>(document, "result-continue"),
+    resultRestart: element<HTMLButtonElement>(document, "result-restart"),
+    resultNewGame: element<HTMLButtonElement>(document, "result-new-game"),
+    resultLoad: element<HTMLButtonElement>(document, "result-load"),
+    resultMenu: element<HTMLButtonElement>(document, "result-menu"),
+    resultExit: element<HTMLButtonElement>(document, "result-exit"),
+    resultError: element<HTMLElement>(document, "result-error"),
     messageList: element<HTMLOListElement>(document, "message-list"),
     turnValue: element<HTMLElement>(document, "turn-value"),
     hpValue: element<HTMLElement>(document, "hp-value"),

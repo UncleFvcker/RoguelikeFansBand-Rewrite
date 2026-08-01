@@ -44,6 +44,7 @@ import { TauriNativeTransport } from "./tauri-native-transport";
 import { installRendererProfileHook } from "./render-profile";
 import { createSessionShellDom, SessionShell } from "./session-shell";
 import { JourneyGuidance } from "./journey-guidance";
+import { JourneyResult } from "./journey-result";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -133,6 +134,7 @@ const settingsPanel = new SettingsPanel({
     nativeSavePanel.localize();
     sessionShell.localize();
     journeyGuidance.localize();
+    journeyResult.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -149,6 +151,7 @@ const gameSession = new GameSession({
     inventoryPanel.render(update.inventory, update.equipment);
     for (const event of update.events) addGameEvent(event);
     journeyGuidance.observeCommand(command, previous, update);
+    journeyResult.renderUpdate(update);
   },
   refreshBusyControls: () => {
     inventoryPanel.updateActions();
@@ -250,6 +253,19 @@ const sessionShell = new SessionShell({
     appDom.inputPresetSelect.dispatchEvent(new Event("change", { bubbles: true }));
   },
   getInputPreset: () => settingsPanel.inputPreset,
+  confirm: (message) => window.confirm(message),
+});
+const journeyResult = new JourneyResult({
+  dom: appDom,
+  localization,
+  formatEvent,
+  currentSeed: () => sessionShell.restartRequest?.seed,
+  canRestart: () => sessionShell.restartRequest !== undefined,
+  onRestart: restartSameSetup,
+  onNewGame: () => showSessionView("new-game"),
+  onLoad: () => showSessionView("load"),
+  onMenu: () => showSessionView("title"),
+  onExit: () => getCurrentWindow().close(),
 });
 settingsPanel.initialize();
 nativeSavePanel.localize();
@@ -271,6 +287,7 @@ settingsPanel.install();
 statusPanel.install();
 inventoryPanel.install();
 journeyGuidance.install();
+journeyResult.install();
 saveButton.addEventListener("click", () => void exportSave());
 replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
@@ -285,6 +302,7 @@ window.addEventListener("beforeunload", () => {
   settingsPanel.dispose();
   inputController.dispose();
   journeyGuidance.dispose();
+  journeyResult.dispose();
   sessionShell.dispose();
   renderer.destroy();
   core.dispose();
@@ -393,6 +411,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   journeyGuidance.render(snapshot);
   sessionShell.showGame(snapshot);
+  journeyResult.renderSnapshot(snapshot);
 }
 
 async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot> {
@@ -442,9 +461,38 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   journeyGuidance.render(snapshot);
+  journeyResult.renderSnapshot(snapshot);
   appState.connection = "ready";
   renderConnectionStatus();
   await nativeSavePanel.refresh();
+}
+
+async function restartSameSetup(): Promise<void> {
+  const request = sessionShell.restartRequest;
+  if (!request) throw new Error(localization.format("result-restart-unavailable"));
+  try {
+    const snapshot = await startNewSession(request);
+    sessionShell.showGame(snapshot, request);
+  } catch (error) {
+    appState.mode = "playing";
+    throw error;
+  }
+}
+
+function showSessionView(view: "title" | "new-game" | "load"): void {
+  inputController.cancelTargeting(false);
+  appState.mode = "title";
+  switch (view) {
+    case "title":
+      sessionShell.showTitle();
+      break;
+    case "new-game":
+      sessionShell.showNewGame(true);
+      break;
+    case "load":
+      sessionShell.showLoad();
+      break;
+  }
 }
 
 function describeLookPosition(position: { readonly x: number; readonly y: number }): string {
