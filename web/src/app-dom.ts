@@ -8,8 +8,20 @@ export interface AppDom {
   readonly mapHost: HTMLElement;
   readonly targetCursor: HTMLElement;
   readonly targetModeToggle: HTMLButtonElement;
+  readonly lookModeToggle: HTMLButtonElement;
   readonly targetModeStatus: HTMLElement;
   readonly connectionStatus: HTMLElement;
+  readonly journeyPanel: HTMLElement;
+  readonly journeyObjectiveTitle: HTMLElement;
+  readonly journeyObjectiveDetail: HTMLElement;
+  readonly journeyLocation: HTMLElement;
+  readonly onboardingKind: HTMLElement;
+  readonly onboardingTitle: HTMLElement;
+  readonly onboardingDetail: HTMLElement;
+  readonly onboardingControl: HTMLElement;
+  readonly onboardingProgress: HTMLElement;
+  readonly onboardingHideOptional: HTMLInputElement;
+  readonly onboardingReset: HTMLButtonElement;
   readonly messageList: HTMLOListElement;
   readonly turnValue: HTMLElement;
   readonly hpValue: HTMLElement;
@@ -70,8 +82,20 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     mapHost: element<HTMLElement>(document, "map-host"),
     targetCursor: element<HTMLElement>(document, "target-cursor"),
     targetModeToggle: element<HTMLButtonElement>(document, "target-mode-toggle"),
+    lookModeToggle: element<HTMLButtonElement>(document, "look-mode-toggle"),
     targetModeStatus: element<HTMLElement>(document, "target-mode-status"),
     connectionStatus: element<HTMLElement>(document, "connection-status"),
+    journeyPanel: element<HTMLElement>(document, "journey-panel"),
+    journeyObjectiveTitle: element<HTMLElement>(document, "journey-objective-title"),
+    journeyObjectiveDetail: element<HTMLElement>(document, "journey-objective-detail"),
+    journeyLocation: element<HTMLElement>(document, "journey-location"),
+    onboardingKind: element<HTMLElement>(document, "onboarding-kind"),
+    onboardingTitle: element<HTMLElement>(document, "onboarding-title"),
+    onboardingDetail: element<HTMLElement>(document, "onboarding-detail"),
+    onboardingControl: element<HTMLElement>(document, "onboarding-control"),
+    onboardingProgress: element<HTMLElement>(document, "onboarding-progress"),
+    onboardingHideOptional: element<HTMLInputElement>(document, "onboarding-hide-optional"),
+    onboardingReset: element<HTMLButtonElement>(document, "onboarding-reset"),
     messageList: element<HTMLOListElement>(document, "message-list"),
     turnValue: element<HTMLElement>(document, "turn-value"),
     hpValue: element<HTMLElement>(document, "hp-value"),

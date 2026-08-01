@@ -2,6 +2,7 @@
 
 import type {
   BodySlotDto,
+  CellVisualDto,
   EquipmentItemDto,
   GameSnapshot,
   GameUpdate,
@@ -14,6 +15,7 @@ export type ConnectionState = "starting" | "ready" | "error";
 export type ApplicationMode = "title" | "starting-session" | "playing";
 
 export type TargetingIntent =
+  | { type: "look" }
   | { type: "projectile" }
   | { type: "ability"; abilityId: string }
   | { type: "item"; itemId: string };
@@ -31,6 +33,7 @@ export class AppState {
   equipment: EquipmentItemDto[] = [];
   bodySlots: BodySlotDto[] = [];
   readonly selectedInventoryIds = new Set<string>();
+  readonly cellVisibility = new Map<string, CellVisualDto["visibility"]>();
   dropQuantityItemId: string | undefined;
   targeting: TargetingState | undefined;
   targetingIntent: TargetingIntent | undefined;
@@ -43,5 +46,16 @@ export class AppState {
   setMapSize(width: number, height: number): void {
     this.mapWidth = width;
     this.mapHeight = height;
+  }
+
+  replaceVisualCells(cells: readonly CellVisualDto[]): void {
+    this.cellVisibility.clear();
+    this.updateVisualCells(cells);
+  }
+
+  updateVisualCells(cells: readonly CellVisualDto[]): void {
+    for (const cell of cells) {
+      this.cellVisibility.set(`${cell.position.x},${cell.position.y}`, cell.visibility);
+    }
   }
 }

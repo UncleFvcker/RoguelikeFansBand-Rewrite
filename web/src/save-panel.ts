@@ -28,6 +28,7 @@ export class NativeSavePanel {
     kind: string,
   ) => void;
   readonly #confirm: (message: string) => boolean;
+  readonly #onSaved: () => void;
   readonly #logError: (error: unknown) => void;
   #busy = false;
   #installed = false;
@@ -49,6 +50,7 @@ export class NativeSavePanel {
       kind: string,
     ) => void;
     confirm: (message: string) => boolean;
+    onSaved?: () => void;
     logError?: (error: unknown) => void;
   }) {
     this.#storage = options.storage;
@@ -62,6 +64,7 @@ export class NativeSavePanel {
     this.#applySnapshot = options.applySnapshot;
     this.#announce = options.announce;
     this.#confirm = options.confirm;
+    this.#onSaved = options.onSaved ?? (() => undefined);
     this.#logError = options.logError ?? console.error;
   }
 
@@ -103,6 +106,7 @@ export class NativeSavePanel {
       this.#nameInput.value = "";
       this.#replaceSummary(summary);
       this.#announce("message-native-save-created", { name: summary.slotName }, "system");
+      this.#onSaved();
     } catch (error) {
       this.#showError(error);
     } finally {
@@ -119,6 +123,7 @@ export class NativeSavePanel {
       const updated = await this.#storage.save(summary.slotName, summary.slotId);
       this.#replaceSummary(updated);
       this.#announce("message-native-save-overwritten", { name: updated.slotName }, "system");
+      this.#onSaved();
     } catch (error) {
       this.#showError(error);
     } finally {

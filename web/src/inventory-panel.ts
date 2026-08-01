@@ -51,6 +51,7 @@ export class InventoryPanel {
   readonly #localization: Localization;
   readonly #formatter: InventoryFormatter;
   readonly #dispatch: (command: GameCommand) => Promise<void>;
+  readonly #onInventoryInteraction: () => void;
   readonly #startTargeting: (
     spec: TargetSpecDto | null | undefined,
     intent: TargetingIntent,
@@ -72,6 +73,7 @@ export class InventoryPanel {
     localization: Localization;
     formatter: InventoryFormatter;
     dispatch: (command: GameCommand) => Promise<void>;
+    onInventoryInteraction?: () => void;
     startTargeting: (
       spec: TargetSpecDto | null | undefined,
       intent: TargetingIntent,
@@ -91,6 +93,7 @@ export class InventoryPanel {
     this.#localization = options.localization;
     this.#formatter = options.formatter;
     this.#dispatch = options.dispatch;
+    this.#onInventoryInteraction = options.onInventoryInteraction ?? (() => undefined);
     this.#startTargeting = options.startTargeting;
     this.#updateCampaignAction = options.updateCampaignAction;
     this.#announce = options.announce;
@@ -265,6 +268,7 @@ export class InventoryPanel {
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) this.#state.selectedInventoryIds.add(item.id);
         else this.#state.selectedInventoryIds.delete(item.id);
+        this.#onInventoryInteraction();
         this.updateActions();
       });
       const details = document.createElement("span");

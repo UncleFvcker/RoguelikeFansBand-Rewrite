@@ -1,6 +1,6 @@
 # Phase 17: Complete Player Journey Vertical Slice
 
-Status: Phase 17 is active. Gates 0-1 are complete; Gate 2 is next. Gate 0 fixed the journey contract against base commit `09291410`. Gate 1 adds the startup/session shell and typed build/seed initialization without changing the protocol, save/replay formats, schemas, fixtures, campaign behavior, or content bytes.
+Status: Phase 17 is active. Gates 0-2 are complete; Gate 3 is next. Gate 0 fixed the journey contract against base commit `09291410`. Gates 1-2 add the startup/session shell, typed build/seed initialization, and frontend-only objective/onboarding presentation without changing the protocol, save/replay formats, schemas, fixtures, campaign behavior, or content bytes.
 
 ## 1. Gate 0 decisions
 
@@ -105,7 +105,7 @@ The compiled demo pack at the Gate 0 baseline contains 1 world, 4 races, 6 class
 | PJ-03 | blocking | Native saves were rendered only after implicit initialization | Save discovery and load work from the title/session shell with no throwaway game | 1 | closed |
 | PJ-04 | blocking | The built-in campaign requires ten-depth Resonance Descent | The playtest campaign treats Echo Depths conquest as victory while preserving the same victory/return/retire rules | 3 | open |
 | PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 | open |
-| PJ-06 | blocking | Controls exist but first-run actions and the primary objective are not staged | Contextual onboarding introduces the minimum action set and always shows the next journey objective | 2 | open |
+| PJ-06 | blocking | Controls exist but first-run actions and the primary objective are not staged | Contextual onboarding introduces the minimum action set and always shows the next journey objective | 2 | closed |
 | PJ-07 | blocking | Desktop E2E remains a technical gameplay smoke test after its new title/new-game/pre-session-load coverage | Normal player commands prove menu -> new game -> Echo guardian -> return -> retire/result, including save/resume | 6 | open |
 | PJ-08 | high | No current evidence guarantees an ordinary Explorer can finish several fixed seeds without starvation, resource dead ends, or opaque difficulty spikes | Explorer completes the route on the acceptance seeds with no soft lock; necessary balance changes are bounded and recorded | 5 | open |
 | PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 | open |
@@ -138,7 +138,7 @@ The completed gate introduces a localized title shell with New Game, Continue, L
 
 Native save listing and recovery now operate at the title screen without constructing a throwaway game. Application command gating distinguishes title, starting-session, and playing states. The desktop E2E cold-starts at the title, selects Explorer and seed `42`, later reloads the complete frontend, discovers the created native save before any new session, restores it, and continues the existing gameplay/storage/render checks. Focused coverage raises the frontend suite from 54 to 57 tests and the Tauri suite from 14 to 16 tests. Gate 1 preserves the built-in pack `1.140.0` and hash `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`.
 
-### Gate 2: onboarding and objective guidance
+### Gate 2: onboarding and objective guidance (complete)
 
 - show one primary objective at all times: prepare, enter Echo Depths, descend, defeat the guardian, return, or retire;
 - stage contextual prompts for movement, inspect/look, pickup, inventory, equip/use, combat/targeting, stairs, resources, messages, and save;
@@ -147,6 +147,12 @@ Native save listing and recovery now operate at the title screen without constru
 - provide localized, actionable feedback for rejected actions and unavailable targets.
 
 Onboarding may use frontend presentation state where it has no gameplay meaning. Authoritative objectives, victory, death, and progression remain Rust-owned.
+
+The completed gate adds a pure `selectJourneyObjective` model over existing `GameSnapshot`/`GameUpdate` fields. It continuously presents prepare, enter Echo Depths, descend, guardian, return, retire, or completed guidance from authoritative floor, inventory/equipment, and campaign status. The model already understands every Echo depth-two branch and depth-three main, mirror, branch, and shaft floor, but does not manufacture victory: return and retire appear only after Rust reports the campaign `victorious`. Selecting Echo Depths as the playtest victory requirement remains Gate 3.
+
+Ten contextual prompts cover movement, zero-turn look/inspect, pickup, inventory selection, equip/use, combat/targeting, connections, resources, message history, and native saving. Journey prompts are visibly distinct from optional help. Completion is driven by position/floor changes, successful projected events, an entered target/look mode, inventory selection, or a completed native save rather than a dismiss button. Learned prompts and the experienced-player optional-help preference persist locally; Replay Guidance resets presentation history without mutating the run.
+
+Look mode uses the existing cursor and authoritative visibility deltas, never dispatches a core command, never advances the turn, and does not reveal occupants outside currently visible cells. Common movement, pickup, equip/use, targeting, ammunition, ability-range, and connection rejections now include localized next actions. Focused coverage raises the frontend suite from 57 to 61 tests. The desktop E2E proves prepare objective -> movement completion -> optional look with an unchanged turn -> pickup -> enter objective. Gate 2 closes PJ-06; PJ-09 remains open until the Gate 3/4 transition and result feedback is complete. Protocol/content identity remains unchanged at built-in pack `1.140.0` and hash `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`.
 
 ### Gate 3: Echo campaign and victory-return route
 
@@ -236,8 +242,8 @@ Phase 17 is complete only when all of the following are true:
 - the complete repository acceptance matrix and Windows playtest build pass;
 - release notes call the artifact a focused Echo Depths player-journey playtest and do not imply full RFB content parity.
 
-## 10. Gate 0-1 closure and Gate 2 entry
+## 10. Gate 0-2 closure and Gate 3 entry
 
-Gate 0 closed with the journey, terminal states, golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria explicit. Gate 1 closes PJ-01, PJ-02, PJ-03, and PJ-10 with a tested product shell and typed native initialization path.
+Gate 0 closed with the journey, terminal states, golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria explicit. Gate 1 closed PJ-01, PJ-02, PJ-03, and PJ-10 with a tested product shell and typed native initialization path. Gate 2 closes PJ-06 with continuous state-derived objectives, interaction-derived contextual onboarding, optional-help suppression, a zero-turn look mode, and actionable rejection guidance.
 
-Gate 2 begins with a pure objective-selection model over existing snapshot/update information, followed by the smallest localized UI surface for the current primary objective and contextual first-run prompts. It must not move authoritative campaign/task/progression ownership into TypeScript, and it does not yet change Echo campaign victory selection.
+Gate 3 begins by introducing the narrowest Rust-owned playtest campaign configuration that treats Echo Depths conquest as victory. It will connect the already-present guardian, victory, return, and retire objective states to the real three-depth route while preserving normal connections, replay/save determinism, scoring, and the ten-depth campaign in the content catalog.

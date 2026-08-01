@@ -284,6 +284,94 @@ button:disabled,
   margin-bottom: 1rem;
 }
 
+.journey-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.journey-objective,
+.onboarding-card {
+  border: 1px solid rgb(103 137 168 / 28%);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgb(20 31 42 / 94%), rgb(13 20 28 / 94%));
+  padding: 1rem;
+  box-shadow: 0 22px 60px rgb(0 0 0 / 20%);
+}
+
+.journey-heading,
+.onboarding-meta,
+.onboarding-settings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.journey-heading {
+  min-height: auto;
+  padding: 0 0 0.65rem;
+  background: none;
+}
+
+.journey-location,
+.onboarding-meta,
+.journey-label {
+  color: #7994ad;
+  font-size: 0.78rem;
+}
+
+.journey-label {
+  margin: 0.75rem 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.journey-objective h2,
+.onboarding-card h3 {
+  margin: 0;
+  color: #d7b56d;
+}
+
+.journey-objective > p:last-child,
+.onboarding-card > p {
+  margin: 0.45rem 0 0;
+  line-height: 1.45;
+}
+
+.onboarding-kind {
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  color: #d7b56d;
+  font-weight: 700;
+}
+
+.journey-panel[data-prompt-kind="optional"] .onboarding-kind {
+  color: #7994ad;
+}
+
+.onboarding-control {
+  border-left: 3px solid #d7b56d;
+  padding-left: 0.65rem;
+  color: #d8e3ec;
+}
+
+.onboarding-settings {
+  margin-top: 0.75rem;
+  border-top: 1px solid rgb(103 137 168 / 20%);
+  padding-top: 0.65rem;
+  color: #7994ad;
+  font-size: 0.78rem;
+}
+
+.onboarding-settings label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .eyebrow,
 .panel-heading {
   color: #6f8da8;
@@ -1031,6 +1119,10 @@ h1 {
   .app-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .journey-panel {
+    grid-template-columns: 1fr;
   }
 
   .header-actions,

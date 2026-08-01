@@ -185,6 +185,18 @@ async function runScenario(driver) {
   assert.equal(runSetup.seedLabel, "42");
   assert.equal(runSetup.titleHidden, true);
   assert.equal(runSetup.gameHidden, false);
+  const initialGuidance = await driver.execute(`
+    return {
+      objective: document.querySelector("#journey-panel")?.dataset.objectiveId,
+      prompt: document.querySelector("#journey-panel")?.dataset.promptId,
+      kind: document.querySelector("#journey-panel")?.dataset.promptKind,
+      title: document.querySelector("#journey-objective-title")?.textContent,
+    };
+  `);
+  assert.equal(initialGuidance.objective, "prepare");
+  assert.equal(initialGuidance.prompt, "movement");
+  assert.equal(initialGuidance.kind, "journey");
+  assert.match(initialGuidance.title, /准备/);
 
   await driver.execute(`
     const input = document.querySelector("#input-preset");
@@ -280,6 +292,36 @@ async function runScenario(driver) {
   assert.equal(state.lastRebuiltTerrainChunks, "0");
   assert.equal(state.canvasUnchanged, true);
 
+  const movedGuidance = await driver.execute(`
+    return {
+      prompt: document.querySelector("#journey-panel")?.dataset.promptId,
+      kind: document.querySelector("#journey-panel")?.dataset.promptKind,
+    };
+  `);
+  assert.deepEqual(movedGuidance, { prompt: "look", kind: "optional" });
+
+  await dispatchKey(driver, "KeyX", "x");
+  await driver.waitFor(
+    `return document.querySelector("#map-host")?.dataset.targetingAction === "look" && document.querySelector("#journey-panel")?.dataset.promptId === "pickup"`,
+    "look mode and observed onboarding completion",
+  );
+  await dispatchKey(driver, "Numpad6", "6");
+  const lookState = await driver.execute(`
+    return {
+      turn: document.querySelector("#turn-value")?.textContent,
+      targetX: document.querySelector("#map-host")?.dataset.targetX,
+      status: document.querySelector("#target-mode-status")?.textContent,
+    };
+  `);
+  assert.equal(lookState.turn, "2");
+  assert.equal(lookState.targetX, "5");
+  assert.match(lookState.status, /物品/);
+  await dispatchKey(driver, "Escape", "Escape");
+  await driver.waitFor(
+    `return document.querySelector("#map-host")?.dataset.targetingAction === "none"`,
+    "look mode exit",
+  );
+
   await dispatchKey(driver, "KeyG", "g");
   await driver.waitFor(
     `return document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
@@ -293,6 +335,13 @@ async function runScenario(driver) {
   assert.match(state.inventory, /陌生的浅色碎片/);
   assert.match(state.inventory, /×5/);
   assert.match(state.messages, /你将 5 个陌生的浅色碎片收入了背包/);
+  const pickupGuidance = await driver.execute(`
+    return {
+      objective: document.querySelector("#journey-panel")?.dataset.objectiveId,
+      prompt: document.querySelector("#journey-panel")?.dataset.promptId,
+    };
+  `);
+  assert.deepEqual(pickupGuidance, { objective: "enter", prompt: "inventory" });
 
   const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
   const nativeSaveHash = state.stateHash;

@@ -29,3 +29,17 @@ test("application state owns map dimensions and terminal command gating", () => 
   assert.equal(state.mapHeight, 45);
   assert.equal(state.commandBlocked, true);
 });
+
+test("application state maintains authoritative visibility deltas for look mode", () => {
+  const state = new AppState();
+  state.replaceVisualCells([
+    { position: { x: 1, y: 2 }, visibility: "visible", light: {} },
+  ]);
+  state.updateVisualCells([
+    { position: { x: 1, y: 2 }, visibility: "remembered", light: {} },
+    { position: { x: 2, y: 2 }, visibility: "visible", light: {} },
+  ]);
+
+  assert.equal(state.cellVisibility.get("1,2"), "remembered");
+  assert.equal(state.cellVisibility.get("2,2"), "visible");
+});

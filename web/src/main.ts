@@ -43,6 +43,7 @@ import type { GameCommand, GameEventDto, GameSnapshot } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import { installRendererProfileHook } from "./render-profile";
 import { createSessionShellDom, SessionShell } from "./session-shell";
+import { JourneyGuidance } from "./journey-guidance";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -111,6 +112,12 @@ const addLocalizedMessage = (
   kind: string,
 ) => messagePanel.addLocalized(key, args, kind);
 const addGameEvent = (event: GameEventDto) => messagePanel.addEvent(event);
+const journeyGuidance = new JourneyGuidance({
+  dom: appDom,
+  localization,
+  storage: localStorage,
+  getInputPreset: () => settingsPanel.inputPreset,
+});
 const settingsPanel = new SettingsPanel({
   dom: appDom,
   state: appState,
@@ -125,6 +132,7 @@ const settingsPanel = new SettingsPanel({
     inventoryPanel.render(appState.inventory, appState.equipment);
     nativeSavePanel.localize();
     sessionShell.localize();
+    journeyGuidance.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -133,11 +141,14 @@ const settingsPanel = new SettingsPanel({
 const gameSession = new GameSession({
   state: appState,
   execute: (command) => core.dispatch(command),
-  applyUpdate: (update) => {
+  applyUpdate: (update, command) => {
+    const previous = appState.status;
     renderer.applyUpdate(update);
+    appState.updateVisualCells(update.changedVisualCells);
     statusPanel.render(update);
     inventoryPanel.render(update.inventory, update.equipment);
     for (const event of update.events) addGameEvent(event);
+    journeyGuidance.observeCommand(command, previous, update);
   },
   refreshBusyControls: () => {
     inventoryPanel.updateActions();
@@ -154,6 +165,8 @@ const inputController = new InputController({
   getInputPreset: () => settingsPanel.inputPreset,
   getZoom: () => settingsPanel.zoom,
   dispatch,
+  describeLook: describeLookPosition,
+  onLookOrTargeting: (interaction) => journeyGuidance.recordInteraction(interaction),
   announce: addLocalizedMessage,
 });
 const inventoryPanel = new InventoryPanel({
@@ -169,6 +182,7 @@ const inventoryPanel = new InventoryPanel({
     statusName,
   },
   dispatch,
+  onInventoryInteraction: () => journeyGuidance.recordInteraction("inventory"),
   startTargeting: (spec, intent) => inputController.startTargetingWithSpec(spec, intent),
   updateCampaignAction: () => statusPanel.updateCampaignAction(),
   announce: addLocalizedMessage,
@@ -203,6 +217,7 @@ const nativeSavePanel = new NativeSavePanel({
   applySnapshot: applyLoadedSnapshot,
   announce: addLocalizedMessage,
   confirm: (message) => window.confirm(message),
+  onSaved: () => journeyGuidance.recordInteraction("save"),
 });
 const sessionShell = new SessionShell({
   dom: sessionShellDom,
@@ -255,6 +270,7 @@ inputController.install();
 settingsPanel.install();
 statusPanel.install();
 inventoryPanel.install();
+journeyGuidance.install();
 saveButton.addEventListener("click", () => void exportSave());
 replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
@@ -268,6 +284,7 @@ window.addEventListener("beforeunload", () => {
   statusPanel.dispose();
   settingsPanel.dispose();
   inputController.dispose();
+  journeyGuidance.dispose();
   sessionShell.dispose();
   renderer.destroy();
   core.dispose();
@@ -370,9 +387,11 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   core.synchronize(snapshot);
   renderContentMetadata(snapshot);
   renderer.applySnapshot(snapshot);
+  appState.replaceVisualCells(snapshot.visualCells);
   statusPanel.render(snapshot);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  journeyGuidance.render(snapshot);
   sessionShell.showGame(snapshot);
 }
 
@@ -416,14 +435,48 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
     settingsPanel.announceTileset(tileset.id, tileset.warnings);
   }
   renderer.applySnapshot(snapshot);
+  appState.replaceVisualCells(snapshot.visualCells);
   await synchronizeCrashDiagnosticContext(snapshot);
   appState.mode = "playing";
   statusPanel.render(snapshot);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  journeyGuidance.render(snapshot);
   appState.connection = "ready";
   renderConnectionStatus();
   await nativeSavePanel.refresh();
+}
+
+function describeLookPosition(position: { readonly x: number; readonly y: number }): string {
+  const status = appState.status;
+  if (!status) return localization.format("look-contents-empty");
+  if (
+    status.player.position.x === position.x &&
+    status.player.position.y === position.y
+  ) {
+    return localization.format("look-contents-player");
+  }
+  if (appState.cellVisibility.get(`${position.x},${position.y}`) !== "visible") {
+    return localization.format("look-contents-unseen");
+  }
+  const actor = status.entities.find(
+    (entity) => entity.position.x === position.x && entity.position.y === position.y,
+  );
+  if (actor) {
+    return localization.format("look-contents-actor", {
+      actor: contentName(actor.kindId),
+    });
+  }
+  const item = status.items.find(
+    (candidate) =>
+      candidate.position.x === position.x && candidate.position.y === position.y,
+  );
+  if (item) {
+    return localization.format("look-contents-item", {
+      item: visibleItemName(item.displayNameKey, item.kindId),
+    });
+  }
+  return localization.format("look-contents-empty");
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {

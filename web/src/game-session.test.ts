@@ -27,7 +27,8 @@ test("game session applies successful updates only after clearing busy", async (
       calls.push(["execute", command.type, state.busy]);
       return update;
     },
-    applyUpdate: (value) => calls.push(["apply", value.turn, state.busy]),
+    applyUpdate: (value, command) =>
+      calls.push(["apply", value.turn, command.type, state.busy]),
     refreshBusyControls: () => calls.push(["controls", state.busy]),
     showError: (error) => calls.push(["error", error]),
   });
@@ -37,7 +38,7 @@ test("game session applies successful updates only after clearing busy", async (
   assert.deepEqual(calls, [
     ["controls", true],
     ["execute", "wait", true],
-    ["apply", 1, false],
+    ["apply", 1, "wait", false],
   ]);
 });
 

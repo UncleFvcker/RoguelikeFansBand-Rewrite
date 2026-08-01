@@ -141,6 +141,34 @@
         </div>
       </header>
 
+      <section id="journey-panel" class="journey-panel" aria-labelledby="journey-panel-title">
+        <div class="journey-objective">
+          <div class="panel-heading journey-heading">
+            <span id="journey-panel-title" data-l10n-id="panel-journey-title"></span>
+            <span id="journey-location" class="journey-location"></span>
+          </div>
+          <p class="journey-label" data-l10n-id="journey-primary-objective-label"></p>
+          <h2 id="journey-objective-title"></h2>
+          <p id="journey-objective-detail"></p>
+        </div>
+        <div class="onboarding-card" aria-live="polite">
+          <div class="onboarding-meta">
+            <span id="onboarding-kind" class="onboarding-kind"></span>
+            <span id="onboarding-progress"></span>
+          </div>
+          <h3 id="onboarding-title"></h3>
+          <p id="onboarding-detail"></p>
+          <p id="onboarding-control" class="onboarding-control"></p>
+          <div class="onboarding-settings">
+            <label for="onboarding-hide-optional">
+              <input id="onboarding-hide-optional" type="checkbox" />
+              <span data-l10n-id="onboarding-hide-optional-label"></span>
+            </label>
+            <button id="onboarding-reset" class="quiet-button" type="button" data-l10n-id="action-onboarding-reset"></button>
+          </div>
+        </div>
+      </section>
+
       <main class="game-layout">
         <section class="map-panel" data-l10n-aria-label="map-aria-label">
           <div class="panel-heading">
@@ -152,6 +180,7 @@
           </div>
           <div class="input-toolbar">
             <div class="target-controls">
+              <button id="look-mode-toggle" type="button"></button>
               <button id="target-mode-toggle" type="button"></button>
               <span id="target-mode-status" aria-live="polite"></span>
             </div>

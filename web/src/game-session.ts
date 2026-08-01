@@ -6,14 +6,14 @@ import type { GameCommand, GameUpdate } from "./protocol";
 export class GameSession {
   readonly #state: AppState;
   readonly #execute: (command: GameCommand) => Promise<GameUpdate>;
-  readonly #applyUpdate: (update: GameUpdate) => void;
+  readonly #applyUpdate: (update: GameUpdate, command: GameCommand) => void;
   readonly #refreshBusyControls: () => void;
   readonly #showError: (error: unknown) => void;
 
   constructor(options: {
     state: AppState;
     execute: (command: GameCommand) => Promise<GameUpdate>;
-    applyUpdate: (update: GameUpdate) => void;
+    applyUpdate: (update: GameUpdate, command: GameCommand) => void;
     refreshBusyControls: () => void;
     showError: (error: unknown) => void;
   }) {
@@ -33,7 +33,7 @@ export class GameSession {
       // Update renderers observe the final idle state and emit their final
       // controls directly, avoiding a redundant second panel render.
       this.#state.busy = false;
-      this.#applyUpdate(update);
+      this.#applyUpdate(update, command);
     } catch (error) {
       this.#showError(error);
     } finally {
