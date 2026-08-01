@@ -7,21 +7,106 @@ use rfb_content::{
 };
 use rfb_protocol::Position;
 
-use super::super::{
-    GeneratedRegion, GeneratedRoom, GeneratedVaultPlacement, GeneratedVaultPlacementCandidate,
-};
+use super::super::*;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(in crate::game) struct GeneratedRoom {
+    pub(in crate::game) id: String,
+    pub(in crate::game) x: i32,
+    pub(in crate::game) y: i32,
+    pub(in crate::game) width: i32,
+    pub(in crate::game) height: i32,
+    pub(in crate::game) shape: ProceduralRoomShape,
+}
+
+impl GeneratedRoom {
+    pub(in crate::game) fn center(&self) -> Position {
+        Position {
+            x: self.x + self.width / 2,
+            y: self.y + self.height / 2,
+        }
+    }
+
+    pub(in crate::game) fn contains(&self, position: Position) -> bool {
+        if position.x < self.x
+            || position.x >= self.x + self.width
+            || position.y < self.y
+            || position.y >= self.y + self.height
+        {
+            return false;
+        }
+        match self.shape {
+            ProceduralRoomShape::Rectangle => true,
+            ProceduralRoomShape::Cross => {
+                position.x == self.center().x || position.y == self.center().y
+            }
+        }
+    }
+
+    pub(in crate::game) fn area(&self) -> u32 {
+        match self.shape {
+            ProceduralRoomShape::Rectangle => (self.width * self.height) as u32,
+            ProceduralRoomShape::Cross => (self.width + self.height - 1) as u32,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(in crate::game) struct GeneratedVaultPlacement {
+    pub(in crate::game) vault: VaultDefinition,
+    pub(in crate::game) origin: Position,
+    pub(in crate::game) transform: VaultTransform,
+    pub(in crate::game) ordinal: u16,
+    pub(in crate::game) connector_cells: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedVaultPlacementCandidate {
+    origin: Position,
+    transform: VaultTransform,
+    connector_cells: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedPitPlacement {
+    definition: ProceduralPitDefinition,
+    origin: Position,
+    outer_entrance: Position,
+    inner_entrance: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(in crate::game) struct GeneratedTerrainFeature {
+    pub(in crate::game) terrain_id: String,
+    pub(in crate::game) position: Position,
+}
+
+pub(in crate::game) struct TerrainFeaturePlacementContext<'a> {
+    pub(in crate::game) rooms: &'a [GeneratedRoom],
+    pub(in crate::game) reserved: &'a BTreeSet<Position>,
+    pub(in crate::game) floor_terrain_id: &'a str,
+    pub(in crate::game) room_floor_terrain_ids: &'a BTreeSet<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GeneratedRegion {
+    state: FloorRegionState,
+    room_ids: Vec<String>,
+    floor_terrain_id: String,
+}
+
 use super::geometry::{
-    generated_terrain_index, generated_terrain_is_connected, maze_floor_distances,
-    transformed_vault_dimensions, transformed_vault_position, vault_connector_path,
-    vault_entrance_outward,
+    generated_terrain_index, generated_terrain_is_connected, maze_floor_anchors,
+    maze_floor_distances, maze_floor_path, transformed_vault_dimensions,
+    transformed_vault_position, vault_connector_path, vault_entrance_outward,
 };
 
-pub(in crate::game) fn generated_non_entry_room_id(rooms: &[GeneratedRoom], ordinal: u16) -> &str {
+fn generated_non_entry_room_id(rooms: &[GeneratedRoom], ordinal: u16) -> &str {
     let room_index = 1 + usize::from(ordinal) % (rooms.len() - 1);
     &rooms[room_index].id
 }
 
-pub(in crate::game) fn choose_generated_maze_position(
+fn choose_generated_maze_position(
     walkable: &BTreeSet<Position>,
     entry: Position,
     occupied: &BTreeSet<Position>,
@@ -41,7 +126,7 @@ pub(in crate::game) fn choose_generated_maze_position(
     candidates[0]
 }
 
-pub(in crate::game) fn formation_placement_candidates(
+fn formation_placement_candidates(
     rooms: &[GeneratedRoom],
     room_id: &str,
     occupied: &BTreeSet<Position>,
@@ -104,7 +189,7 @@ pub(in crate::game) fn formation_placement_candidates(
     candidates
 }
 
-pub(in crate::game) fn free_vault_placement_candidates(
+fn free_vault_placement_candidates(
     terrain: &[String],
     width: u16,
     height: u16,
@@ -214,7 +299,7 @@ pub(in crate::game) fn free_vault_placement_candidates(
     candidates
 }
 
-pub(in crate::game) fn apply_generated_vault_placement(
+fn apply_generated_vault_placement(
     terrain: &mut [String],
     width: u16,
     corridor_terrain_id: &str,
@@ -226,11 +311,7 @@ pub(in crate::game) fn apply_generated_vault_placement(
     }
 }
 
-pub(in crate::game) fn paint_generated_vault(
-    terrain: &mut [String],
-    width: u16,
-    placement: &GeneratedVaultPlacement,
-) {
+fn paint_generated_vault(terrain: &mut [String], width: u16, placement: &GeneratedVaultPlacement) {
     for local_y in 0..placement.vault.height {
         for local_x in 0..placement.vault.width {
             let local = transformed_vault_position(
@@ -270,10 +351,7 @@ pub(in crate::game) fn paint_generated_vault(
     }
 }
 
-pub(in crate::game) fn assign_generated_rooms_to_regions(
-    rooms: &[GeneratedRoom],
-    region_count: usize,
-) -> Vec<usize> {
+fn assign_generated_rooms_to_regions(rooms: &[GeneratedRoom], region_count: usize) -> Vec<usize> {
     if region_count == 0 {
         return Vec::new();
     }
@@ -305,7 +383,7 @@ pub(in crate::game) fn assign_generated_rooms_to_regions(
         .collect()
 }
 
-pub(in crate::game) fn generated_room_cells(room: &GeneratedRoom) -> Vec<Position> {
+fn generated_room_cells(room: &GeneratedRoom) -> Vec<Position> {
     (room.y..room.y + room.height)
         .flat_map(|y| {
             (room.x..room.x + room.width).filter_map(move |x| {
@@ -316,7 +394,7 @@ pub(in crate::game) fn generated_room_cells(room: &GeneratedRoom) -> Vec<Positio
         .collect()
 }
 
-pub(in crate::game) fn allocate_generated_region_placements(
+fn allocate_generated_region_placements(
     regions: &[GeneratedRegion],
     terrain: &[String],
     width: u16,
@@ -378,7 +456,7 @@ pub(in crate::game) fn allocate_generated_region_placements(
     (actor_allocations, loot_allocations)
 }
 
-pub(in crate::game) fn generated_region_open_positions(
+fn generated_region_open_positions(
     region: &GeneratedRegion,
     terrain: &[String],
     width: u16,
@@ -399,7 +477,7 @@ pub(in crate::game) fn generated_region_open_positions(
         .collect()
 }
 
-pub(in crate::game) fn assign_generated_footprint_to_region(
+fn assign_generated_footprint_to_region(
     regions: &mut [GeneratedRegion],
     rooms: &[GeneratedRoom],
     anchor: Position,
@@ -435,7 +513,7 @@ pub(in crate::game) fn assign_generated_footprint_to_region(
     regions[region_index].state.cells.extend(footprint);
 }
 
-pub(in crate::game) fn carve_generated_room(
+fn carve_generated_room(
     terrain: &mut [String],
     width: u16,
     room: &GeneratedRoom,
@@ -451,7 +529,7 @@ pub(in crate::game) fn carve_generated_room(
     }
 }
 
-pub(in crate::game) fn carve_generated_corridor(
+fn carve_generated_corridor(
     terrain: &mut [String],
     width: u16,
     from: Position,
@@ -519,7 +597,7 @@ pub(in crate::game) fn set_generated_terrain(
     terrain[index] = terrain_id.to_owned();
 }
 
-pub(in crate::game) fn primary_floor_connection_ids(
+fn primary_floor_connection_ids(
     definition: &ProceduralFloorDefinition,
 ) -> (Option<&str>, Option<&str>) {
     let primary_up_id = definition.entry_connection_id.as_deref().or_else(|| {
@@ -545,7 +623,7 @@ pub(in crate::game) fn primary_floor_connection_ids(
     (primary_up_id, primary_down_id)
 }
 
-pub(in crate::game) fn generated_wall_positions(
+fn generated_wall_positions(
     definition: &ProceduralFloorDefinition,
     terrain: &[String],
 ) -> Vec<Position> {
@@ -564,4 +642,2757 @@ pub(in crate::game) fn generated_wall_positions(
         .collect::<Vec<_>>();
     positions.sort_by_key(|position| (position.y, position.x));
     positions
+}
+
+impl Game {
+    pub(in crate::game) fn generate_procedural_floor(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        dungeon_instance_id: Option<String>,
+    ) -> Result<FloorState, CoreError> {
+        let maze_only = definition
+            .layout
+            .as_ref()
+            .is_some_and(|layout| layout.mode == ProceduralLayoutMode::MazeOnly);
+        let selected_region_entries = if let Some(table_id) = &definition.region_table_id {
+            let table = self
+                .content
+                .region_table(table_id)
+                .expect("validated region table must remain available")
+                .clone();
+            let mut eligible = table
+                .entries
+                .into_iter()
+                .filter(|entry| {
+                    entry.min_depth <= definition.depth && definition.depth <= entry.max_depth
+                })
+                .collect::<Vec<_>>();
+            let placement_count = definition
+                .generation_budget
+                .as_ref()
+                .and_then(|budget| budget.region_placements)
+                .expect("validated region floor must retain a placement budget");
+            let mut selected = Vec::with_capacity(usize::from(placement_count));
+            for _ in 0..placement_count {
+                let weights = eligible
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                let selected_index = self.roll_weighted_index(&weights);
+                selected.push(eligible.remove(selected_index));
+            }
+            selected
+        } else {
+            Vec::new()
+        };
+        let eligible_themes = definition
+            .theme_table_id
+            .as_ref()
+            .and_then(|table_id| self.content.theme_table(table_id))
+            .map(|table| {
+                table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth && definition.depth <= entry.max_depth
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let selected_theme = if eligible_themes.is_empty() {
+            None
+        } else if eligible_themes.len() == 1 {
+            Some(eligible_themes[0].clone())
+        } else {
+            let weights = eligible_themes
+                .iter()
+                .map(|entry| entry.weight)
+                .collect::<Vec<_>>();
+            Some(eligible_themes[self.roll_weighted_index(&weights)].clone())
+        };
+        let generated_floor_terrain_id = selected_theme
+            .as_ref()
+            .map(|entry| entry.floor_terrain_id.clone())
+            .unwrap_or_else(|| definition.floor_terrain_id.clone());
+        let uses_spatial_vault_budget =
+            definition.generation_budget.as_ref().is_some_and(|budget| {
+                budget.vault_placements.is_some() && budget.vault_area_tiles.is_some()
+            });
+        let eligible_vault_candidates = selected_theme
+            .as_ref()
+            .map(|theme| {
+                theme
+                    .vault_candidates
+                    .iter()
+                    .filter(|candidate| {
+                        candidate.min_depth <= definition.depth
+                            && definition.depth <= candidate.max_depth
+                            && self
+                                .content
+                                .vault(&candidate.vault_id)
+                                .is_some_and(|vault| {
+                                    uses_spatial_vault_budget
+                                        || vault.width <= 6
+                                            && vault.height <= 5
+                                            && vault.entrance_positions.len() == 1
+                                            && vault.entrance_positions[0].x == vault.width / 2
+                                            && vault.entrance_positions[0].y == 0
+                                })
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let legacy_vault = if uses_spatial_vault_budget || maze_only {
+            None
+        } else if eligible_vault_candidates.is_empty() {
+            definition
+                .vault_id
+                .as_ref()
+                .and_then(|vault_id| self.content.vault(vault_id))
+                .cloned()
+        } else if eligible_vault_candidates.len() == 1 {
+            self.content
+                .vault(&eligible_vault_candidates[0].vault_id)
+                .cloned()
+        } else {
+            let weights = eligible_vault_candidates
+                .iter()
+                .map(|candidate| candidate.weight)
+                .collect::<Vec<_>>();
+            let vault_id = &eligible_vault_candidates[self.roll_weighted_index(&weights)].vault_id;
+            self.content.vault(vault_id).cloned()
+        };
+        let guardian = definition.guardian.as_ref().filter(|_| {
+            definition.dungeon_id.as_ref().is_some_and(|dungeon_id| {
+                self.dungeon_states
+                    .get(dungeon_id)
+                    .is_some_and(|state| !state.guardian_defeated)
+            })
+        });
+        let task_objectives = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| {
+                        floor_task_id(floor) == floor_task_id(definition)
+                            && !floor.task_stages.is_empty()
+                    })
+                    .map(|floor| {
+                        floor
+                            .task_stages
+                            .iter()
+                            .filter(|stage| {
+                                stage.floor_id.as_deref() == Some(definition.id.as_str())
+                            })
+                            .cloned()
+                            .collect::<Vec<_>>()
+                    })
+            })
+            .unwrap_or_else(|| definition.task_objective.iter().cloned().collect());
+        let width = definition.width;
+        let height = definition.height;
+        let mut terrain =
+            vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        let cavern_origin = definition.layout.as_ref().and_then(|layout| {
+            layout.cavern.as_ref().map(|cavern| {
+                self.generate_connected_cavern(definition, &cavern.terrain_id, &mut terrain)
+            })
+        });
+        let lake_origin = definition.layout.as_ref().and_then(|layout| {
+            layout.lake.as_ref().map(|lake| {
+                self.generate_connected_lake(
+                    definition,
+                    &lake.deep_terrain_id,
+                    &lake.shallow_terrain_id,
+                    &mut terrain,
+                )
+            })
+        });
+        let maze_walkable = if maze_only {
+            let maze = definition
+                .layout
+                .as_ref()
+                .and_then(|layout| layout.maze.as_ref())
+                .expect("validated maze-only layout must retain maze geometry");
+            self.generate_maze(definition, maze, &generated_floor_terrain_id, &mut terrain)
+        } else {
+            BTreeSet::new()
+        };
+        let rooms = if maze_only {
+            Vec::new()
+        } else if let Some(layout) = &definition.layout {
+            self.generate_budgeted_rooms(
+                definition,
+                layout
+                    .rooms
+                    .as_ref()
+                    .expect("validated rooms layout must retain room geometry"),
+            )
+        } else {
+            let room_width = 6_i32;
+            let room_height = 5_i32;
+            let first_x = 1 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+            let first_y = 1 + i32::try_from(self.rng.bounded(4)).unwrap_or(0);
+            let second_x = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+            let second_y = 11 + i32::try_from(self.rng.bounded(3)).unwrap_or(0);
+            vec![
+                GeneratedRoom {
+                    id: "entry".to_owned(),
+                    x: first_x,
+                    y: first_y,
+                    width: room_width,
+                    height: room_height,
+                    shape: ProceduralRoomShape::Rectangle,
+                },
+                GeneratedRoom {
+                    id: "remote".to_owned(),
+                    x: second_x,
+                    y: second_y,
+                    width: room_width,
+                    height: room_height,
+                    shape: ProceduralRoomShape::Rectangle,
+                },
+            ]
+        };
+        let content_rooms = if definition
+            .layout
+            .as_ref()
+            .is_some_and(|layout| layout.pit.is_some())
+        {
+            &rooms[..rooms.len() - 1]
+        } else {
+            rooms.as_slice()
+        };
+        let room_region_indexes =
+            assign_generated_rooms_to_regions(content_rooms, selected_region_entries.len());
+        let mut generated_regions = selected_region_entries
+            .iter()
+            .enumerate()
+            .map(|(region_index, entry)| {
+                let theme = self
+                    .content
+                    .theme_table(&entry.theme_table_id)
+                    .and_then(|table| {
+                        table
+                            .entries
+                            .iter()
+                            .find(|theme| theme.theme_id == entry.theme_id)
+                    })
+                    .expect("validated region theme must remain available");
+                let room_ids = content_rooms
+                    .iter()
+                    .zip(&room_region_indexes)
+                    .filter(|(_, assigned_region)| **assigned_region == region_index)
+                    .map(|(room, _)| room.id.clone())
+                    .collect::<Vec<_>>();
+                let mut cells = content_rooms
+                    .iter()
+                    .zip(&room_region_indexes)
+                    .filter(|(_, assigned_region)| **assigned_region == region_index)
+                    .flat_map(|(room, _)| generated_room_cells(room))
+                    .collect::<Vec<_>>();
+                cells.sort();
+                GeneratedRegion {
+                    state: FloorRegionState {
+                        region_id: entry.region_id.clone(),
+                        theme_id: entry.theme_id.clone(),
+                        encounter_table_id: entry.encounter_table_id.clone(),
+                        loot_table_id: entry.loot_table_id.clone(),
+                        cells,
+                    },
+                    room_ids,
+                    floor_terrain_id: theme.floor_terrain_id.clone(),
+                }
+            })
+            .collect::<Vec<_>>();
+        for (room_index, room) in rooms.iter().enumerate() {
+            let room_terrain_id = room_region_indexes
+                .get(room_index)
+                .and_then(|region_index| generated_regions.get(*region_index))
+                .map_or(generated_floor_terrain_id.as_str(), |region| {
+                    region.floor_terrain_id.as_str()
+                });
+            carve_generated_room(&mut terrain, width, room, room_terrain_id);
+        }
+        let (first_center, second_center) = if maze_only {
+            maze_floor_anchors(&maze_walkable)
+        } else {
+            (rooms[0].center(), rooms[1].center())
+        };
+        let legacy_vault_origin = legacy_vault.as_ref().map(|vault| Position {
+            x: second_center.x - i32::from(vault.entrance_positions[0].x),
+            y: rooms
+                .get(1)
+                .expect("legacy vault placement requires a remote room")
+                .y,
+        });
+        if let Some(destroyed) = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.destroyed.as_ref())
+        {
+            self.generate_destroyed_region(definition, &destroyed.terrain_id, &mut terrain);
+        }
+        if let Some(river) = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.river.as_ref())
+        {
+            self.generate_river(
+                definition,
+                &river.deep_terrain_id,
+                &river.shallow_terrain_id,
+                lake_origin.unwrap_or(Position {
+                    x: i32::from(width / 2),
+                    y: i32::from(height / 2),
+                }),
+                &mut terrain,
+            );
+        }
+        if definition
+            .layout
+            .as_ref()
+            .is_some_and(|layout| layout.destroyed.is_some() || layout.river.is_some())
+        {
+            for room in &rooms {
+                let room_index = rooms
+                    .iter()
+                    .position(|candidate| candidate.id == room.id)
+                    .expect("generated room must retain its stable index");
+                let room_terrain_id = room_region_indexes
+                    .get(room_index)
+                    .and_then(|region_index| generated_regions.get(*region_index))
+                    .map_or(generated_floor_terrain_id.as_str(), |region| {
+                        region.floor_terrain_id.as_str()
+                    });
+                carve_generated_room(&mut terrain, width, room, room_terrain_id);
+            }
+        }
+        for connected_rooms in rooms.windows(2) {
+            carve_generated_corridor(
+                &mut terrain,
+                width,
+                connected_rooms[0].center(),
+                connected_rooms[1].center(),
+                &generated_floor_terrain_id,
+            );
+        }
+        if let Some(cavern_origin) = cavern_origin {
+            carve_generated_corridor(
+                &mut terrain,
+                width,
+                first_center,
+                cavern_origin,
+                &generated_floor_terrain_id,
+            );
+        }
+        if let Some(layout) = &definition.layout
+            && !layout.streamers.is_empty()
+        {
+            self.generate_streamers(definition, &layout.streamers, &mut terrain);
+        }
+        let pit_placement = definition
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.pit.as_ref())
+            .map(|pit| {
+                self.place_classic_pit(
+                    definition,
+                    pit,
+                    rooms[rooms.len() - 2].center(),
+                    &generated_floor_terrain_id,
+                    &mut terrain,
+                )
+            });
+        let door_position = (!maze_only).then_some(Position {
+            x: (first_center.x + second_center.x) / 2,
+            y: first_center.y,
+        });
+        if let Some(door_position) = door_position {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                door_position,
+                &definition.closed_door_terrain_id,
+            );
+        }
+        let down_stair_position = if maze_only {
+            second_center
+        } else {
+            Position {
+                x: first_center.x - 1,
+                y: first_center.y,
+            }
+        };
+        let fixed_trap_position = if maze_only {
+            let route = maze_floor_path(&maze_walkable, first_center, second_center);
+            route[route.len() / 2]
+        } else {
+            Position {
+                x: first_center.x,
+                y: first_center.y + 1,
+            }
+        };
+        let mut floor_connections = if definition.connections.is_empty() {
+            set_generated_terrain(
+                &mut terrain,
+                width,
+                first_center,
+                &definition.up_stair_terrain_id,
+            );
+            if let Some(down_stair_terrain_id) = &definition.down_stair_terrain_id {
+                set_generated_terrain(
+                    &mut terrain,
+                    width,
+                    down_stair_position,
+                    down_stair_terrain_id,
+                );
+            }
+            Vec::new()
+        } else {
+            let (primary_up_id, primary_down_id) = primary_floor_connection_ids(definition);
+            for (connection_id, position) in [
+                (primary_up_id, first_center),
+                (primary_down_id, down_stair_position),
+            ] {
+                if let Some(connection) = connection_id.and_then(|connection_id| {
+                    definition
+                        .connections
+                        .iter()
+                        .find(|connection| connection.id == connection_id)
+                }) {
+                    set_generated_terrain(&mut terrain, width, position, &connection.terrain_id);
+                }
+            }
+            Vec::new()
+        };
+        set_generated_terrain(
+            &mut terrain,
+            width,
+            fixed_trap_position,
+            &definition.trap_terrain_id,
+        );
+        let vault_placements = if let Some(vault) = legacy_vault.clone() {
+            let placement = GeneratedVaultPlacement {
+                vault,
+                origin: legacy_vault_origin.expect("present vault must have an origin"),
+                transform: VaultTransform::Identity,
+                ordinal: 1,
+                connector_cells: Vec::new(),
+            };
+            paint_generated_vault(&mut terrain, width, &placement);
+            vec![placement]
+        } else if uses_spatial_vault_budget {
+            self.select_spatial_vault_placements(
+                definition,
+                &eligible_vault_candidates,
+                guardian.is_some(),
+                &generated_floor_terrain_id,
+                &mut terrain,
+            )
+        } else {
+            Vec::new()
+        };
+        for placement in &vault_placements {
+            let entrance = transformed_vault_position(
+                &placement.vault,
+                placement.transform,
+                placement.vault.entrance_positions[0],
+            );
+            let anchor = Position {
+                x: placement.origin.x + entrance.x,
+                y: placement.origin.y + entrance.y,
+            };
+            let (vault_width, vault_height) =
+                transformed_vault_dimensions(&placement.vault, placement.transform);
+            let footprint = (0..vault_height).flat_map(|y| {
+                (0..vault_width).map(move |x| Position {
+                    x: placement.origin.x + i32::from(x),
+                    y: placement.origin.y + i32::from(y),
+                })
+            });
+            assign_generated_footprint_to_region(
+                &mut generated_regions,
+                content_rooms,
+                anchor,
+                footprint,
+            );
+        }
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            let footprint = (0..total_height).flat_map(|y| {
+                (0..total_width).map(move |x| Position {
+                    x: pit.origin.x + i32::from(x),
+                    y: pit.origin.y + i32::from(y),
+                })
+            });
+            assign_generated_footprint_to_region(
+                &mut generated_regions,
+                content_rooms,
+                pit.outer_entrance,
+                footprint,
+            );
+        }
+        if !definition.connections.is_empty() {
+            floor_connections = place_generated_floor_connections(
+                definition,
+                first_center,
+                down_stair_position,
+                fixed_trap_position,
+                &generated_floor_terrain_id,
+                &mut terrain,
+                &mut self.rng,
+            )?;
+        }
+        let mut feature_reserved = BTreeSet::from([fixed_trap_position]);
+        if floor_connections.is_empty() {
+            feature_reserved.insert(first_center);
+        } else {
+            feature_reserved.extend(
+                floor_connections
+                    .iter()
+                    .map(|connection| connection.position),
+            );
+        }
+        if let Some(door_position) = door_position {
+            feature_reserved.insert(door_position);
+        }
+        if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
+            feature_reserved.insert(down_stair_position);
+        }
+        for placement in &vault_placements {
+            let (vault_width, vault_height) =
+                transformed_vault_dimensions(&placement.vault, placement.transform);
+            for y in 0..vault_height {
+                for x in 0..vault_width {
+                    feature_reserved.insert(Position {
+                        x: placement.origin.x + i32::from(x),
+                        y: placement.origin.y + i32::from(y),
+                    });
+                }
+            }
+            feature_reserved.extend(placement.connector_cells.iter().copied());
+        }
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            for y in 0..total_height {
+                for x in 0..total_width {
+                    feature_reserved.insert(Position {
+                        x: pit.origin.x + i32::from(x),
+                        y: pit.origin.y + i32::from(y),
+                    });
+                }
+            }
+            feature_reserved.insert(pit.outer_entrance);
+            feature_reserved.insert(pit.inner_entrance);
+        }
+        let room_floor_terrain_ids = generated_regions
+            .iter()
+            .map(|region| region.floor_terrain_id.clone())
+            .collect::<BTreeSet<_>>();
+        let terrain_features = if let Some(table_id) = &definition.terrain_feature_table_id {
+            let table = self
+                .content
+                .terrain_feature_table(table_id)
+                .expect("validated terrain feature table must remain available")
+                .clone();
+            let eligible_entries = table
+                .entries
+                .iter()
+                .filter(|entry| {
+                    entry.min_depth <= definition.depth && definition.depth <= entry.max_depth
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            self.place_terrain_features(
+                definition,
+                &eligible_entries,
+                TerrainFeaturePlacementContext {
+                    rooms: content_rooms,
+                    reserved: &feature_reserved,
+                    floor_terrain_id: &generated_floor_terrain_id,
+                    room_floor_terrain_ids: &room_floor_terrain_ids,
+                },
+                &mut terrain,
+            )
+        } else {
+            Vec::new()
+        };
+        let mut occupied = BTreeSet::from([first_center]);
+        occupied.extend(
+            floor_connections
+                .iter()
+                .map(|connection| connection.position),
+        );
+        if maze_only {
+            occupied.insert(fixed_trap_position);
+        }
+        occupied.extend(terrain_features.iter().map(|feature| feature.position));
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            for y in 0..total_height {
+                for x in 0..total_width {
+                    occupied.insert(Position {
+                        x: pit.origin.x + i32::from(x),
+                        y: pit.origin.y + i32::from(y),
+                    });
+                }
+            }
+        }
+        for placement in &vault_placements {
+            occupied.extend(
+                placement
+                    .vault
+                    .encounter_groups
+                    .iter()
+                    .flat_map(|group| &group.member_positions)
+                    .map(|local| {
+                        let local = transformed_vault_position(
+                            &placement.vault,
+                            placement.transform,
+                            *local,
+                        );
+                        Position {
+                            x: placement.origin.x + local.x,
+                            y: placement.origin.y + local.y,
+                        }
+                    }),
+            );
+            occupied.extend(placement.vault.loot_spawns.iter().map(|spawn| {
+                let local = transformed_vault_position(
+                    &placement.vault,
+                    placement.transform,
+                    spawn.position,
+                );
+                Position {
+                    x: placement.origin.x + local.x,
+                    y: placement.origin.y + local.y,
+                }
+            }));
+        }
+        if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
+            occupied.insert(down_stair_position);
+        }
+        let guardian_position = guardian.map(|_| Position {
+            x: first_center.x + 1,
+            y: first_center.y,
+        });
+        occupied.extend(guardian_position);
+        let reserved_actor_slots = definition
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.pit_actor_slots)
+            .unwrap_or(0)
+            .saturating_add(definition.nest.as_ref().map_or(0, |nest| nest.spawn_count))
+            .saturating_add(if guardian.is_some() { 1 } else { 0 })
+            .saturating_add(
+                vault_placements
+                    .iter()
+                    .flat_map(|placement| &placement.vault.encounter_groups)
+                    .map(|group| {
+                        u16::try_from(group.member_positions.len())
+                            .expect("validated vault group size must fit u16")
+                    })
+                    .sum::<u16>(),
+            );
+        let mut entities = Vec::new();
+        let mut regional_loot_allocations = Vec::new();
+        if !generated_regions.is_empty() {
+            let budget = definition
+                .generation_budget
+                .as_ref()
+                .expect("validated region floor must retain a generation budget");
+            let region_count = u16::try_from(generated_regions.len())
+                .expect("validated region count must fit u16");
+            if budget.group_placements.is_some() && budget.group_actor_slots.is_some() {
+                let host = &generated_regions[0];
+                let table = self
+                    .content
+                    .encounter_table(&host.state.encounter_table_id)
+                    .expect("validated regional group table must remain available")
+                    .clone();
+                let eligible_entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let room_id = &host.room_ids[0];
+                let id_prefix = format!("{}.region.{}", definition.id, host.state.region_id);
+                entities.extend(self.generate_dynamic_encounter_groups(
+                    definition,
+                    &table,
+                    &eligible_entries,
+                    content_rooms,
+                    room_id,
+                    reserved_actor_slots,
+                    region_count,
+                    false,
+                    &id_prefix,
+                    &mut occupied,
+                ));
+            }
+            let actor_budget = budget
+                .actor_slots
+                .saturating_sub(reserved_actor_slots)
+                .saturating_sub(
+                    u16::try_from(entities.len())
+                        .expect("generated regional group size must fit u16"),
+                );
+            let loot_budget = budget.loot_placements.saturating_sub(
+                vault_placements
+                    .iter()
+                    .map(|placement| {
+                        u16::try_from(placement.vault.loot_spawns.len())
+                            .expect("validated vault loot count must fit u16")
+                    })
+                    .sum::<u16>(),
+            );
+            let (regional_actor_allocations, loot_allocations) =
+                allocate_generated_region_placements(
+                    &generated_regions,
+                    &terrain,
+                    width,
+                    &self.content,
+                    &occupied,
+                    actor_budget,
+                    loot_budget,
+                );
+            regional_loot_allocations = loot_allocations;
+            for (region_index, region) in generated_regions.iter().enumerate() {
+                let placements = regional_actor_allocations[region_index];
+                let table = self
+                    .content
+                    .encounter_table(&region.state.encounter_table_id)
+                    .expect("validated region encounter table must remain available")
+                    .clone();
+                let eligible_entries = table
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.group.is_none()
+                            && entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let weights = eligible_entries
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                for ordinal in 0..placements {
+                    let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                    let position =
+                        self.choose_generated_region_position(region, &terrain, width, &occupied);
+                    occupied.insert(position);
+                    entities.push(self.generated_actor(
+                        format!(
+                            "{}.region.{}.encounter.plain.{}",
+                            definition.id,
+                            region.state.region_id,
+                            ordinal + 1
+                        ),
+                        &entry.actor_kind_id,
+                        position,
+                    ));
+                }
+            }
+        } else if let Some(table_id) = &definition.encounter_table_id {
+            let table = self
+                .content
+                .encounter_table(table_id)
+                .expect("validated floor encounter table must remain available")
+                .clone();
+            let eligible_entries = table
+                .entries
+                .iter()
+                .filter(|entry| {
+                    entry.min_depth <= definition.depth
+                        && definition.depth <= entry.max_depth
+                        && self
+                            .content
+                            .actor(&entry.actor_kind_id)
+                            .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            let weights = eligible_entries
+                .iter()
+                .map(|entry| entry.weight)
+                .collect::<Vec<_>>();
+            let room_id = if legacy_vault.is_some() {
+                "entry"
+            } else {
+                "remote"
+            };
+            if definition.generation_budget.as_ref().is_some_and(|budget| {
+                budget.group_placements.is_some() && budget.group_actor_slots.is_some()
+            }) {
+                entities.extend(self.generate_dynamic_encounter_groups(
+                    definition,
+                    &table,
+                    &eligible_entries,
+                    content_rooms,
+                    room_id,
+                    reserved_actor_slots,
+                    1,
+                    true,
+                    &definition.id,
+                    &mut occupied,
+                ));
+            } else {
+                let encounter_rolls =
+                    definition
+                        .generation_budget
+                        .as_ref()
+                        .map_or(table.rolls, |budget| {
+                            table
+                                .rolls
+                                .min(budget.actor_slots.saturating_sub(reserved_actor_slots))
+                        });
+                for ordinal in 0..encounter_rolls {
+                    let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                    let placement_room_id = if maze_only {
+                        "maze"
+                    } else if definition.layout.is_some() {
+                        generated_non_entry_room_id(content_rooms, ordinal)
+                    } else {
+                        room_id
+                    };
+                    let position = if maze_only {
+                        choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                    } else {
+                        self.choose_generated_room_position(
+                            content_rooms,
+                            placement_room_id,
+                            &occupied,
+                        )
+                    };
+                    occupied.insert(position);
+                    entities.push(self.generated_actor(
+                        format!("{}.encounter.{}", definition.id, ordinal + 1),
+                        &entry.actor_kind_id,
+                        position,
+                    ));
+                }
+            }
+            if let Some(nest) = &definition.nest {
+                let entry = &eligible_entries[self.roll_weighted_index(&weights)];
+                for ordinal in 0..nest.spawn_count {
+                    let position =
+                        self.choose_generated_room_position(&rooms, &nest.room_id, &occupied);
+                    occupied.insert(position);
+                    let actor = self
+                        .content
+                        .actor(&entry.actor_kind_id)
+                        .expect("validated nest actor must remain available");
+                    entities.push(stamped_spawn(
+                        actor_from_spawn(
+                            &format!("{}.nest.{}", definition.id, ordinal + 1),
+                            &entry.actor_kind_id,
+                            ContentPosition {
+                                x: u16::try_from(position.x).expect("nest actor x must fit u16"),
+                                y: u16::try_from(position.y).expect("nest actor y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
+                        ),
+                        actor,
+                    ));
+                }
+            }
+        } else {
+            for spawn in &definition.actor_spawns {
+                let eligible_kind_ids = spawn
+                    .actor_kind_ids
+                    .iter()
+                    .filter(|kind_id| {
+                        self.content
+                            .actor(kind_id)
+                            .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let kind_index = usize::try_from(
+                    self.rng.bounded(
+                        u64::try_from(eligible_kind_ids.len())
+                            .expect("validated actor candidate count must fit u64"),
+                    ),
+                )
+                .expect("bounded actor candidate index must fit usize");
+                let kind_id = &eligible_kind_ids[kind_index];
+                let position =
+                    self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+                occupied.insert(position);
+                let actor = self
+                    .content
+                    .actor(kind_id)
+                    .expect("validated procedural actor kind must remain available");
+                entities.push(stamped_spawn(
+                    actor_from_spawn(
+                        &spawn.instance_id,
+                        kind_id,
+                        ContentPosition {
+                            x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                            y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+                        },
+                        actor.max_hp,
+                        actor.speed,
+                        INITIAL_MONSTER_ENERGY_NEED,
+                        actor_starts_alerted(actor),
+                    ),
+                    actor,
+                ));
+            }
+        }
+        if let Some(pit) = &pit_placement {
+            entities.extend(self.generate_classic_pit_actors(definition, pit, &mut occupied));
+        }
+        for placement in &vault_placements {
+            for group in &placement.vault.encounter_groups {
+                let eligible_entries = group
+                    .entries
+                    .iter()
+                    .filter(|entry| {
+                        entry.min_depth <= definition.depth
+                            && definition.depth <= entry.max_depth
+                            && self
+                                .content
+                                .actor(&entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .collect::<Vec<_>>();
+                let weights = eligible_entries
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                for (ordinal, local) in group.member_positions.iter().enumerate() {
+                    let entry = eligible_entries[self.roll_weighted_index(&weights)];
+                    let actor = self
+                        .content
+                        .actor(&entry.actor_kind_id)
+                        .expect("validated vault encounter actor must remain available");
+                    let local =
+                        transformed_vault_position(&placement.vault, placement.transform, *local);
+                    let position = Position {
+                        x: placement.origin.x + local.x,
+                        y: placement.origin.y + local.y,
+                    };
+                    occupied.insert(position);
+                    let instance_id = if uses_spatial_vault_budget {
+                        format!(
+                            "{}.vault.{}.{}.{}",
+                            definition.id,
+                            placement.ordinal,
+                            group.id,
+                            ordinal + 1
+                        )
+                    } else {
+                        format!("{}.{}.{}", definition.id, group.id, ordinal + 1)
+                    };
+                    entities.push(stamped_spawn(
+                        actor_from_spawn(
+                            &instance_id,
+                            &entry.actor_kind_id,
+                            ContentPosition {
+                                x: u16::try_from(position.x).expect("vault actor x must fit u16"),
+                                y: u16::try_from(position.y).expect("vault actor y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
+                        ),
+                        actor,
+                    ));
+                }
+            }
+        }
+        if let Some(guardian) = guardian {
+            let actor = self
+                .content
+                .actor(&guardian.actor_kind_id)
+                .expect("validated dungeon guardian must remain available");
+            let max_hp = actor.max_hp;
+            let speed = actor.speed;
+            let position = guardian_position.expect("present guardian must retain a position");
+            entities.push(stamped_spawn(
+                actor_from_spawn(
+                    &guardian.instance_id,
+                    &guardian.actor_kind_id,
+                    ContentPosition {
+                        x: u16::try_from(position.x).expect("guardian x must fit u16"),
+                        y: u16::try_from(position.y).expect("guardian y must fit u16"),
+                    },
+                    max_hp,
+                    speed,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(actor),
+                ),
+                actor,
+            ));
+        }
+        let mut items =
+            self.generate_carried_loot_for_actors(&entities, &definition.id, definition.depth)?;
+        if !generated_regions.is_empty() {
+            for (region_index, region) in generated_regions.iter().enumerate() {
+                let placements = regional_loot_allocations[region_index];
+                for ordinal in 0..placements {
+                    let room_id = &region.room_ids[usize::from(ordinal) % region.room_ids.len()];
+                    let position =
+                        self.choose_generated_region_position(region, &terrain, width, &occupied);
+                    occupied.insert(position);
+                    items.extend(self.generate_loot_instances(
+                        &LootContext {
+                            table_id: region.state.loot_table_id.clone(),
+                            floor_id: definition.id.clone(),
+                            depth: definition.depth,
+                            source: LootSource::FloorRoom {
+                                room_id: room_id.clone(),
+                                spawn_id: format!(
+                                    "{}.region.{}.loot.{}",
+                                    definition.id,
+                                    region.state.region_id,
+                                    ordinal + 1
+                                ),
+                            },
+                        },
+                        ItemLocation::Ground(position),
+                    )?);
+                }
+            }
+        } else if let Some(table_id) = &definition.loot_table_id {
+            let room_id = if legacy_vault.is_some() {
+                "entry"
+            } else {
+                "remote"
+            };
+            let floor_loot_placements = definition.generation_budget.as_ref().map_or(1, |budget| {
+                budget.loot_placements.saturating_sub(
+                    vault_placements
+                        .iter()
+                        .map(|placement| {
+                            u16::try_from(placement.vault.loot_spawns.len())
+                                .expect("validated vault loot count must fit u16")
+                        })
+                        .sum::<u16>(),
+                )
+            });
+            for ordinal in 0..floor_loot_placements {
+                let placement_room_id = if maze_only {
+                    "maze"
+                } else if definition.layout.is_some() {
+                    generated_non_entry_room_id(content_rooms, ordinal)
+                } else {
+                    room_id
+                };
+                let position = if maze_only {
+                    choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                } else {
+                    self.choose_generated_room_position(content_rooms, placement_room_id, &occupied)
+                };
+                occupied.insert(position);
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::FloorRoom {
+                            room_id: placement_room_id.to_owned(),
+                            spawn_id: format!("{}.loot-table.{}", definition.id, ordinal + 1),
+                        },
+                    },
+                    ItemLocation::Ground(position),
+                )?);
+            }
+        } else {
+            for spawn in &definition.loot_spawns {
+                let position =
+                    self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+                occupied.insert(position);
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: spawn.loot_table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::FloorRoom {
+                            room_id: spawn.room_id.clone(),
+                            spawn_id: spawn.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(position),
+                )?);
+            }
+        }
+        for placement in &vault_placements {
+            for spawn in &placement.vault.loot_spawns {
+                let local = transformed_vault_position(
+                    &placement.vault,
+                    placement.transform,
+                    spawn.position,
+                );
+                let position = Position {
+                    x: placement.origin.x + local.x,
+                    y: placement.origin.y + local.y,
+                };
+                occupied.insert(position);
+                items.extend(self.generate_loot_instances(
+                    &LootContext {
+                        table_id: spawn.loot_table_id.clone(),
+                        floor_id: definition.id.clone(),
+                        depth: definition.depth,
+                        source: LootSource::Vault {
+                            vault_id: placement.vault.id.clone(),
+                            spawn_id: spawn.id.clone(),
+                        },
+                    },
+                    ItemLocation::Ground(position),
+                )?);
+            }
+        }
+        for objective in &task_objectives {
+            match objective.kind {
+                TaskObjectiveKind::CollectItem => {
+                    let kind_id = objective
+                        .item_kind_id
+                        .clone()
+                        .expect("validated item objective must have a kind ID");
+                    let (activation, charges) = initial_item_runtime_state(
+                        &self.content,
+                        &mut self.rng,
+                        &kind_id,
+                        definition.depth,
+                    );
+                    items.push(ItemInstance {
+                        id: objective
+                            .item_instance_id
+                            .clone()
+                            .expect("validated item objective must have an instance ID"),
+                        curse: initial_item_curse(&self.content, &kind_id),
+                        kind_id,
+                        quantity: 1,
+                        quality: ItemQualityDto::Ordinary,
+                        affix_ids: Vec::new(),
+                        rolled_affixes: Vec::new(),
+                        enchantments: ItemEnchantmentsDto::default(),
+                        activation,
+                        charges,
+                        device_recovery_progress: 0,
+                        location: ItemLocation::Ground(first_center),
+                    });
+                }
+                TaskObjectiveKind::KillActor => {
+                    let kind_id = objective
+                        .actor_kind_id
+                        .as_ref()
+                        .expect("validated kill objective must have a kind ID");
+                    let actor = self
+                        .content
+                        .actor(kind_id)
+                        .expect("validated objective actor must remain available");
+                    entities.push(stamped_spawn(
+                        actor_from_spawn(
+                            objective
+                                .actor_instance_id
+                                .as_ref()
+                                .expect("validated kill objective must have an instance ID"),
+                            kind_id,
+                            ContentPosition {
+                                x: u16::try_from(first_center.x + 1)
+                                    .expect("objective x must fit u16"),
+                                y: u16::try_from(first_center.y).expect("objective y must fit u16"),
+                            },
+                            actor.max_hp,
+                            actor.speed,
+                            INITIAL_MONSTER_ENERGY_NEED,
+                            actor_starts_alerted(actor),
+                        ),
+                        actor,
+                    ));
+                }
+                TaskObjectiveKind::KillActorKind => {
+                    let kind_id = objective
+                        .actor_kind_id
+                        .as_ref()
+                        .expect("validated counted kill objective must have a kind ID");
+                    let actor = self
+                        .content
+                        .actor(kind_id)
+                        .expect("validated objective actor must remain available");
+                    let remaining = self
+                        .task_states
+                        .get(floor_task_id(definition))
+                        .map_or(objective.required, |state| {
+                            state.required.saturating_sub(state.current)
+                        });
+                    let spawn_count = objective
+                        .spawn_count
+                        .unwrap_or(objective.required)
+                        .min(remaining);
+                    for ordinal in 0..spawn_count {
+                        entities.push(stamped_spawn(
+                            actor_from_spawn(
+                                &format!("{}.task-target.{}", definition.id, ordinal + 1),
+                                kind_id,
+                                ContentPosition {
+                                    x: u16::try_from(
+                                        first_center.x
+                                            + 1
+                                            + i32::try_from(ordinal).unwrap_or(i32::MAX),
+                                    )
+                                    .expect("objective x must fit u16"),
+                                    y: u16::try_from(first_center.y)
+                                        .expect("objective y must fit u16"),
+                                },
+                                actor.max_hp,
+                                actor.speed,
+                                INITIAL_MONSTER_ENERGY_NEED,
+                                actor_starts_alerted(actor),
+                            ),
+                            actor,
+                        ));
+                    }
+                }
+                TaskObjectiveKind::EnterFloor => {}
+            }
+        }
+        for region in &mut generated_regions {
+            region.state.cells.sort();
+            region.state.cells.dedup();
+        }
+        generated_regions.sort_by(|left, right| left.state.region_id.cmp(&right.state.region_id));
+        self.resolve_floor_connection_targets(definition, &mut floor_connections)?;
+        Ok(FloorState {
+            id: definition.id.clone(),
+            dungeon_instance_id,
+            width,
+            height,
+            terrain,
+            player_position: first_center,
+            entities,
+            items,
+            explored: vec![false; usize::from(width) * usize::from(height)],
+            revealed_terrain: BTreeSet::new(),
+            connections: floor_connections,
+            regions: generated_regions
+                .into_iter()
+                .map(|region| region.state)
+                .collect(),
+        })
+    }
+}
+
+impl Game {
+    fn resolve_floor_connection_targets(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        connections: &mut [FloorConnectionState],
+    ) -> Result<(), CoreError> {
+        let mut selected_dynamic_targets = BTreeSet::new();
+        for state in connections {
+            let connection = definition
+                .connections
+                .iter()
+                .find(|connection| connection.id == state.id)
+                .ok_or(CoreError::InvalidSave(
+                    "generated floor connection is missing from content",
+                ))?;
+            if connection.target_candidates.is_empty() {
+                state.target_floor_id = Some(connection.target_floor_id.clone());
+                state.target_connection_id = connection.target_connection_id.clone();
+                continue;
+            }
+            let mut eligible = connection
+                .target_candidates
+                .iter()
+                .filter(|candidate| !selected_dynamic_targets.contains(&candidate.target_floor_id))
+                .collect::<Vec<_>>();
+            if eligible.is_empty() {
+                eligible.extend(connection.target_candidates.iter());
+            }
+            let weights = eligible
+                .iter()
+                .map(|candidate| u32::from(candidate.weight))
+                .collect::<Vec<_>>();
+            let selected = eligible[self.roll_weighted_index(&weights)];
+            state.target_floor_id = Some(selected.target_floor_id.clone());
+            state.target_connection_id = Some(selected.target_connection_id.clone());
+            selected_dynamic_targets.insert(selected.target_floor_id.clone());
+        }
+        Ok(())
+    }
+
+    pub(in crate::game) fn generate_budgeted_rooms(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        geometry: &ProceduralRoomGeometryDefinition,
+    ) -> Vec<GeneratedRoom> {
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("room geometry requires a generation budget");
+        let placement_count = budget
+            .room_placements
+            .expect("validated room placement count must remain available");
+        let mut remaining_area = budget
+            .room_area_tiles
+            .expect("validated room area budget must remain available");
+        let columns = if placement_count <= 4 { 2 } else { 3 };
+        let rows = placement_count.div_ceil(columns);
+        let interior_width = definition.width - 2;
+        let interior_height = definition.height - 2;
+        let minimum_room_area = geometry
+            .shapes
+            .iter()
+            .map(|candidate| match candidate.shape {
+                ProceduralRoomShape::Rectangle => {
+                    u32::from(geometry.min_width) * u32::from(geometry.min_height)
+                }
+                ProceduralRoomShape::Cross => {
+                    u32::from(geometry.min_width) + u32::from(geometry.min_height) - 1
+                }
+            })
+            .min()
+            .expect("validated room geometry must retain a shape");
+        let mut rooms = Vec::with_capacity(usize::from(placement_count));
+
+        for ordinal in 0..placement_count {
+            let column = ordinal % columns;
+            let row = ordinal / columns;
+            let cell_left = 1 + interior_width * column / columns;
+            let cell_right = 1 + interior_width * (column + 1) / columns;
+            let cell_top = 1 + interior_height * row / rows;
+            let cell_bottom = 1 + interior_height * (row + 1) / rows;
+            let future_room_count = placement_count - ordinal - 1;
+            let maximum_room_area =
+                remaining_area - u32::from(future_room_count) * minimum_room_area;
+            let mut shape_candidates = Vec::new();
+
+            for shape_candidate in &geometry.shapes {
+                let mut candidates = Vec::new();
+                for y in cell_top..cell_bottom {
+                    for x in cell_left..cell_right {
+                        for height in geometry.min_height..=geometry.max_height {
+                            for width in geometry.min_width..=geometry.max_width {
+                                if x + width > cell_right || y + height > cell_bottom {
+                                    continue;
+                                }
+                                let room = GeneratedRoom {
+                                    id: String::new(),
+                                    x: i32::from(x),
+                                    y: i32::from(y),
+                                    width: i32::from(width),
+                                    height: i32::from(height),
+                                    shape: shape_candidate.shape,
+                                };
+                                if room.area() <= maximum_room_area {
+                                    candidates.push(room);
+                                }
+                            }
+                        }
+                    }
+                }
+                if !candidates.is_empty() {
+                    shape_candidates.push((shape_candidate.weight, candidates));
+                }
+            }
+            let shape_index = if shape_candidates.len() == 1 {
+                0
+            } else {
+                let weights = shape_candidates
+                    .iter()
+                    .map(|(weight, _)| *weight)
+                    .collect::<Vec<_>>();
+                self.roll_weighted_index(&weights)
+            };
+            let candidates = &shape_candidates[shape_index].1;
+            let candidate_index = if candidates.len() == 1 {
+                0
+            } else {
+                usize::try_from(
+                    self.rng.bounded(
+                        u64::try_from(candidates.len())
+                            .expect("room geometry candidate count must fit u64"),
+                    ),
+                )
+                .expect("room geometry candidate index must fit usize")
+            };
+            let mut room = candidates[candidate_index].clone();
+            room.id = match ordinal {
+                0 => "entry".to_owned(),
+                1 => "remote".to_owned(),
+                _ => format!("room.{}", ordinal + 1),
+            };
+            remaining_area -= room.area();
+            rooms.push(room);
+        }
+
+        rooms
+    }
+
+    fn place_classic_pit(
+        &mut self,
+        floor: &ProceduralFloorDefinition,
+        pit: &ProceduralPitDefinition,
+        approach: Position,
+        floor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> GeneratedPitPlacement {
+        let placement_count = floor
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.room_placements)
+            .expect("validated pit requires room placement budget");
+        let columns = if placement_count <= 4 { 2 } else { 3 };
+        let rows = placement_count.div_ceil(columns);
+        let ordinal = placement_count - 1;
+        let column = ordinal % columns;
+        let row = ordinal / columns;
+        let interior_width = floor.width - 2;
+        let interior_height = floor.height - 2;
+        let cell_left = 1 + interior_width * column / columns;
+        let cell_right = 1 + interior_width * (column + 1) / columns;
+        let cell_top = 1 + interior_height * row / rows;
+        let cell_bottom = 1 + interior_height * (row + 1) / rows;
+        let total_width = pit.inner_width + 6;
+        let total_height = pit.inner_height + 6;
+        let maximum_x = i32::from(floor.width - total_width - 1);
+        let maximum_y = i32::from(floor.height - total_height - 1);
+        let origin = Position {
+            x: ((i32::from(cell_left + cell_right) - i32::from(total_width)) / 2)
+                .clamp(1, maximum_x),
+            y: ((i32::from(cell_top + cell_bottom) - i32::from(total_height)) / 2)
+                .clamp(1, maximum_y),
+        };
+        let center_y = origin.y + i32::from(total_height / 2);
+        let outer_entrance = Position {
+            x: origin.x,
+            y: center_y,
+        };
+        let inner_entrance = Position {
+            x: origin.x + 2,
+            y: center_y,
+        };
+
+        for local_y in 0..total_height {
+            for local_x in 0..total_width {
+                let on_outer_wall = local_x == 0
+                    || local_y == 0
+                    || local_x + 1 == total_width
+                    || local_y + 1 == total_height;
+                let on_inner_wall = local_x == 2
+                    || local_y == 2
+                    || local_x + 3 == total_width
+                    || local_y + 3 == total_height;
+                let terrain_id = if on_outer_wall || on_inner_wall {
+                    &floor.wall_terrain_id
+                } else {
+                    floor_terrain_id
+                };
+                set_generated_terrain(
+                    terrain,
+                    floor.width,
+                    Position {
+                        x: origin.x + i32::from(local_x),
+                        y: origin.y + i32::from(local_y),
+                    },
+                    terrain_id,
+                );
+            }
+        }
+        set_generated_terrain(terrain, floor.width, outer_entrance, floor_terrain_id);
+        carve_generated_corridor(
+            terrain,
+            floor.width,
+            approach,
+            outer_entrance,
+            floor_terrain_id,
+        );
+        set_generated_terrain(
+            terrain,
+            floor.width,
+            inner_entrance,
+            &floor.closed_door_terrain_id,
+        );
+        GeneratedPitPlacement {
+            definition: pit.clone(),
+            origin,
+            outer_entrance,
+            inner_entrance,
+        }
+    }
+
+    pub(in crate::game) fn generate_connected_cavern(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Position {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let area = definition
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.cavern_area_tiles)
+            .expect("validated cavern area budget must remain available");
+        let origin = Position {
+            x: i32::from(definition.width / 2),
+            y: i32::from(definition.height / 2),
+        };
+        let mut carved = BTreeSet::from([origin]);
+        set_generated_terrain(terrain, definition.width, origin, terrain_id);
+
+        while carved.len() < usize::try_from(area).expect("cavern area must fit usize") {
+            let mut frontier = carved
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !carved.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("cavern frontier count must fit u64"),
+                ))
+                .expect("cavern frontier index must fit usize")
+            };
+            let position = frontier[index];
+            carved.insert(position);
+            set_generated_terrain(terrain, definition.width, position, terrain_id);
+        }
+
+        origin
+    }
+
+    pub(in crate::game) fn generate_connected_lake(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        deep_terrain_id: &str,
+        shallow_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Position {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("lake requires a generation budget");
+        let area = usize::try_from(
+            budget
+                .lake_area_tiles
+                .expect("validated lake area budget must remain available"),
+        )
+        .expect("lake area must fit usize");
+        let deep_area = usize::try_from(
+            budget
+                .lake_deep_area_tiles
+                .expect("validated deep lake area budget must remain available"),
+        )
+        .expect("deep lake area must fit usize");
+        let origin = Position {
+            x: i32::from(definition.width / 2),
+            y: i32::from(definition.height / 2),
+        };
+        let mut selected = BTreeSet::from([origin]);
+        let mut insertion_order = vec![origin];
+
+        while insertion_order.len() < area {
+            let mut frontier = selected
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !selected.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("lake frontier count must fit u64"),
+                ))
+                .expect("lake frontier index must fit usize")
+            };
+            let position = frontier[index];
+            selected.insert(position);
+            insertion_order.push(position);
+        }
+
+        for (ordinal, position) in insertion_order.into_iter().enumerate() {
+            let terrain_id = if ordinal < deep_area {
+                deep_terrain_id
+            } else {
+                shallow_terrain_id
+            };
+            set_generated_terrain(terrain, definition.width, position, terrain_id);
+        }
+        origin
+    }
+
+    pub(in crate::game) fn generate_river(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        deep_terrain_id: &str,
+        shallow_terrain_id: &str,
+        target: Position,
+        terrain: &mut [String],
+    ) {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let area = usize::try_from(
+            definition
+                .generation_budget
+                .as_ref()
+                .and_then(|budget| budget.river_area_tiles)
+                .expect("validated river area budget must remain available"),
+        )
+        .expect("river area must fit usize");
+        let side = self.rng.bounded(4);
+        let start = match side {
+            0 => Position {
+                x: 1 + i32::try_from(self.rng.bounded(u64::from(definition.width - 2)))
+                    .expect("river start x must fit i32"),
+                y: 1,
+            },
+            1 => Position {
+                x: i32::from(definition.width - 2),
+                y: 1 + i32::try_from(self.rng.bounded(u64::from(definition.height - 2)))
+                    .expect("river start y must fit i32"),
+            },
+            2 => Position {
+                x: 1 + i32::try_from(self.rng.bounded(u64::from(definition.width - 2)))
+                    .expect("river start x must fit i32"),
+                y: i32::from(definition.height - 2),
+            },
+            _ => Position {
+                x: 1,
+                y: 1 + i32::try_from(self.rng.bounded(u64::from(definition.height - 2)))
+                    .expect("river start y must fit i32"),
+            },
+        };
+        let mut current = start;
+        let mut centerline = vec![current];
+        while current != target {
+            let move_x = current.x != target.x;
+            let move_y = current.y != target.y;
+            let advance_x = move_x && (!move_y || self.rng.bounded(2) == 0);
+            if advance_x {
+                current.x += (target.x - current.x).signum();
+            } else {
+                current.y += (target.y - current.y).signum();
+            }
+            centerline.push(current);
+        }
+        debug_assert!(centerline.len() <= area);
+        let mut painted = centerline.iter().copied().collect::<BTreeSet<_>>();
+        for position in &centerline {
+            set_generated_terrain(terrain, definition.width, *position, deep_terrain_id);
+        }
+
+        while painted.len() < area {
+            let mut frontier = painted
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !painted.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("river frontier count must fit u64"),
+                ))
+                .expect("river frontier index must fit usize")
+            };
+            let position = frontier[index];
+            painted.insert(position);
+            set_generated_terrain(terrain, definition.width, position, shallow_terrain_id);
+        }
+    }
+
+    pub(in crate::game) fn generated_actor(
+        &self,
+        id: String,
+        kind_id: &str,
+        position: Position,
+    ) -> Actor {
+        let actor = self
+            .content
+            .actor(kind_id)
+            .expect("validated generated actor must remain available");
+        actor_from_spawn(
+            &id,
+            kind_id,
+            ContentPosition {
+                x: u16::try_from(position.x).expect("generated actor x must fit u16"),
+                y: u16::try_from(position.y).expect("generated actor y must fit u16"),
+            },
+            actor.max_hp,
+            actor.speed,
+            INITIAL_MONSTER_ENERGY_NEED,
+            actor_starts_alerted(actor),
+        )
+    }
+
+    fn generated_pack_actor(
+        &self,
+        id: String,
+        kind_id: &str,
+        position: Position,
+        pack: MonsterPackIdentity,
+    ) -> Actor {
+        let mut actor = self.generated_actor(id, kind_id, position);
+        actor.pack = Some(pack);
+        actor
+    }
+
+    fn generate_classic_pit_actors(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        pit: &GeneratedPitPlacement,
+        occupied: &mut BTreeSet<Position>,
+    ) -> Vec<Actor> {
+        let table = self
+            .content
+            .encounter_table(&pit.definition.encounter_table_id)
+            .expect("validated pit encounter table must remain available")
+            .clone();
+        let eligible = table
+            .entries
+            .iter()
+            .filter(|entry| {
+                entry.min_depth <= definition.depth
+                    && definition.depth <= entry.max_depth
+                    && self
+                        .content
+                        .actor(&entry.actor_kind_id)
+                        .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        let pit_weights = eligible
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        let mut roster = (0..pit.definition.roster_size)
+            .map(|_| {
+                eligible[self.roll_weighted_index(&pit_weights)]
+                    .actor_kind_id
+                    .clone()
+            })
+            .collect::<Vec<_>>();
+        roster.sort_by(|left, right| {
+            let left_level = self
+                .content
+                .actor(left)
+                .expect("pit roster actor must remain available")
+                .level;
+            let right_level = self
+                .content
+                .actor(right)
+                .expect("pit roster actor must remain available")
+                .level;
+            right_level.cmp(&left_level).then_with(|| left.cmp(right))
+        });
+
+        let half_width = pit.definition.inner_width / 2;
+        let half_height = pit.definition.inner_height / 2;
+        let maximum_rank = pit.definition.roster_size - 1;
+        let mut ordinal = 0_u16;
+        let mut actors = Vec::new();
+        for local_y in 0..pit.definition.inner_height {
+            for local_x in 0..pit.definition.inner_width {
+                let dx = local_x.abs_diff(half_width);
+                let dy = local_y.abs_diff(half_height);
+                let horizontal_rank = dx * maximum_rank / half_width;
+                let vertical_rank = dy * maximum_rank / half_height;
+                let rank = usize::from(horizontal_rank.max(vertical_rank));
+                let kind_id = &roster[rank];
+                let position = Position {
+                    x: pit.origin.x + 3 + i32::from(local_x),
+                    y: pit.origin.y + 3 + i32::from(local_y),
+                };
+                occupied.insert(position);
+                ordinal += 1;
+                actors.push(self.generated_actor(
+                    format!("{}.pit.{}", definition.id, ordinal),
+                    kind_id,
+                    position,
+                ));
+            }
+        }
+        actors
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(in crate::game) fn generate_dynamic_encounter_groups(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        table: &EncounterTableDefinition,
+        eligible_entries: &[EncounterEntryDefinition],
+        rooms: &[GeneratedRoom],
+        room_id: &str,
+        reserved_actor_slots: u16,
+        ordinary_actor_reserve: u16,
+        fill_plain: bool,
+        id_prefix: &str,
+        occupied: &mut BTreeSet<Position>,
+    ) -> Vec<Actor> {
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("dynamic encounters require a generation budget");
+        let group_placement_limit = budget
+            .group_placements
+            .expect("validated group placement budget must remain available");
+        let mut remaining_group_actor_slots = budget
+            .group_actor_slots
+            .expect("validated group actor budget must remain available");
+        let mut remaining_actor_slots = budget.actor_slots.saturating_sub(reserved_actor_slots);
+        let grouped_entries = eligible_entries
+            .iter()
+            .filter(|entry| entry.group.is_some())
+            .cloned()
+            .collect::<Vec<_>>();
+        let plain_entries = eligible_entries
+            .iter()
+            .filter(|entry| entry.group.is_none())
+            .cloned()
+            .collect::<Vec<_>>();
+        let minimum_group_companions = grouped_entries
+            .iter()
+            .filter_map(|entry| entry.group.as_ref())
+            .map(rfb_content::EncounterGroupDefinition::min_companion_count)
+            .min()
+            .expect("validated dynamic floor must have a grouped encounter");
+        let mut generated = Vec::new();
+        let mut leader_ordinal = 0_u16;
+
+        for group_slot in 0..group_placement_limit {
+            let future_group_count = group_placement_limit - group_slot - 1;
+            let future_companion_reserve =
+                future_group_count.saturating_mul(minimum_group_companions);
+            let future_actor_reserve = future_group_count
+                .saturating_mul(minimum_group_companions.saturating_add(1))
+                .saturating_add(ordinary_actor_reserve);
+            let available_companion_slots = remaining_group_actor_slots
+                .saturating_sub(future_companion_reserve)
+                .min(
+                    remaining_actor_slots
+                        .saturating_sub(future_actor_reserve)
+                        .saturating_sub(1),
+                );
+            let mut candidates = grouped_entries
+                .iter()
+                .filter(|entry| {
+                    entry.group.as_ref().is_some_and(|group| {
+                        group.min_companion_count() <= available_companion_slots
+                    })
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            let mut placed_group = None;
+            while !candidates.is_empty() {
+                let weights = candidates
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                let selected_index = if candidates.len() == 1 {
+                    0
+                } else {
+                    self.roll_weighted_index(&weights)
+                };
+                let entry = candidates.remove(selected_index);
+                let group = entry
+                    .group
+                    .as_ref()
+                    .expect("grouped encounter candidate must retain its group");
+                let friend_min = group
+                    .friends
+                    .as_ref()
+                    .map_or(0, |friends| friends.min_count);
+                let friend_max = group
+                    .friends
+                    .as_ref()
+                    .map_or(0, |friends| friends.max_count);
+                let escort_min = group.escort.as_ref().map_or(0, |escort| escort.min_count);
+                let escort_max = group.escort.as_ref().map_or(0, |escort| escort.max_count);
+                let friend_upper =
+                    friend_max.min(available_companion_slots.saturating_sub(escort_min));
+                let mut friend_count = self.roll_inclusive(friend_min, friend_upper);
+                let escort_upper =
+                    escort_max.min(available_companion_slots.saturating_sub(friend_count));
+                let mut escort_count = self.roll_inclusive(escort_min, escort_upper);
+                let formation_placement = loop {
+                    let placement_candidates = formation_placement_candidates(
+                        rooms,
+                        room_id,
+                        occupied,
+                        group.formation,
+                        friend_count.saturating_add(escort_count),
+                    );
+                    if !placement_candidates.is_empty() {
+                        let placement_index = if placement_candidates.len() == 1 {
+                            0
+                        } else {
+                            usize::try_from(
+                                self.rng
+                                    .bounded(u64::try_from(placement_candidates.len()).expect(
+                                        "formation placement candidate count must fit u64",
+                                    )),
+                            )
+                            .expect("formation placement candidate index must fit usize")
+                        };
+                        break Some(placement_candidates[placement_index].clone());
+                    }
+                    if escort_count > escort_min {
+                        escort_count -= 1;
+                    } else if friend_count > friend_min {
+                        friend_count -= 1;
+                    } else {
+                        break None;
+                    }
+                };
+                let Some((leader_position, companion_positions)) = formation_placement else {
+                    continue;
+                };
+                placed_group = Some((
+                    entry,
+                    friend_count,
+                    escort_count,
+                    leader_position,
+                    companion_positions,
+                ));
+                break;
+            }
+            let Some((entry, friend_count, escort_count, leader_position, companion_positions)) =
+                placed_group
+            else {
+                break;
+            };
+
+            leader_ordinal += 1;
+            occupied.insert(leader_position);
+            let leader_id = format!("{id_prefix}.encounter.{leader_ordinal}");
+            let pack_id = format!("{id_prefix}.pack.{leader_ordinal}");
+            let pack_ai = entry
+                .group
+                .as_ref()
+                .expect("grouped encounter must retain pack AI")
+                .pack_ai;
+            generated.push(self.generated_pack_actor(
+                leader_id.clone(),
+                &entry.actor_kind_id,
+                leader_position,
+                MonsterPackIdentity {
+                    id: pack_id.clone(),
+                    leader_id: leader_id.clone(),
+                    role: MonsterPackRoleDto::Leader,
+                    behavior: monster_pack_behavior_dto(pack_ai.leader),
+                },
+            ));
+            for (index, position) in companion_positions
+                .iter()
+                .take(usize::from(friend_count))
+                .copied()
+                .enumerate()
+            {
+                occupied.insert(position);
+                generated.push(self.generated_pack_actor(
+                    format!(
+                        "{id_prefix}.encounter.{leader_ordinal}.friend.{}",
+                        index + 1
+                    ),
+                    &entry.actor_kind_id,
+                    position,
+                    MonsterPackIdentity {
+                        id: pack_id.clone(),
+                        leader_id: leader_id.clone(),
+                        role: MonsterPackRoleDto::Member,
+                        behavior: monster_pack_behavior_dto(pack_ai.friends),
+                    },
+                ));
+            }
+            if escort_count > 0 {
+                let escort = entry
+                    .group
+                    .as_ref()
+                    .and_then(|group| group.escort.as_ref())
+                    .expect("positive escort count must retain an escort table");
+                let eligible_escorts = escort
+                    .entries
+                    .iter()
+                    .filter(|escort_entry| {
+                        escort_entry.min_depth <= definition.depth
+                            && definition.depth <= escort_entry.max_depth
+                            && self
+                                .content
+                                .actor(&escort_entry.actor_kind_id)
+                                .is_some_and(|actor| actor.level <= u32::from(definition.depth))
+                    })
+                    .collect::<Vec<_>>();
+                let escort_weights = eligible_escorts
+                    .iter()
+                    .map(|escort_entry| escort_entry.weight)
+                    .collect::<Vec<_>>();
+                for (index, position) in companion_positions
+                    .iter()
+                    .skip(usize::from(friend_count))
+                    .take(usize::from(escort_count))
+                    .copied()
+                    .enumerate()
+                {
+                    let escort_index = if eligible_escorts.len() == 1 {
+                        0
+                    } else {
+                        self.roll_weighted_index(&escort_weights)
+                    };
+                    let kind_id = &eligible_escorts[escort_index].actor_kind_id;
+                    occupied.insert(position);
+                    generated.push(self.generated_pack_actor(
+                        format!(
+                            "{id_prefix}.encounter.{leader_ordinal}.escort.{}",
+                            index + 1
+                        ),
+                        kind_id,
+                        position,
+                        MonsterPackIdentity {
+                            id: pack_id.clone(),
+                            leader_id: leader_id.clone(),
+                            role: MonsterPackRoleDto::Member,
+                            behavior: monster_pack_behavior_dto(pack_ai.escorts),
+                        },
+                    ));
+                }
+            }
+            let companion_count = friend_count.saturating_add(escort_count);
+            remaining_group_actor_slots =
+                remaining_group_actor_slots.saturating_sub(companion_count);
+            remaining_actor_slots =
+                remaining_actor_slots.saturating_sub(companion_count.saturating_add(1));
+        }
+
+        let plain_weights = plain_entries
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
+        while fill_plain && leader_ordinal < table.rolls && remaining_actor_slots > 0 {
+            let entry_index = if plain_entries.len() == 1 {
+                0
+            } else {
+                self.roll_weighted_index(&plain_weights)
+            };
+            let entry = &plain_entries[entry_index];
+            let position = self.choose_generated_room_position(rooms, room_id, occupied);
+            occupied.insert(position);
+            leader_ordinal += 1;
+            generated.push(self.generated_actor(
+                format!("{}.encounter.{leader_ordinal}", definition.id),
+                &entry.actor_kind_id,
+                position,
+            ));
+            remaining_actor_slots -= 1;
+        }
+        generated
+    }
+
+    fn roll_inclusive(&mut self, minimum: u16, maximum: u16) -> u16 {
+        debug_assert!(minimum <= maximum);
+        if minimum == maximum {
+            minimum
+        } else {
+            minimum
+                + u16::try_from(self.rng.bounded(u64::from(maximum - minimum) + 1))
+                    .expect("bounded encounter group count must fit u16")
+        }
+    }
+
+    pub(in crate::game) fn select_spatial_vault_placements(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        eligible_candidates: &[ThemeVaultCandidateDefinition],
+        guardian_present: bool,
+        corridor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Vec<GeneratedVaultPlacement> {
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("spatial vault placement requires a generation budget");
+        let placement_limit = budget
+            .vault_placements
+            .expect("validated spatial vault count must remain available");
+        let mut remaining_area = budget
+            .vault_area_tiles
+            .expect("validated spatial vault area must remain available");
+        let fixed_actor_slots = definition
+            .nest
+            .as_ref()
+            .map_or(0, |nest| nest.spawn_count)
+            .saturating_add(u16::from(guardian_present));
+        let ordinary_placement_reserve = budget.region_placements.unwrap_or(1);
+        let mut remaining_vault_actor_slots = budget
+            .actor_slots
+            .saturating_sub(fixed_actor_slots)
+            .saturating_sub(ordinary_placement_reserve);
+        let mut remaining_vault_loot_placements = budget
+            .loot_placements
+            .saturating_sub(ordinary_placement_reserve);
+        let mut remaining_candidates = eligible_candidates.to_vec();
+        let mut placements = Vec::new();
+
+        'placement_slots: for ordinal in 1..=placement_limit {
+            loop {
+                let affordable = remaining_candidates
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, candidate)| {
+                        let vault = self
+                            .content
+                            .vault(&candidate.vault_id)
+                            .expect("validated spatial vault must remain available");
+                        let actor_cost = vault
+                            .encounter_groups
+                            .iter()
+                            .map(|group| {
+                                u16::try_from(group.member_positions.len())
+                                    .expect("validated vault actor count must fit u16")
+                            })
+                            .sum::<u16>();
+                        let loot_cost = u16::try_from(vault.loot_spawns.len())
+                            .expect("validated vault loot count must fit u16");
+                        let area = u32::from(vault.width) * u32::from(vault.height);
+                        (actor_cost <= remaining_vault_actor_slots
+                            && loot_cost <= remaining_vault_loot_placements
+                            && area <= remaining_area)
+                            .then_some((index, candidate.weight))
+                    })
+                    .collect::<Vec<_>>();
+                if affordable.is_empty() {
+                    break 'placement_slots;
+                }
+                let selected_affordable = if affordable.len() == 1 {
+                    0
+                } else {
+                    let weights = affordable
+                        .iter()
+                        .map(|(_, weight)| *weight)
+                        .collect::<Vec<_>>();
+                    self.roll_weighted_index(&weights)
+                };
+                let candidate_index = affordable[selected_affordable].0;
+                let candidate = remaining_candidates.remove(candidate_index);
+                let vault = self
+                    .content
+                    .vault(&candidate.vault_id)
+                    .expect("validated spatial vault must remain available")
+                    .clone();
+                let placement_candidates = free_vault_placement_candidates(
+                    terrain,
+                    definition.width,
+                    definition.height,
+                    &definition.wall_terrain_id,
+                    corridor_terrain_id,
+                    &vault,
+                    &self.content,
+                );
+                if placement_candidates.is_empty() {
+                    continue;
+                }
+                let placement_index = if placement_candidates.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(placement_candidates.len())
+                                .expect("vault placement candidate count must fit u64"),
+                        ),
+                    )
+                    .expect("vault placement candidate index must fit usize")
+                };
+                let candidate = placement_candidates[placement_index].clone();
+                let actor_cost = vault
+                    .encounter_groups
+                    .iter()
+                    .map(|group| {
+                        u16::try_from(group.member_positions.len())
+                            .expect("validated vault actor count must fit u16")
+                    })
+                    .sum::<u16>();
+                let loot_cost = u16::try_from(vault.loot_spawns.len())
+                    .expect("validated vault loot count must fit u16");
+                let area = u32::from(vault.width) * u32::from(vault.height);
+                let placement = GeneratedVaultPlacement {
+                    vault,
+                    origin: candidate.origin,
+                    transform: candidate.transform,
+                    ordinal,
+                    connector_cells: candidate.connector_cells,
+                };
+                apply_generated_vault_placement(
+                    terrain,
+                    definition.width,
+                    corridor_terrain_id,
+                    &placement,
+                );
+                remaining_vault_actor_slots =
+                    remaining_vault_actor_slots.saturating_sub(actor_cost);
+                remaining_vault_loot_placements =
+                    remaining_vault_loot_placements.saturating_sub(loot_cost);
+                remaining_area = remaining_area.saturating_sub(area);
+                placements.push(placement);
+                break;
+            }
+        }
+        placements
+    }
+
+    pub(in crate::game) fn place_terrain_features(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        eligible_entries: &[TerrainFeatureEntryDefinition],
+        context: TerrainFeaturePlacementContext<'_>,
+        terrain: &mut [String],
+    ) -> Vec<GeneratedTerrainFeature> {
+        let placement_limit = definition
+            .generation_budget
+            .as_ref()
+            .and_then(|budget| budget.feature_placements)
+            .expect("terrain feature placement requires a validated budget");
+        let mut placements = Vec::new();
+
+        'placement_slots: for _ in 0..placement_limit {
+            let mut remaining_entries = eligible_entries.to_vec();
+            loop {
+                if remaining_entries.is_empty() {
+                    break 'placement_slots;
+                }
+                let selected_index = if remaining_entries.len() == 1 {
+                    0
+                } else {
+                    let weights = remaining_entries
+                        .iter()
+                        .map(|entry| entry.weight)
+                        .collect::<Vec<_>>();
+                    self.roll_weighted_index(&weights)
+                };
+                let entry = remaining_entries.remove(selected_index);
+                let candidates = terrain_feature_placement_candidates(
+                    terrain,
+                    definition.width,
+                    context.floor_terrain_id,
+                    context.room_floor_terrain_ids,
+                    context.rooms,
+                    context.reserved,
+                    entry.placement,
+                );
+                if candidates.is_empty() {
+                    continue;
+                }
+                let position_index = if candidates.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(candidates.len())
+                                .expect("terrain feature candidate count must fit u64"),
+                        ),
+                    )
+                    .expect("terrain feature candidate index must fit usize")
+                };
+                let position = candidates[position_index];
+                set_generated_terrain(terrain, definition.width, position, &entry.terrain_id);
+                placements.push(GeneratedTerrainFeature {
+                    terrain_id: entry.terrain_id,
+                    position,
+                });
+                break;
+            }
+        }
+        placements
+    }
+
+    fn choose_generated_room_position(
+        &mut self,
+        rooms: &[GeneratedRoom],
+        room_id: &str,
+        occupied: &BTreeSet<Position>,
+    ) -> Position {
+        let room = rooms
+            .iter()
+            .find(|room| room.id == room_id)
+            .expect("validated procedural room ID must remain available");
+        let candidates = (room.y..room.y + room.height)
+            .flat_map(|y| (room.x..room.x + room.width).map(move |x| Position { x, y }))
+            .filter(|position| room.contains(*position) && !occupied.contains(position))
+            .collect::<Vec<_>>();
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("generated room candidate count must fit u64"),
+        ))
+        .expect("bounded generated room candidate index must fit usize");
+        candidates[index]
+    }
+
+    fn choose_generated_region_position(
+        &mut self,
+        region: &GeneratedRegion,
+        terrain: &[String],
+        width: u16,
+        occupied: &BTreeSet<Position>,
+    ) -> Position {
+        let candidates =
+            generated_region_open_positions(region, terrain, width, &self.content, occupied);
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("regional candidate count must fit u64"),
+        ))
+        .expect("regional candidate index must fit usize");
+        candidates[index]
+    }
+}
+
+impl Game {
+    pub(in crate::game) fn generate_maze(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        maze: &ProceduralMazeDefinition,
+        floor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        let left = i32::from((definition.width - maze.width) / 2);
+        let top = i32::from((definition.height - maze.height) / 2);
+        for y in top..top + i32::from(maze.height) {
+            for x in left..left + i32::from(maze.width) {
+                set_generated_terrain(
+                    terrain,
+                    definition.width,
+                    Position { x, y },
+                    &definition.wall_terrain_id,
+                );
+            }
+        }
+
+        let columns = usize::from(maze.width.div_ceil(2));
+        let rows = usize::from(maze.height.div_ceil(2));
+        let vertex_count = columns * rows;
+        let root = usize::try_from(
+            self.rng
+                .bounded(u64::try_from(vertex_count).expect("maze vertex count must fit u64")),
+        )
+        .expect("maze root must fit usize");
+        let node_position = |node: usize| Position {
+            x: left + i32::try_from((node % columns) * 2).expect("maze x must fit i32"),
+            y: top + i32::try_from((node / columns) * 2).expect("maze y must fit i32"),
+        };
+        let mut visited = BTreeSet::from([root]);
+        let mut stack = vec![root];
+        let mut carved = BTreeSet::new();
+        let root_position = node_position(root);
+        carved.insert(root_position);
+        set_generated_terrain(terrain, definition.width, root_position, floor_terrain_id);
+
+        while let Some(&node) = stack.last() {
+            let column = node % columns;
+            let row = node / columns;
+            let mut neighbors = Vec::new();
+            if row > 0 && !visited.contains(&(node - columns)) {
+                neighbors.push(node - columns);
+            }
+            if column + 1 < columns && !visited.contains(&(node + 1)) {
+                neighbors.push(node + 1);
+            }
+            if row + 1 < rows && !visited.contains(&(node + columns)) {
+                neighbors.push(node + columns);
+            }
+            if column > 0 && !visited.contains(&(node - 1)) {
+                neighbors.push(node - 1);
+            }
+            if neighbors.is_empty() {
+                stack.pop();
+                continue;
+            }
+            let neighbor_index = if neighbors.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(neighbors.len()).expect("maze neighbor count must fit u64"),
+                ))
+                .expect("maze neighbor index must fit usize")
+            };
+            let neighbor = neighbors[neighbor_index];
+            let from = node_position(node);
+            let to = node_position(neighbor);
+            let connector = Position {
+                x: (from.x + to.x) / 2,
+                y: (from.y + to.y) / 2,
+            };
+            for position in [connector, to] {
+                carved.insert(position);
+                set_generated_terrain(terrain, definition.width, position, floor_terrain_id);
+            }
+            visited.insert(neighbor);
+            stack.push(neighbor);
+        }
+
+        carved
+    }
+
+    pub(in crate::game) fn generate_destroyed_region(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        terrain_id: &str,
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        const CARDINAL_OFFSETS: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("destroyed region requires a generation budget");
+        let center_count = usize::from(
+            budget
+                .destruction_centers
+                .expect("validated destruction center budget must remain available"),
+        );
+        let area = usize::try_from(
+            budget
+                .destroyed_area_tiles
+                .expect("validated destroyed area budget must remain available"),
+        )
+        .expect("destroyed area must fit usize");
+        let margin_x = i32::from((definition.width / 5).max(2));
+        let margin_y = i32::from((definition.height / 5).max(2));
+        let mut center_candidates = (margin_y..i32::from(definition.height) - margin_y)
+            .flat_map(|y| {
+                (margin_x..i32::from(definition.width) - margin_x).map(move |x| Position { x, y })
+            })
+            .collect::<Vec<_>>();
+        let mut selected = BTreeSet::new();
+        for _ in 0..center_count {
+            let index = if center_candidates.len() == 1 {
+                0
+            } else {
+                usize::try_from(
+                    self.rng.bounded(
+                        u64::try_from(center_candidates.len())
+                            .expect("destruction center count must fit u64"),
+                    ),
+                )
+                .expect("destruction center index must fit usize")
+            };
+            selected.insert(center_candidates.remove(index));
+        }
+
+        while selected.len() < area {
+            let mut frontier = selected
+                .iter()
+                .flat_map(|position| {
+                    CARDINAL_OFFSETS.map(|(dx, dy)| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+                .filter(|position| {
+                    position.x > 0
+                        && position.y > 0
+                        && position.x + 1 < i32::from(definition.width)
+                        && position.y + 1 < i32::from(definition.height)
+                        && !selected.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = if frontier.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(frontier.len()).expect("destroyed frontier count must fit u64"),
+                ))
+                .expect("destroyed frontier index must fit usize")
+            };
+            selected.insert(frontier[index]);
+        }
+        for position in &selected {
+            set_generated_terrain(terrain, definition.width, *position, terrain_id);
+        }
+        selected
+    }
+
+    pub(in crate::game) fn generate_streamers(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        streamers: &[ProceduralStreamerCandidateDefinition],
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        const DIRECTIONS: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("streamers require a generation budget");
+        let placement_count = budget
+            .streamer_placements
+            .expect("validated streamer placement count must remain available");
+        let area = usize::try_from(
+            budget
+                .streamer_area_tiles
+                .expect("validated streamer area budget must remain available"),
+        )
+        .expect("streamer area must fit usize");
+        let weights = streamers
+            .iter()
+            .map(|candidate| candidate.weight)
+            .collect::<Vec<_>>();
+        let mut assignments = BTreeMap::<Position, String>::new();
+
+        for _ in 0..placement_count {
+            let streamer_index = if streamers.len() == 1 {
+                0
+            } else {
+                self.roll_weighted_index(&weights)
+            };
+            let streamer = &streamers[streamer_index];
+            let mut starts = Vec::new();
+            for y in (definition.height / 3)..=(definition.height * 2 / 3) {
+                for x in (definition.width / 3)..=(definition.width * 2 / 3) {
+                    let position = Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    };
+                    if terrain[generated_terrain_index(definition.width, position)]
+                        == definition.wall_terrain_id
+                    {
+                        starts.push(position);
+                    }
+                }
+            }
+            if starts.is_empty() {
+                starts = generated_wall_positions(definition, terrain);
+            }
+            if starts.is_empty() {
+                break;
+            }
+            starts.sort_by_key(|position| (position.y, position.x));
+            let start_index = if starts.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(starts.len()).expect("streamer start count must fit u64"),
+                ))
+                .expect("streamer start index must fit usize")
+            };
+            let direction_index =
+                usize::try_from(self.rng.bounded(8)).expect("streamer direction must fit usize");
+            let (dx, dy) = DIRECTIONS[direction_index];
+            let mut cursor = starts[start_index];
+            while cursor.x > 0
+                && cursor.y > 0
+                && cursor.x + 1 < i32::from(definition.width)
+                && cursor.y + 1 < i32::from(definition.height)
+            {
+                for y in cursor.y - 1..=cursor.y + 1 {
+                    for x in cursor.x - 1..=cursor.x + 1 {
+                        let position = Position { x, y };
+                        if position.x > 0
+                            && position.y > 0
+                            && position.x + 1 < i32::from(definition.width)
+                            && position.y + 1 < i32::from(definition.height)
+                            && terrain[generated_terrain_index(definition.width, position)]
+                                == definition.wall_terrain_id
+                        {
+                            assignments
+                                .entry(position)
+                                .or_insert_with(|| streamer.terrain_id.clone());
+                        }
+                    }
+                }
+                cursor.x += dx;
+                cursor.y += dy;
+            }
+        }
+
+        let mut painted = BTreeSet::new();
+        while painted.len() < area {
+            let mut candidates = assignments
+                .iter()
+                .filter_map(|(position, terrain_id)| {
+                    (!painted.contains(position)
+                        && terrain[generated_terrain_index(definition.width, *position)]
+                            == definition.wall_terrain_id)
+                        .then_some((*position, terrain_id.as_str()))
+                })
+                .collect::<Vec<_>>();
+            candidates.sort_by_key(|(position, _)| (position.y, position.x));
+            if candidates.is_empty() {
+                let fallback = generated_wall_positions(definition, terrain);
+                if fallback.is_empty() {
+                    break;
+                }
+                let index = if fallback.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(fallback.len())
+                                .expect("streamer fallback count must fit u64"),
+                        ),
+                    )
+                    .expect("streamer fallback index must fit usize")
+                };
+                let position = fallback[index];
+                set_generated_terrain(
+                    terrain,
+                    definition.width,
+                    position,
+                    &streamers[0].terrain_id,
+                );
+                painted.insert(position);
+                continue;
+            }
+            let index = if candidates.len() == 1 {
+                0
+            } else {
+                usize::try_from(self.rng.bounded(
+                    u64::try_from(candidates.len()).expect("streamer candidate count must fit u64"),
+                ))
+                .expect("streamer candidate index must fit usize")
+            };
+            let (position, terrain_id) = candidates[index];
+            set_generated_terrain(terrain, definition.width, position, terrain_id);
+            painted.insert(position);
+        }
+        painted
+    }
+}
+
+fn place_generated_floor_connections(
+    definition: &ProceduralFloorDefinition,
+    entry_anchor: Position,
+    down_stair_anchor: Position,
+    fixed_trap_position: Position,
+    floor_terrain_id: &str,
+    terrain: &mut [String],
+    rng: &mut RfbRng,
+) -> Result<Vec<FloorConnectionState>, CoreError> {
+    let terrain_ref: &[String] = terrain;
+    let mut candidates = (1..definition.height - 1)
+        .flat_map(|y| {
+            (1..definition.width - 1).filter_map(move |x| {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                (position != fixed_trap_position
+                    && terrain_ref[generated_terrain_index(definition.width, position)]
+                        == floor_terrain_id)
+                    .then_some(position)
+            })
+        })
+        .collect::<Vec<_>>();
+    let (primary_up_id, primary_down_id) = primary_floor_connection_ids(definition);
+    let mut ordered_connections = Vec::with_capacity(definition.connections.len());
+    for connection_id in [primary_up_id, primary_down_id].into_iter().flatten() {
+        ordered_connections.push(
+            definition
+                .connections
+                .iter()
+                .find(|connection| connection.id == connection_id)
+                .expect("selected primary connection must remain available"),
+        );
+    }
+    ordered_connections.extend(definition.connections.iter().filter(|connection| {
+        primary_up_id != Some(connection.id.as_str())
+            && primary_down_id != Some(connection.id.as_str())
+    }));
+
+    let mut placed = Vec::with_capacity(definition.connections.len());
+    for connection in ordered_connections {
+        let position = if primary_up_id == Some(connection.id.as_str()) {
+            entry_anchor
+        } else if primary_down_id == Some(connection.id.as_str()) {
+            down_stair_anchor
+        } else {
+            if candidates.is_empty() {
+                return Err(CoreError::InvalidSave(
+                    "generated floor has insufficient connection space",
+                ));
+            }
+            let candidate_index = usize::try_from(rng.bounded(candidates.len() as u64))
+                .expect("bounded connection index must fit usize");
+            candidates[candidate_index]
+        };
+        candidates.retain(|candidate| *candidate != position);
+        set_generated_terrain(terrain, definition.width, position, &connection.terrain_id);
+        placed.push(FloorConnectionState {
+            id: connection.id.clone(),
+            position,
+            target_floor_id: None,
+            target_connection_id: None,
+        });
+    }
+    placed.sort_by(|left, right| left.id.cmp(&right.id));
+    Ok(placed)
 }
