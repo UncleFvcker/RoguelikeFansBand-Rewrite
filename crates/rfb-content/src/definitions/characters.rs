@@ -6,9 +6,10 @@ use std::collections::BTreeMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{AbilityLevelScalingDefinition, default_percent};
-
-use super::{ActorDamageType, ActorResistanceLevel, StatModifiers};
+use super::{
+    AbilityLevelScalingDefinition, ActorDamageType, ActorResistanceLevel, StatModifiers,
+    default_percent,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
