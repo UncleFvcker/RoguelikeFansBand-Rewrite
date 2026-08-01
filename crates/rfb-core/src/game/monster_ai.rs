@@ -465,3 +465,68 @@ impl Game {
         }
     }
 }
+
+impl Game {
+    pub(super) fn resolve_monster_detection(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let kind_id = self.entities[index].kind_id.clone();
+        let Some(awareness) = self
+            .content
+            .actor(&kind_id)
+            .and_then(|definition| definition.awareness.clone())
+        else {
+            self.entities[index].alerted = true;
+            return true;
+        };
+        let monster_position = self.entities[index].position;
+        let distance = monster_position
+            .x
+            .abs_diff(self.player.position.x)
+            .max(monster_position.y.abs_diff(self.player.position.y));
+        if distance > u32::from(awareness.detection_range)
+            || !has_line_of_sight(self, monster_position, self.player.position)
+        {
+            return false;
+        }
+        let ability = self.player_derived_stats().stealth_skill;
+        let mut difficulty_pipeline = DerivedStatsPipeline::new();
+        difficulty_pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            &kind_id,
+            awareness.detection_difficulty,
+        );
+        let check = resolve_check(
+            &mut self.rng,
+            CheckContext {
+                kind: CheckKind::StealthDetection,
+                actor_id: self.player.id.clone(),
+                target_id: Some(self.entities[index].id.clone()),
+                ability,
+                difficulty: difficulty_pipeline
+                    .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+            },
+        );
+        let stayed_hidden = check.succeeded();
+        let skill_id = self
+            .content
+            .skill_by_kind(SkillKind::Stealth)
+            .expect("validated stealth skill must remain available")
+            .id
+            .clone();
+        events.push(DomainEvent::StealthChecked {
+            source_kind_id: kind_id,
+            succeeded: stayed_hidden,
+            resolution: check.to_dto(skill_id),
+        });
+        if stayed_hidden {
+            false
+        } else {
+            self.entities[index].alerted = true;
+            true
+        }
+    }
+}

@@ -1,0 +1,295 @@
+// SPDX-License-Identifier: MPL-2.0
+
+use super::*;
+
+impl Game {
+    pub(super) fn advance_until_player_ready(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        loop {
+            self.world_tick = self.world_tick.saturating_add(1);
+            self.process_status_tick(events, changed, removed_entities)?;
+            if self.player_is_dead() {
+                break;
+            }
+            self.process_equipment_regeneration(events);
+            self.process_inventory_device_recovery(events);
+            self.process_monster_energy_pulse(events, changed, removed_entities)?;
+            if self.player_is_dead() {
+                break;
+            }
+            let speed = derived_speed(&self.player_derived_stats().speed);
+            gain_energy(&mut self.player.energy_need, speed);
+            if self.player.energy_need <= 0 {
+                break;
+            }
+        }
+        self.advance_summon_lifetimes(events, changed, removed_entities);
+        if !self.player_is_dead() {
+            self.advance_recall(events, changed)?;
+        }
+        Ok(())
+    }
+
+    fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
+        if !self
+            .world_tick
+            .is_multiple_of(EQUIPMENT_REGENERATION_INTERVAL_TICKS)
+            || !self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::Regeneration)
+        {
+            return;
+        }
+        let maximum = self.effective_player_max_hp();
+        let before = self.player.hp;
+        self.player.hp = self.player.hp.saturating_add(1).min(maximum);
+        let applied = self.player.hp.saturating_sub(before);
+        if applied > 0 {
+            events.push(DomainEvent::EquipmentRegenerated {
+                resolution: HealingResolutionDto {
+                    requested: 1,
+                    applied,
+                },
+            });
+        }
+    }
+
+    pub(super) fn process_inventory_device_recovery(&mut self, events: &mut Vec<DomainEvent>) {
+        let world_tick = self.world_tick;
+        let content = &self.content;
+        for item in &mut self.items {
+            if item.location != ItemLocation::Inventory {
+                continue;
+            }
+            let Some(recovery) = content
+                .item(&item.kind_id)
+                .and_then(|definition| definition.device_generation.as_ref())
+                .and_then(|generation| generation.recovery)
+            else {
+                continue;
+            };
+            if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
+                continue;
+            }
+            let Some(charges) = item.charges.as_mut() else {
+                continue;
+            };
+            if charges.current >= charges.maximum {
+                item.device_recovery_progress = 0;
+                continue;
+            }
+            let scaled = u64::from(charges.maximum)
+                .saturating_mul(u64::from(recovery.energy_per_mille))
+                .saturating_add(u64::from(item.device_recovery_progress));
+            let gain =
+                u32::try_from(scaled / 1_000).expect("validated device recovery gain must fit u32");
+            item.device_recovery_progress =
+                u16::try_from(scaled % 1_000).expect("recovery remainder must fit u16");
+            if gain == 0 {
+                continue;
+            }
+            let before = charges.current;
+            charges.current = charges.current.saturating_add(gain).min(charges.maximum);
+            let applied = charges.current.saturating_sub(before);
+            if charges.current == charges.maximum {
+                item.device_recovery_progress = 0;
+            }
+            if applied > 0 {
+                events.push(DomainEvent::DeviceEnergyRecovered {
+                    target_item_id: item.id.clone(),
+                    target_kind_id: item.kind_id.clone(),
+                    amount: applied,
+                    current: charges.current,
+                    maximum: charges.maximum,
+                });
+            }
+        }
+    }
+
+    fn advance_summon_lifetimes(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .filter(|entity| entity.summon.is_some())
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+        for entity_id in entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let expires = self.entities[index]
+                .summon
+                .as_ref()
+                .is_some_and(|summon| summon.remaining_turns <= 1);
+            if expires {
+                let position = self.entities[index].position;
+                let target_kind_id = self.entities[index].kind_id.clone();
+                let removed_id = self.entities[index].id.clone();
+                self.entities.remove(index);
+                changed.insert(position);
+                removed_entities.push(removed_id.clone());
+                events.push(DomainEvent::SummonExpired {
+                    entity_id: removed_id,
+                    target_kind_id,
+                });
+            } else if let Some(summon) = self.entities[index].summon.as_mut() {
+                summon.remaining_turns = summon.remaining_turns.saturating_sub(1);
+            }
+        }
+    }
+
+    pub(super) fn process_status_tick(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let player_damage_percent = self.player_incoming_damage_percent();
+        let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
+        let player_status_expired = !player_tick.expired.is_empty();
+        for damage in player_tick.damage {
+            events.push(DomainEvent::PlayerStatusDamaged {
+                status_kind_id: damage.status_kind_id,
+                damage: damage.outcome,
+            });
+        }
+        for status_kind_id in player_tick.expired {
+            events.push(DomainEvent::PlayerStatusExpired { status_kind_id });
+        }
+        if player_status_expired {
+            self.refresh_player_resource_maxima();
+        }
+        self.clamp_player_hp_to_effective_max();
+        if let Some(damage) = player_tick.fatal_damage {
+            events.push(DomainEvent::PlayerDiedFromStatus {
+                status_kind_id: damage.status_kind_id,
+                damage: damage.outcome,
+            });
+            return Ok(());
+        }
+
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+        for entity_id in entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let tick = process_actor_status_tick(&mut self.entities[index], true, 100);
+            if tick.awakened {
+                events.push(DomainEvent::EntityAwakened {
+                    target_kind_id: target_kind_id.clone(),
+                });
+            }
+            for damage in tick.damage {
+                events.push(DomainEvent::EntityStatusDamaged {
+                    target_kind_id: target_kind_id.clone(),
+                    status_kind_id: damage.status_kind_id,
+                    damage: damage.outcome,
+                });
+            }
+            for status_kind_id in tick.expired {
+                events.push(DomainEvent::EntityStatusExpired {
+                    target_kind_id: target_kind_id.clone(),
+                    status_kind_id,
+                });
+            }
+            if let Some(damage) = tick.fatal_damage {
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::EntityDiedFromStatus {
+                        target_kind_id,
+                        status_kind_id: damage.status_kind_id,
+                        damage: damage.outcome,
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    pub(super) fn process_monster_energy_pulse(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+        let mut surround_reservations = BTreeSet::new();
+
+        for entity_id in entity_ids {
+            if self.player_is_dead() {
+                break;
+            }
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&self.entities[index].kind_id)
+                .expect("monster actor definition must remain available");
+            let speed = derived_speed(
+                &self
+                    .actor_derived_stats(&self.entities[index], definition, false)
+                    .speed,
+            );
+            gain_energy(&mut self.entities[index].energy_need, speed);
+            if self.entities[index].energy_need > 0 {
+                continue;
+            }
+            spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            if self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLEEP)
+            {
+                events.push(DomainEvent::MonsterSlept {
+                    target_kind_id: self.entities[index].kind_id.clone(),
+                });
+                continue;
+            }
+            self.resolve_monster_action(
+                index,
+                events,
+                changed,
+                removed_entities,
+                &mut surround_reservations,
+            )?;
+        }
+        Ok(())
+    }
+}
