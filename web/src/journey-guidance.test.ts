@@ -13,6 +13,7 @@ import {
 function state(overrides = {}) {
   return {
     turn: 0,
+    worldId: "demo.world.warrens-journey",
     floorId: "demo.floor.surface",
     player: { position: { x: 3, y: 3 }, resources: [] },
     inventory: [],
@@ -30,16 +31,16 @@ test("journey objectives cover preparation through retirement from authoritative
     id: "enter",
   });
   assert.deepEqual(
-    selectJourneyObjective(state({ floorId: "demo.floor.echo-depth-2-mirror" })),
+    selectJourneyObjective(state({ floorId: "demo.floor.warrens-depth-2" })),
     { id: "descend", depth: 2 },
   );
   assert.deepEqual(
-    selectJourneyObjective(state({ floorId: "demo.floor.echo-depth-3-shaft" })),
-    { id: "guardian", depth: 3 },
+    selectJourneyObjective(state({ floorId: "demo.floor.warrens-depth-9" })),
+    { id: "guardian", depth: 9 },
   );
   assert.deepEqual(
     selectJourneyObjective(
-      state({ floorId: "demo.floor.echo-depth-2", campaign: { status: "victorious" } }),
+      state({ floorId: "demo.floor.warrens-depth-8", campaign: { status: "victorious" } }),
     ),
     { id: "return" },
   );
@@ -65,7 +66,7 @@ test("onboarding completion follows successful commands and state transitions", 
   const before = state({ turn: 3, items: [{ id: "item" }] });
   const update = state({
     turn: 4,
-    floorId: "demo.floor.echo-depth-1",
+    floorId: "demo.floor.warrens-depth-1",
     player: { position: { x: 4, y: 3 }, resources: [] },
     inventory: [{ id: "item" }],
     items: [],

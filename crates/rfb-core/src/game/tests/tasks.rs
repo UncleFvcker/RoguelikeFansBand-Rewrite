@@ -556,3 +556,101 @@ fn campaign_guardian_death_emits_victory_and_old_save_derives_it() {
     );
     assert_eq!(restored.snapshot().state_hash, game.snapshot().state_hash);
 }
+
+#[test]
+fn warrens_journey_conquers_returns_retires_and_round_trips() {
+    let mut game = Game::new_warrens_journey_with_build(49, "demo.build.explorer")
+        .expect("Warrens journey should create");
+    game.player
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
+
+    assert_eq!(game.world_id, WARRENS_JOURNEY_WORLD_ID);
+    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.campaign_state.status, CampaignStatusDto::Active);
+
+    for depth in 1..=9 {
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(update.floor_id, format!("demo.floor.warrens-depth-{depth}"));
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+    }
+
+    let guardian_index = game
+        .entities
+        .iter()
+        .position(|entity| entity.id == "demo.guardian.warrens.1")
+        .expect("Warrens depth 9 should spawn its guardian");
+    assert_eq!(
+        game.entities[guardian_index].kind_id,
+        "demo.actor.warrens-keeper"
+    );
+    let guardian_position = game.entities[guardian_index].position;
+    game.entities[guardian_index].hp = 1;
+    let (direction, player_position) = TERRAIN_INTERACTION_DIRECTIONS
+        .iter()
+        .find_map(|direction| {
+            let (dx, dy) = direction.delta();
+            let position = Position {
+                x: guardian_position.x - dx,
+                y: guardian_position.y - dy,
+            };
+            game.index(position)
+                .and_then(|index| game.content.terrain(&game.terrain[index]))
+                .filter(|terrain| terrain.walkable)
+                .map(|_| (*direction, position))
+        })
+        .expect("guardian should have a walkable approach");
+    game.player.position = player_position;
+
+    let victory = dispatch_next(&mut game, GameCommand::Move { direction });
+    let guardian_event = victory
+        .events
+        .iter()
+        .position(|event| event.kind == "dungeon.guardian-defeated")
+        .expect("guardian death should conquer the Warrens");
+    let victory_event = victory
+        .events
+        .iter()
+        .position(|event| event.kind == "campaign.victorious")
+        .expect("Warrens conquest should win the journey");
+    assert!(guardian_event < victory_event);
+    assert_eq!(victory.campaign.status, CampaignStatusDto::Victorious);
+    assert_eq!(victory.campaign.conquered_dungeons, 1);
+    assert_eq!(victory.campaign.score, 60_000);
+
+    let victorious_hash = game.state_hash();
+    let mut restored = Game::from_save(game.to_save()).expect("victory should round-trip");
+    assert_eq!(restored.world_id, WARRENS_JOURNEY_WORLD_ID);
+    assert_eq!(restored.state_hash(), victorious_hash);
+
+    for expected_depth in (1..=8).rev() {
+        place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+        let update = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.warrens-depth-{expected_depth}")
+        );
+        assert_eq!(update.campaign.status, CampaignStatusDto::Victorious);
+    }
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+    assert_eq!(surface.floor_id, "demo.floor.surface");
+    assert_eq!(surface.campaign.status, CampaignStatusDto::Victorious);
+
+    let retirement = dispatch_next(&mut restored, GameCommand::Retire);
+    assert_eq!(retirement.campaign.status, CampaignStatusDto::Retired);
+    assert!(
+        retirement
+            .events
+            .iter()
+            .any(|event| event.kind == "campaign.retired")
+    );
+    let retired_hash = restored.state_hash();
+    let retired = Game::from_save(restored.to_save()).expect("retirement should round-trip");
+    assert_eq!(retired.state_hash(), retired_hash);
+    assert_eq!(
+        retired.snapshot().campaign.status,
+        CampaignStatusDto::Retired
+    );
+}

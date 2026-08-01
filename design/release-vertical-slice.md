@@ -1,6 +1,6 @@
 # Phase 17: Complete Player Journey Vertical Slice
 
-Status: Phase 17 is active. Gates 0-2 are complete; Gate 3 is next. Gate 0 fixed the journey contract against base commit `09291410`. Gates 1-2 add the startup/session shell, typed build/seed initialization, and frontend-only objective/onboarding presentation without changing the protocol, save/replay formats, schemas, fixtures, campaign behavior, or content bytes.
+Status: Phase 17 is active. Gates 0-3 are complete; Gate 4 is next. Gate 0 fixed the original journey contract against base commit `09291410`. After Gate 2, the user replaced the original Echo target with RFB's Warrens as the first player flow and explicitly allowed Echo Depths to stay out of the release journey. Gate 3 completed that bounded content, guidance, and campaign migration. Gates 1-2 added the startup/session shell, typed build/seed initialization, and frontend-only objective/onboarding presentation without changing the protocol, save/replay formats, schemas, fixtures, campaign behavior, or content bytes.
 
 ## 1. Gate 0 decisions
 
@@ -8,17 +8,17 @@ Phase 17 turns the existing mechanics into one player-facing run that can be und
 
 The following decisions are fixed for the first playable journey:
 
-- **Journey target:** the existing three-depth `demo.dungeon.echo-depths`, including its branches, shafts, procedural content, and `demo.actor.resonant-warden` guardian.
-- **Complete ending:** defeating the guardian produces the victorious state; the player then returns to the surface and uses the existing `Retire` command to freeze the final score and reach the final result screen.
+- **Journey target:** the nine-depth `demo.dungeon.warrens` compatibility slice in `demo.world.warrens-journey`, modeled from the fixed RFB v1.3.0.7 Warrens flow without copying its map bytes, descriptions, algorithms, or exact balance table.
+- **Complete ending:** defeating the depth-nine Kobold Lord produces the victorious state; the player then returns through all normal upward connections and uses the existing `Retire` command on the surface to freeze the final score and reach the final result screen.
 - **Golden build:** `demo.build.explorer` is the recommended build and the only build whose balance and full completion block Phase 17 acceptance.
 - **Visible secondary presets:** the existing Vanguard and Scholar presets may be offered by the new-game shell, but parity between builds is not a release gate. Pathfinder, Duelist, and Tinkerer remain valid catalog content and can be exposed later without deleting or rewriting them.
 - **Session start:** launch must stop at a title/session shell instead of implicitly creating Explorer with seed `42`.
 - **Seed policy:** New Game generates a seed by default and records it once in the authoritative session/replay. An advanced explicit-seed input remains available for reproducibility.
 - **Failure path:** player death always reaches an actionable result state with restart, load, menu, and exit choices.
 - **Persistence:** native saves can be discovered and loaded before a new game is created; surface, mid-dungeon, pre-guardian, victorious, and retired states have explicit round-trip coverage.
-- **Content policy:** Phase 17 first reuses the current demo content. Later careers and items may be selected in small, journey-driven batches from the fixed RFB reference import, subject to the selection and licensing boundary in section 7. Bulk legacy import is not part of the phase.
+- **Content policy:** Phase 17 admits only the bounded Warrens batch required by the changed journey target: the nine-level topology, a four-archetype early roster, a basic weapon/healing supply, a speed-themed guardian reward, and the guardian. Careers and further items still require small journey-driven batches under section 7. Bulk legacy import is not part of the phase.
 
-The ten-depth `demo.dungeon.resonance-descent`, Archive Depths, and task-rift scenarios remain in the pack for system coverage but are not required for the first complete player journey.
+The old `demo.world.original-v1`, Echo Depths, the ten-depth Resonance Descent, Archive Depths, and task-rift scenarios remain only for historical/system regression coverage. Production New Game selects the Warrens world, whose catalog contains no Echo route.
 
 ## 2. Canonical player journey
 
@@ -34,12 +34,11 @@ Launch
    -> understand the current objective and controls
    -> move, inspect, pick up, equip/use, and fight
    -> understand HP, resources, inventory, equipment, and messages
--> Enter Echo Depths
-   -> explore procedural depth one
+-> Enter the Warrens
+   -> explore the compact procedural upper tunnels
    -> collect and use loot; save and resume at least once
-   -> choose a depth-two branch or shaft route
-   -> reach logical depth three
--> Defeat the Resonant Warden
+   -> descend through normal connections to logical depth nine
+-> Defeat the Kobold Lord
    -> receive an unambiguous victorious-state objective
    -> return through normal floor connections to the surface
 -> Retire
@@ -68,7 +67,7 @@ stateDiagram-v2
     Loading --> Playing: Valid save restored
     Playing --> Loading: Load another save
     Playing --> DeathResult: Player dies
-    Playing --> VictoryReturn: Echo guardian defeated
+    Playing --> VictoryReturn: Warrens guardian defeated
     VictoryReturn --> Playing: Return toward surface
     Playing --> RetirementResult: Retire on surface
     DeathResult --> NewGame: Restart / New Game
@@ -89,7 +88,7 @@ The implementation is not waiting for a new game engine. The current repository 
 
 - six build presets and `Game::new_with_build` in the Rust core;
 - deterministic movement, combat, ranged attacks, throwing, abilities, items, equipment, knowledge, progression, and monster AI;
-- the three-depth Echo Depths expedition with branches, shafts, loot, encounters, a final guardian, and conquest scoring;
+- deterministic multi-depth dungeons with loot, encounters, a final guardian, conquest scoring, normal return connections, and reset-on-surface lifecycle;
 - authoritative death, campaign active/victorious/retired states, surface-only retirement, and frozen score semantics;
 - versioned saves, native save slots with backup recovery, replay recording, state hashes, and deterministic fixtures;
 - localized command/event feedback, status/inventory/ability/task panels, renderer, Windows packaging, and a technical desktop E2E suite.
@@ -103,10 +102,10 @@ The compiled demo pack at the Gate 0 baseline contains 1 world, 4 races, 6 class
 | PJ-01 | blocking | `web/src/main.ts` immediately called `core.initialize("42")` | Launch presents New Game, Continue/Load, Settings, and Exit before creating a session | 1 | closed |
 | PJ-02 | blocking | `CoreTransport.initialize` accepted only a seed and Tauri called `Game::new(seed)` | A typed new-session request carries build and seed through every transport to `Game::new_with_build` | 1 | closed |
 | PJ-03 | blocking | Native saves were rendered only after implicit initialization | Save discovery and load work from the title/session shell with no throwaway game | 1 | closed |
-| PJ-04 | blocking | The built-in campaign requires ten-depth Resonance Descent | The playtest campaign treats Echo Depths conquest as victory while preserving the same victory/return/retire rules | 3 | open |
+| PJ-04 | blocking | The original lab campaign requires ten-depth Resonance Descent and the Gate 0 Echo target was superseded | Production New Game selects the bounded Warrens world, where depth-nine guardian conquest uses the same victory/return/retire rules | 3 | closed |
 | PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 | open |
 | PJ-06 | blocking | Controls exist but first-run actions and the primary objective are not staged | Contextual onboarding introduces the minimum action set and always shows the next journey objective | 2 | closed |
-| PJ-07 | blocking | Desktop E2E remains a technical gameplay smoke test after its new title/new-game/pre-session-load coverage | Normal player commands prove menu -> new game -> Echo guardian -> return -> retire/result, including save/resume | 6 | open |
+| PJ-07 | blocking | Desktop E2E remains a technical Original Lab smoke test after its new title/new-game/pre-session-load coverage | Normal player commands prove menu -> new game -> Warrens guardian -> return -> retire/result, including save/resume | 6 | open |
 | PJ-08 | high | No current evidence guarantees an ordinary Explorer can finish several fixed seeds without starvation, resource dead ends, or opaque difficulty spikes | Explorer completes the route on the acceptance seeds with no soft lock; necessary balance changes are bounded and recorded | 5 | open |
 | PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 | open |
 | PJ-10 | high | Existing builds and content were mechanically broad but not presented as a curated player choice | New-game choices explain role, starting strengths, temporary status, and golden-path support level | 1 | closed |
@@ -117,7 +116,7 @@ A blocker is closed only by observable player behavior and automated evidence. A
 
 ### Gate 0: journey contract and blocker audit (complete)
 
-- select the three-depth Echo journey and full return/retire ending;
+- originally select the three-depth Echo journey and full return/retire ending (superseded after Gate 2 by the user-directed Warrens amendment recorded above);
 - select Explorer as the acceptance build;
 - define session, victory, death, recovery, and result states;
 - record current capabilities, blockers, scope, content policy, and evidence requirements;
@@ -140,7 +139,7 @@ Native save listing and recovery now operate at the title screen without constru
 
 ### Gate 2: onboarding and objective guidance (complete)
 
-- show one primary objective at all times: prepare, enter Echo Depths, descend, defeat the guardian, return, or retire;
+- show one primary objective at all times: prepare, enter the selected journey dungeon, descend, defeat the guardian, return, or retire;
 - stage contextual prompts for movement, inspect/look, pickup, inventory, equip/use, combat/targeting, stairs, resources, messages, and save;
 - mark prompts complete from actual observable commands/state, not from button dismissal alone;
 - distinguish mandatory journey guidance from optional help and allow experienced players to suppress repeated prompts;
@@ -148,21 +147,26 @@ Native save listing and recovery now operate at the title screen without constru
 
 Onboarding may use frontend presentation state where it has no gameplay meaning. Authoritative objectives, victory, death, and progression remain Rust-owned.
 
-The completed gate adds a pure `selectJourneyObjective` model over existing `GameSnapshot`/`GameUpdate` fields. It continuously presents prepare, enter Echo Depths, descend, guardian, return, retire, or completed guidance from authoritative floor, inventory/equipment, and campaign status. The model already understands every Echo depth-two branch and depth-three main, mirror, branch, and shaft floor, but does not manufacture victory: return and retire appear only after Rust reports the campaign `victorious`. Selecting Echo Depths as the playtest victory requirement remains Gate 3.
+The completed Gate 2 originally added a pure Echo-oriented `selectJourneyObjective` model over existing `GameSnapshot`/`GameUpdate` fields. Gate 3 migrates that presentation to Warrens depths 1-9. It still does not manufacture victory: return and retire appear only after Rust reports the campaign `victorious`.
 
 Ten contextual prompts cover movement, zero-turn look/inspect, pickup, inventory selection, equip/use, combat/targeting, connections, resources, message history, and native saving. Journey prompts are visibly distinct from optional help. Completion is driven by position/floor changes, successful projected events, an entered target/look mode, inventory selection, or a completed native save rather than a dismiss button. Learned prompts and the experienced-player optional-help preference persist locally; Replay Guidance resets presentation history without mutating the run.
 
 Look mode uses the existing cursor and authoritative visibility deltas, never dispatches a core command, never advances the turn, and does not reveal occupants outside currently visible cells. Common movement, pickup, equip/use, targeting, ammunition, ability-range, and connection rejections now include localized next actions. Focused coverage raises the frontend suite from 57 to 61 tests. The desktop E2E proves prepare objective -> movement completion -> optional look with an unchanged turn -> pickup -> enter objective. Gate 2 closes PJ-06; PJ-09 remains open until the Gate 3/4 transition and result feedback is complete. Protocol/content identity remains unchanged at built-in pack `1.140.0` and hash `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`.
 
-### Gate 3: Echo campaign and victory-return route
+### Gate 3: Warrens content, campaign, and victory-return route (complete)
 
-- introduce the narrowest content/session configuration that selects Echo Depths as the playtest victory requirement;
+- introduce a separate `demo.world.warrens-journey` whose only dungeon and campaign victory requirement is Warrens;
+- model the fixed-source 1-9 depth, compact cave, early-beast/kobold, guardian, and reward roles through independently authored content definitions;
 - preserve the existing guardian death, conquest, victory event, scoring, return connection, surface-only retirement, save, replay, and hash semantics;
-- present dungeon name, logical depth, branch context, guardian objective, and the post-victory instruction to return to the surface;
-- verify that every generated branch and shaft route can reach a final guardian and return normally;
+- present Warrens, logical depth out of nine, guardian objective, and the post-victory instruction to return to the surface;
+- verify that every generated floor has a normal downward path to depth nine and a normal upward path back to the surface;
 - add core/contract coverage for conquest -> victorious -> surface -> retired ordering.
 
-This gate does not shorten the dungeon through debug state, teleport the player to the guardian, or make the ten-depth campaign disappear from the catalog.
+The optional RFB Pest Control/Warg quest is not folded into the main dungeon because it depends on a preceding town quest that Phase 17 does not implement. The old lab stays available to regression tests, but production New Game does not expose Echo Depths. This gate does not shorten Warrens through debug state or teleport a player to its guardian.
+
+The completed gate introduces `demo.world.warrens-journey` as the production New Game world and advances the independently authored demo pack to `1.141.0` with hash `7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f`. Its single campaign route covers Warrens depths 1-9, an early beast/kobold roster, surface supplies, bounded floor loot, a Kobold Lord guardian, and a speed-themed reward. Echo Depths and the Original Lab remain compiled solely so existing compatibility and system regression evidence continues to load.
+
+Normal dispatched stair commands prove all nine descents and returns for 16 fixed seeds. A separate full-flow core test crosses every floor, defeats the actual guardian, checks conquest-before-victory ordering, saves and restores at victory, returns through depths 8-1, retires on the surface, and round-trips the frozen hash. Contract v150 adds fixture 455 for Warren conquest and retirement with zero waivers; frontend objectives now name Warrens and show logical depth out of nine. Protocol `1.123`, save container v1, and state hash Schema `55` remain unchanged. The full Gate 3 matrix passes 34 content, 309 core, 28 legacy-import, 33 replay, 16 Tauri, and 61 frontend tests, all 455 contract fixtures, bindings/schema/content drift checks, workspace check/clippy, UI production build, and desktop E2E. Gate 3 closes PJ-04; PJ-09 remains open for Gate 4 result-state feedback.
 
 ### Gate 4: death, result, restart, and recovery
 
@@ -191,10 +195,10 @@ This gate does not shorten the dungeon through debug state, teleport the player 
 
 The journey is verified at several layers instead of relying on one brittle ten-minute UI script:
 
-- **Core/contract:** actual Echo campaign configuration, guardian/conquest/victory ordering, return-to-surface retirement, death, save round trips, replay, and final hashes.
+- **Core/contract:** actual Warrens world/campaign configuration, all nine normal connections, guardian/conquest/victory ordering, return-to-surface retirement, death, save round trips, replay, and final hashes.
 - **Frontend unit/integration:** session-shell transitions, new-game validation, build/seed selection, objective selection, result actions, and localized feedback.
 - **Tauri integration:** typed initialization, native save listing/loading without a prior session, restart/session replacement, and recovery errors.
-- **Desktop E2E:** normal UI from cold launch through new game, representative onboarding and dungeon actions, native save/resume, guardian/result/retirement checkpoints, and restart/menu. It must not claim full-journey acceptance through the existing webdriver-only state mutation.
+- **Desktop E2E:** normal UI from cold launch through new game, representative onboarding and Warrens actions, native save/resume, guardian/result/retirement checkpoints, and restart/menu. It must not claim full-journey acceptance through the existing webdriver-only Original Lab state mutation.
 - **Manual runbook:** one uninterrupted ordinary Explorer playthrough on the advertised build, plus short startup checks for Vanguard and Scholar.
 
 Prepared saves may accelerate non-journey regression tests, but the acceptance evidence must include at least one replay whose command history begins with a normal new session and reaches retirement without direct state editing.
@@ -211,7 +215,7 @@ The user direction is to prefer a small selection from RFB when later careers or
 6. **Promotion boundary.** Names, descriptions, numeric data, maps, and assets from the legacy source do not enter the repository or release package unless their redistribution rights and provenance are explicitly approved and `design/licensing-and-assets.md` is updated. Until then they are local evaluation material only; an independently authored equivalent may fill the same gameplay role.
 7. **No hidden parity promise.** Selecting a career or item does not commit the project to its complete original ecosystem, every special case, or all neighboring content.
 
-The first complete Explorer journey does not depend on approving any legacy content batch. Candidate selection begins only after the Gate 2/3 playthrough exposes a concrete need, or after the complete journey is stable.
+The user-directed Warrens batch is the first approved journey need. Its public content is independently authored from behavioral facts at fixed commit `191f48c3…`; exact old maps, prose, numeric monster records, algorithms, and assets remain excluded. Further candidates still require a new selection decision.
 
 ## 8. Explicit non-goals
 
@@ -233,17 +237,17 @@ Phase 17 is complete only when all of the following are true:
 - a new player can launch and choose New Game or Load without reading repository documentation;
 - Explorer, seed choice, Continue/Load, Settings, and Exit are discoverable; Vanguard and Scholar can at least create valid sessions if exposed;
 - the player can understand the current objective, HP/resources, inventory/equipment, abilities, floor/depth, targeting mode, and important messages;
-- the normal UI supports the complete Explorer route from surface onboarding through Echo Depths, guardian victory, return to surface, retirement, and final result;
+- the normal UI supports the complete Explorer route from surface onboarding through all nine Warrens depths, guardian victory, return to surface, retirement, and final result;
 - death always reaches an actionable result state and never leaves the shell stuck in a noninteractive game view;
 - native save/exit/load restores the same authoritative state at the declared checkpoints and replay continuation remains verifiable;
 - every required operation and rejection produces visible localized feedback;
 - no known severity-1 or flow-blocking defect remains in startup, onboarding, dungeon connectivity, combat/resource pacing, save/load, death, victory, return, retirement, restart, menu, or exit;
 - fixed-seed runs preserve command/event order and final state hash across direct core, replay verification, and Tauri transport;
 - the complete repository acceptance matrix and Windows playtest build pass;
-- release notes call the artifact a focused Echo Depths player-journey playtest and do not imply full RFB content parity.
+- release notes call the artifact a focused Warrens compatibility journey and do not imply full RFB content parity.
 
 ## 10. Gate 0-2 closure and Gate 3 entry
 
 Gate 0 closed with the journey, terminal states, golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria explicit. Gate 1 closed PJ-01, PJ-02, PJ-03, and PJ-10 with a tested product shell and typed native initialization path. Gate 2 closes PJ-06 with continuous state-derived objectives, interaction-derived contextual onboarding, optional-help suppression, a zero-turn look mode, and actionable rejection guidance.
 
-Gate 3 begins by introducing the narrowest Rust-owned playtest campaign configuration that treats Echo Depths conquest as victory. It will connect the already-present guardian, victory, return, and retire objective states to the real three-depth route while preserving normal connections, replay/save determinism, scoring, and the ten-depth campaign in the content catalog.
+Gate 3 now begins from the post-Gate-2 scope amendment. Production session construction selects `demo.world.warrens-journey`; the world itself owns the one-dungeon victory requirement, so no parallel campaign-profile field or protocol version is needed. The original lab remains a regression world rather than a player-facing route.

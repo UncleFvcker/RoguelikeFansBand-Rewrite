@@ -71,31 +71,37 @@
         "attributes": {
           "strength": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 15,
             "index": 12
           },
           "intelligence": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 10,
             "index": 7
           },
           "dexterity": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 17,
             "index": 14
           },
           "constitution": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 14,
             "index": 11
           },
           "charisma": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 14,
             "index": 11
           }
@@ -460,7 +466,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0b1b93691cc2fa5fffff7d0bed767b0fc7370d11531a28eb7e35889141e040a1"
+      "stateHash": "3bd275891f045a4b967117ad1fbede3e7a32ff3b0c7ef83aa6509769a5d9da76"
     },
     "events": [
       {
@@ -565,6 +571,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "0b1b93691cc2fa5fffff7d0bed767b0fc7370d11531a28eb7e35889141e040a1"
+    "saveRoundTripStateHash": "3bd275891f045a4b967117ad1fbede3e7a32ff3b0c7ef83aa6509769a5d9da76"
   }
 }

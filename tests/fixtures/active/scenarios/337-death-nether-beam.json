@@ -113,31 +113,37 @@
         "attributes": {
           "strength": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 9,
             "index": 6
           },
           "intelligence": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 18,
             "index": 15
           },
           "wisdom": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 14,
             "index": 11
           },
           "dexterity": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 10,
             "index": 7
           },
           "charisma": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 12,
             "index": 9
           }
@@ -3188,7 +3194,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b38a2b0f8139658671019e1a22f0a5ce2539ddbe86b5e87f6a1a3dc2eff07ce9"
+      "stateHash": "405537585fb6de73f8c750a7c70fc04387ff0ad4d4bd3f68510c3c42a8fca083"
     },
     "events": [
       {
@@ -3631,6 +3637,6 @@
       "demo.monster.ember-mote.1",
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "b38a2b0f8139658671019e1a22f0a5ce2539ddbe86b5e87f6a1a3dc2eff07ce9"
+    "saveRoundTripStateHash": "405537585fb6de73f8c750a7c70fc04387ff0ad4d4bd3f68510c3c42a8fca083"
   }
 }

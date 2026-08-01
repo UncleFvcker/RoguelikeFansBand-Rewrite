@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 2,
+  "id": "campaign.warrens-victory-return-retirement",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.warrens-journey",
+    "playerBuildId": "demo.build.explorer",
+    "campaignConqueredDungeons": [
+      "demo.dungeon.warrens"
+    ]
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "retire"
+      }
+    },
+    {
+      "command": {
+        "type": "wait"
+      }
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 1,
+      "turn": 1,
+      "lastCommandSeq": 1,
+      "floorId": "demo.floor.surface",
+      "playerPosition": {
+        "x": 3,
+        "y": 3
+      },
+      "playerHp": 10,
+      "playerMaxHp": 10,
+      "playerAttack": 2,
+      "playerDefense": 1,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 0,
+      "playerCarryCapacityTenthsPound": 100,
+      "playerLevel": 1,
+      "playerExperience": 0,
+      "playerMaxLevel": 1,
+      "playerPendingAttributeIncreases": 0,
+      "playerAttributes": {
+        "level": 1,
+        "maxLevel": 1,
+        "experience": 0,
+        "maximumExperience": 0,
+        "lifeForce": 1000,
+        "levelCap": 100,
+        "attributeCap": 838,
+        "attributeIndexCap": 97,
+        "experienceForNextLevel": 10,
+        "pendingAttributeIncreases": 0,
+        "victoryLevelCapUnlocked": true,
+        "attributes": {
+          "strength": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 13,
+            "index": 10
+          },
+          "intelligence": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 13,
+            "index": 10
+          },
+          "wisdom": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 13,
+            "index": 10
+          },
+          "dexterity": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 13,
+            "index": 10
+          },
+          "constitution": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 13,
+            "index": 10
+          },
+          "charisma": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 13,
+            "index": 10
+          }
+        },
+        "skills": [
+          {
+            "id": "demo.skill.device",
+            "nameKey": "skill-demo-device-name",
+            "current": 24,
+            "maximum": 1000,
+            "base": 24,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.digging",
+            "nameKey": "skill-demo-digging-name",
+            "current": 24,
+            "maximum": 1000,
+            "base": 24,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.disarming",
+            "nameKey": "skill-demo-disarming-name",
+            "current": 24,
+            "maximum": 1000,
+            "base": 24,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.melee",
+            "nameKey": "skill-demo-melee-name",
+            "current": 40,
+            "maximum": 1000,
+            "base": 40,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.perception",
+            "nameKey": "skill-demo-perception-name",
+            "current": 24,
+            "maximum": 1000,
+            "base": 24,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.ranged",
+            "nameKey": "skill-demo-ranged-name",
+            "current": 40,
+            "maximum": 1000,
+            "base": 40,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.saving-throw",
+            "nameKey": "skill-demo-saving-throw-name",
+            "current": 24,
+            "maximum": 1000,
+            "base": 24,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.search",
+            "nameKey": "skill-demo-search-name",
+            "current": 24,
+            "maximum": 1000,
+            "base": 24,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.stealth",
+            "nameKey": "skill-demo-stealth-name",
+            "current": 1,
+            "maximum": 1000,
+            "base": 1,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.throwing",
+            "nameKey": "skill-demo-throwing-name",
+            "current": 40,
+            "maximum": 1000,
+            "base": 40,
+            "growthPerTenLevels": 0
+          }
+        ]
+      },
+      "playerBuild": {
+        "buildId": "demo.build.explorer",
+        "buildNameKey": "build-demo-explorer-name",
+        "raceId": "demo.race.human",
+        "raceNameKey": "race-demo-human-name",
+        "classId": "demo.class.explorer",
+        "classNameKey": "class-demo-explorer-name",
+        "personalityId": "demo.personality.ordinary",
+        "personalityNameKey": "personality-demo-ordinary-name",
+        "lifePercent": 100,
+        "experiencePercent": 100
+      },
+      "entityCount": 0,
+      "groundItemCount": 2,
+      "nextItemInstanceSerial": 1,
+      "campaign": {
+        "status": "retired",
+        "score": 60000,
+        "conqueredDungeons": 1,
+        "completedTasks": 0,
+        "victoryTurn": 0,
+        "retiredTurn": 1
+      },
+      "stateHash": "585abc95efcc8ac1857d56a4dae406f743d0bfc3083d61510ca0f0a9d2a3b1ff"
+    },
+    "events": [
+      {
+        "kind": "campaign.retired",
+        "messageKey": "campaign-retired",
+        "args": {
+          "score": "60000"
+        }
+      }
+    ],
+    "errors": [
+      {
+        "step": 2,
+        "kind": "campaign-ended",
+        "stateHash": "585abc95efcc8ac1857d56a4dae406f743d0bfc3083d61510ca0f0a9d2a3b1ff"
+      }
+    ],
+    "saveRoundTripStateHash": "585abc95efcc8ac1857d56a4dae406f743d0bfc3083d61510ca0f0a9d2a3b1ff"
+  }
+}

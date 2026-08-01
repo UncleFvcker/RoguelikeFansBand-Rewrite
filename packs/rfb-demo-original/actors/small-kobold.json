@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.small-kobold",
+  "role": "monster",
+  "nameKey": "actor-demo-small-kobold-name",
+  "descriptionKey": "actor-demo-small-kobold-description",
+  "glyph": "k",
+  "level": 1,
+  "experienceValue": 8,
+  "maxHp": 4,
+  "speed": 110,
+  "attack": 1,
+  "defense": 1,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "tags": ["humanoid", "kobold", "warrens"]
+}

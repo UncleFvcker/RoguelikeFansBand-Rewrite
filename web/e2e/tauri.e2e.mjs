@@ -152,7 +152,7 @@ async function runScenario(driver) {
       continueDisabled: document.querySelector("#session-continue")?.disabled,
     };
   `);
-  assert.match(titleState.title, /回声深处/);
+  assert.match(titleState.title, /兽穴/);
   assert.match(titleState.subtitle, /临时原创 Demo 构筑/);
 
   await driver.execute(`

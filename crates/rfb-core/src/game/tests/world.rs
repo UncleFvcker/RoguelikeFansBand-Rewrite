@@ -5,6 +5,46 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
+    for seed in 0..16 {
+        let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.explorer")
+            .expect("Warrens journey should create");
+        game.player
+            .resistances
+            .set(DamageType::Physical, ResistanceLevel::Immune);
+
+        for depth in 1..=9 {
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+            dispatch_next(&mut game, GameCommand::TraverseStairs);
+            assert_eq!(
+                game.current_floor_id,
+                format!("demo.floor.warrens-depth-{depth}")
+            );
+            assert!(game.terrain.iter().any(|id| id == "demo.terrain.stairs-up"));
+            if depth < 9 {
+                assert!(
+                    game.terrain
+                        .iter()
+                        .any(|id| id == "demo.terrain.stairs-down")
+                );
+            }
+        }
+
+        for expected_depth in (1..=8).rev() {
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+            dispatch_next(&mut game, GameCommand::TraverseStairs);
+            assert_eq!(
+                game.current_floor_id,
+                format!("demo.floor.warrens-depth-{expected_depth}")
+            );
+        }
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(game.current_floor_id, "demo.floor.surface");
+    }
+}
+
+#[test]
 fn procedural_floor_transition_is_deterministic_persistent_and_reversible() {
     let mut left = Game::new(27);
     let mut right = Game::new(27);

@@ -37,7 +37,7 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 8,
+      "playerHp": 10,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -64,31 +64,37 @@
         "attributes": {
           "strength": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           }
@@ -196,7 +202,7 @@
             "x": 2,
             "y": 2
           },
-          "hp": 3,
+          "hp": 1,
           "speed": 110,
           "energyNeed": 100
         },
@@ -206,7 +212,7 @@
             "x": 3,
             "y": 2
           },
-          "hp": 3,
+          "hp": 1,
           "speed": 110,
           "energyNeed": 100
         }
@@ -287,7 +293,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8ae77145547f8d5b4875a8857540c44027adf6ad5194fd4ee0f2f094c6efbaf6"
+      "stateHash": "6d766f5ec578360320c5993d636561a27d5964d81c154186ccafd3427d0ba4e1"
     },
     "events": [
       {
@@ -321,8 +327,8 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.frost-wisp",
-              "demo.actor.ember-mote"
+              "demo.actor.adaptive-echo",
+              "demo.actor.adaptive-echo"
             ]
           }
         }
@@ -331,17 +337,17 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "2",
-          "source": "demo.actor.frost-wisp"
+          "damage": "0",
+          "source": "demo.actor.adaptive-echo"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
+            "rawDamage": 1,
+            "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "cold",
+            "finalDamage": 0,
+            "damageType": "physical",
             "resistance": "normal"
           }
         }
@@ -350,7 +356,7 @@
         "kind": "combat.monster-miss",
         "messageKey": "combat-monster-miss",
         "args": {
-          "source": "demo.actor.ember-mote"
+          "source": "demo.actor.adaptive-echo"
         }
       }
     ],

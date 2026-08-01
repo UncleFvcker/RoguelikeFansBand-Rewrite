@@ -20,11 +20,12 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
-pub const ACTIVE_BASELINE: &str = "contract-v149";
+pub const ACTIVE_BASELINE: &str = "contract-v150";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
+pub const WARRENS_TEST_WORLD: &str = "demo.world.warrens-journey";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -383,15 +384,25 @@ pub enum CommandErrorKind {
 pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, ContractError> {
     validate_fixture(fixture)?;
     let seed = parse_seed(&fixture.seed)?;
-    let mut payload = fixture
-        .preconditions
-        .player_build_id
-        .as_deref()
-        .map_or_else(
-            || Ok(Game::new(seed)),
-            |build_id| Game::new_with_build(seed, build_id),
-        )?
-        .to_save();
+    let initial_game = match fixture.preconditions.world.as_str() {
+        WARRENS_TEST_WORLD => Game::new_warrens_journey_with_build(
+            seed,
+            fixture
+                .preconditions
+                .player_build_id
+                .as_deref()
+                .unwrap_or("demo.build.explorer"),
+        )?,
+        _ => fixture
+            .preconditions
+            .player_build_id
+            .as_deref()
+            .map_or_else(
+                || Ok(Game::new(seed)),
+                |build_id| Game::new_with_build(seed, build_id),
+            )?,
+    };
+    let mut payload = initial_game.to_save();
     if let Some(player_hp) = fixture.preconditions.player_hp {
         payload.player.hp = player_hp;
     }
@@ -759,6 +770,7 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     }
     if fixture.preconditions.world != ORIGINAL_TEST_WORLD
         && fixture.preconditions.world != HISTORICAL_TEST_WORLD
+        && fixture.preconditions.world != WARRENS_TEST_WORLD
     {
         return Err(ContractError::UnknownWorld(
             fixture.preconditions.world.clone(),

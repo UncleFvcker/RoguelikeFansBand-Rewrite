@@ -163,6 +163,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v147：P96 属性事务修正与 Sustain](design/contract-v147-p96-attribute-corrections.md)
 - [Contract v148：P97 属性永久增长药水](design/contract-v148-potion-attribute-increase.md)
 - [Contract v149：P98 组合恢复消耗品](design/contract-v149-restoration-combinations.md)
+- [Contract v150：Warrens 首个玩家流程](design/contract-v150-warrens-journey.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -186,7 +187,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v149`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v150`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -386,6 +387,8 @@ P96 修正 / contract-v147 修复属性变化后资源池被先 clamp、再二�
 P97 / contract-v148 接入六种单属性增长药水与 Augmentation。`increase-attribute` 先恢复当前属性，再按原版三段公式增长历史最大值；`augment-attributes` 固定按六维顺序处理，封顶属性跳过 RNG 但不阻断后续属性。实际恢复或增长才 Aware，完全无变化保持 Tried-only；不消费等级提升点，整瓶药水只刷新一次 HP 和职业资源。协议保持 1.123、demo 1.139.0、state hash Schema 保持 v55、active baseline 452 条 exact、零 waiver，内置 content hash 为 `a8eb3c1a5b74f683bd5a71728da916f67972088769e3155cdc0b89c88b4e874c`。legacy importer 映射 tval 75/sval 48–53、55，使 `consumable-effect` 53→46。详见[Contract v148](design/contract-v148-potion-attribute-increase.md)。
 
 P98 / contract-v149 接入 Restoring Food、Restoring Potion、Ambrosia 与 Life Potion 的组合恢复事务。四种窄效果复用六维属性恢复、历史最高经验/生命力恢复、既有状态清除和治疗路径；Restoring 系列按实际变化决定 Aware，Ambrosia 与 Life 合法使用即 Aware。协议保持 1.123、demo 1.140.0、state hash Schema 保持 v55、active baseline 454 条 exact、零 waiver，内置 content hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。legacy importer 使 `consumable-effect` 46→41，`food-nutrition` 保持 28。详见[Contract v149](design/contract-v149-restoration-combinations.md)。
+
+Phase 17 Gate 3 / contract-v150 将生产首流程改为固定 RFB v1.3.0.7 行为参考下的 Warrens 兼容切片：独立世界包含九层正常上下行、早期鼠类/狗头人/座狼生态、狗头人领主、基础武器与治疗补给，以及胜利后逐层返程和地表退休。旧地图、文本、算法、精确数值表与素材未复制；Pest Control 因依赖城镇前置任务而暂缓。协议保持 1.123、demo 升至 1.141.0、state hash Schema 保持 v55、active baseline 455 条 exact、零 waiver，内置 content hash 为 `7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f`。详见[Contract v150](design/contract-v150-warrens-journey.md)。
 
 ### 本地验证
 

@@ -135,10 +135,10 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.bytes, second.bytes);
     assert_eq!(decoded, first);
     assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-    assert_eq!(first.content.terrain.len(), 48);
-    assert_eq!(first.content.actors.len(), 28);
+    assert_eq!(first.content.terrain.len(), 49);
+    assert_eq!(first.content.actors.len(), 32);
     assert_eq!(first.content.affixes.len(), 4);
-    assert_eq!(first.content.items.len(), 90);
+    assert_eq!(first.content.items.len(), 92);
     assert_eq!(first.content.resources.len(), 3);
     assert_eq!(first.content.abilities.len(), 68);
     assert_eq!(first.content.ability_books.len(), 5);
@@ -148,11 +148,11 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.content.classes.len(), 6);
     assert_eq!(first.content.personalities.len(), 3);
     assert_eq!(first.content.builds.len(), 6);
-    assert_eq!(first.content.encounter_tables.len(), 6);
-    assert_eq!(first.content.loot_tables.len(), 8);
+    assert_eq!(first.content.encounter_tables.len(), 7);
+    assert_eq!(first.content.loot_tables.len(), 10);
     assert_eq!(first.content.theme_tables.len(), 3);
     assert_eq!(first.content.region_tables.len(), 1);
     assert_eq!(first.content.terrain_feature_tables.len(), 1);
     assert_eq!(first.content.vaults.len(), 6);
-    assert_eq!(first.content.worlds.len(), 1);
+    assert_eq!(first.content.worlds.len(), 2);
 }

@@ -65,31 +65,37 @@
         "attributes": {
           "strength": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           }
@@ -289,7 +295,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "f4fab824b0924b2b647db81e3d932a2a1d3c62be919bfd174dbd5f8679551077"
+      "stateHash": "8cd6765b8e4db58c40ee3aaefefc884e16da3843ea94347d1fefd760116a4cf0"
     },
     "events": [
       {
@@ -304,9 +310,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "f4fab824b0924b2b647db81e3d932a2a1d3c62be919bfd174dbd5f8679551077"
+        "stateHash": "8cd6765b8e4db58c40ee3aaefefc884e16da3843ea94347d1fefd760116a4cf0"
       }
     ],
-    "saveRoundTripStateHash": "f4fab824b0924b2b647db81e3d932a2a1d3c62be919bfd174dbd5f8679551077"
+    "saveRoundTripStateHash": "8cd6765b8e4db58c40ee3aaefefc884e16da3843ea94347d1fefd760116a4cf0"
   }
 }

@@ -176,31 +176,37 @@
         "attributes": {
           "strength": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "intelligence": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "wisdom": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "dexterity": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "constitution": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           },
           "charisma": {
             "natural": 13,
+            "maximumNatural": 13,
             "effective": 13,
             "index": 10
           }
@@ -413,7 +419,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+      "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
     },
     "events": [
       {
@@ -3838,59 +3844,59 @@
       {
         "step": 12,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 13,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 14,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 17,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 18,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 19,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 20,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 21,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       },
       {
         "step": 22,
         "kind": "player-dead",
-        "stateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+        "stateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
       }
     ],
-    "saveRoundTripStateHash": "e22a89e91d983f517eb18d7da03a9526317f43ce3d6a95c30f8fa454aca05e36"
+    "saveRoundTripStateHash": "438766c255b2ffdb26c3e89e7d862f6f11ed2eca02d73b5dfbacdc38b2ba39de"
   }
 }

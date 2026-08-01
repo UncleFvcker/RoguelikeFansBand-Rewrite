@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.giant-white-mouse",
+  "role": "monster",
+  "nameKey": "actor-demo-giant-white-mouse-name",
+  "descriptionKey": "actor-demo-giant-white-mouse-description",
+  "glyph": "r",
+  "level": 1,
+  "experienceValue": 3,
+  "maxHp": 2,
+  "speed": 110,
+  "attack": 1,
+  "defense": 0,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "tags": ["animal", "beast", "warrens"]
+}

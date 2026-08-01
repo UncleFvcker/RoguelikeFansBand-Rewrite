@@ -1088,6 +1088,9 @@ export function createPresentationFormatter(
     if (id === "demo.floor.echo-depth-1") {
       return localization.format("floor-demo-echo-depth-1-name");
     }
+    if (/^demo\.floor\.warrens-depth-\d+$/.test(id ?? "")) {
+      return localization.format("floor-demo-warrens-depth-name");
+    }
     return id ?? "?";
   }
 

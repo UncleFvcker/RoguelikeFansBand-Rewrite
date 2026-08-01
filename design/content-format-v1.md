@@ -282,7 +282,7 @@ contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord
 
 contract-v88 以 1.80.0 增加 `smart`、`preferredDistance` 和 `fleeHpPercent`，并让 Echo Cantor 使用 3 格偏好距离、25% 受伤撤退和已观察抗性记忆；阵营目标、敌我计数和实际多目标结算由核心定义。contract-v89 只增加玩家级召唤物命令、行动与跨层规则，不修改内容 schema 或 demo 数据，因此内容版本/hash 保持不变。contract-v90 以 1.81.0 为 `ResourceDefinition` 增加 `initialFillPercent`、`meleeHitGainAmount`、`meleeKillGainAmount` 和 `turnDecayAmount`，为 `ClassDefinition` 增加多条目 `techniqueProfiles`（资源、主宰属性、上限公式、最低失败率与先天能力），并加入节奏资源、决斗家职业/构筑/技能集与弦月斩、涌动节奏两个技法能力；Mana 与既有职业数据不变。contract-v91 以 1.82.0 为能力效果增加 `blink-self`、`teleport-self` 与 `teleport-target` 三种怪物位移形态（怪物施法白名单准入），并加入裂隙潜行者与三个位移能力。
 
-当前原创包的 active 编译版本为 1.140.0，content hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`；其能力/物品效果集合包含普通伤害、范围爆发、方向/定点/实体延长射线、固定八向锥形、精确与随机位移、树状跨层、延迟召回、固定/类别/同族友方与敌对召唤、瞬时/持久 terrain/actor/item 侦测、原版式 terrain 转换、状态添加/移除、有序多效果、治疗、鉴定、装备附魔、装备诅咒与解除、Death 四册高级效果、动态设备激活、职业许可的学习容量增长，以及窄消耗品状态、直伤、属性损伤/恢复/永久增长与组合恢复效果，并由怪物 caster 与物品实例复用既有 actor、楼层、地形和知识管线。装备 passive 只允许已有权威消费者的 regeneration、vampiric 与六种 sustain；设备自然恢复、职业主动充能与召回继续只保存权威资源/实例/稳定目的地，不建立显示缓存。
+当前包的 active 编译版本为 1.141.0，content hash 为 `7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f`。除既有能力/物品效果集合外，contract-v150 新增第二个 `demo.world.warrens-journey`：九层线性 dungeon、独立 campaign、四个早期 actor、两件基础物品、一个 terrain、一个 encounter table 和两个 loot tables。世界 ID 已由既有 save/replay/state-hash 字段持久化，不新增内容格式字段。完整选择与兼容差异见 [Contract v150](contract-v150-warrens-journey.md)。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 

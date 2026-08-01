@@ -149,9 +149,9 @@ export function selectJourneyObjective(state: JourneyState): JourneyObjective {
     return state.floorId === "demo.floor.surface" ? { id: "retire" } : { id: "return" };
   }
 
-  const depth = echoDepth(state.floorId);
+  const depth = warrensDepth(state.floorId);
   if (depth !== undefined) {
-    return depth >= 3 ? { id: "guardian", depth } : { id: "descend", depth };
+    return depth >= 9 ? { id: "guardian", depth } : { id: "descend", depth };
   }
   if (state.floorId !== "demo.floor.surface") {
     return { id: "enter", returningFromOtherFloor: true };
@@ -390,26 +390,16 @@ function formatJourneyLocation(localization: Localization, floorId: string): str
   if (floorId === "demo.floor.surface") {
     return localization.format("journey-location-surface");
   }
-  const depth = echoDepth(floorId);
+  const depth = warrensDepth(floorId);
   if (depth !== undefined) {
-    return localization.format("journey-location-echo", {
-      depth,
-      route: localization.format(echoRouteKey(floorId)),
-    });
+    return localization.format("journey-location-warrens", { depth });
   }
   return localization.format("journey-location-other", { floor: floorId });
 }
 
-function echoDepth(floorId: string): number | undefined {
-  const match = /^demo\.floor\.echo-depth-(\d)/.exec(floorId);
+function warrensDepth(floorId: string): number | undefined {
+  const match = /^demo\.floor\.warrens-depth-(\d+)$/.exec(floorId);
   return match ? Number(match[1]) : undefined;
-}
-
-function echoRouteKey(floorId: string): MessageKey {
-  if (floorId.endsWith("-mirror")) return "journey-route-mirror";
-  if (floorId.endsWith("-branch")) return "journey-route-branch";
-  if (floorId.endsWith("-shaft")) return "journey-route-shaft";
-  return "journey-route-main";
 }
 
 function readCompletedPrompts(storage: GuidanceStorage): Set<OnboardingPromptId> {

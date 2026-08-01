@@ -40,6 +40,18 @@ pub(super) fn descend_one_floor(game: &mut Game) {
         .expect("descent should transition");
 }
 
+pub(super) fn place_player_on_terrain(game: &mut Game, terrain_id: &str) {
+    let index = game
+        .terrain
+        .iter()
+        .position(|candidate| candidate == terrain_id)
+        .unwrap_or_else(|| panic!("current floor should contain {terrain_id}"));
+    game.player.position = Position {
+        x: i32::try_from(index % usize::from(game.width)).expect("terrain x must fit i32"),
+        y: i32::try_from(index / usize::from(game.width)).expect("terrain y must fit i32"),
+    };
+}
+
 pub(super) fn connection_position(game: &Game, connection_id: &str) -> Position {
     game.floor_connections
         .iter()

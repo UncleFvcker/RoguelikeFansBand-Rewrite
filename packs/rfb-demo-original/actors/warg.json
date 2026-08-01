@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.warg",
+  "role": "monster",
+  "nameKey": "actor-demo-warg-name",
+  "descriptionKey": "actor-demo-warg-description",
+  "glyph": "C",
+  "level": 5,
+  "experienceValue": 30,
+  "maxHp": 9,
+  "speed": 120,
+  "attack": 2,
+  "defense": 2,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "tags": ["animal", "beast", "warrens"]
+}

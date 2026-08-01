@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v149 阶段性里程碑
+## 8. contract-v75–v150 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.123、内容包 1.140.0、contract-v149、save v1 和 state hash Schema v55；内容 hash 为 `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`。active baseline 包含 454 个 exact fixtures，零 waiver。v73–v90 已建立玩家/怪物施法、召唤物行动和多职业资源底子；v91–v99 按真实导入缺口补齐怪物位移、新状态、bolt/ball、吐息、类别召唤、抗性、心灵、诅咒与杂项效果；v100–v103 建立身体槽、装备防御/进攻旗标和动态 affix；v104–v107 完成 Death 四册 32 个能力、4 本实体书和 384 行职业参数覆盖；v108–v114 建立充能/动态设备、恢复/鉴定/侦测、传送与召回；v115–v117 建立装备附魔、三档实例诅咒、神器保护、解除、卸装限制及四种物品类别召唤；v118 删除未接入权威消费者的装备 passive 表面；v119–v143 增加可见 actor 卷轴、祝福、地形创建/破坏、元素爆发、激怒、Genocide、Recharging、Spell 学习容量，以及 Slowness、Death、Poison、Thermal、Resistance、Speed、Heroism、Berserk Strength、Poetic Inspiration、Stone Skin 与 Restore Life Levels Potion；v144–v147 增加 Blindness、Detonations、属性损伤/恢复、资源比例修正与六种 sustain 消费者，v148 接入六种属性永久增长与 Augmentation，v149 接入 Restoring、Ambrosia 与 Life 组合恢复事务。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.123、内容包 1.141.0、contract-v150、save v1 和 state hash Schema v55；内容 hash 为 `7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f`。active baseline 包含 455 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休。Original Lab/Echo 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首轮真实内容导入已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 48 种 terrain、28 种 actor、90 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；它用于证明规则边界和确定性，不对应旧版的大规模内容。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 49 种 terrain、32 种 actor、92 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、7 张 encounter table、10 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |

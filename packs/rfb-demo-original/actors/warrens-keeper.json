@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.warrens-keeper",
+  "role": "monster",
+  "nameKey": "actor-demo-warrens-keeper-name",
+  "descriptionKey": "actor-demo-warrens-keeper-description",
+  "glyph": "k",
+  "level": 7,
+  "experienceValue": 250,
+  "maxHp": 24,
+  "speed": 110,
+  "attack": 3,
+  "defense": 3,
+  "damageDice": 1,
+  "damageSides": 4,
+  "damageType": "physical",
+  "lootTableId": "demo.loot-table.warrens-keeper",
+  "tags": ["guardian", "humanoid", "kobold", "warrens"]
+}

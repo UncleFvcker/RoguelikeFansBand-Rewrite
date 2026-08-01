@@ -147,11 +147,14 @@ impl AppState {
 
 #[cfg(not(feature = "webdriver"))]
 fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
-    Game::new_with_build(seed, build_id).map_err(|error| error.to_string())
+    Game::new_warrens_journey_with_build(seed, build_id).map_err(|error| error.to_string())
 }
 
 #[cfg(feature = "webdriver")]
 fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
+    // The existing webdriver suite is a debug-only technical regression harness
+    // over the original lab. Gate 6 replaces its scripted state assumptions with
+    // the normal Warrens journey; production sessions already use Warrens above.
     let mut payload = Game::new_with_build(seed, build_id)
         .map_err(|error| error.to_string())?
         .to_save();
@@ -459,6 +462,7 @@ mod tests {
         let bytes = state
             .save("2026-07-15T00:01:00Z".to_owned())
             .expect("save should encode");
+        let (_, saved_payload) = rfb_save::decode(&bytes).expect("save should decode");
         let replay = decode_replay(&state.export_replay().expect("replay should encode"))
             .expect("replay should decode");
         let verification = verify_replay(
@@ -471,6 +475,8 @@ mod tests {
             .expect("save should restore in a new native session");
 
         assert_eq!(verification.commands_verified, 1);
+        assert_eq!(initial.world_id, rfb_core::WARRENS_JOURNEY_WORLD_ID);
+        assert_eq!(saved_payload.world_id, rfb_core::WARRENS_JOURNEY_WORLD_ID);
         assert_eq!(verification.final_state_hash, update.state_hash);
         assert_eq!(restored.revision, update.revision);
         assert_eq!(restored.last_command_seq, update.command_seq);
