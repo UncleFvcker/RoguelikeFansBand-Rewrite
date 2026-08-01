@@ -166,6 +166,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v150：Warrens 首个玩家流程](design/contract-v150-warrens-journey.md)
 - [Contract v151：RFB Warrior 与地牢状态面板](design/contract-v151-warrior-and-dungeon-status.md)
 - [Contract v152：玩家结果与恢复流程](design/contract-v152-player-results-and-recovery.md)
+- [Contract v153：Warrens 随机地图生成](design/contract-v153-warrens-map-generation.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -189,7 +190,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v152`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v153`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -395,6 +396,8 @@ Phase 17 Gate 3 / contract-v150 将生产首流程改为固定 RFB v1.3.0.7 行�
 Phase 17 的 Gate 3 后产品修订 / contract-v151 取消准备、进入、深入、首领、返回、退休式阶段目标，改为只显示当前地牢、当前/最大深度，以及尚未击败的首领。新建角色只开放首个 RFB 职业切片 Warrior；六维、HP/生命/经验倍率、八项原版技能成长及阔剑/锁子甲/短弓/箭矢出生角色按固定源码核对，描述独立重写。Warrior 使用显式 RFB Standard 通用身体；高级职业能力和当前模型无法精确承载的弓倍率、护甲命中修正继续列为差异。协议保持 1.123、demo 升至 1.142.0、Schema 保持 v55、active baseline 455 条 exact、零 waiver，内置 content hash 为 `dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36`。详见[Contract v151](design/contract-v151-warrior-and-dungeon-status.md)。
 
 Phase 17 Gate 4 / contract-v152 为死亡、击败兽穴首领后的返程状态和地表退休增加独立结果页。结果页显示职业、已知 seed、回合、分数、征服地牢和任务数，并提供按状态合法的继续返程、同配置重开、新配置、读取、主菜单和退出操作；旧存档无法提供原始 seed 时不会伪造，而是禁用同配置重开。标题页同时把可恢复备份的序号和恢复操作直接显示出来，并允许确认删除损坏存档。协议、save/replay、Schema、内容包与 455 条 exact fixture 均不漂移，active baseline 升至 contract-v152。详见[Contract v152](design/contract-v152-player-results-and-recovery.md)。
+
+Phase 17 Gate 5 前地图纠偏 / contract-v153 将 Warrens 的双矩形 fallback 替换为独立实现的 seeded 地图生成。固定 RFB v1.3.0.7 来源表明浅层 Warrens 实际是 66×22、约五个以不规则洞室为主的房间、随机中心/隧道，以及普通层 1–2 个上行和 4–5 个下行，而不是固定整层 cavern。新实现采用连通 frontier 洞室、打乱中心的环形随机通道和声明式楼梯范围；同 seed 可复现、不同 seed 有差异、楼层往返不重建。协议保持 1.123、demo 升至 1.143.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`。详见[Contract v153](design/contract-v153-warrens-map-generation.md)。
 
 ### 本地验证
 

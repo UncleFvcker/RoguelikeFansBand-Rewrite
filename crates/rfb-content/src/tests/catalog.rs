@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.142.0");
+    assert_eq!(catalog.pack_version(), "1.143.0");
     assert_eq!(
         catalog.resource("demo.resource.mana").map(|resource| (
             resource.name_key.as_str(),
@@ -597,6 +597,55 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         ))
     );
     assert!(catalog.world("demo.world.original-v1").is_some());
+    let warrens = catalog
+        .world("demo.world.warrens-journey")
+        .expect("Warrens world should remain available");
+    assert_eq!((warrens.width, warrens.height), (66, 22));
+    assert_eq!(warrens.procedural_floors.len(), 9);
+    let warrens_first = &warrens.procedural_floors[0];
+    assert_eq!(
+        warrens_first
+            .generation_budget
+            .as_ref()
+            .map(|budget| (budget.room_placements, budget.room_area_tiles,)),
+        Some((Some(5), Some(450)))
+    );
+    assert_eq!(
+        warrens_first.layout.as_ref().map(|layout| (
+            layout.rooms.as_ref().map(|rooms| {
+                rooms
+                    .shapes
+                    .iter()
+                    .map(|candidate| (candidate.shape, candidate.weight))
+                    .collect::<Vec<_>>()
+            }),
+            layout.stairs,
+        )),
+        Some((
+            Some(vec![
+                (ProceduralRoomShape::Rectangle, 1),
+                (ProceduralRoomShape::Cavern, 9),
+            ]),
+            Some(ProceduralStairLayoutDefinition {
+                up: ProceduralCountRangeDefinition {
+                    minimum: 1,
+                    maximum: 2,
+                },
+                down: Some(ProceduralCountRangeDefinition {
+                    minimum: 4,
+                    maximum: 5,
+                }),
+            }),
+        ))
+    );
+    assert_eq!(
+        warrens.procedural_floors[8]
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.stairs)
+            .and_then(|stairs| stairs.down),
+        None
+    );
     assert_eq!(
         catalog.visual_glyphs().get("demo.item.luminous-shard"),
         Some(&"!".to_owned())

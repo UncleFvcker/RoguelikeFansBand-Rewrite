@@ -517,6 +517,60 @@ fn procedural_floor_tables_require_valid_depth_roles_and_references() {
 }
 
 #[test]
+fn warrens_stair_ranges_match_floor_topology_and_stay_bounded() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut zero_up = artifact.content.clone();
+    zero_up
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .and_then(|world| world.procedural_floors.first_mut())
+        .and_then(|floor| floor.layout.as_mut())
+        .and_then(|layout| layout.stairs.as_mut())
+        .expect("Warrens first floor should retain stair ranges")
+        .up
+        .minimum = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut zero_up),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut missing_down = artifact.content.clone();
+    missing_down
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .and_then(|world| world.procedural_floors.first_mut())
+        .and_then(|floor| floor.layout.as_mut())
+        .and_then(|layout| layout.stairs.as_mut())
+        .expect("Warrens first floor should retain stair ranges")
+        .down = None;
+    assert!(matches!(
+        validate_and_normalize(&mut missing_down),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut final_down = artifact.content.clone();
+    final_down
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .and_then(|world| world.procedural_floors.last_mut())
+        .and_then(|floor| floor.layout.as_mut())
+        .and_then(|layout| layout.stairs.as_mut())
+        .expect("Warrens final floor should retain its up stair range")
+        .down = Some(ProceduralCountRangeDefinition {
+        minimum: 4,
+        maximum: 5,
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut final_down),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
 fn region_tables_require_depth_eligible_candidates_and_composable_budgets() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 

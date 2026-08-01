@@ -721,6 +721,9 @@ fn budgeted_rooms_and_connected_cavern_obey_geometric_limits() {
             match room.shape {
                 ProceduralRoomShape::Rectangle => rectangles += 1,
                 ProceduralRoomShape::Cross => crosses += 1,
+                ProceduralRoomShape::Cavern => {
+                    panic!("test geometry should not generate cavern rooms")
+                }
             }
         }
     }
@@ -1385,6 +1388,7 @@ fn terrain_feature_space_failure_falls_back_without_overlap() {
         width: 1,
         height: 1,
         shape: ProceduralRoomShape::Rectangle,
+        carved_cells: BTreeSet::new(),
     }];
     let target = Position { x: 1, y: 1 };
     let mut terrain = vec!["demo.terrain.wall".to_owned(); 16];
@@ -1472,6 +1476,7 @@ fn formation_space_pressure_shrinks_then_falls_back_atomically() {
         width: 3,
         height: 3,
         shape: ProceduralRoomShape::Rectangle,
+        carved_cells: BTreeSet::new(),
     }];
     let free = BTreeSet::from([
         Position { x: 1, y: 0 },

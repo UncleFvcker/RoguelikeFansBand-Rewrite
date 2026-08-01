@@ -4,8 +4,8 @@
   "id": "demo.world.warrens-journey",
   "nameKey": "world-demo-warrens-journey-name",
   "initialFloorId": "demo.floor.surface",
-  "width": 20,
-  "height": 20,
+  "width": 66,
+  "height": 22,
   "fillTerrainId": "demo.terrain.floor",
   "borderTerrainId": "demo.terrain.wall",
   "terrainOverrides": [
@@ -59,12 +59,28 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 2, "lootPlacements": 1 },
+      "generationBudget": { "actorSlots": 2, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "entryTerrainId": "demo.terrain.stairs-down",
       "nextFloorId": "demo.floor.warrens-depth-2",
       "depth": 1,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -81,11 +97,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 2, "lootPlacements": 1 },
+      "generationBudget": { "actorSlots": 2, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-3",
       "depth": 2,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -102,11 +134,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 3, "lootPlacements": 1 },
+      "generationBudget": { "actorSlots": 3, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-4",
       "depth": 3,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -123,11 +171,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 3, "lootPlacements": 1 },
+      "generationBudget": { "actorSlots": 3, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-5",
       "depth": 4,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -144,11 +208,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 4, "lootPlacements": 2 },
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-6",
       "depth": 5,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -165,11 +245,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 4, "lootPlacements": 2 },
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-7",
       "depth": 6,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -186,11 +282,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 5, "lootPlacements": 2 },
+      "generationBudget": { "actorSlots": 5, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-8",
       "depth": 7,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -207,11 +319,27 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 5, "lootPlacements": 2 },
+      "generationBudget": { "actorSlots": 5, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": {
+          "up": { "minimum": 1, "maximum": 2 },
+          "down": { "minimum": 4, "maximum": 5 }
+        }
+      },
       "nextFloorId": "demo.floor.warrens-depth-9",
       "depth": 8,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",
@@ -228,15 +356,28 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 4, "lootPlacements": 2 },
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "layout": {
+        "rooms": {
+          "minWidth": 8,
+          "maxWidth": 18,
+          "minHeight": 7,
+          "maxHeight": 9,
+          "shapes": [
+            { "shape": "cavern", "weight": 9 },
+            { "shape": "rectangle", "weight": 1 }
+          ]
+        },
+        "stairs": { "up": { "minimum": 1, "maximum": 2 } }
+      },
       "finalFloor": true,
       "guardian": {
         "instanceId": "demo.guardian.warrens.1",
         "actorKindId": "demo.actor.warrens-keeper"
       },
       "depth": 9,
-      "width": 20,
-      "height": 20,
+      "width": 66,
+      "height": 22,
       "wallTerrainId": "demo.terrain.wall",
       "floorTerrainId": "demo.terrain.floor",
       "upStairTerrainId": "demo.terrain.stairs-up",

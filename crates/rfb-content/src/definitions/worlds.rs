@@ -490,6 +490,8 @@ pub struct ProceduralLayoutDefinition {
     pub streamers: Vec<ProceduralStreamerCandidateDefinition>,
     #[serde(default)]
     pub pit: Option<ProceduralPitDefinition>,
+    #[serde(default)]
+    pub stairs: Option<ProceduralStairLayoutDefinition>,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -571,6 +573,24 @@ pub struct ProceduralRoomShapeCandidateDefinition {
 pub enum ProceduralRoomShape {
     Rectangle,
     Cross,
+    Cavern,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralStairLayoutDefinition {
+    pub up: ProceduralCountRangeDefinition,
+    #[serde(default)]
+    pub down: Option<ProceduralCountRangeDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralCountRangeDefinition {
+    pub minimum: u16,
+    pub maximum: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

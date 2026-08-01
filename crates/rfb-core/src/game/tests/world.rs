@@ -5,6 +5,61 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn warrens_maps_are_seeded_connected_varied_and_persistent() {
+    let mut generated_maps = BTreeSet::new();
+    for seed in 0..16 {
+        let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
+            .expect("Warrens journey should create");
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+
+        assert_eq!((game.width, game.height), (66, 22));
+        assert!(generated_terrain_is_connected(
+            &game.terrain,
+            game.width,
+            game.height,
+            &game.content,
+        ));
+        assert!(
+            (1..=2).contains(
+                &game
+                    .terrain
+                    .iter()
+                    .filter(|terrain_id| **terrain_id == "demo.terrain.stairs-up")
+                    .count()
+            )
+        );
+        assert!(
+            (4..=5).contains(
+                &game
+                    .terrain
+                    .iter()
+                    .filter(|terrain_id| **terrain_id == "demo.terrain.stairs-down")
+                    .count()
+            )
+        );
+
+        let first_floor_terrain = game.terrain.clone();
+        let mut same_seed = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
+            .expect("same-seed Warrens journey should create");
+        place_player_on_terrain(&mut same_seed, "demo.terrain.stairs-down");
+        dispatch_next(&mut same_seed, GameCommand::TraverseStairs);
+        assert_eq!(same_seed.terrain, first_floor_terrain);
+
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(game.terrain, first_floor_terrain);
+        generated_maps.insert(first_floor_terrain);
+    }
+    assert!(
+        generated_maps.len() >= 15,
+        "fixed seed matrix should produce visibly distinct Warrens maps"
+    );
+}
+
+#[test]
 fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
     for seed in 0..16 {
         let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")

@@ -459,11 +459,11 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v152 阶段性里程碑
+## 8. contract-v75–v153 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.123、内容包 1.142.0、contract-v152、save v1 和 state hash Schema v55；内容 hash 为 `dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36`。active baseline 包含 455 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.123、内容包 1.143.0、contract-v153、save v1 和 state hash Schema v55；内容 hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`。active baseline 包含 456 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口；v153 以独立的 66×22 洞室、随机环形通道和浅层楼梯密度替换 Warrens 固定双矩形 fallback，并固定同 seed 重现、异 seed 变化和往返持久化。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
 这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 49 种 terrain、33 种 actor、96 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、10 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
 
@@ -472,7 +472,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 | 核心模拟、存档与回放 | 已建立 | 新实现已具备强类型命令/事件、单一 RNG、迁移链、state hash 和长回放无漂移；工程边界比旧全局 C 状态更明确 |
 | 状态、抗性与基础战斗 | 基础纵切已建立 | 已覆盖近战、多 blow、射击、投掷、品牌、克制、吸血和代表性状态/元素；仍缺暴击、反击、姿态和骑乘等广度 |
 | 物品、装备与知识 | 基础闭环已建立 | 已覆盖背包、地面堆、装备、affix、质量、鉴别、携带物和掉落；仍缺完整神器、诅咒、激活、随机神器和锻造 |
-| 地图、地牢与探索 | 阶段 E 里程碑完成 | 已覆盖原版式房间外地貌、Vault、pit、maze-only、多区域、多楼梯、树状分支、共享守护者镜像和可配置实例生命周期 |
+| 地图、地牢与探索 | 阶段 E 里程碑完成 | 已覆盖原版式房间外地貌、Vault、pit、maze-only、多区域、多楼梯、树状分支、共享守护者镜像、可配置实例生命周期，以及 Warrens 的 seeded 不规则洞室/随机环形通道；仍未复刻原版 fractal heightmap 与隧道启发式 |
 | 怪物与 AI | 部分建立 | 已有追踪、pack identity、formation、包围、守卫、施法效用、多格法术、敌对召唤、玩家召唤物目标/命令、保持距离/逃跑和有限智能学习；仍缺繁殖、unique 生态、永久宠物和回忆 |
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |

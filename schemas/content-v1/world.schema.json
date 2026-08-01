@@ -386,6 +386,28 @@
       ],
       "type": "object"
     },
+    "ProceduralCountRangeDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "maximum": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minimum": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum"
+      ],
+      "type": "object"
+    },
     "ProceduralDestroyedDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1059,6 +1081,17 @@
           ],
           "default": null
         },
+        "stairs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralStairLayoutDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "streamers": {
           "default": [],
           "items": {
@@ -1232,7 +1265,8 @@
     "ProceduralRoomShape": {
       "enum": [
         "rectangle",
-        "cross"
+        "cross",
+        "cavern"
       ],
       "type": "string"
     },
@@ -1251,6 +1285,29 @@
       "required": [
         "shape",
         "weight"
+      ],
+      "type": "object"
+    },
+    "ProceduralStairLayoutDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "down": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralCountRangeDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "up": {
+          "$ref": "#/$defs/ProceduralCountRangeDefinition"
+        }
+      },
+      "required": [
+        "up"
       ],
       "type": "object"
     },

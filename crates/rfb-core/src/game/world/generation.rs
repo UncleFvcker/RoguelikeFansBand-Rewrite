@@ -17,6 +17,11 @@ pub(in crate::game) struct GeneratedRoom {
     pub(in crate::game) width: i32,
     pub(in crate::game) height: i32,
     pub(in crate::game) shape: ProceduralRoomShape,
+    pub(in crate::game) carved_cells: BTreeSet<Position>,
+}
+
+fn generated_cavern_room_area(width: i32, height: i32) -> u32 {
+    (u32::try_from(width * height).expect("room area must fit u32") * 5 / 8).max(10)
 }
 
 impl GeneratedRoom {
@@ -40,6 +45,7 @@ impl GeneratedRoom {
             ProceduralRoomShape::Cross => {
                 position.x == self.center().x || position.y == self.center().y
             }
+            ProceduralRoomShape::Cavern => self.carved_cells.contains(&position),
         }
     }
 
@@ -47,6 +53,13 @@ impl GeneratedRoom {
         match self.shape {
             ProceduralRoomShape::Rectangle => (self.width * self.height) as u32,
             ProceduralRoomShape::Cross => (self.width + self.height - 1) as u32,
+            ProceduralRoomShape::Cavern => {
+                if self.carved_cells.is_empty() {
+                    generated_cavern_room_area(self.width, self.height)
+                } else {
+                    u32::try_from(self.carved_cells.len()).expect("room area must fit u32")
+                }
+            }
         }
     }
 }
@@ -544,6 +557,22 @@ fn carve_generated_corridor(
     }
 }
 
+fn generated_remote_room_center(rooms: &[GeneratedRoom]) -> Position {
+    let entry = rooms[0].center();
+    rooms
+        .iter()
+        .skip(1)
+        .map(GeneratedRoom::center)
+        .max_by_key(|position| {
+            (
+                entry.x.abs_diff(position.x) + entry.y.abs_diff(position.y),
+                position.y,
+                position.x,
+            )
+        })
+        .expect("room layout must retain a remote room")
+}
+
 pub(in crate::game) fn terrain_feature_placement_candidates(
     terrain: &[String],
     width: u16,
@@ -848,6 +877,7 @@ impl Game {
                     width: room_width,
                     height: room_height,
                     shape: ProceduralRoomShape::Rectangle,
+                    carved_cells: BTreeSet::new(),
                 },
                 GeneratedRoom {
                     id: "remote".to_owned(),
@@ -856,6 +886,7 @@ impl Game {
                     width: room_width,
                     height: room_height,
                     shape: ProceduralRoomShape::Rectangle,
+                    carved_cells: BTreeSet::new(),
                 },
             ]
         };
@@ -919,8 +950,13 @@ impl Game {
                 });
             carve_generated_room(&mut terrain, width, room, room_terrain_id);
         }
+        let cave_room_layout = rooms
+            .iter()
+            .any(|room| room.shape == ProceduralRoomShape::Cavern);
         let (first_center, second_center) = if maze_only {
             maze_floor_anchors(&maze_walkable)
+        } else if cave_room_layout {
+            (rooms[0].center(), generated_remote_room_center(&rooms))
         } else {
             (rooms[0].center(), rooms[1].center())
         };
@@ -973,14 +1009,18 @@ impl Game {
                 carve_generated_room(&mut terrain, width, room, room_terrain_id);
             }
         }
-        for connected_rooms in rooms.windows(2) {
-            carve_generated_corridor(
-                &mut terrain,
-                width,
-                connected_rooms[0].center(),
-                connected_rooms[1].center(),
-                &generated_floor_terrain_id,
-            );
+        if cave_room_layout {
+            self.carve_cave_room_network(&mut terrain, width, &rooms, &generated_floor_terrain_id);
+        } else {
+            for connected_rooms in rooms.windows(2) {
+                carve_generated_corridor(
+                    &mut terrain,
+                    width,
+                    connected_rooms[0].center(),
+                    connected_rooms[1].center(),
+                    &generated_floor_terrain_id,
+                );
+            }
         }
         if let Some(cavern_origin) = cavern_origin {
             carve_generated_corridor(
@@ -1009,7 +1049,7 @@ impl Game {
                     &mut terrain,
                 )
             });
-        let door_position = (!maze_only).then_some(Position {
+        let door_position = (!maze_only && !cave_room_layout).then_some(Position {
             x: (first_center.x + second_center.x) / 2,
             y: first_center.y,
         });
@@ -1021,7 +1061,7 @@ impl Game {
                 &definition.closed_door_terrain_id,
             );
         }
-        let down_stair_position = if maze_only {
+        let down_stair_position = if maze_only || cave_room_layout {
             second_center
         } else {
             Position {
@@ -1032,6 +1072,18 @@ impl Game {
         let fixed_trap_position = if maze_only {
             let route = maze_floor_path(&maze_walkable, first_center, second_center);
             route[route.len() / 2]
+        } else if cave_room_layout {
+            generated_room_cells(&rooms[0])
+                .into_iter()
+                .filter(|position| *position != first_center)
+                .min_by_key(|position| {
+                    (
+                        first_center.x.abs_diff(position.x) + first_center.y.abs_diff(position.y),
+                        position.y,
+                        position.x,
+                    )
+                })
+                .expect("cave entry room must retain a trap cell")
         } else {
             Position {
                 x: first_center.x,
@@ -1150,7 +1202,62 @@ impl Game {
                 &mut self.rng,
             )?;
         }
+        let mut stair_reserved =
+            BTreeSet::from([first_center, down_stair_position, fixed_trap_position]);
+        if let Some(door_position) = door_position {
+            stair_reserved.insert(door_position);
+        }
+        if guardian.is_some() {
+            stair_reserved.insert(if cave_room_layout {
+                second_center
+            } else {
+                Position {
+                    x: first_center.x + 1,
+                    y: first_center.y,
+                }
+            });
+        }
+        for placement in &vault_placements {
+            let (vault_width, vault_height) =
+                transformed_vault_dimensions(&placement.vault, placement.transform);
+            for y in 0..vault_height {
+                for x in 0..vault_width {
+                    stair_reserved.insert(Position {
+                        x: placement.origin.x + i32::from(x),
+                        y: placement.origin.y + i32::from(y),
+                    });
+                }
+            }
+            stair_reserved.extend(placement.connector_cells.iter().copied());
+        }
+        if let Some(pit) = &pit_placement {
+            let total_width = pit.definition.inner_width + 6;
+            let total_height = pit.definition.inner_height + 6;
+            for y in 0..total_height {
+                for x in 0..total_width {
+                    stair_reserved.insert(Position {
+                        x: pit.origin.x + i32::from(x),
+                        y: pit.origin.y + i32::from(y),
+                    });
+                }
+            }
+        }
+        let extra_stair_positions = if floor_connections.is_empty() {
+            self.place_configured_stairs(
+                definition,
+                first_center,
+                definition
+                    .down_stair_terrain_id
+                    .as_ref()
+                    .map(|_| down_stair_position),
+                &stair_reserved,
+                &mut terrain,
+            )
+        } else {
+            BTreeSet::new()
+        };
         let mut feature_reserved = BTreeSet::from([fixed_trap_position]);
+        feature_reserved.extend(extra_stair_positions.iter().copied());
         if floor_connections.is_empty() {
             feature_reserved.insert(first_center);
         } else {
@@ -1226,6 +1333,7 @@ impl Game {
             Vec::new()
         };
         let mut occupied = BTreeSet::from([first_center]);
+        occupied.extend(extra_stair_positions.iter().copied());
         occupied.extend(
             floor_connections
                 .iter()
@@ -1281,9 +1389,15 @@ impl Game {
         if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
-        let guardian_position = guardian.map(|_| Position {
-            x: first_center.x + 1,
-            y: first_center.y,
+        let guardian_position = guardian.map(|_| {
+            if cave_room_layout {
+                second_center
+            } else {
+                Position {
+                    x: first_center.x + 1,
+                    y: first_center.y,
+                }
+            }
         });
         occupied.extend(guardian_position);
         let reserved_actor_slots = definition
@@ -1904,6 +2018,181 @@ impl Game {
 }
 
 impl Game {
+    fn place_configured_stairs(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        primary_up: Position,
+        primary_down: Option<Position>,
+        reserved: &BTreeSet<Position>,
+        terrain: &mut [String],
+    ) -> BTreeSet<Position> {
+        let Some(stairs) = definition.layout.as_ref().and_then(|layout| layout.stairs) else {
+            return BTreeSet::new();
+        };
+        let up_total = stairs.up.minimum
+            + u16::try_from(
+                self.rng
+                    .bounded(u64::from(stairs.up.maximum - stairs.up.minimum + 1)),
+            )
+            .expect("stair count roll must fit u16");
+        let down_total = stairs.down.map(|range| {
+            range.minimum
+                + u16::try_from(
+                    self.rng
+                        .bounded(u64::from(range.maximum - range.minimum + 1)),
+                )
+                .expect("stair count roll must fit u16")
+        });
+        let mut occupied = reserved.clone();
+        occupied.insert(primary_up);
+        occupied.extend(primary_down);
+        let mut placed = BTreeSet::new();
+        self.place_additional_stair_terrain(
+            definition,
+            &definition.up_stair_terrain_id,
+            up_total - 1,
+            &mut occupied,
+            &mut placed,
+            terrain,
+        );
+        if let (Some(down_terrain_id), Some(total)) =
+            (&definition.down_stair_terrain_id, down_total)
+        {
+            self.place_additional_stair_terrain(
+                definition,
+                down_terrain_id,
+                total - 1,
+                &mut occupied,
+                &mut placed,
+                terrain,
+            );
+        }
+        placed
+    }
+
+    fn place_additional_stair_terrain(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        stair_terrain_id: &str,
+        count: u16,
+        occupied: &mut BTreeSet<Position>,
+        placed: &mut BTreeSet<Position>,
+        terrain: &mut [String],
+    ) {
+        for _ in 0..count {
+            let mut candidates = terrain
+                .iter()
+                .enumerate()
+                .filter_map(|(index, terrain_id)| {
+                    let position = Position {
+                        x: i32::try_from(index % usize::from(definition.width))
+                            .expect("floor x must fit i32"),
+                        y: i32::try_from(index / usize::from(definition.width))
+                            .expect("floor y must fit i32"),
+                    };
+                    (!occupied.contains(&position)
+                        && self
+                            .content
+                            .terrain(terrain_id)
+                            .is_some_and(|terrain| terrain.walkable))
+                    .then_some(position)
+                })
+                .collect::<Vec<_>>();
+            let adjacent_wall_count = |position: Position| {
+                [
+                    Position {
+                        x: position.x - 1,
+                        y: position.y,
+                    },
+                    Position {
+                        x: position.x + 1,
+                        y: position.y,
+                    },
+                    Position {
+                        x: position.x,
+                        y: position.y - 1,
+                    },
+                    Position {
+                        x: position.x,
+                        y: position.y + 1,
+                    },
+                ]
+                .into_iter()
+                .filter(|neighbor| {
+                    neighbor.x < 0
+                        || neighbor.y < 0
+                        || neighbor.x >= i32::from(definition.width)
+                        || neighbor.y >= i32::from(definition.height)
+                        || !self
+                            .content
+                            .terrain(&terrain[generated_terrain_index(definition.width, *neighbor)])
+                            .is_some_and(|terrain| terrain.walkable)
+                })
+                .count()
+            };
+            let maximum_adjacent_walls = candidates
+                .iter()
+                .map(|position| adjacent_wall_count(*position))
+                .max()
+                .expect("validated floor must retain space for configured stairs");
+            candidates.retain(|position| adjacent_wall_count(*position) == maximum_adjacent_walls);
+            candidates.sort_by_key(|position| (position.y, position.x));
+            let selected = candidates[usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(candidates.len()).expect("candidates must fit u64")),
+            )
+            .expect("candidate index must fit usize")];
+            set_generated_terrain(terrain, definition.width, selected, stair_terrain_id);
+            occupied.insert(selected);
+            placed.insert(selected);
+        }
+    }
+
+    fn carve_cave_room_network(
+        &mut self,
+        terrain: &mut [String],
+        width: u16,
+        rooms: &[GeneratedRoom],
+        floor_terrain_id: &str,
+    ) {
+        let mut centers = rooms.iter().map(GeneratedRoom::center).collect::<Vec<_>>();
+        for remaining in (2..=centers.len()).rev() {
+            let swap_index = usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(remaining).expect("room count must fit u64")),
+            )
+            .expect("room index must fit usize");
+            centers.swap(remaining - 1, swap_index);
+        }
+        for index in 0..centers.len() {
+            let from = centers[index];
+            let to = centers[(index + 1) % centers.len()];
+            self.carve_randomized_corridor(terrain, width, from, to, floor_terrain_id);
+        }
+    }
+
+    fn carve_randomized_corridor(
+        &mut self,
+        terrain: &mut [String],
+        width: u16,
+        from: Position,
+        to: Position,
+        floor_terrain_id: &str,
+    ) {
+        let mut position = from;
+        set_generated_terrain(terrain, width, position, floor_terrain_id);
+        while position != to {
+            let change_x = position.x != to.x;
+            let change_y = position.y != to.y;
+            if change_x && (!change_y || self.rng.bounded(2) == 0) {
+                position.x += (to.x - position.x).signum();
+            } else {
+                position.y += (to.y - position.y).signum();
+            }
+            set_generated_terrain(terrain, width, position, floor_terrain_id);
+        }
+    }
+
     fn resolve_floor_connection_targets(
         &mut self,
         definition: &ProceduralFloorDefinition,
@@ -1972,6 +2261,10 @@ impl Game {
                 ProceduralRoomShape::Cross => {
                     u32::from(geometry.min_width) + u32::from(geometry.min_height) - 1
                 }
+                ProceduralRoomShape::Cavern => generated_cavern_room_area(
+                    i32::from(geometry.min_width),
+                    i32::from(geometry.min_height),
+                ),
             })
             .min()
             .expect("validated room geometry must retain a shape");
@@ -2005,6 +2298,7 @@ impl Game {
                                     width: i32::from(width),
                                     height: i32::from(height),
                                     shape: shape_candidate.shape,
+                                    carved_cells: BTreeSet::new(),
                                 };
                                 if room.area() <= maximum_room_area {
                                     candidates.push(room);
@@ -2044,11 +2338,62 @@ impl Game {
                 1 => "remote".to_owned(),
                 _ => format!("room.{}", ordinal + 1),
             };
+            if room.shape == ProceduralRoomShape::Cavern {
+                room.carved_cells = self.generate_cavern_room_cells(&room);
+            }
             remaining_area -= room.area();
             rooms.push(room);
         }
 
         rooms
+    }
+
+    fn generate_cavern_room_cells(&mut self, room: &GeneratedRoom) -> BTreeSet<Position> {
+        let target_area = usize::try_from(generated_cavern_room_area(room.width, room.height))
+            .expect("room area must fit usize");
+        let mut carved = BTreeSet::from([room.center()]);
+        while carved.len() < target_area {
+            let mut frontier = carved
+                .iter()
+                .flat_map(|position| {
+                    [
+                        Position {
+                            x: position.x - 1,
+                            y: position.y,
+                        },
+                        Position {
+                            x: position.x + 1,
+                            y: position.y,
+                        },
+                        Position {
+                            x: position.x,
+                            y: position.y - 1,
+                        },
+                        Position {
+                            x: position.x,
+                            y: position.y + 1,
+                        },
+                    ]
+                })
+                .filter(|position| {
+                    position.x >= room.x
+                        && position.x < room.x + room.width
+                        && position.y >= room.y
+                        && position.y < room.y + room.height
+                        && !carved.contains(position)
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            frontier.sort_by_key(|position| (position.y, position.x));
+            let index = usize::try_from(
+                self.rng
+                    .bounded(u64::try_from(frontier.len()).expect("frontier must fit u64")),
+            )
+            .expect("frontier index must fit usize");
+            carved.insert(frontier[index]);
+        }
+        carved
     }
 
     fn place_classic_pit(

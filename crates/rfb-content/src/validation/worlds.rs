@@ -9,6 +9,14 @@ use super::shared::{
     validate_message_key, validate_position,
 };
 
+fn cavern_room_area(width: u16, height: u16) -> u32 {
+    (u32::from(width) * u32::from(height) * 5 / 8).max(10)
+}
+
+fn valid_procedural_count_range(range: ProceduralCountRangeDefinition) -> bool {
+    (1..=8).contains(&range.minimum) && range.minimum <= range.maximum && range.maximum <= 8
+}
+
 pub(super) struct WorldValidationRefs<'a> {
     pub(super) terrain_ids: &'a BTreeSet<String>,
     pub(super) terrain_walkability: &'a BTreeMap<String, bool>,
@@ -630,6 +638,7 @@ pub(super) fn validate_world(
                     || layout.river.is_some()
                     || layout.destroyed.is_some()
                     || layout.pit.is_some()
+                    || layout.stairs.is_some()
                     || budget.cavern_area_tiles.is_some()
                     || budget.lake_area_tiles.is_some()
                     || budget.lake_deep_area_tiles.is_some()
@@ -740,16 +749,19 @@ pub(super) fn validate_world(
                         ProceduralRoomShape::Cross => {
                             u32::from(geometry.min_width) + u32::from(geometry.min_height) - 1
                         }
+                        ProceduralRoomShape::Cavern => {
+                            cavern_room_area(geometry.min_width, geometry.min_height)
+                        }
                     })
                     .min()
                     .unwrap_or(0);
                 let interior_area = u32::from(procedural.width.saturating_sub(2))
                     * u32::from(procedural.height.saturating_sub(2));
                 if !(2..=6).contains(&placements)
-                    || !(5..=9).contains(&geometry.min_width)
-                    || !(geometry.min_width..=9).contains(&geometry.max_width)
-                    || !(5..=9).contains(&geometry.min_height)
-                    || !(geometry.min_height..=9).contains(&geometry.max_height)
+                    || !(5..=32).contains(&geometry.min_width)
+                    || !(geometry.min_width..=32).contains(&geometry.max_width)
+                    || !(5..=32).contains(&geometry.min_height)
+                    || !(geometry.min_height..=32).contains(&geometry.max_height)
                     || geometry.min_width > minimum_cell_width
                     || geometry.min_height > minimum_cell_height
                     || geometry.shapes.is_empty()
@@ -762,6 +774,17 @@ pub(super) fn validate_world(
                     || area_tiles > interior_area
                     || u32::from(placements) * minimum_room_area > area_tiles
                     || procedural.vault_id.is_some()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                if let Some(stairs) = layout.stairs
+                    && (!procedural.connections.is_empty()
+                        || !valid_procedural_count_range(stairs.up)
+                        || match (stairs.down, &procedural.down_stair_terrain_id) {
+                            (Some(range), Some(_)) => !valid_procedural_count_range(range),
+                            (None, None) => false,
+                            _ => true,
+                        })
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
