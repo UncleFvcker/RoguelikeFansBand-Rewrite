@@ -1,6 +1,6 @@
 # Phase 17: Complete Player Journey Vertical Slice
 
-Status: Phase 17 is active. Gate 0 is complete against base commit `09291410`; Gate 1 is next. Gate 0 is a documentation and scope gate only: it changes no production behavior, protocol, save, replay, schema, fixture, or content bytes.
+Status: Phase 17 is active. Gates 0-1 are complete; Gate 2 is next. Gate 0 fixed the journey contract against base commit `09291410`. Gate 1 adds the startup/session shell and typed build/seed initialization without changing the protocol, save/replay formats, schemas, fixtures, campaign behavior, or content bytes.
 
 ## 1. Gate 0 decisions
 
@@ -98,18 +98,18 @@ The compiled demo pack at the Gate 0 baseline contains 1 world, 4 races, 6 class
 
 ## 4. Flow blockers and ownership
 
-| ID | Severity | Current evidence | Required outcome | Gate |
-| --- | --- | --- | --- | --- |
-| PJ-01 | blocking | `web/src/main.ts` immediately calls `core.initialize("42")` | Launch presents New Game, Continue/Load, Settings, and Exit before creating a session | 1 |
-| PJ-02 | blocking | `CoreTransport.initialize` accepts only a seed and Tauri calls `Game::new(seed)` | A typed new-session request carries build and seed through every transport to `Game::new_with_build` | 1 |
-| PJ-03 | blocking | Native saves are rendered only after implicit initialization | Save discovery and load work from the title/session shell with no throwaway game | 1 |
-| PJ-04 | blocking | The built-in campaign requires ten-depth Resonance Descent | The playtest campaign treats Echo Depths conquest as victory while preserving the same victory/return/retire rules | 3 |
-| PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 |
-| PJ-06 | blocking | Controls exist but first-run actions and the primary objective are not staged | Contextual onboarding introduces the minimum action set and always shows the next journey objective | 2 |
-| PJ-07 | blocking | Desktop E2E is a technical command/storage/render smoke test and uses a webdriver-only altered initial state | Normal player commands prove menu -> new game -> Echo guardian -> return -> retire/result, including save/resume | 6 |
-| PJ-08 | high | No current evidence guarantees an ordinary Explorer can finish several fixed seeds without starvation, resource dead ends, or opaque difficulty spikes | Explorer completes the route on the acceptance seeds with no soft lock; necessary balance changes are bounded and recorded | 5 |
-| PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 |
-| PJ-10 | high | Existing builds and content are mechanically broad but not presented as a curated player choice | New-game choices explain role, starting strengths, complexity, and golden-path support level | 1 |
+| ID | Severity | Gate 0 evidence | Required outcome | Gate | State |
+| --- | --- | --- | --- | --- | --- |
+| PJ-01 | blocking | `web/src/main.ts` immediately called `core.initialize("42")` | Launch presents New Game, Continue/Load, Settings, and Exit before creating a session | 1 | closed |
+| PJ-02 | blocking | `CoreTransport.initialize` accepted only a seed and Tauri called `Game::new(seed)` | A typed new-session request carries build and seed through every transport to `Game::new_with_build` | 1 | closed |
+| PJ-03 | blocking | Native saves were rendered only after implicit initialization | Save discovery and load work from the title/session shell with no throwaway game | 1 | closed |
+| PJ-04 | blocking | The built-in campaign requires ten-depth Resonance Descent | The playtest campaign treats Echo Depths conquest as victory while preserving the same victory/return/retire rules | 3 | open |
+| PJ-05 | blocking | Death and victory are messages/status values, not complete result flows | Death, victorious-return, and retired states each have a deliberate screen and legal next actions | 4 | open |
+| PJ-06 | blocking | Controls exist but first-run actions and the primary objective are not staged | Contextual onboarding introduces the minimum action set and always shows the next journey objective | 2 | open |
+| PJ-07 | blocking | Desktop E2E remains a technical gameplay smoke test after its new title/new-game/pre-session-load coverage | Normal player commands prove menu -> new game -> Echo guardian -> return -> retire/result, including save/resume | 6 | open |
+| PJ-08 | high | No current evidence guarantees an ordinary Explorer can finish several fixed seeds without starvation, resource dead ends, or opaque difficulty spikes | Explorer completes the route on the acceptance seeds with no soft lock; necessary balance changes are bounded and recorded | 5 | open |
+| PJ-09 | high | Major events are localized, but the player must infer some floor, branch, target, and rejection context | Every journey transition and failed required action gives visible, localized, actionable feedback | 2, 3, 4 | open |
+| PJ-10 | high | Existing builds and content were mechanically broad but not presented as a curated player choice | New-game choices explain role, starting strengths, temporary status, and golden-path support level | 1 | closed |
 
 A blocker is closed only by observable player behavior and automated evidence. A debug-only fixture, developer console action, or direct `Game` field mutation cannot close a player-journey blocker.
 
@@ -123,7 +123,7 @@ A blocker is closed only by observable player behavior and automated evidence. A
 - record current capabilities, blockers, scope, content policy, and evidence requirements;
 - make no production or content change.
 
-### Gate 1: startup and new-session shell
+### Gate 1: startup and new-session shell (complete)
 
 - add explicit Title, New Game, Load/Continue, and Playing application states;
 - make native save listing/loading available before session creation;
@@ -133,6 +133,10 @@ A blocker is closed only by observable player behavior and automated evidence. A
 - preserve save/replay determinism and provide focused frontend/Tauri tests for all legal and rejected transitions.
 
 Gate 1 must not add new careers, items, game rules, or campaign behavior.
+
+The completed gate introduces a localized title shell with New Game, Continue, Load Game, Settings, and Exit before any core session exists. The three visible choices are explicitly labeled temporary original demo builds rather than RFB careers; Explorer is recommended. New Game validates the complete unsigned 64-bit seed range, generates a host-random seed by default, and sends one typed `{ buildId, seed }` request through `CoreTransport`, Tauri IPC, and `Game::new_with_build`. The active run header displays the selected demo build and committed seed; legacy saves whose original seed was never stored are honestly labeled as loaded saves instead of fabricating metadata.
+
+Native save listing and recovery now operate at the title screen without constructing a throwaway game. Application command gating distinguishes title, starting-session, and playing states. The desktop E2E cold-starts at the title, selects Explorer and seed `42`, later reloads the complete frontend, discovers the created native save before any new session, restores it, and continues the existing gameplay/storage/render checks. Focused coverage raises the frontend suite from 54 to 57 tests and the Tauri suite from 14 to 16 tests. Gate 1 preserves the built-in pack `1.140.0` and hash `cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774`.
 
 ### Gate 2: onboarding and objective guidance
 
@@ -232,8 +236,8 @@ Phase 17 is complete only when all of the following are true:
 - the complete repository acceptance matrix and Windows playtest build pass;
 - release notes call the artifact a focused Echo Depths player-journey playtest and do not imply full RFB content parity.
 
-## 10. Gate 0 closure and Gate 1 entry
+## 10. Gate 0-1 closure and Gate 2 entry
 
-Gate 0 closes with this document because the journey, terminal states, golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria are now explicit. No implementation blocker requires clarification before Gate 1.
+Gate 0 closed with the journey, terminal states, golden build, blocker list, gate ordering, test layers, content budget, licensing boundary, and completion criteria explicit. Gate 1 closes PJ-01, PJ-02, PJ-03, and PJ-10 with a tested product shell and typed native initialization path.
 
-Gate 1 begins by characterizing the existing seed-only `CoreTransport` and Tauri initialization tests, then introduces the smallest typed new-session request and application-shell state machine. It must preserve the current `Game` aggregate boundary and existing save/replay behavior while removing the implicit startup session.
+Gate 2 begins with a pure objective-selection model over existing snapshot/update information, followed by the smallest localized UI surface for the current primary objective and contextual first-run prompts. It must not move authoritative campaign/task/progression ownership into TypeScript, and it does not yet change Echo campaign victory selection.

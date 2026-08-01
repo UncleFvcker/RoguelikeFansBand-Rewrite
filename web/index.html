@@ -7,11 +7,129 @@
     <title data-l10n-id="app-title"></title>
   </head>
   <body>
-    <div id="app">
+    <main id="session-shell" class="session-shell" data-view="title">
+      <section class="session-card" aria-labelledby="session-heading">
+        <p class="eyebrow" data-l10n-id="session-eyebrow"></p>
+        <h1 id="session-heading" data-l10n-id="session-heading"></h1>
+        <p class="session-subtitle" data-l10n-id="session-subtitle"></p>
+
+        <section id="session-title-view" class="session-view">
+          <div class="session-primary-actions">
+            <button id="session-new-game" class="primary-button" type="button" data-l10n-id="action-session-new-game"></button>
+            <button id="session-continue" type="button" data-l10n-id="action-session-continue"></button>
+            <button id="session-load-game" type="button" data-l10n-id="action-session-load-game"></button>
+          </div>
+          <div class="session-secondary-actions">
+            <button id="session-settings" class="quiet-button" type="button" data-l10n-id="action-session-settings"></button>
+            <button id="session-exit" class="quiet-button" type="button" data-l10n-id="action-session-exit"></button>
+          </div>
+        </section>
+
+        <form id="session-new-game-view" class="session-view" hidden>
+          <div class="session-view-heading">
+            <h2 data-l10n-id="session-new-game-heading"></h2>
+            <p data-l10n-id="session-demo-build-notice"></p>
+          </div>
+          <fieldset class="session-builds">
+            <legend data-l10n-id="session-build-label"></legend>
+            <label class="session-build-card recommended">
+              <input id="session-build-explorer" type="radio" name="session-build" value="demo.build.explorer" checked />
+              <span class="session-build-heading">
+                <strong data-l10n-id="build-demo-explorer-name"></strong>
+                <span data-l10n-id="session-build-recommended"></span>
+              </span>
+              <span data-l10n-id="build-demo-explorer-description"></span>
+              <small data-l10n-id="session-build-temporary"></small>
+            </label>
+            <label class="session-build-card">
+              <input id="session-build-vanguard" type="radio" name="session-build" value="demo.build.vanguard" />
+              <span class="session-build-heading">
+                <strong data-l10n-id="build-demo-vanguard-name"></strong>
+              </span>
+              <span data-l10n-id="build-demo-vanguard-description"></span>
+              <small data-l10n-id="session-build-temporary"></small>
+            </label>
+            <label class="session-build-card">
+              <input id="session-build-scholar" type="radio" name="session-build" value="demo.build.scholar" />
+              <span class="session-build-heading">
+                <strong data-l10n-id="build-demo-scholar-name"></strong>
+              </span>
+              <span data-l10n-id="build-demo-scholar-description"></span>
+              <small data-l10n-id="session-build-temporary"></small>
+            </label>
+          </fieldset>
+          <label class="session-seed" for="session-seed">
+            <span data-l10n-id="session-seed-label"></span>
+            <span class="session-seed-controls">
+              <input id="session-seed" type="text" inputmode="numeric" autocomplete="off" />
+              <button id="session-randomize-seed" type="button" data-l10n-id="action-session-randomize-seed"></button>
+            </span>
+            <small data-l10n-id="session-seed-help"></small>
+          </label>
+          <div class="session-form-actions">
+            <button id="session-new-game-back" type="button" data-l10n-id="action-session-back"></button>
+            <button id="session-start-game" class="primary-button" type="submit" data-l10n-id="action-session-start-game"></button>
+          </div>
+        </form>
+
+        <section id="session-load-view" class="session-view" hidden>
+          <div class="session-view-heading session-view-heading-row">
+            <div>
+              <h2 data-l10n-id="session-load-heading"></h2>
+              <p data-l10n-id="session-load-description"></p>
+            </div>
+            <button id="session-load-refresh" class="quiet-button" type="button" data-l10n-id="action-native-save-refresh"></button>
+          </div>
+          <ul id="session-load-list" class="native-save-list session-load-list" aria-live="polite"></ul>
+          <div class="session-form-actions">
+            <button id="session-load-back" type="button" data-l10n-id="action-session-back"></button>
+          </div>
+        </section>
+
+        <section id="session-settings-view" class="session-view" hidden>
+          <div class="session-view-heading">
+            <h2 data-l10n-id="session-settings-heading"></h2>
+            <p data-l10n-id="session-settings-description"></p>
+          </div>
+          <div class="session-settings-grid">
+            <label for="session-settings-language">
+              <span data-l10n-id="settings-language-label"></span>
+              <select id="session-settings-language">
+                <option value="en-US" data-l10n-id="language-name-en-us"></option>
+                <option value="zh-CN" data-l10n-id="language-name-zh-cn"></option>
+              </select>
+            </label>
+            <label for="session-settings-input">
+              <span data-l10n-id="settings-input-label"></span>
+              <select id="session-settings-input">
+                <option value="numpad" data-l10n-id="input-preset-numpad"></option>
+                <option value="vi" data-l10n-id="input-preset-vi"></option>
+                <option value="wasd" data-l10n-id="input-preset-wasd"></option>
+              </select>
+            </label>
+          </div>
+          <div class="session-form-actions">
+            <button id="session-settings-back" type="button" data-l10n-id="action-session-back"></button>
+          </div>
+        </section>
+
+        <p id="session-status" class="session-status" aria-live="polite"></p>
+        <p id="session-error" class="session-error" aria-live="assertive"></p>
+      </section>
+    </main>
+
+    <div id="app" hidden>
       <header class="app-header">
         <div>
           <p class="eyebrow" data-l10n-id="app-eyebrow"></p>
           <h1 data-l10n-id="app-heading"></h1>
+          <p class="run-metadata">
+            <span data-l10n-id="run-build-label"></span>
+            <strong id="run-build-value">--</strong>
+            <span aria-hidden="true" data-l10n-id="run-metadata-separator"></span>
+            <span data-l10n-id="run-seed-label"></span>
+            <strong id="run-seed-value">--</strong>
+          </p>
         </div>
         <div class="header-actions">
           <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>

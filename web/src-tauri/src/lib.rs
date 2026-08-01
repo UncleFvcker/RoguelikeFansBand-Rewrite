@@ -39,11 +39,16 @@ struct AppState {
 }
 
 impl AppState {
-    fn initialize(&self, seed: &str, created_at: String) -> Result<GameSnapshot, String> {
+    fn initialize(
+        &self,
+        seed: &str,
+        build_id: &str,
+        created_at: String,
+    ) -> Result<GameSnapshot, String> {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let recorder = ReplayRecorder::new(initial_game(seed));
+        let recorder = ReplayRecorder::new(initial_game(seed, build_id)?);
         let snapshot = recorder.game().snapshot();
         self.replace_session(GameSession {
             recorder,
@@ -90,7 +95,7 @@ impl AppState {
             created_at: session.created_at.clone(),
             saved_at,
             character_summary: CharacterSummary {
-                display_name: "原创测试探索者".to_owned(),
+                display_name: "RFB Demo Character".to_owned(),
                 level: snapshot.player.progress.level.into(),
                 location_key: session.recorder.game().location_key().to_owned(),
                 turn: snapshot.turn,
@@ -141,13 +146,15 @@ impl AppState {
 }
 
 #[cfg(not(feature = "webdriver"))]
-fn initial_game(seed: u64) -> Game {
-    Game::new(seed)
+fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
+    Game::new_with_build(seed, build_id).map_err(|error| error.to_string())
 }
 
 #[cfg(feature = "webdriver")]
-fn initial_game(seed: u64) -> Game {
-    let mut payload = Game::new(seed).to_save();
+fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
+    let mut payload = Game::new_with_build(seed, build_id)
+        .map_err(|error| error.to_string())?
+        .to_save();
     payload.entities.clear();
     payload.carried_items.clear();
     payload
@@ -155,8 +162,7 @@ fn initial_game(seed: u64) -> Game {
         .iter_mut()
         .filter(|state| state.dungeon_id == "demo.dungeon.resonance-descent")
         .for_each(|state| state.entrance_guardian_defeated = Some(true));
-    Game::from_save(payload)
-        .expect("webdriver fixture should remove monsters without invalid state")
+    Game::from_save(payload).map_err(|error| error.to_string())
 }
 
 #[derive(Serialize)]
@@ -208,9 +214,10 @@ fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
 fn initialize_game(
     state: tauri::State<'_, AppState>,
     seed: String,
+    build_id: String,
     created_at: String,
 ) -> Result<GameSnapshot, String> {
-    state.initialize(&seed, created_at)
+    state.initialize(&seed, &build_id, created_at)
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -434,7 +441,11 @@ mod tests {
     fn native_session_moves_saves_and_restores() {
         let state = AppState::default();
         let initial = state
-            .initialize("42", "2026-07-15T00:00:00Z".to_owned())
+            .initialize(
+                "42",
+                "demo.build.explorer",
+                "2026-07-15T00:00:00Z".to_owned(),
+            )
             .expect("session should initialize");
         let update = state
             .dispatch(
@@ -450,8 +461,11 @@ mod tests {
             .expect("save should encode");
         let replay = decode_replay(&state.export_replay().expect("replay should encode"))
             .expect("replay should decode");
-        let verification =
-            verify_replay(&replay, initial_game(42)).expect("exported replay should verify");
+        let verification = verify_replay(
+            &replay,
+            initial_game(42, "demo.build.explorer").expect("initial game should create"),
+        )
+        .expect("exported replay should verify");
         let restored = AppState::default()
             .load(&bytes)
             .expect("save should restore in a new native session");
@@ -467,7 +481,11 @@ mod tests {
     fn rejected_native_command_is_not_recorded() {
         let state = AppState::default();
         let initial = state
-            .initialize("42", "2026-07-15T00:00:00Z".to_owned())
+            .initialize(
+                "42",
+                "demo.build.explorer",
+                "2026-07-15T00:00:00Z".to_owned(),
+            )
             .expect("session should initialize");
 
         state
@@ -484,7 +502,11 @@ mod tests {
     fn loading_a_save_starts_a_new_replay_segment() {
         let state = AppState::default();
         let initial = state
-            .initialize("42", "2026-07-15T00:00:00Z".to_owned())
+            .initialize(
+                "42",
+                "demo.build.explorer",
+                "2026-07-15T00:00:00Z".to_owned(),
+            )
             .expect("session should initialize");
         state
             .dispatch(
@@ -518,5 +540,49 @@ mod tests {
         assert_eq!(replay.commands.len(), 1);
         assert_eq!(replay.commands[0].turn_before, loaded.turn);
         assert_eq!(verification.final_state_hash, update.state_hash);
+    }
+
+    #[test]
+    fn native_session_uses_the_requested_demo_build() {
+        let state = AppState::default();
+        let snapshot = state
+            .initialize(
+                "73",
+                "demo.build.vanguard",
+                "2026-08-01T00:00:00Z".to_owned(),
+            )
+            .expect("vanguard session should initialize");
+
+        assert_eq!(
+            snapshot
+                .player
+                .build
+                .as_ref()
+                .map(|build| build.build_id.as_str()),
+            Some("demo.build.vanguard")
+        );
+    }
+
+    #[test]
+    fn native_session_rejects_invalid_seed_and_unknown_build() {
+        let state = AppState::default();
+
+        let invalid_seed = state
+            .initialize(
+                "not-a-seed",
+                "demo.build.explorer",
+                "2026-08-01T00:00:00Z".to_owned(),
+            )
+            .expect_err("invalid seed should be rejected");
+        let unknown_build = state
+            .initialize(
+                "73",
+                "rfb-legacy.class.not-present",
+                "2026-08-01T00:00:00Z".to_owned(),
+            )
+            .expect_err("unknown build should be rejected");
+
+        assert!(invalid_seed.contains("invalid seed"));
+        assert!(unknown_build.contains("rfb-legacy.class.not-present"));
     }
 }

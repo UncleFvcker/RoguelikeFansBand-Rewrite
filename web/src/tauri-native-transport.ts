@@ -2,16 +2,17 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
-import type { CoreTransport } from "./core-transport";
+import type { CoreTransport, NewSessionRequest } from "./core-transport";
 import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
 
 export class TauriNativeTransport implements CoreTransport {
   #revision = 0;
   #commandSeq = 0;
 
-  async initialize(seed: string): Promise<GameSnapshot> {
+  async initialize(request: NewSessionRequest): Promise<GameSnapshot> {
     const snapshot = await invoke<GameSnapshot>("initialize_game", {
-      seed,
+      seed: request.seed,
+      buildId: request.buildId,
       createdAt: new Date().toISOString(),
     });
     this.#syncSnapshot(snapshot);

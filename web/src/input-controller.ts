@@ -208,7 +208,7 @@ export class InputController {
   };
 
   readonly #handleKeydown = (event: KeyboardEvent): void => {
-    if (this.#state.busy || this.#state.playerDead || isTextInput(event.target)) return;
+    if (this.#state.busy || this.#state.commandBlocked || isTextInput(event.target)) return;
     if (this.#state.targeting) {
       this.#handleTargetingKey(event);
       return;

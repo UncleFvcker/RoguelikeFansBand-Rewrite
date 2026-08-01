@@ -11,6 +11,7 @@ import type { TargetingState } from "./targeting";
 import type { TerrainInteractionMode } from "./terrain-interaction";
 
 export type ConnectionState = "starting" | "ready" | "error";
+export type ApplicationMode = "title" | "starting-session" | "playing";
 
 export type TargetingIntent =
   | { type: "projectile" }
@@ -21,6 +22,7 @@ export class AppState {
   busy = false;
   playerDead = false;
   campaignEnded = false;
+  mode: ApplicationMode = "title";
   connection: ConnectionState = "starting";
   mapWidth = 0;
   mapHeight = 0;
@@ -35,7 +37,7 @@ export class AppState {
   terrainInteractionMode: TerrainInteractionMode | undefined;
 
   get commandBlocked(): boolean {
-    return this.playerDead || this.campaignEnded;
+    return this.mode !== "playing" || this.playerDead || this.campaignEnded;
   }
 
   setMapSize(width: number, height: number): void {

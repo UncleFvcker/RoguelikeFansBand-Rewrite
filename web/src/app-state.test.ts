@@ -6,11 +6,12 @@ import test from "node:test";
 
 import { AppState } from "./app-state.ts";
 
-test("application state starts with one empty, command-ready session", () => {
+test("application state starts at the title screen without a game session", () => {
   const state = new AppState();
 
   assert.equal(state.busy, false);
-  assert.equal(state.commandBlocked, false);
+  assert.equal(state.mode, "title");
+  assert.equal(state.commandBlocked, true);
   assert.equal(state.connection, "starting");
   assert.deepEqual(state.inventory, []);
   assert.deepEqual(state.equipment, []);
@@ -21,6 +22,7 @@ test("application state owns map dimensions and terminal command gating", () => 
   const state = new AppState();
 
   state.setMapSize(80, 45);
+  state.mode = "playing";
   state.campaignEnded = true;
 
   assert.equal(state.mapWidth, 80);

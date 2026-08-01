@@ -2,6 +2,8 @@
 
 import "./styles.css";
 
+import { getCurrentWindow } from "@tauri-apps/api/window";
+
 import {
   Localization,
   type LocalizationArgs,
@@ -22,6 +24,7 @@ import { MessagePanel, type MessageRecord } from "./message-panel";
 import { NativeSavePanel, nativeSaveErrorKey } from "./save-panel";
 import { createAppDom } from "./app-dom";
 import { AppState, type ConnectionState } from "./app-state";
+import type { NewSessionRequest } from "./core-transport";
 import { InputController } from "./input-controller";
 import { GameSession } from "./game-session";
 import {
@@ -39,17 +42,20 @@ import {
 import type { GameCommand, GameEventDto, GameSnapshot } from "./protocol";
 import { TauriNativeTransport } from "./tauri-native-transport";
 import { installRendererProfileHook } from "./render-profile";
+import { createSessionShellDom, SessionShell } from "./session-shell";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
 const nativeSaveStorage = new NativeSaveStorage();
 const renderer = new MapRenderer();
 const appState = new AppState();
+let rendererInitialized = false;
 let recordingFrontendCrash = false;
 let announcedCrashReport: string | undefined;
 const announcedCrashDiagnosticErrors = new Set<string>();
 
 const appDom = createAppDom(document);
+const sessionShellDom = createSessionShellDom(document);
 const {
   mapHost,
   targetCursor,
@@ -118,6 +124,7 @@ const settingsPanel = new SettingsPanel({
     inputController.render();
     inventoryPanel.render(appState.inventory, appState.equipment);
     nativeSavePanel.localize();
+    sessionShell.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -197,6 +204,38 @@ const nativeSavePanel = new NativeSavePanel({
   announce: addLocalizedMessage,
   confirm: (message) => window.confirm(message),
 });
+const sessionShell = new SessionShell({
+  dom: sessionShellDom,
+  storage: nativeSaveStorage,
+  localization,
+  onStart: startNewSession,
+  onLoad: async (result, summary) => {
+    await initializeGameView(result.snapshot);
+    if (result.recoveryBackup === null) {
+      addLocalizedMessage(
+        "message-native-save-loaded",
+        { name: summary.slotName },
+        "system",
+      );
+    } else {
+      addLocalizedMessage(
+        "message-native-save-backup-loaded",
+        { name: summary.slotName, backup: result.recoveryBackup },
+        "system",
+      );
+    }
+  },
+  onExit: () => getCurrentWindow().close(),
+  onLocaleChange: (locale) => {
+    appDom.languageSelect.value = locale;
+    appDom.languageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  },
+  onInputPresetChange: (preset) => {
+    appDom.inputPresetSelect.value = preset;
+    appDom.inputPresetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  },
+  getInputPreset: () => settingsPanel.inputPreset,
+});
 settingsPanel.initialize();
 nativeSavePanel.localize();
 renderConnectionStatus();
@@ -207,38 +246,9 @@ installRendererProfileHook();
 void start();
 
 async function start(): Promise<void> {
-  try {
-    const snapshot = await core.initialize("42");
-    appState.setMapSize(snapshot.width, snapshot.height);
-    const contentGlyphs = Object.fromEntries(
-      snapshot.contentVisuals.map((visual) => [visual.id, visual.glyph]),
-    );
-    renderContentMetadata(snapshot);
-    const tileset = await renderer.initialize(
-      mapHost,
-      snapshot.width,
-      snapshot.height,
-      settingsPanel.tilesetManifest,
-      contentGlyphs,
-      localization.format("map-aria-label"),
-      settingsPanel.cameraMode,
-      settingsPanel.zoom,
-    );
-    mapHost.append(targetCursor);
-    renderer.applySnapshot(snapshot);
-    await synchronizeCrashDiagnosticContext(snapshot);
-    statusPanel.render(snapshot);
-    appState.bodySlots = snapshot.bodySlots ?? [];
-    inventoryPanel.render(snapshot.inventory, snapshot.equipment);
-    addLocalizedMessage("message-core-started", undefined, "system");
-    settingsPanel.announceTileset(tileset.id, tileset.warnings);
-    appState.connection = "ready";
-    renderConnectionStatus();
-    await refreshCrashDiagnosticStatus();
-    await nativeSavePanel.refresh();
-  } catch (error) {
-    showError(error);
-  }
+  appState.mode = "title";
+  await sessionShell.initialize();
+  await refreshCrashDiagnosticStatus();
 }
 
 inputController.install();
@@ -249,6 +259,7 @@ saveButton.addEventListener("click", () => void exportSave());
 replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
 nativeSavePanel.install();
+sessionShell.install();
 clearMessages.addEventListener("click", () => {
   messagePanel.clear();
 });
@@ -257,6 +268,7 @@ window.addEventListener("beforeunload", () => {
   statusPanel.dispose();
   settingsPanel.dispose();
   inputController.dispose();
+  sessionShell.dispose();
   renderer.destroy();
   core.dispose();
 });
@@ -353,6 +365,7 @@ async function importSave(): Promise<void> {
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
+  appState.mode = "playing";
   appState.setMapSize(snapshot.width, snapshot.height);
   core.synchronize(snapshot);
   renderContentMetadata(snapshot);
@@ -360,6 +373,57 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   statusPanel.render(snapshot);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  sessionShell.showGame(snapshot);
+}
+
+async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot> {
+  appState.mode = "starting-session";
+  appState.connection = "starting";
+  renderConnectionStatus();
+  try {
+    const snapshot = await core.initialize(request);
+    await initializeGameView(snapshot);
+    addLocalizedMessage("message-core-started", undefined, "system");
+    return snapshot;
+  } catch (error) {
+    appState.mode = "title";
+    appState.connection = "error";
+    throw error;
+  }
+}
+
+async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
+  inputController.cancelTargeting(false);
+  appState.setMapSize(snapshot.width, snapshot.height);
+  core.synchronize(snapshot);
+  renderContentMetadata(snapshot);
+  if (!rendererInitialized) {
+    const contentGlyphs = Object.fromEntries(
+      snapshot.contentVisuals.map((visual) => [visual.id, visual.glyph]),
+    );
+    const tileset = await renderer.initialize(
+      mapHost,
+      snapshot.width,
+      snapshot.height,
+      settingsPanel.tilesetManifest,
+      contentGlyphs,
+      localization.format("map-aria-label"),
+      settingsPanel.cameraMode,
+      settingsPanel.zoom,
+    );
+    mapHost.append(targetCursor);
+    rendererInitialized = true;
+    settingsPanel.announceTileset(tileset.id, tileset.warnings);
+  }
+  renderer.applySnapshot(snapshot);
+  await synchronizeCrashDiagnosticContext(snapshot);
+  appState.mode = "playing";
+  statusPanel.render(snapshot);
+  appState.bodySlots = snapshot.bodySlots ?? [];
+  inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  appState.connection = "ready";
+  renderConnectionStatus();
+  await nativeSavePanel.refresh();
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {

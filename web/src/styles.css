@@ -12,6 +12,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   min-width: 320px;
   min-height: 100vh;
@@ -37,6 +41,233 @@ button:hover,
 .file-button:hover {
   border-color: #6fbce8;
   background: #1c3043;
+}
+
+button:disabled,
+.file-button:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.primary-button {
+  border-color: #3d8d75;
+  color: #effff9;
+  background: #1a4b3d;
+}
+
+.primary-button:hover {
+  border-color: #79d4b1;
+  background: #205d4b;
+}
+
+.session-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.session-card {
+  width: min(48rem, 100%);
+  overflow: hidden;
+  border: 1px solid rgb(103 137 168 / 35%);
+  border-radius: 18px;
+  padding: clamp(1.3rem, 4vw, 2.6rem);
+  background:
+    linear-gradient(145deg, rgb(21 34 46 / 96%), rgb(10 16 23 / 98%)),
+    #0d141c;
+  box-shadow: 0 32px 90px rgb(0 0 0 / 38%);
+}
+
+.session-card > h1 {
+  max-width: 14ch;
+}
+
+.session-subtitle {
+  max-width: 60ch;
+  margin: 0.75rem 0 1.5rem;
+  color: #91a4b8;
+  line-height: 1.65;
+}
+
+.session-view {
+  display: grid;
+  gap: 1rem;
+}
+
+.session-primary-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.session-primary-actions button {
+  min-height: 3.2rem;
+}
+
+.session-secondary-actions,
+.session-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.session-view-heading h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.session-view-heading p {
+  margin: 0.35rem 0 0;
+  color: #91a4b8;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.session-view-heading-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.session-builds {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.session-builds legend {
+  margin-bottom: 0.55rem;
+  color: #7890a7;
+  font-size: 0.8rem;
+}
+
+.session-build-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.2rem 0.75rem;
+  border: 1px solid rgb(103 137 168 / 28%);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  color: #9fb5ca;
+  background: rgb(12 20 28 / 82%);
+  cursor: pointer;
+}
+
+.session-build-card:has(input:checked) {
+  border-color: #62a9d2;
+  background: rgb(24 48 68 / 82%);
+  box-shadow: 0 0 0 1px rgb(98 169 210 / 18%);
+}
+
+.session-build-card.recommended:has(input:checked) {
+  border-color: #5fbd98;
+}
+
+.session-build-card input {
+  grid-row: 1 / span 3;
+  margin-top: 0.2rem;
+}
+
+.session-build-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #e2edf8;
+}
+
+.session-build-heading > span,
+.session-build-card small {
+  color: #79d4b1;
+  font-size: 0.7rem;
+}
+
+.session-build-card small {
+  color: #768b9f;
+}
+
+.session-seed {
+  display: grid;
+  gap: 0.45rem;
+  color: #9fb5ca;
+  font-size: 0.82rem;
+}
+
+.session-seed-controls {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.session-seed input,
+.session-settings-grid select {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #354a5f;
+  border-radius: 7px;
+  padding: 0.62rem 0.7rem;
+  color: #dcecff;
+  background: #101c27;
+  font: inherit;
+}
+
+.session-seed small {
+  color: #6f8499;
+}
+
+.session-load-list {
+  min-height: 6rem;
+  max-height: min(24rem, 48vh);
+  border: 1px solid rgb(103 137 168 / 18%);
+  border-radius: 10px;
+  background: rgb(8 14 20 / 55%);
+}
+
+.session-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.session-settings-grid label {
+  display: grid;
+  gap: 0.45rem;
+  color: #91a4b8;
+  font-size: 0.82rem;
+}
+
+.session-status,
+.session-error {
+  min-height: 1.25rem;
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+}
+
+.session-status {
+  color: #6f8da8;
+}
+
+.session-error {
+  margin-top: 0.3rem;
+  color: #ff9292;
+}
+
+.run-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  color: #6f8499;
+  font-size: 0.78rem;
+}
+
+.run-metadata strong {
+  color: #9fb5ca;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-weight: 500;
 }
 
 #app {
@@ -782,6 +1013,17 @@ h1 {
 }
 
 @media (max-width: 680px) {
+  .session-primary-actions,
+  .session-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-seed-controls,
+  .session-view-heading-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   #app {
     padding: 0.75rem;
   }

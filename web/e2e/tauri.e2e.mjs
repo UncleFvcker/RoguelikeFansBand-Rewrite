@@ -125,11 +125,11 @@ async function cleanupNativeTestSaves(driver) {
 
 async function runScenario(driver) {
   const expected = await loadExpectedIdentity();
-  // Cold CI runners need well over the default 10s to reach the first ready
-  // state on a debug build with software rendering.
+  // Gate 1 must stop at the session shell without constructing a throwaway
+  // game. Cold CI runners still need extra time for the first WebView load.
   await driver.waitFor(
-    `return document.querySelector("#connection-status")?.classList.contains("ready")`,
-    "native core connection",
+    `return document.documentElement.dataset.appMode === "title" && !document.querySelector("#session-shell")?.hidden && document.querySelector("#app")?.hidden`,
+    "title session shell",
     60_000,
   );
   await driver.execute(`
@@ -140,10 +140,51 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.querySelector("#connection-status")?.classList.contains("ready")`,
-    "deterministic application reload",
+    `return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`,
+    "deterministic title reload",
     60_000,
   );
+
+  const titleState = await driver.execute(`
+    return {
+      title: document.querySelector("#session-heading")?.textContent,
+      subtitle: document.querySelector(".session-subtitle")?.textContent,
+      continueDisabled: document.querySelector("#session-continue")?.disabled,
+    };
+  `);
+  assert.match(titleState.title, /回声深处/);
+  assert.match(titleState.subtitle, /临时原创 Demo 构筑/);
+
+  await driver.execute(`
+    document.querySelector("#session-new-game").click();
+    const build = document.querySelector("#session-build-explorer");
+    build.checked = true;
+    build.dispatchEvent(new Event("change", { bubbles: true }));
+    const seed = document.querySelector("#session-seed");
+    seed.value = "42";
+    seed.dispatchEvent(new Event("input", { bubbles: true }));
+    document.querySelector("#session-start-game").click();
+    return true;
+  `);
+  await driver.waitFor(
+    `return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status")?.classList.contains("ready")`,
+    "selected build session initialization",
+    60_000,
+  );
+  const runSetup = await driver.execute(`
+    return {
+      buildId: document.querySelector("#app")?.dataset.sessionBuildId,
+      seed: document.querySelector("#app")?.dataset.sessionSeed,
+      seedLabel: document.querySelector("#run-seed-value")?.textContent,
+      titleHidden: document.querySelector("#session-shell")?.hidden,
+      gameHidden: document.querySelector("#app")?.hidden,
+    };
+  `);
+  assert.equal(runSetup.buildId, "demo.build.explorer");
+  assert.equal(runSetup.seed, "42");
+  assert.equal(runSetup.seedLabel, "42");
+  assert.equal(runSetup.titleHidden, true);
+  assert.equal(runSetup.gameHidden, false);
 
   await driver.execute(`
     const input = document.querySelector("#input-preset");
@@ -288,14 +329,34 @@ async function runScenario(driver) {
     `return document.querySelector("#position-value")?.textContent === "4, 4" && document.querySelector("#turn-value")?.textContent === "4"`,
     "movement after native save",
   );
-  await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]`);
+  await driver.execute(`setTimeout(() => window.location.reload(), 0); return true;`);
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && !document.querySelector('[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]')?.disabled`,
-    "native save restore",
+    `return document.documentElement.dataset.appMode === "title" && document.querySelector("#app")?.hidden`,
+    "return to title without implicit session",
+    60_000,
   );
+  await click(driver, "#session-load-game");
+  await driver.waitFor(
+    `return document.querySelector('#session-load-list [data-slot-id="${nativeSlot.slotId}"] [data-session-load-action="load"]') && !document.querySelector('#session-load-list [data-slot-id="${nativeSlot.slotId}"] [data-session-load-action="load"]')?.disabled`,
+    "pre-session native save discovery",
+  );
+  await click(
+    driver,
+    `#session-load-list [data-slot-id="${nativeSlot.slotId}"] [data-session-load-action="load"]`,
+  );
+  await driver.waitFor(
+    `return document.documentElement.dataset.appMode === "playing" && document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && !document.querySelector('[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]')?.disabled`,
+    "title native save restore",
+    60_000,
+  );
+  await driver.execute(`window.__rfbE2eCanvas = document.querySelector("#map-host canvas"); return true;`);
   state = await readState(driver);
   assert.equal(state.stateHash, nativeSaveHash);
   assert.equal(state.canvasUnchanged, true);
+  assert.equal(
+    await driver.execute(`return document.querySelector("#run-seed-value")?.textContent;`),
+    "来自已载入存档",
+  );
   assert.match(state.messages, /已载入原生存档/);
 
   await dispatchKey(driver, "Numpad5", "5");
@@ -319,7 +380,7 @@ async function runScenario(driver) {
   await driver.execute(`window.confirm = () => true; return true;`);
   await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="delete"]`);
   await driver.waitFor(
-    `return !document.querySelector('[data-slot-id="${nativeSlot.slotId}"]')`,
+    `return !document.querySelector('#native-save-list [data-slot-id="${nativeSlot.slotId}"]')`,
     "native save deletion",
   );
   state = await readState(driver);
@@ -647,7 +708,7 @@ async function runScenario(driver) {
   assert.equal(state.stateHash, hashBeforeLanguageSwitch);
   assert.equal(state.canvasUnchanged, true);
   assert.match(state.inventory, /unfamiliar pale shard/);
-  assert.match(state.messages, /You pick up unfamiliar pale shard ×5/);
+  assert.match(state.messages, /You pick up echo charm ×1/);
   assert.match(state.controls, /Numpad 1–9 moves in eight directions/);
 
   await driver.execute(`

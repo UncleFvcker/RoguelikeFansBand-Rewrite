@@ -2,8 +2,13 @@
 
 import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
 
+export interface NewSessionRequest {
+  readonly seed: string;
+  readonly buildId: string;
+}
+
 export interface CoreTransport {
-  initialize(seed: string): Promise<GameSnapshot>;
+  initialize(request: NewSessionRequest): Promise<GameSnapshot>;
   dispatch(command: GameCommand): Promise<GameUpdate>;
   save(): Promise<Uint8Array>;
   load(data: Uint8Array): Promise<GameSnapshot>;
