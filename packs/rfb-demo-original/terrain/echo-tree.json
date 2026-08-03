@@ -4,7 +4,7 @@
   "id": "demo.terrain.echo-tree",
   "nameKey": "terrain-demo-echo-tree-name",
   "descriptionKey": "terrain-demo-echo-tree-description",
-  "glyph": "T",
+  "glyph": "♣",
   "walkable": false,
   "blocksSight": true,
   "tags": ["living", "outdoor", "tree"]

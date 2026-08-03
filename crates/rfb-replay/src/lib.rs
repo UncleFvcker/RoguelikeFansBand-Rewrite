@@ -509,7 +509,7 @@ mod tests {
             .expect("Warrens game should start");
         let mut first_segment = ReplayRecorder::new(initial.clone());
         for direction in
-            std::iter::repeat_n(Direction::West, 16).chain(std::iter::repeat_n(Direction::North, 3))
+            std::iter::repeat_n(Direction::West, 12).chain(std::iter::repeat_n(Direction::North, 3))
         {
             first_segment
                 .dispatch(GameCommand::Move { direction })
@@ -538,7 +538,7 @@ mod tests {
         let (midpoint_game, first_replay) = first_segment.finish();
         let first_verification =
             verify(&first_replay, initial).expect("shop purchase replay should verify");
-        assert_eq!(first_verification.commands_verified, 20);
+        assert_eq!(first_verification.commands_verified, 16);
 
         let midpoint_payload = midpoint_game.to_save();
         let restored =

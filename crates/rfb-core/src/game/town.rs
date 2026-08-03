@@ -183,7 +183,7 @@ fn plain_shop_item(
     rng: &mut RfbRng,
     next_serial: &mut u64,
 ) -> Result<ItemInstance, CoreError> {
-    let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, 1);
+    let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, 15);
     Ok(ItemInstance {
         id: allocate_shop_item_id(next_serial)?,
         kind_id: item_kind_id.to_owned(),
@@ -264,6 +264,7 @@ fn category_dto(category: ShopCategory) -> ShopCategoryDto {
         ShopCategory::GeneralStore => ShopCategoryDto::GeneralStore,
         ShopCategory::Temple => ShopCategoryDto::Temple,
         ShopCategory::Alchemist => ShopCategoryDto::Alchemist,
+        ShopCategory::MagicShop => ShopCategoryDto::MagicShop,
     }
 }
 

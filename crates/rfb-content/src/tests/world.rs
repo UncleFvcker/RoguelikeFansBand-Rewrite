@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
-fn outpost_supply_court_has_three_walkable_shop_entrances() {
+fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
         .content
@@ -15,15 +15,19 @@ fn outpost_supply_court_has_three_walkable_shop_entrances() {
     let entrances = [
         (
             "demo.terrain.general-store-entrance",
-            ContentPosition { x: 16, y: 8 },
+            ContentPosition { x: 17, y: 8 },
         ),
         (
             "demo.terrain.temple-entrance",
-            ContentPosition { x: 20, y: 8 },
+            ContentPosition { x: 29, y: 14 },
         ),
         (
             "demo.terrain.alchemist-entrance",
-            ContentPosition { x: 24, y: 8 },
+            ContentPosition { x: 38, y: 8 },
+        ),
+        (
+            "demo.terrain.magic-shop-entrance",
+            ContentPosition { x: 42, y: 8 },
         ),
     ];
     for (terrain_id, entrance) in entrances {
@@ -32,24 +36,50 @@ fn outpost_supply_court_has_three_walkable_shop_entrances() {
         }));
     }
 
-    let store_walls = world
+    let fortifications = world
         .terrain_overrides
         .iter()
-        .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-wall")
-        .expect("fixture should contain supply court walls");
-    let expected_walls = (6..=8)
-        .flat_map(|y| (14..=25).map(move |x| ContentPosition { x, y }))
-        .filter(|position| !entrances.iter().any(|(_, entrance)| entrance == position))
+        .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-fortification")
+        .expect("fixture should contain town fortifications");
+    let expected_fortifications = (8..=50)
+        .flat_map(|x| [ContentPosition { x, y: 2 }, ContentPosition { x, y: 19 }])
+        .chain((3..=18).flat_map(|y| [ContentPosition { x: 8, y }, ContentPosition { x: 50, y }]))
+        .filter(|position| position.y != 11)
         .collect::<BTreeSet<_>>();
     assert_eq!(
-        store_walls
+        fortifications
             .positions
             .iter()
             .copied()
             .collect::<BTreeSet<_>>(),
-        expected_walls,
-        "three adjacent 4x3 shops should form one continuous supply court"
+        expected_fortifications,
+        "the Outpost should have one continuous perimeter interrupted only by its gates"
     );
+    let gates = world
+        .terrain_overrides
+        .iter()
+        .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-gate")
+        .expect("fixture should contain town gates");
+    assert_eq!(
+        gates.positions,
+        [
+            ContentPosition { x: 8, y: 11 },
+            ContentPosition { x: 50, y: 11 }
+        ]
+    );
+    assert!(entrances.iter().all(|(_, position)| {
+        position.x > 8 && position.x < 50 && position.y > 2 && position.y < 19
+    }));
+    let warrens_entrance = world
+        .terrain_overrides
+        .iter()
+        .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
+        .expect("fixture should contain the Warrens entrance");
+    assert_eq!(
+        warrens_entrance.positions,
+        [ContentPosition { x: 59, y: 11 }]
+    );
+    assert!(warrens_entrance.positions[0].x > 50);
 
     let mut wrong_entrance = artifact.content.clone();
     wrong_entrance
@@ -57,7 +87,7 @@ fn outpost_supply_court_has_three_walkable_shop_entrances() {
         .iter_mut()
         .find(|shop| shop.id == "demo.shop.outpost-general-store")
         .unwrap()
-        .entrance_position = ContentPosition { x: 17, y: 8 };
+        .entrance_position = ContentPosition { x: 18, y: 8 };
     assert!(matches!(
         validate_and_normalize(&mut wrong_entrance),
         Err(ContentError::InvalidShop(id)) if id == "demo.shop.outpost-general-store"
@@ -1467,5 +1497,24 @@ fn door_terrain_transitions_are_reciprocal_and_match_collision() {
     assert!(matches!(
         validate_and_normalize(&mut non_door_generator),
         Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
+fn terrain_glyphs_do_not_consume_letters_reserved_for_actors() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    assert!(artifact.content.terrain.iter().all(|terrain| {
+        !terrain
+            .glyph
+            .chars()
+            .next()
+            .is_some_and(|glyph| glyph.is_ascii_alphabetic())
+    }));
+
+    let mut letter_terrain = artifact.content.clone();
+    letter_terrain.terrain[0].glyph = "T".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut letter_terrain),
+        Err(ContentError::InvalidTerrainGlyph(_))
     ));
 }

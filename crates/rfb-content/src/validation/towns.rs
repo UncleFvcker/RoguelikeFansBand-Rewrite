@@ -31,11 +31,18 @@ const ALCHEMIST_ITEM_IDS: [&str; 5] = [
     "demo.item.temperate-tonic",
 ];
 
+const MAGIC_SHOP_ITEM_IDS: [&str; 3] = [
+    "demo.item.magic-missile-wand",
+    "demo.item.detect-objects-staff",
+    "demo.item.identify-staff",
+];
+
 fn expected_stock_ids(category: ShopCategory) -> BTreeSet<&'static str> {
     match category {
         ShopCategory::GeneralStore => GENERAL_STORE_ITEM_IDS.into_iter().collect(),
         ShopCategory::Temple => TEMPLE_ITEM_IDS.into_iter().collect(),
         ShopCategory::Alchemist => ALCHEMIST_ITEM_IDS.into_iter().collect(),
+        ShopCategory::MagicShop => MAGIC_SHOP_ITEM_IDS.into_iter().collect(),
     }
 }
 

@@ -49,6 +49,8 @@ pub enum ContentError {
     InvalidDefinitionText(String),
     #[error("definition glyph must contain one non-control Unicode scalar: {0}")]
     InvalidGlyph(String),
+    #[error("terrain glyph must not use an ASCII letter reserved for actors: {0}")]
+    InvalidTerrainGlyph(String),
     #[error("terrain open/close transition is invalid: {0}")]
     InvalidTerrainTransition(String),
     #[error("invalid tag {tag} in {id}")]

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.detect-objects-staff",
+  "nameKey": "item-demo-detect-objects-staff-name",
+  "appearanceNameKey": "item-demo-unfamiliar-staff-name",
+  "descriptionKey": "item-demo-detect-objects-staff-description",
+  "glyph": "_",
+  "weightTenthsPound": 50,
+  "maxStack": 1,
+  "baseValue": 1500,
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 10, "energyPerMille": 10 },
+    "activations": [
+      {
+        "id": "demo.device-activation.detect-objects",
+        "nameKey": "device-activation-demo-detect-objects-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 6,
+        "charges": { "minimum": 45, "maximum": 45, "cost": 4 },
+        "target": {
+          "modes": ["self"],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.detect-items"
+      }
+    ]
+  },
+  "tags": ["device", "rfb", "staff"]
+}

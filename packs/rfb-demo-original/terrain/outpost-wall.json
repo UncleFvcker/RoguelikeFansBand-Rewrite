@@ -4,7 +4,7 @@
   "id": "demo.terrain.outpost-wall",
   "nameKey": "terrain-demo-outpost-wall-name",
   "descriptionKey": "terrain-demo-outpost-wall-description",
-  "glyph": "#",
+  "glyph": "▓",
   "walkable": false,
   "blocksSight": true,
   "tags": ["building", "outdoor", "surface"]

@@ -101,10 +101,10 @@ async function runSupplyLoop(driver) {
     "Warrens Warrior session",
     60_000,
   );
-  assert.equal(await text(driver, "#position-value"), "32, 11");
+  assert.equal(await text(driver, "#position-value"), "29, 11");
   assert.equal(await text(driver, "#journey-dungeon-name"), "前哨站");
 
-  await moveMany(driver, "Numpad4", "4", 16, -1, 0);
+  await moveMany(driver, "Numpad4", "4", 12, -1, 0);
   await moveMany(driver, "Numpad8", "8", 3, 0, -1);
   await driver.waitFor(`return document.querySelector("#shop-dialog")?.open`, "automatic shop entry");
   const shopLayout = await driver.execute(`
@@ -208,9 +208,9 @@ async function runSupplyLoop(driver) {
   assert.ok(Number(await text(driver, "#shop-gold-value")) < goldBeforeShopping);
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 1, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
-  await moveMany(driver, "Numpad8", "8", 1, 0, -1);
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await moveMany(driver, "Numpad6", "6", 12, 1, 0);
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "圣殿"`,
     "Temple shop entry",
@@ -233,9 +233,9 @@ async function runSupplyLoop(driver) {
   );
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 1, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
-  await moveMany(driver, "Numpad8", "8", 1, 0, -1);
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await moveMany(driver, "Numpad6", "6", 9, 1, 0);
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "炼金店"`,
     "Alchemist shop entry",
@@ -260,9 +260,25 @@ async function runSupplyLoop(driver) {
 
   await click(driver, "#shop-close");
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 27, 1, 0);
-  await moveMany(driver, "Numpad2", "2", 5, 0, 1);
-  assert.equal(await text(driver, "#position-value"), "51, 16");
+  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "魔法店"`,
+    "Magic Shop entry",
+  );
+  const magicShopLayout = await currentShopLayout(driver);
+  assert.match(magicShopLayout.owner, /埃德林·索尔/);
+  assert.equal(magicShopLayout.stockRows, 3);
+  assert.deepEqual(magicShopLayout.stockNames, [
+    "魔法飞弹魔杖",
+    "探测物品法杖",
+    "鉴定法杖",
+  ]);
+
+  await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await moveMany(driver, "Numpad6", "6", 17, 1, 0);
+  assert.equal(await text(driver, "#position-value"), "59, 11");
   await dispatchKey(driver, "Period", ">");
   await driver.waitFor(
     `return document.querySelector("#map-host")?.dataset.worldId === "demo.world.warrens-journey" && document.querySelector("#journey-depth")?.textContent.includes("1")`,
@@ -300,12 +316,11 @@ async function runSupplyLoop(driver) {
 
   await dispatchKey(driver, "Comma", "<");
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "51, 16" && document.querySelector("#journey-dungeon-name")?.textContent === "前哨站"`,
+    `return document.querySelector("#position-value")?.textContent === "59, 11" && document.querySelector("#journey-dungeon-name")?.textContent === "前哨站"`,
     "returning to Outpost",
     30_000,
   );
-  await moveMany(driver, "Numpad8", "8", 5, 0, -1);
-  await moveMany(driver, "Numpad4", "4", 35, -1, 0);
+  await moveMany(driver, "Numpad4", "4", 42, -1, 0);
   await moveMany(driver, "Numpad8", "8", 3, 0, -1);
   await driver.waitFor(`return document.querySelector("#shop-dialog")?.open`, "return shop entry");
   await selectShopItem(driver, "一份口粮");

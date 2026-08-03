@@ -4,7 +4,7 @@
   "id": "demo.terrain.task-rift",
   "nameKey": "terrain-demo-task-rift-name",
   "descriptionKey": "terrain-demo-task-rift-description",
-  "glyph": "O",
+  "glyph": "○",
   "walkable": true,
   "blocksSight": false,
   "tags": ["task-entry"]

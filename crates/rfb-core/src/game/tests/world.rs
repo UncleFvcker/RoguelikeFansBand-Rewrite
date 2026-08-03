@@ -10,13 +10,13 @@ fn warrens_journey_starts_on_an_outdoor_surface_with_a_working_entrance() {
         .expect("Warrens journey should create");
 
     assert_eq!(game.current_floor_id, "demo.floor.surface");
-    assert_eq!(game.player.position, Position { x: 32, y: 11 });
+    assert_eq!(game.player.position, Position { x: 29, y: 11 });
     assert_eq!(
-        game.terrain_at(Position { x: 32, y: 11 }),
+        game.terrain_at(Position { x: 29, y: 11 }),
         "demo.terrain.surface-path"
     );
     assert_eq!(
-        game.terrain_at(Position { x: 51, y: 16 }),
+        game.terrain_at(Position { x: 59, y: 11 }),
         "demo.terrain.stairs-down"
     );
     assert_eq!(
@@ -24,11 +24,11 @@ fn warrens_journey_starts_on_an_outdoor_surface_with_a_working_entrance() {
         "demo.terrain.surface-tree"
     );
 
-    game.player.position = Position { x: 51, y: 15 };
+    game.player.position = Position { x: 58, y: 11 };
     dispatch_next(
         &mut game,
         GameCommand::Move {
-            direction: Direction::South,
+            direction: Direction::East,
         },
     );
     let update = dispatch_next(&mut game, GameCommand::TraverseStairs);

@@ -6,6 +6,7 @@ use crate::game::tests::support::dispatch_next;
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
 const TEMPLE_ID: &str = "demo.shop.outpost-temple";
 const ALCHEMIST_ID: &str = "demo.shop.outpost-alchemist";
+const MAGIC_SHOP_ID: &str = "demo.shop.outpost-magic-shop";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -17,7 +18,7 @@ fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
 fn store_game(seed: u64) -> Game {
     let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
         .expect("Warrens game should start");
-    game.player.position = Position { x: 16, y: 8 };
+    game.player.position = Position { x: 17, y: 8 };
     game.mark_shop_visited_at_player();
     game
 }
@@ -33,7 +34,7 @@ fn stock_item_id(game: &Game, kind_id: &str) -> String {
 }
 
 #[test]
-fn outpost_supply_court_is_projected_from_authoritative_content() {
+fn outpost_shops_are_projected_from_authoritative_content() {
     let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     let snapshot = game.snapshot();
@@ -41,20 +42,23 @@ fn outpost_supply_court_is_projected_from_authoritative_content() {
     assert_eq!(town.id, "demo.town.outpost");
     assert_eq!(town.floor_id, "demo.floor.surface");
     assert!(town.visited);
-    assert_eq!(snapshot.shops.len(), 3);
+    assert_eq!(snapshot.shops.len(), 4);
     let general_store = projected_shop(&snapshot.shops, GENERAL_STORE_ID);
-    assert_eq!(general_store.entrance_position, Position { x: 16, y: 8 });
+    assert_eq!(general_store.entrance_position, Position { x: 17, y: 8 });
     assert_eq!(
         general_store.entrance_terrain_id,
         "demo.terrain.general-store-entrance"
     );
     assert_eq!(general_store.category, ShopCategoryDto::GeneralStore);
     let temple = projected_shop(&snapshot.shops, TEMPLE_ID);
-    assert_eq!(temple.entrance_position, Position { x: 20, y: 8 });
+    assert_eq!(temple.entrance_position, Position { x: 29, y: 14 });
     assert_eq!(temple.category, ShopCategoryDto::Temple);
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
-    assert_eq!(alchemist.entrance_position, Position { x: 24, y: 8 });
+    assert_eq!(alchemist.entrance_position, Position { x: 38, y: 8 });
     assert_eq!(alchemist.category, ShopCategoryDto::Alchemist);
+    let magic_shop = projected_shop(&snapshot.shops, MAGIC_SHOP_ID);
+    assert_eq!(magic_shop.entrance_position, Position { x: 42, y: 8 });
+    assert_eq!(magic_shop.category, ShopCategoryDto::MagicShop);
     assert!(
         snapshot
             .shops
@@ -67,7 +71,7 @@ fn outpost_supply_court_is_projected_from_authoritative_content() {
 fn entering_general_store_entrance_marks_persistent_shop_visit() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
-    game.player.position = Position { x: 16, y: 9 };
+    game.player.position = Position { x: 17, y: 9 };
 
     let update = dispatch_next(
         &mut game,
@@ -150,6 +154,14 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
                 "demo.item.temperate-tonic",
             ]),
         ),
+        (
+            MAGIC_SHOP_ID,
+            std::collections::BTreeSet::from([
+                "demo.item.magic-missile-wand",
+                "demo.item.detect-objects-staff",
+                "demo.item.identify-staff",
+            ]),
+        ),
     ];
     for (shop_id, expected_kinds) in expected {
         assert_eq!(
@@ -192,7 +204,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     game.gold = 1_000;
-    game.player.position = Position { x: 20, y: 8 };
+    game.player.position = Position { x: 29, y: 14 };
     game.mark_shop_visited_at_player();
     let temple_snapshot = game.snapshot();
     let temple = projected_shop(&temple_snapshot.shops, TEMPLE_ID);
@@ -231,7 +243,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     assert_eq!(game.gold, 980);
     assert_eq!(game.shop_states[ALCHEMIST_ID], alchemist_before);
 
-    game.player.position = Position { x: 24, y: 8 };
+    game.player.position = Position { x: 38, y: 8 };
     game.mark_shop_visited_at_player();
     let snapshot = game.snapshot();
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
@@ -246,9 +258,100 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     );
     assert!(!projected_shop(&snapshot.shops, TEMPLE_ID).player_at_entrance);
 
-    let restored = Game::from_save(game.to_save()).expect("three shops should round-trip");
+    let restored = Game::from_save(game.to_save()).expect("four shops should round-trip");
     assert_eq!(restored.shop_states, game.shop_states);
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn magic_shop_purchase_device_use_and_save_are_authoritative() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.gold = 10_000;
+    game.player.position = Position { x: 42, y: 8 };
+    game.mark_shop_visited_at_player();
+
+    let shop = projected_shop(&game.snapshot().shops, MAGIC_SHOP_ID).clone();
+    assert!(shop.visited);
+    assert!(shop.player_at_entrance);
+    assert_eq!(shop.category, ShopCategoryDto::MagicShop);
+    assert_eq!(shop.owner.price_factor_percent, 102);
+    assert_eq!(
+        shop.stock
+            .iter()
+            .map(|item| item.kind_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>(),
+        std::collections::BTreeSet::from([
+            "demo.item.magic-missile-wand",
+            "demo.item.detect-objects-staff",
+            "demo.item.identify-staff",
+        ])
+    );
+    let staff = shop
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.detect-objects-staff")
+        .expect("Magic Shop should stock the RFB Detect Objects Staff")
+        .clone();
+    assert_eq!(
+        staff.display_name_key,
+        "item-demo-detect-objects-staff-name"
+    );
+    assert_eq!(staff.unit_price, 1_530);
+
+    let purchase = dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: MAGIC_SHOP_ID.to_owned(),
+            item_id: staff.id,
+            quantity: 1,
+        },
+    );
+    assert!(
+        purchase
+            .events
+            .iter()
+            .any(|event| event.kind == "shop.purchase")
+    );
+    let bought = purchase
+        .inventory
+        .iter()
+        .find(|item| item.kind_id == "demo.item.detect-objects-staff")
+        .expect("purchased staff should be carried");
+    assert_eq!(
+        bought.charges,
+        Some(ItemChargesDto {
+            current: 11,
+            maximum: 45,
+        })
+    );
+    let staff_id = bought.id.clone();
+
+    let used = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: staff_id.clone(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert!(
+        used.events
+            .iter()
+            .any(|event| event.kind == "skill.device-success")
+    );
+    assert_eq!(
+        used.inventory
+            .iter()
+            .find(|item| item.id == staff_id)
+            .and_then(|item| item.charges),
+        Some(ItemChargesDto {
+            current: 7,
+            maximum: 45,
+        })
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("Magic Shop device state should reload");
+    assert_eq!(restored.snapshot(), game.snapshot());
 }
 
 #[test]

@@ -34,6 +34,14 @@ pub(super) fn validate_terrain(
         validate_definition_id(&terrain.id, "terrain")?;
         validate_definition_text(&terrain.id, &terrain.name_key, &terrain.description_key)?;
         validate_glyph(&terrain.id, &terrain.glyph)?;
+        if terrain
+            .glyph
+            .chars()
+            .next()
+            .is_some_and(|glyph| glyph.is_ascii_alphabetic())
+        {
+            return Err(ContentError::InvalidTerrainGlyph(terrain.id.clone()));
+        }
         normalize_tags(&terrain.id, &mut terrain.tags)?;
         insert_definition_id(all_ids, &terrain.id)?;
         terrain_ids.insert(terrain.id.clone());

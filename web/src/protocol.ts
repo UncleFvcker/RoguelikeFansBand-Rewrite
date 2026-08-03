@@ -246,7 +246,7 @@ export type CampaignStateDto = { status: CampaignStatusDto, score: bigint, conqu
 
 export type TownDto = { id: string, nameKey: string, descriptionKey: string, floorId: string, visited: boolean, };
 
-export type ShopCategoryDto = "general-store" | "temple" | "alchemist";
+export type ShopCategoryDto = "general-store" | "temple" | "alchemist" | "magic-shop";
 
 export type ShopOwnerDto = { id: string, nameKey: string, raceId: string, greedPercent: number, purchasePriceCap: number, priceFactorPercent: number, };
 

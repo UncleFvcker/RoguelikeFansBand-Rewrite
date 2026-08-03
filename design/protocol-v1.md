@@ -350,3 +350,5 @@ major 版本要求：
 协议 1.121 为 Recharging 卷轴新增窄 `UseItemForRecharge { itemId, sourceItemId, targetItemId }` 命令，并为 `InventoryItemDto` 增加省略式 `requiresRechargeTargets`。三个 ID 只描述一次背包物品事务，不进入存档或 state hash，也不扩展通用 `TargetSelection`；Schema 保持 v53。完整边界见 [Contract v131](contract-v131-scroll-recharging.md)。
 
 contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与既有 `AbilityLearningDto`。`PlayerSaveDto` 增加默认 0、零值省略的 `bonusSpellLearningCapacity`；它是权威持久状态并使 state hash Schema 升至 v54，但 `PROTOCOL_VERSION` 保持 1.121。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。
+
+协议 1.130 为 `ShopCategoryDto` 增加 `magic-shop`，使第四家 Outpost 商店在快照与更新中保持严格类别。设备购买、使用、能量、交易事件和存档继续复用既有 DTO；城墙、城门和地牢位置仍来自内容与地图格，不新增协议字段。save v1 与 state hash Schema v60 保持不变。完整边界见 [Contract v163](contract-v163-walled-outpost-magic-shop.md)。

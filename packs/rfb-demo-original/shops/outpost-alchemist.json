@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-alchemist-description",
   "townId": "demo.town.outpost",
   "category": "alchemist",
-  "entrancePosition": { "x": 24, "y": 8 },
+  "entrancePosition": { "x": 38, "y": 8 },
   "entranceTerrainId": "demo.terrain.alchemist-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-ilyra-moss",

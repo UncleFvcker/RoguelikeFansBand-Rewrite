@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.129 / contract-v162（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18 文档）
+状态：长期规则实现路线；当前基线为协议 1.130 / contract-v163（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18 文档）
 
 ## 1. 目的与边界
 
@@ -189,7 +189,7 @@ flowchart TD
 | 多地牢 | 深度范围、守护者、主题、进入条件和特殊规则 | 已建立基础版 | contract-v63 已建立 `DungeonDefinition`、根层和共享守护者身份；后续增加进入条件、并存探索实例、重置策略和地牢级特殊规则 |
 | 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | 未建立 | 桌面版后期实现分区世界图；不与当前战术格地图共用同一尺寸假设 |
 | 城镇 | 多城镇、访问状态、地图、昼夜和服务 | Phase 18 Gate 4 已建立首个切片 | `TownDefinition` 复用普通 floor；稳定 `demo.floor.surface` 已扩展为独立设计的 Outpost，并保存/投影访问状态，首批只开放杂货店和 Warrens |
-| 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | Phase 18 Gate 4 已建立商店身份与入口 | 当前 `ShopDefinition` 只声明城镇、类别与入口；Gate 5 扩展持久库存、店主、价格、钱包、原子买卖与每日维护，其他商店和 Home 暂缓 |
+| 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | Phase 18 Gate 6 与 contract-v163 已建立四店闭环 | General Store、Temple、Alchemist、Magic Shop 已具备持久库存、店主、价格、钱包、原子买卖、维护与 UI；其他商店和 Home 暂缓 |
 | 建筑服务 | 治疗、鉴定、附魔、重铸、任务、公会等 | 未建立 | `ServiceDefinition` 引用 effect/transaction；UI 根据服务 schema 生成表单 |
 | 任务 | 接取、进行、完成、失败、奖励、杀敌/寻物/清层目标 | 未建立 | `QuestStateMachine` + 可组合目标；任务只监听领域事件，不侵入战斗和拾取代码 |
 | 竞技场/特殊模式 | 单挑、押注、特殊胜负与奖励 | 未建立 | 使用独立 scenario/floor ruleset；在任务和关卡规则稳定后实现 |
@@ -463,7 +463,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.129、内容包 1.152.0、contract-v162、save v1 和 state hash Schema v60；内容 hash 为 `8481a945e6d627244cf7ad1b8af4f77ef0ef2013baa2a1b360ef2821527f1433`。active baseline 包含 462 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口；v153–v156 依次完成 Warrens 随机地图、地表入口、自由房间/矿脉/怪物密度，以及面积缩放的楼层物品和原版式怪物掉落；v157 建立金币来源与钱包；v158 建立出生口粮、饱食度、速度相关消化、恢复倍率、昏厥和挨饿；v159 建立出生火把、实例燃料、补充燃料、周期消耗、地表环境光和 Warrens 暗视野；v160 建立 Outpost/General Store 内容身份、入口与访问状态；v161 建立稳定店主、持久库存、RFB 价值/价格因子、维护和原子买卖；v162 将 General Store、Temple 和 Alchemist 组成三入口补给院并完成对应 UI 验收。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.130、内容包 1.153.0、contract-v163、save v1 和 state hash Schema v60；内容 hash 为 `cbcca1349df4d40a76a5de10759d3a2bffa17bfe4c71fc486389c5b21b4d525e`。active baseline 包含 463 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口；v153–v156 依次完成 Warrens 随机地图、地表入口、自由房间/矿脉/怪物密度，以及面积缩放的楼层物品和原版式怪物掉落；v157 建立金币来源与钱包；v158 建立出生口粮、饱食度、速度相关消化、恢复倍率、昏厥和挨饿；v159 建立出生火把、实例燃料、补充燃料、周期消耗、地表环境光和 Warrens 暗视野；v160 建立 Outpost/General Store 内容身份、入口与访问状态；v161 建立稳定店主、持久库存、RFB 价值/价格因子、维护和原子买卖；v162 加入 Temple 和 Alchemist；v163 将地表改为围墙城镇、把 Warrens 放到东门外、拆分独立 General Store/Temple，并在 Alchemist 共用建筑中加入严格 RFB 原版首批 Magic Shop。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
 这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 55 种 terrain、33 种 actor、107 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、12 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
 
@@ -477,7 +477,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
 | 法术、能力与设备 | 玩家/怪物施法、动态设备与首批卷轴纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、普通/完整物品鉴定、装备附魔、临时形态、生命恢复、动态设备 profile/容量、首批 wand/staff/rod 与主动充能；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整卷轴/激活族 |
-| 荒野、城镇与经济 | Outpost 补给纵切已建立 | 已有首个持久城镇、三入口补给院、General Store/Temple/Alchemist 店主、库存、定价、维护、交易与玩家商店 UI；多城镇旅行、家、建筑服务、声望和长期经济广度尚未形成 |
+| 荒野、城镇与经济 | Outpost 补给纵切已建立 | 已有首个围墙持久城镇、城外 Warrens、General Store/Temple/Alchemist/Magic Shop 店主、库存、定价、维护、交易与玩家商店 UI；多城镇旅行、家、建筑服务、声望和长期经济广度尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
 ### 8.2 已达到或扩展旧版的边界

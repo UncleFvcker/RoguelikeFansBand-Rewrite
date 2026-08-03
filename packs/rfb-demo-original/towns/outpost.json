@@ -8,6 +8,7 @@
   "shopIds": [
     "demo.shop.outpost-general-store",
     "demo.shop.outpost-temple",
-    "demo.shop.outpost-alchemist"
+    "demo.shop.outpost-alchemist",
+    "demo.shop.outpost-magic-shop"
   ]
 }

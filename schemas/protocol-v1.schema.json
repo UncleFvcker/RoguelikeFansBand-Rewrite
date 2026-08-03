@@ -6650,7 +6650,8 @@
       "enum": [
         "general-store",
         "temple",
-        "alchemist"
+        "alchemist",
+        "magic-shop"
       ]
     },
     "ShopDto": {

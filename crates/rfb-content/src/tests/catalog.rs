@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.152.0");
+    assert_eq!(catalog.pack_version(), "1.153.0");
     assert_eq!(
         catalog
             .town("demo.town.outpost")
@@ -16,6 +16,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             [
                 "demo.shop.outpost-alchemist".to_owned(),
                 "demo.shop.outpost-general-store".to_owned(),
+                "demo.shop.outpost-magic-shop".to_owned(),
                 "demo.shop.outpost-temple".to_owned(),
             ]
             .as_slice()
@@ -29,7 +30,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Temple,
-            ContentPosition { x: 20, y: 8 },
+            ContentPosition { x: 29, y: 14 },
             "demo.terrain.temple-entrance",
         ))
     );
@@ -41,7 +42,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Alchemist,
-            ContentPosition { x: 24, y: 8 },
+            ContentPosition { x: 38, y: 8 },
             "demo.terrain.alchemist-entrance",
         ))
     );
@@ -55,8 +56,20 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         Some((
             "demo.town.outpost",
             ShopCategory::GeneralStore,
-            ContentPosition { x: 16, y: 8 },
+            ContentPosition { x: 17, y: 8 },
             "demo.terrain.general-store-entrance",
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-magic-shop").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::MagicShop,
+            ContentPosition { x: 42, y: 8 },
+            "demo.terrain.magic-shop-entrance",
         ))
     );
     assert_eq!(

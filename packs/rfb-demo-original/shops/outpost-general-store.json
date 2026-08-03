@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-general-store-description",
   "townId": "demo.town.outpost",
   "category": "general-store",
-  "entrancePosition": { "x": 16, "y": 8 },
+  "entrancePosition": { "x": 17, "y": 8 },
   "entranceTerrainId": "demo.terrain.general-store-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-mara-venn",

@@ -126,31 +126,67 @@
     {
       "command": {
         "type": "move",
-        "direction": "south"
+        "direction": "east"
       }
     },
     {
       "command": {
         "type": "move",
-        "direction": "south"
+        "direction": "east"
       }
     },
     {
       "command": {
         "type": "move",
-        "direction": "south"
+        "direction": "east"
       }
     },
     {
       "command": {
         "type": "move",
-        "direction": "south"
+        "direction": "east"
       }
     },
     {
       "command": {
         "type": "move",
-        "direction": "south"
+        "direction": "east"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "east"
       }
     },
     {
@@ -162,16 +198,16 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 25,
-      "turn": 25,
-      "worldTick": 250,
-      "lastCommandSeq": 25,
-      "rngDrawCounter": 475,
+      "revision": 31,
+      "turn": 31,
+      "worldTick": 310,
+      "lastCommandSeq": 31,
+      "rngDrawCounter": 473,
       "floorId": "demo.floor.warrens-depth-1",
       "dungeonInstanceId": "demo.dungeon.warrens.instance.1",
       "playerPosition": {
-        "x": 45,
-        "y": 16
+        "x": 52,
+        "y": 6
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -182,7 +218,7 @@
       "playerCarriedWeightTenthsPound": 714,
       "playerCarryCapacityTenthsPound": 1200,
       "playerGold": 346,
-      "playerNutrition": 9949,
+      "playerNutrition": 9939,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -341,18 +377,18 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.1",
           "position": {
-            "x": 55,
-            "y": 16
+            "x": 11,
+            "y": 8
           },
-          "hp": 2,
+          "hp": 4,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
-            "x": 48,
-            "y": 5
+            "x": 52,
+            "y": 14
           },
           "hp": 4,
           "speed": 110,
@@ -361,20 +397,20 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 19,
-            "y": 8
+            "x": 37,
+            "y": 12
           },
-          "hp": 2,
+          "hp": 4,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.4",
           "position": {
-            "x": 24,
-            "y": 16
+            "x": 33,
+            "y": 5
           },
-          "hp": 2,
+          "hp": 4,
           "speed": 110,
           "energyNeed": 100
         }
@@ -384,10 +420,10 @@
         {
           "id": "generated.gold.1",
           "position": {
-            "x": 27,
-            "y": 6
+            "x": 50,
+            "y": 9
           },
-          "amount": 30,
+          "amount": 31,
           "appearance": "copper"
         }
       ],
@@ -751,7 +787,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 32,
+      "nextItemInstanceSerial": 35,
       "nextGoldPileSerial": 2,
       "campaign": {
         "status": "active",
@@ -759,7 +795,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ebb879ae8d6ddb4f695a2e496ed860bc5f532b5792be0cb23e5e76d833996205"
+      "stateHash": "233d92b188f8127e7f82f070cc62e9ebe93248919df338284577ed0f19f305fc"
     },
     "events": [
       {
@@ -773,6 +809,30 @@
     ],
     "changedCells": [
       {
+        "x": 29,
+        "y": 11
+      },
+      {
+        "x": 30,
+        "y": 11
+      },
+      {
+        "x": 30,
+        "y": 11
+      },
+      {
+        "x": 31,
+        "y": 11
+      },
+      {
+        "x": 31,
+        "y": 11
+      },
+      {
+        "x": 32,
+        "y": 11
+      },
+      {
         "x": 32,
         "y": 11
       },
@@ -929,40 +989,64 @@
         "y": 11
       },
       {
-        "x": 51,
-        "y": 12
+        "x": 52,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 12
+        "x": 52,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 13
+        "x": 53,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 13
+        "x": 53,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 14
+        "x": 54,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 14
+        "x": 54,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 15
+        "x": 55,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 15
+        "x": 55,
+        "y": 11
       },
       {
-        "x": 51,
-        "y": 16
+        "x": 56,
+        "y": 11
+      },
+      {
+        "x": 56,
+        "y": 11
+      },
+      {
+        "x": 57,
+        "y": 11
+      },
+      {
+        "x": 57,
+        "y": 11
+      },
+      {
+        "x": 58,
+        "y": 11
+      },
+      {
+        "x": 58,
+        "y": 11
+      },
+      {
+        "x": 59,
+        "y": 11
       },
       {
         "x": 0,
@@ -6773,6 +6857,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "ebb879ae8d6ddb4f695a2e496ed860bc5f532b5792be0cb23e5e76d833996205"
+    "saveRoundTripStateHash": "233d92b188f8127e7f82f070cc62e9ebe93248919df338284577ed0f19f305fc"
   }
 }

@@ -4,7 +4,7 @@
   "id": "demo.terrain.task-rift-failed",
   "nameKey": "terrain-demo-task-rift-failed-name",
   "descriptionKey": "terrain-demo-task-rift-failed-description",
-  "glyph": "x",
+  "glyph": "×",
   "walkable": true,
   "blocksSight": false,
   "tags": ["task-entry-failed"]

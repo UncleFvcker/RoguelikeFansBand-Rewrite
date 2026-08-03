@@ -4,7 +4,7 @@
   "id": "demo.terrain.surface-tree",
   "nameKey": "terrain-demo-surface-tree-name",
   "descriptionKey": "terrain-demo-surface-tree-description",
-  "glyph": "T",
+  "glyph": "♣",
   "walkable": false,
   "blocksSight": true,
   "tags": ["outdoor", "surface", "tree"]

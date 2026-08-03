@@ -1,6 +1,6 @@
 # Phase 18: Outpost supply loop
 
-状态：Gate 0–6 完成，首批后续商店扩展完成。当前 active baseline 为 `contract-v162`；协议 `1.129`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.152.0`（hash `8481a945e6d627244cf7ad1b8af4f77ef0ef2013baa2a1b360ef2821527f1433`）和 462 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、Outpost、General Store/Temple/Alchemist 权威交易、玩家 UI 与完整供给闭环已经建立。
+状态：Gate 0–6 完成，围墙城镇与首批 Magic Shop 扩展完成。当前 active baseline 为 `contract-v163`；协议 `1.130`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.153.0`（hash `cbcca1349df4d40a76a5de10759d3a2bffa17bfe4c71fc486389c5b21b4d525e`）和 463 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、围墙 Outpost、General Store/Temple/Alchemist/Magic Shop 权威交易、玩家 UI 与完整供给闭环已经建立。
 
 ## 1. 目标
 
@@ -154,9 +154,11 @@ Gate 6 不提升协议、内容包或 state hash Schema。Web 增加入口自动
 
 Gate 6 后续首批扩展为 contract-v162：General Store、Temple 和 Alchemist 组成三入口补给院，各店保持独立持久状态；圣殿与炼金店只开放已有完整使用行为的 RFB 对应消耗品。协议升至 `1.129`、内容包升至 `1.152.0`、state hash Schema 保持 `60`；fixture 462 覆盖两处新入口和存档回环。当前开发期不为旧开发存档迁移新增商店状态。
 
+contract-v163 将地表整理为带东西城门的围墙城镇，Warrens 入口移至东墙外；General Store 独立，Temple 使用南侧对称建筑，Alchemist/Magic Shop 共用东北建筑的两个入口。所有 terrain 禁止 ASCII 字母 glyph，字母完整保留给 actor；墙体使用 `█/▓/▒` 色块。Magic Shop 首批严格采用 RFB 原版 Magic Missile Wand、Detect Objects Staff 和 Identify Staff。协议升至 `1.130`、内容包升至 `1.153.0`、state hash Schema 保持 `60`；fixture 463 覆盖四店访问、魔法设备购买/使用与存档回环。当前开发期仍不为旧开发存档新增兼容哈希。
+
 ## 8. 明确暂缓
 
-- Armoury、Weaponsmith、Temple、Alchemist、Magic Shop、Black Market、Home、Bookstore 和 Museum；
+- Armoury、Weaponsmith、Black Market、Home、Bookstore 和 Museum；
 - White Horse Inn、城堡、Pest Control、其他任务与建筑服务；
 - 荒野旅行、其他城镇、昼夜、镇民生成和城镇战斗；
 - 全部普通食物、投掷油、光源 ego/神器、永久光源和特殊种族消化；

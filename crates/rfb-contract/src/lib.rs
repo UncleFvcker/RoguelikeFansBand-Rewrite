@@ -21,7 +21,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
-pub const ACTIVE_BASELINE: &str = "contract-v162";
+pub const ACTIVE_BASELINE: &str = "contract-v163";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -77,6 +77,8 @@ pub struct Preconditions {
     pub player_build_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player_gold: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_level: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -420,6 +422,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     let mut payload = initial_game.to_save();
     if let Some(player_hp) = fixture.preconditions.player_hp {
         payload.player.hp = player_hp;
+    }
+    if let Some(player_gold) = fixture.preconditions.player_gold {
+        payload.player.gold = player_gold;
     }
     if fixture.preconditions.player_level.is_some()
         || fixture.preconditions.player_experience.is_some()

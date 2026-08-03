@@ -77,4 +77,5 @@ pub enum ShopCategory {
     GeneralStore,
     Temple,
     Alchemist,
+    MagicShop,
 }
