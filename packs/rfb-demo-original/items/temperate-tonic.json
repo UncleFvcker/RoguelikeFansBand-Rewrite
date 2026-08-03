@@ -8,6 +8,7 @@
   "glyph": "!",
   "weightTenthsPound": 4,
   "maxStack": 20,
+  "baseValue": 120,
   "useAction": {
     "effectProgramId": "demo.effect.thermal-resistance"
   },

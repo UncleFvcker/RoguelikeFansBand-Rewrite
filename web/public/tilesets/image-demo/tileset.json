@@ -63,6 +63,16 @@
       "foreground": "#f0ca72",
       "background": "#3a2d1b"
     },
+    "demo.terrain.temple-entrance": {
+      "glyph": "4",
+      "foreground": "#e9e4d6",
+      "background": "#34312b"
+    },
+    "demo.terrain.alchemist-entrance": {
+      "glyph": "5",
+      "foreground": "#84caa2",
+      "background": "#1d3328"
+    },
     "demo.actor.explorer": {
       "foreground": "#8ed8ff",
       "background": "#17324a",

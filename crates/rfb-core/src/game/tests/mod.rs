@@ -6,8 +6,8 @@ use rfb_protocol::{
     AbilityLearningDto, CellVisualDto, CheckOutcomeDto, CheckResolutionDto, DamageResolutionDto,
     DamageTypeDto, DeviceRechargeSourceDto, Direction, EntityFactionDto, FloorConnectionSaveDto,
     GameCommand, GameCommandEnvelope, GameEventOutcomeDto, GameSnapshot, ItemKnowledgeSaveDto,
-    ResistanceLevelDto, ResistanceSaveDto, SavePayloadV1, StatusSaveDto, TerrainInteractionKindDto,
-    VisibilityState,
+    ResistanceLevelDto, ResistanceSaveDto, SavePayloadV1, ShopCategoryDto, ShopDto, StatusSaveDto,
+    TerrainInteractionKindDto, VisibilityState,
 };
 
 use super::*;

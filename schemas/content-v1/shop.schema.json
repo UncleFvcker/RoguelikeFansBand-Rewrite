@@ -24,7 +24,9 @@
     },
     "ShopCategory": {
       "enum": [
-        "general-store"
+        "general-store",
+        "temple",
+        "alchemist"
       ],
       "type": "string"
     },

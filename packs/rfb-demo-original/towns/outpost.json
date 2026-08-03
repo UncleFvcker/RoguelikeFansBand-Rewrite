@@ -5,5 +5,9 @@
   "nameKey": "town-demo-outpost-name",
   "descriptionKey": "town-demo-outpost-description",
   "floorId": "demo.floor.surface",
-  "shopIds": ["demo.shop.outpost-general-store"]
+  "shopIds": [
+    "demo.shop.outpost-general-store",
+    "demo.shop.outpost-temple",
+    "demo.shop.outpost-alchemist"
+  ]
 }

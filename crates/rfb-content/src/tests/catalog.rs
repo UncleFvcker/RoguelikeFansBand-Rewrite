@@ -6,14 +6,43 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.151.0");
+    assert_eq!(catalog.pack_version(), "1.152.0");
     assert_eq!(
         catalog
             .town("demo.town.outpost")
             .map(|town| (town.floor_id.as_str(), town.shop_ids.as_slice())),
         Some((
             "demo.floor.surface",
-            ["demo.shop.outpost-general-store".to_owned()].as_slice()
+            [
+                "demo.shop.outpost-alchemist".to_owned(),
+                "demo.shop.outpost-general-store".to_owned(),
+                "demo.shop.outpost-temple".to_owned(),
+            ]
+            .as_slice()
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-temple").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::Temple,
+            ContentPosition { x: 20, y: 8 },
+            "demo.terrain.temple-entrance",
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-alchemist").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::Alchemist,
+            ContentPosition { x: 24, y: 8 },
+            "demo.terrain.alchemist-entrance",
         ))
     );
     assert_eq!(

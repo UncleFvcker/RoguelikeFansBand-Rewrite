@@ -27,7 +27,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 9,
+      "rngDrawCounter": 18,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -37,6 +37,29 @@
         "visited": true
       },
       "shops": [
+        {
+          "id": "demo.shop.outpost-alchemist",
+          "nameKey": "shop-demo-outpost-alchemist-name",
+          "descriptionKey": "shop-demo-outpost-alchemist-description",
+          "category": "alchemist",
+          "entrancePosition": {
+            "x": 24,
+            "y": 8
+          },
+          "entranceTerrainId": "demo.terrain.alchemist-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-ilyra-moss",
+            "nameKey": "shop-owner-demo-outpost-ilyra-moss-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 111,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 103
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
         {
           "id": "demo.shop.outpost-general-store",
           "nameKey": "shop-demo-outpost-general-store-name",
@@ -56,6 +79,29 @@
             "greedPercent": 108,
             "purchasePriceCap": 500,
             "priceFactorPercent": 100
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-temple",
+          "nameKey": "shop-demo-outpost-temple-name",
+          "descriptionKey": "shop-demo-outpost-temple-description",
+          "category": "temple",
+          "entrancePosition": {
+            "x": 20,
+            "y": 8
+          },
+          "entranceTerrainId": "demo.terrain.temple-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-aldren-vale",
+            "nameKey": "shop-owner-demo-outpost-aldren-vale-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 109,
+            "purchasePriceCap": 30000,
+            "priceFactorPercent": 101
           },
           "stock": [],
           "sellQuotes": []
@@ -586,7 +632,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 21,
+      "nextItemInstanceSerial": 28,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -594,7 +640,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7c52cdae097540125376c352d0df521c317b8f1f6956252cce1a929ae81bb1f4"
+      "stateHash": "e7d6f49a862c8d54fc9a18fb3a016ba15e0dfd73783703f1f1eb20dc2fd4326f"
     },
     "events": [
       {
@@ -617,6 +663,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "7c52cdae097540125376c352d0df521c317b8f1f6956252cce1a929ae81bb1f4"
+    "saveRoundTripStateHash": "e7d6f49a862c8d54fc9a18fb3a016ba15e0dfd73783703f1f1eb20dc2fd4326f"
   }
 }

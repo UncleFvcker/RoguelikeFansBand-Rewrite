@@ -8,6 +8,7 @@
   "glyph": "?",
   "weightTenthsPound": 1,
   "maxStack": 20,
+  "baseValue": 8,
   "useAction": {
     "effectProgramId": "demo.effect.detect-traps-through-walls"
   },

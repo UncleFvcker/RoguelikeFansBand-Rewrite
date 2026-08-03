@@ -75,4 +75,6 @@ pub struct ShopMaintenanceDefinition {
 #[serde(rename_all = "kebab-case")]
 pub enum ShopCategory {
     GeneralStore,
+    Temple,
+    Alchemist,
 }

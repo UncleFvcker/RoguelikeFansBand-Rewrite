@@ -208,8 +208,59 @@ async function runSupplyLoop(driver) {
   assert.ok(Number(await text(driver, "#shop-gold-value")) < goldBeforeShopping);
 
   await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad2", "2", 1, 0, 1);
+  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
+  await moveMany(driver, "Numpad8", "8", 1, 0, -1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "圣殿"`,
+    "Temple shop entry",
+  );
+  const templeLayout = await currentShopLayout(driver);
+  assert.match(templeLayout.owner, /奥尔德伦·维尔/);
+  assert.equal(templeLayout.stockRows, 4);
+  assert.deepEqual(templeLayout.stockNames, [
+    "轻伤治疗药水",
+    "勇毅饮剂",
+    "归返卷轴",
+    "净化卷轴",
+  ]);
+  await selectShopItem(driver, "轻伤治疗药水");
+  await setShopQuantity(driver, 1);
+  await click(driver, "#shop-confirm");
+  await driver.waitFor(
+    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("轻伤治疗药水")`,
+    "Temple healing purchase",
+  );
+
+  await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad2", "2", 1, 0, 1);
+  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
+  await moveMany(driver, "Numpad8", "8", 1, 0, -1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "炼金店"`,
+    "Alchemist shop entry",
+  );
+  const alchemistLayout = await currentShopLayout(driver);
+  assert.match(alchemistLayout.owner, /伊莉拉·莫斯/);
+  assert.equal(alchemistLayout.stockRows, 5);
+  assert.deepEqual(alchemistLayout.stockNames, [
+    "闪跃卷轴",
+    "远行卷轴",
+    "探物卷轴",
+    "探陷卷轴",
+    "调温饮剂",
+  ]);
+  await selectShopItem(driver, "闪跃卷轴");
+  await setShopQuantity(driver, 1);
+  await click(driver, "#shop-confirm");
+  await driver.waitFor(
+    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("闪跃卷轴")`,
+    "Alchemist scroll purchase",
+  );
+
+  await click(driver, "#shop-close");
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 35, 1, 0);
+  await moveMany(driver, "Numpad6", "6", 27, 1, 0);
   await moveMany(driver, "Numpad2", "2", 5, 0, 1);
   assert.equal(await text(driver, "#position-value"), "51, 16");
   await dispatchKey(driver, "Period", ">");
@@ -310,6 +361,18 @@ async function runSupplyLoop(driver) {
   );
   assert.equal(await text(driver, "#gold-value"), savedGold);
   assert.equal(await inventoryQuantity(driver, "demo.item.ration-of-food"), savedRations);
+}
+
+async function currentShopLayout(driver) {
+  return driver.execute(`
+    return {
+      title: document.querySelector("#shop-title")?.textContent,
+      owner: document.querySelector("#shop-owner")?.textContent,
+      stockRows: document.querySelectorAll("#shop-item-list [data-shop-item-id]").length,
+      stockNames: [...document.querySelectorAll("#shop-item-list .shop-item-name")]
+        .map((item) => item.textContent),
+    };
+  `);
 }
 
 async function moveMany(driver, code, key, count, dx, dy) {

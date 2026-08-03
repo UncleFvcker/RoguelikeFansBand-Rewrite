@@ -132,7 +132,7 @@
       "turn": 19,
       "worldTick": 190,
       "lastCommandSeq": 19,
-      "rngDrawCounter": 9,
+      "rngDrawCounter": 18,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -142,6 +142,29 @@
         "visited": true
       },
       "shops": [
+        {
+          "id": "demo.shop.outpost-alchemist",
+          "nameKey": "shop-demo-outpost-alchemist-name",
+          "descriptionKey": "shop-demo-outpost-alchemist-description",
+          "category": "alchemist",
+          "entrancePosition": {
+            "x": 24,
+            "y": 8
+          },
+          "entranceTerrainId": "demo.terrain.alchemist-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-ilyra-moss",
+            "nameKey": "shop-owner-demo-outpost-ilyra-moss-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 111,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 103
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
         {
           "id": "demo.shop.outpost-general-store",
           "nameKey": "shop-demo-outpost-general-store-name",
@@ -164,7 +187,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.12",
+              "id": "generated.item.17",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 5,
@@ -174,11 +197,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.13",
+              "id": "generated.item.18",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -190,11 +213,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.18",
+              "id": "generated.item.22",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 30,
               "weightTenthsPound": 50,
               "fuel": {
@@ -206,11 +229,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.20",
+              "id": "generated.item.23",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -243,6 +266,29 @@
               "unavailableReason": "item-illegal"
             }
           ]
+        },
+        {
+          "id": "demo.shop.outpost-temple",
+          "nameKey": "shop-demo-outpost-temple-name",
+          "descriptionKey": "shop-demo-outpost-temple-description",
+          "category": "temple",
+          "entrancePosition": {
+            "x": 20,
+            "y": 8
+          },
+          "entranceTerrainId": "demo.terrain.temple-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-aldren-vale",
+            "nameKey": "shop-owner-demo-outpost-aldren-vale-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 109,
+            "purchasePriceCap": 30000,
+            "priceFactorPercent": 101
+          },
+          "stock": [],
+          "sellQuotes": []
         }
       ],
       "playerPosition": {
@@ -770,7 +816,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 21,
+      "nextItemInstanceSerial": 28,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -778,7 +824,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4afbf2962dfc33efb515773de6647437b529bba27b7ff43d696a0521252599fe"
+      "stateHash": "8f7366b94caf9563271d5e3090cae0861c6c3553c3368ceedbeeb01eddadee30"
     },
     "changedCells": [
       {
@@ -934,6 +980,6 @@
         "y": 9
       }
     ],
-    "saveRoundTripStateHash": "4afbf2962dfc33efb515773de6647437b529bba27b7ff43d696a0521252599fe"
+    "saveRoundTripStateHash": "8f7366b94caf9563271d5e3090cae0861c6c3553c3368ceedbeeb01eddadee30"
   }
 }

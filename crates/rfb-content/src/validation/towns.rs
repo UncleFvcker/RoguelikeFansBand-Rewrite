@@ -16,6 +16,29 @@ const GENERAL_STORE_ITEM_IDS: [&str; 4] = [
     "demo.item.flask-of-oil",
 ];
 
+const TEMPLE_ITEM_IDS: [&str; 4] = [
+    "demo.item.light-healing-potion",
+    "demo.item.valor-tonic",
+    "demo.item.homeward-scroll",
+    "demo.item.cleansing-scroll",
+];
+
+const ALCHEMIST_ITEM_IDS: [&str; 5] = [
+    "demo.item.flicker-scroll",
+    "demo.item.farstep-scroll",
+    "demo.item.seeking-scroll",
+    "demo.item.trapfinding-scroll",
+    "demo.item.temperate-tonic",
+];
+
+fn expected_stock_ids(category: ShopCategory) -> BTreeSet<&'static str> {
+    match category {
+        ShopCategory::GeneralStore => GENERAL_STORE_ITEM_IDS.into_iter().collect(),
+        ShopCategory::Temple => TEMPLE_ITEM_IDS.into_iter().collect(),
+        ShopCategory::Alchemist => ALCHEMIST_ITEM_IDS.into_iter().collect(),
+    }
+}
+
 pub(super) struct TownValidationRefs<'a> {
     pub(super) items: &'a [ItemDefinition],
     pub(super) races: &'a [RaceDefinition],
@@ -93,9 +116,7 @@ pub(super) fn validate_towns_and_shops(
                 return Err(ContentError::InvalidShop(shop.id.clone()));
             }
         }
-        if matches!(shop.category, ShopCategory::GeneralStore)
-            && stock_ids != GENERAL_STORE_ITEM_IDS.into_iter().collect::<BTreeSet<_>>()
-        {
+        if stock_ids != expected_stock_ids(shop.category) {
             return Err(ContentError::InvalidShop(shop.id.clone()));
         }
         insert_definition_id(all_ids, &shop.id)?;

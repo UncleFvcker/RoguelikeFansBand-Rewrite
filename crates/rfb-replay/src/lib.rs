@@ -515,7 +515,12 @@ mod tests {
                 .dispatch(GameCommand::Move { direction })
                 .expect("path to General Store should execute");
         }
-        let shop = &first_segment.game().snapshot().shops[0];
+        let snapshot = first_segment.game().snapshot();
+        let shop = snapshot
+            .shops
+            .iter()
+            .find(|shop| shop.id == "demo.shop.outpost-general-store")
+            .expect("General Store should be projected");
         let stock_item_id = shop
             .stock
             .iter()

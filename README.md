@@ -176,6 +176,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v159：燃料与地牢光照](design/contract-v159-fuel-light.md)
 - [Contract v160：Outpost 内容模型](design/contract-v160-outpost-content.md)
 - [Contract v161：General Store 权威交易](design/contract-v161-general-store-transactions.md)
+- [Contract v162：Outpost 三入口补给院](design/contract-v162-outpost-supply-court.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -199,7 +200,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v161`，共 461 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v162`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -426,6 +427,8 @@ Phase 18 Gate 4 / contract-v160 增加严格的 town/shop 内容根、Outpost �
 
 Phase 18 Gate 5–6 / contract-v161 建立完整 Outpost 补给闭环：General Store 具备稳定店主、四类 RFB 价值补给、种子库存、按 `worldTick` 维护、原版价格因子和原子批量买卖；相同种类且实例状态相容的库存与背包物品按原版 `pack_carry` 路径合并为一行，不同燃料或属性保持独立。Web 提供入口自动打开的购买/出售页、数量、价格、金币、负重、饱食和装备光源状态，桌面 E2E 覆盖购物、Warrens 消耗、拾取金币、回城补给及原生存档恢复。协议 1.128、demo 1.151.0、Schema v60、461 条 exact fixtures、零 waiver和 content hash 均保持不变。详见[Contract v161](design/contract-v161-general-store-transactions.md)与[Phase 18 规划](design/phase-18-outpost-supply-loop.md)。
 
+Phase 18 后续 / contract-v162 将 General Store、Temple 和 Alchemist 横向合并为一座三入口补给院，每店仍保留独立入口、稳定店主、持久库存、维护和访问状态。圣殿与炼金店首批只开放已有完整使用行为的 RFB 对应消耗品；三类普通商店共享正价值且非尸体/骨骸的收购边界。协议升至 1.129、demo 升至 1.152.0、Schema 保持 v60，active baseline 增至 462 条 exact fixtures、零 waiver，content hash 为 `8481a945e6d627244cf7ad1b8af4f77ef0ef2013baa2a1b360ef2821527f1433`。详见[Contract v162](design/contract-v162-outpost-supply-court.md)。
+
 ### 本地验证
 
 ```powershell
@@ -501,7 +504,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 461 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 462 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

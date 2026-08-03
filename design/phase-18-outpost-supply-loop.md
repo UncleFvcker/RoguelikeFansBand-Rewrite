@@ -1,6 +1,6 @@
 # Phase 18: Outpost supply loop
 
-状态：Gate 0–6 完成。当前 active baseline 为 `contract-v161`；协议 `1.128`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.151.0`（hash `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`）和 461 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、Outpost、General Store 权威交易、玩家 UI 与完整供给闭环已经建立。
+状态：Gate 0–6 完成，首批后续商店扩展完成。当前 active baseline 为 `contract-v162`；协议 `1.129`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.152.0`（hash `8481a945e6d627244cf7ad1b8af4f77ef0ef2013baa2a1b360ef2821527f1433`）和 462 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、Outpost、General Store/Temple/Alchemist 权威交易、玩家 UI 与完整供给闭环已经建立。
 
 ## 1. 目标
 
@@ -151,6 +151,8 @@ Gate 4 的实际版本结果为协议 `1.127`、内容包 `1.150.0`、state hash
 Gate 5 的实际版本结果为协议 `1.128`、内容包 `1.151.0`、state hash Schema `60` 和 contract-v161。店主、完整实例库存、维护时间、买卖命令与价格投影全部持久化；交易零世界时间，拒绝零 RNG/零 mutation。缺少商店状态的开发存档严格拒绝。完整边界见 [Contract v161](contract-v161-general-store-transactions.md)。
 
 Gate 6 不提升协议、内容包或 state hash Schema。Web 增加入口自动打开的购买/出售页、数量与最大值控制、价格、余额、负重、饱食和装备光源状态；桌面 supply-loop E2E 覆盖购物、地牢消耗、拾取金币、回城补给和原生存档恢复。原版式相容物品合并作为 Gate 6 验收中发现的 Gate 5 行为纠偏，同步更新 fixture 460/461 的 exact 结果，但不改变其金币、世界时间或 RNG 断言。
+
+Gate 6 后续首批扩展为 contract-v162：General Store、Temple 和 Alchemist 组成三入口补给院，各店保持独立持久状态；圣殿与炼金店只开放已有完整使用行为的 RFB 对应消耗品。协议升至 `1.129`、内容包升至 `1.152.0`、state hash Schema 保持 `60`；fixture 462 覆盖两处新入口和存档回环。当前开发期不为旧开发存档迁移新增商店状态。
 
 ## 8. 明确暂缓
 

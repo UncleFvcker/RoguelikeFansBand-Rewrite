@@ -8,6 +8,7 @@
   "glyph": "?",
   "weightTenthsPound": 1,
   "maxStack": 20,
+  "baseValue": 40,
   "useAction": {
     "effectProgramId": "demo.effect.random-teleport-long"
   },

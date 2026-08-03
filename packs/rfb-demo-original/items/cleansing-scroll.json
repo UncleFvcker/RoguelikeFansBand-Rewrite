@@ -8,6 +8,7 @@
   "glyph": "?",
   "weightTenthsPound": 1,
   "maxStack": 20,
+  "baseValue": 100,
   "useAction": {
     "effectProgramId": "demo.effect.remove-equipped-curses"
   },

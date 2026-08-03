@@ -166,12 +166,12 @@
       "turn": 25,
       "worldTick": 250,
       "lastCommandSeq": 25,
-      "rngDrawCounter": 442,
+      "rngDrawCounter": 475,
       "floorId": "demo.floor.warrens-depth-1",
       "dungeonInstanceId": "demo.dungeon.warrens.instance.1",
       "playerPosition": {
-        "x": 43,
-        "y": 17
+        "x": 45,
+        "y": 16
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -341,10 +341,10 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.1",
           "position": {
-            "x": 27,
-            "y": 9
+            "x": 55,
+            "y": 16
           },
-          "hp": 4,
+          "hp": 2,
           "speed": 110,
           "energyNeed": 100
         },
@@ -352,7 +352,7 @@
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
             "x": 48,
-            "y": 9
+            "y": 5
           },
           "hp": 4,
           "speed": 110,
@@ -361,33 +361,33 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 23,
-            "y": 17
+            "x": 19,
+            "y": 8
           },
-          "hp": 4,
+          "hp": 2,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.4",
           "position": {
-            "x": 3,
-            "y": 11
+            "x": 24,
+            "y": 16
           },
-          "hp": 4,
+          "hp": 2,
           "speed": 110,
           "energyNeed": 100
         }
       ],
-      "groundItemCount": 3,
+      "groundItemCount": 4,
       "goldPiles": [
         {
           "id": "generated.gold.1",
           "position": {
-            "x": 21,
-            "y": 19
+            "x": 27,
+            "y": 6
           },
-          "amount": 20,
+          "amount": 30,
           "appearance": "copper"
         }
       ],
@@ -751,7 +751,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 24,
+      "nextItemInstanceSerial": 32,
       "nextGoldPileSerial": 2,
       "campaign": {
         "status": "active",
@@ -759,7 +759,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "39d77e19728f0f896c596bea70fb3ec9c43a4bc17bb44ae1fb3abac1494e0665"
+      "stateHash": "ebb879ae8d6ddb4f695a2e496ed860bc5f532b5792be0cb23e5e76d833996205"
     },
     "events": [
       {
@@ -6773,6 +6773,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "39d77e19728f0f896c596bea70fb3ec9c43a4bc17bb44ae1fb3abac1494e0665"
+    "saveRoundTripStateHash": "ebb879ae8d6ddb4f695a2e496ed860bc5f532b5792be0cb23e5e76d833996205"
   }
 }

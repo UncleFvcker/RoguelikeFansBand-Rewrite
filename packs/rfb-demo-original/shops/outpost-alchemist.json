@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.outpost-alchemist",
+  "nameKey": "shop-demo-outpost-alchemist-name",
+  "descriptionKey": "shop-demo-outpost-alchemist-description",
+  "townId": "demo.town.outpost",
+  "category": "alchemist",
+  "entrancePosition": { "x": 24, "y": 8 },
+  "entranceTerrainId": "demo.terrain.alchemist-entrance",
+  "owner": {
+    "id": "demo.shop-owner.outpost-ilyra-moss",
+    "nameKey": "shop-owner-demo-outpost-ilyra-moss-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 111,
+    "purchasePriceCap": 10000
+  },
+  "stock": [
+    {
+      "itemKindId": "demo.item.flicker-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
+    },
+    {
+      "itemKindId": "demo.item.farstep-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 3,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 3
+    },
+    {
+      "itemKindId": "demo.item.seeking-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
+    },
+    {
+      "itemKindId": "demo.item.trapfinding-scroll",
+      "initialMinimum": 1,
+      "initialMaximum": 4,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 4
+    },
+    {
+      "itemKindId": "demo.item.temperate-tonic",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
+    }
+  ],
+  "maintenance": {
+    "intervalWorldTicks": 10000
+  }
+}

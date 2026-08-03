@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
-fn outpost_owns_one_walkable_general_store_entrance() {
+fn outpost_supply_court_has_three_walkable_shop_entrances() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact
         .content
@@ -12,20 +12,34 @@ fn outpost_owns_one_walkable_general_store_entrance() {
         .find(|world| world.id == "demo.world.warrens-journey")
         .expect("fixture should contain Warrens");
     assert_eq!(world.town_id.as_deref(), Some("demo.town.outpost"));
-    let entrance = ContentPosition { x: 16, y: 8 };
-    assert!(world.terrain_overrides.iter().any(|terrain| {
-        terrain.terrain_id == "demo.terrain.general-store-entrance"
-            && terrain.positions == [entrance]
-    }));
+    let entrances = [
+        (
+            "demo.terrain.general-store-entrance",
+            ContentPosition { x: 16, y: 8 },
+        ),
+        (
+            "demo.terrain.temple-entrance",
+            ContentPosition { x: 20, y: 8 },
+        ),
+        (
+            "demo.terrain.alchemist-entrance",
+            ContentPosition { x: 24, y: 8 },
+        ),
+    ];
+    for (terrain_id, entrance) in entrances {
+        assert!(world.terrain_overrides.iter().any(|terrain| {
+            terrain.terrain_id == terrain_id && terrain.positions == [entrance]
+        }));
+    }
 
     let store_walls = world
         .terrain_overrides
         .iter()
         .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-wall")
-        .expect("fixture should contain General Store walls");
+        .expect("fixture should contain supply court walls");
     let expected_walls = (6..=8)
-        .flat_map(|y| (14..=17).map(move |x| ContentPosition { x, y }))
-        .filter(|position| *position != entrance)
+        .flat_map(|y| (14..=25).map(move |x| ContentPosition { x, y }))
+        .filter(|position| !entrances.iter().any(|(_, entrance)| entrance == position))
         .collect::<BTreeSet<_>>();
     assert_eq!(
         store_walls
@@ -34,11 +48,16 @@ fn outpost_owns_one_walkable_general_store_entrance() {
             .copied()
             .collect::<BTreeSet<_>>(),
         expected_walls,
-        "General Store should be a compact filled footprint with only its entrance open"
+        "three adjacent 4x3 shops should form one continuous supply court"
     );
 
     let mut wrong_entrance = artifact.content.clone();
-    wrong_entrance.shops[0].entrance_position = ContentPosition { x: 17, y: 8 };
+    wrong_entrance
+        .shops
+        .iter_mut()
+        .find(|shop| shop.id == "demo.shop.outpost-general-store")
+        .unwrap()
+        .entrance_position = ContentPosition { x: 17, y: 8 };
     assert!(matches!(
         validate_and_normalize(&mut wrong_entrance),
         Err(ContentError::InvalidShop(id)) if id == "demo.shop.outpost-general-store"
@@ -59,17 +78,40 @@ fn general_store_economy_content_is_strict() {
 
     let mutations: [fn(&mut CompiledContentV1); 4] = [
         |content: &mut CompiledContentV1| {
-            content.shops[0].owner.greed_percent = 99;
+            content
+                .shops
+                .iter_mut()
+                .find(|shop| shop.id == "demo.shop.outpost-general-store")
+                .unwrap()
+                .owner
+                .greed_percent = 99;
         },
         |content: &mut CompiledContentV1| {
-            content.shops[0].stock.pop();
+            content
+                .shops
+                .iter_mut()
+                .find(|shop| shop.id == "demo.shop.outpost-general-store")
+                .unwrap()
+                .stock
+                .pop();
         },
         |content: &mut CompiledContentV1| {
-            content.shops[0].stock[0].initial_minimum =
-                content.shops[0].stock[0].initial_maximum + 1;
+            let shop = content
+                .shops
+                .iter_mut()
+                .find(|shop| shop.id == "demo.shop.outpost-general-store")
+                .unwrap();
+            shop.stock[0].initial_minimum = shop.stock[0].initial_maximum + 1;
         },
         |content: &mut CompiledContentV1| {
-            let kind_id = content.shops[0].stock[0].item_kind_id.clone();
+            let kind_id = content
+                .shops
+                .iter()
+                .find(|shop| shop.id == "demo.shop.outpost-general-store")
+                .unwrap()
+                .stock[0]
+                .item_kind_id
+                .clone();
             content
                 .items
                 .iter_mut()
@@ -88,7 +130,13 @@ fn general_store_economy_content_is_strict() {
     }
 
     let mut invalid_owner = artifact.content.clone();
-    invalid_owner.shops[0].owner.race_id = "demo.race.missing".to_owned();
+    invalid_owner
+        .shops
+        .iter_mut()
+        .find(|shop| shop.id == store_id)
+        .unwrap()
+        .owner
+        .race_id = "demo.race.missing".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut invalid_owner),
         Err(ContentError::InvalidShop(id)) if id == store_id
@@ -117,6 +165,60 @@ fn general_store_economy_content_is_strict() {
         validate_and_normalize(&mut invalid_race_factor),
         Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
     ));
+}
+
+#[test]
+fn temple_and_alchemist_stock_are_strictly_separated() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let expected = [
+        (
+            "demo.shop.outpost-temple",
+            BTreeSet::from([
+                "demo.item.light-healing-potion",
+                "demo.item.valor-tonic",
+                "demo.item.homeward-scroll",
+                "demo.item.cleansing-scroll",
+            ]),
+        ),
+        (
+            "demo.shop.outpost-alchemist",
+            BTreeSet::from([
+                "demo.item.flicker-scroll",
+                "demo.item.farstep-scroll",
+                "demo.item.seeking-scroll",
+                "demo.item.trapfinding-scroll",
+                "demo.item.temperate-tonic",
+            ]),
+        ),
+    ];
+    for (shop_id, item_ids) in expected {
+        let shop = artifact
+            .content
+            .shops
+            .iter()
+            .find(|shop| shop.id == shop_id)
+            .expect("shop should exist");
+        assert_eq!(
+            shop.stock
+                .iter()
+                .map(|stock| stock.item_kind_id.as_str())
+                .collect::<BTreeSet<_>>(),
+            item_ids
+        );
+
+        let mut invalid = artifact.content.clone();
+        invalid
+            .shops
+            .iter_mut()
+            .find(|shop| shop.id == shop_id)
+            .unwrap()
+            .stock
+            .pop();
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidShop(id)) if id == shop_id
+        ));
+    }
 }
 
 #[test]

@@ -8,6 +8,7 @@
   "glyph": "?",
   "weightTenthsPound": 1,
   "maxStack": 20,
+  "baseValue": 150,
   "useAction": {
     "effectProgramId": "demo.effect.recall-homeward"
   },

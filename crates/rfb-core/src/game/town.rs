@@ -262,6 +262,8 @@ fn roll_shop_stock(
 fn category_dto(category: ShopCategory) -> ShopCategoryDto {
     match category {
         ShopCategory::GeneralStore => ShopCategoryDto::GeneralStore,
+        ShopCategory::Temple => ShopCategoryDto::Temple,
+        ShopCategory::Alchemist => ShopCategoryDto::Alchemist,
     }
 }
 
@@ -298,7 +300,7 @@ fn shop_price_factor(game: &Game, shop: &ShopDefinition) -> u16 {
     u16::try_from(factor).unwrap_or(u16::MAX)
 }
 
-fn item_is_legal_for_general_store(game: &Game, item: &ItemInstance) -> bool {
+fn item_is_legal_for_shop(game: &Game, item: &ItemInstance) -> bool {
     game.content.item(&item.kind_id).is_some_and(|definition| {
         definition.base_value > 0
             && !definition
@@ -432,11 +434,11 @@ fn grouped_inventory_items(game: &Game) -> Vec<(&ItemInstance, u32)> {
     sorted.sort_by(|left, right| left.id.cmp(&right.id));
     let mut groups: Vec<(&ItemInstance, u32)> = Vec::new();
     for item in sorted {
-        let legal = item_is_legal_for_general_store(game, item);
+        let legal = item_is_legal_for_shop(game, item);
         if legal {
             let knowledge = game.item_property_knowledge.get(&item.id);
             if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
-                item_is_legal_for_general_store(game, anchor)
+                item_is_legal_for_shop(game, anchor)
                     && item_instances_stack_compatible(anchor, item)
                     && game.item_property_knowledge.get(&anchor.id) == knowledge
             }) {
@@ -664,7 +666,7 @@ impl Game {
         if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
-        if !item_is_legal_for_general_store(self, &item) {
+        if !item_is_legal_for_shop(self, &item) {
             return Err("item-illegal");
         }
         let item_kind_id = item.kind_id.clone();
@@ -976,7 +978,7 @@ impl Game {
                             ShopStockItemDto {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
-                                display_name_key: self.item_display_name_key(&item.kind_id),
+                                display_name_key: definition.name_key.clone(),
                                 quantity,
                                 maximum_quantity: quantity.min(affordable).min(carryable),
                                 unit_price,
@@ -1002,7 +1004,7 @@ impl Game {
                                 .content
                                 .item(&item.kind_id)
                                 .expect("inventory item kind must remain available");
-                            let unavailable_reason = (!item_is_legal_for_general_store(self, item))
+                            let unavailable_reason = (!item_is_legal_for_shop(self, item))
                                 .then(|| "item-illegal".to_owned());
                             ShopSellQuoteDto {
                                 item_id: item.id.clone(),
