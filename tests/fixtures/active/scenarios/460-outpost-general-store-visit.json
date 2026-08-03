@@ -177,72 +177,8 @@
               "id": "generated.item.13",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.14",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.15",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.16",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.17",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -257,24 +193,8 @@
               "id": "generated.item.18",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 30,
-              "weightTenthsPound": 50,
-              "fuel": {
-                "kind": "lantern",
-                "current": 7500,
-                "maximum": 15000,
-                "lightRadius": 2
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.19",
-              "kindId": "demo.item.brass-lantern",
-              "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 50,
               "fuel": {
@@ -313,37 +233,7 @@
               "itemId": "generated.item.2",
               "kindId": "demo.item.wooden-torch",
               "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.3",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.4",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.5",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.6",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.7",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
+              "maximumQuantity": 6
             },
             {
               "itemId": "generated.item.8",

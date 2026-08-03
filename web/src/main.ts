@@ -46,6 +46,7 @@ import { createSessionShellDom, SessionShell } from "./session-shell";
 import { JourneyGuidance } from "./journey-guidance";
 import { JourneyResult } from "./journey-result";
 import { PlayerUiLayout } from "./player-ui-layout";
+import { ShopPanel } from "./shop-panel";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -144,6 +145,7 @@ const settingsPanel = new SettingsPanel({
     journeyGuidance.localize();
     journeyResult.localize();
     playerUiLayout.localize();
+    shopPanel.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -159,12 +161,14 @@ const gameSession = new GameSession({
     appState.updateVisualCells(update.changedVisualCells);
     statusPanel.render(update);
     inventoryPanel.render(update.inventory, update.equipment);
+    shopPanel.render(update);
     for (const event of update.events) addGameEvent(event);
     journeyGuidance.observeCommand(command, previous, update);
     journeyResult.renderUpdate(update);
   },
   refreshBusyControls: () => {
     inventoryPanel.updateActions();
+    shopPanel.updateActions();
     inputController.render();
   },
   showError,
@@ -220,6 +224,19 @@ const statusPanel = new StatusPanel({
   reconcileTargeting: (state) => inputController.reconcileStatus(state),
   renderTargeting: () => inputController.render(),
   refreshInventoryActions: () => inventoryPanel.updateActions(),
+});
+const shopPanel = new ShopPanel({
+  document,
+  state: appState,
+  localization,
+  dispatch,
+  formatEvent,
+  visibleItemName,
+  contentName,
+  beforeOpen: () => {
+    playerUiLayout.closePage();
+    inputController.cancelTargeting(false);
+  },
 });
 const nativeSavePanel = new NativeSavePanel({
   storage: nativeSaveStorage,
@@ -290,6 +307,7 @@ renderConnectionStatus();
 inputController.render();
 installFrontendCrashHandlers();
 installRendererProfileHook();
+installSupplyE2eHook();
 
 void start();
 
@@ -303,6 +321,7 @@ inputController.install();
 settingsPanel.install();
 statusPanel.install();
 inventoryPanel.install();
+shopPanel.install();
 journeyGuidance.install();
 journeyResult.install();
 playerUiLayout.install();
@@ -317,6 +336,7 @@ clearMessages.addEventListener("click", () => {
 window.addEventListener("beforeunload", () => {
   inventoryPanel.dispose();
   statusPanel.dispose();
+  shopPanel.dispose();
   settingsPanel.dispose();
   inputController.dispose();
   journeyGuidance.dispose();
@@ -330,6 +350,13 @@ window.addEventListener("beforeunload", () => {
 function installFrontendCrashHandlers(): void {
   window.addEventListener("error", () => recordFrontendCrash("window-error"));
   window.addEventListener("unhandledrejection", () => recordFrontendCrash("unhandled-rejection"));
+}
+
+function installSupplyE2eHook(): void {
+  window.__rfbPrepareSupplyE2e = async (amount: number): Promise<void> => {
+    const snapshot = await core.prepareSupplyE2e(amount);
+    applyLoadedSnapshot(snapshot);
+  };
 }
 
 function recordFrontendCrash(kind: "window-error" | "unhandled-rejection"): void {
@@ -419,6 +446,7 @@ async function importSave(): Promise<void> {
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
+  shopPanel.reset();
   appState.mode = "playing";
   appState.setMapSize(snapshot.width, snapshot.height);
   appState.worldId = snapshot.worldId;
@@ -431,6 +459,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   statusPanel.render(snapshot);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  shopPanel.render(snapshot);
   journeyGuidance.render(snapshot);
   sessionShell.showGame(snapshot);
   journeyResult.renderSnapshot(snapshot);
@@ -454,6 +483,7 @@ async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot
 
 async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inputController.cancelTargeting(false);
+  shopPanel.reset();
   appState.setMapSize(snapshot.width, snapshot.height);
   appState.worldId = snapshot.worldId;
   appState.replaceCells(snapshot.cells);
@@ -485,6 +515,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   statusPanel.render(snapshot);
   appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  shopPanel.render(snapshot);
   journeyGuidance.render(snapshot);
   journeyResult.renderSnapshot(snapshot);
   appState.connection = "ready";
@@ -506,6 +537,7 @@ async function restartSameSetup(): Promise<void> {
 
 function showSessionView(view: "title" | "new-game" | "load"): void {
   inputController.cancelTargeting(false);
+  shopPanel.reset();
   appState.mode = "title";
   switch (view) {
     case "title":

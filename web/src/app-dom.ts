@@ -47,6 +47,7 @@ export interface AppDom {
   readonly healthMeterFill: HTMLElement;
   readonly goldValue: HTMLElement;
   readonly nutritionValue: HTMLElement;
+  readonly lightValue: HTMLElement;
   readonly attackValue: HTMLElement;
   readonly defenseValue: HTMLElement;
   readonly effectsValue: HTMLElement;
@@ -145,6 +146,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     healthMeterFill: element<HTMLElement>(document, "health-meter-fill"),
     goldValue: element<HTMLElement>(document, "gold-value"),
     nutritionValue: element<HTMLElement>(document, "nutrition-value"),
+    lightValue: element<HTMLElement>(document, "light-value"),
     attackValue: element<HTMLElement>(document, "attack-value"),
     defenseValue: element<HTMLElement>(document, "defense-value"),
     effectsValue: element<HTMLElement>(document, "effects-value"),

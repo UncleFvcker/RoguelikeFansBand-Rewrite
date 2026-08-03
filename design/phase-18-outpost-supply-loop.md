@@ -1,6 +1,6 @@
 # Phase 18: Outpost supply loop
 
-状态：Gate 0–5 完成，Gate 6 UI 下一步。当前 active baseline 为 `contract-v161`；协议 `1.128`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.151.0`（hash `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`）和 461 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、Outpost 以及 General Store 权威库存与交易已经建立，下一步只接玩家 UI 与完整流程验收。
+状态：Gate 0–6 完成。当前 active baseline 为 `contract-v161`；协议 `1.128`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.151.0`（hash `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`）和 461 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、Outpost、General Store 权威交易、玩家 UI 与完整供给闭环已经建立。
 
 ## 1. 目标
 
@@ -80,6 +80,7 @@ Outpost 购买补给
 - 城镇楼层持久存在。返回 Outpost 仍按现有规则终止 Warrens 实例，但不清空店铺库存、店主或维护时间。
 - 打开/关闭商店是零时间 UI 状态；`BuyFromShop` 和 `SellToShop` 是零世界时间但增加 revision 的权威命令。
 - General Store 收购所有正价值且非遗骸的普通物品。店内物品完全识别；玩家卖出的物品保留完整实例状态并转为商店库存实例，回购时恢复同一 fuel、charges、affix、enchantment、curse 等状态。
+- 按 RFB `shop.c -> pack_carry -> inv_combine_ex` 的购买路径，相同种类且实例状态相容的商品在商店和背包中合并为一个条目，交易数量可以跨内部实例；燃料、充能、附魔、诅咒或知识状态不同的同名物品保持独立。
 
 ## 5. RNG 与事件顺序
 
@@ -124,7 +125,7 @@ Outpost 购买补给
 - 店主、基础补给库存、按 world tick 维护、原版相关价格因子、每单位收购报价 cap、批量买卖和完整识别；
 - 交易守恒、负重、堆叠、出售后回购、每日维护和拒绝零 mutation 测试。
 
-### Gate 6: player UI and acceptance
+### Gate 6: player UI and acceptance (complete)
 
 - 地图入口打开买入/出售双视图；右栏显示金币、饱食状态和装备光源燃料；
 - 键盘/鼠标数量操作、确认、错误反馈和中英文 Fluent；
@@ -148,6 +149,8 @@ Gate 3 的实际版本结果为协议 `1.126`、内容包 `1.149.0`、state hash
 Gate 4 的实际版本结果为协议 `1.127`、内容包 `1.150.0`、state hash Schema `59` 和 contract-v160。旧地表仅在缺少声明入口时确定性重建；迁移保留合法玩家坐标，不推进时间或 RNG，也不重建当前/已存储 Warrens 楼层。完整边界见 [Contract v160](contract-v160-outpost-content.md)。
 
 Gate 5 的实际版本结果为协议 `1.128`、内容包 `1.151.0`、state hash Schema `60` 和 contract-v161。店主、完整实例库存、维护时间、买卖命令与价格投影全部持久化；交易零世界时间，拒绝零 RNG/零 mutation。缺少商店状态的开发存档严格拒绝。完整边界见 [Contract v161](contract-v161-general-store-transactions.md)。
+
+Gate 6 不提升协议、内容包或 state hash Schema。Web 增加入口自动打开的购买/出售页、数量与最大值控制、价格、余额、负重、饱食和装备光源状态；桌面 supply-loop E2E 覆盖购物、地牢消耗、拾取金币、回城补给和原生存档恢复。原版式相容物品合并作为 Gate 6 验收中发现的 Gate 5 行为纠偏，同步更新 fixture 460/461 的 exact 结果，但不改变其金币、世界时间或 RNG 断言。
 
 ## 8. 明确暂缓
 

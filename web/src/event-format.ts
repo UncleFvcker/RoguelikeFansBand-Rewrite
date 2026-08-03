@@ -508,6 +508,24 @@ export function createPresentationFormatter(
           amount: event.args.amount ?? "?",
           balance: event.args.balance ?? "?",
         });
+      case "shop-purchase-success":
+        return localization.format("shop-purchase-success", {
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+          totalPrice: event.args.totalPrice ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "shop-sale-success":
+        return localization.format("shop-sale-success", {
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+          totalPrice: event.args.totalPrice ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "shop-transaction-unavailable":
+        return localization.format("shop-transaction-unavailable", {
+          reason: shopTransactionReason(event.args.reason),
+        });
       case "item-pickup-over-capacity":
         return localization.format("message-item-pickup-over-capacity", {
           target: visibleItemNameForKind(event.args.target),
@@ -1270,6 +1288,13 @@ export function createPresentationFormatter(
 
   function restStopReason(reason: string | undefined): string {
     return localization.format(`rest-stop-${reason ?? "unknown"}` as MessageKey);
+  }
+
+  function shopTransactionReason(reason: string | undefined): string {
+    const key = `shop-transaction-reason-${reason ?? "unknown"}`;
+    return localization.hasMessage(localization.locale, key) || localization.hasMessage("en-US", key)
+      ? localization.format(key)
+      : localization.format("shop-transaction-reason-unknown");
   }
 
   function visibleItemName(

@@ -141,6 +141,21 @@ fn quantity_purchase_is_atomic_zero_time_and_identified() {
     let mut game = store_game(42);
     game.gold = 100;
     let item_id = stock_item_id(&game, "demo.item.ration-of-food");
+    let ration_before = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.ration-of-food" && item.location == ItemLocation::Inventory
+        })
+        .expect("warrior should start with rations")
+        .clone();
+    let stack_count_before = game
+        .items
+        .iter()
+        .filter(|item| {
+            item.kind_id == ration_before.kind_id && item.location == ItemLocation::Inventory
+        })
+        .count();
     let before_tick = game.world_tick;
     let before_draws = game.rng_draw_counter();
     let update = dispatch_next(
@@ -163,12 +178,18 @@ fn quantity_purchase_is_atomic_zero_time_and_identified() {
     let bought = game
         .items
         .iter()
-        .find(|item| {
-            item.kind_id == "demo.item.ration-of-food"
-                && item.location == ItemLocation::Inventory
-                && item.quantity == 2
-        })
-        .expect("purchase should enter inventory");
+        .find(|item| item.id == ration_before.id)
+        .expect("purchase should merge into the existing ration stack");
+    assert_eq!(bought.quantity, ration_before.quantity + 2);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| {
+                item.kind_id == ration_before.kind_id && item.location == ItemLocation::Inventory
+            })
+            .count(),
+        stack_count_before
+    );
     assert_eq!(
         game.item_knowledge_dto(&bought.kind_id),
         ItemKnowledgeDto::Aware
@@ -258,9 +279,16 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
     game.gold = 100;
     let original = game
         .items
-        .iter()
-        .find(|item| item.kind_id == "demo.item.ration-of-food")
-        .expect("warrior should start with rations")
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.wooden-torch")
+        .map(|item| {
+            item.fuel
+                .as_mut()
+                .expect("starting torch must have fuel")
+                .current = 1_234;
+            item.clone()
+        })
+        .expect("warrior should start with torches")
         .clone();
     let sale = dispatch_next(
         &mut game,
@@ -274,7 +302,7 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
     let sold = game.shop_states[GENERAL_STORE_ID]
         .inventory
         .iter()
-        .find(|item| item.kind_id == original.kind_id && item.quantity == 1)
+        .find(|item| item.id == original.id)
         .expect("sold item should enter store")
         .clone();
     let purchase = dispatch_next(
@@ -300,6 +328,118 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
     assert_eq!(repurchased.fuel, original.fuel);
     assert_eq!(repurchased.charges, original.charges);
     assert!(game.item_property_knowledge[&repurchased.id].identified);
+}
+
+#[test]
+fn compatible_shop_instances_project_and_trade_as_one_row() {
+    let mut game = store_game(42);
+    game.gold = 100;
+    let shop_before = game.snapshot().shops.remove(0);
+    for kind_id in [
+        "demo.item.ration-of-food",
+        "demo.item.wooden-torch",
+        "demo.item.brass-lantern",
+        "demo.item.flask-of-oil",
+    ] {
+        assert_eq!(
+            shop_before
+                .stock
+                .iter()
+                .filter(|item| item.kind_id == kind_id)
+                .count(),
+            1,
+            "compatible {kind_id} stock should use one row"
+        );
+    }
+
+    let torch = shop_before
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.wooden-torch")
+        .expect("store should stock torches");
+    assert!(torch.maximum_quantity >= 2);
+    let torch_item_id = torch.id.clone();
+    let shop_torches_before = game.shop_states[GENERAL_STORE_ID]
+        .inventory
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.wooden-torch")
+        .map(|item| item.quantity)
+        .sum::<u32>();
+    let carried_torches_before = game
+        .items
+        .iter()
+        .filter(|item| {
+            item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+        })
+        .map(|item| item.quantity)
+        .sum::<u32>();
+    let purchase = dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: GENERAL_STORE_ID.to_owned(),
+            item_id: torch_item_id,
+            quantity: 2,
+        },
+    );
+    assert!(
+        purchase
+            .events
+            .iter()
+            .any(|event| event.kind == "shop.purchase")
+    );
+    assert_eq!(
+        game.shop_states[GENERAL_STORE_ID]
+            .inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .map(|item| item.quantity)
+            .sum::<u32>(),
+        shop_torches_before - 2
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| {
+                item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+            })
+            .map(|item| item.quantity)
+            .sum::<u32>(),
+        carried_torches_before + 2
+    );
+
+    let shop_after_purchase = game.snapshot().shops.remove(0);
+    let quote = shop_after_purchase
+        .sell_quotes
+        .iter()
+        .find(|quote| quote.kind_id == "demo.item.wooden-torch" && quote.maximum_quantity >= 2)
+        .expect("compatible carried torches should have one grouped quote");
+    let sale = dispatch_next(
+        &mut game,
+        GameCommand::SellToShop {
+            shop_id: GENERAL_STORE_ID.to_owned(),
+            item_id: quote.item_id.clone(),
+            quantity: 2,
+        },
+    );
+    assert!(sale.events.iter().any(|event| event.kind == "shop.sale"));
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| {
+                item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+            })
+            .map(|item| item.quantity)
+            .sum::<u32>(),
+        carried_torches_before
+    );
+    assert_eq!(
+        game.snapshot().shops[0]
+            .stock
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .count(),
+        1
+    );
 }
 
 #[test]

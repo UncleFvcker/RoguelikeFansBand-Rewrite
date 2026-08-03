@@ -18,7 +18,10 @@ use crate::{
     stats::AttributeKind,
 };
 
-use super::{Game, initial_item_curse, initial_item_runtime_state};
+use super::{
+    Game, initial_item_curse, initial_item_runtime_state,
+    inventory::item_instances_stack_compatible,
+};
 use crate::save::{
     GENERATED_ITEM_ID_PREFIX, initial_item_fuel, inventory_item_from_dto, inventory_to_save,
 };
@@ -331,78 +334,205 @@ fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
         && game.player.position == position_from_content(shop.entrance_position)
 }
 
-fn transfer_to_inventory(
-    game: &mut Game,
+fn shop_purchase_group(
+    game: &Game,
     shop_id: &str,
     item_id: &str,
-    quantity: u32,
-) -> Result<ItemInstance, CoreError> {
-    let split_id = {
-        let state = game
-            .shop_states
-            .get(shop_id)
-            .expect("preflighted shop must remain available");
-        let item = state
-            .inventory
+) -> Option<(ItemInstance, Vec<String>, u32)> {
+    let state = game.shop_states.get(shop_id)?;
+    let anchor = state
+        .inventory
+        .iter()
+        .find(|item| item.id == item_id)?
+        .clone();
+    let mut items = state
+        .inventory
+        .iter()
+        .filter(|item| item_instances_stack_compatible(item, &anchor))
+        .collect::<Vec<_>>();
+    items.sort_by(|left, right| left.id.cmp(&right.id));
+    let quantity = items
+        .iter()
+        .fold(0_u32, |total, item| total.saturating_add(item.quantity));
+    Some((
+        anchor,
+        items.into_iter().map(|item| item.id.clone()).collect(),
+        quantity,
+    ))
+}
+
+fn inventory_sale_group(game: &Game, item_id: &str) -> Option<(ItemInstance, Vec<String>, u32)> {
+    let anchor = game
+        .items
+        .iter()
+        .find(|item| item.id == item_id && item.location == ItemLocation::Inventory)?
+        .clone();
+    let anchor_knowledge = game.item_property_knowledge.get(&anchor.id);
+    let mut items = game
+        .items
+        .iter()
+        .filter(|item| {
+            item.location == ItemLocation::Inventory
+                && item_instances_stack_compatible(item, &anchor)
+                && game.item_property_knowledge.get(&item.id) == anchor_knowledge
+        })
+        .collect::<Vec<_>>();
+    items.sort_by(|left, right| left.id.cmp(&right.id));
+    let quantity = items
+        .iter()
+        .fold(0_u32, |total, item| total.saturating_add(item.quantity));
+    Some((
+        anchor,
+        items.into_iter().map(|item| item.id.clone()).collect(),
+        quantity,
+    ))
+}
+
+fn group_requires_split(items: &[ItemInstance], item_ids: &[String], quantity: u32) -> bool {
+    let mut remaining = quantity;
+    for item_id in item_ids {
+        let item = items
             .iter()
-            .find(|item| item.id == item_id)
-            .expect("preflighted shop item must remain available");
-        (item.quantity != quantity)
-            .then(|| game.allocate_item_instance_id())
-            .transpose()?
-    };
+            .find(|item| item.id == *item_id)
+            .expect("preflighted grouped item must remain available");
+        if remaining < item.quantity {
+            return true;
+        }
+        remaining -= item.quantity;
+        if remaining == 0 {
+            break;
+        }
+    }
+    false
+}
+
+fn grouped_shop_items(items: &[ItemInstance]) -> Vec<(&ItemInstance, u32)> {
+    let mut sorted = items.iter().collect::<Vec<_>>();
+    sorted.sort_by(|left, right| left.id.cmp(&right.id));
+    let mut groups: Vec<(&ItemInstance, u32)> = Vec::new();
+    for item in sorted {
+        if let Some((_, quantity)) = groups
+            .iter_mut()
+            .find(|(anchor, _)| item_instances_stack_compatible(anchor, item))
+        {
+            *quantity = quantity.saturating_add(item.quantity);
+        } else {
+            groups.push((item, item.quantity));
+        }
+    }
+    groups
+}
+
+fn grouped_inventory_items(game: &Game) -> Vec<(&ItemInstance, u32)> {
+    let mut sorted = game
+        .items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .collect::<Vec<_>>();
+    sorted.sort_by(|left, right| left.id.cmp(&right.id));
+    let mut groups: Vec<(&ItemInstance, u32)> = Vec::new();
+    for item in sorted {
+        let legal = item_is_legal_for_general_store(game, item);
+        if legal {
+            let knowledge = game.item_property_knowledge.get(&item.id);
+            if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
+                item_is_legal_for_general_store(game, anchor)
+                    && item_instances_stack_compatible(anchor, item)
+                    && game.item_property_knowledge.get(&anchor.id) == knowledge
+            }) {
+                *quantity = quantity.saturating_add(item.quantity);
+                continue;
+            }
+        }
+        groups.push((item, item.quantity));
+    }
+    groups
+}
+
+fn transfer_group_to_inventory(
+    game: &mut Game,
+    shop_id: &str,
+    item_ids: &[String],
+    quantity: u32,
+    mut split_id: Option<String>,
+) -> Vec<ItemInstance> {
     let state = game
         .shop_states
         .get_mut(shop_id)
         .expect("preflighted shop must remain available");
-    let index = state
-        .inventory
-        .iter()
-        .position(|item| item.id == item_id)
-        .expect("preflighted shop item must remain available");
-    if split_id.is_none() {
-        let mut item = state.inventory.remove(index);
+    let mut remaining = quantity;
+    let mut transferred = Vec::new();
+    for item_id in item_ids {
+        if remaining == 0 {
+            break;
+        }
+        let index = state
+            .inventory
+            .iter()
+            .position(|item| item.id == *item_id)
+            .expect("preflighted shop item must remain available");
+        let moved = remaining.min(state.inventory[index].quantity);
+        let mut item = if moved == state.inventory[index].quantity {
+            state.inventory.remove(index)
+        } else {
+            let mut item = state.inventory[index].clone();
+            state.inventory[index].quantity -= moved;
+            item.id = split_id
+                .take()
+                .expect("partial grouped transfer must have a split id");
+            item.quantity = moved;
+            item
+        };
         item.location = ItemLocation::Inventory;
-        return Ok(item);
+        transferred.push(item);
+        remaining -= moved;
     }
-    let mut item = state.inventory[index].clone();
-    state.inventory[index].quantity -= quantity;
-    item.id = split_id.expect("split transfer must allocate an item id");
-    item.quantity = quantity;
-    item.location = ItemLocation::Inventory;
-    Ok(item)
+    debug_assert_eq!(remaining, 0);
+    debug_assert!(split_id.is_none());
+    transferred
 }
 
-fn transfer_to_shop(
+fn transfer_group_to_shop(
     game: &mut Game,
     shop_id: &str,
-    item_id: &str,
+    item_ids: &[String],
     quantity: u32,
-) -> Result<ItemInstance, CoreError> {
-    let index = game
-        .items
-        .iter()
-        .position(|item| item.id == item_id)
-        .expect("preflighted inventory item must remain available");
-    let split_id = (game.items[index].quantity != quantity)
-        .then(|| game.allocate_item_instance_id())
-        .transpose()?;
-    if split_id.is_none() {
-        let mut item = game.items.remove(index);
-        game.item_property_knowledge.remove(&item.id);
+    mut split_id: Option<String>,
+) -> Vec<ItemInstance> {
+    let mut remaining = quantity;
+    let mut transferred = Vec::new();
+    for item_id in item_ids {
+        if remaining == 0 {
+            break;
+        }
+        let index = game
+            .items
+            .iter()
+            .position(|item| item.id == *item_id)
+            .expect("preflighted inventory item must remain available");
+        let moved = remaining.min(game.items[index].quantity);
+        let mut item = if moved == game.items[index].quantity {
+            let item = game.items.remove(index);
+            game.item_property_knowledge.remove(&item.id);
+            item
+        } else {
+            let mut item = game.items[index].clone();
+            game.items[index].quantity -= moved;
+            item.id = split_id
+                .take()
+                .expect("partial grouped transfer must have a split id");
+            item.quantity = moved;
+            item
+        };
         item.location = ItemLocation::Shop {
             shop_id: shop_id.to_owned(),
         };
-        return Ok(item);
+        transferred.push(item);
+        remaining -= moved;
     }
-    let mut item = game.items[index].clone();
-    game.items[index].quantity -= quantity;
-    item.id = split_id.expect("split transfer must allocate an item id");
-    item.quantity = quantity;
-    item.location = ItemLocation::Shop {
-        shop_id: shop_id.to_owned(),
-    };
-    Ok(item)
+    debug_assert_eq!(remaining, 0);
+    debug_assert!(split_id.is_none());
+    transferred
 }
 
 impl Game {
@@ -412,23 +542,21 @@ impl Game {
         item_id: &str,
         quantity: u32,
     ) -> Result<ShopTransactionOutcome, &'static str> {
-        let Some(shop) = self.content.shop(shop_id) else {
+        let Some(shop) = self.content.shop(shop_id).cloned() else {
             return Err("unknown-shop");
         };
-        if !shop_accessible(self, shop) {
+        if !shop_accessible(self, &shop) {
             return Err("shop-unreachable");
         }
         if quantity == 0 {
             return Err("invalid-quantity");
         }
-        let Some(item) = self
-            .shop_states
-            .get(shop_id)
-            .and_then(|state| state.inventory.iter().find(|item| item.id == item_id))
+        let Some((item, source_ids, available_quantity)) =
+            shop_purchase_group(self, shop_id, item_id)
         else {
             return Err("item-unavailable");
         };
-        if quantity > item.quantity {
+        if quantity > available_quantity {
             return Err("insufficient-stock");
         }
         let item_kind_id = item.kind_id.clone();
@@ -436,7 +564,7 @@ impl Game {
             .content
             .item(&item_kind_id)
             .expect("shop item kind must remain available");
-        let unit_price = buy_unit_price(definition.base_value, shop_price_factor(self, shop));
+        let unit_price = buy_unit_price(definition.base_value, shop_price_factor(self, &shop));
         let Some(total_price) = unit_price.checked_mul(quantity) else {
             return Err("price-overflow");
         };
@@ -452,32 +580,57 @@ impl Game {
             return Err("over-capacity");
         }
 
-        let purchased = transfer_to_inventory(self, shop_id, item_id, quantity)
+        let split_required = group_requires_split(
+            &self
+                .shop_states
+                .get(shop_id)
+                .expect("preflighted shop must remain available")
+                .inventory,
+            &source_ids,
+            quantity,
+        );
+        let split_id = split_required
+            .then(|| self.allocate_item_instance_id())
+            .transpose()
             .map_err(|_| "item-id-exhausted")?;
-        let purchased_id = purchased.id.clone();
-        self.items.push(purchased);
+        let purchased = transfer_group_to_inventory(self, shop_id, &source_ids, quantity, split_id);
+        let mut destination_ids = Vec::new();
+        for item in purchased {
+            destination_ids.extend(self.carry_shop_purchase_item(item));
+        }
+        let purchased_id = destination_ids
+            .first()
+            .expect("successful purchase must have a destination")
+            .clone();
         self.gold -= total_price;
         self.mark_item_aware(&item_kind_id);
-        let knowledge = self
-            .item_property_knowledge
-            .entry(purchased_id.clone())
-            .or_default();
-        knowledge.appraised = true;
-        knowledge.identified = true;
-        let purchased = self
-            .items
-            .iter()
-            .find(|item| item.id == purchased_id)
-            .expect("purchased item must remain available");
-        knowledge
-            .known_affix_ids
-            .extend(purchased.affix_ids.iter().cloned());
-        knowledge.known_affix_ids.extend(
-            purchased
-                .rolled_affixes
+        destination_ids.sort();
+        destination_ids.dedup();
+        for destination_id in destination_ids {
+            let purchased = self
+                .items
                 .iter()
-                .map(|affix| affix.affix_id.clone()),
-        );
+                .find(|item| item.id == destination_id)
+                .expect("purchased item must remain available");
+            let known_affix_ids = purchased
+                .affix_ids
+                .iter()
+                .cloned()
+                .chain(
+                    purchased
+                        .rolled_affixes
+                        .iter()
+                        .map(|affix| affix.affix_id.clone()),
+                )
+                .collect::<Vec<_>>();
+            let knowledge = self
+                .item_property_knowledge
+                .entry(destination_id)
+                .or_default();
+            knowledge.appraised = true;
+            knowledge.identified = true;
+            knowledge.known_affix_ids.extend(known_affix_ids);
+        }
         Ok(ShopTransactionOutcome {
             shop_id: shop_id.to_owned(),
             item_id: purchased_id,
@@ -495,26 +648,23 @@ impl Game {
         item_id: &str,
         quantity: u32,
     ) -> Result<ShopTransactionOutcome, &'static str> {
-        let Some(shop) = self.content.shop(shop_id) else {
+        let Some(shop) = self.content.shop(shop_id).cloned() else {
             return Err("unknown-shop");
         };
-        if !shop_accessible(self, shop) {
+        if !shop_accessible(self, &shop) {
             return Err("shop-unreachable");
         }
         if quantity == 0 {
             return Err("invalid-quantity");
         }
-        let Some(item) = self
-            .items
-            .iter()
-            .find(|item| item.id == item_id && item.location == ItemLocation::Inventory)
+        let Some((item, source_ids, available_quantity)) = inventory_sale_group(self, item_id)
         else {
             return Err("item-unavailable");
         };
-        if quantity > item.quantity {
+        if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
-        if !item_is_legal_for_general_store(self, item) {
+        if !item_is_legal_for_general_store(self, &item) {
             return Err("item-illegal");
         }
         let item_kind_id = item.kind_id.clone();
@@ -524,7 +674,7 @@ impl Game {
             .expect("inventory item kind must remain available");
         let unit_price = sell_unit_price(
             definition.base_value,
-            shop_price_factor(self, shop),
+            shop_price_factor(self, &shop),
             shop.owner.purchase_price_cap,
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -537,14 +687,22 @@ impl Game {
             return Err("gold-overflow");
         }
 
-        let sold =
-            transfer_to_shop(self, shop_id, item_id, quantity).map_err(|_| "item-id-exhausted")?;
-        let sold_id = sold.id.clone();
+        let split_required = group_requires_split(&self.items, &source_ids, quantity);
+        let split_id = split_required
+            .then(|| self.allocate_item_instance_id())
+            .transpose()
+            .map_err(|_| "item-id-exhausted")?;
+        let sold = transfer_group_to_shop(self, shop_id, &source_ids, quantity, split_id);
+        let sold_id = sold
+            .first()
+            .expect("successful sale must have a destination")
+            .id
+            .clone();
         self.shop_states
             .get_mut(shop_id)
             .expect("preflighted shop must remain available")
             .inventory
-            .push(sold);
+            .extend(sold);
         self.gold = gold_balance;
         Ok(ShopTransactionOutcome {
             shop_id: shop_id.to_owned(),
@@ -802,10 +960,9 @@ impl Game {
                     .get(&shop.id)
                     .expect("validated shop state must remain available");
                 let mut stock = if player_at_entrance {
-                    state
-                        .inventory
-                        .iter()
-                        .map(|item| {
+                    grouped_shop_items(&state.inventory)
+                        .into_iter()
+                        .map(|(item, quantity)| {
                             let definition = self
                                 .content
                                 .item(&item.kind_id)
@@ -820,8 +977,8 @@ impl Game {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: self.item_display_name_key(&item.kind_id),
-                                quantity: item.quantity,
-                                maximum_quantity: item.quantity.min(affordable).min(carryable),
+                                quantity,
+                                maximum_quantity: quantity.min(affordable).min(carryable),
                                 unit_price,
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
@@ -838,10 +995,9 @@ impl Game {
                 };
                 stock.sort_by(|left, right| left.id.cmp(&right.id));
                 let mut sell_quotes = if player_at_entrance {
-                    self.items
-                        .iter()
-                        .filter(|item| item.location == ItemLocation::Inventory)
-                        .map(|item| {
+                    grouped_inventory_items(self)
+                        .into_iter()
+                        .map(|(item, quantity)| {
                             let definition = self
                                 .content
                                 .item(&item.kind_id)
@@ -864,7 +1020,7 @@ impl Game {
                                 maximum_quantity: if unavailable_reason.is_some() {
                                     0
                                 } else {
-                                    item.quantity
+                                    quantity
                                 },
                                 unavailable_reason,
                             }

@@ -77,6 +77,45 @@ test("gold events report gained balance and monster drops", () => {
   );
 });
 
+test("shop events report localized item names, totals, balances, and rejection reasons", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "shop.purchase",
+      messageKey: "shop-purchase-success",
+      args: {
+        target: "demo.item.ration-of-food",
+        quantity: "2",
+        totalPrice: "6",
+        balance: "241",
+      },
+    }),
+    "Purchased 2 Ration of Food for 6 gold. Balance: 241.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "shop.transaction-unavailable",
+      messageKey: "shop-transaction-unavailable",
+      args: { reason: "over-capacity" },
+    }),
+    "The shop transaction cannot be completed (The purchase would exceed your carrying capacity.).",
+  );
+  localization.setLocale("zh-CN");
+  assert.equal(
+    formatter.formatEvent({
+      kind: "shop.sale",
+      messageKey: "shop-sale-success",
+      args: {
+        target: "demo.item.wooden-torch",
+        quantity: "1",
+        totalPrice: "1",
+        balance: "242",
+      },
+    }),
+    "出售了 1 件木制火把，获得 1 金币。余额：242。",
+  );
+  localization.setLocale("en-US");
+});
+
 test("food events report eating hunger changes fainting and starvation", () => {
   assert.equal(
     formatter.formatEvent({

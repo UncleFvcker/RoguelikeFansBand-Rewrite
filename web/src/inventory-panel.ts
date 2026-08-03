@@ -265,6 +265,7 @@ export class InventoryPanel {
       const row = document.createElement("li");
       row.className = "inventory-item";
       row.dataset.itemId = item.id;
+      row.dataset.itemKindId = item.kindId;
       const label = document.createElement("label");
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";

@@ -77,19 +77,20 @@ use rfb_protocol::{
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     AbilityVisibleDamageResolutionDto, AttackProfileDto, CampaignStatusDto, CellLightDto,
     CellVisualDto, DamageDiceDto, DeviceRechargeSourceDto, Direction, EquipmentBonusesDto,
-    EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, HealingResolutionDto, ItemActivationDto,
-    ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
-    ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
-    ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemPropertyDto,
-    ItemQualityDto, MeleeBlowDto, MeleeRoutineDto, MonsterAbilityCandidateResolutionDto,
-    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
-    MonsterAbilityRejectionReasonDto, MonsterAbilityTargetResolutionDto,
-    MonsterDisplacementResolutionDto, MonsterPackBehaviorDto, MonsterPackRoleDto, Position,
-    ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourceGainResolutionDto,
-    ResourceGainSourceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
-    RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, SummonCommandDto,
-    SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto, TargetSelection,
-    TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, WeaponBrandDto,
+    EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto, HealingResolutionDto,
+    ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto,
+    ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
+    ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
+    ItemPropertyDto, ItemQualityDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
+    MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
+    MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
+    MonsterPackRoleDto, Position, ProjectileProfileDto, RecallStateDto, ResistanceDto,
+    ResourceGainResolutionDto, ResourceGainSourceDto, ResourcePoolSaveDto,
+    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
+    SlayTargetDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
+    SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
+    ThrowProfileDto, WeaponBrandDto,
 };
 
 mod abilities;
@@ -1882,6 +1883,22 @@ impl Game {
             fuel: initial_item_fuel(&self.content, kind_id),
             device_recovery_progress: 0,
             location: ItemLocation::Inventory,
+        });
+        Ok(())
+    }
+
+    #[doc(hidden)]
+    pub fn debug_prepare_supply_e2e_gold(&mut self, amount: u32) -> Result<(), CoreError> {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        self.gold_piles.clear();
+        let id = self.allocate_gold_pile_id()?;
+        self.gold_piles.push(GoldPile {
+            id,
+            position: self.player.position,
+            amount,
+            appearance: GoldAppearanceDto::Gold,
         });
         Ok(())
     }

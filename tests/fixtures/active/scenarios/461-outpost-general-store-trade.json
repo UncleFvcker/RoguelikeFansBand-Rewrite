@@ -183,8 +183,8 @@
               "id": "generated.item.12",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "quality": "ordinary"
@@ -193,72 +193,8 @@
               "id": "generated.item.13",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.14",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.15",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.16",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.17",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -273,24 +209,8 @@
               "id": "generated.item.18",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 30,
-              "weightTenthsPound": 50,
-              "fuel": {
-                "kind": "lantern",
-                "current": 7500,
-                "maximum": 15000,
-                "lightRadius": 2
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.19",
-              "kindId": "demo.item.brass-lantern",
-              "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 30,
               "weightTenthsPound": 50,
               "fuel": {
@@ -316,16 +236,6 @@
                 "lightRadius": 0
               },
               "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.22",
-              "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
             }
           ],
           "sellQuotes": [
@@ -333,49 +243,13 @@
               "itemId": "generated.item.1",
               "kindId": "demo.item.ration-of-food",
               "unitPrice": 2,
-              "maximumQuantity": 8
+              "maximumQuantity": 10
             },
             {
               "itemId": "generated.item.2",
               "kindId": "demo.item.wooden-torch",
               "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.21",
-              "kindId": "demo.item.ration-of-food",
-              "unitPrice": 2,
-              "maximumQuantity": 2
-            },
-            {
-              "itemId": "generated.item.3",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.4",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.5",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.6",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
-            },
-            {
-              "itemId": "generated.item.7",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 1
+              "maximumQuantity": 6
             },
             {
               "itemId": "generated.item.8",
@@ -552,7 +426,7 @@
       },
       "entityCount": 0,
       "groundItemCount": 2,
-      "inventoryStackCount": 9,
+      "inventoryStackCount": 8,
       "equipmentCount": 3,
       "inventory": [
         {
@@ -563,7 +437,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 8,
+          "quantity": 10,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -578,7 +452,8 @@
             "charisma": 0,
             "speed": 0
           },
-          "identification": "unexamined"
+          "identification": "identified",
+          "quality": "ordinary"
         },
         {
           "id": "generated.item.2",
@@ -610,32 +485,6 @@
             "speed": 0
           },
           "identification": "unexamined"
-        },
-        {
-          "id": "generated.item.21",
-          "kindId": "demo.item.ration-of-food",
-          "displayNameKey": "item-demo-ration-of-food-name",
-          "knowledge": "aware",
-          "usable": true,
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 2,
-          "weightTenthsPound": 10,
-          "equipmentSlot": null,
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "identified",
-          "quality": "ordinary"
         },
         {
           "id": "generated.item.3",
@@ -923,17 +772,17 @@
       ],
       "itemPropertyKnowledge": [
         {
+          "itemId": "generated.item.1",
+          "appraised": true,
+          "identified": true
+        },
+        {
           "itemId": "generated.item.10",
           "appraised": true,
           "identified": true
         },
         {
           "itemId": "generated.item.11",
-          "appraised": true,
-          "identified": true
-        },
-        {
-          "itemId": "generated.item.21",
           "appraised": true,
           "identified": true
         },
@@ -951,7 +800,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "11466cf0a4f5525e586b546e9d1507925083e628513f5ea40e86308927847440"
+      "stateHash": "bf8bd62b1e9ad1d1701ac68d48f1d5cc91b178a93778ce2dd26e8dea40053b6f"
     },
     "events": [
       {
@@ -959,7 +808,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "340",
-          "item": "generated.item.21",
+          "item": "generated.item.1",
           "quantity": "2",
           "shop": "demo.shop.outpost-general-store",
           "target": "demo.item.ration-of-food",
@@ -1135,6 +984,6 @@
         "y": 9
       }
     ],
-    "saveRoundTripStateHash": "11466cf0a4f5525e586b546e9d1507925083e628513f5ea40e86308927847440"
+    "saveRoundTripStateHash": "bf8bd62b1e9ad1d1701ac68d48f1d5cc91b178a93778ce2dd26e8dea40053b6f"
   }
 }

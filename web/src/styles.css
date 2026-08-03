@@ -1922,7 +1922,8 @@ kbd {
 }
 
 .player-page-dialog,
-.player-ui-settings-dialog {
+.player-ui-settings-dialog,
+.shop-dialog {
   width: min(58rem, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
   overflow: hidden;
@@ -1935,13 +1936,15 @@ kbd {
 }
 
 .player-page-dialog::backdrop,
-.player-ui-settings-dialog::backdrop {
+.player-ui-settings-dialog::backdrop,
+.shop-dialog::backdrop {
   background: rgb(2 2 2 / 76%);
   backdrop-filter: blur(2px);
 }
 
 .player-page-dialog > header,
-.player-ui-settings-dialog > header {
+.player-ui-settings-dialog > header,
+.shop-dialog > header {
   display: flex;
   min-height: 3.8rem;
   align-items: center;
@@ -1953,7 +1956,8 @@ kbd {
 }
 
 .player-page-dialog h2,
-.player-ui-settings-dialog h2 {
+.player-ui-settings-dialog h2,
+.shop-dialog h2 {
   margin: 0;
   color: #eee5d3;
   font-family: Georgia, "Songti SC", serif;
@@ -1962,7 +1966,8 @@ kbd {
 }
 
 .player-page-dialog .eyebrow,
-.player-ui-settings-dialog .eyebrow {
+.player-ui-settings-dialog .eyebrow,
+.shop-dialog .eyebrow {
   margin-bottom: 0.15rem;
   color: var(--ui-accent);
   font-size: 0.6rem;
@@ -2056,6 +2061,296 @@ kbd {
   font-size: 0.68rem;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.shop-dialog {
+  width: min(68rem, calc(100vw - 2rem));
+}
+
+.shop-header > div {
+  min-width: 0;
+}
+
+.shop-description,
+.shop-owner {
+  margin: 0.2rem 0 0;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.shop-owner {
+  color: var(--ui-faint);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.66rem;
+}
+
+.shop-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 21rem);
+  max-height: calc(100vh - 8rem);
+  overflow: hidden;
+}
+
+.shop-catalog {
+  min-width: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--ui-line);
+}
+
+.shop-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--ui-line);
+  background: #11110e;
+}
+
+.shop-tabs button {
+  min-height: 2.6rem;
+  border: 0;
+  border-right: 1px solid var(--ui-line-soft);
+  border-radius: 0;
+  color: var(--ui-muted);
+  background: transparent;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.shop-tabs button:last-child {
+  border-right: 0;
+}
+
+.shop-tabs button[aria-selected="true"] {
+  border-bottom: 2px solid var(--ui-accent);
+  color: #f2dfbd;
+  background: #1b1811;
+}
+
+.shop-item-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shop-item-row {
+  border-bottom: 1px solid var(--ui-line-soft);
+}
+
+.shop-item-select {
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.4fr) minmax(9rem, 1fr) minmax(6.5rem, auto) minmax(5rem, auto);
+  gap: 0.25rem 0.75rem;
+  width: 100%;
+  min-height: 4.25rem;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0.65rem 0.8rem;
+  text-align: left;
+  background: transparent;
+}
+
+.shop-item-select:hover {
+  background: #191711;
+}
+
+.shop-item-select[aria-pressed="true"] {
+  box-shadow: inset 3px 0 0 var(--ui-accent);
+  background: #211c12;
+}
+
+.shop-item-select:active:not(:disabled),
+.shop-confirm:active:not(:disabled),
+.shop-quantity-controls button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.shop-item-row[data-unavailable="true"] .shop-item-select {
+  opacity: 0.62;
+}
+
+.shop-item-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #eee6d7;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.shop-item-details,
+.shop-item-price,
+.shop-item-stock,
+.shop-item-unavailable {
+  color: var(--ui-muted);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.67rem;
+  line-height: 1.4;
+}
+
+.shop-item-price,
+.shop-item-stock {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.shop-item-unavailable {
+  grid-column: 1 / -1;
+  color: #bd756c;
+}
+
+.shop-empty {
+  padding: 2.5rem 1rem;
+  color: var(--ui-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.shop-ledger {
+  overflow-y: auto;
+  background: #0d0d0b;
+}
+
+.shop-ledger > h3 {
+  margin: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  padding: 0.65rem 0.75rem;
+  color: var(--ui-muted);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.shop-player-summary,
+.shop-transaction-summary {
+  display: grid;
+  margin: 0;
+}
+
+.shop-player-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.shop-player-summary > div,
+.shop-transaction-summary > div {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+}
+
+.shop-player-summary > div:nth-child(odd) {
+  border-right: 1px solid var(--ui-line-soft);
+}
+
+.shop-player-summary dt,
+.shop-transaction-summary dt {
+  color: var(--ui-faint);
+  font-size: 0.62rem;
+}
+
+.shop-player-summary dd,
+.shop-transaction-summary dd {
+  margin: 0.18rem 0 0;
+  overflow-wrap: anywhere;
+  color: #e6dfd1;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.shop-transaction {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+.shop-selection {
+  min-height: 2.45rem;
+  margin: 0;
+  border-left: 2px solid var(--ui-accent);
+  padding: 0.45rem 0.55rem;
+  color: #e8dfce;
+  background: #17150f;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.shop-transaction > label {
+  color: var(--ui-muted);
+  font-size: 0.68rem;
+}
+
+.shop-quantity-controls {
+  display: grid;
+  grid-template-columns: 2.35rem minmax(4rem, 1fr) 2.35rem auto;
+  gap: 0.35rem;
+}
+
+.shop-quantity-controls button,
+.shop-quantity-controls input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.35rem;
+  border: 1px solid #403b2f;
+  border-radius: 4px;
+  color: var(--ui-text);
+  background: #15140f;
+  font: 0.74rem "Cascadia Mono", Consolas, monospace;
+  text-align: center;
+}
+
+.shop-quantity-controls input {
+  padding: 0.35rem;
+}
+
+.shop-transaction-summary {
+  border-block: 1px solid var(--ui-line-soft);
+}
+
+.shop-transaction-summary > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.shop-confirm {
+  width: 100%;
+  font-weight: 700;
+}
+
+.shop-feedback {
+  min-height: 2.25rem;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.shop-feedback[data-kind="success"] {
+  color: #a8c58a;
+}
+
+.shop-feedback[data-kind="error"] {
+  color: #d68578;
+}
+
+.shop-feedback[data-kind="pending"] {
+  color: var(--ui-accent-strong);
+}
+
 @media (max-width: 1280px) {
   #app[data-tool-column="visible"] .game-layout {
     grid-template-columns: minmax(0, 1fr) minmax(17rem, 19rem);
@@ -2109,6 +2404,27 @@ kbd {
     border-left: 0;
     padding: 0.45rem 0 0;
   }
+
+  .shop-dialog {
+    width: min(46rem, calc(100vw - 1rem));
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .shop-workspace {
+    grid-template-columns: 1fr;
+    max-height: calc(100dvh - 7rem);
+    overflow-y: auto;
+  }
+
+  .shop-catalog {
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--ui-line);
+  }
+
+  .shop-ledger {
+    overflow: visible;
+  }
 }
 
 @media (max-width: 680px) {
@@ -2140,5 +2456,44 @@ kbd {
 
   .map-host[data-camera-mode="player-centered"] {
     height: var(--map-centered-height);
+  }
+
+  .shop-dialog > header {
+    align-items: flex-start;
+    padding: 0.6rem;
+  }
+
+  .shop-item-select {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .shop-item-details,
+  .shop-item-unavailable {
+    grid-column: 1 / -1;
+  }
+
+  .shop-item-stock {
+    text-align: left;
+  }
+
+  .shop-item-price {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .shop-player-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-player-summary > div:nth-child(odd) {
+    border-right: 0;
+  }
+
+  .shop-quantity-controls {
+    grid-template-columns: 2.35rem minmax(3.2rem, 1fr) 2.35rem;
+  }
+
+  #shop-quantity-maximum {
+    grid-column: 1 / -1;
   }
 }

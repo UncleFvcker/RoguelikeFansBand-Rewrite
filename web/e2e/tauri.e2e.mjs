@@ -342,7 +342,7 @@ async function runScenario(driver) {
   state = await readState(driver);
   assert.equal(state.turn, "2");
   assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "99");
+  assert.equal(state.appliedCells, "18");
   assert.equal(state.lastRebuiltTerrainChunks, "0");
   assert.equal(state.canvasUnchanged, true);
 
@@ -383,7 +383,7 @@ async function runScenario(driver) {
   );
   state = await readState(driver);
   assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "1");
+  assert.equal(state.appliedCells, "45");
   assert.equal(state.itemCount, "4");
   assert.equal(state.inventoryStackCount, "1");
   assert.match(state.inventory, /陌生的浅色碎片/);

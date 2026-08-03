@@ -424,7 +424,7 @@ Phase 18 Gate 3 / contract-v159 加入 Warrior 出生火把、火把/灯笼/油�
 
 Phase 18 Gate 4 / contract-v160 增加严格的 town/shop 内容根、Outpost 与 General Store 稳定身份、独立地表布局、入口访问状态及确定性旧地表迁移。当前不含店主、库存、价格或交易；这些属于 Gate 5。协议升至 1.127、demo 升至 1.150.0、Schema 升至 v59，active baseline 增至 460 条 exact fixtures、零 waiver，内置 content hash 为 `a03b7c96e880a8c1d1e0c86a323e9e3333d84d2670eef9404d884cbad6d50779`。详见[Contract v160](design/contract-v160-outpost-content.md)。
 
-Phase 18 Gate 5 / contract-v161 建立 General Store 权威后端：稳定店主、四类 RFB 价值补给、种子库存、按 `worldTick` 维护、种族/魅力/贪婪/同族定价、批量买卖、负重与金币原子校验、完整实例回购和严格存档状态。交易零世界时间且拒绝零 RNG/零 mutation；缺少商店状态的开发存档直接拒绝，不做旧档兼容。协议升至 1.128、demo 升至 1.151.0、Schema 升至 v60，active baseline 增至 461 条 exact fixtures、零 waiver，内置 content hash 为 `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`。Gate 6 UI 仍是下一步。详见[Contract v161](design/contract-v161-general-store-transactions.md)。
+Phase 18 Gate 5–6 / contract-v161 建立完整 Outpost 补给闭环：General Store 具备稳定店主、四类 RFB 价值补给、种子库存、按 `worldTick` 维护、原版价格因子和原子批量买卖；相同种类且实例状态相容的库存与背包物品按原版 `pack_carry` 路径合并为一行，不同燃料或属性保持独立。Web 提供入口自动打开的购买/出售页、数量、价格、金币、负重、饱食和装备光源状态，桌面 E2E 覆盖购物、Warrens 消耗、拾取金币、回城补给及原生存档恢复。协议 1.128、demo 1.151.0、Schema v60、461 条 exact fixtures、零 waiver和 content hash 均保持不变。详见[Contract v161](design/contract-v161-general-store-transactions.md)与[Phase 18 规划](design/phase-18-outpost-supply-loop.md)。
 
 ### 本地验证
 

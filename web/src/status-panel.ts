@@ -18,6 +18,7 @@ import type {
 } from "./protocol";
 import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
+import { equippedLightText } from "./shop-panel.ts";
 
 type StatusDom = Pick<
   AppDom,
@@ -28,6 +29,7 @@ type StatusDom = Pick<
   | "healthMeterFill"
   | "goldValue"
   | "nutritionValue"
+  | "lightValue"
   | "attackValue"
   | "defenseValue"
   | "effectsValue"
@@ -173,6 +175,11 @@ export class StatusPanel {
       state: this.#localization.format(`nutrition-state-${state.player.nutritionState}`),
       percent: nutritionPercentage(state.player.nutrition),
     });
+    this.#dom.lightValue.textContent = equippedLightText(
+      state.equipment,
+      this.#localization,
+      this.#contentName,
+    );
     this.#renderCombatStat(
       this.#dom.attackValue,
       state.player.attack,

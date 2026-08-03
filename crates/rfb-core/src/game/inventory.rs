@@ -398,7 +398,7 @@ fn plan_pick_up(
     }))
 }
 
-fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
+pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
     left.kind_id == right.kind_id
         && left.quality == right.quality
         && left.affix_ids == right.affix_ids
@@ -412,6 +412,46 @@ fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) ->
 }
 
 impl Game {
+    pub(super) fn carry_shop_purchase_item(&mut self, mut item: ItemInstance) -> Vec<String> {
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .expect("purchased item kind must remain available");
+        let mut stack_indices = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, carried)| {
+                carried.location == ItemLocation::Inventory
+                    && carried.quantity < definition.max_stack
+                    && item_instances_stack_compatible(carried, &item)
+            })
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        stack_indices.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+
+        let mut destination_ids = Vec::new();
+        for stack_index in stack_indices {
+            let transferred = item
+                .quantity
+                .min(definition.max_stack - self.items[stack_index].quantity);
+            if transferred == 0 {
+                continue;
+            }
+            self.items[stack_index].quantity += transferred;
+            item.quantity -= transferred;
+            destination_ids.push(self.items[stack_index].id.clone());
+            if item.quantity == 0 {
+                break;
+            }
+        }
+        if item.quantity > 0 {
+            destination_ids.push(item.id.clone());
+            self.items.push(item);
+        }
+        destination_ids
+    }
+
     pub(super) fn drop_inventory_items(&mut self, item_ids: &[String]) -> Option<(usize, u64)> {
         let plan = plan_batch_drop(&self.items, item_ids)?;
         for index in &plan.item_indices {

@@ -50,6 +50,12 @@ export class TauriNativeTransport implements CoreTransport {
     return Uint8Array.from(bytes);
   }
 
+  async prepareSupplyE2e(amount: number): Promise<GameSnapshot> {
+    const snapshot = await invoke<GameSnapshot>("prepare_supply_e2e", { amount });
+    this.#syncSnapshot(snapshot);
+    return snapshot;
+  }
+
   dispose(): void {
     // The native game session is owned by the Tauri application and ends with it.
   }

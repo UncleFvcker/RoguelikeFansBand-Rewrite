@@ -129,6 +129,19 @@ impl AppState {
         rfb_replay::encode(&session.recorder.replay_snapshot()).map_err(|error| error.to_string())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_supply_e2e(&self, amount: u32) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session
+            .as_mut()
+            .ok_or_else(|| "game session is not initialized".to_owned())?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_supply_e2e_gold(amount)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -154,6 +167,10 @@ fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
 
 #[cfg(feature = "webdriver")]
 fn initial_game(seed: u64, build_id: &str) -> Result<Game, String> {
+    if std::env::var_os("RFB_E2E_WORLD").as_deref() == Some(std::ffi::OsStr::new("warrens")) {
+        return Game::new_warrens_journey_with_build(seed, build_id)
+            .map_err(|error| error.to_string());
+    }
     // The existing webdriver suite is a debug-only technical regression harness
     // over the original lab. Gate 6 replaces its scripted state assumptions with
     // the normal Warrens journey; production sessions already use Warrens above.
@@ -243,6 +260,22 @@ fn dispatch_game_command(
     command: GameCommand,
 ) -> Result<GameUpdate, String> {
     state.dispatch(command_seq, expected_revision, command)
+}
+
+#[tauri::command]
+fn prepare_supply_e2e(
+    state: tauri::State<'_, AppState>,
+    amount: u32,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        return state.prepare_supply_e2e(amount);
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, amount);
+        Err("supply E2E fixture is unavailable".to_owned())
+    }
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -423,6 +456,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             initialize_game,
             dispatch_game_command,
+            prepare_supply_e2e,
             save_game,
             load_game,
             export_replay,

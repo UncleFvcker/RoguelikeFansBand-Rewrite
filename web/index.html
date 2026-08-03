@@ -261,6 +261,7 @@
             <dl class="status-grid">
               <div class="status-gold"><dt data-l10n-id="status-gold"></dt><dd id="gold-value">--</dd></div>
               <div class="status-nutrition"><dt data-l10n-id="status-nutrition"></dt><dd id="nutrition-value">--</dd></div>
+              <div class="status-light"><dt data-l10n-id="status-light"></dt><dd id="light-value">--</dd></div>
               <div><dt data-l10n-id="status-attack"></dt><dd id="attack-value">--</dd></div>
               <div><dt data-l10n-id="status-defense"></dt><dd id="defense-value">--</dd></div>
               <div class="status-effects"><dt data-l10n-id="status-effects"></dt><dd id="effects-value">--</dd></div>
@@ -421,6 +422,55 @@
           <button id="player-page-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
         </header>
         <div id="player-page-host" class="player-page-host"></div>
+      </dialog>
+
+      <dialog id="shop-dialog" class="shop-dialog" aria-labelledby="shop-title" aria-describedby="shop-description">
+        <header class="shop-header">
+          <div>
+            <p class="eyebrow" data-l10n-id="shop-eyebrow"></p>
+            <h2 id="shop-title"></h2>
+            <p id="shop-description" class="shop-description"></p>
+            <p id="shop-owner" class="shop-owner"></p>
+          </div>
+          <button id="shop-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div class="shop-workspace">
+          <section class="shop-catalog" aria-labelledby="shop-catalog-title">
+            <div class="shop-tabs" role="tablist">
+              <button id="shop-buy-tab" role="tab" type="button" aria-controls="shop-item-list" aria-selected="true" data-l10n-id="action-shop-buy-tab"></button>
+              <button id="shop-sell-tab" role="tab" type="button" aria-controls="shop-item-list" aria-selected="false" data-l10n-id="action-shop-sell-tab"></button>
+            </div>
+            <h3 id="shop-catalog-title" class="visually-hidden" data-l10n-id="shop-item-list-label"></h3>
+            <ul id="shop-item-list" class="shop-item-list" aria-live="polite"></ul>
+          </section>
+
+          <aside class="shop-ledger" aria-labelledby="shop-ledger-title">
+            <h3 id="shop-ledger-title" data-l10n-id="shop-player-summary-label"></h3>
+            <dl class="shop-player-summary">
+              <div><dt data-l10n-id="shop-gold-label"></dt><dd id="shop-gold-value">--</dd></div>
+              <div><dt data-l10n-id="shop-weight-label"></dt><dd id="shop-weight-value">--</dd></div>
+              <div><dt data-l10n-id="shop-nutrition-label"></dt><dd id="shop-nutrition-value">--</dd></div>
+              <div><dt data-l10n-id="shop-light-label"></dt><dd id="shop-light-value">--</dd></div>
+            </dl>
+            <div class="shop-transaction">
+              <p id="shop-selection" class="shop-selection" aria-live="polite"></p>
+              <label for="shop-quantity" data-l10n-id="shop-quantity-label"></label>
+              <div class="shop-quantity-controls">
+                <button id="shop-quantity-decrease" type="button" aria-label="" data-l10n-id="action-shop-quantity-decrease-symbol" data-l10n-aria-label="action-shop-quantity-decrease"></button>
+                <input id="shop-quantity" type="number" inputmode="numeric" min="1" value="1" />
+                <button id="shop-quantity-increase" type="button" aria-label="" data-l10n-id="action-shop-quantity-increase-symbol" data-l10n-aria-label="action-shop-quantity-increase"></button>
+                <button id="shop-quantity-maximum" type="button" data-l10n-id="action-shop-quantity-maximum"></button>
+              </div>
+              <dl class="shop-transaction-summary">
+                <div><dt data-l10n-id="shop-total-label"></dt><dd id="shop-total-value">--</dd></div>
+                <div><dt data-l10n-id="shop-gold-after-label"></dt><dd id="shop-gold-after">--</dd></div>
+                <div><dt data-l10n-id="shop-weight-after-label"></dt><dd id="shop-weight-after">--</dd></div>
+              </dl>
+              <button id="shop-confirm" class="primary-button shop-confirm" type="button" disabled></button>
+              <p id="shop-feedback" class="shop-feedback" aria-live="assertive"></p>
+            </div>
+          </aside>
+        </div>
       </dialog>
 
       <dialog id="player-ui-settings-dialog" class="player-ui-settings-dialog" aria-labelledby="player-ui-settings-title">

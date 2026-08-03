@@ -2,7 +2,7 @@
 
 # Contract v161: General Store transactions
 
-状态：active baseline；Phase 18 Gate 5 完成，Gate 6 UI 下一步。协议升至 `1.128`，save 容器保持 v1，state hash Schema 升至 `60`。demo 内容包升至 `1.151.0`，content hash 为 `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`；active baseline 包含 461 条 exact fixtures、零 waiver。
+状态：active baseline；Phase 18 Gate 5–6 完成。协议为 `1.128`，save 容器保持 v1，state hash Schema 为 `60`。demo 内容包为 `1.151.0`，content hash 为 `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`；active baseline 包含 461 条 exact fixtures、零 waiver。
 
 ## 内容与原版价值
 
@@ -25,10 +25,11 @@
 - 任一拒绝都不改变 RNG、世界时间、金币、玩家物品或商店状态。Warrior 负重上限调整为 120.0 磅，使 71.4 磅出生装备后仍有真实购买空间。
 - General Store 收购正价值且非 corpse/remains 的背包物品。出售实例保留 fuel、charges、activation、affix、enchantment、curse 等完整运行时状态，可按同一实例状态回购；拆分数量时使用稳定的新实例 ID。
 - 从商店购买的物品按原版商店边界设为 aware、appraised 和 identified。协议投影只在玩家位于入口时提供 stock、sell quotes、价格、可交易数量和店主信息。
+- RFB 原版在购买后调用 `pack_carry`，由 `inv_combine_ex` 逐个吸收到相容的既有堆叠。重写版因此按稳定实例 ID 合并背包物品，并把相同种类且完整运行时状态相容的商店库存/出售报价投影为一行；交易数量可跨内部实例。燃料、充能、附魔、诅咒或知识不同的同名物品不合并。
 
 ## 存档、契约与暂缓
 
 - 本项目仍处开发期且每次以新存档测试。Gate 5 不为缺少 `shopStates` 的旧开发存档猜测库存或补抽 RNG；此类存档严格拒绝。
 - fixture 461 固定 Warrior 走到入口、购买两份口粮、出售一份出生口粮，并验证两笔交易后 `worldTick` 仍为 190、RNG 不变、余额 342、库存/负重变化和 save round-trip hash 一致。
 - 核心测试覆盖种子库存、价格、批量交易、负重/金币/尸体拒绝、完整实例回购、维护和存档校验；replay 测试覆盖买卖与中途存档续跑；全部 461 条 active fixtures 保持 exact。
-- Gate 6 仍单独实现购买/出售标签、数量控件、金币/负重展示和完整桌面验收。本 Gate 不加入其他商店、家、博物馆、旅店、Pest Control、城镇 NPC、昼夜或荒野。
+- Gate 6 已实现购买/出售标签、数量控件、金币/负重/饱食/光源展示和完整桌面 supply-loop 验收。本阶段不加入其他商店、家、博物馆、旅店、Pest Control、城镇 NPC、昼夜或荒野。

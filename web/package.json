@@ -17,7 +17,8 @@
     "build:ui": "npm run typecheck && vite build",
     "e2e:build": "node e2e/build.mjs",
     "e2e:tauri": "node e2e/tauri.e2e.mjs",
-    "e2e": "npm run e2e:build && npm run e2e:tauri",
+    "e2e:supply": "node e2e/supply-loop.e2e.mjs",
+    "e2e": "npm run e2e:build && npm run e2e:tauri && npm run e2e:supply",
     "android:build:debug": "tauri android build --debug --target aarch64 --apk --ci",
     "preview": "vite preview"
   },

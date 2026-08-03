@@ -105,7 +105,7 @@ impl Game {
         piles
     }
 
-    fn allocate_gold_pile_id(&mut self) -> Result<String, CoreError> {
+    pub(super) fn allocate_gold_pile_id(&mut self) -> Result<String, CoreError> {
         loop {
             let serial = self.next_gold_pile_serial;
             let next = serial
