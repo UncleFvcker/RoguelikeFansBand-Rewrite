@@ -352,3 +352,7 @@ major 版本要求：
 contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与既有 `AbilityLearningDto`。`PlayerSaveDto` 增加默认 0、零值省略的 `bonusSpellLearningCapacity`；它是权威持久状态并使 state hash Schema 升至 v54，但 `PROTOCOL_VERSION` 保持 1.121。完整边界见 [Contract v132](contract-v132-scroll-spell.md)。
 
 协议 1.130 为 `ShopCategoryDto` 增加 `magic-shop`，使第四家 Outpost 商店在快照与更新中保持严格类别。设备购买、使用、能量、交易事件和存档继续复用既有 DTO；城墙、城门和地牢位置仍来自内容与地图格，不新增协议字段。save v1 与 state hash Schema v60 保持不变。完整边界见 [Contract v163](contract-v163-walled-outpost-magic-shop.md)。
+
+协议 1.131 为 `ShopCategoryDto` 增加 `armoury` 与 `weaponsmith`，使 Outpost 共享工坊的两个入口保持严格类别。装备购买、穿戴、箭矢聚合、交易事件和存档继续复用既有 DTO；save v1 与 state hash Schema v60 保持不变。完整边界见 [Contract v164](contract-v164-outpost-armoury-weaponsmith.md)。
+
+协议 1.132 为 `ShopCategoryDto` 增加 `bookstore`，使 Outpost 共享奥术建筑的书店入口保持严格类别。购买后的法术书实例继续复用既有库存、能力学习、知识和存档 DTO；save v1 与 state hash Schema v60 保持不变。完整边界见 [Contract v165](contract-v165-outpost-bookstore.md)。

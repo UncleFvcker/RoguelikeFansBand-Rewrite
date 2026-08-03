@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.weaponsmith-entrance",
+  "nameKey": "terrain-demo-weaponsmith-entrance-name",
+  "descriptionKey": "terrain-demo-weaponsmith-entrance-description",
+  "glyph": "3",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "shop-entrance", "surface"]
+}

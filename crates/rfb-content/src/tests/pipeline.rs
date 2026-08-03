@@ -139,13 +139,13 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.bytes, second.bytes);
     assert_eq!(decoded, first);
     assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-    assert_eq!(first.content.terrain.len(), 63);
+    assert_eq!(first.content.terrain.len(), 66);
     assert_eq!(first.content.actors.len(), 33);
     assert_eq!(first.content.affixes.len(), 4);
-    assert_eq!(first.content.items.len(), 110);
+    assert_eq!(first.content.items.len(), 111);
     assert_eq!(first.content.resources.len(), 3);
     assert_eq!(first.content.abilities.len(), 68);
-    assert_eq!(first.content.ability_books.len(), 5);
+    assert_eq!(first.content.ability_books.len(), 6);
     assert_eq!(first.content.skills.len(), 10);
     assert_eq!(first.content.skill_sets.len(), 13);
     assert_eq!(first.content.races.len(), 5);
@@ -159,6 +159,6 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.content.terrain_feature_tables.len(), 1);
     assert_eq!(first.content.vaults.len(), 6);
     assert_eq!(first.content.towns.len(), 1);
-    assert_eq!(first.content.shops.len(), 4);
+    assert_eq!(first.content.shops.len(), 7);
     assert_eq!(first.content.worlds.len(), 2);
 }

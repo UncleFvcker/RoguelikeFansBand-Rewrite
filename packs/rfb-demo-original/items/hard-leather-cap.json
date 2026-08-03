@@ -7,6 +7,7 @@
   "glyph": "[",
   "weightTenthsPound": 15,
   "maxStack": 1,
+  "baseValue": 12,
   "equipmentSlot": "head",
   "modifiers": { "defense": 2 },
   "tags": ["armor", "equipment", "rfb-compatibility"]

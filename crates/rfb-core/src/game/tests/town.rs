@@ -4,9 +4,12 @@ use super::*;
 use crate::game::tests::support::dispatch_next;
 
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
+const ARMOURY_ID: &str = "demo.shop.outpost-armoury";
+const WEAPONSMITH_ID: &str = "demo.shop.outpost-weaponsmith";
 const TEMPLE_ID: &str = "demo.shop.outpost-temple";
 const ALCHEMIST_ID: &str = "demo.shop.outpost-alchemist";
 const MAGIC_SHOP_ID: &str = "demo.shop.outpost-magic-shop";
+const BOOKSTORE_ID: &str = "demo.shop.outpost-bookstore";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -42,7 +45,7 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     assert_eq!(town.id, "demo.town.outpost");
     assert_eq!(town.floor_id, "demo.floor.surface");
     assert!(town.visited);
-    assert_eq!(snapshot.shops.len(), 4);
+    assert_eq!(snapshot.shops.len(), 7);
     let general_store = projected_shop(&snapshot.shops, GENERAL_STORE_ID);
     assert_eq!(general_store.entrance_position, Position { x: 17, y: 8 });
     assert_eq!(
@@ -59,6 +62,15 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     let magic_shop = projected_shop(&snapshot.shops, MAGIC_SHOP_ID);
     assert_eq!(magic_shop.entrance_position, Position { x: 42, y: 8 });
     assert_eq!(magic_shop.category, ShopCategoryDto::MagicShop);
+    let bookstore = projected_shop(&snapshot.shops, BOOKSTORE_ID);
+    assert_eq!(bookstore.entrance_position, Position { x: 40, y: 8 });
+    assert_eq!(bookstore.category, ShopCategoryDto::Bookstore);
+    let armoury = projected_shop(&snapshot.shops, ARMOURY_ID);
+    assert_eq!(armoury.entrance_position, Position { x: 15, y: 14 });
+    assert_eq!(armoury.category, ShopCategoryDto::Armoury);
+    let weaponsmith = projected_shop(&snapshot.shops, WEAPONSMITH_ID);
+    assert_eq!(weaponsmith.entrance_position, Position { x: 19, y: 14 });
+    assert_eq!(weaponsmith.category, ShopCategoryDto::Weaponsmith);
     assert!(
         snapshot
             .shops
@@ -136,6 +148,27 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
             ]),
         ),
         (
+            ARMOURY_ID,
+            std::collections::BTreeSet::from([
+                "demo.item.leather-gloves",
+                "demo.item.soft-leather-boots",
+                "demo.item.hard-leather-cap",
+                "demo.item.small-leather-shield",
+                "demo.item.chain-mail",
+            ]),
+        ),
+        (
+            WEAPONSMITH_ID,
+            std::collections::BTreeSet::from([
+                "demo.item.spear",
+                "demo.item.sabre",
+                "demo.item.short-sword",
+                "demo.item.broad-sword",
+                "demo.item.short-bow",
+                "demo.item.arrow",
+            ]),
+        ),
+        (
             TEMPLE_ID,
             std::collections::BTreeSet::from([
                 "demo.item.light-healing-potion",
@@ -160,6 +193,13 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
                 "demo.item.magic-missile-wand",
                 "demo.item.detect-objects-staff",
                 "demo.item.identify-staff",
+            ]),
+        ),
+        (
+            BOOKSTORE_ID,
+            std::collections::BTreeSet::from([
+                "demo.item.stench-of-death",
+                "demo.item.sepulchral-ways",
             ]),
         ),
     ];
@@ -258,9 +298,149 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     );
     assert!(!projected_shop(&snapshot.shops, TEMPLE_ID).player_at_entrance);
 
-    let restored = Game::from_save(game.to_save()).expect("four shops should round-trip");
+    let restored = Game::from_save(game.to_save()).expect("seven shops should round-trip");
     assert_eq!(restored.shop_states, game.shop_states);
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.scholar")
+        .expect("Warrens game should start");
+    game.gold = 10_000;
+    game.items
+        .retain(|item| item.location != ItemLocation::Inventory);
+    game.player.position = Position { x: 40, y: 8 };
+    game.mark_shop_visited_at_player();
+
+    let shop = projected_shop(&game.snapshot().shops, BOOKSTORE_ID).clone();
+    assert!(shop.visited);
+    assert!(shop.player_at_entrance);
+    assert_eq!(shop.category, ShopCategoryDto::Bookstore);
+    assert_eq!(shop.owner.greed_percent, 108);
+    assert_eq!(shop.owner.purchase_price_cap, 10_000);
+    assert_eq!(
+        shop.stock
+            .iter()
+            .map(|item| (item.kind_id.as_str(), item.unit_price))
+            .collect::<std::collections::BTreeMap<_, _>>(),
+        std::collections::BTreeMap::from([
+            ("demo.item.stench-of-death", 129),
+            ("demo.item.sepulchral-ways", 1_290),
+        ])
+    );
+    let book = shop
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.stench-of-death")
+        .expect("Bookstore should stock Stench of Death")
+        .clone();
+
+    let purchase = dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: BOOKSTORE_ID.to_owned(),
+            item_id: book.id,
+            quantity: 1,
+        },
+    );
+    let book_item_id = purchase
+        .inventory
+        .iter()
+        .find(|item| item.kind_id == "demo.item.stench-of-death")
+        .expect("purchased book should be carried")
+        .id
+        .clone();
+    let studied = dispatch_next(
+        &mut game,
+        GameCommand::StudyAbility {
+            book_item_id,
+            ability_id: "demo.ability.death-detect-evil".to_owned(),
+        },
+    );
+    assert!(
+        studied
+            .player
+            .abilities
+            .iter()
+            .any(|ability| { ability.id == "demo.ability.death-detect-evil" && ability.learned })
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("bookstore trade should round-trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
+}
+
+#[test]
+fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.gold = 10_000;
+    game.player.position = Position { x: 19, y: 14 };
+    game.mark_shop_visited_at_player();
+
+    let weaponsmith = projected_shop(&game.snapshot().shops, WEAPONSMITH_ID).clone();
+    assert!(weaponsmith.visited);
+    assert!(weaponsmith.player_at_entrance);
+    assert_eq!(weaponsmith.owner.greed_percent, 110);
+    assert_eq!(weaponsmith.owner.purchase_price_cap, 20_000);
+    assert_eq!(
+        weaponsmith
+            .stock
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.arrow")
+            .count(),
+        1,
+        "compatible arrow stacks should project as one shop entry"
+    );
+    assert!(
+        weaponsmith
+            .stock
+            .iter()
+            .find(|item| item.kind_id == "demo.item.arrow")
+            .is_some_and(|item| item.quantity > 30),
+        "seed 42 should exercise grouping across the arrow stack limit"
+    );
+
+    game.player.position = Position { x: 15, y: 14 };
+    game.mark_shop_visited_at_player();
+    let armoury = projected_shop(&game.snapshot().shops, ARMOURY_ID).clone();
+    assert!(armoury.visited);
+    assert!(armoury.player_at_entrance);
+    assert_eq!(armoury.owner.greed_percent, 111);
+    assert_eq!(armoury.owner.purchase_price_cap, 20_000);
+    let gloves = armoury
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.leather-gloves")
+        .expect("Armoury should stock RFB Leather Gloves")
+        .clone();
+    assert_eq!(gloves.unit_price, 3);
+
+    let purchase = dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: ARMOURY_ID.to_owned(),
+            item_id: gloves.id,
+            quantity: 1,
+        },
+    );
+    let glove_id = purchase
+        .inventory
+        .iter()
+        .find(|item| item.kind_id == "demo.item.leather-gloves")
+        .expect("purchased gloves should be carried")
+        .id
+        .clone();
+    let equipped = dispatch_next(&mut game, GameCommand::Equip { item_id: glove_id });
+    assert!(
+        equipped
+            .equipment
+            .iter()
+            .any(|item| { item.kind_id == "demo.item.leather-gloves" && item.slot_id == "hands" })
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("forge trade should round-trip");
+    assert_eq!(restored.snapshot(), game.snapshot());
 }
 
 #[test]
@@ -318,13 +498,11 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
         .iter()
         .find(|item| item.kind_id == "demo.item.detect-objects-staff")
         .expect("purchased staff should be carried");
-    assert_eq!(
-        bought.charges,
-        Some(ItemChargesDto {
-            current: 11,
-            maximum: 45,
-        })
-    );
+    let charges_before = bought
+        .charges
+        .expect("purchased staff should retain its generated energy");
+    assert_eq!(charges_before.maximum, 45);
+    assert!(charges_before.current >= 4);
     let staff_id = bought.id.clone();
 
     let used = dispatch_next(
@@ -345,8 +523,8 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
             .find(|item| item.id == staff_id)
             .and_then(|item| item.charges),
         Some(ItemChargesDto {
-            current: 7,
-            maximum: 45,
+            current: charges_before.current - 4,
+            maximum: charges_before.maximum,
         })
     );
 
@@ -356,7 +534,7 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
 
 #[test]
 fn quantity_purchase_is_atomic_zero_time_and_identified() {
-    let mut game = store_game(42);
+    let mut game = store_game(43);
     game.gold = 100;
     let item_id = stock_item_id(&game, "demo.item.ration-of-food");
     let ration_before = game
@@ -570,24 +748,24 @@ fn compatible_shop_instances_project_and_trade_as_one_row() {
         );
     }
 
-    let torch = shop_before
+    let ration = shop_before
         .stock
         .iter()
-        .find(|item| item.kind_id == "demo.item.wooden-torch")
-        .expect("store should stock torches");
-    assert!(torch.maximum_quantity >= 2);
-    let torch_item_id = torch.id.clone();
-    let shop_torches_before = game.shop_states[GENERAL_STORE_ID]
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("store should stock rations");
+    assert!(ration.maximum_quantity >= 2);
+    let ration_item_id = ration.id.clone();
+    let shop_rations_before = game.shop_states[GENERAL_STORE_ID]
         .inventory
         .iter()
-        .filter(|item| item.kind_id == "demo.item.wooden-torch")
+        .filter(|item| item.kind_id == "demo.item.ration-of-food")
         .map(|item| item.quantity)
         .sum::<u32>();
-    let carried_torches_before = game
+    let carried_rations_before = game
         .items
         .iter()
         .filter(|item| {
-            item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+            item.kind_id == "demo.item.ration-of-food" && item.location == ItemLocation::Inventory
         })
         .map(|item| item.quantity)
         .sum::<u32>();
@@ -595,7 +773,7 @@ fn compatible_shop_instances_project_and_trade_as_one_row() {
         &mut game,
         GameCommand::BuyFromShop {
             shop_id: GENERAL_STORE_ID.to_owned(),
-            item_id: torch_item_id,
+            item_id: ration_item_id,
             quantity: 2,
         },
     );
@@ -609,28 +787,29 @@ fn compatible_shop_instances_project_and_trade_as_one_row() {
         game.shop_states[GENERAL_STORE_ID]
             .inventory
             .iter()
-            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .filter(|item| item.kind_id == "demo.item.ration-of-food")
             .map(|item| item.quantity)
             .sum::<u32>(),
-        shop_torches_before - 2
+        shop_rations_before - 2
     );
     assert_eq!(
         game.items
             .iter()
             .filter(|item| {
-                item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+                item.kind_id == "demo.item.ration-of-food"
+                    && item.location == ItemLocation::Inventory
             })
             .map(|item| item.quantity)
             .sum::<u32>(),
-        carried_torches_before + 2
+        carried_rations_before + 2
     );
 
     let shop_after_purchase = projected_shop(&game.snapshot().shops, GENERAL_STORE_ID).clone();
     let quote = shop_after_purchase
         .sell_quotes
         .iter()
-        .find(|quote| quote.kind_id == "demo.item.wooden-torch" && quote.maximum_quantity >= 2)
-        .expect("compatible carried torches should have one grouped quote");
+        .find(|quote| quote.kind_id == "demo.item.ration-of-food" && quote.maximum_quantity >= 2)
+        .expect("compatible carried rations should have one grouped quote");
     let sale = dispatch_next(
         &mut game,
         GameCommand::SellToShop {
@@ -644,17 +823,18 @@ fn compatible_shop_instances_project_and_trade_as_one_row() {
         game.items
             .iter()
             .filter(|item| {
-                item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+                item.kind_id == "demo.item.ration-of-food"
+                    && item.location == ItemLocation::Inventory
             })
             .map(|item| item.quantity)
             .sum::<u32>(),
-        carried_torches_before
+        carried_rations_before
     );
     assert_eq!(
         projected_shop(&game.snapshot().shops, GENERAL_STORE_ID)
             .stock
             .iter()
-            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .filter(|item| item.kind_id == "demo.item.ration-of-food")
             .count(),
         1
     );

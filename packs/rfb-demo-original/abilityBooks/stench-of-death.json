@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.stench-of-death",
+  "nameKey": "ability-book-demo-stench-of-death-name",
+  "descriptionKey": "ability-book-demo-stench-of-death-description",
+  "abilityIds": [
+    "demo.ability.death-black-sleep",
+    "demo.ability.death-detect-evil",
+    "demo.ability.death-detect-unlife",
+    "demo.ability.death-enslave-undead",
+    "demo.ability.death-horrify",
+    "demo.ability.death-malediction",
+    "demo.ability.death-necromantic-resistance",
+    "demo.ability.death-stinking-cloud"
+  ],
+  "tags": ["death", "spellbook"]
+}

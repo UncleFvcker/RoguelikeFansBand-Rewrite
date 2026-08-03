@@ -16,6 +16,23 @@ const GENERAL_STORE_ITEM_IDS: [&str; 4] = [
     "demo.item.flask-of-oil",
 ];
 
+const ARMOURY_ITEM_IDS: [&str; 5] = [
+    "demo.item.leather-gloves",
+    "demo.item.soft-leather-boots",
+    "demo.item.hard-leather-cap",
+    "demo.item.small-leather-shield",
+    "demo.item.chain-mail",
+];
+
+const WEAPONSMITH_ITEM_IDS: [&str; 6] = [
+    "demo.item.spear",
+    "demo.item.sabre",
+    "demo.item.short-sword",
+    "demo.item.broad-sword",
+    "demo.item.short-bow",
+    "demo.item.arrow",
+];
+
 const TEMPLE_ITEM_IDS: [&str; 4] = [
     "demo.item.light-healing-potion",
     "demo.item.valor-tonic",
@@ -37,12 +54,17 @@ const MAGIC_SHOP_ITEM_IDS: [&str; 3] = [
     "demo.item.identify-staff",
 ];
 
+const BOOKSTORE_ITEM_IDS: [&str; 2] = ["demo.item.stench-of-death", "demo.item.sepulchral-ways"];
+
 fn expected_stock_ids(category: ShopCategory) -> BTreeSet<&'static str> {
     match category {
         ShopCategory::GeneralStore => GENERAL_STORE_ITEM_IDS.into_iter().collect(),
+        ShopCategory::Armoury => ARMOURY_ITEM_IDS.into_iter().collect(),
+        ShopCategory::Weaponsmith => WEAPONSMITH_ITEM_IDS.into_iter().collect(),
         ShopCategory::Temple => TEMPLE_ITEM_IDS.into_iter().collect(),
         ShopCategory::Alchemist => ALCHEMIST_ITEM_IDS.into_iter().collect(),
         ShopCategory::MagicShop => MAGIC_SHOP_ITEM_IDS.into_iter().collect(),
+        ShopCategory::Bookstore => BOOKSTORE_ITEM_IDS.into_iter().collect(),
     }
 }
 

@@ -75,7 +75,7 @@
       "playerDefense": 2,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 95,
+      "playerCarriedWeightTenthsPound": 110,
       "playerCarryCapacityTenthsPound": 100,
       "playerGold": 0,
       "playerNutrition": 9999,
@@ -3095,7 +3095,7 @@
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 15,
+          "weightTenthsPound": 30,
           "equipmentSlot": null,
           "modifiers": {
             "attack": 0,
@@ -3245,7 +3245,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "936d8ea10e385c70e337cc01438aa73259717ed3c1fdda57946a9abf4cdac198"
+      "stateHash": "9b60a0b39e97703ee6809a46493484012b631e1067e62c666b197ede6d5c5c46"
     },
     "events": [
       {
@@ -3267,6 +3267,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "936d8ea10e385c70e337cc01438aa73259717ed3c1fdda57946a9abf4cdac198"
+    "saveRoundTripStateHash": "9b60a0b39e97703ee6809a46493484012b631e1067e62c666b197ede6d5c5c46"
   }
 }

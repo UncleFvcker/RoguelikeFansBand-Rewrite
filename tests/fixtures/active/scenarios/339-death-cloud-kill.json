@@ -92,7 +92,7 @@
       "playerDefense": 2,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 95,
+      "playerCarriedWeightTenthsPound": 110,
       "playerCarryCapacityTenthsPound": 100,
       "playerGold": 0,
       "playerNutrition": 9999,
@@ -3046,7 +3046,7 @@
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 15,
+          "weightTenthsPound": 30,
           "equipmentSlot": null,
           "modifiers": {
             "attack": 0,
@@ -3196,7 +3196,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b24f2c5b2c0e160256b8a14dbcf03945a9a9a2bc5d3ba5c40dcab4f776a6154f"
+      "stateHash": "ee8a8aee56911f9aebb277f724fcf35886fdcd5be625b3f4ab6cf9a7947a934b"
     },
     "events": [
       {
@@ -4204,6 +4204,6 @@
       "demo.monster.ember-mote.1",
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "b24f2c5b2c0e160256b8a14dbcf03945a9a9a2bc5d3ba5c40dcab4f776a6154f"
+    "saveRoundTripStateHash": "ee8a8aee56911f9aebb277f724fcf35886fdcd5be625b3f4ab6cf9a7947a934b"
   }
 }

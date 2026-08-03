@@ -6,9 +6,12 @@
   "descriptionKey": "town-demo-outpost-description",
   "floorId": "demo.floor.surface",
   "shopIds": [
+    "demo.shop.outpost-armoury",
+    "demo.shop.outpost-bookstore",
     "demo.shop.outpost-general-store",
     "demo.shop.outpost-temple",
     "demo.shop.outpost-alchemist",
-    "demo.shop.outpost-magic-shop"
+    "demo.shop.outpost-magic-shop",
+    "demo.shop.outpost-weaponsmith"
   ]
 }

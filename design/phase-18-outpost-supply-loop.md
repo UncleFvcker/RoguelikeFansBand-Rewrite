@@ -1,6 +1,6 @@
 # Phase 18: Outpost supply loop
 
-状态：Gate 0–6 完成，围墙城镇与首批 Magic Shop 扩展完成。当前 active baseline 为 `contract-v163`；协议 `1.130`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.153.0`（hash `cbcca1349df4d40a76a5de10759d3a2bffa17bfe4c71fc486389c5b21b4d525e`）和 463 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、围墙 Outpost、General Store/Temple/Alchemist/Magic Shop 权威交易、玩家 UI 与完整供给闭环已经建立。
+状态：Gate 0–6 完成，围墙城镇、共享 Armoury/Weaponsmith 工坊与 Bookstore 扩展完成。当前 active baseline 为 `contract-v165`；协议 `1.132`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.155.0`（hash `3f12b3a62351b245edb8223b324c72a7bd01e3cc53f2ffb3fcd402dce5109435`）和 465 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、围墙 Outpost、七店权威交易、玩家 UI 与完整供给闭环已经建立。
 
 ## 1. 目标
 
@@ -156,9 +156,13 @@ Gate 6 后续首批扩展为 contract-v162：General Store、Temple 和 Alchemis
 
 contract-v163 将地表整理为带东西城门的围墙城镇，Warrens 入口移至东墙外；General Store 独立，Temple 使用南侧对称建筑，Alchemist/Magic Shop 共用东北建筑的两个入口。所有 terrain 禁止 ASCII 字母 glyph，字母完整保留给 actor；墙体使用 `█/▓/▒` 色块。Magic Shop 首批严格采用 RFB 原版 Magic Missile Wand、Detect Objects Staff 和 Identify Staff。协议升至 `1.130`、内容包升至 `1.153.0`、state hash Schema 保持 `60`；fixture 463 覆盖四店访问、魔法设备购买/使用与存档回环。当前开发期仍不为旧开发存档新增兼容哈希。
 
+contract-v164 在西南侧加入 Armoury/Weaponsmith 共享工坊，使用原版 `2/3` 双入口。两店只开放项目已有完整穿戴、近战或射击行为的 RFB 原版首批装备，固定原版 Human 店主参数；fixture 464 与桌面 supply-loop E2E 覆盖购买、装备、双入口访问及箭矢聚合。协议升至 `1.131`、内容包升至 `1.154.0`，state hash Schema 保持 `60`。当前开发期仍不为旧开发存档新增兼容哈希。
+
+contract-v165 在东北 Alchemist/Magic Shop 建筑中增加 Bookstore 第三入口 `(40,8)`，使用原版数字 `9`。首批严格采用原版 `TOWN` 库存中的 Stench of Death 与 Sepulchral Ways，价值 `100/1000`；前者补齐为可购买、可学习、可存档的完整死亡魔法书，Black Channels 与 Necronomicon 不提前进入城镇库存。fixture 465 与桌面 supply-loop E2E 覆盖入口、交易、法术学习和存档回环。协议升至 `1.132`、内容包升至 `1.155.0`，state hash Schema 保持 `60`。当前开发期仍不为旧开发存档新增兼容哈希。
+
 ## 8. 明确暂缓
 
-- Armoury、Weaponsmith、Black Market、Home、Bookstore 和 Museum；
+- Black Market、Home、Jeweler、Shroomery、Dragon 与 Museum；
 - White Horse Inn、城堡、Pest Control、其他任务与建筑服务；
 - 荒野旅行、其他城镇、昼夜、镇民生成和城镇战斗；
 - 全部普通食物、投掷油、光源 ego/神器、永久光源和特殊种族消化；

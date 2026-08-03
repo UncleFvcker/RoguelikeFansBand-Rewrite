@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.outpost-bookstore",
+  "nameKey": "shop-demo-outpost-bookstore-name",
+  "descriptionKey": "shop-demo-outpost-bookstore-description",
+  "townId": "demo.town.outpost",
+  "category": "bookstore",
+  "entrancePosition": { "x": 40, "y": 8 },
+  "entranceTerrainId": "demo.terrain.bookstore-entrance",
+  "owner": {
+    "id": "demo.shop-owner.outpost-doraf",
+    "nameKey": "shop-owner-demo-outpost-doraf-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 10000
+  },
+  "stock": [
+    { "itemKindId": "demo.item.stench-of-death", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.sepulchral-ways", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+  ],
+  "maintenance": { "intervalWorldTicks": 10000 }
+}

@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.153.0");
+    assert_eq!(catalog.pack_version(), "1.155.0");
     assert_eq!(
         catalog
             .town("demo.town.outpost")
@@ -15,11 +15,50 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             "demo.floor.surface",
             [
                 "demo.shop.outpost-alchemist".to_owned(),
+                "demo.shop.outpost-armoury".to_owned(),
+                "demo.shop.outpost-bookstore".to_owned(),
                 "demo.shop.outpost-general-store".to_owned(),
                 "demo.shop.outpost-magic-shop".to_owned(),
                 "demo.shop.outpost-temple".to_owned(),
+                "demo.shop.outpost-weaponsmith".to_owned(),
             ]
             .as_slice()
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-bookstore").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::Bookstore,
+            ContentPosition { x: 40, y: 8 },
+            "demo.terrain.bookstore-entrance",
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-armoury").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::Armoury,
+            ContentPosition { x: 15, y: 14 },
+            "demo.terrain.armoury-entrance",
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-weaponsmith").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::Weaponsmith,
+            ContentPosition { x: 19, y: 14 },
+            "demo.terrain.weaponsmith-entrance",
         ))
     );
     assert_eq!(
@@ -150,6 +189,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
                 "demo.ability-book.echo-primer".to_owned(),
                 "demo.ability-book.necronomicon".to_owned(),
                 "demo.ability-book.sepulchral-ways".to_owned(),
+                "demo.ability-book.stench-of-death".to_owned(),
                 "demo.ability-book.stillwater-notes".to_owned(),
             ]
             .as_slice(),

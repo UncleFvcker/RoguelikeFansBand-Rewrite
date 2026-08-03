@@ -202,12 +202,12 @@
       "turn": 31,
       "worldTick": 310,
       "lastCommandSeq": 31,
-      "rngDrawCounter": 473,
+      "rngDrawCounter": 533,
       "floorId": "demo.floor.warrens-depth-1",
       "dungeonInstanceId": "demo.dungeon.warrens.instance.1",
       "playerPosition": {
-        "x": 52,
-        "y": 6
+        "x": 31,
+        "y": 16
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -377,8 +377,8 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.1",
           "position": {
-            "x": 11,
-            "y": 8
+            "x": 35,
+            "y": 2
           },
           "hp": 4,
           "speed": 110,
@@ -387,8 +387,8 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
-            "x": 52,
-            "y": 14
+            "x": 14,
+            "y": 11
           },
           "hp": 4,
           "speed": 110,
@@ -397,17 +397,17 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 37,
-            "y": 12
+            "x": 48,
+            "y": 14
           },
-          "hp": 4,
+          "hp": 2,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.4",
           "position": {
-            "x": 33,
+            "x": 54,
             "y": 5
           },
           "hp": 4,
@@ -415,15 +415,15 @@
           "energyNeed": 100
         }
       ],
-      "groundItemCount": 4,
+      "groundItemCount": 3,
       "goldPiles": [
         {
           "id": "generated.gold.1",
           "position": {
-            "x": 50,
-            "y": 9
+            "x": 40,
+            "y": 5
           },
-          "amount": 31,
+          "amount": 22,
           "appearance": "copper"
         }
       ],
@@ -787,7 +787,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 35,
+      "nextItemInstanceSerial": 50,
       "nextGoldPileSerial": 2,
       "campaign": {
         "status": "active",
@@ -795,7 +795,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "233d92b188f8127e7f82f070cc62e9ebe93248919df338284577ed0f19f305fc"
+      "stateHash": "92372e954a981cd39b4130690cbfbc93ef5408d9e346085ced8e4fbe2bfdf3ae"
     },
     "events": [
       {
@@ -6857,6 +6857,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "233d92b188f8127e7f82f070cc62e9ebe93248919df338284577ed0f19f305fc"
+    "saveRoundTripStateHash": "92372e954a981cd39b4130690cbfbc93ef5408d9e346085ced8e4fbe2bfdf3ae"
   }
 }

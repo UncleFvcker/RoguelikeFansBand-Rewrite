@@ -7,6 +7,7 @@
   "glyph": "/",
   "weightTenthsPound": 50,
   "maxStack": 1,
+  "baseValue": 36,
   "equipmentSlot": "weapon",
   "meleeProfile": {
     "attacks": 1,

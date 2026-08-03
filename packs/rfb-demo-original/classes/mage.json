@@ -30,6 +30,7 @@
     "beamChanceLevelDivisor": 1,
     "beamChanceBonus": 0,
     "abilityBookIds": [
+      "demo.ability-book.stench-of-death",
       "demo.ability-book.echo-primer",
       "demo.ability-book.sepulchral-ways",
       "demo.ability-book.black-channels",

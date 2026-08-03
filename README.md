@@ -178,6 +178,8 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v161：General Store 权威交易](design/contract-v161-general-store-transactions.md)
 - [Contract v162：Outpost 三入口补给院](design/contract-v162-outpost-supply-court.md)
 - [Contract v163：围墙 Outpost 与魔法店](design/contract-v163-walled-outpost-magic-shop.md)
+- [Contract v164：护甲店与武器店](design/contract-v164-outpost-armoury-weaponsmith.md)
+- [Contract v165：书店](design/contract-v165-outpost-bookstore.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -201,7 +203,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v163`，共 463 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v165`，共 465 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -432,6 +434,10 @@ Phase 18 后续 / contract-v162 将 General Store、Temple 和 Alchemist 横向�
 
 Phase 18 后续 / contract-v163 将 Outpost 改为带东西城门和贯通主街的围墙城镇，Warrens 固定在东墙外。杂货店独立，圣殿使用南侧对称建筑，炼金店与魔法店共享一栋双入口建筑；墙体使用 `█/▓/▒` 色块，且所有 terrain 都禁止使用会与原版生物冲突的 ASCII 字母 glyph。Magic Shop 首批严格采用原版 Magic Missile Wand、Detect Objects Staff 和 Identify Staff。协议升至 1.130、demo 升至 1.153.0、Schema 保持 v60，active baseline 增至 463 条 exact fixtures、零 waiver，content hash 为 `cbcca1349df4d40a76a5de10759d3a2bffa17bfe4c71fc486389c5b21b4d525e`。详见[Contract v163](design/contract-v163-walled-outpost-magic-shop.md)。
 
+Phase 18 后续 / contract-v164 在 Outpost 西南侧加入共享工坊：护甲店与武器店使用原版数字 `2/3` 双入口，并只出售项目中已有完整装备、射击行为的 RFB 原版首批物品。两店采用固定原版 Human 店主参数；箭矢等兼容实例继续在商店 UI 聚合为一个条目。协议升至 1.131、demo 升至 1.154.0、Schema 保持 v60，active baseline 增至 464 条 exact fixtures、零 waiver，content hash 为 `dcf62b45fb72e47b8190bb98b8d59db534f5ad53cc9ec47ac918effb2e22d52c`。详见[Contract v164](design/contract-v164-outpost-armoury-weaponsmith.md)。
+
+Phase 18 后续 / contract-v165 将书店作为炼金店/魔法店共享建筑的第三入口，使用原版数字 `9`。库存严格限定为原版可进入城镇库存的《死亡的气息》和《冥府之路》，基础价值为 `100/1000`；前者新增为可购买并用于学习的完整能力书，后两册高阶死亡魔法书不提前出售。协议升至 1.132、demo 升至 1.155.0、Schema 保持 v60，active baseline 增至 465 条 exact fixtures、零 waiver，content hash 为 `3f12b3a62351b245edb8223b324c72a7bd01e3cc53f2ffb3fcd402dce5109435`。详见[Contract v165](design/contract-v165-outpost-bookstore.md)。
+
 ### 本地验证
 
 ```powershell
@@ -507,7 +513,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 463 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 465 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

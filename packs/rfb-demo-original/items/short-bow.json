@@ -7,6 +7,7 @@
   "glyph": "}",
   "weightTenthsPound": 30,
   "maxStack": 1,
+  "baseValue": 400,
   "equipmentSlot": "launcher",
   "projectileProfile": {
     "range": 8,

@@ -93,7 +93,7 @@
       "playerDefense": 2,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 95,
+      "playerCarriedWeightTenthsPound": 110,
       "playerCarryCapacityTenthsPound": 100,
       "playerGold": 0,
       "playerNutrition": 9999,
@@ -3059,7 +3059,7 @@
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 15,
+          "weightTenthsPound": 30,
           "equipmentSlot": null,
           "modifiers": {
             "attack": 0,
@@ -3209,7 +3209,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8a2dfe3422c5caf21e697d9be5211accda2b64a4edeb9f16a7eccc40ee699a5e"
+      "stateHash": "1b189c1d8c6f48c048e1ac3b62d460f54e083faad6554fc8142ee296f7759fdf"
     },
     "events": [
       {
@@ -3346,6 +3346,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "8a2dfe3422c5caf21e697d9be5211accda2b64a4edeb9f16a7eccc40ee699a5e"
+    "saveRoundTripStateHash": "1b189c1d8c6f48c048e1ac3b62d460f54e083faad6554fc8142ee296f7759fdf"
   }
 }

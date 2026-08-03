@@ -6649,9 +6649,12 @@
       "type": "string",
       "enum": [
         "general-store",
+        "armoury",
+        "weaponsmith",
         "temple",
         "alchemist",
-        "magic-shop"
+        "magic-shop",
+        "bookstore"
       ]
     },
     "ShopDto": {

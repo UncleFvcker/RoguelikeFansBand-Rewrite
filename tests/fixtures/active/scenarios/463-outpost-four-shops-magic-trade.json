@@ -363,14 +363,14 @@
       "command": {
         "type": "buy-from-shop",
         "shopId": "demo.shop.outpost-magic-shop",
-        "itemId": "generated.item.25",
+        "itemId": "generated.item.31",
         "quantity": 1
       }
     },
     {
       "command": {
         "type": "use-item",
-        "itemId": "generated.item.25",
+        "itemId": "generated.item.31",
         "target": {
           "type": "self"
         }
@@ -384,7 +384,7 @@
       "turn": 60,
       "worldTick": 590,
       "lastCommandSeq": 60,
-      "rngDrawCounter": 32,
+      "rngDrawCounter": 45,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -413,6 +413,52 @@
             "greedPercent": 111,
             "purchasePriceCap": 10000,
             "priceFactorPercent": 103
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-armoury",
+          "nameKey": "shop-demo-outpost-armoury-name",
+          "descriptionKey": "shop-demo-outpost-armoury-description",
+          "category": "armoury",
+          "entrancePosition": {
+            "x": 15,
+            "y": 14
+          },
+          "entranceTerrainId": "demo.terrain.armoury-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-dagro",
+            "nameKey": "shop-owner-demo-outpost-dagro-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 111,
+            "purchasePriceCap": 20000,
+            "priceFactorPercent": 103
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-bookstore",
+          "nameKey": "shop-demo-outpost-bookstore-name",
+          "descriptionKey": "shop-demo-outpost-bookstore-description",
+          "category": "bookstore",
+          "entrancePosition": {
+            "x": 40,
+            "y": 8
+          },
+          "entranceTerrainId": "demo.terrain.bookstore-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-doraf",
+            "nameKey": "shop-owner-demo-outpost-doraf-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 10000,
+            "priceFactorPercent": 100
           },
           "stock": [],
           "sellQuotes": []
@@ -462,7 +508,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.24",
+              "id": "generated.item.30",
               "kindId": "demo.item.magic-missile-wand",
               "displayNameKey": "item-demo-magic-missile-wand-name",
               "quantity": 1,
@@ -470,7 +516,7 @@
               "unitPrice": 867,
               "weightTenthsPound": 2,
               "charges": {
-                "current": 17,
+                "current": 15,
                 "maximum": 45
               },
               "activation": {
@@ -492,7 +538,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.26",
+              "id": "generated.item.32",
               "kindId": "demo.item.identify-staff",
               "displayNameKey": "item-demo-identify-staff-name",
               "quantity": 1,
@@ -500,7 +546,7 @@
               "unitPrice": 1530,
               "weightTenthsPound": 50,
               "charges": {
-                "current": 16,
+                "current": 36,
                 "maximum": 45
               },
               "activation": {
@@ -534,7 +580,7 @@
               "maximumQuantity": 6
             },
             {
-              "itemId": "generated.item.25",
+              "itemId": "generated.item.31",
               "kindId": "demo.item.detect-objects-staff",
               "unitPrice": 1428,
               "maximumQuantity": 1
@@ -542,9 +588,8 @@
             {
               "itemId": "generated.item.8",
               "kindId": "demo.item.arrow",
-              "unitPrice": 0,
-              "maximumQuantity": 0,
-              "unavailableReason": "item-illegal"
+              "unitPrice": 1,
+              "maximumQuantity": 22
             }
           ]
         },
@@ -567,6 +612,29 @@
             "greedPercent": 109,
             "purchasePriceCap": 30000,
             "priceFactorPercent": 101
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
+          "id": "demo.shop.outpost-weaponsmith",
+          "nameKey": "shop-demo-outpost-weaponsmith-name",
+          "descriptionKey": "shop-demo-outpost-weaponsmith-description",
+          "category": "weaponsmith",
+          "entrancePosition": {
+            "x": 19,
+            "y": 14
+          },
+          "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-arndal",
+            "nameKey": "shop-owner-demo-outpost-arndal-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 110,
+            "purchasePriceCap": 20000,
+            "priceFactorPercent": 102
           },
           "stock": [],
           "sellQuotes": []
@@ -797,13 +865,44 @@
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.25",
+          "id": "generated.item.3",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.31",
           "kindId": "demo.item.detect-objects-staff",
           "displayNameKey": "item-demo-detect-objects-staff-name",
           "knowledge": "aware",
           "usable": true,
           "charges": {
-            "current": 7,
+            "current": 20,
             "maximum": 45
           },
           "activation": {
@@ -846,37 +945,6 @@
           },
           "identification": "identified",
           "quality": "ordinary"
-        },
-        {
-          "id": "generated.item.3",
-          "kindId": "demo.item.wooden-torch",
-          "displayNameKey": "item-demo-wooden-torch-name",
-          "knowledge": "aware",
-          "usable": false,
-          "fuel": {
-            "kind": "torch",
-            "current": 2000,
-            "maximum": 5000,
-            "lightRadius": 1
-          },
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 30,
-          "equipmentSlot": "light",
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "unexamined"
         },
         {
           "id": "generated.item.4",
@@ -1150,7 +1218,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.25",
+          "itemId": "generated.item.31",
           "appraised": true,
           "identified": true
         },
@@ -1160,7 +1228,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 31,
+      "nextItemInstanceSerial": 47,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1168,7 +1236,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0cf023c18beac81d9a9bc884f0c7e6e0ce830c2ea05f25551ec5e634cf30205a"
+      "stateHash": "a5a017c9a95d0d35ba86bfe0649c3c9efc42dd214e3e9809992e97a1c5d9c6b8"
     },
     "events": [
       {
@@ -1176,7 +1244,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "8470",
-          "item": "generated.item.25",
+          "item": "generated.item.31",
           "quantity": "1",
           "shop": "demo.shop.outpost-magic-shop",
           "target": "demo.item.detect-objects-staff",
@@ -1196,8 +1264,8 @@
             "skillId": "demo.skill.device",
             "ability": 18,
             "difficulty": 6,
-            "percentileRoll": 41,
-            "contestRoll": 14,
+            "percentileRoll": 62,
+            "contestRoll": 11,
             "threshold": 4,
             "outcome": "success"
           }
@@ -1689,6 +1757,6 @@
         "y": 9
       }
     ],
-    "saveRoundTripStateHash": "0cf023c18beac81d9a9bc884f0c7e6e0ce830c2ea05f25551ec5e634cf30205a"
+    "saveRoundTripStateHash": "a5a017c9a95d0d35ba86bfe0649c3c9efc42dd214e3e9809992e97a1c5d9c6b8"
   }
 }

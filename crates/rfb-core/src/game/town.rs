@@ -262,9 +262,12 @@ fn roll_shop_stock(
 fn category_dto(category: ShopCategory) -> ShopCategoryDto {
     match category {
         ShopCategory::GeneralStore => ShopCategoryDto::GeneralStore,
+        ShopCategory::Armoury => ShopCategoryDto::Armoury,
+        ShopCategory::Weaponsmith => ShopCategoryDto::Weaponsmith,
         ShopCategory::Temple => ShopCategoryDto::Temple,
         ShopCategory::Alchemist => ShopCategoryDto::Alchemist,
         ShopCategory::MagicShop => ShopCategoryDto::MagicShop,
+        ShopCategory::Bookstore => ShopCategoryDto::Bookstore,
     }
 }
 

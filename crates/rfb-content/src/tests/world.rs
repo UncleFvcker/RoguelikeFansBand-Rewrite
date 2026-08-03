@@ -29,6 +29,18 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
             "demo.terrain.magic-shop-entrance",
             ContentPosition { x: 42, y: 8 },
         ),
+        (
+            "demo.terrain.bookstore-entrance",
+            ContentPosition { x: 40, y: 8 },
+        ),
+        (
+            "demo.terrain.armoury-entrance",
+            ContentPosition { x: 15, y: 14 },
+        ),
+        (
+            "demo.terrain.weaponsmith-entrance",
+            ContentPosition { x: 19, y: 14 },
+        ),
     ];
     for (terrain_id, entrance) in entrances {
         assert!(world.terrain_overrides.iter().any(|terrain| {
@@ -249,6 +261,48 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
             Err(ContentError::InvalidShop(id)) if id == shop_id
         ));
     }
+}
+
+#[test]
+fn bookstore_stock_is_limited_to_original_town_books() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_id = "demo.shop.outpost-bookstore";
+    let shop = artifact
+        .content
+        .shops
+        .iter()
+        .find(|shop| shop.id == shop_id)
+        .expect("bookstore should exist");
+    assert_eq!(shop.category, ShopCategory::Bookstore);
+    assert_eq!(
+        shop.stock
+            .iter()
+            .map(|stock| stock.item_kind_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["demo.item.stench-of-death", "demo.item.sepulchral-ways",])
+    );
+    let values = artifact
+        .content
+        .items
+        .iter()
+        .filter(|item| shop.stock.iter().any(|stock| stock.item_kind_id == item.id))
+        .map(|item| (item.id.as_str(), item.base_value))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    assert_eq!(values["demo.item.stench-of-death"], 100);
+    assert_eq!(values["demo.item.sepulchral-ways"], 1_000);
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .shops
+        .iter_mut()
+        .find(|shop| shop.id == shop_id)
+        .expect("bookstore should exist")
+        .stock
+        .pop();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidShop(id)) if id == shop_id
+    ));
 }
 
 #[test]

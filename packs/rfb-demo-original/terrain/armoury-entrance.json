@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.armoury-entrance",
+  "nameKey": "terrain-demo-armoury-entrance-name",
+  "descriptionKey": "terrain-demo-armoury-entrance-description",
+  "glyph": "2",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "shop-entrance", "surface"]
+}

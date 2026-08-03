@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.stench-of-death",
+  "nameKey": "item-demo-stench-of-death-name",
+  "descriptionKey": "item-demo-stench-of-death-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "baseValue": 100,
+  "abilityBookId": "demo.ability-book.stench-of-death",
+  "tags": ["book", "death", "spellbook"]
+}

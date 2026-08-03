@@ -5,8 +5,9 @@
   "nameKey": "item-demo-sepulchral-ways-name",
   "descriptionKey": "item-demo-sepulchral-ways-description",
   "glyph": "?",
-  "weightTenthsPound": 15,
+  "weightTenthsPound": 30,
   "maxStack": 1,
+  "baseValue": 1000,
   "abilityBookId": "demo.ability-book.sepulchral-ways",
   "tags": ["book", "death", "spellbook"]
 }

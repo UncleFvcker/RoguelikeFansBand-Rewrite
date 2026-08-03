@@ -173,7 +173,7 @@ async function runSupplyLoop(driver) {
   const goldBeforeShopping = Number(await text(driver, "#shop-gold-value"));
   const rationBefore = await inventoryQuantity(driver, "demo.item.ration-of-food");
   await selectShopItem(driver, "一份口粮");
-  await setShopQuantity(driver, 2);
+  await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
     `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#shop-feedback")?.textContent.includes("购买")`,
@@ -182,7 +182,7 @@ async function runSupplyLoop(driver) {
   const rationAfterPurchase = await inventoryQuantity(driver, "demo.item.ration-of-food");
   assert.equal(
     rationAfterPurchase,
-    rationBefore + 2,
+    rationBefore + 1,
     `inventory rows: ${JSON.stringify(await inventoryRows(driver))}`,
   );
 
@@ -209,7 +209,52 @@ async function runSupplyLoop(driver) {
 
   await click(driver, "#shop-close");
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 12, 1, 0);
+  await moveMany(driver, "Numpad4", "4", 2, -1, 0);
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "护甲店"`,
+    "Armoury shop entry",
+  );
+  const armouryLayout = await currentShopLayout(driver);
+  assert.match(armouryLayout.owner, /冷酷的达格罗/);
+  assert.equal(armouryLayout.stockRows, 5);
+  assert.deepEqual(armouryLayout.stockNames, [
+    "皮手套",
+    "软皮靴",
+    "硬皮帽",
+    "小皮盾",
+    "锁子甲",
+  ]);
+  await selectShopItem(driver, "皮手套");
+  await setShopQuantity(driver, 1);
+  await click(driver, "#shop-confirm");
+  await driver.waitFor(
+    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("皮手套")`,
+    "Armoury gloves purchase",
+  );
+  await click(driver, "#shop-close");
+  await selectInventoryItem(driver, "demo.item.leather-gloves");
+  await click(driver, "#inventory-equip");
+  await driver.waitFor(
+    `return [...document.querySelectorAll("#equipment-list li")].some((item) => item.textContent.includes("皮手套"))`,
+    "equipping purchased gloves",
+  );
+
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "武器店"`,
+    "Weaponsmith shop entry",
+  );
+  const weaponsmithLayout = await currentShopLayout(driver);
+  assert.match(weaponsmithLayout.owner, /屠兽者阿恩达尔/);
+  assert.equal(weaponsmithLayout.stockRows, 6);
+  assert.equal(weaponsmithLayout.stockNames.filter((name) => name === "箭矢").length, 1);
+
+  await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await moveMany(driver, "Numpad6", "6", 10, 1, 0);
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "圣殿"`,
@@ -260,7 +305,20 @@ async function runSupplyLoop(driver) {
 
   await click(driver, "#shop-close");
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
+  await moveMany(driver, "Numpad6", "6", 2, 1, 0);
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "书店"`,
+    "Bookstore entry",
+  );
+  const bookstoreLayout = await currentShopLayout(driver);
+  assert.match(bookstoreLayout.owner, /贪婪的多拉夫/);
+  assert.equal(bookstoreLayout.stockRows, 2);
+  assert.deepEqual(bookstoreLayout.stockNames, ["死亡的气息", "冥府之路"]);
+
+  await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await moveMany(driver, "Numpad6", "6", 2, 1, 0);
   await moveMany(driver, "Numpad8", "8", 3, 0, -1);
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "魔法店"`,
