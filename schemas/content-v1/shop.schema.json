@@ -1,0 +1,179 @@
+{
+  "$defs": {
+    "ContentPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "y": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "ShopCategory": {
+      "enum": [
+        "general-store"
+      ],
+      "type": "string"
+    },
+    "ShopMaintenanceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "intervalWorldTicks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "intervalWorldTicks"
+      ],
+      "type": "object"
+    },
+    "ShopOwnerDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "greedPercent": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "purchasePriceCap": {
+          "description": "Maximum amount the owner will offer per unit. This is an RFB-style\npurse cap, not a diminishing shop wallet.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "raceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "raceId",
+        "greedPercent",
+        "purchasePriceCap"
+      ],
+      "type": "object"
+    },
+    "ShopStockDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "initialMaximum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "initialMinimum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "itemKindId": {
+          "type": "string"
+        },
+        "maintenanceMaximum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maintenanceMinimum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "initialMinimum",
+        "initialMaximum",
+        "maintenanceMinimum",
+        "maintenanceMaximum"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "category": {
+      "$ref": "#/$defs/ShopCategory"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "entrancePosition": {
+      "$ref": "#/$defs/ContentPosition"
+    },
+    "entranceTerrainId": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "maintenance": {
+      "$ref": "#/$defs/ShopMaintenanceDefinition"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "owner": {
+      "$ref": "#/$defs/ShopOwnerDefinition"
+    },
+    "stock": {
+      "items": {
+        "$ref": "#/$defs/ShopStockDefinition"
+      },
+      "type": "array"
+    },
+    "townId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "townId",
+    "category",
+    "entrancePosition",
+    "entranceTerrainId",
+    "owner",
+    "stock",
+    "maintenance"
+  ],
+  "title": "ShopDefinition",
+  "type": "object"
+}

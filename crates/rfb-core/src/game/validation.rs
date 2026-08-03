@@ -11,6 +11,7 @@ use rfb_content::{AffixPropertyBundleDefinition, ContentCatalog};
 use rfb_protocol::{MonsterPackBehaviorDto, MonsterPackRoleDto, Position};
 
 use super::Game;
+use super::gold::{MAX_PLAYER_GOLD, derive_next_gold_pile_serial, generated_gold_serial};
 use super::*;
 
 impl Game {
@@ -155,6 +156,7 @@ pub(super) fn floor_regions_are_valid(
             .find(|entity| &entity.id == actor_id)
             .is_some_and(|entity| cells.contains(&entity.position)),
         ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
+        ItemLocation::Shop { .. } => false,
     })
 }
 
@@ -308,6 +310,61 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("floor identity is invalid"));
         }
+        match world
+            .town_id
+            .as_deref()
+            .and_then(|town_id| self.content.town(town_id))
+        {
+            None if !self.town_states.is_empty() || !self.shop_states.is_empty() => {
+                return Err(CoreError::InvalidSave("town state is invalid"));
+            }
+            None => {}
+            Some(town) => {
+                if self.town_states.len() != 1
+                    || !self
+                        .town_states
+                        .get(&town.id)
+                        .is_some_and(|state| state.visited)
+                    || self.shop_states.len() != town.shop_ids.len()
+                    || town
+                        .shop_ids
+                        .iter()
+                        .any(|shop_id| !self.shop_states.contains_key(shop_id))
+                {
+                    return Err(CoreError::InvalidSave("town state is invalid"));
+                }
+                if self.current_floor_id == town.floor_id
+                    && town.shop_ids.iter().any(|shop_id| {
+                        let shop = self
+                            .content
+                            .shop(shop_id)
+                            .expect("validated town shop must remain available");
+                        self.player.position == position_from_content(shop.entrance_position)
+                            && !self
+                                .shop_states
+                                .get(shop_id)
+                                .is_some_and(|state| state.visited)
+                    })
+                {
+                    return Err(CoreError::InvalidSave("shop state is invalid"));
+                }
+                for shop_id in &town.shop_ids {
+                    let shop = self
+                        .content
+                        .shop(shop_id)
+                        .expect("validated town shop must remain available");
+                    let state = self
+                        .shop_states
+                        .get(shop_id)
+                        .expect("validated shop state must remain available");
+                    if state.owner_id != shop.owner.id
+                        || state.last_maintenance_world_tick > self.world_tick
+                    {
+                        return Err(CoreError::InvalidSave("shop state is invalid"));
+                    }
+                }
+            }
+        }
         let current_dungeon_id = floor_dungeon_id(world, &self.current_floor_id);
         match (&current_dungeon_id, &self.current_dungeon_instance_id) {
             (Some(dungeon_id), Some(instance_id))
@@ -405,6 +462,12 @@ impl Game {
             }
         }
         let victory_cap_unlocked = self.campaign_state.status != CampaignStatusDto::Active;
+        if self.gold > MAX_PLAYER_GOLD {
+            return Err(CoreError::InvalidSave("player gold balance is invalid"));
+        }
+        if self.nutrition > rfb_protocol::PLAYER_NUTRITION_MAXIMUM {
+            return Err(CoreError::InvalidSave("player nutrition is invalid"));
+        }
         let expected_skills =
             character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)?;
         if !self.progress.validate(victory_cap_unlocked)
@@ -515,6 +578,49 @@ impl Game {
                         return Err(CoreError::InvalidSave("carried item state is invalid"));
                     }
                 }
+                ItemLocation::Shop { .. } => {
+                    return Err(CoreError::InvalidSave(
+                        "shop item is in the active item set",
+                    ));
+                }
+            }
+        }
+        for (shop_id, state) in &self.shop_states {
+            for item in &state.inventory {
+                let definition = self
+                    .content
+                    .item(&item.kind_id)
+                    .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+                let location_is_valid = matches!(
+                    &item.location,
+                    ItemLocation::Shop { shop_id: location_shop_id }
+                        if location_shop_id == shop_id
+                );
+                let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
+                    && item
+                        .affix_ids
+                        .iter()
+                        .all(|affix_id| self.content.affix(affix_id).is_some())
+                    && rolled_affixes_are_valid(item)
+                    && (item.quality == ItemQualityDto::Ordinary
+                        || (definition.max_stack == 1 && item.quantity == 1));
+                if !instance_ids.insert(item.id.clone())
+                    || item.quantity == 0
+                    || item.quantity > definition.max_stack
+                    || !affixes_are_valid
+                    || !location_is_valid
+                {
+                    return Err(CoreError::InvalidSave("shop item state is invalid"));
+                }
+            }
+        }
+        for pile in &self.gold_piles {
+            if !instance_ids.insert(pile.id.clone())
+                || generated_gold_serial(&pile.id).is_none()
+                || pile.amount == 0
+                || !self.is_walkable(pile.position)
+            {
+                return Err(CoreError::InvalidSave("gold pile state is invalid"));
             }
         }
         for floor in self.stored_floors.values() {
@@ -606,7 +712,9 @@ impl Game {
                         floor_position_is_walkable(floor, *position, &self.content)
                     }
                     ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
-                    ItemLocation::Inventory | ItemLocation::Equipped { .. } => false,
+                    ItemLocation::Inventory
+                    | ItemLocation::Equipped { .. }
+                    | ItemLocation::Shop { .. } => false,
                 };
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0
@@ -615,6 +723,17 @@ impl Game {
                     || !location_is_valid
                 {
                     return Err(CoreError::InvalidSave("stored floor item state is invalid"));
+                }
+            }
+            for pile in &floor.gold_piles {
+                if !instance_ids.insert(pile.id.clone())
+                    || generated_gold_serial(&pile.id).is_none()
+                    || pile.amount == 0
+                    || !floor_position_is_walkable(floor, pile.position, &self.content)
+                {
+                    return Err(CoreError::InvalidSave(
+                        "stored floor gold pile state is invalid",
+                    ));
                 }
             }
         }
@@ -928,6 +1047,20 @@ impl Game {
         {
             return Err(CoreError::InvalidSave(
                 "item instance allocator is behind existing IDs",
+            ));
+        }
+        let derived_next_gold_pile_serial = derive_next_gold_pile_serial(
+            self.gold_piles.iter().chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.gold_piles.iter()),
+            ),
+        )?;
+        if self.next_gold_pile_serial == 0
+            || self.next_gold_pile_serial < derived_next_gold_pile_serial
+        {
+            return Err(CoreError::InvalidSave(
+                "gold pile allocator is behind existing IDs",
             ));
         }
         Ok(())

@@ -9,12 +9,19 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.123";
+pub const PROTOCOL_VERSION: &str = "1.128";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
 const fn default_actor_speed() -> u16 {
     110
+}
+
+pub const PLAYER_NUTRITION_MAXIMUM: u16 = 15_000;
+pub const PLAYER_NUTRITION_BIRTH: u16 = 9_999;
+
+const fn default_player_nutrition() -> u16 {
+    PLAYER_NUTRITION_BIRTH
 }
 
 const fn default_monster_energy_need() -> i32 {
@@ -84,6 +91,11 @@ pub enum GameCommand {
     BashDoor {
         direction: Direction,
     },
+    BuyFromShop {
+        shop_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     CastAbility {
         ability_id: String,
         target: TargetSelection,
@@ -126,9 +138,18 @@ pub enum GameCommand {
         turns: u16,
     },
     Search,
+    SellToShop {
+        shop_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     RechargeItem {
         target_item_id: String,
         source: DeviceRechargeSourceDto,
+    },
+    RefuelLight {
+        target_item_id: String,
+        source_item_id: String,
     },
     SetSummonCommand {
         mode: SummonCommandModeDto,
@@ -1874,6 +1895,12 @@ pub struct PlayerDto {
     pub position: Position,
     pub hp: i32,
     pub max_hp: i32,
+    #[serde(default)]
+    pub gold: u32,
+    #[serde(default = "default_player_nutrition")]
+    pub nutrition: u16,
+    #[serde(default)]
+    pub nutrition_state: NutritionStateDto,
     #[serde(default = "default_actor_speed")]
     pub speed: u16,
     #[serde(default)]
@@ -1928,6 +1955,20 @@ pub struct PlayerDto {
     pub summon_command: SummonCommandDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recall: Option<RecallStateDto>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum NutritionStateDto {
+    Bloated,
+    Full,
+    #[default]
+    Normal,
+    Hungry,
+    Weak,
+    Faint,
+    Starving,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2021,10 +2062,39 @@ pub struct ItemDto {
     pub knowledge: ItemKnowledgeDto,
     pub position: Position,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum GoldAppearanceDto {
+    Copper,
+    Silver,
+    Garnets,
+    Gold,
+    Opals,
+    Sapphires,
+    Rubies,
+    Diamonds,
+    Emeralds,
+    Mithril,
+    Adamantite,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct GoldPileDto {
+    pub id: String,
+    pub position: Position,
+    pub amount: u32,
+    pub appearance: GoldAppearanceDto,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2043,6 +2113,25 @@ pub enum ItemKnowledgeDto {
 pub struct ItemChargesDto {
     pub current: u32,
     pub maximum: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemFuelKindDto {
+    Torch,
+    Lantern,
+    Oil,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ItemFuelDto {
+    pub kind: ItemFuelKindDto,
+    pub current: u16,
+    pub maximum: u16,
+    pub light_radius: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2186,6 +2275,8 @@ pub struct InventoryItemDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub use_target_spec: Option<TargetSpecDto>,
@@ -2256,6 +2347,8 @@ pub struct EquipmentItemDto {
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2330,6 +2423,91 @@ pub struct CampaignStateDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct TownDto {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub floor_id: String,
+    pub visited: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ShopCategoryDto {
+    GeneralStore,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ShopOwnerDto {
+    pub id: String,
+    pub name_key: String,
+    pub race_id: String,
+    pub greed_percent: u16,
+    pub purchase_price_cap: u32,
+    pub price_factor_percent: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ShopStockItemDto {
+    pub id: String,
+    pub kind_id: String,
+    pub display_name_key: String,
+    pub quantity: u32,
+    pub maximum_quantity: u32,
+    pub unit_price: u32,
+    pub weight_tenths_pound: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantments: ItemEnchantmentsDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub curse: Option<ItemCurseSeverityDto>,
+    pub quality: ItemQualityDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ShopSellQuoteDto {
+    pub item_id: String,
+    pub kind_id: String,
+    pub unit_price: u32,
+    pub maximum_quantity: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ShopDto {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub category: ShopCategoryDto,
+    pub entrance_position: Position,
+    pub entrance_terrain_id: String,
+    pub visited: bool,
+    pub player_at_entrance: bool,
+    pub owner: ShopOwnerDto,
+    #[serde(default)]
+    pub stock: Vec<ShopStockItemDto>,
+    #[serde(default)]
+    pub sell_quotes: Vec<ShopSellQuoteDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct GameSnapshot {
     pub protocol_version: String,
     pub revision: u32,
@@ -2345,6 +2523,8 @@ pub struct GameSnapshot {
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
+    #[serde(default)]
+    pub gold_piles: Vec<GoldPileDto>,
     pub inventory: Vec<InventoryItemDto>,
     #[serde(default)]
     pub equipment: Vec<EquipmentItemDto>,
@@ -2357,6 +2537,10 @@ pub struct GameSnapshot {
     pub floor_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub town: Option<TownDto>,
+    #[serde(default)]
+    pub shops: Vec<ShopDto>,
     #[serde(default)]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default)]
@@ -2378,6 +2562,10 @@ pub struct GameUpdate {
     pub floor_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub town: Option<TownDto>,
+    #[serde(default)]
+    pub shops: Vec<ShopDto>,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
     #[serde(default)]
@@ -2385,6 +2573,8 @@ pub struct GameUpdate {
     pub player: PlayerDto,
     pub entities: Vec<EntityDto>,
     pub items: Vec<ItemDto>,
+    #[serde(default)]
+    pub gold_piles: Vec<GoldPileDto>,
     pub inventory: Vec<InventoryItemDto>,
     #[serde(default)]
     pub equipment: Vec<EquipmentItemDto>,
@@ -2517,11 +2707,16 @@ pub fn generated_typescript() -> String {
     push_declaration!(StatusDto);
     push_declaration!(DeviceRechargeDto);
     push_declaration!(RecallStateDto);
+    push_declaration!(NutritionStateDto);
     push_declaration!(PlayerDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
+    push_declaration!(ItemFuelKindDto);
+    push_declaration!(ItemFuelDto);
+    push_declaration!(GoldAppearanceDto);
+    push_declaration!(GoldPileDto);
     push_declaration!(ItemKnowledgeDto);
     push_declaration!(ItemChargesDto);
     push_declaration!(ItemActivationDto);
@@ -2541,6 +2736,12 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameEventDto);
     push_declaration!(CampaignStatusDto);
     push_declaration!(CampaignStateDto);
+    push_declaration!(TownDto);
+    push_declaration!(ShopCategoryDto);
+    push_declaration!(ShopOwnerDto);
+    push_declaration!(ShopStockItemDto);
+    push_declaration!(ShopSellQuoteDto);
+    push_declaration!(ShopDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
 
@@ -2577,6 +2778,10 @@ pub struct PlayerSaveDto {
     pub kind_id: String,
     pub position: Position,
     pub hp: i32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub gold: u32,
+    #[serde(default = "default_player_nutrition")]
+    pub nutrition: u16,
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default = "default_actor_speed")]
@@ -2804,6 +3009,8 @@ pub struct ItemSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
@@ -2827,6 +3034,8 @@ pub struct InventoryItemSaveDto {
     pub curse: Option<ItemCurseSeverityDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
@@ -2853,6 +3062,8 @@ pub struct EquipmentItemSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
@@ -2877,6 +3088,8 @@ pub struct CarriedItemSaveDto {
     pub curse: Option<ItemCurseSeverityDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
@@ -2915,6 +3128,8 @@ pub struct FloorSaveDto {
     pub entities: Vec<ActorSaveDto>,
     #[serde(default)]
     pub items: Vec<ItemSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub gold_piles: Vec<GoldPileDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub carried_items: Vec<CarriedItemSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3000,6 +3215,23 @@ pub struct CampaignStateSaveDto {
     pub final_score: Option<u64>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TownStateSaveDto {
+    pub town_id: String,
+    pub visited: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShopStateSaveDto {
+    pub shop_id: String,
+    pub visited: bool,
+    pub owner_id: String,
+    pub last_maintenance_world_tick: u32,
+    pub inventory: Vec<InventoryItemSaveDto>,
+}
+
 fn is_zero_u32(value: &u32) -> bool {
     *value == 0
 }
@@ -3022,6 +3254,8 @@ pub struct SavePayloadV1 {
     pub entities: Vec<ActorSaveDto>,
     #[serde(default)]
     pub items: Vec<ItemSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub gold_piles: Vec<GoldPileDto>,
     #[serde(default)]
     pub inventory: Vec<InventoryItemSaveDto>,
     #[serde(default)]
@@ -3038,10 +3272,16 @@ pub struct SavePayloadV1 {
     pub task_states: Vec<TaskStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub town_states: Vec<TownStateSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shop_states: Vec<ShopStateSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign_state: Option<CampaignStateSaveDto>,
     #[serde(default)]
     pub next_item_instance_serial: u64,
+    #[serde(default)]
+    pub next_gold_pile_serial: u64,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub explored: Vec<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3154,6 +3394,11 @@ mod tests {
             GameCommand::BashDoor {
                 direction: Direction::South,
             },
+            GameCommand::BuyFromShop {
+                shop_id: "demo.shop.outpost-general-store".to_owned(),
+                item_id: "generated.item.9".to_owned(),
+                quantity: 2,
+            },
             GameCommand::OpenDoor {
                 direction: Direction::East,
             },
@@ -3191,6 +3436,11 @@ mod tests {
             },
             GameCommand::TraverseStairs,
             GameCommand::Search,
+            GameCommand::SellToShop {
+                shop_id: "demo.shop.outpost-general-store".to_owned(),
+                item_id: "generated.item.1".to_owned(),
+                quantity: 1,
+            },
             GameCommand::UseItem {
                 item_id: "demo.item.luminous-shard.1".to_owned(),
                 target: None,
@@ -3336,6 +3586,9 @@ mod tests {
                 position: Position { x: 0, y: 0 },
                 hp: 8,
                 max_hp: 14,
+                gold: 0,
+                nutrition: PLAYER_NUTRITION_BIRTH,
+                nutrition_state: NutritionStateDto::Normal,
                 speed: 110,
                 energy_need: 0,
                 carried_weight_tenths_pound: 5,
@@ -3407,6 +3660,7 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 position: Position { x: 0, y: 0 },
                 quantity: 2,
+                fuel: None,
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
             }],
@@ -3417,6 +3671,7 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
                 charges: None,
+                fuel: None,
                 activation: None,
                 use_target_spec: None,
                 requires_target_glyph: false,
@@ -3453,6 +3708,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 quantity: 1,
+                fuel: None,
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
                 weight_tenths_pound: 5,
@@ -3525,6 +3781,8 @@ mod tests {
             kind_id: "demo.actor.explorer".to_owned(),
             position: Position { x: 0, y: 0 },
             hp: 10,
+            gold: 0,
+            nutrition: PLAYER_NUTRITION_BIRTH,
             base_max_hp: 10,
             base_speed: 110,
             energy_need: 0,

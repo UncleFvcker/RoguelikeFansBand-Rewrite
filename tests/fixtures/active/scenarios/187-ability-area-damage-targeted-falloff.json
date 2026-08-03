@@ -239,6 +239,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 2,
       "playerExperience": 16,
       "playerMaxLevel": 2,
@@ -3290,6 +3292,7 @@
         }
       ],
       "nextItemInstanceSerial": 10,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -3357,7 +3360,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "da2ea456185324bd89dfff4aec8ffd32016f2a13f0bff6c4570192cd102f44c8"
+      "stateHash": "03f17a373a4823c541fbd844f8fc600d59752b6bd4e8288e55b3a265bee2e50e"
     },
     "events": [
       {
@@ -3811,6 +3814,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "da2ea456185324bd89dfff4aec8ffd32016f2a13f0bff6c4570192cd102f44c8"
+    "saveRoundTripStateHash": "03f17a373a4823c541fbd844f8fc600d59752b6bd4e8288e55b3a265bee2e50e"
   }
 }

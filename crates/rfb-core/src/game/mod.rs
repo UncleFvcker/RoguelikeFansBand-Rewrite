@@ -28,15 +28,16 @@ use crate::{
     rng::{RNG_ALGORITHM, RfbRng},
     save::{
         GENERATED_ITEM_ID_PREFIX, actor_from_runtime_spawn, actor_from_spawn,
-        derive_next_item_instance_serial, position_from_content,
+        derive_next_item_instance_serial, initial_item_fuel, position_from_content,
     },
     scheduler::{
-        INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, gain_energy,
-        spend_energy,
+        INITIAL_MONSTER_ENERGY_NEED, INITIAL_PLAYER_ENERGY_NEED, STANDARD_ACTION_COST, energy_gain,
+        gain_energy, spend_energy,
     },
     state::{
-        Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
-        MonsterPackIdentity, ResourcePool, RolledAffixState, SummonIdentity,
+        Actor, FloorConnectionState, FloorRegionState, FloorState, GoldPile, ItemInstance,
+        ItemLocation, MonsterPackIdentity, ResourcePool, RolledAffixState, ShopState,
+        SummonIdentity, TownState,
     },
     stats::{
         AttributeKind, CharacterBuildIdentity, CharacterProgress, DerivedStat,
@@ -55,10 +56,11 @@ use rfb_content::{
     ItemCurseTargetDefinition, ItemEnchantmentRollDefinition, ItemSummonLevelSourceDefinition,
     ItemSummonSelectorDefinition, ItemUseEffectDefinition, MonsterPackBehavior,
     ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
-    SkillKind, SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
-    TechniqueAttribute, TechniqueProfileDefinition, TerrainFeatureEntryDefinition,
-    ThemeVaultCandidateDefinition, WeaponBrand,
+    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
+    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TechniqueProfileDefinition, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
+    WeaponBrand,
 };
 #[cfg(test)]
 use rfb_content::{
@@ -96,10 +98,13 @@ mod damage;
 mod death;
 mod environment_combat;
 mod floor;
+mod gold;
+mod hunger;
 mod inventory;
 mod item_combat;
 mod item_knowledge;
 mod item_use;
+mod lighting;
 mod monster_abilities;
 mod monster_ai;
 mod monster_combat;
@@ -113,6 +118,7 @@ mod snapshot;
 mod status_effects;
 mod tasks;
 mod terrain;
+pub(crate) mod town;
 mod turn;
 mod validation;
 mod world;
@@ -175,7 +181,7 @@ use world::geometry::{
 };
 
 pub const BUILT_IN_WORLD_ID: &str = "demo.world.original-v1";
-const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 144] = [
+const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 151] = [
     "880610557b208e7c2459ff876c4ace1cb2ef9903986cb7883a04d511ca13c025",
     "0a76daadea3a9683ea8173aa8f65e6195a5582bdf7fdad215cea1a2896dfefcc",
     "cd2c813d224189c925a940e60a915fe3dcf6efa0ccadfc7363d06d428f56525f",
@@ -320,21 +326,33 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 144] = [
     "cf977b882f1650f641035e1e12b22cca6430106a4992cceefd2e496060f51774",
     "7231dd36f3ae6734f64290f7aba57f30648dfff1e3746de83acbb4148ec0347f",
     "dd7a374770e13e923ac7c2be0648e3fea2793bcec5b78c81adf90f3d30783c36",
+    "4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe",
+    "25c0ed9c6afd24e3f74cdf3bae09f60044daec3b6ae9149f86a9e530c30087db",
+    "6af0e0500187c01f10612428b47ddc255ab415f6068dcd87800a17078fb534c2",
+    "91ac518116420421305410a9435e002648c5538deba102780ce5e1359d7e33be",
+    "70f21e8d8f28a2102a8b28e5c6cabf83137afb4532e5c2868d10fb7c1e5e5012",
+    "3f113d088273af9ac1098e78f5a6c8bd597f043a90f8dfc48bc21af9c316aabf",
+    "8d1abd50ee3b9b849d58ae3cd0dddc3dbe4b28963b94bc6d642c7c33828a26e1",
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe";
+    "6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 55;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 60;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
+const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
 const MIN_THROW_RANGE: u16 = 2;
 const MAX_THROW_RANGE: u16 = 10;
-const MAX_REST_TURNS: u16 = 100;
-const AMBIENT_LIGHT: u8 = 28;
-const PLAYER_LIGHT_RADIUS: i32 = 6;
+const MAX_REST_TURNS: u16 = 9_999;
+const NATURAL_HP_REGENERATION_INTERVAL_TICKS: u32 = 10;
+const NATURAL_HP_REGENERATION_FACTOR: u64 = 197;
+const NATURAL_HP_REGENERATION_BASE: u64 = 1_442;
+const NATURAL_HP_REGENERATION_SCALE: u64 = 65_536;
+const SURFACE_AMBIENT_LIGHT: u8 = 48;
+const DUNGEON_AMBIENT_LIGHT: u8 = 0;
 const TERRAIN_INTERACTION_DIRECTIONS: [Direction; 8] = [
     Direction::North,
     Direction::NorthEast,
@@ -706,6 +724,7 @@ fn append_starting_item(
         curse: initial_item_curse(content, &starting_item.item_kind_id),
         activation,
         charges,
+        fuel: initial_item_fuel(content, &starting_item.item_kind_id),
         device_recovery_progress: 0,
         location,
     });
@@ -845,15 +864,21 @@ pub struct Game {
     ability_progress: BTreeMap<String, AbilityProgress>,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
+    gold: u32,
+    nutrition: u16,
+    gold_piles: Vec<GoldPile>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
     task_states: BTreeMap<String, TaskState>,
     dungeon_states: BTreeMap<String, DungeonState>,
+    town_states: BTreeMap<String, TownState>,
+    shop_states: BTreeMap<String, ShopState>,
     campaign_state: CampaignState,
     summon_command: SummonCommandDto,
     recall: Option<RecallStateDto>,
     confusing_strike_ready: bool,
     next_item_instance_serial: u64,
+    next_gold_pile_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
     floor_connections: Vec<FloorConnectionState>,
@@ -1019,6 +1044,9 @@ impl Game {
             entities.push(actor);
         }
         let mut rng = RfbRng::seeded(seed);
+        let gold = gold::starting_gold(build.as_ref(), &mut rng);
+        let starting_ration_quantity = hunger::starting_ration_quantity(build.as_ref(), &mut rng);
+        let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
         let mut items = world
             .items
             .iter()
@@ -1036,6 +1064,7 @@ impl Game {
                     curse: initial_item_curse(&content, &spawn.kind_id),
                     activation,
                     charges,
+                    fuel: initial_item_fuel(&content, &spawn.kind_id),
                     device_recovery_progress: 0,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
                 }
@@ -1044,6 +1073,41 @@ impl Game {
         let body_slots = resolve_body_slots(&content, build.as_ref())?;
         let mut next_item_instance_serial =
             derive_next_item_instance_serial(&player, &entities, &items)?;
+        if let Some(quantity) = starting_ration_quantity {
+            append_starting_item(
+                &content,
+                &StartingItemDefinition {
+                    item_kind_id: hunger::RATION_ITEM_KIND_ID.to_owned(),
+                    quantity,
+                    equipped: false,
+                },
+                &body_slots,
+                &mut items,
+                &mut next_item_instance_serial,
+                &mut rng,
+            )?;
+        }
+        if let Some(supply) = starting_torches {
+            for _ in 0..supply.quantity {
+                append_starting_item(
+                    &content,
+                    &StartingItemDefinition {
+                        item_kind_id: lighting::WOODEN_TORCH_ITEM_KIND_ID.to_owned(),
+                        quantity: 1,
+                        equipped: false,
+                    },
+                    &body_slots,
+                    &mut items,
+                    &mut next_item_instance_serial,
+                    &mut rng,
+                )?;
+                items
+                    .last_mut()
+                    .and_then(|item| item.fuel.as_mut())
+                    .expect("validated birth torch must have fuel")
+                    .current = supply.fuel;
+            }
+        }
         append_starting_items(
             &content,
             build.as_ref(),
@@ -1055,6 +1119,12 @@ impl Game {
         let initial_floor_id = world.initial_floor_id.clone();
         let task_states = initial_task_states(world);
         let dungeon_states = initial_dungeon_states(world);
+        let (town_states, shop_states) = town::initial_town_and_shop_states(
+            world,
+            &content,
+            &mut rng,
+            &mut next_item_instance_serial,
+        )?;
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
@@ -1076,15 +1146,21 @@ impl Game {
             ability_progress: BTreeMap::new(),
             entities,
             items,
+            gold,
+            nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
+            gold_piles: Vec::new(),
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
             task_states,
             dungeon_states,
+            town_states,
+            shop_states,
             campaign_state: CampaignState::default(),
             summon_command: SummonCommandDto::default(),
             recall: None,
             confusing_strike_ready: false,
             next_item_instance_serial,
+            next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
             floor_connections: Vec::new(),
@@ -1180,6 +1256,15 @@ impl Game {
                 .device_recharge_unavailable_reason(target_item_id, source)
                 .is_some()
         );
+        let unavailable_light_refuel = matches!(
+            &action,
+            GameAction::RefuelLight {
+                target_item_id,
+                source_item_id,
+            } if self
+                .refuel_light_unavailable_reason(target_item_id, source_item_id)
+                .is_some()
+        );
         let unavailable_recharging_item = matches!(
             &action,
             GameAction::UseItemForRecharge {
@@ -1195,12 +1280,15 @@ impl Game {
             && !cursed_unequip
             && !cursed_equip_replacement
             && !unavailable_recharge
+            && !unavailable_light_refuel
             && !unavailable_recharging_item
             && !matches!(
                 &action,
                 GameAction::Retire
+                    | GameAction::BuyFromShop { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::Rest { .. }
+                    | GameAction::SellToShop { .. }
                     | GameAction::SetSummonCommand { .. }
             );
         // Paralysis wastes any world-advancing action: the substituted idle
@@ -1262,6 +1350,18 @@ impl Game {
                     events.push(DomainEvent::DoorBashFailed { position });
                 }
                 None => events.push(DomainEvent::DoorBashUnavailable),
+            },
+            GameAction::BuyFromShop {
+                shop_id,
+                item_id,
+                quantity,
+            } => match self.buy_from_shop(&shop_id, &item_id, quantity) {
+                Ok(outcome) => events.push(DomainEvent::ShopPurchaseCompleted { outcome }),
+                Err(reason) => events.push(DomainEvent::ShopTransactionUnavailable {
+                    shop_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
             },
             GameAction::CloseDoor { direction } => {
                 if let Some(position) = self.close_door(direction) {
@@ -1384,6 +1484,31 @@ impl Game {
             } => {
                 self.recharge_inventory_item(&target_item_id, &source, &mut events);
             }
+            GameAction::RefuelLight {
+                target_item_id,
+                source_item_id,
+            } => {
+                if let Some(reason) =
+                    self.refuel_light_unavailable_reason(&target_item_id, &source_item_id)
+                {
+                    events.push(DomainEvent::LightRefuelUnavailable {
+                        target_item_id,
+                        source_item_id,
+                        reason: reason.to_owned(),
+                    });
+                } else if let Some(outcome) =
+                    self.refuel_equipped_light(&target_item_id, &source_item_id)
+                {
+                    events.push(DomainEvent::LightRefueled {
+                        target_item_id: outcome.target_item_id,
+                        target_kind_id: outcome.target_kind_id,
+                        source_kind_id: outcome.source_kind_id,
+                        amount: outcome.amount,
+                        current: outcome.current,
+                        maximum: outcome.maximum,
+                    });
+                }
+            }
             GameAction::UseItemForRecharge {
                 item_id,
                 source_item_id,
@@ -1436,29 +1561,42 @@ impl Game {
                 }
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
-            GameAction::PickUp => match self.pick_up_at_player()? {
-                PickUpOutcome::Picked { kind_id, quantity } => {
+            GameAction::PickUp => {
+                let gold_pickup = self.pick_up_gold_at_player();
+                if let Some(gold) = gold_pickup {
                     changed.insert(self.player.position);
-                    events.push(DomainEvent::ItemPickedUp {
-                        target_kind_id: kind_id,
-                        quantity,
+                    events.push(DomainEvent::GoldPickedUp {
+                        amount: gold.gained,
+                        balance: gold.balance,
                     });
                 }
-                PickUpOutcome::OverCapacity {
-                    kind_id,
-                    quantity,
-                    current_weight,
-                    pickup_weight,
-                    capacity,
-                } => events.push(DomainEvent::ItemPickupOverCapacity {
-                    target_kind_id: kind_id,
-                    quantity,
-                    current_weight,
-                    pickup_weight,
-                    capacity,
-                }),
-                PickUpOutcome::Nothing => events.push(DomainEvent::NothingToPickUp),
-            },
+                match self.pick_up_at_player()? {
+                    PickUpOutcome::Picked { kind_id, quantity } => {
+                        changed.insert(self.player.position);
+                        events.push(DomainEvent::ItemPickedUp {
+                            target_kind_id: kind_id,
+                            quantity,
+                        });
+                    }
+                    PickUpOutcome::OverCapacity {
+                        kind_id,
+                        quantity,
+                        current_weight,
+                        pickup_weight,
+                        capacity,
+                    } => events.push(DomainEvent::ItemPickupOverCapacity {
+                        target_kind_id: kind_id,
+                        quantity,
+                        current_weight,
+                        pickup_weight,
+                        capacity,
+                    }),
+                    PickUpOutcome::Nothing if gold_pickup.is_none() => {
+                        events.push(DomainEvent::NothingToPickUp);
+                    }
+                    PickUpOutcome::Nothing => {}
+                }
+            }
             GameAction::Unequip { slot_id } => {
                 if let Some((target_kind_id, severity)) = self.cursed_equipment_in_slot(&slot_id) {
                     events.push(DomainEvent::ItemUnequipCursed {
@@ -1540,6 +1678,18 @@ impl Game {
                     }
                 }
             }
+            GameAction::SellToShop {
+                shop_id,
+                item_id,
+                quantity,
+            } => match self.sell_to_shop(&shop_id, &item_id, quantity) {
+                Ok(outcome) => events.push(DomainEvent::ShopSaleCompleted { outcome }),
+                Err(reason) => events.push(DomainEvent::ShopTransactionUnavailable {
+                    shop_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
             GameAction::SetSummonCommand { mode } => {
                 self.summon_command = SummonCommandDto {
                     mode,
@@ -1584,7 +1734,12 @@ impl Game {
 
         if advances_world {
             spend_energy(&mut self.player.energy_need, action_cost);
-            self.advance_until_player_ready(&mut events, &mut changed, &mut removed_entities)?;
+            self.advance_until_player_ready(
+                false,
+                &mut events,
+                &mut changed,
+                &mut removed_entities,
+            )?;
             if recover_after_wait && !self.player_is_dead() {
                 events.extend(
                     self.recover_player_resources(false)
@@ -1616,6 +1771,8 @@ impl Game {
             command_seq: self.last_command_seq,
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+            town: self.current_town_dto(),
+            shops: self.current_shop_dtos(),
             events,
             changed_cells: changed
                 .into_iter()
@@ -1625,6 +1782,7 @@ impl Game {
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
+            gold_piles: self.gold_pile_dtos(),
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
             removed_entities,
@@ -1721,6 +1879,7 @@ impl Game {
             curse: initial_item_curse(&self.content, kind_id),
             activation,
             charges,
+            fuel: initial_item_fuel(&self.content, kind_id),
             device_recovery_progress: 0,
             location: ItemLocation::Inventory,
         });
@@ -2112,7 +2271,8 @@ impl Game {
                 ItemLocation::Ground(position) => Some(position),
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
-                | ItemLocation::CarriedBy { .. } => None,
+                | ItemLocation::CarriedBy { .. }
+                | ItemLocation::Shop { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let mut candidates = Vec::new();
@@ -2323,7 +2483,8 @@ impl Game {
                 ItemLocation::Ground(position) => Some(position),
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
-                | ItemLocation::CarriedBy { .. } => None,
+                | ItemLocation::CarriedBy { .. }
+                | ItemLocation::Shop { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let connections = self
@@ -3445,31 +3606,113 @@ impl Game {
         Ok(items)
     }
 
-    fn generate_death_loot(&mut self, actor: &Actor) -> Result<Vec<ItemInstance>, CoreError> {
-        let Some(table_id) = self
+    fn generate_death_loot(
+        &mut self,
+        actor: &Actor,
+    ) -> Result<(Vec<ItemInstance>, Option<GoldPile>), CoreError> {
+        let actor_definition = self
             .content
             .actor(&actor.kind_id)
-            .and_then(|definition| definition.loot_table_id.clone())
-        else {
-            return Ok(Vec::new());
-        };
-        self.generate_loot_instances(
-            &LootContext {
+            .expect("living actor definition must remain available")
+            .clone();
+        let table_id = actor_definition.loot_table_id.clone();
+        let guardian_reward_table_id = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == self.current_floor_id)
+            })
+            .and_then(|floor| floor.guardian.as_ref())
+            .filter(|guardian| guardian.instance_id == actor.id)
+            .and_then(|guardian| guardian.reward_loot_table_id.clone());
+        let floor_id = self.current_floor_id.clone();
+        let depth = self.floor_depth(&floor_id);
+        let mut generated = Vec::new();
+        let mut gold = None;
+        if let Some(table_id) = table_id {
+            let context = LootContext {
                 table_id,
-                floor_id: self.current_floor_id.clone(),
-                depth: self.floor_depth(&self.current_floor_id),
+                floor_id: floor_id.clone(),
+                depth,
                 source: LootSource::MonsterDeath {
                     actor_id: actor.id.clone(),
                 },
-            },
-            ItemLocation::Ground(actor.position),
-        )
+            };
+            if let Some(gold_chance) = actor_definition.gold_drop_chance_percent {
+                let table = self
+                    .content
+                    .loot_table(&context.table_id)
+                    .expect("validated actor loot table must remain available");
+                let successful_drop = table
+                    .roll_chance_percent
+                    .is_none_or(|chance| self.rng.bounded(100) < u64::from(chance));
+                if successful_drop {
+                    if self.rng.bounded(100) < u64::from(gold_chance) {
+                        let actor_level = actor_definition.level.min(u32::from(u16::MAX));
+                        let floor_level = u32::from(depth);
+                        let object_level = if actor_level >= floor_level {
+                            actor_level
+                        } else {
+                            (actor_level + floor_level) / 2
+                        };
+                        gold = Some(self.generate_gold_pile(
+                            actor.position,
+                            u16::try_from(object_level).expect("bounded gold level must fit u16"),
+                            true,
+                        )?);
+                    } else {
+                        generated.extend(self.generate_loot_instances_after_roll_chance(
+                            &context,
+                            ItemLocation::Ground(actor.position),
+                        )?);
+                    }
+                }
+            } else {
+                generated.extend(
+                    self.generate_loot_instances(&context, ItemLocation::Ground(actor.position))?,
+                );
+            }
+        }
+        if let Some(table_id) = guardian_reward_table_id {
+            generated.extend(self.generate_loot_instances(
+                &LootContext {
+                    table_id,
+                    floor_id: floor_id.clone(),
+                    depth,
+                    source: LootSource::MonsterDeath {
+                        actor_id: actor.id.clone(),
+                    },
+                },
+                ItemLocation::Ground(actor.position),
+            )?);
+        }
+        Ok((generated, gold))
     }
 
     fn generate_loot_instances(
         &mut self,
         context: &LootContext,
         location: ItemLocation,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        self.generate_loot_instances_internal(context, location, true)
+    }
+
+    fn generate_loot_instances_after_roll_chance(
+        &mut self,
+        context: &LootContext,
+        location: ItemLocation,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        self.generate_loot_instances_internal(context, location, false)
+    }
+
+    fn generate_loot_instances_internal(
+        &mut self,
+        context: &LootContext,
+        location: ItemLocation,
+        roll_table_chance: bool,
     ) -> Result<Vec<ItemInstance>, CoreError> {
         let context_is_valid = !context.floor_id.is_empty()
             && match &context.source {
@@ -3489,11 +3732,21 @@ impl Game {
             .loot_table(&context.table_id)
             .expect("validated actor loot table must remain available")
             .clone();
+        let maximum_rolls = table.roll_dice.map_or(u32::from(table.rolls), |dice| {
+            u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
+        });
         self.next_item_instance_serial
-            .checked_add(u64::from(table.rolls))
+            .checked_add(u64::from(maximum_rolls))
             .ok_or(CoreError::ItemIdExhausted)?;
-        let entry_weights = table
+        let eligible_entries = table
             .entries
+            .iter()
+            .filter(|entry| entry.min_depth <= context.depth && context.depth <= entry.max_depth)
+            .collect::<Vec<_>>();
+        if eligible_entries.is_empty() {
+            return Ok(Vec::new());
+        }
+        let entry_weights = eligible_entries
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
@@ -3507,12 +3760,27 @@ impl Game {
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
-        let mut generated = Vec::with_capacity(usize::from(table.rolls));
-        for _ in 0..table.rolls {
+        let mut roll_count = table.rolls;
+        if roll_table_chance
+            && table
+                .roll_chance_percent
+                .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
+        {
+            roll_count = 0;
+        } else if let Some(dice) = table.roll_dice {
+            for _ in 0..dice.dice {
+                roll_count = roll_count.saturating_add(
+                    u16::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
+                        .expect("validated loot die must fit u16"),
+                );
+            }
+        }
+        let mut generated = Vec::with_capacity(usize::from(roll_count));
+        for _ in 0..roll_count {
             let entry_index = self.roll_weighted_index(&entry_weights);
             let quality_index = self.roll_weighted_index(&quality_weights);
             let affix_index = self.roll_weighted_index(&affix_weights);
-            let entry = &table.entries[entry_index];
+            let entry = eligible_entries[entry_index];
             let quality = item_quality_dto(table.quality_weights[quality_index].quality);
             let affix_ids = if quality == ItemQualityDto::Ordinary {
                 Vec::new()
@@ -3541,6 +3809,7 @@ impl Game {
                 curse: initial_item_curse(&self.content, &entry.item_kind_id),
                 activation,
                 charges,
+                fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
                 device_recovery_progress: 0,
                 location: location.clone(),
             };
@@ -3622,6 +3891,11 @@ impl Game {
         self.player.id == candidate
             || self.entities.iter().any(|entity| entity.id == candidate)
             || self.items.iter().any(|item| item.id == candidate)
+            || self
+                .shop_states
+                .values()
+                .flat_map(|state| state.inventory.iter())
+                .any(|item| item.id == candidate)
     }
 
     fn reveal_current_visibility(&mut self) {
@@ -3652,18 +3926,44 @@ impl Game {
             return false;
         }
         has_line_of_sight(self, self.player.position, position)
+            && (self.floor_has_environment_light()
+                || position == self.player.position
+                || self.position_is_lit(position))
+    }
+
+    fn floor_has_environment_light(&self) -> bool {
+        self.content
+            .world(&self.world_id)
+            .is_some_and(|world| self.current_floor_id == world.initial_floor_id)
+    }
+
+    fn ambient_light(&self) -> u8 {
+        if self.floor_has_environment_light() {
+            SURFACE_AMBIENT_LIGHT
+        } else {
+            DUNGEON_AMBIENT_LIGHT
+        }
+    }
+
+    fn position_is_lit(&self, position: Position) -> bool {
+        self.collect_light_sources().iter().any(|source| {
+            squared_distance(source.position, position) <= source.radius * source.radius
+        })
     }
 
     fn collect_light_sources(&self) -> Vec<LightSource> {
         // The source order mirrors the original per-cell scan (player, then
         // entities, then ground items) so strict-greater comparisons keep
         // resolving ties identically.
-        let mut sources = vec![LightSource {
-            position: self.player.position,
-            radius: PLAYER_LIGHT_RADIUS,
-            maximum: 72,
-            color: PLAYER_LIGHT_COLOR,
-        }];
+        let mut sources = Vec::new();
+        if let Some(radius) = self.equipped_light_radius() {
+            sources.push(LightSource {
+                position: self.player.position,
+                radius,
+                maximum: 72,
+                color: PLAYER_LIGHT_COLOR,
+            });
+        }
         for entity in &self.entities {
             let Some(definition) = self.content.actor(&entity.kind_id) else {
                 continue;
@@ -3685,7 +3985,8 @@ impl Game {
             let Some(definition) = self.content.item(&item.kind_id) else {
                 continue;
             };
-            if !definition.tags.iter().any(|tag| tag == "light-source") {
+            if definition.fuel.is_some() || !definition.tags.iter().any(|tag| tag == "light-source")
+            {
                 continue;
             }
             sources.push(LightSource {
@@ -3776,6 +4077,9 @@ impl Game {
     ) -> Vec<DomainEvent> {
         let old_position = self.player.position;
         self.player.position = destination;
+        self.mark_shop_visited_at_player();
+        self.maintain_shop_at_player()
+            .expect("shop maintenance must preserve validated item allocation");
         changed.insert(old_position);
         changed.insert(destination);
 
@@ -4848,7 +5152,11 @@ struct LightSource {
     color: u32,
 }
 
-fn light_from_sources(sources: &[LightSource], position: Position) -> CellLightDto {
+fn light_from_sources(
+    sources: &[LightSource],
+    position: Position,
+    ambient_light: u8,
+) -> CellLightDto {
     let mut strongest = (0_u8, PLAYER_LIGHT_COLOR);
     for source in sources {
         let boost = source_intensity(source.position, position, source.radius, source.maximum);
@@ -4858,7 +5166,7 @@ fn light_from_sources(sources: &[LightSource], position: Position) -> CellLightD
     }
     CellLightDto {
         color: strongest.1,
-        intensity: AMBIENT_LIGHT.saturating_add(strongest.0),
+        intensity: ambient_light.saturating_add(strongest.0),
     }
 }
 

@@ -57,6 +57,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.blindness",
@@ -275,6 +277,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -342,7 +345,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c3c0cc610686fb55e6b15989e6fa62493756d781d060da02c179246cd3040c45"
+      "stateHash": "21c03f3ff159257d9e2dcb12b7ccbeece7597a1f1323547aa4e4e88d35b34c77"
     },
     "events": [
       {
@@ -539,6 +542,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "c3c0cc610686fb55e6b15989e6fa62493756d781d060da02c179246cd3040c45"
+    "saveRoundTripStateHash": "21c03f3ff159257d9e2dcb12b7ccbeece7597a1f1323547aa4e4e88d35b34c77"
   }
 }

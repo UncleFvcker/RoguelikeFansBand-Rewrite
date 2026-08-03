@@ -57,6 +57,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.poetic-inspiration",
@@ -402,6 +404,7 @@
         }
       ],
       "nextItemInstanceSerial": 6,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -469,7 +472,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "630a3b30bb5ea57ea56780014c5737d0e42217e093e27cd15bebb1a30465d999"
+      "stateHash": "a956127b06a834e4d7d7631f10ebb190db6afcf77d61781025b5528e37c4659c"
     },
     "events": [
       {

@@ -89,6 +89,10 @@ pub struct RaceDefinition {
     pub life_percent: u16,
     #[serde(default = "default_percent")]
     pub experience_percent: u16,
+    /// Percentage applied by shopkeepers before charisma and greed. RFB's
+    /// neutral human factor is 100; unspecified races use the 110 default.
+    #[serde(default = "default_shop_adjust_percent")]
+    pub shop_adjust_percent: u16,
     #[serde(default)]
     pub base_hp: i32,
     pub skill_set_id: String,
@@ -109,6 +113,10 @@ pub struct RaceDefinition {
     #[serde(default)]
     pub kin_category: Option<String>,
     pub tags: Vec<String>,
+}
+
+const fn default_shop_adjust_percent() -> u16 {
+    110
 }
 
 /// One equipment slot instance on a body: `slot_type` is the item-facing

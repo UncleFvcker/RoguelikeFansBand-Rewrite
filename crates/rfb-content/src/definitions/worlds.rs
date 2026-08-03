@@ -106,6 +106,8 @@ pub struct WorldDefinition {
     pub id: String,
     pub name_key: String,
     pub initial_floor_id: String,
+    #[serde(default)]
+    pub town_id: Option<String>,
     pub width: u16,
     pub height: u16,
     pub fill_terrain_id: String,
@@ -231,6 +233,12 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub loot_table_id: Option<String>,
     #[serde(default)]
+    pub loot_allocation: Option<ProceduralLootAllocationDefinition>,
+    #[serde(default)]
+    pub gold_allocation: Option<ProceduralGoldAllocationDefinition>,
+    #[serde(default)]
+    pub guaranteed_items: Vec<ProceduralGuaranteedItemDefinition>,
+    #[serde(default)]
     pub theme_table_id: Option<String>,
     #[serde(default)]
     pub region_table_id: Option<String>,
@@ -329,6 +337,52 @@ const fn default_allow_early_task_exit() -> bool {
 pub struct DungeonGuardianDefinition {
     pub instance_id: String,
     pub actor_kind_id: String,
+    #[serde(default)]
+    pub reward_loot_table_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralNormalAllocationDefinition {
+    pub mean: u16,
+    pub standard_deviation: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralLootAllocationDefinition {
+    pub reference_area_tiles: u32,
+    pub room_objects: ProceduralNormalAllocationDefinition,
+    pub anywhere_objects: ProceduralNormalAllocationDefinition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralGoldAllocationDefinition {
+    pub reference_area_tiles: u32,
+    pub piles: ProceduralNormalAllocationDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralGuaranteedItemDefinition {
+    pub id: String,
+    #[cfg_attr(feature = "schemas", schemars(range(min = 2, max = 1000)))]
+    pub chance_one_in: u16,
+    pub entries: Vec<ProceduralGuaranteedItemEntryDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralGuaranteedItemEntryDefinition {
+    pub item_kind_id: String,
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 1000)))]
+    pub weight: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -461,11 +515,22 @@ pub struct ProceduralGenerationBudgetDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProceduralRoomGeometryDefinition {
+    #[serde(default)]
+    pub placement: ProceduralRoomPlacement,
     pub min_width: u16,
     pub max_width: u16,
     pub min_height: u16,
     pub max_height: u16,
     pub shapes: Vec<ProceduralRoomShapeCandidateDefinition>,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ProceduralRoomPlacement {
+    #[default]
+    Partitioned,
+    Free,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

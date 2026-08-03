@@ -37,7 +37,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}: ok", fixture.id);
         }
         "refresh" => {
-            let mut fixture: ContractFixture = serde_json::from_slice(&fs::read(&path)?)?;
+            let mut source: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+            source["assertions"] = serde_json::Value::Null;
+            let mut fixture: ContractFixture = serde_json::from_value(source)?;
             fixture.assertions = Some(observe(&fixture)?);
             let mut output = serde_json::to_string_pretty(&fixture)?;
             output.push('\n');

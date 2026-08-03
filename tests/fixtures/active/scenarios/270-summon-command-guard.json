@@ -71,6 +71,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -258,6 +260,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -325,7 +328,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1c0e0e52c45ff6a44a80d4408c472cb9d45746d39d8d94d36d8b5b303c7d59e3"
+      "stateHash": "c9c4850fac7db0f0850f0239fd5b503cea94f695de6f654417605ff4eec34205"
     },
     "events": [
       {
@@ -373,6 +376,6 @@
         "y": 15
       }
     ],
-    "saveRoundTripStateHash": "1c0e0e52c45ff6a44a80d4408c472cb9d45746d39d8d94d36d8b5b303c7d59e3"
+    "saveRoundTripStateHash": "c9c4850fac7db0f0850f0239fd5b503cea94f695de6f654417605ff4eec34205"
   }
 }

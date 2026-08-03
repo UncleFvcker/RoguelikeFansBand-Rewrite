@@ -5,8 +5,75 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn warrens_journey_starts_on_an_outdoor_surface_with_a_working_entrance() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+
+    assert_eq!(game.current_floor_id, "demo.floor.surface");
+    assert_eq!(game.player.position, Position { x: 32, y: 11 });
+    assert_eq!(
+        game.terrain_at(Position { x: 32, y: 11 }),
+        "demo.terrain.surface-path"
+    );
+    assert_eq!(
+        game.terrain_at(Position { x: 51, y: 16 }),
+        "demo.terrain.stairs-down"
+    );
+    assert_eq!(
+        game.terrain_at(Position { x: 0, y: 0 }),
+        "demo.terrain.surface-tree"
+    );
+
+    game.player.position = Position { x: 51, y: 15 };
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::South,
+        },
+    );
+    let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(update.floor_id, "demo.floor.warrens-depth-1");
+}
+
+#[test]
+fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens journey should create");
+
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    let first_instance = game
+        .current_dungeon_instance_id
+        .clone()
+        .expect("Warrens entry should allocate an instance");
+    assert_eq!(game.entities.len(), 4);
+
+    game.entities.clear();
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    let surface = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(surface.floor_id, "demo.floor.surface");
+    assert!(
+        game.stored_floors
+            .values()
+            .all(|floor| floor.dungeon_instance_id.as_deref() != Some(first_instance.as_str()))
+    );
+
+    let draws_before_reentry = game.rng.draw_counter;
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+    let reentry = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(reentry.floor_id, "demo.floor.warrens-depth-1");
+    assert_ne!(
+        game.current_dungeon_instance_id.as_deref(),
+        Some(first_instance.as_str())
+    );
+    assert!(game.rng.draw_counter > draws_before_reentry);
+    assert_eq!(game.entities.len(), 4);
+}
+
+#[test]
 fn warrens_maps_are_seeded_connected_varied_and_persistent() {
     let mut generated_maps = BTreeSet::new();
+    let mut walkable_masks = Vec::<Vec<bool>>::new();
     for seed in 0..16 {
         let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
             .expect("Warrens journey should create");
@@ -14,12 +81,20 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
         dispatch_next(&mut game, GameCommand::TraverseStairs);
 
         assert_eq!((game.width, game.height), (66, 22));
-        assert!(generated_terrain_is_connected(
-            &game.terrain,
-            game.width,
-            game.height,
-            &game.content,
-        ));
+        let route_terrain = game
+            .terrain
+            .iter()
+            .map(|terrain_id| match terrain_id.as_str() {
+                "demo.terrain.magma-vein" | "demo.terrain.quartz-vein" => {
+                    "demo.terrain.wall".to_owned()
+                }
+                _ => terrain_id.clone(),
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            generated_terrain_is_connected(&route_terrain, game.width, game.height, &game.content,),
+            "seed {seed} should retain a connected travel network"
+        );
         assert!(
             (1..=2).contains(
                 &game
@@ -29,6 +104,42 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
                     .count()
             )
         );
+        assert_eq!(game.entities.len(), 4);
+        assert_eq!(
+            game.terrain
+                .iter()
+                .filter(|terrain_id| {
+                    matches!(
+                        terrain_id.as_str(),
+                        "demo.terrain.magma-vein" | "demo.terrain.quartz-vein"
+                    )
+                })
+                .count(),
+            24
+        );
+
+        let walkable_mask = game
+            .terrain
+            .iter()
+            .map(|terrain_id| {
+                game.content
+                    .terrain(terrain_id)
+                    .expect("generated terrain must remain available")
+                    .walkable
+            })
+            .collect::<Vec<_>>();
+        for previous in &walkable_masks {
+            let structural_difference = previous
+                .iter()
+                .zip(&walkable_mask)
+                .filter(|(left, right)| left != right)
+                .count();
+            assert!(
+                structural_difference >= 120,
+                "seed {seed} only changed {structural_difference} walkable cells"
+            );
+        }
+        walkable_masks.push(walkable_mask);
         assert!(
             (4..=5).contains(
                 &game
@@ -40,17 +151,42 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
         );
 
         let first_floor_terrain = game.terrain.clone();
+        let first_floor_items = game.items.clone();
+        let ground_item_count = first_floor_items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Ground(_)))
+            .count();
+        assert!(
+            (2..=5).contains(&ground_item_count),
+            "seed {seed} generated {ground_item_count} floor items"
+        );
+        assert!(first_floor_items.iter().all(|item| {
+            !matches!(item.location, ItemLocation::Ground(_))
+                || !matches!(
+                    item.kind_id.as_str(),
+                    "demo.item.arrow"
+                        | "demo.item.frailty-tonic"
+                        | "demo.item.venom-draught"
+                        | "demo.item.cartography-scroll"
+                        | "demo.item.clamor-scroll"
+                        | "demo.item.homeward-scroll"
+                        | "demo.item.short-sword"
+                        | "demo.item.trapfinding-scroll"
+                )
+        }));
         let mut same_seed = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
             .expect("same-seed Warrens journey should create");
         place_player_on_terrain(&mut same_seed, "demo.terrain.stairs-down");
         dispatch_next(&mut same_seed, GameCommand::TraverseStairs);
         assert_eq!(same_seed.terrain, first_floor_terrain);
+        assert_eq!(same_seed.items, first_floor_items);
 
         place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
         dispatch_next(&mut game, GameCommand::TraverseStairs);
         place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
         dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(game.terrain, first_floor_terrain);
+        assert_eq!(game.items, first_floor_items);
         generated_maps.insert(first_floor_terrain);
     }
     assert!(
@@ -61,6 +197,8 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
 
 #[test]
 fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
+    let mut saw_scaled_allocation_above_minimum = false;
+    let mut saw_depth_gated_item = false;
     for seed in 0..16 {
         let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
             .expect("Warrens journey should create");
@@ -76,6 +214,41 @@ fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
                 format!("demo.floor.warrens-depth-{depth}")
             );
             assert!(game.terrain.iter().any(|id| id == "demo.terrain.stairs-up"));
+            assert_eq!(game.entities.len(), if depth == 9 { 5 } else { 4 });
+            let ground_items = game
+                .items
+                .iter()
+                .filter(|item| matches!(item.location, ItemLocation::Ground(_)))
+                .collect::<Vec<_>>();
+            assert!(
+                (2..=5).contains(&ground_items.len()),
+                "seed {seed} depth {depth} generated {} floor items",
+                ground_items.len()
+            );
+            saw_scaled_allocation_above_minimum |= ground_items.len() > 2;
+            saw_depth_gated_item |= depth >= 5
+                && ground_items.iter().any(|item| {
+                    matches!(
+                        item.kind_id.as_str(),
+                        "demo.item.cartography-scroll"
+                            | "demo.item.clamor-scroll"
+                            | "demo.item.homeward-scroll"
+                            | "demo.item.short-sword"
+                            | "demo.item.trapfinding-scroll"
+                    )
+                });
+            assert_eq!(
+                game.terrain
+                    .iter()
+                    .filter(|terrain_id| {
+                        matches!(
+                            terrain_id.as_str(),
+                            "demo.terrain.magma-vein" | "demo.terrain.quartz-vein"
+                        )
+                    })
+                    .count(),
+                24
+            );
             if depth < 9 {
                 assert!(
                     game.terrain
@@ -97,6 +270,8 @@ fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
         dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(game.current_floor_id, "demo.floor.surface");
     }
+    assert!(saw_scaled_allocation_above_minimum);
+    assert!(saw_depth_gated_item);
 }
 
 #[test]
@@ -967,7 +1142,7 @@ fn locked_door_checks_update_collision_visibility_and_persist() {
     );
     assert_eq!(
         visual_at(&game.snapshot(), Position { x: 11, y: 4 }).visibility,
-        VisibilityState::Visible
+        VisibilityState::Hidden
     );
 
     let mut restored = Game::from_save(game.to_save()).expect("open door should reload");

@@ -1,0 +1,1049 @@
+{
+  "schemaVersion": 2,
+  "id": "town.outpost-general-store-visit",
+  "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+  "determinism": "exact",
+  "seed": "42",
+  "preconditions": {
+    "world": "demo.world.warrens-journey",
+    "debugClearEntities": true,
+    "playerBuildId": "demo.build.warrior"
+  },
+  "commands": [
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "west"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "north"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "north"
+      }
+    },
+    {
+      "command": {
+        "type": "move",
+        "direction": "north"
+      }
+    }
+  ],
+  "saveRoundTrip": true,
+  "assertions": {
+    "finalState": {
+      "revision": 19,
+      "turn": 19,
+      "worldTick": 190,
+      "lastCommandSeq": 19,
+      "rngDrawCounter": 9,
+      "floorId": "demo.floor.surface",
+      "town": {
+        "id": "demo.town.outpost",
+        "nameKey": "town-demo-outpost-name",
+        "descriptionKey": "town-demo-outpost-description",
+        "floorId": "demo.floor.surface",
+        "visited": true
+      },
+      "shops": [
+        {
+          "id": "demo.shop.outpost-general-store",
+          "nameKey": "shop-demo-outpost-general-store-name",
+          "descriptionKey": "shop-demo-outpost-general-store-description",
+          "category": "general-store",
+          "entrancePosition": {
+            "x": 16,
+            "y": 8
+          },
+          "entranceTerrainId": "demo.terrain.general-store-entrance",
+          "visited": true,
+          "playerAtEntrance": true,
+          "owner": {
+            "id": "demo.shop-owner.outpost-mara-venn",
+            "nameKey": "shop-owner-demo-outpost-mara-venn-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 108,
+            "purchasePriceCap": 500,
+            "priceFactorPercent": 100
+          },
+          "stock": [
+            {
+              "id": "generated.item.12",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 5,
+              "maximumQuantity": 5,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.13",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.14",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.15",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.16",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.17",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.18",
+              "kindId": "demo.item.brass-lantern",
+              "displayNameKey": "item-demo-brass-lantern-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 50,
+              "fuel": {
+                "kind": "lantern",
+                "current": 7500,
+                "maximum": 15000,
+                "lightRadius": 2
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.19",
+              "kindId": "demo.item.brass-lantern",
+              "displayNameKey": "item-demo-brass-lantern-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 50,
+              "fuel": {
+                "kind": "lantern",
+                "current": 7500,
+                "maximum": 15000,
+                "lightRadius": 2
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.20",
+              "kindId": "demo.item.flask-of-oil",
+              "displayNameKey": "item-demo-flask-of-oil-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "fuel": {
+                "kind": "oil",
+                "current": 7500,
+                "maximum": 7500,
+                "lightRadius": 0
+              },
+              "quality": "ordinary"
+            }
+          ],
+          "sellQuotes": [
+            {
+              "itemId": "generated.item.1",
+              "kindId": "demo.item.ration-of-food",
+              "unitPrice": 2,
+              "maximumQuantity": 9
+            },
+            {
+              "itemId": "generated.item.2",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.3",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.4",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.5",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.6",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.7",
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
+              "maximumQuantity": 1
+            },
+            {
+              "itemId": "generated.item.8",
+              "kindId": "demo.item.arrow",
+              "unitPrice": 0,
+              "maximumQuantity": 0,
+              "unavailableReason": "item-illegal"
+            }
+          ]
+        }
+      ],
+      "playerPosition": {
+        "x": 16,
+        "y": 8
+      },
+      "playerHp": 33,
+      "playerMaxHp": 33,
+      "playerAttack": 2,
+      "playerDefense": 15,
+      "playerSpeed": 110,
+      "playerEnergyNeed": 0,
+      "playerCarriedWeightTenthsPound": 714,
+      "playerCarryCapacityTenthsPound": 1200,
+      "playerGold": 346,
+      "playerNutrition": 9969,
+      "playerLevel": 1,
+      "playerExperience": 0,
+      "playerMaxLevel": 1,
+      "playerPendingAttributeIncreases": 0,
+      "playerAttributes": {
+        "level": 1,
+        "maxLevel": 1,
+        "experience": 0,
+        "maximumExperience": 0,
+        "lifeForce": 1000,
+        "levelCap": 50,
+        "attributeCap": 238,
+        "attributeIndexCap": 37,
+        "experienceForNextLevel": 10,
+        "pendingAttributeIncreases": 0,
+        "victoryLevelCapUnlocked": false,
+        "attributes": {
+          "strength": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 17,
+            "index": 14
+          },
+          "intelligence": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 11,
+            "index": 8
+          },
+          "wisdom": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 11,
+            "index": 8
+          },
+          "dexterity": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 15,
+            "index": 12
+          },
+          "constitution": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 15,
+            "index": 12
+          },
+          "charisma": {
+            "natural": 13,
+            "maximumNatural": 13,
+            "effective": 14,
+            "index": 11
+          }
+        },
+        "skills": [
+          {
+            "id": "demo.skill.device",
+            "nameKey": "skill-demo-device-name",
+            "current": 18,
+            "maximum": 1000,
+            "base": 18,
+            "growthPerTenLevels": 7
+          },
+          {
+            "id": "demo.skill.digging",
+            "nameKey": "skill-demo-digging-name",
+            "current": 31,
+            "maximum": 1000,
+            "base": 30,
+            "growthPerTenLevels": 10
+          },
+          {
+            "id": "demo.skill.disarming",
+            "nameKey": "skill-demo-disarming-name",
+            "current": 26,
+            "maximum": 1000,
+            "base": 25,
+            "growthPerTenLevels": 12
+          },
+          {
+            "id": "demo.skill.melee",
+            "nameKey": "skill-demo-melee-name",
+            "current": 73,
+            "maximum": 1000,
+            "base": 70,
+            "growthPerTenLevels": 30
+          },
+          {
+            "id": "demo.skill.perception",
+            "nameKey": "skill-demo-perception-name",
+            "current": 2,
+            "maximum": 1000,
+            "base": 2,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.ranged",
+            "nameKey": "skill-demo-ranged-name",
+            "current": 58,
+            "maximum": 1000,
+            "base": 55,
+            "growthPerTenLevels": 30
+          },
+          {
+            "id": "demo.skill.saving-throw",
+            "nameKey": "skill-demo-saving-throw-name",
+            "current": 32,
+            "maximum": 1000,
+            "base": 31,
+            "growthPerTenLevels": 10
+          },
+          {
+            "id": "demo.skill.search",
+            "nameKey": "skill-demo-search-name",
+            "current": 14,
+            "maximum": 1000,
+            "base": 14,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.stealth",
+            "nameKey": "skill-demo-stealth-name",
+            "current": 1,
+            "maximum": 1000,
+            "base": 1,
+            "growthPerTenLevels": 0
+          },
+          {
+            "id": "demo.skill.throwing",
+            "nameKey": "skill-demo-throwing-name",
+            "current": 57,
+            "maximum": 1000,
+            "base": 55,
+            "growthPerTenLevels": 20
+          }
+        ]
+      },
+      "playerBuild": {
+        "buildId": "demo.build.warrior",
+        "buildNameKey": "build-demo-warrior-name",
+        "raceId": "demo.race.rfb-human",
+        "raceNameKey": "race-demo-rfb-human-name",
+        "classId": "demo.class.warrior",
+        "classNameKey": "class-demo-warrior-name",
+        "personalityId": "demo.personality.ordinary",
+        "personalityNameKey": "personality-demo-ordinary-name",
+        "lifePercent": 115,
+        "experiencePercent": 100
+      },
+      "entityCount": 0,
+      "groundItemCount": 2,
+      "inventoryStackCount": 8,
+      "equipmentCount": 3,
+      "inventory": [
+        {
+          "id": "generated.item.1",
+          "kindId": "demo.item.ration-of-food",
+          "displayNameKey": "item-demo-ration-of-food-name",
+          "knowledge": "aware",
+          "usable": true,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 9,
+          "weightTenthsPound": 10,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.2",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.3",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.4",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.5",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.6",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.7",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
+          "knowledge": "aware",
+          "usable": false,
+          "fuel": {
+            "kind": "torch",
+            "current": 2000,
+            "maximum": 5000,
+            "lightRadius": 1
+          },
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "equipmentSlot": "light",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.8",
+          "kindId": "demo.item.arrow",
+          "displayNameKey": "item-demo-arrow-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 22,
+          "weightTenthsPound": 2,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "unexamined"
+        }
+      ],
+      "equipment": [
+        {
+          "id": "generated.item.10",
+          "kindId": "demo.item.chain-mail",
+          "displayNameKey": "item-demo-chain-mail-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 220,
+          "slotId": "body",
+          "modifiers": {
+            "attack": 0,
+            "defense": 14,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary"
+        },
+        {
+          "id": "generated.item.9",
+          "kindId": "demo.item.broad-sword",
+          "displayNameKey": "item-demo-broad-sword-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 150,
+          "slotId": "right-hand",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary",
+          "meleeProfile": {
+            "attacks": 1,
+            "toHit": 0,
+            "toDamage": 0,
+            "damage": {
+              "dice": 2,
+              "sides": 6,
+              "damageType": "physical"
+            },
+            "sourceItemId": "generated.item.9"
+          }
+        },
+        {
+          "id": "generated.item.11",
+          "kindId": "demo.item.short-bow",
+          "displayNameKey": "item-demo-short-bow-name",
+          "knowledge": "aware",
+          "quantity": 1,
+          "weightTenthsPound": 30,
+          "slotId": "shooting",
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary",
+          "projectileProfile": {
+            "range": 8,
+            "toHit": 0,
+            "toDamage": 0,
+            "damage": {
+              "dice": 3,
+              "sides": 4,
+              "damageType": "physical"
+            },
+            "ammoKindId": "demo.item.arrow",
+            "targetSpec": {
+              "modes": [
+                "direction",
+                "position",
+                "entity"
+              ],
+              "range": 8,
+              "requiresLineOfEffect": true
+            },
+            "sourceItemId": "generated.item.11"
+          }
+        }
+      ],
+      "itemPropertyKnowledge": [
+        {
+          "itemId": "generated.item.10",
+          "appraised": true,
+          "identified": true
+        },
+        {
+          "itemId": "generated.item.11",
+          "appraised": true,
+          "identified": true
+        },
+        {
+          "itemId": "generated.item.9",
+          "appraised": true,
+          "identified": true
+        }
+      ],
+      "nextItemInstanceSerial": 21,
+      "nextGoldPileSerial": 1,
+      "campaign": {
+        "status": "active",
+        "score": 0,
+        "conqueredDungeons": 0,
+        "completedTasks": 0
+      },
+      "stateHash": "4afbf2962dfc33efb515773de6647437b529bba27b7ff43d696a0521252599fe"
+    },
+    "changedCells": [
+      {
+        "x": 31,
+        "y": 11
+      },
+      {
+        "x": 32,
+        "y": 11
+      },
+      {
+        "x": 30,
+        "y": 11
+      },
+      {
+        "x": 31,
+        "y": 11
+      },
+      {
+        "x": 29,
+        "y": 11
+      },
+      {
+        "x": 30,
+        "y": 11
+      },
+      {
+        "x": 28,
+        "y": 11
+      },
+      {
+        "x": 29,
+        "y": 11
+      },
+      {
+        "x": 27,
+        "y": 11
+      },
+      {
+        "x": 28,
+        "y": 11
+      },
+      {
+        "x": 26,
+        "y": 11
+      },
+      {
+        "x": 27,
+        "y": 11
+      },
+      {
+        "x": 25,
+        "y": 11
+      },
+      {
+        "x": 26,
+        "y": 11
+      },
+      {
+        "x": 24,
+        "y": 11
+      },
+      {
+        "x": 25,
+        "y": 11
+      },
+      {
+        "x": 23,
+        "y": 11
+      },
+      {
+        "x": 24,
+        "y": 11
+      },
+      {
+        "x": 22,
+        "y": 11
+      },
+      {
+        "x": 23,
+        "y": 11
+      },
+      {
+        "x": 21,
+        "y": 11
+      },
+      {
+        "x": 22,
+        "y": 11
+      },
+      {
+        "x": 20,
+        "y": 11
+      },
+      {
+        "x": 21,
+        "y": 11
+      },
+      {
+        "x": 19,
+        "y": 11
+      },
+      {
+        "x": 20,
+        "y": 11
+      },
+      {
+        "x": 18,
+        "y": 11
+      },
+      {
+        "x": 19,
+        "y": 11
+      },
+      {
+        "x": 17,
+        "y": 11
+      },
+      {
+        "x": 18,
+        "y": 11
+      },
+      {
+        "x": 16,
+        "y": 11
+      },
+      {
+        "x": 17,
+        "y": 11
+      },
+      {
+        "x": 16,
+        "y": 10
+      },
+      {
+        "x": 16,
+        "y": 11
+      },
+      {
+        "x": 16,
+        "y": 9
+      },
+      {
+        "x": 16,
+        "y": 10
+      },
+      {
+        "x": 16,
+        "y": 8
+      },
+      {
+        "x": 16,
+        "y": 9
+      }
+    ],
+    "saveRoundTripStateHash": "4afbf2962dfc33efb515773de6647437b529bba27b7ff43d696a0521252599fe"
+  }
+}

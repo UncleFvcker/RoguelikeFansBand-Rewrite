@@ -15,6 +15,7 @@ use rfb_protocol::{
 use crate::{
     error::CoreError,
     event::DomainEvent,
+    save::initial_item_fuel,
     state::{Actor, FloorConnectionState, FloorState, ItemInstance, ItemLocation},
 };
 
@@ -918,6 +919,7 @@ impl Game {
             player_position: self.player.position,
             entities: std::mem::take(&mut self.entities),
             items: floor_items,
+            gold_piles: std::mem::take(&mut self.gold_piles),
             explored: std::mem::take(&mut self.explored),
             revealed_terrain: std::mem::take(&mut self.revealed_terrain),
             connections: std::mem::take(&mut self.floor_connections),
@@ -1042,6 +1044,7 @@ impl Game {
                     curse: initial_item_curse(&self.content, &reward.item_kind_id),
                     activation,
                     charges,
+                    fuel: initial_item_fuel(&self.content, &reward.item_kind_id),
                     device_recovery_progress: 0,
                     location: ItemLocation::Ground(destination.player_position),
                 });
@@ -1240,10 +1243,13 @@ impl Game {
         self.entities = floor.entities;
         global_items.extend(floor.items);
         self.items = global_items;
+        self.gold_piles = floor.gold_piles;
         self.explored = floor.explored;
         self.revealed_terrain = floor.revealed_terrain;
         self.floor_connections = floor.connections;
         self.floor_regions = floor.regions;
+        self.mark_current_town_visited();
+        self.mark_shop_visited_at_player();
         self.update_recall_destination_for_current_floor();
         self.reveal_current_visibility();
     }

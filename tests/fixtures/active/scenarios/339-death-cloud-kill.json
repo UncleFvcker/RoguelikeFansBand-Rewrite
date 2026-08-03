@@ -94,6 +94,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 50,
       "playerExperience": 68,
       "playerMaxLevel": 50,
@@ -3126,6 +3128,7 @@
         }
       ],
       "nextItemInstanceSerial": 11,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -3193,7 +3196,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2b55b92563ecf38babda4704fbf0165d87f9a44a55bab7b875017d77085a10ce"
+      "stateHash": "1c08c38383033e0d4680fcbab62dfe4a732d7dd45ecbf48e61b0e99aaa89ec8f"
     },
     "events": [
       {
@@ -4201,6 +4204,6 @@
       "demo.monster.ember-mote.1",
       "demo.z-entrance-guardian.resonance-descent.1"
     ],
-    "saveRoundTripStateHash": "2b55b92563ecf38babda4704fbf0165d87f9a44a55bab7b875017d77085a10ce"
+    "saveRoundTripStateHash": "1c08c38383033e0d4680fcbab62dfe4a732d7dd45ecbf48e61b0e99aaa89ec8f"
   }
 }

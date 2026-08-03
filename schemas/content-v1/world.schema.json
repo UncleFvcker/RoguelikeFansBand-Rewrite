@@ -235,6 +235,13 @@
         },
         "instanceId": {
           "type": "string"
+        },
+        "rewardLootTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -584,6 +591,24 @@
           ],
           "default": null
         },
+        "goldAllocation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralGoldAllocationDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "guaranteedItems": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProceduralGuaranteedItemDefinition"
+          },
+          "type": "array"
+        },
         "guardian": {
           "anyOf": [
             {
@@ -618,6 +643,17 @@
         "lifecycle": {
           "$ref": "#/$defs/FloorLifecycle",
           "default": "dungeon"
+        },
+        "lootAllocation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralLootAllocationDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "lootSpawns": {
           "items": {
@@ -981,6 +1017,69 @@
       ],
       "type": "object"
     },
+    "ProceduralGoldAllocationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "piles": {
+          "$ref": "#/$defs/ProceduralNormalAllocationDefinition"
+        },
+        "referenceAreaTiles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "referenceAreaTiles",
+        "piles"
+      ],
+      "type": "object"
+    },
+    "ProceduralGuaranteedItemDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chanceOneIn": {
+          "format": "uint16",
+          "maximum": 1000,
+          "minimum": 2,
+          "type": "integer"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/ProceduralGuaranteedItemEntryDefinition"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "chanceOneIn",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "ProceduralGuaranteedItemEntryDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "itemKindId": {
+          "type": "string"
+        },
+        "weight": {
+          "format": "uint16",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "weight"
+      ],
+      "type": "object"
+    },
     "ProceduralLakeDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1109,6 +1208,28 @@
       ],
       "type": "string"
     },
+    "ProceduralLootAllocationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "anywhereObjects": {
+          "$ref": "#/$defs/ProceduralNormalAllocationDefinition"
+        },
+        "referenceAreaTiles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "roomObjects": {
+          "$ref": "#/$defs/ProceduralNormalAllocationDefinition"
+        }
+      },
+      "required": [
+        "referenceAreaTiles",
+        "roomObjects",
+        "anywhereObjects"
+      ],
+      "type": "object"
+    },
     "ProceduralLootSpawnDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1167,6 +1288,28 @@
       "required": [
         "roomId",
         "spawnCount"
+      ],
+      "type": "object"
+    },
+    "ProceduralNormalAllocationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "mean": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "standardDeviation": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mean",
+        "standardDeviation"
       ],
       "type": "object"
     },
@@ -1246,6 +1389,10 @@
           "minimum": 0,
           "type": "integer"
         },
+        "placement": {
+          "$ref": "#/$defs/ProceduralRoomPlacement",
+          "default": "partitioned"
+        },
         "shapes": {
           "items": {
             "$ref": "#/$defs/ProceduralRoomShapeCandidateDefinition"
@@ -1261,6 +1408,13 @@
         "shapes"
       ],
       "type": "object"
+    },
+    "ProceduralRoomPlacement": {
+      "enum": [
+        "partitioned",
+        "free"
+      ],
+      "type": "string"
     },
     "ProceduralRoomShape": {
       "enum": [
@@ -1534,6 +1688,13 @@
         "$ref": "#/$defs/TerrainOverride"
       },
       "type": "array"
+    },
+    "townId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "width": {
       "format": "uint16",

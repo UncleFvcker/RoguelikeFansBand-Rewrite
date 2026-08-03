@@ -2,7 +2,7 @@
 
 # Contract v153: Warrens map generation
 
-状态：active baseline。协议保持 `1.123`，save 容器保持 v1，state hash Schema 保持 `55`。demo 内容包升至 `1.143.0`，content hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`；active baseline 包含 456 条 exact fixture、零 waiver。
+状态：历史 baseline；当前 active baseline 见 [contract-v154](contract-v154-warrens-surface-entry.md)。协议保持 `1.123`，save 容器保持 v1，state hash Schema 保持 `55`。本版 demo 内容包为 `1.143.0`，content hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`；baseline 包含 456 条 exact fixture、零 waiver。
 
 ## 固定来源结论
 

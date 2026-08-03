@@ -22,6 +22,11 @@ pub(crate) enum GameAction {
     BashDoor {
         direction: Direction,
     },
+    BuyFromShop {
+        shop_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     CastAbility {
         ability_id: String,
         target: TargetSelection,
@@ -54,7 +59,16 @@ pub(crate) enum GameAction {
         target_item_id: String,
         source: DeviceRechargeSourceDto,
     },
+    RefuelLight {
+        target_item_id: String,
+        source_item_id: String,
+    },
     Search,
+    SellToShop {
+        shop_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     SetSummonCommand {
         mode: SummonCommandModeDto,
     },
@@ -104,7 +118,12 @@ pub(crate) enum GameAction {
 impl GameAction {
     pub(crate) const fn energy_cost(&self) -> i32 {
         match self {
-            Self::IncreaseAttribute { .. } | Self::Retire | Self::SetSummonCommand { .. } => 0,
+            Self::BuyFromShop { .. }
+            | Self::IncreaseAttribute { .. }
+            | Self::Retire
+            | Self::SellToShop { .. }
+            | Self::SetSummonCommand { .. } => 0,
+            Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
             _ => STANDARD_ACTION_COST,
         }
     }
@@ -127,6 +146,15 @@ impl From<GameCommand> for GameAction {
             },
             GameCommand::Appraise { item_id } => Self::Appraise { item_id },
             GameCommand::BashDoor { direction } => Self::BashDoor { direction },
+            GameCommand::BuyFromShop {
+                shop_id,
+                item_id,
+                quantity,
+            } => Self::BuyFromShop {
+                shop_id,
+                item_id,
+                quantity,
+            },
             GameCommand::CastAbility { ability_id, target } => {
                 Self::CastAbility { ability_id, target }
             }
@@ -146,7 +174,23 @@ impl From<GameCommand> for GameAction {
                 target_item_id,
                 source,
             },
+            GameCommand::RefuelLight {
+                target_item_id,
+                source_item_id,
+            } => Self::RefuelLight {
+                target_item_id,
+                source_item_id,
+            },
             GameCommand::Search => Self::Search,
+            GameCommand::SellToShop {
+                shop_id,
+                item_id,
+                quantity,
+            } => Self::SellToShop {
+                shop_id,
+                item_id,
+                quantity,
+            },
             GameCommand::SetSummonCommand { mode } => Self::SetSummonCommand { mode },
             GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },
             GameCommand::StudyAbility {

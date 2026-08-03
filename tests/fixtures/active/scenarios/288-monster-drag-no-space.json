@@ -102,6 +102,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -283,6 +285,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -337,7 +340,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "04d4ffb05b6ca2a1781bd8f66b5c37e48be427b8c9993baf18ce5bb2b1b6c0a9"
+      "stateHash": "02ef2e338e37e0e1be90f62bcaa05a71f2916281788844416838ddbd6b864108"
     },
     "events": [
       {
@@ -469,6 +472,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "04d4ffb05b6ca2a1781bd8f66b5c37e48be427b8c9993baf18ce5bb2b1b6c0a9"
+    "saveRoundTripStateHash": "02ef2e338e37e0e1be90f62bcaa05a71f2916281788844416838ddbd6b864108"
   }
 }

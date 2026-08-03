@@ -175,6 +175,36 @@ fn equippable_items_require_a_valid_slot_and_single_item_stack() {
 }
 
 #[test]
+fn food_effect_requires_positive_bounded_nutrition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let ration = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.ration-of-food")
+        .expect("fixture should contain the ration");
+    assert!(matches!(
+        ration.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::IncreaseNutrition { amount: 5_000 })
+    ));
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.ration-of-food")
+        .expect("fixture should contain the ration")
+        .use_action
+        .as_mut()
+        .expect("ration should be usable")
+        .effect = ItemUseEffectDefinition::IncreaseNutrition { amount: 0 };
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidItemUseAction(_))
+    ));
+}
+
+#[test]
 fn charged_item_actions_require_bounded_single_instance_devices() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let action = artifact
@@ -440,5 +470,84 @@ fn device_recharge_profiles_require_distinct_bounded_resources() {
     assert!(matches!(
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidDeviceRechargeProfile(_))
+    ));
+}
+
+#[test]
+fn fuel_items_require_original_capacity_slot_stack_and_radius_shapes() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = |id: &str| {
+        artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("fixture should contain {id}"))
+    };
+    assert_eq!(
+        item("demo.item.wooden-torch").fuel,
+        Some(ItemFuelDefinition {
+            kind: ItemFuelKindDefinition::Torch,
+            initial: 4_000,
+            maximum: 5_000,
+            light_radius: 1,
+        })
+    );
+    assert_eq!(
+        item("demo.item.brass-lantern").fuel,
+        Some(ItemFuelDefinition {
+            kind: ItemFuelKindDefinition::Lantern,
+            initial: 7_500,
+            maximum: 15_000,
+            light_radius: 2,
+        })
+    );
+    assert_eq!(
+        item("demo.item.flask-of-oil").fuel,
+        Some(ItemFuelDefinition {
+            kind: ItemFuelKindDefinition::Oil,
+            initial: 7_500,
+            maximum: 7_500,
+            light_radius: 0,
+        })
+    );
+
+    let mut invalid_capacity = artifact.content.clone();
+    invalid_capacity
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.wooden-torch")
+        .and_then(|item| item.fuel.as_mut())
+        .expect("fixture should contain a torch fuel profile")
+        .maximum = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_capacity),
+        Err(ContentError::InvalidItemFuel(_))
+    ));
+
+    let mut invalid_radius = artifact.content.clone();
+    invalid_radius
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.brass-lantern")
+        .and_then(|item| item.fuel.as_mut())
+        .expect("fixture should contain a lantern fuel profile")
+        .light_radius = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_radius),
+        Err(ContentError::InvalidItemFuel(_))
+    ));
+
+    let mut invalid_oil = artifact.content.clone();
+    invalid_oil
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.flask-of-oil")
+        .and_then(|item| item.fuel.as_mut())
+        .expect("fixture should contain an oil fuel profile")
+        .initial = 7_000;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_oil),
+        Err(ContentError::InvalidItemFuel(_))
     ));
 }

@@ -103,6 +103,8 @@
       "playerEnergyNeed": 100,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerResistances": [
         {
           "damageType": "mana",
@@ -290,6 +292,7 @@
         }
       ],
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -357,7 +360,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c8d4c3c37d6fd5ab21fe1aacef69f76e601c184a4c33b61675ddaefea9b432d2"
+      "stateHash": "fad4b4551899d2acc849fd26dfda098dfcba626863581a0b8eca64eb9f40f93b"
     },
     "events": [
       {

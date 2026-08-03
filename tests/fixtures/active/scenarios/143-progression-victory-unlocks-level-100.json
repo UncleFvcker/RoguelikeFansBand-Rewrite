@@ -38,7 +38,7 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 10,
+      "playerHp": 11,
       "playerMaxHp": 514,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -46,6 +46,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 100,
       "playerExperience": 29500000,
       "playerMaxLevel": 100,
@@ -225,6 +227,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -293,7 +296,7 @@
         "completedTasks": 0,
         "victoryTurn": 0
       },
-      "stateHash": "b0c45480cefd7a31a2bdadaa1eca39eb40ab0dcf0a663adce212a82610a3b1e2"
+      "stateHash": "28fb78906d41ccfb284d5917abcf24afbb41a7fe6d19fc4145c0160f83c3022f"
     },
     "events": [
       {
@@ -312,6 +315,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "b0c45480cefd7a31a2bdadaa1eca39eb40ab0dcf0a663adce212a82610a3b1e2"
+    "saveRoundTripStateHash": "28fb78906d41ccfb284d5917abcf24afbb41a7fe6d19fc4145c0160f83c3022f"
   }
 }

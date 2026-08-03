@@ -16,7 +16,7 @@ use rfb_protocol::{
     SummonCommandResolutionDto,
 };
 
-use crate::effect::DamageOutcome;
+use crate::{effect::DamageOutcome, game::town::ShopTransactionOutcome};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ItemAttributeChange {
@@ -217,6 +217,10 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         quantity: u32,
     },
+    GoldDropped {
+        source_kind_id: String,
+        amount: u32,
+    },
     ExperienceGained {
         amount: u64,
         total: u64,
@@ -346,6 +350,23 @@ pub(crate) enum DomainEvent {
         failure_roll: Option<u32>,
         source_destroyed: bool,
     },
+    LightRefuelUnavailable {
+        target_item_id: String,
+        source_item_id: String,
+        reason: String,
+    },
+    LightRefueled {
+        target_item_id: String,
+        target_kind_id: String,
+        source_kind_id: String,
+        amount: u16,
+        current: u16,
+        maximum: u16,
+    },
+    LightExtinguished {
+        target_item_id: String,
+        target_kind_id: String,
+    },
     SavingThrowChecked {
         source_kind_id: String,
         position: Position,
@@ -377,6 +398,21 @@ pub(crate) enum DomainEvent {
     ItemPickedUp {
         target_kind_id: String,
         quantity: u32,
+    },
+    GoldPickedUp {
+        amount: u32,
+        balance: u32,
+    },
+    ShopPurchaseCompleted {
+        outcome: ShopTransactionOutcome,
+    },
+    ShopSaleCompleted {
+        outcome: ShopTransactionOutcome,
+    },
+    ShopTransactionUnavailable {
+        shop_id: String,
+        item_id: String,
+        reason: String,
     },
     ItemPickupOverCapacity {
         target_kind_id: String,
@@ -454,6 +490,12 @@ pub(crate) enum DomainEvent {
         display_name_key: String,
         requested: i32,
         applied: i32,
+    },
+    ItemNutritionIncreased {
+        source_kind_id: String,
+        display_name_key: String,
+        amount: u16,
+        nutrition: u16,
     },
     ItemStatusRemoved {
         source_kind_id: String,
@@ -843,6 +885,20 @@ pub(crate) enum DomainEvent {
     PlayerDied {
         source_kind_id: String,
         method_id: Option<String>,
+        damage: DamageOutcome,
+    },
+    NutritionStateChanged {
+        from: rfb_protocol::NutritionStateDto,
+        to: rfb_protocol::NutritionStateDto,
+        nutrition: u16,
+    },
+    PlayerFaintedFromHunger {
+        duration: u32,
+    },
+    PlayerDamagedByStarvation {
+        damage: DamageOutcome,
+    },
+    PlayerDiedFromStarvation {
         damage: DamageOutcome,
     },
     PlayerStatusDamaged {
@@ -1343,6 +1399,14 @@ impl DomainEvent {
                     ("quantity", quantity.to_string()),
                 ],
             ),
+            Self::GoldDropped {
+                source_kind_id,
+                amount,
+            } => dto(
+                "gold.drop",
+                "gold-drop",
+                [("source", source_kind_id), ("amount", amount.to_string())],
+            ),
             Self::ExperienceGained { amount, total } => dto(
                 "player.experience-gained",
                 "player-experience-gained",
@@ -1627,6 +1691,46 @@ impl DomainEvent {
                     ("sourceDestroyed", source_destroyed.to_string()),
                 ],
             ),
+            Self::LightRefuelUnavailable {
+                target_item_id,
+                source_item_id,
+                reason,
+            } => dto(
+                "light.refuel-unavailable",
+                "light-refuel-unavailable",
+                [
+                    ("targetItem", target_item_id),
+                    ("sourceItem", source_item_id),
+                    ("reason", reason),
+                ],
+            ),
+            Self::LightRefueled {
+                target_item_id,
+                target_kind_id,
+                source_kind_id,
+                amount,
+                current,
+                maximum,
+            } => dto(
+                "light.refueled",
+                "light-refueled",
+                [
+                    ("targetItem", target_item_id),
+                    ("target", target_kind_id),
+                    ("source", source_kind_id),
+                    ("amount", amount.to_string()),
+                    ("current", current.to_string()),
+                    ("maximum", maximum.to_string()),
+                ],
+            ),
+            Self::LightExtinguished {
+                target_item_id,
+                target_kind_id,
+            } => dto(
+                "light.extinguished",
+                "light-extinguished",
+                [("targetItem", target_item_id), ("target", target_kind_id)],
+            ),
             Self::SavingThrowChecked {
                 source_kind_id,
                 position,
@@ -1719,6 +1823,53 @@ impl DomainEvent {
                 [
                     ("target", target_kind_id),
                     ("quantity", quantity.to_string()),
+                ],
+            ),
+            Self::GoldPickedUp { amount, balance } => dto(
+                "gold.pickup",
+                "gold-pickup-success",
+                [
+                    ("amount", amount.to_string()),
+                    ("balance", balance.to_string()),
+                ],
+            ),
+            Self::ShopPurchaseCompleted { outcome } => dto(
+                "shop.purchase",
+                "shop-purchase-success",
+                [
+                    ("shop", outcome.shop_id.clone()),
+                    ("item", outcome.item_id.clone()),
+                    ("target", outcome.item_kind_id.clone()),
+                    ("quantity", outcome.quantity.to_string()),
+                    ("unitPrice", outcome.unit_price.to_string()),
+                    ("totalPrice", outcome.total_price.to_string()),
+                    ("balance", outcome.gold_balance.to_string()),
+                ],
+            ),
+            Self::ShopSaleCompleted { outcome } => dto(
+                "shop.sale",
+                "shop-sale-success",
+                [
+                    ("shop", outcome.shop_id.clone()),
+                    ("item", outcome.item_id.clone()),
+                    ("target", outcome.item_kind_id.clone()),
+                    ("quantity", outcome.quantity.to_string()),
+                    ("unitPrice", outcome.unit_price.to_string()),
+                    ("totalPrice", outcome.total_price.to_string()),
+                    ("balance", outcome.gold_balance.to_string()),
+                ],
+            ),
+            Self::ShopTransactionUnavailable {
+                shop_id,
+                item_id,
+                reason,
+            } => dto(
+                "shop.transaction-unavailable",
+                "shop-transaction-unavailable",
+                [
+                    ("shop", shop_id.clone()),
+                    ("item", item_id.clone()),
+                    ("reason", reason.clone()),
                 ],
             ),
             Self::ItemPickupOverCapacity {
@@ -1918,6 +2069,21 @@ impl DomainEvent {
                 GameEventOutcomeDto::Heal {
                     resolution: HealingResolutionDto { requested, applied },
                 },
+            ),
+            Self::ItemNutritionIncreased {
+                source_kind_id,
+                display_name_key,
+                amount,
+                nutrition,
+            } => dto(
+                "item.use-food",
+                "item-use-food",
+                [
+                    ("target", source_kind_id),
+                    ("nameKey", display_name_key),
+                    ("amount", amount.to_string()),
+                    ("nutrition", nutrition.to_string()),
+                ],
             ),
             Self::ItemStatusRemoved {
                 source_kind_id,
@@ -3176,6 +3342,40 @@ impl DomainEvent {
                 ),
                 method_id,
             ),
+            Self::NutritionStateChanged {
+                from,
+                to,
+                nutrition,
+            } => dto(
+                "hunger.state-changed",
+                "hunger-state-changed",
+                [
+                    ("from", nutrition_state_id(from).to_owned()),
+                    ("to", nutrition_state_id(to).to_owned()),
+                    ("nutrition", nutrition.to_string()),
+                ],
+            ),
+            Self::PlayerFaintedFromHunger { duration } => dto(
+                "hunger.fainted",
+                "hunger-fainted",
+                [("duration", duration.to_string())],
+            ),
+            Self::PlayerDamagedByStarvation { damage } => dto_with_outcome(
+                "hunger.starvation-damage",
+                "hunger-starvation-damage",
+                [("damage", damage.applied.to_string())],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::PlayerDiedFromStarvation { damage } => dto_with_outcome(
+                "hunger.starvation-death",
+                "hunger-starvation-death",
+                [],
+                GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
+            ),
             Self::PlayerStatusDamaged {
                 status_kind_id,
                 damage,
@@ -3251,6 +3451,20 @@ fn item_quality_id(quality: ItemQualityDto) -> &'static str {
         ItemQualityDto::Ordinary => "ordinary",
         ItemQualityDto::Fine => "fine",
         ItemQualityDto::Exceptional => "exceptional",
+    }
+}
+
+const fn nutrition_state_id(state: rfb_protocol::NutritionStateDto) -> &'static str {
+    use rfb_protocol::NutritionStateDto;
+
+    match state {
+        NutritionStateDto::Bloated => "bloated",
+        NutritionStateDto::Full => "full",
+        NutritionStateDto::Normal => "normal",
+        NutritionStateDto::Hungry => "hungry",
+        NutritionStateDto::Weak => "weak",
+        NutritionStateDto::Faint => "faint",
+        NutritionStateDto::Starving => "starving",
     }
 }
 

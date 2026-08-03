@@ -4,8 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::AffixPropertyBundleDefinition;
 use rfb_protocol::{
-    ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto, ItemEnchantmentsDto, ItemQualityDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, Position,
+    GoldAppearanceDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
+    ItemEnchantmentsDto, ItemFuelDto, ItemQualityDto, MonsterPackBehaviorDto, MonsterPackRoleDto,
+    Position,
 };
 use serde::{Deserialize, Serialize};
 
@@ -58,6 +59,7 @@ pub(crate) enum ItemLocation {
     Inventory,
     Equipped { slot_id: String },
     CarriedBy { actor_id: String },
+    Shop { shop_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -72,6 +74,7 @@ pub(crate) struct ItemInstance {
     pub(crate) curse: Option<ItemCurseSeverityDto>,
     pub(crate) activation: Option<ItemActivationDto>,
     pub(crate) charges: Option<ItemChargesDto>,
+    pub(crate) fuel: Option<ItemFuelDto>,
     pub(crate) device_recovery_progress: u16,
     pub(crate) location: ItemLocation,
 }
@@ -80,6 +83,14 @@ pub(crate) struct ItemInstance {
 pub(crate) struct RolledAffixState {
     pub(crate) affix_id: String,
     pub(crate) properties: AffixPropertyBundleDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct GoldPile {
+    pub(crate) id: String,
+    pub(crate) position: Position,
+    pub(crate) amount: u32,
+    pub(crate) appearance: GoldAppearanceDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -92,6 +103,7 @@ pub(crate) struct FloorState {
     pub(crate) player_position: Position,
     pub(crate) entities: Vec<Actor>,
     pub(crate) items: Vec<ItemInstance>,
+    pub(crate) gold_piles: Vec<GoldPile>,
     pub(crate) explored: Vec<bool>,
     pub(crate) revealed_terrain: BTreeSet<Position>,
     pub(crate) connections: Vec<FloorConnectionState>,
@@ -113,6 +125,19 @@ pub(crate) struct FloorRegionState {
     pub(crate) encounter_table_id: String,
     pub(crate) loot_table_id: String,
     pub(crate) cells: Vec<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct TownState {
+    pub(crate) visited: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ShopState {
+    pub(crate) visited: bool,
+    pub(crate) owner_id: String,
+    pub(crate) inventory: Vec<ItemInstance>,
+    pub(crate) last_maintenance_world_tick: u32,
 }
 
 pub(crate) struct EquipOutcome {

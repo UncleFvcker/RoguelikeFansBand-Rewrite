@@ -74,6 +74,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.confusion",
@@ -263,6 +265,7 @@
       "entityCount": 0,
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -317,7 +320,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "224f881dde148d39620c2b4bbe65e8de5558293ea6c13cb1fdeab346463c2c07"
+      "stateHash": "2e1ca6009db81020fa0189b2d82062d15e4a8b27fabdb71ec40c08f0a1469d68"
     },
     "changedCells": [
       {
@@ -329,6 +332,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "224f881dde148d39620c2b4bbe65e8de5558293ea6c13cb1fdeab346463c2c07"
+    "saveRoundTripStateHash": "2e1ca6009db81020fa0189b2d82062d15e4a8b27fabdb71ec40c08f0a1469d68"
   }
 }

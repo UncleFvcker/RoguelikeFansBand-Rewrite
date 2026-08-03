@@ -746,6 +746,8 @@
       "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9969,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -1014,6 +1016,7 @@
       ],
       "groundItemCount": 2,
       "nextItemInstanceSerial": 13,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -1081,7 +1084,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+      "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
     },
     "events": [
       {
@@ -12708,534 +12711,534 @@
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 17,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 18,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 19,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 20,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 21,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 22,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 23,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 24,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 25,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 26,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 27,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 28,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 29,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 30,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 31,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 32,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 33,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 34,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 35,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 36,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 37,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 38,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 39,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 40,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 41,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 42,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 43,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 44,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 45,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 46,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 47,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 48,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 49,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 50,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 51,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 52,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 53,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 54,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 55,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 56,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 57,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 58,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 59,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 60,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 61,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 62,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 63,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 64,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 65,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 66,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 67,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 68,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 69,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 70,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 71,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 72,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 73,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 74,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 75,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 76,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 77,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 78,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 79,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 80,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 81,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 82,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 83,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 84,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 85,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 86,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 87,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 88,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 89,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 90,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 91,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 92,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 93,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 94,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 95,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 96,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 97,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 98,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 99,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 100,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 101,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 102,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 103,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 104,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 105,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 106,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 107,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 108,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 109,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 110,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 111,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 112,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 113,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 114,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 115,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 116,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 117,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 118,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 119,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 120,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       },
       {
         "step": 121,
         "kind": "player-dead",
-        "stateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+        "stateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
       }
     ],
-    "saveRoundTripStateHash": "75133b9a40ade788e41122791804feef13cb45fe0b4ef25bfeb6208d8499002e"
+    "saveRoundTripStateHash": "06a5d75ebd181e6512a28edc0d1473182996c29d865c8d32f91672702c6cc2a2"
   }
 }

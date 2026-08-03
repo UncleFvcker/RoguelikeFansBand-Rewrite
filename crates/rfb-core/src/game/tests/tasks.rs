@@ -71,6 +71,126 @@ fn content_driven_loot_generation_is_deterministic_and_persistent() {
     assert_eq!(restored.state_hash(), left.state_hash());
 }
 
+fn direct_warrens_death_drops(
+    actor_kind_id: &str,
+    seed: u64,
+) -> (Vec<ItemInstance>, Vec<GoldPile>) {
+    let mut game = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    game.current_floor_id = "demo.floor.warrens-depth-1".to_owned();
+    game.rng = RfbRng::seeded(seed);
+    let existing_item_ids = game
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
+    let existing_gold_ids = game
+        .gold_piles
+        .iter()
+        .map(|pile| pile.id.clone())
+        .collect::<BTreeSet<_>>();
+    let actor_id = format!("test.{actor_kind_id}.{seed}");
+    let actor = game.generated_actor(actor_id, actor_kind_id, game.player.position);
+    game.entities.push(actor);
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    let mut removed = Vec::new();
+    game.resolve_actor_death(
+        game.entities.len() - 1,
+        DomainEvent::Waited,
+        &mut events,
+        &mut changed,
+        &mut removed,
+    )
+    .expect("direct monster death should resolve");
+    (
+        game.items
+            .into_iter()
+            .filter(|item| !existing_item_ids.contains(&item.id))
+            .collect(),
+        game.gold_piles
+            .into_iter()
+            .filter(|pile| !existing_gold_ids.contains(&pile.id))
+            .collect(),
+    )
+}
+
+#[test]
+fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
+    let is_remains = |item: &ItemInstance| {
+        matches!(
+            item.kind_id.as_str(),
+            "demo.item.corpse-remains" | "demo.item.skeleton-remains"
+        )
+    };
+    let mut saw_kobold_drop = false;
+    let mut saw_kobold_gold = false;
+    let mut saw_kobold_no_drop = false;
+    let mut saw_no_remains = false;
+    let mut saw_corpse = false;
+    let mut saw_skeleton = false;
+
+    for seed in 0..128 {
+        let (drops, gold) = direct_warrens_death_drops("demo.actor.small-kobold", seed);
+        let ordinary_drop_count = drops.iter().filter(|item| !is_remains(item)).count();
+        assert!(ordinary_drop_count <= 1);
+        assert!(gold.len() <= 1);
+        assert!(ordinary_drop_count == 0 || gold.is_empty());
+        saw_kobold_drop |= ordinary_drop_count == 1;
+        saw_kobold_gold |= gold.len() == 1;
+        saw_kobold_no_drop |= ordinary_drop_count == 0;
+        saw_no_remains |= drops.iter().all(|item| !is_remains(item));
+        saw_corpse |= drops
+            .iter()
+            .any(|item| item.kind_id == "demo.item.corpse-remains");
+        saw_skeleton |= drops
+            .iter()
+            .any(|item| item.kind_id == "demo.item.skeleton-remains");
+    }
+
+    assert!(saw_kobold_drop && saw_kobold_gold && saw_kobold_no_drop);
+    assert!(saw_no_remains && saw_corpse && saw_skeleton);
+    assert_eq!(
+        direct_warrens_death_drops("demo.actor.small-kobold", 42),
+        direct_warrens_death_drops("demo.actor.small-kobold", 42)
+    );
+
+    for actor_kind_id in ["demo.actor.giant-white-mouse", "demo.actor.warg"] {
+        for seed in 0..32 {
+            let (drops, gold) = direct_warrens_death_drops(actor_kind_id, seed);
+            assert!(gold.is_empty());
+            assert!(drops.iter().all(is_remains));
+            if actor_kind_id == "demo.actor.giant-white-mouse" {
+                assert!(
+                    drops
+                        .iter()
+                        .all(|item| item.kind_id != "demo.item.skeleton-remains")
+                );
+            }
+        }
+    }
+
+    let mut surface = Game::new_warrens_journey_with_build(1, "demo.build.warrior")
+        .expect("Warrens journey should create");
+    surface.rng = RfbRng::seeded(42);
+    let draws_before = surface.rng_draw_counter();
+    let outside_depth = surface
+        .generate_loot_instances(
+            &LootContext {
+                table_id: "demo.loot-table.small-kobold".to_owned(),
+                floor_id: "demo.floor.surface".to_owned(),
+                depth: 0,
+                source: LootSource::MonsterDeath {
+                    actor_id: "test.small-kobold.surface".to_owned(),
+                },
+            },
+            ItemLocation::Ground(surface.player.position),
+        )
+        .expect("an out-of-depth loot table should resolve without candidates");
+    assert!(outside_depth.is_empty());
+    assert_eq!(surface.rng_draw_counter(), draws_before);
+}
+
 #[test]
 fn carried_item_save_rejects_a_missing_monster_owner() {
     let mut payload = Game::new(42).to_save();
@@ -586,24 +706,28 @@ fn warrens_journey_conquers_returns_retires_and_round_trips() {
         "demo.actor.warrens-keeper"
     );
     let guardian_position = game.entities[guardian_index].position;
-    game.entities[guardian_index].hp = 1;
-    let (direction, player_position) = TERRAIN_INTERACTION_DIRECTIONS
+    let item_ids_before_guardian = game
+        .items
         .iter()
-        .find_map(|direction| {
-            let (dx, dy) = direction.delta();
-            let position = Position {
-                x: guardian_position.x - dx,
-                y: guardian_position.y - dy,
-            };
-            game.index(position)
-                .and_then(|index| game.content.terrain(&game.terrain[index]))
-                .filter(|terrain| terrain.walkable)
-                .map(|_| (*direction, position))
-        })
-        .expect("guardian should have a walkable approach");
-    game.player.position = player_position;
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
+    game.entities[guardian_index].hp = 1;
+    game.entities[guardian_index].statuses = vec![StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 3,
+        remaining_ticks: 1,
+        source_id: Some(game.player.id.clone()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    }];
 
-    let victory = dispatch_next(&mut game, GameCommand::Move { direction });
+    let victory = dispatch_next(&mut game, GameCommand::Wait);
     let guardian_event = victory
         .events
         .iter()
@@ -618,6 +742,40 @@ fn warrens_journey_conquers_returns_retires_and_round_trips() {
     assert_eq!(victory.campaign.status, CampaignStatusDto::Victorious);
     assert_eq!(victory.campaign.conquered_dungeons, 1);
     assert_eq!(victory.campaign.score, 60_000);
+    let guardian_drops = game
+        .items
+        .iter()
+        .filter(|item| !item_ids_before_guardian.contains(&item.id))
+        .collect::<Vec<_>>();
+    assert!(
+        guardian_drops
+            .iter()
+            .all(|item| { item.location == ItemLocation::Ground(guardian_position) })
+    );
+    assert_eq!(
+        guardian_drops
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.swiftstep-tonic")
+            .count(),
+        1
+    );
+    let fine_equipment = guardian_drops
+        .iter()
+        .filter(|item| item.quality == ItemQualityDto::Fine)
+        .collect::<Vec<_>>();
+    assert!((1..=2).contains(&fine_equipment.len()));
+    assert!(fine_equipment.iter().all(|item| {
+        matches!(
+            item.kind_id.as_str(),
+            "demo.item.short-sword"
+                | "demo.item.hard-leather-cap"
+                | "demo.item.leather-gloves"
+                | "demo.item.sabre"
+                | "demo.item.small-leather-shield"
+                | "demo.item.soft-leather-boots"
+                | "demo.item.spear"
+        )
+    }));
 
     let victorious_hash = game.state_hash();
     let mut restored = Game::from_save(game.to_save()).expect("victory should round-trip");

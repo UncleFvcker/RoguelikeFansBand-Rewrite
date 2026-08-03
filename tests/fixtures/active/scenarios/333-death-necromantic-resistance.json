@@ -50,6 +50,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.necromantic-resistance",
@@ -3168,6 +3170,7 @@
         }
       ],
       "nextItemInstanceSerial": 9,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -3235,7 +3238,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "13eb4a9bd034c48f0fee02dc74476d24804493a75d2c0b9e11e417b6847f3f3c"
+      "stateHash": "441652c594ab9e082da44700795981e5c109c62f597e5f52411dcbc9c86581aa"
     },
     "events": [
       {
@@ -3316,6 +3319,6 @@
         "y": 5
       }
     ],
-    "saveRoundTripStateHash": "13eb4a9bd034c48f0fee02dc74476d24804493a75d2c0b9e11e417b6847f3f3c"
+    "saveRoundTripStateHash": "441652c594ab9e082da44700795981e5c109c62f597e5f52411dcbc9c86581aa"
   }
 }

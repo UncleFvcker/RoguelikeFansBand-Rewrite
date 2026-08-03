@@ -407,6 +407,7 @@ fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) ->
         && left.curse == right.curse
         && left.activation == right.activation
         && left.charges == right.charges
+        && left.fuel == right.fuel
         && left.device_recovery_progress == right.device_recovery_progress
 }
 

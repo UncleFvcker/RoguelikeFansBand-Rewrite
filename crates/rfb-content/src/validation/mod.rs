@@ -8,6 +8,7 @@ mod items;
 mod shared;
 mod tables;
 mod terrain;
+mod towns;
 mod worlds;
 
 use std::collections::BTreeSet;
@@ -28,6 +29,7 @@ pub(crate) use shared::{
 };
 use tables::{TableDefinitions, TableValidationOutputs, TableValidationRefs, validate_tables};
 use terrain::{TerrainValidationOutputs, validate_terrain};
+use towns::{TownValidationOutputs, TownValidationRefs, validate_towns_and_shops};
 use worlds::{WorldValidationRefs, validate_world};
 
 pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<(), ContentError> {
@@ -87,6 +89,8 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .terrain_feature_tables
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.vaults.sort_by(|left, right| left.id.cmp(&right.id));
+    content.towns.sort_by(|left, right| left.id.cmp(&right.id));
+    content.shops.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
     let mut all_ids = BTreeSet::new();
     let TerrainValidationOutputs {
@@ -182,6 +186,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
 
     let TableValidationOutputs {
         loot_table_ids,
+        loot_tables_by_id,
         encounter_tables_by_id,
         vaults_by_id,
         theme_tables_by_id,
@@ -210,6 +215,20 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         &mut all_ids,
     )?;
 
+    let TownValidationOutputs {
+        towns_by_id,
+        shops_by_id,
+    } = validate_towns_and_shops(
+        &mut content.towns,
+        &mut content.shops,
+        TownValidationRefs {
+            items: &content.items,
+            races: &content.races,
+        },
+        &mut all_ids,
+    )?;
+
+    let mut referenced_towns = BTreeSet::new();
     for world in &mut content.worlds {
         require_schema(&world.schema, WORLD_SCHEMA, &world.id)?;
         require_format_version(world.format_version, &world.id)?;
@@ -227,16 +246,32 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 actor_roles: &actor_roles,
                 actor_levels: &actor_levels,
                 item_limits: &item_limits,
+                items: &content.items,
                 affix_ids: &affix_ids,
                 encounter_tables: &encounter_tables_by_id,
                 loot_table_ids: &loot_table_ids,
+                loot_tables: &loot_tables_by_id,
                 theme_tables: &theme_tables_by_id,
                 region_tables: &region_tables_by_id,
                 terrain_feature_tables: &terrain_feature_tables_by_id,
                 vaults: &vaults_by_id,
                 build_ids: &build_ids,
+                towns: &towns_by_id,
+                shops: &shops_by_id,
             },
         )?;
+        if let Some(town_id) = &world.town_id
+            && !referenced_towns.insert(town_id.clone())
+        {
+            return Err(ContentError::InvalidTown(town_id.clone()));
+        }
+    }
+    if referenced_towns.len() != towns_by_id.len() {
+        let unowned = towns_by_id
+            .keys()
+            .find(|town_id| !referenced_towns.contains(*town_id))
+            .expect("town count mismatch must identify an unowned town");
+        return Err(ContentError::InvalidTown(unowned.clone()));
     }
     Ok(())
 }

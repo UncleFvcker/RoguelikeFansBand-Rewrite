@@ -450,9 +450,27 @@ mod tests {
 
     #[test]
     fn ten_thousand_turns_do_not_drift() {
-        let initial = quiet_game(0x0123_4567_89ab_cdef);
+        let mut initial = quiet_game(0x0123_4567_89ab_cdef);
+        for index in 0..9 {
+            initial
+                .debug_add_generated_inventory_item(
+                    &format!("test.item.replay-ration.{index}"),
+                    "demo.item.ration-of-food",
+                    1,
+                )
+                .expect("long replay should have enough food");
+        }
         let mut recorder = ReplayRecorder::new(initial.clone());
-        dispatch_waits(&mut recorder, 10_000);
+        for index in 0..9 {
+            dispatch_waits(&mut recorder, 1_000);
+            recorder
+                .dispatch(GameCommand::UseItem {
+                    item_id: format!("test.item.replay-ration.{index}"),
+                    target: None,
+                })
+                .expect("ration should keep the long replay alive");
+        }
+        dispatch_waits(&mut recorder, 991);
         let (final_game, replay) = recorder.finish();
 
         assert_eq!(replay.checkpoints.len(), 100);
@@ -483,6 +501,75 @@ mod tests {
         verify(&second_replay, replay_initial).expect("resumed replay segment should verify");
 
         assert_eq!(resumed_game.state_hash(), uninterrupted_game.state_hash());
+    }
+
+    #[test]
+    fn shop_transactions_replay_and_continue_across_save_reload() {
+        let initial = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+            .expect("Warrens game should start");
+        let mut first_segment = ReplayRecorder::new(initial.clone());
+        for direction in
+            std::iter::repeat_n(Direction::West, 16).chain(std::iter::repeat_n(Direction::North, 3))
+        {
+            first_segment
+                .dispatch(GameCommand::Move { direction })
+                .expect("path to General Store should execute");
+        }
+        let shop = &first_segment.game().snapshot().shops[0];
+        let stock_item_id = shop
+            .stock
+            .iter()
+            .find(|item| item.kind_id == "demo.item.ration-of-food")
+            .expect("General Store should stock rations")
+            .id
+            .clone();
+        first_segment
+            .dispatch(GameCommand::BuyFromShop {
+                shop_id: shop.id.clone(),
+                item_id: stock_item_id,
+                quantity: 1,
+            })
+            .expect("purchase should execute");
+        let (midpoint_game, first_replay) = first_segment.finish();
+        let first_verification =
+            verify(&first_replay, initial).expect("shop purchase replay should verify");
+        assert_eq!(first_verification.commands_verified, 20);
+
+        let midpoint_payload = midpoint_game.to_save();
+        let restored =
+            Game::from_save(midpoint_payload.clone()).expect("shop state should restore");
+        let replay_initial =
+            Game::from_save(midpoint_payload).expect("shop replay state should restore");
+        let ration_item_id = restored
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == "demo.item.ration-of-food")
+            .expect("Warrior should carry rations")
+            .id
+            .clone();
+        let mut second_segment = ReplayRecorder::new(restored);
+        second_segment
+            .dispatch(GameCommand::SellToShop {
+                shop_id: "demo.shop.outpost-general-store".to_owned(),
+                item_id: ration_item_id,
+                quantity: 1,
+            })
+            .expect("sale should execute");
+        let (resumed_game, second_replay) = second_segment.finish();
+        let second_verification =
+            verify(&second_replay, replay_initial).expect("resumed shop sale replay should verify");
+        assert_eq!(second_verification.commands_verified, 1);
+
+        let mut uninterrupted = midpoint_game;
+        uninterrupted
+            .dispatch(GameCommandEnvelope {
+                command_seq: uninterrupted.last_command_seq().saturating_add(1),
+                expected_revision: uninterrupted.revision(),
+                command: second_replay.commands[0].command.clone(),
+            })
+            .expect("uninterrupted sale should execute");
+        assert_eq!(resumed_game.state_hash(), uninterrupted.state_hash());
     }
 
     #[test]
@@ -1266,9 +1353,9 @@ mod tests {
         let (final_game, replay) = recorder.finish();
 
         let snapshot = final_game.snapshot();
-        assert_eq!(snapshot.player.hp, 11);
+        assert_eq!(snapshot.player.hp, 12);
         assert_eq!(snapshot.player.resources[0].current, 21);
-        assert_eq!(snapshot.turn, 8);
+        assert_eq!(snapshot.turn, 11);
         let verification = verify(&replay, initial).expect("healing rest replay should verify");
         assert_eq!(verification.commands_verified, 3);
         assert_eq!(verification.final_state_hash, final_game.state_hash());
@@ -1600,10 +1687,14 @@ mod tests {
     }
 
     fn dispatch_waits(recorder: &mut ReplayRecorder, count: usize) {
-        for _ in 0..count {
-            recorder
-                .dispatch(GameCommand::Wait)
-                .expect("wait should execute");
+        for step in 0..count {
+            if let Err(error) = recorder.dispatch(GameCommand::Wait) {
+                let payload = recorder.game().to_save();
+                panic!(
+                    "wait {step}/{count} should execute at tick {}, nutrition {}, hp {}: {error}",
+                    payload.world_tick, payload.player.nutrition, payload.player.hp
+                );
+            }
         }
     }
 

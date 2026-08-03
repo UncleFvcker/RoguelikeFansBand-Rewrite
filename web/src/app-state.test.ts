@@ -43,3 +43,19 @@ test("application state maintains authoritative visibility deltas for look mode"
   assert.equal(state.cellVisibility.get("1,2"), "remembered");
   assert.equal(state.cellVisibility.get("2,2"), "visible");
 });
+
+test("application state maintains authoritative cells and content glyphs", () => {
+  const state = new AppState();
+  state.replaceCells([
+    { position: { x: 3, y: 4 }, terrainId: "demo.terrain.stairs-down", itemId: null, actorId: null },
+  ]);
+  state.updateCells([
+    { position: { x: 3, y: 4 }, terrainId: "demo.terrain.stairs-up", itemId: null, actorId: null },
+  ]);
+  state.replaceContentVisuals([
+    { id: "demo.terrain.stairs-up", glyph: "<" },
+  ]);
+
+  assert.equal(state.cellAt({ x: 3, y: 4 })?.terrainId, "demo.terrain.stairs-up");
+  assert.equal(state.contentGlyphs.get("demo.terrain.stairs-up"), "<");
+});

@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     AbilityDetectSubjectDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
     ContentError, EquipmentBonuses, ITEM_SCHEMA, ItemDefinition, ItemEnchantmentRollDefinition,
-    ItemSummonSelectorDefinition, ItemUseEffectDefinition, StatModifiers,
+    ItemFuelKindDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition, StatModifiers,
 };
 
 use super::shared::{
@@ -23,6 +23,7 @@ pub(crate) fn valid_item_effect(
     resource_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
+        ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::Heal { amount }
         | ItemUseEffectDefinition::SelfLifeLoss { amount } => (1..=1_000_000).contains(amount),
         ItemUseEffectDefinition::ApplyDetonation {
@@ -383,7 +384,8 @@ pub(super) fn validate_items(
                 && target.requires_line_of_effect;
             modes_are_unique
                 && match effect {
-                    ItemUseEffectDefinition::Heal { .. }
+                    ItemUseEffectDefinition::IncreaseNutrition { .. }
+                    | ItemUseEffectDefinition::Heal { .. }
                     | ItemUseEffectDefinition::HealDice { .. }
                     | ItemUseEffectDefinition::Bless { .. }
                     | ItemUseEffectDefinition::ApplySlowness { .. }
@@ -462,8 +464,35 @@ pub(super) fn validate_items(
         if item.max_stack == 0 || item.max_stack > 1_000_000 {
             return Err(ContentError::InvalidItemStack(item.id.clone()));
         }
+        if item.base_value > 999_999_999 {
+            return Err(ContentError::InvalidItemValue(item.id.clone()));
+        }
         if item.break_chance_percent > 100 {
             return Err(ContentError::InvalidItemBreakChance(item.id.clone()));
+        }
+        if let Some(fuel) = item.fuel {
+            let valid = fuel.maximum > 0
+                && fuel.initial <= fuel.maximum
+                && match fuel.kind {
+                    ItemFuelKindDefinition::Torch => {
+                        item.equipment_slot.as_deref() == Some("light")
+                            && item.max_stack == 1
+                            && fuel.light_radius == 1
+                    }
+                    ItemFuelKindDefinition::Lantern => {
+                        item.equipment_slot.as_deref() == Some("light")
+                            && item.max_stack == 1
+                            && fuel.light_radius == 2
+                    }
+                    ItemFuelKindDefinition::Oil => {
+                        item.equipment_slot.is_none()
+                            && fuel.light_radius == 0
+                            && fuel.initial == fuel.maximum
+                    }
+                };
+            if !valid {
+                return Err(ContentError::InvalidItemFuel(item.id.clone()));
+            }
         }
         if let Some(slot) = &item.equipment_slot
             && (item.max_stack != 1 || validate_equipment_slot(slot).is_err())
@@ -579,6 +608,7 @@ pub(super) fn validate_items(
                     action.effect,
                     ItemUseEffectDefinition::RechargeFromDevice { .. }
                         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
+                        | ItemUseEffectDefinition::IncreaseNutrition { .. }
                         | ItemUseEffectDefinition::ApplySlowness { .. }
                         | ItemUseEffectDefinition::ApplySpeed { .. }
                         | ItemUseEffectDefinition::ApplyHeroism { .. }

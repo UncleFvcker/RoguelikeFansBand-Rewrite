@@ -77,8 +77,9 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
         Some(73)
     );
     assert_eq!(snapshot.player.melee_skill, 73);
-    assert_eq!(snapshot.player.carry_capacity_tenths_pound, 600);
-    assert_eq!(snapshot.player.carried_weight_tenths_pound, 444);
+    assert!((202..=800).contains(&snapshot.player.gold));
+    assert_eq!(snapshot.player.carry_capacity_tenths_pound, 1200);
+    assert_eq!(snapshot.player.carried_weight_tenths_pound, 714);
     assert_eq!(
         snapshot
             .body_slots
@@ -101,9 +102,27 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
             ("feet", "boots"),
         ]
     );
-    assert_eq!(snapshot.inventory.len(), 1);
-    assert_eq!(snapshot.inventory[0].kind_id, "demo.item.arrow");
-    assert_eq!(snapshot.inventory[0].quantity, 22);
+    assert_eq!(snapshot.inventory.len(), 8);
+    assert!(
+        snapshot
+            .inventory
+            .iter()
+            .any(|item| { item.kind_id == "demo.item.arrow" && item.quantity == 22 })
+    );
+    assert!(
+        snapshot
+            .inventory
+            .iter()
+            .any(|item| { item.kind_id == "demo.item.ration-of-food" && item.quantity == 9 })
+    );
+    assert_eq!(
+        snapshot
+            .inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .count(),
+        6
+    );
     assert_eq!(snapshot.equipment.len(), 3);
     assert!(
         snapshot
@@ -159,7 +178,7 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
             .find(|skill| skill.id == "demo.skill.device")
             .is_some_and(|skill| skill.current > 60)
     );
-    assert_eq!(warrior.rng_draw_counter(), 0);
+    assert!(warrior.rng_draw_counter() > 5);
 }
 
 #[test]

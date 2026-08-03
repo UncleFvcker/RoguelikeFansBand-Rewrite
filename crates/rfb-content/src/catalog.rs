@@ -9,9 +9,9 @@ use super::{
     CharacterBuildDefinition, ClassDefinition, CompiledArtifact, ContentError,
     EncounterTableDefinition, ItemDefinition, LootTableDefinition, PackDependency,
     PersonalityDefinition, RaceDefinition, RegionTableDefinition, ResourceDefinition,
-    SkillDefinition, SkillKind, SkillSetDefinition, TerrainDefinition,
-    TerrainFeatureTableDefinition, ThemeTableDefinition, VaultDefinition, WorldDefinition,
-    decode_content,
+    ShopDefinition, SkillDefinition, SkillKind, SkillSetDefinition, TerrainDefinition,
+    TerrainFeatureTableDefinition, ThemeTableDefinition, TownDefinition, VaultDefinition,
+    WorldDefinition, decode_content,
 };
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -57,6 +57,10 @@ pub struct CompiledContentV1 {
     pub terrain_feature_tables: Vec<TerrainFeatureTableDefinition>,
     #[serde(default)]
     pub vaults: Vec<VaultDefinition>,
+    #[serde(default)]
+    pub towns: Vec<TownDefinition>,
+    #[serde(default)]
+    pub shops: Vec<ShopDefinition>,
     pub worlds: Vec<WorldDefinition>,
 }
 
@@ -84,6 +88,8 @@ pub struct ContentCatalog {
     region_tables: BTreeMap<String, RegionTableDefinition>,
     terrain_feature_tables: BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: BTreeMap<String, VaultDefinition>,
+    towns: BTreeMap<String, TownDefinition>,
+    shops: BTreeMap<String, ShopDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
 }
 
@@ -112,6 +118,8 @@ pub struct ContentSummary {
     pub region_table_count: usize,
     pub terrain_feature_table_count: usize,
     pub vault_count: usize,
+    pub town_count: usize,
+    pub shop_count: usize,
     pub world_count: usize,
 }
 
@@ -228,6 +236,16 @@ impl ContentCatalog {
                 .collect(),
             vaults: content
                 .vaults
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            towns: content
+                .towns
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            shops: content
+                .shops
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -370,6 +388,16 @@ impl ContentCatalog {
     #[must_use]
     pub fn vault(&self, id: &str) -> Option<&VaultDefinition> {
         self.vaults.get(id)
+    }
+
+    #[must_use]
+    pub fn town(&self, id: &str) -> Option<&TownDefinition> {
+        self.towns.get(id)
+    }
+
+    #[must_use]
+    pub fn shop(&self, id: &str) -> Option<&ShopDefinition> {
+        self.shops.get(id)
     }
 
     #[must_use]

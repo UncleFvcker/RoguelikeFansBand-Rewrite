@@ -7,6 +7,7 @@ type DocumentLookup = Pick<Document, "getElementById">;
 export interface AppDom {
   readonly mapHost: HTMLElement;
   readonly targetCursor: HTMLElement;
+  readonly traverseStairs: HTMLButtonElement;
   readonly targetModeToggle: HTMLButtonElement;
   readonly lookModeToggle: HTMLButtonElement;
   readonly targetModeStatus: HTMLElement;
@@ -42,6 +43,10 @@ export interface AppDom {
   readonly messageList: HTMLOListElement;
   readonly turnValue: HTMLElement;
   readonly hpValue: HTMLElement;
+  readonly healthMeter: HTMLElement;
+  readonly healthMeterFill: HTMLElement;
+  readonly goldValue: HTMLElement;
+  readonly nutritionValue: HTMLElement;
   readonly attackValue: HTMLElement;
   readonly defenseValue: HTMLElement;
   readonly effectsValue: HTMLElement;
@@ -61,6 +66,8 @@ export interface AppDom {
   readonly resourceList: HTMLUListElement;
   readonly abilityList: HTMLUListElement;
   readonly resourceRest: HTMLButtonElement;
+  readonly nearbyCurrent: HTMLElement;
+  readonly nearbyList: HTMLUListElement;
   readonly summonCommandStatus: HTMLElement;
   readonly summonCommandButtons: Readonly<Record<SummonCommandModeDto, HTMLButtonElement>>;
   readonly taskLogList: HTMLUListElement;
@@ -98,6 +105,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
   return Object.freeze({
     mapHost: element<HTMLElement>(document, "map-host"),
     targetCursor: element<HTMLElement>(document, "target-cursor"),
+    traverseStairs: element<HTMLButtonElement>(document, "traverse-stairs"),
     targetModeToggle: element<HTMLButtonElement>(document, "target-mode-toggle"),
     lookModeToggle: element<HTMLButtonElement>(document, "look-mode-toggle"),
     targetModeStatus: element<HTMLElement>(document, "target-mode-status"),
@@ -133,6 +141,10 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     messageList: element<HTMLOListElement>(document, "message-list"),
     turnValue: element<HTMLElement>(document, "turn-value"),
     hpValue: element<HTMLElement>(document, "hp-value"),
+    healthMeter: element<HTMLElement>(document, "health-meter"),
+    healthMeterFill: element<HTMLElement>(document, "health-meter-fill"),
+    goldValue: element<HTMLElement>(document, "gold-value"),
+    nutritionValue: element<HTMLElement>(document, "nutrition-value"),
     attackValue: element<HTMLElement>(document, "attack-value"),
     defenseValue: element<HTMLElement>(document, "defense-value"),
     effectsValue: element<HTMLElement>(document, "effects-value"),
@@ -158,6 +170,8 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     resourceList: element<HTMLUListElement>(document, "resource-list"),
     abilityList: element<HTMLUListElement>(document, "ability-list"),
     resourceRest: element<HTMLButtonElement>(document, "resource-rest"),
+    nearbyCurrent: element<HTMLElement>(document, "nearby-current"),
+    nearbyList: element<HTMLUListElement>(document, "nearby-list"),
     summonCommandStatus: element<HTMLElement>(document, "summon-command-status"),
     summonCommandButtons: Object.freeze({
       follow: element<HTMLButtonElement>(document, "summon-command-follow"),

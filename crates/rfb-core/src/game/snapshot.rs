@@ -40,6 +40,9 @@ impl Game {
             position: self.player.position,
             hp: self.player.hp,
             max_hp: stats.max_hp.value,
+            gold: self.gold,
+            nutrition: self.nutrition,
+            nutrition_state: self.nutrition_state(),
             speed: derived_speed(&stats.speed),
             energy_need: self.player.energy_need,
             carried_weight_tenths_pound: self.carried_weight_tenths_pound(),
@@ -470,6 +473,7 @@ impl Game {
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     position: *position,
                     quantity: item.quantity,
+                    fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
                 })
@@ -506,6 +510,7 @@ impl Game {
                     charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then_some(item.charges)
                         .flatten(),
+                    fuel: item.fuel,
                     activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then(|| item.activation.clone())
                         .flatten(),
@@ -577,6 +582,7 @@ impl Game {
                     display_name_key: self.item_display_name_key(&item.kind_id),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     quantity: item.quantity,
+                    fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
@@ -626,6 +632,7 @@ impl Game {
             player: self.player_dto(),
             entities: self.entities_dto(),
             items: self.items_dto(),
+            gold_piles: self.gold_pile_dtos(),
             inventory: self.inventory_dto(),
             equipment: self.equipment_dto(),
             body_slots: self
@@ -642,6 +649,8 @@ impl Game {
             world_id: self.world_id.clone(),
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+            town: self.current_town_dto(),
+            shops: self.current_shop_dtos(),
             terrain_interactions: self.terrain_interactions(),
             tasks: self.task_statuses(),
             campaign: self.campaign_state_dto(),
@@ -650,11 +659,32 @@ impl Game {
     }
 
     fn content_visuals(&self) -> Vec<ContentVisualDto> {
-        self.content
+        let mut visuals = self
+            .content
             .visual_glyphs()
             .into_iter()
             .map(|(id, glyph)| ContentVisualDto { id, glyph })
-            .collect()
+            .collect::<Vec<_>>();
+        for appearance in [
+            rfb_protocol::GoldAppearanceDto::Copper,
+            rfb_protocol::GoldAppearanceDto::Silver,
+            rfb_protocol::GoldAppearanceDto::Garnets,
+            rfb_protocol::GoldAppearanceDto::Gold,
+            rfb_protocol::GoldAppearanceDto::Opals,
+            rfb_protocol::GoldAppearanceDto::Sapphires,
+            rfb_protocol::GoldAppearanceDto::Rubies,
+            rfb_protocol::GoldAppearanceDto::Diamonds,
+            rfb_protocol::GoldAppearanceDto::Emeralds,
+            rfb_protocol::GoldAppearanceDto::Mithril,
+            rfb_protocol::GoldAppearanceDto::Adamantite,
+        ] {
+            visuals.push(ContentVisualDto {
+                id: super::gold::gold_visual_id(appearance).to_owned(),
+                glyph: "$".to_owned(),
+            });
+        }
+        visuals.sort_by(|left, right| left.id.cmp(&right.id));
+        visuals
     }
 
     pub(super) fn cell_dto(&self, position: Position) -> CellDto {
@@ -670,10 +700,18 @@ impl Game {
             position,
             terrain_id: self.known_terrain_at(position).to_owned(),
             item_id: self
-                .items
+                .gold_piles
                 .iter()
-                .find(|item| item.location == ItemLocation::Ground(position))
-                .map(|item| item.id.clone()),
+                .filter(|pile| pile.position == position)
+                .min_by(|left, right| left.id.cmp(&right.id))
+                .map(|pile| pile.id.clone())
+                .or_else(|| {
+                    self.items
+                        .iter()
+                        .filter(|item| item.location == ItemLocation::Ground(position))
+                        .min_by(|left, right| left.id.cmp(&right.id))
+                        .map(|item| item.id.clone())
+                }),
             actor_id,
         }
     }
@@ -720,7 +758,7 @@ impl Game {
             } else {
                 VisibilityState::Hidden
             },
-            light: light_from_sources(light_sources, position),
+            light: light_from_sources(light_sources, position, self.ambient_light()),
         }
     }
 

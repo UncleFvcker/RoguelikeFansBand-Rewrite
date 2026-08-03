@@ -234,6 +234,9 @@ pub enum ItemSummonSelectorDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
+    IncreaseNutrition {
+        amount: u16,
+    },
     Heal {
         amount: u32,
     },
@@ -535,6 +538,26 @@ pub struct ItemDeviceRecoveryDefinition {
     pub energy_per_mille: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemFuelKindDefinition {
+    Torch,
+    Lantern,
+    Oil,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemFuelDefinition {
+    pub kind: ItemFuelKindDefinition,
+    pub initial: u16,
+    pub maximum: u16,
+    #[serde(default)]
+    pub light_radius: u8,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -550,6 +573,10 @@ pub struct ItemDefinition {
     pub glyph: String,
     pub weight_tenths_pound: u16,
     pub max_stack: u32,
+    /// Fully-known, plain-instance value used by authoritative shop pricing.
+    /// Zero means ordinary stores will not buy the item.
+    #[serde(default)]
+    pub base_value: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
     /// Curse stamped onto newly generated instances. Save data remains
@@ -570,6 +597,8 @@ pub struct ItemDefinition {
     pub use_action: Option<ItemUseActionDefinition>,
     #[serde(default)]
     pub device_generation: Option<ItemDeviceGenerationDefinition>,
+    #[serde(default)]
+    pub fuel: Option<ItemFuelDefinition>,
     #[serde(default)]
     pub ability_book_id: Option<String>,
     #[serde(default)]

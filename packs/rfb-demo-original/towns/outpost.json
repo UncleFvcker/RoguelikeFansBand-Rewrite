@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town.outpost",
+  "nameKey": "town-demo-outpost-name",
+  "descriptionKey": "town-demo-outpost-description",
+  "floorId": "demo.floor.surface",
+  "shopIds": ["demo.shop.outpost-general-store"]
+}

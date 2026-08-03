@@ -70,7 +70,7 @@
         "x": 2,
         "y": 3
       },
-      "playerHp": 12,
+      "playerHp": 13,
       "playerMaxHp": 247,
       "playerAttack": 3,
       "playerDefense": 2,
@@ -78,6 +78,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.wraithform",
@@ -3148,6 +3150,7 @@
         }
       ],
       "nextItemInstanceSerial": 9,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -3215,7 +3218,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "351b8fb81ee8bb757ea2dc2001e87cb5f4dee226b8e3a023c2b93444d0dff634"
+      "stateHash": "3acfd117cdf0ed14660d913628faa2a8fa09a0ea3cbc88c153f9dc04dce53731"
     },
     "events": [
       {
@@ -3286,6 +3289,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "351b8fb81ee8bb757ea2dc2001e87cb5f4dee226b8e3a023c2b93444d0dff634"
+    "saveRoundTripStateHash": "3acfd117cdf0ed14660d913628faa2a8fa09a0ea3cbc88c153f9dc04dce53731"
   }
 }

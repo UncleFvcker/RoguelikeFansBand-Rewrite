@@ -32,7 +32,7 @@ pub(crate) use items::SourceItemUseActionDefinition;
 const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
-pub(crate) const SUPPORTED_ROOTS: [&str; 23] = [
+pub(crate) const SUPPORTED_ROOTS: [&str; 25] = [
     "abilities",
     "abilityBooks",
     "abilityPrograms",
@@ -51,9 +51,11 @@ pub(crate) const SUPPORTED_ROOTS: [&str; 23] = [
     "resources",
     "skills",
     "skillSets",
+    "shops",
     "terrain",
     "terrainFeatureTables",
     "themeTables",
+    "towns",
     "vaults",
     "worlds",
 ];
@@ -125,6 +127,8 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         region_tables: load_root(root, "regionTables", &roots, &mut budget)?,
         terrain_feature_tables: load_root(root, "terrainFeatureTables", &roots, &mut budget)?,
         vaults: load_root(root, "vaults", &roots, &mut budget)?,
+        towns: load_root(root, "towns", &roots, &mut budget)?,
+        shops: load_root(root, "shops", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };
     validate_effect_program_catalog(&effect_programs, &content)?;

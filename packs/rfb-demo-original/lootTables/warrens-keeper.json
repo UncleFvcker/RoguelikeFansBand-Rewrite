@@ -2,16 +2,19 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
   "formatVersion": 1,
   "id": "demo.loot-table.warrens-keeper",
-  "rolls": 1,
+  "rolls": 0,
+  "rollDice": { "dice": 1, "sides": 2 },
   "entries": [
-    {
-      "itemKindId": "demo.item.swiftstep-tonic",
-      "weight": 1,
-      "quantity": 1
-    }
+    { "itemKindId": "demo.item.short-sword", "weight": 3, "quantity": 1 },
+    { "itemKindId": "demo.item.hard-leather-cap", "weight": 7, "quantity": 1 },
+    { "itemKindId": "demo.item.leather-gloves", "weight": 7, "quantity": 1 },
+    { "itemKindId": "demo.item.sabre", "weight": 7, "quantity": 1 },
+    { "itemKindId": "demo.item.small-leather-shield", "weight": 7, "quantity": 1 },
+    { "itemKindId": "demo.item.soft-leather-boots", "weight": 7, "quantity": 1 },
+    { "itemKindId": "demo.item.spear", "weight": 7, "quantity": 1 }
   ],
   "qualityWeights": [
-    { "quality": "ordinary", "weight": 1 }
+    { "quality": "fine", "weight": 1 }
   ],
   "affixWeights": [
     { "weight": 1 }

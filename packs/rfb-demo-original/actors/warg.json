@@ -15,5 +15,12 @@
   "damageDice": 1,
   "damageSides": 3,
   "damageType": "physical",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "corpseWeight": 4,
+    "skeletonWeight": 1
+  },
   "tags": ["animal", "beast", "warrens"]
 }

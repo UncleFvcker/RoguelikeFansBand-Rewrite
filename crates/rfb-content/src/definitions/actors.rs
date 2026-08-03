@@ -132,11 +132,31 @@ pub struct ActorDefinition {
     pub monster_casting: Option<MonsterCastingDefinition>,
     #[serde(default)]
     pub loot_table_id: Option<String>,
+    /// Chance that a successful death-loot roll becomes gold instead of an item.
+    #[serde(default)]
+    pub gold_drop_chance_percent: Option<u8>,
     #[serde(default)]
     pub carried_loot_table_id: Option<String>,
     #[serde(default)]
     pub corpse_item_kind_id: Option<String>,
+    #[serde(default)]
+    pub remains: Option<MonsterRemainsDefinition>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterRemainsDefinition {
+    pub chance_denominator: u16,
+    #[serde(default)]
+    pub corpse_item_kind_id: Option<String>,
+    #[serde(default)]
+    pub skeleton_item_kind_id: Option<String>,
+    #[serde(default)]
+    pub corpse_weight: u16,
+    #[serde(default)]
+    pub skeleton_weight: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

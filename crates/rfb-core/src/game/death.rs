@@ -7,10 +7,11 @@ use rfb_protocol::{ItemEnchantmentsDto, ItemQualityDto, MonsterPackRoleDto, Posi
 use crate::{
     error::CoreError,
     event::DomainEvent,
-    state::{Actor, ItemInstance, ItemLocation},
+    state::{Actor, GoldPile, ItemInstance, ItemLocation},
 };
 
 use super::{Game, initial_item_curse, initial_item_runtime_state};
+use crate::save::initial_item_fuel;
 
 struct CarriedDrop {
     item_id: String,
@@ -22,6 +23,7 @@ struct ActorDeathPlan {
     actor: Actor,
     corpse: Option<ItemInstance>,
     generated_loot: Vec<ItemInstance>,
+    generated_gold: Option<GoldPile>,
     carried: Vec<CarriedDrop>,
     has_drops: bool,
     dissolved_pack_id: Option<String>,
@@ -35,10 +37,35 @@ impl Game {
         death_event: DomainEvent,
     ) -> Result<ActorDeathPlan, CoreError> {
         let actor = self.entities[index].clone();
-        let corpse_kind_id = self
+        let actor_definition = self
             .content
             .actor(&actor.kind_id)
-            .and_then(|definition| definition.corpse_item_kind_id.clone());
+            .expect("living actor definition must remain available")
+            .clone();
+        let (generated_loot, generated_gold) = self.generate_death_loot(&actor)?;
+        let corpse_kind_id = if let Some(kind_id) = actor_definition.corpse_item_kind_id {
+            Some(kind_id)
+        } else if let Some(remains) = actor_definition.remains {
+            if self.rng.bounded(u64::from(remains.chance_denominator)) != 0 {
+                None
+            } else {
+                match (remains.corpse_item_kind_id, remains.skeleton_item_kind_id) {
+                    (Some(kind_id), None) | (None, Some(kind_id)) => Some(kind_id),
+                    (Some(corpse_kind_id), Some(skeleton_kind_id)) => {
+                        let total =
+                            u64::from(remains.corpse_weight) + u64::from(remains.skeleton_weight);
+                        if self.rng.bounded(total) < u64::from(remains.corpse_weight) {
+                            Some(corpse_kind_id)
+                        } else {
+                            Some(skeleton_kind_id)
+                        }
+                    }
+                    (None, None) => unreachable!("validated remains must define an item kind"),
+                }
+            }
+        } else {
+            None
+        };
         let corpse = if let Some(kind_id) = corpse_kind_id {
             let (activation, charges) =
                 initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, 1);
@@ -46,6 +73,7 @@ impl Game {
                 id: self.allocate_item_instance_id()?,
                 activation,
                 charges,
+                fuel: initial_item_fuel(&self.content, &kind_id),
                 device_recovery_progress: 0,
                 curse: initial_item_curse(&self.content, &kind_id),
                 kind_id,
@@ -59,7 +87,6 @@ impl Game {
         } else {
             None
         };
-        let generated_loot = self.generate_death_loot(&actor)?;
         let mut carried = self
             .items
             .iter()
@@ -75,7 +102,10 @@ impl Game {
             })
             .collect::<Vec<_>>();
         carried.sort_by(|left, right| left.item_id.cmp(&right.item_id));
-        let has_drops = !carried.is_empty() || !generated_loot.is_empty() || corpse.is_some();
+        let has_drops = !carried.is_empty()
+            || !generated_loot.is_empty()
+            || generated_gold.is_some()
+            || corpse.is_some();
         let dissolved_pack_id = actor
             .pack
             .as_ref()
@@ -85,6 +115,7 @@ impl Game {
             actor,
             corpse,
             generated_loot,
+            generated_gold,
             carried,
             has_drops,
             dissolved_pack_id,
@@ -105,6 +136,7 @@ impl Game {
             actor,
             corpse,
             generated_loot,
+            generated_gold,
             carried,
             has_drops,
             dissolved_pack_id,
@@ -239,6 +271,13 @@ impl Game {
                 quantity: item.quantity,
             });
             self.items.push(item);
+        }
+        if let Some(gold) = generated_gold {
+            events.push(DomainEvent::GoldDropped {
+                source_kind_id: removed.kind_id.clone(),
+                amount: gold.amount,
+            });
+            self.gold_piles.push(gold);
         }
         if let Some(corpse) = corpse {
             self.items.push(corpse);

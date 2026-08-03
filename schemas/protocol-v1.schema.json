@@ -3436,6 +3436,16 @@
         "equipmentBonuses": {
           "$ref": "#/$defs/EquipmentBonusesDto"
         },
+        "fuel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemFuelDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -3647,6 +3657,32 @@
           "required": [
             "type",
             "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "shopId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "buy-from-shop"
+            }
+          },
+          "required": [
+            "type",
+            "shopId",
+            "itemId",
+            "quantity"
           ]
         },
         {
@@ -3896,6 +3932,32 @@
         {
           "type": "object",
           "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "shopId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "sell-to-shop"
+            }
+          },
+          "required": [
+            "type",
+            "shopId",
+            "itemId",
+            "quantity"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "source": {
               "$ref": "#/$defs/DeviceRechargeSourceDto"
             },
@@ -3911,6 +3973,26 @@
             "type",
             "targetItemId",
             "source"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceItemId": {
+              "type": "string"
+            },
+            "targetItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "refuel-light"
+            }
+          },
+          "required": [
+            "type",
+            "targetItemId",
+            "sourceItemId"
           ]
         },
         {
@@ -4635,6 +4717,13 @@
         "floorId": {
           "type": "string"
         },
+        "goldPiles": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GoldPileDto"
+          }
+        },
         "height": {
           "type": "integer",
           "format": "uint16",
@@ -4669,6 +4758,13 @@
           "format": "uint32",
           "minimum": 0
         },
+        "shops": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ShopDto"
+          }
+        },
         "stateHash": {
           "type": "string"
         },
@@ -4685,6 +4781,16 @@
           "items": {
             "$ref": "#/$defs/TerrainInteractionDto"
           }
+        },
+        "town": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TownDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "turn": {
           "type": "integer",
@@ -4792,6 +4898,13 @@
         "floorId": {
           "type": "string"
         },
+        "goldPiles": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GoldPileDto"
+          }
+        },
         "inventory": {
           "type": "array",
           "items": {
@@ -4818,6 +4931,13 @@
           "format": "uint32",
           "minimum": 0
         },
+        "shops": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ShopDto"
+          }
+        },
         "stateHash": {
           "type": "string"
         },
@@ -4834,6 +4954,16 @@
           "items": {
             "$ref": "#/$defs/TerrainInteractionDto"
           }
+        },
+        "town": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TownDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "turn": {
           "type": "integer",
@@ -4862,6 +4992,47 @@
         "removedEntities",
         "campaign",
         "stateHash"
+      ]
+    },
+    "GoldAppearanceDto": {
+      "type": "string",
+      "enum": [
+        "copper",
+        "silver",
+        "garnets",
+        "gold",
+        "opals",
+        "sapphires",
+        "rubies",
+        "diamonds",
+        "emeralds",
+        "mithril",
+        "adamantite"
+      ]
+    },
+    "GoldPileDto": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "appearance": {
+          "$ref": "#/$defs/GoldAppearanceDto"
+        },
+        "id": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "id",
+        "position",
+        "amount",
+        "appearance"
       ]
     },
     "HealingResolutionDto": {
@@ -4944,6 +5115,16 @@
             "null"
           ],
           "default": null
+        },
+        "fuel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemFuelDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "id": {
           "type": "string"
@@ -5235,6 +5416,16 @@
         "enchantments": {
           "$ref": "#/$defs/ItemEnchantmentsDto"
         },
+        "fuel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemFuelDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -5349,6 +5540,46 @@
         "toHit",
         "toDamage",
         "toArmor"
+      ]
+    },
+    "ItemFuelDto": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/ItemFuelKindDto"
+        },
+        "lightRadius": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kind",
+        "current",
+        "maximum",
+        "lightRadius"
+      ]
+    },
+    "ItemFuelKindDto": {
+      "type": "string",
+      "enum": [
+        "torch",
+        "lantern",
+        "oil"
       ]
     },
     "ItemIdentificationDto": {
@@ -5721,6 +5952,18 @@
         "to"
       ]
     },
+    "NutritionStateDto": {
+      "type": "string",
+      "enum": [
+        "bloated",
+        "full",
+        "normal",
+        "hungry",
+        "weak",
+        "faint",
+        "starving"
+      ]
+    },
     "PlayerBuildDto": {
       "type": "object",
       "properties": {
@@ -5879,6 +6122,12 @@
             "wisdom": 0
           }
         },
+        "gold": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -5922,6 +6171,17 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "nutrition": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 9999,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "nutritionState": {
+          "$ref": "#/$defs/NutritionStateDto",
+          "default": "normal"
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -6383,6 +6643,232 @@
         "invalid-turns",
         "player-died",
         "turn-limit"
+      ]
+    },
+    "ShopCategoryDto": {
+      "type": "string",
+      "enum": [
+        "general-store"
+      ]
+    },
+    "ShopDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/ShopCategoryDto"
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "entrancePosition": {
+          "$ref": "#/$defs/Position"
+        },
+        "entranceTerrainId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/ShopOwnerDto"
+        },
+        "playerAtEntrance": {
+          "type": "boolean"
+        },
+        "sellQuotes": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ShopSellQuoteDto"
+          }
+        },
+        "stock": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ShopStockItemDto"
+          }
+        },
+        "visited": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey",
+        "category",
+        "entrancePosition",
+        "entranceTerrainId",
+        "visited",
+        "playerAtEntrance",
+        "owner"
+      ]
+    },
+    "ShopOwnerDto": {
+      "type": "object",
+      "properties": {
+        "greedPercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "priceFactorPercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "purchasePriceCap": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "raceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "raceId",
+        "greedPercent",
+        "purchasePriceCap",
+        "priceFactorPercent"
+      ]
+    },
+    "ShopSellQuoteDto": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maximumQuantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "unavailableReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unitPrice": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "itemId",
+        "kindId",
+        "unitPrice",
+        "maximumQuantity"
+      ]
+    },
+    "ShopStockItemDto": {
+      "type": "object",
+      "properties": {
+        "activation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemActivationDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "charges": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemChargesDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "curse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "displayNameKey": {
+          "type": "string"
+        },
+        "enchantments": {
+          "$ref": "#/$defs/ItemEnchantmentsDto"
+        },
+        "fuel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemFuelDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maximumQuantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "quality": {
+          "$ref": "#/$defs/ItemQualityDto"
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "unitPrice": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "weightTenthsPound": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "displayNameKey",
+        "quantity",
+        "maximumQuantity",
+        "unitPrice",
+        "weightTenthsPound",
+        "quality"
       ]
     },
     "SkillProgressDto": {
@@ -6953,6 +7439,33 @@
         "toDamage",
         "damage",
         "sourceItemId"
+      ]
+    },
+    "TownDto": {
+      "type": "object",
+      "properties": {
+        "descriptionKey": {
+          "type": "string"
+        },
+        "floorId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "visited": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey",
+        "floorId",
+        "visited"
       ]
     },
     "VisibilityState": {

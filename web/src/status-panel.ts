@@ -16,12 +16,18 @@ import type {
   SummonCommandDto,
   SummonCommandModeDto,
 } from "./protocol";
+import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
+import { goldVisualId } from "./render-world.ts";
 
 type StatusDom = Pick<
   AppDom,
   | "mapHost"
   | "turnValue"
   | "hpValue"
+  | "healthMeter"
+  | "healthMeterFill"
+  | "goldValue"
+  | "nutritionValue"
   | "attackValue"
   | "defenseValue"
   | "effectsValue"
@@ -41,6 +47,8 @@ type StatusDom = Pick<
   | "resourceList"
   | "abilityList"
   | "resourceRest"
+  | "nearbyCurrent"
+  | "nearbyList"
   | "summonCommandStatus"
   | "summonCommandButtons"
   | "taskLogList"
@@ -151,6 +159,20 @@ export class StatusPanel {
         bonus: state.player.equipmentModifiers.maxHp,
       },
     );
+    const healthRatio =
+      state.player.maxHp > 0 ? Math.max(0, Math.min(1, state.player.hp / state.player.maxHp)) : 0;
+    this.#dom.healthMeterFill.style.width = `${healthRatio * 100}%`;
+    this.#dom.healthMeter.dataset.healthState =
+      healthRatio <= 0.25 ? "critical" : healthRatio <= 0.5 ? "wounded" : "healthy";
+    this.#dom.healthMeter.setAttribute("role", "progressbar");
+    this.#dom.healthMeter.setAttribute("aria-valuemin", "0");
+    this.#dom.healthMeter.setAttribute("aria-valuemax", String(state.player.maxHp));
+    this.#dom.healthMeter.setAttribute("aria-valuenow", String(state.player.hp));
+    this.#dom.goldValue.textContent = state.player.gold.toLocaleString(this.#localization.locale);
+    this.#dom.nutritionValue.textContent = this.#localization.format("status-nutrition-value", {
+      state: this.#localization.format(`nutrition-state-${state.player.nutritionState}`),
+      percent: nutritionPercentage(state.player.nutrition),
+    });
     this.#renderCombatStat(
       this.#dom.attackValue,
       state.player.attack,
@@ -168,6 +190,7 @@ export class StatusPanel {
       state.player.abilityLearning,
     );
     this.#renderSummonCommand(state.player.summonCommand, state.entities);
+    this.#renderNearby(state);
     const activeEffects = state.player.statuses.map((status) =>
       this.#localization.format("status-effect-entry", {
         status: this.#statusName(status.kindId),
@@ -194,6 +217,9 @@ export class StatusPanel {
     this.#dom.hashValue.textContent = state.stateHash.slice(0, 12);
     this.#dom.hashValue.title = state.stateHash;
     this.#dom.mapHost.dataset.itemCount = String(state.items.length);
+    this.#dom.mapHost.dataset.goldPileCount = String(state.goldPiles.length);
+    this.#dom.mapHost.dataset.playerGold = String(state.player.gold);
+    this.#dom.mapHost.dataset.playerNutrition = String(state.player.nutrition);
     this.#dom.mapHost.dataset.inventoryStackCount = String(state.inventory.length);
     this.#dom.mapHost.dataset.equipmentCount = String(state.equipment.length);
     this.#dom.mapHost.dataset.carriedWeightTenthsPound = String(
@@ -223,7 +249,7 @@ export class StatusPanel {
   };
 
   readonly #handleRest = (): void => {
-    void this.#dispatch({ type: "rest", turns: 100 });
+    void this.#dispatch({ type: "rest", turns: REST_UNTIL_RECOVERED_TURNS });
   };
 
   readonly #summonCommandHandlers: Record<SummonCommandModeDto, () => void> = {
@@ -426,9 +452,17 @@ export class StatusPanel {
     this.#dom.resourceRest.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
-      !resources.some(
-        (resource) => resource.restRecoveryAmount > 0 && resource.current < resource.maximum,
-      );
+      !this.#state.status ||
+      (this.#state.status.player.hp >= this.#state.status.player.maxHp &&
+        !resources.some(
+          (resource) => resource.restRecoveryAmount > 0 && resource.current < resource.maximum,
+        ));
+    if (resources.length === 0) {
+      const unavailable = document.createElement("li");
+      unavailable.className = "resource-empty";
+      unavailable.textContent = this.#localization.format("resource-unavailable");
+      this.#dom.resourceList.append(unavailable);
+    }
     if (resources.length === 0 && abilities.length === 0) {
       const unavailable = document.createElement("li");
       unavailable.className = "ability-empty";
@@ -440,11 +474,32 @@ export class StatusPanel {
       const row = document.createElement("li");
       row.className = "resource-row";
       const name = this.#localization.format(resource.nameKey as MessageKey);
+      const heading = document.createElement("div");
+      heading.className = "resource-heading";
+      const label = document.createElement("span");
+      label.className = "resource-name";
+      label.textContent = name;
+      const value = document.createElement("strong");
+      value.className = "resource-value";
+      value.textContent = `${resource.current} / ${resource.maximum}`;
+      heading.append(label, value);
+      const meter = document.createElement("span");
+      meter.className = "resource-meter";
+      meter.setAttribute("role", "progressbar");
+      meter.setAttribute("aria-label", name);
+      meter.setAttribute("aria-valuemin", "0");
+      meter.setAttribute("aria-valuemax", String(resource.maximum));
+      meter.setAttribute("aria-valuenow", String(resource.current));
+      const fill = document.createElement("span");
+      fill.style.width = `${resource.maximum > 0 ? Math.max(0, Math.min(100, resource.current / resource.maximum * 100)) : 0}%`;
+      meter.append(fill);
       const momentumDriven =
         (resource.meleeHitGainAmount ?? 0) > 0 ||
         (resource.meleeKillGainAmount ?? 0) > 0 ||
         (resource.turnDecayAmount ?? 0) > 0;
-      row.textContent = momentumDriven
+      const recovery = document.createElement("span");
+      recovery.className = "resource-recovery";
+      recovery.textContent = momentumDriven
         ? this.#localization.format("ability-resource-momentum-value", {
             resource: name,
             current: resource.current,
@@ -460,6 +515,7 @@ export class StatusPanel {
             wait: resource.waitRecoveryAmount,
             rest: resource.restRecoveryAmount,
           });
+      row.append(heading, meter, recovery);
       this.#dom.resourceList.append(row);
     }
     if (learning) {
@@ -473,6 +529,115 @@ export class StatusPanel {
       this.#dom.resourceList.append(row);
     }
     for (const ability of abilities) this.#dom.abilityList.append(this.#abilityRow(ability));
+  }
+
+  #renderNearby(state: GameSnapshot | GameUpdate): void {
+    const document = this.#dom.nearbyList.ownerDocument;
+    const player = state.player.position;
+    const currentCell = this.#state.cellAt(player);
+    this.#dom.nearbyCurrent.textContent = currentCell
+      ? this.#localization.format("nearby-current-terrain", {
+          terrain: this.#contentName(currentCell.terrainId),
+        })
+      : this.#localization.format("nearby-current-unknown");
+
+    const entries: NearbyEntry[] = [];
+    for (const entity of state.entities) {
+      if (!this.#isVisible(entity.position)) continue;
+      const distance = chebyshevDistance(player, entity.position);
+      if (distance === 0) continue;
+      entries.push({
+        id: `actor:${entity.id}`,
+        kind: entity.faction === "hostile" ? "hostile" : "ally",
+        contentId: entity.kindId,
+        name: this.#contentName(entity.kindId),
+        distance,
+        direction: directionKey(player, entity.position),
+        hp: entity.hp,
+        maxHp: entity.maxHp,
+      });
+    }
+    for (const item of state.items) {
+      if (!this.#isVisible(item.position)) continue;
+      const distance = chebyshevDistance(player, item.position);
+      entries.push({
+        id: `item:${item.id}`,
+        kind: "item",
+        contentId: item.kindId,
+        name: this.#contentName(item.kindId),
+        distance,
+        direction: distance === 0 ? "here" : directionKey(player, item.position),
+        quantity: item.quantity,
+      });
+    }
+    for (const pile of state.goldPiles) {
+      if (!this.#isVisible(pile.position)) continue;
+      const distance = chebyshevDistance(player, pile.position);
+      entries.push({
+        id: `gold:${pile.id}`,
+        kind: "gold",
+        contentId: goldVisualId(pile.appearance),
+        name: this.#localization.format(`gold-appearance-${pile.appearance}`),
+        distance,
+        direction: distance === 0 ? "here" : directionKey(player, pile.position),
+        amount: pile.amount,
+      });
+    }
+    entries.sort((left, right) =>
+      left.distance - right.distance ||
+      nearbyKindPriority(left.kind) - nearbyKindPriority(right.kind) ||
+      left.name.localeCompare(right.name) ||
+      left.id.localeCompare(right.id),
+    );
+    if (entries.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "nearby-empty";
+      empty.textContent = this.#localization.format("nearby-empty");
+      this.#dom.nearbyList.replaceChildren(empty);
+      return;
+    }
+    this.#dom.nearbyList.replaceChildren(
+      ...entries.slice(0, 8).map((entry) => {
+        const row = document.createElement("li");
+        row.className = `nearby-row nearby-${entry.kind}`;
+        const glyph = document.createElement("span");
+        glyph.className = "nearby-glyph";
+        glyph.setAttribute("aria-hidden", "true");
+        glyph.textContent = this.#state.contentGlyphs.get(entry.contentId) ?? "?";
+        const details = document.createElement("span");
+        details.className = "nearby-details";
+        const name = document.createElement("strong");
+        name.textContent = entry.name;
+        const meta = document.createElement("span");
+        const direction = this.#localization.format(`nearby-direction-${entry.direction}`);
+        meta.textContent =
+          entry.kind === "item"
+            ? this.#localization.format("nearby-item-meta", {
+                direction,
+                distance: entry.distance,
+                quantity: entry.quantity ?? 1,
+              })
+            : entry.kind === "gold"
+              ? this.#localization.format("nearby-gold-meta", {
+                  direction,
+                  distance: entry.distance,
+                  amount: entry.amount ?? 0,
+                })
+            : this.#localization.format("nearby-actor-meta", {
+                direction,
+                distance: entry.distance,
+                hp: entry.hp ?? 0,
+                maxHp: entry.maxHp ?? 0,
+              });
+        details.append(name, meta);
+        row.append(glyph, details);
+        return row;
+      }),
+    );
+  }
+
+  #isVisible(position: { readonly x: number; readonly y: number }): boolean {
+    return this.#state.cellVisibility.get(`${position.x},${position.y}`) === "visible";
   }
 
   #abilityRow(ability: AbilityDto): HTMLLIElement {
@@ -534,6 +699,7 @@ export class StatusPanel {
     );
     forget.disabled = this.#state.busy || this.#state.playerDead || !ability.canForget;
     const cast = this.#abilityAction("action-ability-cast", () => this.#castAbility(ability));
+    cast.classList.add("ability-cast-action");
     cast.disabled = this.#state.busy || this.#state.playerDead || !ability.canCast;
     actions.append(study, forget, cast);
     row.append(details, actions);
@@ -627,6 +793,50 @@ export class StatusPanel {
 
 export function formatAttributeValue(value: number): string {
   return value > 18 ? `18/${value - 18}` : String(value);
+}
+
+export function nutritionPercentage(nutrition: number): number {
+  return Math.floor(nutrition / 100);
+}
+
+type NearbyKind = "hostile" | "ally" | "gold" | "item";
+type NearbyDirection = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | "here";
+
+interface NearbyEntry {
+  readonly id: string;
+  readonly kind: NearbyKind;
+  readonly contentId: string;
+  readonly name: string;
+  readonly distance: number;
+  readonly direction: NearbyDirection;
+  readonly hp?: number;
+  readonly maxHp?: number;
+  readonly quantity?: number;
+  readonly amount?: number;
+}
+
+function chebyshevDistance(
+  left: { readonly x: number; readonly y: number },
+  right: { readonly x: number; readonly y: number },
+): number {
+  return Math.max(Math.abs(left.x - right.x), Math.abs(left.y - right.y));
+}
+
+function directionKey(
+  from: { readonly x: number; readonly y: number },
+  to: { readonly x: number; readonly y: number },
+): NearbyDirection {
+  const x = Math.sign(to.x - from.x);
+  const y = Math.sign(to.y - from.y);
+  if (x === 0 && y === 0) return "here";
+  if (x === 0) return y < 0 ? "n" : "s";
+  if (y === 0) return x < 0 ? "w" : "e";
+  if (x > 0) return y < 0 ? "ne" : "se";
+  return y < 0 ? "nw" : "sw";
+}
+
+function nearbyKindPriority(kind: NearbyKind): number {
+  return kind === "hostile" ? 0 : kind === "ally" ? 1 : kind === "gold" ? 2 : 3;
 }
 
 function signedModifier(value: number): string {

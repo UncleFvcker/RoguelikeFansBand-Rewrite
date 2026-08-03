@@ -152,7 +152,7 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 4,
+      "playerHp": 6,
       "playerMaxHp": 293,
       "playerAttack": 3,
       "playerDefense": 0,
@@ -160,6 +160,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 125,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.berserk",
@@ -3345,6 +3347,7 @@
         }
       ],
       "nextItemInstanceSerial": 10,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -3412,7 +3415,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2b3570098abc27b3816a63be99ad5bd1d5939018c1ff30ba9974bb3b3efb7200"
+      "stateHash": "de7a252fdc445092ae1e24956bac2d722f4c8274406e8c4c652153890c4b2856"
     },
     "events": [
       {
@@ -3757,6 +3760,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "2b3570098abc27b3816a63be99ad5bd1d5939018c1ff30ba9974bb3b3efb7200"
+    "saveRoundTripStateHash": "de7a252fdc445092ae1e24956bac2d722f4c8274406e8c4c652153890c4b2856"
   }
 }

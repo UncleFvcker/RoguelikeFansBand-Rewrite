@@ -373,6 +373,47 @@
       ],
       "type": "object"
     },
+    "ItemFuelDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "initial": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "$ref": "#/$defs/ItemFuelKindDefinition"
+        },
+        "lightRadius": {
+          "default": 0,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "initial",
+        "maximum"
+      ],
+      "type": "object"
+    },
+    "ItemFuelKindDefinition": {
+      "enum": [
+        "torch",
+        "lantern",
+        "oil"
+      ],
+      "type": "string"
+    },
     "ItemUseActionDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -582,6 +623,12 @@
         "null"
       ]
     },
+    "baseValue": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
     "brands": {
       "default": [],
       "description": "Elemental brands applied to melee weapon dice while this item is\nequipped.",
@@ -643,6 +690,17 @@
       "maximum": 65535,
       "minimum": 0,
       "type": "integer"
+    },
+    "fuel": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ItemFuelDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "glyph": {
       "type": "string"

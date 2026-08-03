@@ -17,6 +17,46 @@
       "foreground": "#8190a3",
       "background": "#26303d"
     },
+    "demo.terrain.magma-vein": {
+      "glyph": "%",
+      "foreground": "#a85d3b",
+      "background": "#30231f"
+    },
+    "demo.terrain.quartz-vein": {
+      "glyph": "%",
+      "foreground": "#c7c2b7",
+      "background": "#33343a"
+    },
+    "demo.terrain.surface-grass": {
+      "glyph": "\"",
+      "foreground": "#6f9d62",
+      "background": "#111b14"
+    },
+    "demo.terrain.surface-path": {
+      "glyph": "·",
+      "foreground": "#b69a68",
+      "background": "#211b12"
+    },
+    "demo.terrain.surface-rock": {
+      "glyph": "#",
+      "foreground": "#958d7e",
+      "background": "#292620"
+    },
+    "demo.terrain.surface-tree": {
+      "glyph": "♣",
+      "foreground": "#4f8a55",
+      "background": "#101a12"
+    },
+    "demo.terrain.outpost-wall": {
+      "glyph": "#",
+      "foreground": "#b7a58d",
+      "background": "#332a22"
+    },
+    "demo.terrain.general-store-entrance": {
+      "glyph": "1",
+      "foreground": "#f0ca72",
+      "background": "#3a2d1b"
+    },
     "demo.actor.explorer": {
       "foreground": "#8ed8ff",
       "background": "#17324a"
@@ -45,6 +85,61 @@
     "demo.item.resonance-pellet": {
       "foreground": "#d5f4ee",
       "background": "#213633"
+    },
+    "core.gold.copper": {
+      "glyph": "$",
+      "foreground": "#c98254",
+      "background": "#241b17"
+    },
+    "core.gold.silver": {
+      "glyph": "$",
+      "foreground": "#c7cbd1",
+      "background": "#202226"
+    },
+    "core.gold.garnets": {
+      "glyph": "$",
+      "foreground": "#d95763",
+      "background": "#29181b"
+    },
+    "core.gold.gold": {
+      "glyph": "$",
+      "foreground": "#e2bb57",
+      "background": "#272116"
+    },
+    "core.gold.opals": {
+      "glyph": "$",
+      "foreground": "#e2d6e8",
+      "background": "#242127"
+    },
+    "core.gold.sapphires": {
+      "glyph": "$",
+      "foreground": "#6f9ed8",
+      "background": "#182130"
+    },
+    "core.gold.rubies": {
+      "glyph": "$",
+      "foreground": "#cf4d62",
+      "background": "#29181c"
+    },
+    "core.gold.diamonds": {
+      "glyph": "$",
+      "foreground": "#e8f4f5",
+      "background": "#202829"
+    },
+    "core.gold.emeralds": {
+      "glyph": "$",
+      "foreground": "#55ad7a",
+      "background": "#17271e"
+    },
+    "core.gold.mithril": {
+      "glyph": "$",
+      "foreground": "#9ed6d8",
+      "background": "#192627"
+    },
+    "core.gold.adamantite": {
+      "glyph": "$",
+      "foreground": "#c9b7dd",
+      "background": "#241f29"
     }
   },
   "fallback": {

@@ -55,6 +55,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.vengeance",
@@ -279,6 +281,7 @@
         }
       ],
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -346,7 +349,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5ce6f9effe386660df1fcb52077febb75422293d9b08ab235244b13e5f463670"
+      "stateHash": "4575a4a7d2dcca91df31373888c7f35f19e915ba23d3ebc59f6bef706a0ad31e"
     },
     "events": [
       {
@@ -443,6 +446,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "5ce6f9effe386660df1fcb52077febb75422293d9b08ab235244b13e5f463670"
+    "saveRoundTripStateHash": "4575a4a7d2dcca91df31373888c7f35f19e915ba23d3ebc59f6bef706a0ad31e"
   }
 }

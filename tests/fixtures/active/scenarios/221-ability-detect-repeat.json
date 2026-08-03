@@ -69,6 +69,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 95,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -3102,6 +3104,7 @@
         }
       ],
       "nextItemInstanceSerial": 9,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "open-door",
@@ -3201,7 +3204,7 @@
           "y": 4
         }
       ],
-      "stateHash": "3f30a6fd086cb22c9a20472308366402dc7bb8dc53f26c20189883058dc3de10"
+      "stateHash": "9caba28380134314ee36b65a05049de1f376baf3cab40dce9f0073def44a33a7"
     },
     "events": [
       {
@@ -3318,6 +3321,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "3f30a6fd086cb22c9a20472308366402dc7bb8dc53f26c20189883058dc3de10"
+    "saveRoundTripStateHash": "9caba28380134314ee36b65a05049de1f376baf3cab40dce9f0073def44a33a7"
   }
 }

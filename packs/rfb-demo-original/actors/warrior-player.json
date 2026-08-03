@@ -19,6 +19,6 @@
   "damageDice": 1,
   "damageSides": 2,
   "damageType": "physical",
-  "carryCapacityTenthsPound": 600,
+  "carryCapacityTenthsPound": 1200,
   "tags": ["player", "rfb-compatibility"]
 }

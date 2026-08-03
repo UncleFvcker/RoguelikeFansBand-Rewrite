@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use rfb_content::{
     ContentCatalog, ContentPosition, EncounterFormation, ProceduralFloorDefinition,
-    TerrainFeaturePlacement, VaultDefinition, VaultTransform,
+    ProceduralNormalAllocationDefinition, TerrainFeaturePlacement, VaultDefinition, VaultTransform,
 };
 use rfb_protocol::Position;
 
@@ -1797,48 +1797,108 @@ impl Game {
                 }
             }
         } else if let Some(table_id) = &definition.loot_table_id {
-            let room_id = if legacy_vault.is_some() {
-                "entry"
-            } else {
-                "remote"
-            };
-            let floor_loot_placements = definition.generation_budget.as_ref().map_or(1, |budget| {
-                budget.loot_placements.saturating_sub(
-                    vault_placements
-                        .iter()
-                        .map(|placement| {
-                            u16::try_from(placement.vault.loot_spawns.len())
-                                .expect("validated vault loot count must fit u16")
-                        })
-                        .sum::<u16>(),
-                )
-            });
-            for ordinal in 0..floor_loot_placements {
-                let placement_room_id = if maze_only {
-                    "maze"
-                } else if definition.layout.is_some() {
-                    generated_non_entry_room_id(content_rooms, ordinal)
-                } else {
-                    room_id
-                };
-                let position = if maze_only {
-                    choose_generated_maze_position(&maze_walkable, first_center, &occupied)
-                } else {
-                    self.choose_generated_room_position(content_rooms, placement_room_id, &occupied)
-                };
-                occupied.insert(position);
-                items.extend(self.generate_loot_instances(
-                    &LootContext {
-                        table_id: table_id.clone(),
-                        floor_id: definition.id.clone(),
-                        depth: definition.depth,
-                        source: LootSource::FloorRoom {
-                            room_id: placement_room_id.to_owned(),
-                            spawn_id: format!("{}.loot-table.{}", definition.id, ordinal + 1),
+            if let Some(allocation) = definition.loot_allocation {
+                let room_count = self.scaled_normal_allocation(
+                    allocation.room_objects,
+                    definition,
+                    allocation.reference_area_tiles,
+                );
+                let anywhere_count = self.scaled_normal_allocation(
+                    allocation.anywhere_objects,
+                    definition,
+                    allocation.reference_area_tiles,
+                );
+                for ordinal in 0..room_count {
+                    let (room_id, position) =
+                        self.choose_generated_rooms_position(content_rooms, &occupied);
+                    occupied.insert(position);
+                    items.extend(self.generate_loot_instances(
+                        &LootContext {
+                            table_id: table_id.clone(),
+                            floor_id: definition.id.clone(),
+                            depth: definition.depth,
+                            source: LootSource::FloorRoom {
+                                room_id,
+                                spawn_id: format!(
+                                    "{}.loot-table.room.{}",
+                                    definition.id,
+                                    ordinal + 1
+                                ),
+                            },
                         },
-                    },
-                    ItemLocation::Ground(position),
-                )?);
+                        ItemLocation::Ground(position),
+                    )?);
+                }
+                for ordinal in 0..anywhere_count {
+                    let position =
+                        self.choose_generated_floor_position(definition, &terrain, &occupied);
+                    occupied.insert(position);
+                    items.extend(self.generate_loot_instances(
+                        &LootContext {
+                            table_id: table_id.clone(),
+                            floor_id: definition.id.clone(),
+                            depth: definition.depth,
+                            source: LootSource::FloorRoom {
+                                room_id: "anywhere".to_owned(),
+                                spawn_id: format!(
+                                    "{}.loot-table.anywhere.{}",
+                                    definition.id,
+                                    ordinal + 1
+                                ),
+                            },
+                        },
+                        ItemLocation::Ground(position),
+                    )?);
+                }
+            } else {
+                let room_id = if legacy_vault.is_some() {
+                    "entry"
+                } else {
+                    "remote"
+                };
+                let floor_loot_placements =
+                    definition.generation_budget.as_ref().map_or(1, |budget| {
+                        budget.loot_placements.saturating_sub(
+                            vault_placements
+                                .iter()
+                                .map(|placement| {
+                                    u16::try_from(placement.vault.loot_spawns.len())
+                                        .expect("validated vault loot count must fit u16")
+                                })
+                                .sum::<u16>(),
+                        )
+                    });
+                for ordinal in 0..floor_loot_placements {
+                    let placement_room_id = if maze_only {
+                        "maze"
+                    } else if definition.layout.is_some() {
+                        generated_non_entry_room_id(content_rooms, ordinal)
+                    } else {
+                        room_id
+                    };
+                    let position = if maze_only {
+                        choose_generated_maze_position(&maze_walkable, first_center, &occupied)
+                    } else {
+                        self.choose_generated_room_position(
+                            content_rooms,
+                            placement_room_id,
+                            &occupied,
+                        )
+                    };
+                    occupied.insert(position);
+                    items.extend(self.generate_loot_instances(
+                        &LootContext {
+                            table_id: table_id.clone(),
+                            floor_id: definition.id.clone(),
+                            depth: definition.depth,
+                            source: LootSource::FloorRoom {
+                                room_id: placement_room_id.to_owned(),
+                                spawn_id: format!("{}.loot-table.{}", definition.id, ordinal + 1),
+                            },
+                        },
+                        ItemLocation::Ground(position),
+                    )?);
+                }
             }
         } else {
             for spawn in &definition.loot_spawns {
@@ -1885,6 +1945,58 @@ impl Game {
                 )?);
             }
         }
+        let mut gold_piles = Vec::new();
+        if let Some(allocation) = definition.gold_allocation {
+            let pile_count = self.scaled_normal_allocation(
+                allocation.piles,
+                definition,
+                allocation.reference_area_tiles,
+            );
+            for _ in 0..pile_count {
+                let position =
+                    self.choose_generated_floor_position(definition, &terrain, &occupied);
+                occupied.insert(position);
+                gold_piles.push(self.generate_gold_pile(position, definition.depth, false)?);
+            }
+        }
+        for guaranteed in &definition.guaranteed_items {
+            if self.rng.bounded(u64::from(guaranteed.chance_one_in)) != 0 {
+                continue;
+            }
+            let entry = if guaranteed.entries.len() == 1 {
+                &guaranteed.entries[0]
+            } else {
+                let weights = guaranteed
+                    .entries
+                    .iter()
+                    .map(|entry| u32::from(entry.weight))
+                    .collect::<Vec<_>>();
+                &guaranteed.entries[self.roll_weighted_index(&weights)]
+            };
+            let position = self.choose_generated_floor_position(definition, &terrain, &occupied);
+            occupied.insert(position);
+            let (activation, charges) = initial_item_runtime_state(
+                &self.content,
+                &mut self.rng,
+                &entry.item_kind_id,
+                definition.depth,
+            );
+            items.push(ItemInstance {
+                id: self.allocate_item_instance_id()?,
+                kind_id: entry.item_kind_id.clone(),
+                quantity: 1,
+                quality: ItemQualityDto::Ordinary,
+                affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
+                enchantments: ItemEnchantmentsDto::default(),
+                curse: initial_item_curse(&self.content, &entry.item_kind_id),
+                activation,
+                charges,
+                fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
+                device_recovery_progress: 0,
+                location: ItemLocation::Ground(position),
+            });
+        }
         for objective in &task_objectives {
             match objective.kind {
                 TaskObjectiveKind::CollectItem => {
@@ -1898,6 +2010,7 @@ impl Game {
                         &kind_id,
                         definition.depth,
                     );
+                    let fuel = initial_item_fuel(&self.content, &kind_id);
                     items.push(ItemInstance {
                         id: objective
                             .item_instance_id
@@ -1912,6 +2025,7 @@ impl Game {
                         enchantments: ItemEnchantmentsDto::default(),
                         activation,
                         charges,
+                        fuel,
                         device_recovery_progress: 0,
                         location: ItemLocation::Ground(first_center),
                     });
@@ -2006,6 +2120,7 @@ impl Game {
             player_position: first_center,
             entities,
             items,
+            gold_piles,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
             connections: floor_connections,
@@ -2237,6 +2352,21 @@ impl Game {
         definition: &ProceduralFloorDefinition,
         geometry: &ProceduralRoomGeometryDefinition,
     ) -> Vec<GeneratedRoom> {
+        match geometry.placement {
+            ProceduralRoomPlacement::Partitioned => {
+                self.generate_partitioned_rooms(definition, geometry)
+            }
+            ProceduralRoomPlacement::Free => self
+                .generate_free_rooms(definition, geometry)
+                .unwrap_or_else(|| self.generate_partitioned_rooms(definition, geometry)),
+        }
+    }
+
+    fn generate_partitioned_rooms(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        geometry: &ProceduralRoomGeometryDefinition,
+    ) -> Vec<GeneratedRoom> {
         let budget = definition
             .generation_budget
             .as_ref()
@@ -2346,6 +2476,133 @@ impl Game {
         }
 
         rooms
+    }
+
+    fn generate_free_rooms(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        geometry: &ProceduralRoomGeometryDefinition,
+    ) -> Option<Vec<GeneratedRoom>> {
+        const LAYOUT_ATTEMPTS: usize = 64;
+
+        let budget = definition
+            .generation_budget
+            .as_ref()
+            .expect("room geometry requires a generation budget");
+        let placement_count = budget
+            .room_placements
+            .expect("validated room placement count must remain available");
+        let area_budget = budget
+            .room_area_tiles
+            .expect("validated room area budget must remain available");
+        let minimum_room_area = geometry
+            .shapes
+            .iter()
+            .map(|candidate| match candidate.shape {
+                ProceduralRoomShape::Rectangle => {
+                    u32::from(geometry.min_width) * u32::from(geometry.min_height)
+                }
+                ProceduralRoomShape::Cross => {
+                    u32::from(geometry.min_width) + u32::from(geometry.min_height) - 1
+                }
+                ProceduralRoomShape::Cavern => generated_cavern_room_area(
+                    i32::from(geometry.min_width),
+                    i32::from(geometry.min_height),
+                ),
+            })
+            .min()
+            .expect("validated room geometry must retain a shape");
+
+        for _ in 0..LAYOUT_ATTEMPTS {
+            let mut remaining_area = area_budget;
+            let mut rooms = Vec::with_capacity(usize::from(placement_count));
+            let mut layout_complete = true;
+
+            for ordinal in 0..placement_count {
+                let future_room_count = placement_count - ordinal - 1;
+                let maximum_room_area =
+                    remaining_area - u32::from(future_room_count) * minimum_room_area;
+                let mut shape_candidates = Vec::new();
+
+                for shape_candidate in &geometry.shapes {
+                    let mut candidates = Vec::new();
+                    for height in geometry.min_height..=geometry.max_height {
+                        for width in geometry.min_width..=geometry.max_width {
+                            for y in 1..definition.height - height {
+                                for x in 1..definition.width - width {
+                                    let room = GeneratedRoom {
+                                        id: String::new(),
+                                        x: i32::from(x),
+                                        y: i32::from(y),
+                                        width: i32::from(width),
+                                        height: i32::from(height),
+                                        shape: shape_candidate.shape,
+                                        carved_cells: BTreeSet::new(),
+                                    };
+                                    let separated = rooms.iter().all(|placed: &GeneratedRoom| {
+                                        room.x + room.width < placed.x
+                                            || placed.x + placed.width < room.x
+                                            || room.y + room.height < placed.y
+                                            || placed.y + placed.height < room.y
+                                    });
+                                    if separated && room.area() <= maximum_room_area {
+                                        candidates.push(room);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if !candidates.is_empty() {
+                        shape_candidates.push((shape_candidate.weight, candidates));
+                    }
+                }
+
+                if shape_candidates.is_empty() {
+                    layout_complete = false;
+                    break;
+                }
+                let shape_index = if shape_candidates.len() == 1 {
+                    0
+                } else {
+                    let weights = shape_candidates
+                        .iter()
+                        .map(|(weight, _)| *weight)
+                        .collect::<Vec<_>>();
+                    self.roll_weighted_index(&weights)
+                };
+                let candidates = &shape_candidates[shape_index].1;
+                let candidate_index = if candidates.len() == 1 {
+                    0
+                } else {
+                    usize::try_from(
+                        self.rng.bounded(
+                            u64::try_from(candidates.len())
+                                .expect("room geometry candidate count must fit u64"),
+                        ),
+                    )
+                    .expect("room geometry candidate index must fit usize")
+                };
+                let room = candidates[candidate_index].clone();
+                remaining_area -= room.area();
+                rooms.push(room);
+            }
+
+            if layout_complete {
+                for (index, room) in rooms.iter_mut().enumerate() {
+                    room.id = match index {
+                        0 => "entry".to_owned(),
+                        1 => "remote".to_owned(),
+                        _ => format!("room.{}", index + 1),
+                    };
+                    if room.shape == ProceduralRoomShape::Cavern {
+                        room.carved_cells = self.generate_cavern_room_cells(room);
+                    }
+                }
+                return Some(rooms);
+            }
+        }
+
+        None
     }
 
     fn generate_cavern_room_cells(&mut self, room: &GeneratedRoom) -> BTreeSet<Position> {
@@ -3332,6 +3589,85 @@ impl Game {
         ))
         .expect("bounded generated room candidate index must fit usize");
         candidates[index]
+    }
+
+    fn choose_generated_rooms_position(
+        &mut self,
+        rooms: &[GeneratedRoom],
+        occupied: &BTreeSet<Position>,
+    ) -> (String, Position) {
+        let candidates = rooms
+            .iter()
+            .flat_map(|room| {
+                (room.y..room.y + room.height).flat_map(move |y| {
+                    (room.x..room.x + room.width).filter_map(move |x| {
+                        let position = Position { x, y };
+                        (room.contains(position) && !occupied.contains(&position))
+                            .then_some((room.id.clone(), position))
+                    })
+                })
+            })
+            .collect::<Vec<_>>();
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("generated room candidate count must fit u64"),
+        ))
+        .expect("bounded generated room candidate index must fit usize");
+        candidates[index].clone()
+    }
+
+    fn choose_generated_floor_position(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        terrain: &[String],
+        occupied: &BTreeSet<Position>,
+    ) -> Position {
+        let candidates = terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, terrain_id)| {
+                let position = Position {
+                    x: i32::try_from(index % usize::from(definition.width))
+                        .expect("generated floor x must fit i32"),
+                    y: i32::try_from(index / usize::from(definition.width))
+                        .expect("generated floor y must fit i32"),
+                };
+                (self
+                    .content
+                    .terrain(terrain_id)
+                    .is_some_and(|terrain| terrain.walkable)
+                    && !occupied.contains(&position))
+                .then_some(position)
+            })
+            .collect::<Vec<_>>();
+        let index = usize::try_from(self.rng.bounded(
+            u64::try_from(candidates.len()).expect("generated floor candidate count must fit u64"),
+        ))
+        .expect("bounded generated floor candidate index must fit usize");
+        candidates[index]
+    }
+
+    fn scaled_normal_allocation(
+        &mut self,
+        rule: ProceduralNormalAllocationDefinition,
+        definition: &ProceduralFloorDefinition,
+        reference_area_tiles: u32,
+    ) -> u16 {
+        let centered_sum = (0..12)
+            .map(|_| i32::try_from(self.rng.bounded(6)).expect("normal die must fit i32"))
+            .sum::<i32>()
+            - 30;
+        let spread = i32::from(rule.standard_deviation);
+        let offset = (centered_sum * spread / 6).clamp(-4 * spread, 4 * spread);
+        let raw = (i32::from(rule.mean) + offset).max(0);
+        let map_area = u64::from(definition.width) * u64::from(definition.height);
+        let scaled = u64::try_from(raw).expect("non-negative allocation must fit u64") * map_area;
+        let reference = u64::from(reference_area_tiles);
+        let mut count = scaled / reference;
+        let remainder = scaled % reference;
+        if remainder > 0 && self.rng.bounded(reference) < remainder {
+            count += 1;
+        }
+        u16::try_from(count.max(1)).expect("validated allocation count must fit u16")
     }
 
     fn choose_generated_region_position(

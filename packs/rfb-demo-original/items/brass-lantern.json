@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.brass-lantern",
+  "nameKey": "item-demo-brass-lantern-name",
+  "descriptionKey": "item-demo-brass-lantern-description",
+  "glyph": "~",
+  "weightTenthsPound": 50,
+  "maxStack": 1,
+  "baseValue": 30,
+  "equipmentSlot": "light",
+  "fuel": {
+    "kind": "lantern",
+    "initial": 7500,
+    "maximum": 15000,
+    "lightRadius": 2
+  },
+  "tags": ["equipment", "light-source", "lantern"]
+}

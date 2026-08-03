@@ -11,11 +11,11 @@ use super::{
     LOOT_TABLE_SCHEMA, LootTableDefinition, PACK_SCHEMA, PERSONALITY_SCHEMA,
     PLAYER_ABILITY_BINDING_SCHEMA, PackManifest, PersonalityDefinition,
     PlayerAbilityBindingDefinition, RACE_SCHEMA, REGION_TABLE_SCHEMA, RESOURCE_SCHEMA,
-    RaceDefinition, RegionTableDefinition, ResourceDefinition, SKILL_SCHEMA, SKILL_SET_SCHEMA,
-    SkillDefinition, SkillSetDefinition, SourceAbilityDefinition, SourceItemDefinition,
-    TERRAIN_FEATURE_TABLE_SCHEMA, TERRAIN_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition,
-    TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA, VaultDefinition,
-    WORLD_SCHEMA, WorldDefinition,
+    RaceDefinition, RegionTableDefinition, ResourceDefinition, SHOP_SCHEMA, SKILL_SCHEMA,
+    SKILL_SET_SCHEMA, ShopDefinition, SkillDefinition, SkillSetDefinition, SourceAbilityDefinition,
+    SourceItemDefinition, TERRAIN_FEATURE_TABLE_SCHEMA, TERRAIN_SCHEMA, THEME_TABLE_SCHEMA,
+    TOWN_SCHEMA, TerrainDefinition, TerrainFeatureTableDefinition, ThemeTableDefinition,
+    TownDefinition, VAULT_SCHEMA, VaultDefinition, WORLD_SCHEMA, WorldDefinition,
 };
 
 pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde_json::Error> {
@@ -127,6 +127,8 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             VAULT_SCHEMA,
             schema_for!(VaultDefinition),
         )?,
+        schema_document("town.schema.json", TOWN_SCHEMA, schema_for!(TownDefinition))?,
+        schema_document("shop.schema.json", SHOP_SCHEMA, schema_for!(ShopDefinition))?,
         schema_document(
             "world.schema.json",
             WORLD_SCHEMA,

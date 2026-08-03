@@ -23,6 +23,22 @@ pub struct LootEntryDefinition {
     pub item_kind_id: String,
     pub weight: u32,
     pub quantity: u32,
+    #[serde(default)]
+    pub min_depth: u16,
+    #[serde(default = "maximum_depth")]
+    pub max_depth: u16,
+}
+
+const fn maximum_depth() -> u16 {
+    u16::MAX
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LootRollDiceDefinition {
+    pub dice: u16,
+    pub sides: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,6 +67,10 @@ pub struct LootTableDefinition {
     pub format_version: u16,
     pub id: String,
     pub rolls: u16,
+    #[serde(default)]
+    pub roll_chance_percent: Option<u8>,
+    #[serde(default)]
+    pub roll_dice: Option<LootRollDiceDefinition>,
     pub entries: Vec<LootEntryDefinition>,
     pub quality_weights: Vec<LootQualityWeightDefinition>,
     pub affix_weights: Vec<LootAffixWeightDefinition>,

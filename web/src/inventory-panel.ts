@@ -204,7 +204,11 @@ export class InventoryPanel {
         this.#rechargeSourceForTarget(targetItemId) === undefined;
     }
     for (const button of this.#dom.equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
-      button.disabled = this.#state.busy || this.#state.playerDead;
+      const refuelTargetId = button.dataset.refuelTargetId;
+      button.disabled =
+        this.#state.busy ||
+        this.#state.playerDead ||
+        (refuelTargetId !== undefined && this.#refuelSourceForTarget(refuelTargetId) === undefined);
     }
   }
 
@@ -341,7 +345,26 @@ export class InventoryPanel {
         const name = document.createElement("span");
         name.textContent = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
         details.append(name, slotTag);
+        this.#appendItemFuel(details, item);
         this.#appendKnownDetails(details, item);
+        if (item.fuel && item.fuel.kind !== "oil" && item.fuel.current < item.fuel.maximum) {
+          const refuel = document.createElement("button");
+          refuel.type = "button";
+          refuel.className = "equipment-refuel";
+          refuel.dataset.refuelTargetId = item.id;
+          refuel.textContent = this.#localization.format("action-equipment-refuel");
+          refuel.disabled = this.#refuelSourceForTarget(item.id) === undefined;
+          refuel.addEventListener("click", () => {
+            const source = this.#refuelSourceForTarget(item.id);
+            if (!source) return;
+            void this.#dispatch({
+              type: "refuel-light",
+              targetItemId: item.id,
+              sourceItemId: source.id,
+            });
+          });
+          row.append(refuel);
+        }
         const unequip = document.createElement("button");
         unequip.type = "button";
         unequip.textContent = this.#localization.format("action-equipment-unequip");
@@ -383,6 +406,7 @@ export class InventoryPanel {
       });
       container.append(charges);
     }
+    this.#appendItemFuel(container, item);
     if (item.activation) {
       const activation = document.createElement("span");
       activation.className = "inventory-activation";
@@ -396,10 +420,45 @@ export class InventoryPanel {
     this.#appendKnownDetails(container, item);
   }
 
+  #appendItemFuel(
+    container: HTMLElement,
+    item: InventoryItemDto | EquipmentItemDto,
+  ): void {
+    if (!item.fuel) return;
+    const fuel = container.ownerDocument.createElement("span");
+    fuel.className = "inventory-fuel";
+    fuel.textContent = this.#localization.format("inventory-fuel", {
+      current: item.fuel.current,
+      maximum: item.fuel.maximum,
+    });
+    container.append(fuel);
+  }
+
+  #refuelSourceForTarget(targetItemId: string): InventoryItemDto | undefined {
+    const target = this.#state.equipment.find((item) => item.id === targetItemId);
+    if (!target?.fuel || target.fuel.current >= target.fuel.maximum) return undefined;
+    return this.#state.inventory.find((item) => {
+      if (!item.fuel || item.fuel.current === 0) return false;
+      return target.fuel?.kind === "torch"
+        ? item.fuel.kind === "torch"
+        : target.fuel?.kind === "lantern" &&
+            (item.fuel.kind === "lantern" || item.fuel.kind === "oil");
+    });
+  }
+
   #appendKnownDetails(
     container: HTMLElement,
     item: InventoryItemDto | EquipmentItemDto,
   ): void {
+    if ("slotId" in item || item.equipmentSlot !== null) {
+      const identification = container.ownerDocument.createElement("span");
+      identification.className = `item-identification item-identification-${item.identification}`;
+      identification.textContent = this.#localization.format(
+        itemIdentificationMessageKey(item.identification, item.knownProperties?.length ?? 0),
+        { count: item.knownProperties?.length ?? 0 },
+      );
+      container.append(identification);
+    }
     this.#appendItemModifiers(container, item.modifiers);
     this.#appendItemEnchantments(container, item.enchantments);
     this.#appendItemCurse(container, item.curse);
@@ -837,6 +896,17 @@ export function parseDropQuantity(value: string, itemQuantity: number): number |
 
 export function formatTenthsPound(value: number): string {
   return `${Math.trunc(value / 10)}.${Math.abs(value % 10)}`;
+}
+
+export function itemIdentificationMessageKey(
+  identification: InventoryItemDto["identification"],
+  knownPropertyCount: number,
+): MessageKey {
+  if (identification === "unexamined") return "item-identification-unexamined";
+  if (identification === "appraised") return "item-identification-appraised";
+  return knownPropertyCount > 0
+    ? "item-identification-identified-ego"
+    : "item-identification-identified-ordinary";
 }
 
 export function formatTenthsPoundArgument(value: string | undefined): string {

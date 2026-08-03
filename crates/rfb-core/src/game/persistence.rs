@@ -12,9 +12,9 @@ use crate::{
         actor_from_entity, actor_from_player, actors_to_save, carried_item_from_dto,
         carried_items_to_save, derive_next_item_instance_serial, equipment_item_from_dto,
         equipment_to_save, floor_connections_from_save, floor_connections_to_save, floor_from_save,
-        floor_regions_from_save, floor_regions_to_save, floor_to_save, inventory_item_from_dto,
-        inventory_to_save, item_from_dto, items_to_save, player_to_save,
-        revealed_terrain_from_save,
+        floor_regions_from_save, floor_regions_to_save, floor_to_save, gold_piles_from_save,
+        gold_piles_to_save, inventory_item_from_dto, inventory_to_save, item_from_dto,
+        items_to_save, player_to_save, revealed_terrain_from_save,
     },
     state::{Actor, FloorState, ItemInstance, ItemLocation},
     stats::{AttributeKind, AttributeSet, CharacterProgress, SkillProgress},
@@ -25,12 +25,14 @@ use rfb_protocol::{
     CarriedItemSaveDto, DungeonStateSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
     FloorRegionSaveDto, InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
     ItemSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResourcePoolSaveDto, RngSaveDto,
-    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, TaskStateSaveDto, TaskStatusKindDto,
-    TerrainSaveDto,
+    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, ShopStateSaveDto, TaskStateSaveDto,
+    TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use super::gold::derive_next_gold_pile_serial;
+use super::town::{restore_town_and_shop_states, shop_state_to_save};
 use super::validation::floor_connections_are_valid;
 use super::{
     BUILT_IN_CONTENT_HASH, BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState,
@@ -488,6 +490,8 @@ struct StateHashPayloadV41<'a> {
     player: PlayerSaveDto,
     entities: Vec<ActorSaveDto>,
     items: Vec<ItemSaveDto>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    gold_piles: Vec<rfb_protocol::GoldPileDto>,
     inventory: Vec<InventoryItemSaveDto>,
     equipment: Vec<EquipmentItemSaveDto>,
     carried_items: Vec<CarriedItemSaveDto>,
@@ -495,8 +499,11 @@ struct StateHashPayloadV41<'a> {
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
     dungeon_states: Vec<DungeonStateSaveDto>,
+    town_states: Vec<TownStateSaveDto>,
+    shop_states: Vec<ShopStateSaveDto>,
     campaign_state: CampaignStateSaveDto,
     next_item_instance_serial: u64,
+    next_gold_pile_serial: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     explored: Vec<bool>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -539,6 +546,8 @@ struct FloorSaveForHash<'a> {
     entities: Vec<ActorSaveDto>,
     items: Vec<ItemSaveDto>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    gold_piles: Vec<rfb_protocol::GoldPileDto>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     carried_items: Vec<CarriedItemSaveDto>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     revealed_terrain: Vec<Position>,
@@ -560,6 +569,7 @@ fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
+        gold_piles: gold_piles_to_save(&floor.gold_piles),
         carried_items: carried_items_to_save(&floor.items),
         revealed_terrain: floor.revealed_terrain.iter().copied().collect(),
         connections: floor_connections_to_save(&floor.connections),
@@ -656,6 +666,14 @@ impl Game {
         }
         let mut dungeon_states =
             restore_dungeon_states(world, &payload.dungeon_states, migrating_previous_content)?;
+        let (town_states, shop_states) = restore_town_and_shop_states(
+            world,
+            &content,
+            &current_floor_id,
+            payload.player.position,
+            &payload.town_states,
+            &payload.shop_states,
+        )?;
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0 || payload.terrain.terrain_ids.len() != expected_len {
             return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
@@ -735,6 +753,8 @@ impl Game {
             }
             slots
         };
+        let gold = payload.player.gold;
+        let nutrition = payload.player.nutrition;
         let player = actor_from_player(payload.player, &content)?;
         let entities = payload
             .entities
@@ -753,6 +773,7 @@ impl Game {
                 .map(|item| inventory_item_from_dto(item, &content))
                 .collect::<Result<Vec<_>, CoreError>>()?,
         );
+        let gold_piles = gold_piles_from_save(payload.gold_piles);
         items.extend(
             payload
                 .equipment
@@ -823,6 +844,11 @@ impl Game {
             allocator_entities.extend(floor.entities.iter().cloned());
             allocator_items.extend(floor.items.iter().cloned());
         }
+        allocator_items.extend(
+            shop_states
+                .values()
+                .flat_map(|state| state.inventory.iter().cloned()),
+        );
         let derived_next_item_instance_serial =
             derive_next_item_instance_serial(&player, &allocator_entities, &allocator_items)?;
         let next_item_instance_serial = if payload.next_item_instance_serial == 0 {
@@ -833,6 +859,22 @@ impl Game {
             ));
         } else {
             payload.next_item_instance_serial
+        };
+        let derived_next_gold_pile_serial = derive_next_gold_pile_serial(
+            gold_piles.iter().chain(
+                stored_floors
+                    .values()
+                    .flat_map(|floor| floor.gold_piles.iter()),
+            ),
+        )?;
+        let next_gold_pile_serial = if payload.next_gold_pile_serial == 0 {
+            derived_next_gold_pile_serial
+        } else if payload.next_gold_pile_serial < derived_next_gold_pile_serial {
+            return Err(CoreError::InvalidSave(
+                "gold pile allocator is behind existing IDs",
+            ));
+        } else {
+            payload.next_gold_pile_serial
         };
         let mut explored = payload.explored;
         if explored.is_empty() {
@@ -917,6 +959,8 @@ impl Game {
             height: payload.terrain.height,
             terrain,
             player,
+            gold,
+            nutrition,
             build,
             body_slots,
             progress,
@@ -928,15 +972,19 @@ impl Game {
             ability_progress: BTreeMap::new(),
             entities,
             items,
+            gold_piles,
             item_knowledge,
             item_property_knowledge,
             task_states,
             dungeon_states,
+            town_states,
+            shop_states,
             campaign_state,
             summon_command,
             recall,
             confusing_strike_ready,
             next_item_instance_serial,
+            next_gold_pile_serial,
             explored,
             revealed_terrain,
             floor_connections,
@@ -964,6 +1012,7 @@ impl Game {
             game.campaign_state.victory_turn = Some(game.turn);
         }
         if migrating_previous_content {
+            game.migrate_outpost_surface_layout();
             let world = game
                 .content
                 .world(&game.world_id)
@@ -1044,6 +1093,7 @@ impl Game {
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
+            gold_piles: gold_piles_to_save(&self.gold_piles),
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
             carried_items: carried_items_to_save(&self.items),
@@ -1052,8 +1102,22 @@ impl Game {
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
+            town_states: self
+                .town_states
+                .iter()
+                .map(|(town_id, state)| TownStateSaveDto {
+                    town_id: town_id.clone(),
+                    visited: state.visited,
+                })
+                .collect(),
+            shop_states: self
+                .shop_states
+                .iter()
+                .map(|(shop_id, state)| shop_state_to_save(shop_id, state))
+                .collect(),
             campaign_state: Some(self.campaign_state_to_save()),
             next_item_instance_serial: self.next_item_instance_serial,
+            next_gold_pile_serial: self.next_gold_pile_serial,
             explored: self.explored.clone(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
             floor_connections: floor_connections_to_save(&self.floor_connections),
@@ -1084,6 +1148,7 @@ impl Game {
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
             items: items_to_save(&self.items),
+            gold_piles: gold_piles_to_save(&self.gold_piles),
             inventory: inventory_to_save(&self.items),
             equipment: equipment_to_save(&self.items),
             carried_items: carried_items_to_save(&self.items),
@@ -1091,8 +1156,22 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
+            town_states: self
+                .town_states
+                .iter()
+                .map(|(town_id, state)| TownStateSaveDto {
+                    town_id: town_id.clone(),
+                    visited: state.visited,
+                })
+                .collect(),
+            shop_states: self
+                .shop_states
+                .iter()
+                .map(|(shop_id, state)| shop_state_to_save(shop_id, state))
+                .collect(),
             campaign_state: self.campaign_state_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,
+            next_gold_pile_serial: self.next_gold_pile_serial,
             explored: Vec::new(),
             revealed_terrain: self.revealed_terrain.iter().copied().collect(),
             floor_connections: floor_connections_to_save(&self.floor_connections),
@@ -1117,6 +1196,8 @@ impl Game {
 
     fn player_save_dto(&self) -> PlayerSaveDto {
         let mut player = player_to_save(&self.player, &self.progress, self.build.as_ref());
+        player.gold = self.gold;
+        player.nutrition = self.nutrition;
         player.resources = self
             .resources
             .iter()

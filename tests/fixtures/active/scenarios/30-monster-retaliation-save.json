@@ -65,6 +65,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9989,
       "playerLevel": 2,
       "playerExperience": 10,
       "playerMaxLevel": 2,
@@ -235,6 +237,7 @@
       ],
       "groundItemCount": 7,
       "nextItemInstanceSerial": 3,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -289,7 +292,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c38997af06e4a6d1c6103b9006b86685866209132eb77bdc9cbaab2c2cca05e7"
+      "stateHash": "1fcc3fd5d7f71242f35073aa668dc124a4aa6e9e8774ae47c83284db699492ba"
     },
     "events": [
       {
@@ -461,6 +464,6 @@
     "removedEntities": [
       "demo.monster.ember-mote.1"
     ],
-    "saveRoundTripStateHash": "c38997af06e4a6d1c6103b9006b86685866209132eb77bdc9cbaab2c2cca05e7"
+    "saveRoundTripStateHash": "1fcc3fd5d7f71242f35073aa668dc124a4aa6e9e8774ae47c83284db699492ba"
   }
 }

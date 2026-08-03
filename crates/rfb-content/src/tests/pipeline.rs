@@ -23,9 +23,11 @@ fn source_roots_and_validation_precedence_are_stable() {
             "resources",
             "skills",
             "skillSets",
+            "shops",
             "terrain",
             "terrainFeatureTables",
             "themeTables",
+            "towns",
             "vaults",
             "worlds",
         ]
@@ -120,6 +122,8 @@ fn generated_schema_document_order_is_stable() {
             "region-table.schema.json",
             "terrain-feature-table.schema.json",
             "vault.schema.json",
+            "town.schema.json",
+            "shop.schema.json",
             "world.schema.json",
         ]
     );
@@ -135,10 +139,10 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.bytes, second.bytes);
     assert_eq!(decoded, first);
     assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-    assert_eq!(first.content.terrain.len(), 49);
+    assert_eq!(first.content.terrain.len(), 57);
     assert_eq!(first.content.actors.len(), 33);
     assert_eq!(first.content.affixes.len(), 4);
-    assert_eq!(first.content.items.len(), 96);
+    assert_eq!(first.content.items.len(), 107);
     assert_eq!(first.content.resources.len(), 3);
     assert_eq!(first.content.abilities.len(), 68);
     assert_eq!(first.content.ability_books.len(), 5);
@@ -149,10 +153,12 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.content.personalities.len(), 3);
     assert_eq!(first.content.builds.len(), 7);
     assert_eq!(first.content.encounter_tables.len(), 7);
-    assert_eq!(first.content.loot_tables.len(), 10);
+    assert_eq!(first.content.loot_tables.len(), 12);
     assert_eq!(first.content.theme_tables.len(), 3);
     assert_eq!(first.content.region_tables.len(), 1);
     assert_eq!(first.content.terrain_feature_tables.len(), 1);
     assert_eq!(first.content.vaults.len(), 6);
+    assert_eq!(first.content.towns.len(), 1);
+    assert_eq!(first.content.shops.len(), 1);
     assert_eq!(first.content.worlds.len(), 2);
 }

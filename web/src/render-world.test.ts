@@ -34,6 +34,23 @@ test("render world keeps item and actor layers separate", () => {
   assert.equal(cells[0].actorKindId, "demo.actor.explorer");
 });
 
+test("render world resolves gold pile IDs to their stable visual IDs", () => {
+  const world = new RenderWorld(2, 1);
+  const snapshot = snapshotFixture();
+  snapshot.cells[0] = cell(0, 0, "demo.actor.player.1", "generated.gold.7");
+  snapshot.items = [];
+  snapshot.goldPiles = [
+    {
+      id: "generated.gold.7",
+      position: { x: 0, y: 0 },
+      amount: 117,
+      appearance: "rubies",
+    },
+  ];
+
+  assert.equal(world.applySnapshot(snapshot)[0].itemKindId, "core.gold.rubies");
+});
+
 test("game updates dirty only authoritative cell and visual deltas", () => {
   const world = new RenderWorld(20, 20);
   world.applySnapshot(largeSnapshotFixture());
@@ -52,6 +69,7 @@ test("game updates dirty only authoritative cell and visual deltas", () => {
     player: player(4, 3),
     entities: [],
     items: [],
+    goldPiles: [],
     inventory: [],
     equipment: [],
     removedEntities: [],
@@ -111,6 +129,7 @@ function snapshotFixture() {
         quantity: 1,
       },
     ],
+    goldPiles: [],
     inventory: [],
     equipment: [],
     contentId: "content",

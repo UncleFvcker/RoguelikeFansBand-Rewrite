@@ -81,6 +81,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 57,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -407,6 +409,7 @@
         }
       ],
       "nextItemInstanceSerial": 5,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "disarm-trap",
@@ -506,7 +509,7 @@
           "y": 4
         }
       ],
-      "stateHash": "cd02d73da360cccc9c53b66b3574173469fc9e07910863367a9abd03f7d14c07"
+      "stateHash": "b1d697b79adfdee6ceb41943d457adaf6b8ef77bf5d429834ed7cdb4f0ca2b07"
     },
     "events": [
       {
@@ -578,6 +581,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "cd02d73da360cccc9c53b66b3574173469fc9e07910863367a9abd03f7d14c07"
+    "saveRoundTripStateHash": "b1d697b79adfdee6ceb41943d457adaf6b8ef77bf5d429834ed7cdb4f0ca2b07"
   }
 }

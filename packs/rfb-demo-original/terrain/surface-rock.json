@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.surface-rock",
+  "nameKey": "terrain-demo-surface-rock-name",
+  "descriptionKey": "terrain-demo-surface-rock-description",
+  "glyph": "#",
+  "walkable": false,
+  "blocksSight": true,
+  "tags": ["outdoor", "rock", "surface"]
+}

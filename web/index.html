@@ -115,6 +115,7 @@
           </p>
         </div>
         <div class="header-actions">
+          <button id="player-ui-settings-open" class="quiet-button" type="button" data-l10n-id="action-game-settings"></button>
           <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>
           <button id="save-button" type="button" data-l10n-id="action-export-save"></button>
           <label class="file-button">
@@ -178,6 +179,7 @@
       </section>
 
       <main class="game-layout">
+        <div class="play-column">
         <section class="map-panel" data-l10n-aria-label="map-aria-label">
           <div class="panel-heading">
             <span data-l10n-id="panel-map-title"></span>
@@ -188,6 +190,7 @@
           </div>
           <div class="input-toolbar">
             <div class="target-controls">
+              <button id="traverse-stairs" type="button" disabled></button>
               <button id="look-mode-toggle" type="button"></button>
               <button id="target-mode-toggle" type="button"></button>
               <span id="target-mode-status" aria-live="polite"></span>
@@ -235,52 +238,96 @@
           </div>
         </section>
 
-        <aside class="ui-column">
-          <section class="status-panel" aria-labelledby="status-title">
+        <div id="message-panel-host" class="message-panel-host"></div>
+        <details class="support-drawer">
+          <summary data-l10n-id="support-drawer-title"></summary>
+          <div id="support-panel-host" class="support-panel-host"></div>
+        </details>
+        </div>
+
+        <aside id="player-sidebar" class="ui-column player-sidebar">
+          <section id="status-panel" class="status-panel player-status-panel" aria-labelledby="status-title">
             <div class="panel-heading">
               <span id="status-title" data-l10n-id="panel-status-title"></span>
+              <span class="turn-indicator"><span data-l10n-id="status-turn"></span> <strong id="turn-value">0</strong></span>
+            </div>
+            <div id="health-meter" class="health-meter" data-health-state="healthy">
+              <div class="health-meter-label">
+                <span data-l10n-id="status-health"></span>
+                <strong id="hp-value">--</strong>
+              </div>
+              <div class="meter-track" aria-hidden="true"><span id="health-meter-fill" class="health-meter-fill"></span></div>
             </div>
             <dl class="status-grid">
-              <div><dt data-l10n-id="status-turn"></dt><dd id="turn-value">0</dd></div>
-              <div><dt data-l10n-id="status-health"></dt><dd id="hp-value">--</dd></div>
+              <div class="status-gold"><dt data-l10n-id="status-gold"></dt><dd id="gold-value">--</dd></div>
+              <div class="status-nutrition"><dt data-l10n-id="status-nutrition"></dt><dd id="nutrition-value">--</dd></div>
               <div><dt data-l10n-id="status-attack"></dt><dd id="attack-value">--</dd></div>
               <div><dt data-l10n-id="status-defense"></dt><dd id="defense-value">--</dd></div>
-              <div><dt data-l10n-id="status-effects"></dt><dd id="effects-value">--</dd></div>
-              <div><dt data-l10n-id="status-position"></dt><dd id="position-value">--</dd></div>
-              <div><dt data-l10n-id="status-hash"></dt><dd id="hash-value">--</dd></div>
+              <div class="status-effects"><dt data-l10n-id="status-effects"></dt><dd id="effects-value">--</dd></div>
             </dl>
+            <details class="technical-details">
+              <summary data-l10n-id="status-technical-details"></summary>
+              <dl class="status-grid technical-status-grid">
+                <div><dt data-l10n-id="status-position"></dt><dd id="position-value">--</dd></div>
+                <div><dt data-l10n-id="status-hash"></dt><dd id="hash-value">--</dd></div>
+              </dl>
+            </details>
           </section>
 
-          <section class="status-panel progression-panel" aria-labelledby="progression-title">
+          <section id="progression-panel" class="status-panel progression-panel" aria-labelledby="progression-title">
             <div class="panel-heading">
               <span id="progression-title" data-l10n-id="panel-progression-title"></span>
             </div>
-            <dl class="status-grid">
+            <dl class="status-grid player-identity-grid">
               <div><dt data-l10n-id="progression-level"></dt><dd id="progression-level-value">--</dd></div>
-              <div><dt data-l10n-id="progression-experience"></dt><dd id="progression-experience-value">--</dd></div>
-              <div><dt data-l10n-id="progression-cap"></dt><dd id="progression-cap-value">--</dd></div>
-              <div><dt data-l10n-id="progression-points"></dt><dd id="progression-points-value">--</dd></div>
               <div><dt data-l10n-id="progression-build"></dt><dd id="progression-build-value">--</dd></div>
               <div><dt data-l10n-id="progression-race"></dt><dd id="progression-race-value">--</dd></div>
               <div><dt data-l10n-id="progression-class"></dt><dd id="progression-class-value">--</dd></div>
-              <div><dt data-l10n-id="progression-personality"></dt><dd id="progression-personality-value">--</dd></div>
-              <div><dt data-l10n-id="progression-multipliers"></dt><dd id="progression-multipliers-value">--</dd></div>
             </dl>
-            <ul id="attribute-list" class="attribute-list" aria-live="polite"></ul>
-            <div class="progression-subheading" data-l10n-id="progression-skills"></div>
-            <ul id="skill-list" class="skill-list" aria-live="polite"></ul>
+            <details class="player-details">
+              <summary data-l10n-id="progression-details"></summary>
+              <dl class="status-grid progression-detail-grid">
+                <div><dt data-l10n-id="progression-experience"></dt><dd id="progression-experience-value">--</dd></div>
+                <div><dt data-l10n-id="progression-cap"></dt><dd id="progression-cap-value">--</dd></div>
+                <div><dt data-l10n-id="progression-points"></dt><dd id="progression-points-value">--</dd></div>
+                <div><dt data-l10n-id="progression-personality"></dt><dd id="progression-personality-value">--</dd></div>
+                <div><dt data-l10n-id="progression-multipliers"></dt><dd id="progression-multipliers-value">--</dd></div>
+              </dl>
+              <ul id="attribute-list" class="attribute-list" aria-live="polite"></ul>
+              <div class="progression-subheading" data-l10n-id="progression-skills"></div>
+              <ul id="skill-list" class="skill-list" aria-live="polite"></ul>
+            </details>
           </section>
 
-          <section class="status-panel ability-panel" aria-labelledby="ability-title">
+          <section id="resource-panel" class="status-panel resource-panel" aria-labelledby="resource-title">
             <div class="panel-heading">
-              <span id="ability-title" data-l10n-id="panel-ability-title"></span>
-              <button id="resource-rest" class="quiet-button" type="button" data-l10n-id="action-resource-rest"></button>
+              <span id="resource-title" data-l10n-id="panel-resource-title"></span>
             </div>
             <ul id="resource-list" class="resource-list" aria-live="polite"></ul>
+          </section>
+
+          <nav class="player-page-actions" data-l10n-aria-label="player-pages-aria-label">
+            <button id="player-ui-inventory-open" type="button" aria-keyshortcuts="I"><span data-l10n-id="action-open-inventory"></span><kbd data-l10n-id="shortcut-inventory"></kbd></button>
+            <button id="player-ui-ability-open" type="button" aria-keyshortcuts="M"><span data-l10n-id="action-open-abilities"></span><kbd data-l10n-id="shortcut-abilities"></kbd></button>
+            <button id="resource-rest" type="button" aria-keyshortcuts="R"><span data-l10n-id="action-resource-rest"></span><kbd data-l10n-id="shortcut-rest"></kbd></button>
+          </nav>
+
+          <section id="nearby-panel" class="status-panel nearby-panel" aria-labelledby="nearby-title">
+            <div class="panel-heading">
+              <span id="nearby-title" data-l10n-id="panel-nearby-title"></span>
+            </div>
+            <p id="nearby-current" class="nearby-current"></p>
+            <ul id="nearby-list" class="nearby-list" aria-live="polite"></ul>
+          </section>
+
+          <section id="ability-panel" class="status-panel ability-panel" aria-labelledby="ability-title">
+            <div class="panel-heading">
+              <span id="ability-title" data-l10n-id="panel-ability-title"></span>
+            </div>
             <ul id="ability-list" class="ability-list" aria-live="polite"></ul>
           </section>
 
-          <section class="status-panel summon-command-panel" aria-labelledby="summon-command-title">
+          <section id="summon-command-panel" class="status-panel summon-command-panel" aria-labelledby="summon-command-title">
             <div class="panel-heading">
               <span id="summon-command-title" data-l10n-id="panel-summon-command-title"></span>
               <span id="summon-command-status" class="status-pill"></span>
@@ -293,7 +340,7 @@
             </div>
           </section>
 
-          <section class="status-panel" aria-labelledby="campaign-title">
+          <section id="campaign-panel" class="status-panel" aria-labelledby="campaign-title">
             <div class="panel-heading">
               <span id="campaign-title" data-l10n-id="panel-campaign-title"></span>
             </div>
@@ -306,14 +353,14 @@
             <button id="campaign-retire" type="button" data-l10n-id="action-campaign-retire"></button>
           </section>
 
-          <section class="inventory-panel" aria-labelledby="task-log-title">
+          <section id="task-log-panel" class="inventory-panel" aria-labelledby="task-log-title">
             <div class="panel-heading">
               <span id="task-log-title" data-l10n-id="panel-task-log-title"></span>
             </div>
             <ul id="task-log-list" class="inventory-list" aria-live="polite"></ul>
           </section>
 
-          <section class="inventory-panel" aria-labelledby="inventory-title">
+          <section id="inventory-panel" class="inventory-panel" aria-labelledby="inventory-title">
             <div class="panel-heading">
               <span id="inventory-title" data-l10n-id="panel-inventory-title"></span>
               <span id="inventory-count"></span>
@@ -336,7 +383,7 @@
             <ul id="equipment-list" class="equipment-list" aria-live="polite"></ul>
           </section>
 
-          <section class="save-panel" aria-labelledby="native-save-title">
+          <section id="native-save-panel" class="save-panel" aria-labelledby="native-save-title">
             <div class="panel-heading">
               <span id="native-save-title" data-l10n-id="panel-native-save-title"></span>
               <button id="native-save-refresh" class="quiet-button" type="button" data-l10n-id="action-native-save-refresh"></button>
@@ -351,7 +398,7 @@
             <ul id="native-save-list" class="native-save-list" aria-live="polite"></ul>
           </section>
 
-          <section class="message-panel" aria-labelledby="message-title">
+          <section id="message-panel" class="message-panel" aria-labelledby="message-title">
             <div class="panel-heading">
               <span id="message-title" data-l10n-id="panel-message-title"></span>
               <button id="clear-messages" class="quiet-button" type="button" data-l10n-id="action-clear-messages"></button>
@@ -359,7 +406,56 @@
             <ol id="message-list" class="message-list" aria-live="polite"></ol>
           </section>
         </aside>
+
+        <aside id="player-tool-column" class="tool-column" aria-label="" hidden></aside>
       </main>
+
+      <div id="player-page-parking" hidden></div>
+
+      <dialog id="player-page-dialog" class="player-page-dialog" aria-labelledby="player-page-title">
+        <header>
+          <div>
+            <p class="eyebrow" data-l10n-id="player-page-eyebrow"></p>
+            <h2 id="player-page-title"></h2>
+          </div>
+          <button id="player-page-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div id="player-page-host" class="player-page-host"></div>
+      </dialog>
+
+      <dialog id="player-ui-settings-dialog" class="player-ui-settings-dialog" aria-labelledby="player-ui-settings-title">
+        <header>
+          <div>
+            <p class="eyebrow" data-l10n-id="settings-interface-eyebrow"></p>
+            <h2 id="player-ui-settings-title" data-l10n-id="settings-interface-title"></h2>
+          </div>
+          <button id="player-ui-settings-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div class="settings-section">
+          <h3 data-l10n-id="settings-panel-layout-title"></h3>
+          <p data-l10n-id="settings-panel-layout-description"></p>
+          <div class="settings-grid">
+            <label for="inventory-presentation">
+              <span data-l10n-id="settings-inventory-presentation"></span>
+              <select id="inventory-presentation">
+                <option value="page" data-l10n-id="settings-presentation-page"></option>
+                <option value="column" data-l10n-id="settings-presentation-column"></option>
+              </select>
+            </label>
+            <label for="ability-presentation">
+              <span data-l10n-id="settings-ability-presentation"></span>
+              <select id="ability-presentation">
+                <option value="page" data-l10n-id="settings-presentation-page"></option>
+                <option value="column" data-l10n-id="settings-presentation-column"></option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3 data-l10n-id="settings-gameplay-title"></h3>
+          <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host"></div>
+        </div>
+      </dialog>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -4,6 +4,7 @@
   "id": "demo.race.rfb-human",
   "nameKey": "race-demo-rfb-human-name",
   "descriptionKey": "race-demo-rfb-human-description",
+  "shopAdjustPercent": 100,
   "skillSetId": "demo.skill-set.human",
   "kinCategory": "kin-glyph-112",
   "bodySlots": [

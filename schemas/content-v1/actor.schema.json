@@ -184,6 +184,49 @@
         "abilities"
       ],
       "type": "object"
+    },
+    "MonsterRemainsDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chanceDenominator": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "corpseItemKindId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "corpseWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "skeletonItemKindId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skeletonWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "chanceDenominator"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
@@ -286,6 +329,17 @@
     "glyph": {
       "type": "string"
     },
+    "goldDropChancePercent": {
+      "default": null,
+      "description": "Chance that a successful death-loot roll becomes gold instead of an item.",
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "id": {
       "type": "string"
     },
@@ -329,6 +383,17 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "remains": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MonsterRemainsDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "resistances": {
       "additionalProperties": false,

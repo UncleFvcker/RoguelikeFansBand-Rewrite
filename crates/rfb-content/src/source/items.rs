@@ -11,8 +11,8 @@ use crate::{
     ContentError, EquipmentBonuses, EquipmentPassive, ItemChargeDefinition,
     ItemCurseSeverityDefinition, ItemDefinition, ItemDeviceActivationDefinition,
     ItemDeviceChargeRangeDefinition, ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition,
-    ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel, SlayTarget, StatModifiers,
-    ThrowProfileDefinition, WeaponBrand,
+    ItemFuelDefinition, ItemUseActionDefinition, ProjectileProfileDefinition, SlayLevel,
+    SlayTarget, StatModifiers, ThrowProfileDefinition, WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -35,6 +35,8 @@ pub(crate) struct SourceItemDefinition {
     weight_tenths_pound: u16,
     max_stack: u32,
     #[serde(default)]
+    base_value: u32,
+    #[serde(default)]
     equipment_slot: Option<String>,
     /// Curse stamped onto newly generated instances. Save data remains
     /// authoritative after generation and never re-derives this field.
@@ -54,6 +56,8 @@ pub(crate) struct SourceItemDefinition {
     use_action: Option<SourceItemUseActionDefinition>,
     #[serde(default)]
     device_generation: Option<SourceItemDeviceGenerationDefinition>,
+    #[serde(default)]
+    fuel: Option<ItemFuelDefinition>,
     #[serde(default)]
     ability_book_id: Option<String>,
     #[serde(default)]
@@ -200,6 +204,7 @@ impl SourceItemDefinition {
             glyph: self.glyph,
             weight_tenths_pound: self.weight_tenths_pound,
             max_stack: self.max_stack,
+            base_value: self.base_value,
             equipment_slot: self.equipment_slot,
             initial_curse: self.initial_curse,
             modifiers: self.modifiers,
@@ -209,6 +214,7 @@ impl SourceItemDefinition {
             throw_profile: self.throw_profile,
             use_action,
             device_generation,
+            fuel: self.fuel,
             ability_book_id: self.ability_book_id,
             break_chance_percent: self.break_chance_percent,
             resistances: self.resistances,

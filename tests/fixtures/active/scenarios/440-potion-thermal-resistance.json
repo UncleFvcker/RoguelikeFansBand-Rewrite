@@ -48,6 +48,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.thermal-resistance",
@@ -413,6 +415,7 @@
         }
       ],
       "nextItemInstanceSerial": 6,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -480,7 +483,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "321319c36e56bc50f0ab4dfa56b20fbd286158ebc1c2635e84d18d3f503f8bcc"
+      "stateHash": "443538061051ffc97648256dadd82d4b300fb6ed96f0ce0925e1abea167b413f"
     },
     "events": [
       {
@@ -493,6 +496,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "321319c36e56bc50f0ab4dfa56b20fbd286158ebc1c2635e84d18d3f503f8bcc"
+    "saveRoundTripStateHash": "443538061051ffc97648256dadd82d4b300fb6ed96f0ce0925e1abea167b413f"
   }
 }

@@ -714,7 +714,7 @@
         "x": 8,
         "y": 4
       },
-      "playerHp": 1,
+      "playerHp": 7,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -722,6 +722,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9769,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -940,6 +942,7 @@
       ],
       "groundItemCount": 2,
       "nextItemInstanceSerial": 11,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -1000,7 +1003,7 @@
           "y": 5
         }
       ],
-      "stateHash": "36e3d69a61f314cd1c5c82a8037a0bea63ea75ea48f98a48a3a58ba4449a43ce"
+      "stateHash": "a0817286660a248f4f73f834d7e53990e02632161203f581c6a62529aeb965e9"
     },
     "events": [
       {
@@ -13119,6 +13122,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "36e3d69a61f314cd1c5c82a8037a0bea63ea75ea48f98a48a3a58ba4449a43ce"
+    "saveRoundTripStateHash": "a0817286660a248f4f73f834d7e53990e02632161203f581c6a62529aeb965e9"
   }
 }

@@ -4,6 +4,8 @@ import type {
   CellDto,
   CellVisualDto,
   EntityDto,
+  GoldAppearanceDto,
+  GoldPileDto,
   GameSnapshot,
   GameUpdate,
   ItemDto,
@@ -42,7 +44,7 @@ export class RenderWorld {
   }
 
   applySnapshot(snapshot: GameSnapshot): RenderCell[] {
-    this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items);
+    this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items, snapshot.goldPiles);
     this.#playerPosition = snapshot.player.position;
     this.#visibility.fill("hidden");
     this.#lights.fill(DEFAULT_LIGHT);
@@ -52,7 +54,7 @@ export class RenderWorld {
   }
 
   applyUpdate(update: GameUpdate): RenderCell[] {
-    this.#syncEntityKinds(update.player, update.entities, update.items);
+    this.#syncEntityKinds(update.player, update.entities, update.items, update.goldPiles);
     this.#playerPosition = update.player.position;
     const dirty = new Set<number>();
     for (const cell of update.changedCells) {
@@ -91,11 +93,17 @@ export class RenderWorld {
     return cells;
   }
 
-  #syncEntityKinds(player: PlayerDto, entities: EntityDto[], items: ItemDto[]): void {
+  #syncEntityKinds(
+    player: PlayerDto,
+    entities: EntityDto[],
+    items: ItemDto[],
+    goldPiles: GoldPileDto[],
+  ): void {
     this.#entityKinds.clear();
     this.#entityKinds.set(player.id, player.kindId);
     for (const entity of entities) this.#entityKinds.set(entity.id, entity.kindId);
     for (const item of items) this.#entityKinds.set(item.id, item.kindId);
+    for (const pile of goldPiles) this.#entityKinds.set(pile.id, goldVisualId(pile.appearance));
   }
 
   #storeCell(cell: CellDto): number | undefined {
@@ -152,4 +160,8 @@ export class RenderWorld {
     }
     return position.y * this.#width + position.x;
   }
+}
+
+export function goldVisualId(appearance: GoldAppearanceDto): string {
+  return `core.gold.${appearance}`;
 }

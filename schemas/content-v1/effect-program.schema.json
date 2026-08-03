@@ -158,6 +158,26 @@
           "additionalProperties": false,
           "properties": {
             "amount": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "increase-nutrition",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
               "format": "uint32",
               "minimum": 0,
               "type": "integer"

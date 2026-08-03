@@ -119,6 +119,8 @@
       "playerEnergyNeed": 10,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9979,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -387,6 +389,7 @@
       ],
       "groundItemCount": 2,
       "nextItemInstanceSerial": 13,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -441,7 +444,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "64401a6eb3fa007d698efb826bb1249f133f9129f4cb9c3a6cffdba005e725fb"
+      "stateHash": "c03bbc12904e2054f4a37ec602fc5e12e6120b901d3a67990cfdd2809921d732"
     },
     "events": [
       {
@@ -12012,14 +12015,14 @@
       {
         "step": 15,
         "kind": "player-dead",
-        "stateHash": "64401a6eb3fa007d698efb826bb1249f133f9129f4cb9c3a6cffdba005e725fb"
+        "stateHash": "c03bbc12904e2054f4a37ec602fc5e12e6120b901d3a67990cfdd2809921d732"
       },
       {
         "step": 16,
         "kind": "player-dead",
-        "stateHash": "64401a6eb3fa007d698efb826bb1249f133f9129f4cb9c3a6cffdba005e725fb"
+        "stateHash": "c03bbc12904e2054f4a37ec602fc5e12e6120b901d3a67990cfdd2809921d732"
       }
     ],
-    "saveRoundTripStateHash": "64401a6eb3fa007d698efb826bb1249f133f9129f4cb9c3a6cffdba005e725fb"
+    "saveRoundTripStateHash": "c03bbc12904e2054f4a37ec602fc5e12e6120b901d3a67990cfdd2809921d732"
   }
 }

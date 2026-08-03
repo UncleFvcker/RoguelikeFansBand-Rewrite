@@ -15,5 +15,14 @@
   "damageDice": 1,
   "damageSides": 2,
   "damageType": "physical",
+  "lootTableId": "demo.loot-table.small-kobold",
+  "goldDropChancePercent": 20,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "corpseWeight": 4,
+    "skeletonWeight": 1
+  },
   "tags": ["humanoid", "kobold", "warrens"]
 }

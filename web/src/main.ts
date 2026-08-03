@@ -45,6 +45,7 @@ import { installRendererProfileHook } from "./render-profile";
 import { createSessionShellDom, SessionShell } from "./session-shell";
 import { JourneyGuidance } from "./journey-guidance";
 import { JourneyResult } from "./journey-result";
+import { PlayerUiLayout } from "./player-ui-layout";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -75,6 +76,12 @@ const {
 } = appDom;
 
 const localization = new Localization(readLocale(localStorage), LOCALIZATION_SOURCES);
+const playerUiLayout = new PlayerUiLayout({
+  document,
+  window,
+  storage: localStorage,
+  localization,
+});
 const itemCurseSeverityName = createItemCurseSeverityName(localization);
 const {
   formatEvent,
@@ -91,6 +98,7 @@ const {
     currentInventory: appState.inventory,
     currentEquipment: appState.equipment,
     currentStatus: appState.status,
+    currentWorldId: appState.worldId,
   }),
   {
     formatAttributeValueArgument,
@@ -135,6 +143,7 @@ const settingsPanel = new SettingsPanel({
     sessionShell.localize();
     journeyGuidance.localize();
     journeyResult.localize();
+    playerUiLayout.localize();
     messagePanel.render();
   },
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -146,6 +155,7 @@ const gameSession = new GameSession({
   applyUpdate: (update, command) => {
     const previous = appState.status;
     renderer.applyUpdate(update);
+    appState.updateCells(update.changedCells);
     appState.updateVisualCells(update.changedVisualCells);
     statusPanel.render(update);
     inventoryPanel.render(update.inventory, update.equipment);
@@ -186,7 +196,10 @@ const inventoryPanel = new InventoryPanel({
   },
   dispatch,
   onInventoryInteraction: () => journeyGuidance.recordInteraction("inventory"),
-  startTargeting: (spec, intent) => inputController.startTargetingWithSpec(spec, intent),
+  startTargeting: (spec, intent) => {
+    playerUiLayout.closePage();
+    inputController.startTargetingWithSpec(spec, intent);
+  },
   updateCampaignAction: () => statusPanel.updateCampaignAction(),
   announce: addLocalizedMessage,
   itemCurseSeverityName,
@@ -200,7 +213,10 @@ const statusPanel = new StatusPanel({
   statusName,
   selectItemTarget: (excludedItemId, onSelect) =>
     inventoryPanel.selectItemTarget(excludedItemId, onSelect),
-  startAbilityTargeting: (ability) => inputController.startAbilityTargeting(ability),
+  startAbilityTargeting: (ability) => {
+    playerUiLayout.closePage();
+    inputController.startAbilityTargeting(ability);
+  },
   reconcileTargeting: (state) => inputController.reconcileStatus(state),
   renderTargeting: () => inputController.render(),
   refreshInventoryActions: () => inventoryPanel.updateActions(),
@@ -267,6 +283,7 @@ const journeyResult = new JourneyResult({
   onMenu: () => showSessionView("title"),
   onExit: () => getCurrentWindow().close(),
 });
+playerUiLayout.initialize();
 settingsPanel.initialize();
 nativeSavePanel.localize();
 renderConnectionStatus();
@@ -288,6 +305,7 @@ statusPanel.install();
 inventoryPanel.install();
 journeyGuidance.install();
 journeyResult.install();
+playerUiLayout.install();
 saveButton.addEventListener("click", () => void exportSave());
 replayButton.addEventListener("click", () => void exportReplay());
 loadInput.addEventListener("change", () => void importSave());
@@ -303,6 +321,7 @@ window.addEventListener("beforeunload", () => {
   inputController.dispose();
   journeyGuidance.dispose();
   journeyResult.dispose();
+  playerUiLayout.dispose();
   sessionShell.dispose();
   renderer.destroy();
   core.dispose();
@@ -402,6 +421,9 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
   appState.mode = "playing";
   appState.setMapSize(snapshot.width, snapshot.height);
+  appState.worldId = snapshot.worldId;
+  appState.replaceCells(snapshot.cells);
+  appState.replaceContentVisuals(snapshot.contentVisuals);
   core.synchronize(snapshot);
   renderContentMetadata(snapshot);
   renderer.applySnapshot(snapshot);
@@ -433,6 +455,9 @@ async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot
 async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inputController.cancelTargeting(false);
   appState.setMapSize(snapshot.width, snapshot.height);
+  appState.worldId = snapshot.worldId;
+  appState.replaceCells(snapshot.cells);
+  appState.replaceContentVisuals(snapshot.contentVisuals);
   core.synchronize(snapshot);
   renderContentMetadata(snapshot);
   if (!rendererInitialized) {
@@ -498,11 +523,19 @@ function showSessionView(view: "title" | "new-game" | "load"): void {
 function describeLookPosition(position: { readonly x: number; readonly y: number }): string {
   const status = appState.status;
   if (!status) return localization.format("look-contents-empty");
+  const cell = appState.cellAt(position);
+  const withTerrain = (contents: string): string =>
+    cell
+      ? localization.format("look-contents-with-terrain", {
+          contents,
+          terrain: contentName(cell.terrainId),
+        })
+      : contents;
   if (
     status.player.position.x === position.x &&
     status.player.position.y === position.y
   ) {
-    return localization.format("look-contents-player");
+    return withTerrain(localization.format("look-contents-player"));
   }
   if (appState.cellVisibility.get(`${position.x},${position.y}`) !== "visible") {
     return localization.format("look-contents-unseen");
@@ -511,20 +544,24 @@ function describeLookPosition(position: { readonly x: number; readonly y: number
     (entity) => entity.position.x === position.x && entity.position.y === position.y,
   );
   if (actor) {
-    return localization.format("look-contents-actor", {
-      actor: contentName(actor.kindId),
-    });
+    return withTerrain(
+      localization.format("look-contents-actor", {
+        actor: contentName(actor.kindId),
+      }),
+    );
   }
   const item = status.items.find(
     (candidate) =>
       candidate.position.x === position.x && candidate.position.y === position.y,
   );
   if (item) {
-    return localization.format("look-contents-item", {
-      item: visibleItemName(item.displayNameKey, item.kindId),
-    });
+    return withTerrain(
+      localization.format("look-contents-item", {
+        item: visibleItemName(item.displayNameKey, item.kindId),
+      }),
+    );
   }
-  return localization.format("look-contents-empty");
+  return withTerrain(localization.format("look-contents-empty"));
 }
 
 function renderContentMetadata(snapshot: GameSnapshot): void {

@@ -26,14 +26,18 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) actor_roles: &'a BTreeMap<String, ActorRole>,
     pub(super) actor_levels: &'a BTreeMap<String, u32>,
     pub(super) item_limits: &'a BTreeMap<String, (u32, bool)>,
+    pub(super) items: &'a [ItemDefinition],
     pub(super) affix_ids: &'a BTreeSet<String>,
     pub(super) encounter_tables: &'a BTreeMap<String, EncounterTableDefinition>,
     pub(super) loot_table_ids: &'a BTreeSet<String>,
+    pub(super) loot_tables: &'a BTreeMap<String, LootTableDefinition>,
     pub(super) theme_tables: &'a BTreeMap<String, ThemeTableDefinition>,
     pub(super) region_tables: &'a BTreeMap<String, RegionTableDefinition>,
     pub(super) terrain_feature_tables: &'a BTreeMap<String, TerrainFeatureTableDefinition>,
     pub(super) vaults: &'a BTreeMap<String, VaultDefinition>,
     pub(super) build_ids: &'a BTreeSet<String>,
+    pub(super) towns: &'a BTreeMap<String, TownDefinition>,
+    pub(super) shops: &'a BTreeMap<String, ShopDefinition>,
 }
 
 fn validate_task_objective(
@@ -140,14 +144,18 @@ pub(super) fn validate_world(
         actor_roles,
         actor_levels,
         item_limits,
+        items,
         affix_ids,
         encounter_tables,
         loot_table_ids,
+        loot_tables,
         theme_tables,
         region_tables,
         terrain_feature_tables,
         vaults,
         build_ids,
+        towns,
+        shops,
     } = refs;
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
@@ -384,6 +392,76 @@ pub(super) fn validate_world(
         };
         if let Some(table_id) = &procedural.loot_table_id {
             require_reference(loot_table_ids, table_id, &procedural.id)?;
+            if loot_tables.get(table_id).is_some_and(|table| {
+                !table.entries.iter().any(|entry| {
+                    entry.min_depth <= procedural.depth && procedural.depth <= entry.max_depth
+                })
+            }) {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        if let Some(allocation) = procedural.loot_allocation {
+            let map_area = u32::from(procedural.width) * u32::from(procedural.height);
+            let valid_rule = |rule: ProceduralNormalAllocationDefinition| {
+                rule.mean > 0
+                    && rule.mean <= 64
+                    && rule.standard_deviation > 0
+                    && rule.standard_deviation <= 16
+            };
+            if procedural.loot_table_id.is_none()
+                || procedural.layout.as_ref().is_none_or(|layout| {
+                    layout.mode != ProceduralLayoutMode::Rooms || layout.rooms.is_none()
+                })
+                || allocation.reference_area_tiles < map_area
+                || allocation.reference_area_tiles > 1_000_000
+                || !valid_rule(allocation.room_objects)
+                || !valid_rule(allocation.anywhere_objects)
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        if let Some(allocation) = procedural.gold_allocation {
+            let map_area = u32::from(procedural.width) * u32::from(procedural.height);
+            if procedural.layout.as_ref().is_none_or(|layout| {
+                layout.mode != ProceduralLayoutMode::Rooms || layout.rooms.is_none()
+            }) || allocation.reference_area_tiles < map_area
+                || allocation.reference_area_tiles > 1_000_000
+                || allocation.piles.mean == 0
+                || allocation.piles.mean > 64
+                || allocation.piles.standard_deviation == 0
+                || allocation.piles.standard_deviation > 16
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+        }
+        procedural
+            .guaranteed_items
+            .sort_by(|left, right| left.id.cmp(&right.id));
+        let mut guaranteed_ids = BTreeSet::new();
+        for guaranteed in &procedural.guaranteed_items {
+            let mut entry_ids = BTreeSet::new();
+            let valid_entries = (1..=16).contains(&guaranteed.entries.len())
+                && guaranteed.entries.iter().all(|entry| {
+                    let valid_item = items.iter().any(|item| {
+                        item.id == entry.item_kind_id
+                            && (item.use_action.as_ref().is_some_and(|action| {
+                                matches!(
+                                    action.effect,
+                                    ItemUseEffectDefinition::IncreaseNutrition { .. }
+                                )
+                            }) || item.fuel.is_some())
+                    });
+                    (1..=1_000).contains(&entry.weight)
+                        && entry_ids.insert(entry.item_kind_id.as_str())
+                        && valid_item
+                });
+            if !(2..=1_000).contains(&guaranteed.chance_one_in)
+                || validate_id(&guaranteed.id).is_err()
+                || !guaranteed_ids.insert(guaranteed.id.as_str())
+                || !valid_entries
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
         }
         let eligible_theme_entries = if let Some(table_id) = &procedural.theme_table_id {
             let Some(table) = theme_tables.get(table_id) else {
@@ -757,13 +835,25 @@ pub(super) fn validate_world(
                     .unwrap_or(0);
                 let interior_area = u32::from(procedural.width.saturating_sub(2))
                     * u32::from(procedural.height.saturating_sub(2));
+                let invalid_placement_geometry = match geometry.placement {
+                    ProceduralRoomPlacement::Partitioned => {
+                        geometry.min_width > minimum_cell_width
+                            || geometry.min_height > minimum_cell_height
+                    }
+                    ProceduralRoomPlacement::Free => {
+                        geometry.min_width > minimum_cell_width
+                            || geometry.min_height > minimum_cell_height
+                            || geometry.max_width > procedural.width.saturating_sub(2)
+                            || geometry.max_height > procedural.height.saturating_sub(2)
+                            || layout.pit.is_some()
+                    }
+                };
                 if !(2..=6).contains(&placements)
                     || !(5..=32).contains(&geometry.min_width)
                     || !(geometry.min_width..=32).contains(&geometry.max_width)
                     || !(5..=32).contains(&geometry.min_height)
                     || !(geometry.min_height..=32).contains(&geometry.max_height)
-                    || geometry.min_width > minimum_cell_width
-                    || geometry.min_height > minimum_cell_height
+                    || invalid_placement_geometry
                     || geometry.shapes.is_empty()
                     || geometry.shapes.len() > 2
                     || shape_count != geometry.shapes.len()
@@ -1269,6 +1359,9 @@ pub(super) fn validate_world(
                 .is_none_or(|level| *level > u32::from(procedural.depth))
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if let Some(table_id) = &guardian.reward_loot_table_id {
+                require_reference(loot_table_ids, table_id, &procedural.id)?;
             }
         }
         if let Some(reward) = &procedural.task_reward {
@@ -1857,6 +1950,38 @@ pub(super) fn validate_world(
                     .is_some()
             {
                 return Err(ContentError::InvalidTerrainOverride(world.id.clone()));
+            }
+        }
+    }
+
+    if let Some(town_id) = &world.town_id {
+        let town = towns
+            .get(town_id)
+            .ok_or_else(|| ContentError::DanglingReference {
+                owner: world.id.clone(),
+                target: town_id.clone(),
+            })?;
+        if town.floor_id != world.initial_floor_id {
+            return Err(ContentError::InvalidTown(town.id.clone()));
+        }
+        let mut entrance_positions = BTreeSet::new();
+        for shop_id in &town.shop_ids {
+            let shop = shops
+                .get(shop_id)
+                .expect("validated town shop reference must remain available");
+            validate_position(shop.entrance_position, world.width, world.height, &shop.id)?;
+            require_reference(terrain_ids, &shop.entrance_terrain_id, &shop.id)?;
+            let effective_terrain_id = override_terrain
+                .get(&shop.entrance_position)
+                .unwrap_or(&world.fill_terrain_id);
+            if !entrance_positions.insert(shop.entrance_position)
+                || effective_terrain_id != &shop.entrance_terrain_id
+                || terrain_walkability.get(effective_terrain_id) != Some(&true)
+                || !terrain_tags
+                    .get(effective_terrain_id)
+                    .is_some_and(|tags| tags.contains("shop-entrance"))
+            {
+                return Err(ContentError::InvalidShop(shop.id.clone()));
             }
         }
     }

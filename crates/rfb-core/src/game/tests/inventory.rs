@@ -48,6 +48,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
             curse: None,
             activation: None,
             charges: None,
+            fuel: None,
             device_recovery_progress: 0,
             location: ItemLocation::Inventory,
         });
@@ -1252,6 +1253,7 @@ fn pickup_merges_into_the_lowest_id_compatible_stack() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
@@ -1429,6 +1431,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
@@ -1481,6 +1484,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
@@ -1561,6 +1565,7 @@ fn rolled_affix_save_round_trip_does_not_redraw_rng() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
@@ -1623,6 +1628,7 @@ fn rolled_equipment_bonuses_and_regeneration_are_authoritative() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),

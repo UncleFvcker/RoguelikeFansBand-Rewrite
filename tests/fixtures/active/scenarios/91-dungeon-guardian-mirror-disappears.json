@@ -313,6 +313,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9919,
       "playerResistances": [
         {
           "damageType": "physical",
@@ -507,6 +509,7 @@
       ],
       "groundItemCount": 2,
       "nextItemInstanceSerial": 8,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -561,7 +564,7 @@
         "conqueredDungeons": 1,
         "completedTasks": 0
       },
-      "stateHash": "b70ad8e6715ef4af821c335c623695637ffc548ea9d2d8895d032303be23e4c5"
+      "stateHash": "b241be23617893e8dea2c1ce5e0f6c63e67f0d6c0153a2d54c85edce74f980a9"
     },
     "events": [
       {
@@ -6374,6 +6377,6 @@
       "demo.floor.echo-depth-2.region.demo.region.resonance-grotto.encounter.plain.1",
       "demo.guardian.echo-depths.1"
     ],
-    "saveRoundTripStateHash": "b70ad8e6715ef4af821c335c623695637ffc548ea9d2d8895d032303be23e4c5"
+    "saveRoundTripStateHash": "b241be23617893e8dea2c1ce5e0f6c63e67f0d6c0153a2d54c85edce74f980a9"
   }
 }

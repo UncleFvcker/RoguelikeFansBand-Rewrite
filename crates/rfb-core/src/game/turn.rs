@@ -5,6 +5,7 @@ use super::*;
 impl Game {
     pub(super) fn advance_until_player_ready(
         &mut self,
+        resting: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -15,6 +16,12 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
+            self.process_hunger(events);
+            if self.player_is_dead() {
+                break;
+            }
+            self.process_natural_hp_regeneration(resting);
+            self.process_equipped_light_fuel(events);
             self.process_equipment_regeneration(events);
             self.process_inventory_device_recovery(events);
             self.process_monster_energy_pulse(events, changed, removed_entities)?;
@@ -32,6 +39,46 @@ impl Game {
             self.advance_recall(events, changed)?;
         }
         Ok(())
+    }
+
+    fn process_natural_hp_regeneration(&mut self, resting: bool) {
+        if !self
+            .world_tick
+            .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
+            || self.player.hp >= self.effective_player_max_hp()
+            || self
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_POISON || status.kind_id == STATUS_BLEEDING)
+        {
+            return;
+        }
+        let period = u64::from(self.world_tick / NATURAL_HP_REGENERATION_INTERVAL_TICKS);
+        let maximum = u64::try_from(self.effective_player_max_hp().max(1))
+            .expect("positive maximum HP must fit u64");
+        let factor = self.nutrition_regeneration_factor() * if resting { 2 } else { 1 };
+        let regeneration = maximum
+            .saturating_mul(factor)
+            .saturating_add(NATURAL_HP_REGENERATION_BASE);
+        let recovered = period
+            .saturating_mul(regeneration)
+            .saturating_div(NATURAL_HP_REGENERATION_SCALE)
+            .saturating_sub(
+                period
+                    .saturating_sub(1)
+                    .saturating_mul(regeneration)
+                    .saturating_div(NATURAL_HP_REGENERATION_SCALE),
+            );
+        if recovered == 0 {
+            return;
+        }
+        let recovered = i32::try_from(recovered).unwrap_or(i32::MAX);
+        self.player.hp = self
+            .player
+            .hp
+            .saturating_add(recovered)
+            .min(self.effective_player_max_hp());
     }
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {

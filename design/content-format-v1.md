@@ -1,6 +1,6 @@
 # RFB 内容数据格式 v1
 
-状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.140.0
+状态：P0 源格式、JSON Schema、确定性编译器和首个原创内容包已实现；当前内容包已扩展至 1.147.0
 
 ## 1. 目标
 
@@ -282,7 +282,7 @@ contract-v87 以 1.79.0 扩展 Echo Cantor 的候选池，并增加 Call Discord
 
 contract-v88 以 1.80.0 增加 `smart`、`preferredDistance` 和 `fleeHpPercent`，并让 Echo Cantor 使用 3 格偏好距离、25% 受伤撤退和已观察抗性记忆；阵营目标、敌我计数和实际多目标结算由核心定义。contract-v89 只增加玩家级召唤物命令、行动与跨层规则，不修改内容 schema 或 demo 数据，因此内容版本/hash 保持不变。contract-v90 以 1.81.0 为 `ResourceDefinition` 增加 `initialFillPercent`、`meleeHitGainAmount`、`meleeKillGainAmount` 和 `turnDecayAmount`，为 `ClassDefinition` 增加多条目 `techniqueProfiles`（资源、主宰属性、上限公式、最低失败率与先天能力），并加入节奏资源、决斗家职业/构筑/技能集与弦月斩、涌动节奏两个技法能力；Mana 与既有职业数据不变。contract-v91 以 1.82.0 为能力效果增加 `blink-self`、`teleport-self` 与 `teleport-target` 三种怪物位移形态（怪物施法白名单准入），并加入裂隙潜行者与三个位移能力。
 
-当前包的 active 编译版本为 1.143.0，content hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`。contract-v150 新增第二个 `demo.world.warrens-journey`：九层线性 dungeon、独立 campaign、四个早期 actor、两件基础物品、一个 terrain、一个 encounter table 和两个 loot tables。contract-v151 在既有 Schema 内新增 `demo.build.warrior`、一个独立玩家 actor、显式采用 RFB Standard 槽位的 Human race，以及 Broad Sword、Chain Mail、Short Bow、Arrow 四件出生物品；生产 Warrens 世界改以 Warrior 开局。contract-v153 为 `ProceduralRoomShape` 增加 `cavern`，并为 rooms layout 增加可选的 `stairs.up/down` 数量范围；两者由编译器验证并进入 canonical content hash。完整选择与兼容差异见 [Contract v150](contract-v150-warrens-journey.md)、[Contract v151](contract-v151-warrior-and-dungeon-status.md) 与 [Contract v153](contract-v153-warrens-map-generation.md)。
+当前包的 active 编译版本为 1.151.0，content hash 为 `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`。contract-v150 新增第二个 `demo.world.warrens-journey`：九层线性 dungeon、独立 campaign、四个早期 actor、两件基础物品、一个 terrain、一个 encounter table 和两个 loot tables。contract-v151 在既有 Schema 内新增 `demo.build.warrior`、一个独立玩家 actor、显式采用 RFB Standard 槽位的 Human race，以及 Broad Sword、Chain Mail、Short Bow、Arrow 四件出生物品；生产 Warrens 世界改以 Warrior 开局。contract-v153 为 `ProceduralRoomShape` 增加 `cavern`，并为 rooms layout 增加可选的 `stairs.up/down` 数量范围。contract-v154 新增四种独立地表 terrain，把生产入口从室内占位视觉改为草地、土路、岩壁与密林组成的固定地表；Schema 不变。contract-v155 为 rooms geometry 增加默认 `partitioned`、可选 `free` 的放置策略，并以既有 streamer 预算表达 Warrens 岩浆岩/石英矿脉。contract-v156 为 loot table 增加深度、概率与数量骰，为 actor 增加概率遗骸，为程序化楼层增加面积缩放的房间/全图物品分配，并为 guardian 增加独立奖励表。contract-v157 为 actor 增加物品成功掉落后的金币替换概率，并为程序化楼层增加面积缩放的 `goldAllocation`；金币实例与钱包属于运行时协议，不是内容根。contract-v158 加入口粮和 `increase-nutrition` 效果，并为 Warrens 程序化楼层增加 50% 食物保证尝试。contract-v159 为 item 增加严格的 `fuel { kind, initial, maximum, lightRadius }`，录入木制火把、黄铜灯笼和油瓶，并为 Warrens 增加 50% 光源保证尝试及油/灯笼 1:2 权重；实例当前燃料仍属于运行时协议。contract-v160 新增严格的 `towns`/`shops` 根、`TownDefinition`/`ShopDefinition`、world `townId` 及城镇/商店/入口交叉验证；店主、库存、价格与交易仍是运行时后续边界。contract-v161 为 item 增加 `baseValue`、为 Race 增加 `shopAdjustPercent`，并扩展 `ShopDefinition` 的固定 owner、严格 stock 数量范围和 maintenance 周期；General Store 必须且只能列出首批四种正价值补给。完整选择与兼容差异见 [Contract v150](contract-v150-warrens-journey.md)、[Contract v151](contract-v151-warrior-and-dungeon-status.md)、[Contract v153](contract-v153-warrens-map-generation.md)、[Contract v154](contract-v154-warrens-surface-entry.md)、[Contract v155](contract-v155-warrens-generation-density.md)、[Contract v156](contract-v156-warrens-loot.md)、[Contract v157](contract-v157-gold-wallet.md)、[Contract v158](contract-v158-food-hunger.md)、[Contract v159](contract-v159-fuel-light.md)、[Contract v160](contract-v160-outpost-content.md) 与 [Contract v161](contract-v161-general-store-transactions.md)。
 
 运行时只加载验证通过的编译包。开发热重载也必须先通过相同验证，不能绕过 Schema。
 
@@ -354,7 +354,7 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 当前完成情况：
 
 - 已完成：`rfb-content` crate、`rfb-contentc`、源包验证和编译容器回环；
-- 已完成：`packs/rfb-demo-original`，包含 48 种地形、28 种 actor、90 种原创物品、3 种资源、68 个能力、5 本能力书、10 个 skill、13 个 skill set、4 个 Race、6 个 Class、3 个 Personality、6 个 build、6 张 encounter table、8 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 1 个 world；
+- 已完成：`packs/rfb-demo-original`，包含 55 种地形、33 种 actor、103 种物品、3 种资源、68 个能力、5 本能力书、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、12 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world；
 - 已完成：确定性 hash、lock 文件、checksum 损坏和悬空引用测试；
 - 已完成：内容 Schema 生成与 CI 漂移检查；
 - 已完成：Rust 核心运行时解码 `.rfbcontent`，按稳定 ID 建立地形、角色、物品和世界索引；
@@ -362,4 +362,4 @@ v1 使用受限字段操作，不使用依赖数组下标的通用 JSON Patch：
 - 已完成：前端从核心快照取得内容 glyph，不再在 TypeScript 构建期导入内容 JSON；
 - 待完成：多包依赖图、patch、locale 回退和已安装内容集合迁移。
 
-首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v118 建立实例充能、动态设备、恢复/鉴定/侦测消耗品、传送/召回、装备附魔、装备诅咒、物品召唤，并收缩无消费者的 passive 表面；contract-v119–v132 继续以窄物品效果接入可见 actor、状态、地形、爆发、Genocide、Recharging 与 Spell 卷轴族；contract-v133–v149 接入一组药水/食物状态、直伤、恢复、属性损伤、永久增长与组合恢复纵切。当前 state hash 为 Schema v55。
+首个包的真实编译 hash 与 contract-v1 使用的早期占位 content hash 不同。运行时激活通过 `contract-v2` 和 state hash Schema v2 完成；背包、装备、物品实例、战斗、行动调度与状态抗性依次迁移到 contract-v3–v9。contract-v12 至 v21 依次建立近战、怪物 routine、投射、重量、知识和消耗品；contract-v22–v25 建立 affix、质量、loot table 与怪物携带物；contract-v26–v45 建立程序化楼层、地形交互、多层探索和任务状态机；contract-v46–v69 建立生成表、分阶段地貌、树状地牢、实例身份、campaign 和生命周期；contract-v70–v90 建立成长、构筑、玩家/怪物施法、召唤物与职业资源；contract-v91–v103 建立导入所需的法术族、抗性、身体槽、装备旗标和动态 affix；contract-v104–v107 完成 Death 四册；contract-v108–v118 建立实例充能、动态设备、恢复/鉴定/侦测消耗品、传送/召回、装备附魔、装备诅咒、物品召唤，并收缩无消费者的 passive 表面；contract-v119–v132 继续以窄物品效果接入可见 actor、状态、地形、爆发、Genocide、Recharging 与 Spell 卷轴族；contract-v133–v149 接入一组药水/食物状态、直伤、恢复、属性损伤、永久增长与组合恢复纵切；contract-v150–v159 建立首个 Warrens 玩家流程、Warrior、结果页、随机地表/地牢生成、密度、物品/金币来源、食物饥饿与燃料光照。当前 state hash 为 Schema v58。

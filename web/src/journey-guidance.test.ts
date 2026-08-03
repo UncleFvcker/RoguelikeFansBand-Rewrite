@@ -29,9 +29,7 @@ test("journey status shows dungeon depth and only an undefeated boss", () => {
   assert.deepEqual(
     selectJourneyDungeonStatus(state()),
     {
-      dungeonNameKey: "dungeon-demo-warrens-name",
-      currentDepth: 0,
-      maximumDepth: 9,
+      dungeonNameKey: "floor-demo-surface-name",
       bossNameKey: "actor-demo-warrens-keeper-name",
     },
   );

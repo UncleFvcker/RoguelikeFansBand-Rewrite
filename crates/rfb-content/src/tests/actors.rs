@@ -29,6 +29,50 @@ fn player_carry_capacity_is_positive_and_monsters_cannot_declare_one() {
 }
 
 #[test]
+fn probabilistic_monster_remains_require_valid_weights_and_corpse_items() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    let mut zero_chance = artifact.content.clone();
+    zero_chance
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.small-kobold")
+        .and_then(|actor| actor.remains.as_mut())
+        .expect("small kobold should define probabilistic remains")
+        .chance_denominator = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut zero_chance),
+        Err(ContentError::InvalidActorStats(_))
+    ));
+
+    let mut mismatched_weight = artifact.content.clone();
+    mismatched_weight
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.small-kobold")
+        .and_then(|actor| actor.remains.as_mut())
+        .expect("small kobold should define probabilistic remains")
+        .skeleton_weight = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut mismatched_weight),
+        Err(ContentError::InvalidActorStats(_))
+    ));
+
+    let mut dangling_remains = artifact.content;
+    dangling_remains
+        .actors
+        .iter_mut()
+        .find(|actor| actor.id == "demo.actor.small-kobold")
+        .and_then(|actor| actor.remains.as_mut())
+        .expect("small kobold should define probabilistic remains")
+        .skeleton_item_kind_id = Some("demo.item.missing-remains".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut dangling_remains),
+        Err(ContentError::DanglingReference { .. })
+    ));
+}
+
+#[test]
 fn melee_routines_require_monsters_and_valid_blow_profiles() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mut invalid = artifact.content.clone();

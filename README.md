@@ -17,6 +17,7 @@ RoguelikeFansBand 的新一代重构工程。
 
 ## 设计文档
 
+- [Phase 18：Outpost 补给循环](design/phase-18-outpost-supply-loop.md)
 - [Phase 17：完整玩家旅程纵向切片](design/release-vertical-slice.md)
 - [Rust/Tauri 重构计划](design/html-rewrite-plan.md)
 - [旧版行为基准与差分测试](design/legacy-behavior-baseline.md)
@@ -167,6 +168,14 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v151：RFB Warrior 与地牢状态面板](design/contract-v151-warrior-and-dungeon-status.md)
 - [Contract v152：玩家结果与恢复流程](design/contract-v152-player-results-and-recovery.md)
 - [Contract v153：Warrens 随机地图生成](design/contract-v153-warrens-map-generation.md)
+- [Contract v154：Warrens 地表与入口交互](design/contract-v154-warrens-surface-entry.md)
+- [Contract v155：Warrens 生成密度](design/contract-v155-warrens-generation-density.md)
+- [Contract v156：Warrens 楼层与怪物掉落](design/contract-v156-warrens-loot.md)
+- [Contract v157：金币来源与玩家钱包](design/contract-v157-gold-wallet.md)
+- [Contract v158：食物与饥饿](design/contract-v158-food-hunger.md)
+- [Contract v159：燃料与地牢光照](design/contract-v159-fuel-light.md)
+- [Contract v160：Outpost 内容模型](design/contract-v160-outpost-content.md)
+- [Contract v161：General Store 权威交易](design/contract-v161-general-store-transactions.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -190,7 +199,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v153`，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v161`，共 461 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -399,6 +408,24 @@ Phase 17 Gate 4 / contract-v152 为死亡、击败兽穴首领后的返程状态
 
 Phase 17 Gate 5 前地图纠偏 / contract-v153 将 Warrens 的双矩形 fallback 替换为独立实现的 seeded 地图生成。固定 RFB v1.3.0.7 来源表明浅层 Warrens 实际是 66×22、约五个以不规则洞室为主的房间、随机中心/隧道，以及普通层 1–2 个上行和 4–5 个下行，而不是固定整层 cavern。新实现采用连通 frontier 洞室、打乱中心的环形随机通道和声明式楼梯范围；同 seed 可复现、不同 seed 有差异、楼层往返不重建。协议保持 1.123、demo 升至 1.143.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`。详见[Contract v153](design/contract-v153-warrens-map-generation.md)。
 
+Phase 17 Gate 5 前入口纠偏 / contract-v154 将 Warrens 开局层明确为独立地表：草地、土路、洞口岩壁和密林替换室内石地占位视觉，通用楼梯文案移除 Echo/Original Lab 残留，地牢信息在地表不再显示深度 0。地图工具栏新增状态感知的进入/上楼/下楼按钮，查看模式同时报告 terrain，入口指引明确起点南侧的 `>` 与 `Shift + .`。协议保持 1.123、demo 升至 1.144.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `25c0ed9c6afd24e3f74cdf3bae09f60044daec3b6ae9149f86a9e530c30087db`。详见[Contract v154](design/contract-v154-warrens-surface-entry.md)。
+
+Phase 17 Gate 5 前生成密度纠偏 / contract-v155 为 rooms layout 增加默认兼容的 `partitioned/free` 放置策略，Warrens 九层改用全图自由洞室布局并加入可挖的岩浆岩/石英矿脉；初始普通怪物从每层一次分配提高到 RFB 最小地图规则对应的四次分配，最终层另保留 Boss 槽。协议保持 1.123、demo 升至 1.145.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `6af0e0500187c01f10612428b47ddc255ab415f6068dcd87800a17078fb534c2`。详见[Contract v155](design/contract-v155-warrens-generation-density.md)。
+
+Phase 17 Gate 5 掉落纠偏 / contract-v156 按 RFB v1.3.0.7 的常规 Warrens 路径接入房间/全图独立物品分配、面积缩放和深度候选；Small kobold 使用 60% 普通/Warrior 主题掉落，mouse/Warg 无普通物品，四类怪物使用 `one_in_(3)` 遗骸，Mughash 掉落 `1d2` 件 Fine Warrior 装备并额外必掉 Speed 药水。金币、食物、光源、完整 `apply_magic` 与极稀有超深度提升在对应消费/对象系统建立前暂缓。协议保持 1.123、demo 升至 1.146.0、Schema 保持 v55、active baseline 456 条 exact、零 waiver，内置 content hash 为 `91ac518116420421305410a9435e002648c5538deba102780ce5e1359d7e33be`。详见[Contract v156](design/contract-v156-warrens-loot.md)。
+
+Phase 18 Gate 0 固定 Outpost 补给循环的实施边界：按 gold source -> hunger consumer -> fuel lighting -> Outpost content -> General Store transactions -> UI acceptance 的顺序推进，保留 `demo.floor.surface` 作为稳定返程层 ID，首批只开放杂货店和 Warrens 入口。Gate 0 仅更新规划，金币、饥饿、燃料、城镇与交易尚未进入运行时；协议 1.123、save v1、Schema v55、demo 1.146.0、contract-v156 和 456 条 exact fixtures 均不改变。详见[Phase 18 规划](design/phase-18-outpost-supply-loop.md)。
+
+Phase 18 Gate 1 / contract-v157 建立第一段经济来源：Warrior 出生金币 `2d300+200`、独立地面金币堆、Warrens 面积缩放金币分配、原版式金额/外观，以及 Small kobold 成功掉落后的 20% 金币替换分支。拾取先吸收同格全部金币且不占背包或负重；余额、当前层/离层金币和全局实例序号进入 save/replay/state hash，旧档迁移为 0 金币且不回填、不抽 RNG。Web 右栏、地图、附近面板与中英文事件同步显示金币。协议升至 1.124、demo 升至 1.147.0、Schema 升至 v56、active baseline 升至 contract-v157 和 457 条 exact fixtures、零 waiver，内置 content hash 为 `70f21e8d8f28a2102a8b28e5c6cabf83137afb4532e5c2868d10fb7c1e5e5012`。下一步是 Gate 2 的食物与饥饿。详见[Contract v157](design/contract-v157-gold-wallet.md)。
+
+Phase 18 Gate 2 / contract-v158 加入 Warrior 出生口粮、权威饱食度、速度相关消化、低饱食恢复、昏厥和挨饿伤害，并为 Warrens 每层增加原版式 50% 口粮保证尝试。协议升至 1.125、demo 升至 1.148.0、Schema 升至 v57，active baseline 增至 458 条 exact fixtures。详见[Contract v158](design/contract-v158-food-hunger.md)。
+
+Phase 18 Gate 3 / contract-v159 加入 Warrior 出生火把、火把/灯笼/油瓶实例燃料、补充燃料、周期消耗、Outpost 环境光和 Warrens 暗视野，并为 Warrens 每层增加原版式光源保证尝试。协议升至 1.126、demo 升至 1.149.0、Schema 升至 v58，active baseline 增至 459 条 exact fixtures。详见[Contract v159](design/contract-v159-fuel-light.md)。
+
+Phase 18 Gate 4 / contract-v160 增加严格的 town/shop 内容根、Outpost 与 General Store 稳定身份、独立地表布局、入口访问状态及确定性旧地表迁移。当前不含店主、库存、价格或交易；这些属于 Gate 5。协议升至 1.127、demo 升至 1.150.0、Schema 升至 v59，active baseline 增至 460 条 exact fixtures、零 waiver，内置 content hash 为 `a03b7c96e880a8c1d1e0c86a323e9e3333d84d2670eef9404d884cbad6d50779`。详见[Contract v160](design/contract-v160-outpost-content.md)。
+
+Phase 18 Gate 5 / contract-v161 建立 General Store 权威后端：稳定店主、四类 RFB 价值补给、种子库存、按 `worldTick` 维护、种族/魅力/贪婪/同族定价、批量买卖、负重与金币原子校验、完整实例回购和严格存档状态。交易零世界时间且拒绝零 RNG/零 mutation；缺少商店状态的开发存档直接拒绝，不做旧档兼容。协议升至 1.128、demo 升至 1.151.0、Schema 升至 v60，active baseline 增至 461 条 exact fixtures、零 waiver，内置 content hash 为 `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`。Gate 6 UI 仍是下一步。详见[Contract v161](design/contract-v161-general-store-transactions.md)。
+
 ### 本地验证
 
 ```powershell
@@ -413,9 +440,12 @@ cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-orig
 cd web
 npm ci
 npm test
+npm run build:standalone:debug
 npm run build -- --no-bundle
 # 启动可玩开发版：npm run dev
 ```
+
+`npm run build:standalone:debug` 生成可直接双击、无需 Vite 服务的 `target/debug/rfb-tauri.exe`。普通 `cargo build -p rfb-tauri` 只生成连接 `devUrl` 的开发程序，不能作为玩家测试封包。
 
 Rust 是 CoreTransport DTO 的唯一权威来源。修改 `rfb-protocol` 后运行：
 
@@ -471,7 +501,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 454 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 461 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

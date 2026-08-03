@@ -93,6 +93,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -252,6 +254,7 @@
         }
       ],
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "close-door",
@@ -319,7 +322,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "4a5f91762279cd5c14e1acdd3a19c1343c514aa0a150c496597fcc882d5f7ede"
+      "stateHash": "ec2bcdc3500241e44830e5c2e80cde3397ee66a782bb760d38ee9e02ddbea535"
     },
     "events": [
       {
@@ -359,6 +362,6 @@
         "y": 4
       }
     ],
-    "saveRoundTripStateHash": "4a5f91762279cd5c14e1acdd3a19c1343c514aa0a150c496597fcc882d5f7ede"
+    "saveRoundTripStateHash": "ec2bcdc3500241e44830e5c2e80cde3397ee66a782bb760d38ee9e02ddbea535"
   }
 }

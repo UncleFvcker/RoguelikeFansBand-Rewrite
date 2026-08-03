@@ -38,6 +38,7 @@ pub(super) struct TableValidationRefs<'a> {
 
 pub(super) struct TableValidationOutputs {
     pub(super) loot_table_ids: BTreeSet<String>,
+    pub(super) loot_tables_by_id: BTreeMap<String, LootTableDefinition>,
     pub(super) encounter_tables_by_id: BTreeMap<String, EncounterTableDefinition>,
     pub(super) vaults_by_id: BTreeMap<String, VaultDefinition>,
     pub(super) theme_tables_by_id: BTreeMap<String, ThemeTableDefinition>,
@@ -62,12 +63,22 @@ pub(super) fn validate_tables(
         terrain,
     } = refs;
     let mut loot_table_ids = BTreeSet::new();
+    let mut loot_tables_by_id = BTreeMap::new();
     for table in definitions.loot_tables.iter_mut() {
         require_schema(&table.schema, LOOT_TABLE_SCHEMA, &table.id)?;
         require_format_version(table.format_version, &table.id)?;
         validate_definition_id(&table.id, "loot-table")?;
-        if table.rolls == 0
-            || table.rolls > 16
+        let maximum_rolls = table.roll_dice.map_or(u32::from(table.rolls), |dice| {
+            u32::from(table.rolls) + u32::from(dice.dice) * u32::from(dice.sides)
+        });
+        if maximum_rolls == 0
+            || maximum_rolls > 16
+            || table
+                .roll_chance_percent
+                .is_some_and(|chance| !(1..=100).contains(&chance))
+            || table
+                .roll_dice
+                .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
             || table.entries.is_empty()
             || table.entries.len() > 64
             || table.quality_weights.is_empty()
@@ -104,6 +115,7 @@ pub(super) fn validate_tables(
             if entry.weight == 0
                 || entry.quantity == 0
                 || entry.quantity > *max_stack
+                || entry.min_depth > entry.max_depth
                 || !entry_ids.insert(entry.item_kind_id.as_str())
                 || ((table
                     .quality_weights
@@ -155,6 +167,7 @@ pub(super) fn validate_tables(
         }
         insert_definition_id(all_ids, &table.id)?;
         loot_table_ids.insert(table.id.clone());
+        loot_tables_by_id.insert(table.id.clone(), table.clone());
     }
 
     for (actor_id, loot_table_id) in actor_loot_table_ids {
@@ -660,6 +673,7 @@ pub(super) fn validate_tables(
     }
     Ok(TableValidationOutputs {
         loot_table_ids,
+        loot_tables_by_id,
         encounter_tables_by_id,
         vaults_by_id,
         theme_tables_by_id,

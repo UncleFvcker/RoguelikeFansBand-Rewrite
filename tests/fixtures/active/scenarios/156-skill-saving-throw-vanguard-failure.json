@@ -45,6 +45,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -374,6 +376,7 @@
         }
       ],
       "nextItemInstanceSerial": 6,
+      "nextGoldPileSerial": 1,
       "tasks": [
         {
           "taskId": "demo.floor.echo-hunt-rift",
@@ -434,7 +437,7 @@
           "y": 3
         }
       ],
-      "stateHash": "bdb7d753ed52048a3f63d8d6c4822da9e5af5af819480233b572c0e9fed507ce"
+      "stateHash": "f948628b949f2c35ddbe7364d67218e8c66619493c2d243266924097f51628b9"
     },
     "events": [
       {

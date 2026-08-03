@@ -1,4 +1,190 @@
+use std::collections::BTreeSet;
+
 use super::*;
+
+#[test]
+fn outpost_owns_one_walkable_general_store_entrance() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain Warrens");
+    assert_eq!(world.town_id.as_deref(), Some("demo.town.outpost"));
+    let entrance = ContentPosition { x: 16, y: 8 };
+    assert!(world.terrain_overrides.iter().any(|terrain| {
+        terrain.terrain_id == "demo.terrain.general-store-entrance"
+            && terrain.positions == [entrance]
+    }));
+
+    let store_walls = world
+        .terrain_overrides
+        .iter()
+        .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-wall")
+        .expect("fixture should contain General Store walls");
+    let expected_walls = (6..=8)
+        .flat_map(|y| (14..=17).map(move |x| ContentPosition { x, y }))
+        .filter(|position| *position != entrance)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        store_walls
+            .positions
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>(),
+        expected_walls,
+        "General Store should be a compact filled footprint with only its entrance open"
+    );
+
+    let mut wrong_entrance = artifact.content.clone();
+    wrong_entrance.shops[0].entrance_position = ContentPosition { x: 17, y: 8 };
+    assert!(matches!(
+        validate_and_normalize(&mut wrong_entrance),
+        Err(ContentError::InvalidShop(id)) if id == "demo.shop.outpost-general-store"
+    ));
+
+    let mut unowned_shop = artifact.content.clone();
+    unowned_shop.towns[0].shop_ids.clear();
+    assert!(matches!(
+        validate_and_normalize(&mut unowned_shop),
+        Err(ContentError::InvalidTown(id)) if id == "demo.town.outpost"
+    ));
+}
+
+#[test]
+fn general_store_economy_content_is_strict() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let store_id = "demo.shop.outpost-general-store";
+
+    let mutations: [fn(&mut CompiledContentV1); 4] = [
+        |content: &mut CompiledContentV1| {
+            content.shops[0].owner.greed_percent = 99;
+        },
+        |content: &mut CompiledContentV1| {
+            content.shops[0].stock.pop();
+        },
+        |content: &mut CompiledContentV1| {
+            content.shops[0].stock[0].initial_minimum =
+                content.shops[0].stock[0].initial_maximum + 1;
+        },
+        |content: &mut CompiledContentV1| {
+            let kind_id = content.shops[0].stock[0].item_kind_id.clone();
+            content
+                .items
+                .iter_mut()
+                .find(|item| item.id == kind_id)
+                .expect("stock kind should exist")
+                .base_value = 0;
+        },
+    ];
+    for mutate in mutations {
+        let mut invalid = artifact.content.clone();
+        mutate(&mut invalid);
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidShop(id)) if id == store_id
+        ));
+    }
+
+    let mut invalid_owner = artifact.content.clone();
+    invalid_owner.shops[0].owner.race_id = "demo.race.missing".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_owner),
+        Err(ContentError::InvalidShop(id)) if id == store_id
+    ));
+
+    let mut invalid_value = artifact.content.clone();
+    invalid_value
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.ration-of-food")
+        .expect("ration should exist")
+        .base_value = 1_000_000_000;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_value),
+        Err(ContentError::InvalidItemValue(id)) if id == "demo.item.ration-of-food"
+    ));
+
+    let mut invalid_race_factor = artifact.content.clone();
+    invalid_race_factor
+        .races
+        .iter_mut()
+        .find(|race| race.id == "demo.race.rfb-human")
+        .expect("Human race should exist")
+        .shop_adjust_percent = 49;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_race_factor),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+    ));
+}
+
+#[test]
+fn guaranteed_floor_supplies_require_rfb_chance_and_supported_items() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let warrens = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain Warrens");
+    assert!(warrens.procedural_floors.iter().all(|floor| {
+        floor.guaranteed_items.as_slice()
+            == [
+                ProceduralGuaranteedItemDefinition {
+                    id: "demo.guaranteed.warrens-food".to_owned(),
+                    chance_one_in: 2,
+                    entries: vec![ProceduralGuaranteedItemEntryDefinition {
+                        item_kind_id: "demo.item.ration-of-food".to_owned(),
+                        weight: 1,
+                    }],
+                },
+                ProceduralGuaranteedItemDefinition {
+                    id: "demo.guaranteed.warrens-light".to_owned(),
+                    chance_one_in: 2,
+                    entries: vec![
+                        ProceduralGuaranteedItemEntryDefinition {
+                            item_kind_id: "demo.item.flask-of-oil".to_owned(),
+                            weight: 1,
+                        },
+                        ProceduralGuaranteedItemEntryDefinition {
+                            item_kind_id: "demo.item.brass-lantern".to_owned(),
+                            weight: 2,
+                        },
+                    ],
+                },
+            ]
+    }));
+
+    let mut invalid_chance = artifact.content.clone();
+    invalid_chance
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain Warrens")
+        .procedural_floors[0]
+        .guaranteed_items[0]
+        .chance_one_in = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_chance),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    let mut invalid_item = artifact.content.clone();
+    invalid_item
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain Warrens")
+        .procedural_floors[0]
+        .guaranteed_items[0]
+        .entries[0]
+        .item_kind_id = "demo.item.broad-sword".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_item),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
 
 #[test]
 fn loot_tables_require_valid_weights_references_and_instance_shapes() {
@@ -65,6 +251,64 @@ fn loot_tables_require_valid_weights_references_and_instance_shapes() {
     assert!(matches!(
         validate_and_normalize(&mut player_carry),
         Err(ContentError::InvalidActorLootTable(_))
+    ));
+
+    let mut invalid_chance = artifact.content.clone();
+    invalid_chance
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.small-kobold")
+        .expect("fixture should contain the probabilistic loot table")
+        .roll_chance_percent = Some(0);
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_chance),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+
+    let mut invalid_dice = artifact.content.clone();
+    invalid_dice
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens-keeper")
+        .expect("fixture should contain the diced loot table")
+        .roll_dice
+        .as_mut()
+        .expect("Warrens keeper should use a drop-count die")
+        .sides = 0;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_dice),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+
+    let mut inverted_depth = artifact.content.clone();
+    let entry = &mut inverted_depth
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("fixture should contain the floor loot table")
+        .entries[0];
+    entry.min_depth = 2;
+    entry.max_depth = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut inverted_depth),
+        Err(ContentError::InvalidLootTable(_))
+    ));
+
+    let mut dangling_guardian_reward = artifact.content.clone();
+    dangling_guardian_reward
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.warrens-journey")
+        .expect("fixture should contain the Warrens journey")
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.final_floor)
+        .and_then(|floor| floor.guardian.as_mut())
+        .expect("Warrens should contain a final guardian")
+        .reward_loot_table_id = Some("demo.loot-table.missing".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut dangling_guardian_reward),
+        Err(ContentError::DanglingReference { .. })
     ));
 }
 

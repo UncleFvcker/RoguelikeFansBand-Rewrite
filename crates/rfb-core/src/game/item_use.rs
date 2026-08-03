@@ -593,7 +593,8 @@ impl Game {
                 ItemLocation::Ground(position) => Some(position),
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
-                | ItemLocation::CarriedBy { .. } => None,
+                | ItemLocation::CarriedBy { .. }
+                | ItemLocation::Shop { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let connections = self
@@ -1000,7 +1001,7 @@ impl Game {
                     && match &item.location {
                         ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
                         ItemLocation::Ground(position) => *position == self.player.position,
-                        ItemLocation::CarriedBy { .. } => false,
+                        ItemLocation::CarriedBy { .. } | ItemLocation::Shop { .. } => false,
                     }
             })
     }
@@ -1310,6 +1311,7 @@ impl Game {
         match (effect, plan) {
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
+                | ItemUseEffectDefinition::IncreaseNutrition { .. }
                 | ItemUseEffectDefinition::HealDice { .. }
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
@@ -1548,7 +1550,8 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
-            ItemUseEffectDefinition::Heal { .. }
+            ItemUseEffectDefinition::IncreaseNutrition { .. }
+            | ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::ApplySlowness { .. }
@@ -2751,6 +2754,26 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         match effect {
+            ItemUseEffectDefinition::IncreaseNutrition { amount } => {
+                let before_state = self.nutrition_state();
+                let applied = self.increase_nutrition(*amount);
+                self.mark_item_aware(source_kind_id);
+                events.push(DomainEvent::ItemNutritionIncreased {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    amount: applied,
+                    nutrition: self.nutrition,
+                });
+                let after_state = self.nutrition_state();
+                if after_state != before_state {
+                    events.push(DomainEvent::NutritionStateChanged {
+                        from: before_state,
+                        to: after_state,
+                        nutrition: self.nutrition,
+                    });
+                }
+                true
+            }
             effect @ (ItemUseEffectDefinition::Heal { .. }
             | ItemUseEffectDefinition::HealDice { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }

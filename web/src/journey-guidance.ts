@@ -143,6 +143,15 @@ export function selectJourneyDungeonStatus(
   if (worldId !== "demo.world.warrens-journey") {
     return { dungeonNameKey: "journey-dungeon-none" };
   }
+  if (state.floorId === "demo.floor.surface") {
+    return {
+      dungeonNameKey: "floor-demo-surface-name",
+      bossNameKey:
+        state.campaign.status === "active"
+          ? "actor-demo-warrens-keeper-name"
+          : undefined,
+    };
+  }
   return {
     dungeonNameKey: "dungeon-demo-warrens-name",
     currentDepth: warrensDepth(state.floorId) ?? 0,
@@ -291,10 +300,20 @@ export class JourneyGuidance {
     this.#dom.onboardingKind.textContent = this.#localization.format(
       `onboarding-kind-${prompt.kind}`,
     );
-    this.#dom.onboardingTitle.textContent = this.#localization.format(prompt.titleKey);
-    this.#dom.onboardingDetail.textContent = this.#localization.format(prompt.detailKey);
+    const surfaceEntrance =
+      prompt.id === "stairs" &&
+      this.#worldId === "demo.world.warrens-journey" &&
+      state.floorId === "demo.floor.surface";
+    this.#dom.onboardingTitle.textContent = this.#localization.format(
+      surfaceEntrance ? "onboarding-warrens-entrance-title" : prompt.titleKey,
+    );
+    this.#dom.onboardingDetail.textContent = this.#localization.format(
+      surfaceEntrance ? "onboarding-warrens-entrance-detail" : prompt.detailKey,
+    );
     this.#dom.onboardingControl.textContent = this.#localization.format(
-      promptControlKey(prompt, this.#getInputPreset()),
+      surfaceEntrance
+        ? "onboarding-warrens-entrance-control"
+        : promptControlKey(prompt, this.#getInputPreset()),
     );
   }
 

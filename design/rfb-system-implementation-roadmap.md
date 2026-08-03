@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.123 / contract-v149（P31–P98 进展见 8.3 与[待实现内容清单](pending-implementation.md)）
+状态：长期规则实现路线；当前基线为协议 1.128 / contract-v161（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18 文档）
 
 ## 1. 目的与边界
 
@@ -87,7 +87,7 @@ flowchart TD
 | 子系统 | 旧 RFB 行为 | 当前状态 | 新实现方案 |
 | --- | --- | --- | --- |
 | 地形格 | 墙、地板、门、楼梯、陷阱、商店入口、任务入口等 | 部分建立 | contract-v28/v29 已建立普通门、锁门和破损状态，contract-v31 已建立秘密 terrain 真值、隐藏投影和发现知识；下一步增加隐藏陷阱 |
-| 视野、记忆、光照 | LOS、FOV、探索记忆、怪物/物品光源 | 已建立基础版 | 保持 Rust 权威；后续增加隐身、黑暗、红外、感知和特殊视觉通道 |
+| 视野、记忆、光照 | LOS、FOV、探索记忆、怪物/物品光源 | Phase 18 Gate 3 已建立燃料光源 | contract-v159 让地表环境光与地牢暗视野分离，并以火把/灯笼实例燃料控制半径 1/2 的当前可见区；后续增加隐身、红外、感知、永久光和特殊视觉通道 |
 | 交互地形 | 开门、关门、挖掘、撞门、解除陷阱、上/下楼 | 部分建立 | contract-v26 已建立楼梯，contract-v28–v30 已建立门与权威交互，contract-v31 已建立主动搜索；下一步建立陷阱触发与解除 |
 | 楼层生命周期 | 新生成、离开、持久楼层、返回、任务楼层 | 已建立基础版 | contract-v26 已建立稳定 `FloorId`、显式 `FloorState`、离层仓库、save v1 往返和首次生成；后续增加多深度连接、临时/持久策略、任务层和旧层淘汰 |
 | 地图生成 | 房间、走廊、vault、巢穴、主题、守护者、物品与怪物分配 | 部分建立 | contract-v26/v27 已建立双房间骨架与深度分配，contract-v46 已建立最终层和持久守护者，contract-v47–v50 已建立独立 Vault、楼层表、巢穴、actor/loot 总预算、深度主题、Vault 变换与空间预算，contract-v51 已建立动态群体，contract-v52 已建立 terrain feature 表及额外预算，contract-v53–v55 建立 cavern/lake/river/maze/destroyed/streamer 管线，contract-v56 建立原版式复合 pit 与等级阵列，contract-v57 建立完全替代 rooms 的 maze-only 专用楼层，contract-v58 建立多楼梯、权威连接 ID、独立到达点与 shaft，contract-v59 建立持久 pack identity 与首版 pack AI，contract-v60 建立同层房间区域、局部表与持久边界，contract-v62 建立区域与特殊生成阶段组合，contract-v63 建立树状地牢、多个程序化最终叶层和共享守护者镜像，contract-v64 建立 Vault 多入口、模板/整层连通证明与确定性跨走廊拼接，contract-v65 建立实例身份、实例序号和实例级生命周期，contract-v66 建立动态楼梯候选、无放回目标解析与持久实例级探索树，contract-v67 建立入口守卫软门槛和可选硬进入条件；普通地牢回地表仍清理实例 |
@@ -119,7 +119,7 @@ flowchart TD
 | 基础状态 | 加速、减速、失明、混乱、恐惧、中毒、流血、眩晕、麻痹等 | 部分建立 | `StatusInstance { kindId, intensity, remainingTicks, sourceId }`、三种叠加策略、加速/减速、毒、流血、眩晕和恐惧已进入存档/回放；后续补失明、混乱与麻痹 |
 | 抗性 | 基础元素、高级元素、免疫、弱点、临时抗性 | 部分建立 | 稀疏 `ResistanceProfile` 和弱点/普通/抗性/强抗/免疫等级已建立；火焰近战已接入，其他元素等待实际规则入口和来源合并 |
 | 增益与防御 | 祝福、英雄、护盾、无敌、反射、灵体等 | 未建立 | 通过 effect pipeline 改写命中、伤害或行动许可；优先组合拦截器，不在 `take_damage` 中持续加分支 |
-| 饥饿与恢复 | 食物、自然回复、休息、环境伤害和周期性扣血 | 部分建立 | Mana 等待/休息恢复、真实调度和受伤/敌人中断已由 contract-v74 建立，contract-v75 又让冷却按实际回合递减；饥饿、HP 自然回复、环境规则和安全地点修正仍待实现 |
+| 饥饿与恢复 | 食物、自然回复、休息、环境伤害和周期性扣血 | Phase 18 Gate 2 已完成 | contract-v158 以现有 `world_tick` 接入饱食度、口粮、速度相关消化、恢复倍率、昏厥和挨饿伤害；其他食物、特殊种族消化与环境规则后续扩展 |
 | 变异与德行 | 永久/随机变异、德行变化及规则影响 | 未建立 | 变异作为持久 feature 集；德行作为具名整数 track。最后接入，避免污染基础角色模型 |
 
 ### 4.6 战斗
@@ -180,7 +180,7 @@ flowchart TD
 | HP 成长 | 种族、职业、生命倍率和随机成长 | 已建立基础版 | contract-v71 将 Race/Class/Personality 生命倍率、基础 HP 修正接入 v70 独立 RNG 的 100 级序列；复杂种族/职业成长曲线仍待实现 |
 | 技能熟练 | 武器、射击、法术、骑术等熟练度 | 已建立基础版 | `SkillDefinition`/`SkillSetDefinition` 已建立等级成长基础并接入近战、射击、投掷、搜索、解除和挖掘；练习/下降、武器/法术熟练度分层仍待实现 |
 | 职业专属成长 | 技能点、契约、姿态、领域选择、进化树 | 未建立 | 通用 `ChoiceGrant` 与 `ProgressionNode`；特别复杂职业可有自己的小型状态组件 |
-| 声望、金钱、德行 | 商店价格、任务奖励、建筑服务和特殊职业资源 | 仅金钱未建立 | 分成经济、声望、德行三个明确系统，禁止复用一个字段表达不同语义 |
+| 声望、金钱、德行 | 商店价格、任务奖励、建筑服务和特殊职业资源 | Phase 18 Gate 1 已建立金钱 | 独立玩家 wallet 与地面 `GoldPile` 已接入出生/楼层/怪物金币、存档和 UI，且不占背包；交易在 Gate 5 接入，声望与德行继续独立暂缓 |
 
 ### 4.11 城镇、荒野、地牢、商店与任务
 
@@ -188,8 +188,8 @@ flowchart TD
 | --- | --- | --- | --- |
 | 多地牢 | 深度范围、守护者、主题、进入条件和特殊规则 | 已建立基础版 | contract-v63 已建立 `DungeonDefinition`、根层和共享守护者身份；后续增加进入条件、并存探索实例、重置策略和地牢级特殊规则 |
 | 荒野 | 大地图、地形、生物群落、城镇入口和旅行 | 未建立 | 桌面版后期实现分区世界图；不与当前战术格地图共用同一尺寸假设 |
-| 城镇 | 多城镇、访问状态、地图、昼夜和服务 | 未建立 | `TownDefinition`，城镇地图仍走普通 map/floor 系统 |
-| 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | 未建立 | 商店是持久 inventory + pricing policy；交易作为原子命令；家是无价格仓库 |
+| 城镇 | 多城镇、访问状态、地图、昼夜和服务 | Phase 18 Gate 4 已建立首个切片 | `TownDefinition` 复用普通 floor；稳定 `demo.floor.surface` 已扩展为独立设计的 Outpost，并保存/投影访问状态，首批只开放杂货店和 Warrens |
+| 商店与家 | 库存刷新、买卖、鉴定价格、黑市、家中仓库 | Phase 18 Gate 4 已建立商店身份与入口 | 当前 `ShopDefinition` 只声明城镇、类别与入口；Gate 5 扩展持久库存、店主、价格、钱包、原子买卖与每日维护，其他商店和 Home 暂缓 |
 | 建筑服务 | 治疗、鉴定、附魔、重铸、任务、公会等 | 未建立 | `ServiceDefinition` 引用 effect/transaction；UI 根据服务 schema 生成表单 |
 | 任务 | 接取、进行、完成、失败、奖励、杀敌/寻物/清层目标 | 未建立 | `QuestStateMachine` + 可组合目标；任务只监听领域事件，不侵入战斗和拾取代码 |
 | 竞技场/特殊模式 | 单挑、押注、特殊胜负与奖励 | 未建立 | 使用独立 scenario/floor ruleset；在任务和关卡规则稳定后实现 |
@@ -459,13 +459,13 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 实现自动拾取规则 AST、自动铭文、宏/动作绑定、完整知识菜单、怪物回忆、统计、角色档案、高分、胜利记录和可选 spoiler 工具。最后进行大规模内容录入、性能分析、平衡差分和发行准备。
 
-## 8. contract-v75–v153 阶段性里程碑
+## 8. contract-v75–v159 阶段性里程碑
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.123、内容包 1.143.0、contract-v153、save v1 和 state hash Schema v55；内容 hash 为 `4da783cfb282e4e2f2da517656ae5924e451083d0b67e6cf069887c840a2bfbe`。active baseline 包含 456 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口；v153 以独立的 66×22 洞室、随机环形通道和浅层楼梯密度替换 Warrens 固定双矩形 fallback，并固定同 seed 重现、异 seed 变化和往返持久化。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.128、内容包 1.151.0、contract-v161、save v1 和 state hash Schema v60；内容 hash 为 `6af8e97c7c2e4f1fa56b6c6d004d267cfb24d238f5921478740a45f5a567d478`。active baseline 包含 461 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150 以独立实现接入九层 Warrens 首流程世界、早期怪物/补给小批次、守卫胜利、普通返程和地表退休；v151 将生产角色固定为 RFB Warrior 小切片，加入 Standard 通用身体和四件出生物品，并把阶段式旅程目标改成当前地牢、深度/最大深度和未击败 Boss 的事实展示；v152 为死亡、胜利返程和退休加入结果页、同配置重开与标题页存档恢复/删除入口；v153–v156 依次完成 Warrens 随机地图、地表入口、自由房间/矿脉/怪物密度，以及面积缩放的楼层物品和原版式怪物掉落；v157 建立金币来源与钱包；v158 建立出生口粮、饱食度、速度相关消化、恢复倍率、昏厥和挨饿；v159 建立出生火把、实例燃料、补充燃料、周期消耗、地表环境光和 Warrens 暗视野；v160 建立 Outpost/General Store 内容身份、入口与访问状态；v161 建立稳定店主、持久库存、RFB 价值/价格因子、维护和原子买卖。Gate 6 UI 尚未完成。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 49 种 terrain、33 种 actor、96 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、10 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 55 种 terrain、33 种 actor、107 种 item、3 种 resource、68 个 ability、5 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、12 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |
@@ -477,7 +477,7 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 | 任务与 campaign | 基础状态机已建立 | 已有多阶段目标、暂停/重接/放弃、奖励、胜利、退休和评分；仍缺任务来源、超时、脚本、重复任务与完整日志 UI |
 | 角色创建与成长 | 基础纵切已建立 | 已覆盖 Race/Class/Personality、五个代表性构筑、六维属性、经验/等级、HP 成长、十个技能的首轮规则消费和存档迁移；仍缺完整职业矩阵、技能练习、属性损伤/恢复和更多职业资源形态 |
 | 法术、能力与设备 | 玩家/怪物施法、动态设备与首批卷轴纵切已建立 | 已有 Mana、实体能力书、学习/熟练度/冷却、多类目标与伤害、位移/召唤/侦测/地形/状态、怪物效用选择、Death 四册、普通/完整物品鉴定、装备附魔、临时形态、生命恢复、动态设备 profile/容量、首批 wand/staff/rod 与主动充能；仍缺随机学习、首次奖励、受击/吟唱/姿态类资源、其他领域广度和完整卷轴/激活族 |
-| 荒野、城镇与经济 | 未建立 | 多城镇旅行、商店、家、建筑服务、交易、声望和长期经济循环尚未形成 |
+| 荒野、城镇与经济 | Outpost 后端纵切已建立 | 已有首个持久城镇、General Store 店主/库存/定价/维护/交易；玩家商店 UI、多城镇旅行、家、建筑服务、声望和长期经济广度尚未形成 |
 | 原生客户端与表现层 | Windows 纵切已建立 | Rust/Tauri/PixiJS、Fluent、FOV/记忆/光照、原生存档和诊断已接入；完整知识、统计和高分等菜单仍缺失 |
 
 ### 8.2 已达到或扩展旧版的边界

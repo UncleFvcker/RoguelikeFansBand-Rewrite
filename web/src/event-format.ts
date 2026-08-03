@@ -15,6 +15,7 @@ export interface PresentationState {
   currentInventory: readonly InventoryItemDto[];
   currentEquipment: readonly EquipmentItemDto[];
   currentStatus: GameSnapshot | GameUpdate | undefined;
+  currentWorldId?: string;
 }
 
 export function createPresentationFormatter(
@@ -470,6 +471,20 @@ export function createPresentationFormatter(
         return localization.format("message-status-player-death", {
           status: statusName(event.args.status),
         });
+      case "hunger-state-changed":
+        return localization.format("message-hunger-state-changed", {
+          state: localization.format(`nutrition-state-${event.args.to ?? "normal"}`),
+        });
+      case "hunger-fainted":
+        return localization.format("message-hunger-fainted", {
+          duration: event.args.duration ?? "?",
+        });
+      case "hunger-starvation-damage":
+        return localization.format("message-hunger-starvation-damage", {
+          damage: event.args.damage ?? "?",
+        });
+      case "hunger-starvation-death":
+        return localization.format("message-hunger-starvation-death");
       case "status-entity-death":
         return localization.format("message-status-entity-death", {
           target: contentName(event.args.target),
@@ -487,6 +502,11 @@ export function createPresentationFormatter(
         return localization.format("message-item-pickup-success", {
           target: visibleItemNameForKind(event.args.target),
           quantity: event.args.quantity ?? "?",
+        });
+      case "gold-pickup-success":
+        return localization.format("message-gold-pickup-success", {
+          amount: event.args.amount ?? "?",
+          balance: event.args.balance ?? "?",
         });
       case "item-pickup-over-capacity":
         return localization.format("message-item-pickup-over-capacity", {
@@ -529,6 +549,11 @@ export function createPresentationFormatter(
           target: visibleItemNameForKind(event.args.target),
           quantity: event.args.quantity ?? "?",
         });
+      case "gold-drop":
+        return localization.format("message-gold-drop", {
+          source: contentName(event.args.source),
+          amount: event.args.amount ?? "?",
+        });
       case "item-unequip-success":
         return localization.format("message-item-unequip-success", {
           target: visibleItemNameForKind(event.args.target),
@@ -553,6 +578,12 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-heal", {
           target: visibleItemName(event.args.nameKey, event.args.target),
           amount: event.args.amount ?? "?",
+        });
+      case "item-use-food":
+        return localization.format("message-item-use-food", {
+          target: visibleItemName(event.args.nameKey, event.args.target),
+          amount: event.args.amount ?? "?",
+          nutrition: event.args.nutrition ?? "?",
         });
       case "item-use-no-effect":
         return localization.format("message-item-use-no-effect", {
@@ -890,6 +921,20 @@ export function createPresentationFormatter(
           ? `${failure} ${localization.format("message-device-recharge-source-destroyed")}`
           : failure;
       }
+      case "light-refuel-unavailable":
+        return localization.format("message-light-refuel-unavailable");
+      case "light-refueled":
+        return localization.format("message-light-refueled", {
+          target: visibleItemNameForKind(event.args.target),
+          source: visibleItemNameForKind(event.args.source),
+          amount: event.args.amount ?? "?",
+          current: event.args.current ?? "?",
+          maximum: event.args.maximum ?? "?",
+        });
+      case "light-extinguished":
+        return localization.format("message-light-extinguished", {
+          target: visibleItemNameForKind(event.args.target),
+        });
       case "item-activation-landed":
         return localization.format("message-item-activation-landed", {
           source: visibleItemNameForKind(event.args.source),
@@ -1083,7 +1128,11 @@ export function createPresentationFormatter(
 
   function floorName(id: string | undefined): string {
     if (id === "demo.floor.surface") {
-      return localization.format("world-demo-original-lab-name");
+      return localization.format(
+        getState().currentWorldId === "demo.world.warrens-journey"
+          ? "floor-demo-surface-name"
+          : "world-demo-original-lab-name",
+      );
     }
     if (id === "demo.floor.echo-depth-1") {
       return localization.format("floor-demo-echo-depth-1-name");
@@ -1176,8 +1225,39 @@ export function createPresentationFormatter(
     if (id === "demo.terrain.floor") {
       return localization.format("terrain-demo-floor-name");
     }
+    if (id === "demo.terrain.wall") {
+      return localization.format("terrain-demo-wall-name");
+    }
+    if (id === "demo.terrain.stairs-down") {
+      return localization.format("terrain-demo-stairs-down-name");
+    }
+    if (id === "demo.terrain.stairs-up") {
+      return localization.format("terrain-demo-stairs-up-name");
+    }
+    if (id === "demo.terrain.surface-grass") {
+      return localization.format("terrain-demo-surface-grass-name");
+    }
+    if (id === "demo.terrain.surface-path") {
+      return localization.format("terrain-demo-surface-path-name");
+    }
+    if (id === "demo.terrain.surface-rock") {
+      return localization.format("terrain-demo-surface-rock-name");
+    }
+    if (id === "demo.terrain.surface-tree") {
+      return localization.format("terrain-demo-surface-tree-name");
+    }
     if (id === "demo.terrain.echo-rubble") {
       return localization.format("terrain-demo-echo-rubble-name");
+    }
+    if (id) {
+      const [namespace, kind, ...nameParts] = id.split(".");
+      const derivedNameKey = `${kind}-${namespace}-${nameParts.join("-")}-name`;
+      if (
+        localization.hasMessage(localization.locale, derivedNameKey) ||
+        localization.hasMessage("en-US", derivedNameKey)
+      ) {
+        return localization.format(derivedNameKey);
+      }
     }
     return localization.format(
       id?.startsWith("demo.item.") ? "item-unknown-name" : "actor-unknown-name",
@@ -1196,20 +1276,10 @@ export function createPresentationFormatter(
     displayNameKey: string | undefined,
     fallbackKindId: string | undefined,
   ): string {
-    switch (displayNameKey) {
-      case "item-demo-luminous-shard-name":
-      case "item-demo-unfamiliar-shard-name":
-      case "item-demo-echo-charm-name":
-      case "item-demo-echo-blade-name":
-      case "item-demo-echo-primer-name":
-      case "item-demo-stillwater-notes-name":
-      case "item-demo-resonance-sling-name":
-      case "item-demo-resonance-pellet-name":
-      case "item-unknown-name":
-        return localization.format(displayNameKey);
-      default:
-        return contentName(fallbackKindId);
+    if (displayNameKey && localization.hasMessage(localization.locale, displayNameKey)) {
+      return localization.format(displayNameKey);
     }
+    return contentName(fallbackKindId);
   }
 
   function visibleItemNameForKind(kindId: string | undefined): string {

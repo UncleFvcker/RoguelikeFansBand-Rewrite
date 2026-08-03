@@ -1,0 +1,954 @@
+// SPDX-License-Identifier: MPL-2.0
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use rfb_content::{
+    ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, WorldDefinition,
+};
+use rfb_protocol::{
+    ItemEnchantmentsDto, ItemQualityDto, Position, ShopCategoryDto, ShopDto, ShopOwnerDto,
+    ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
+};
+
+use crate::{
+    error::CoreError,
+    rng::RfbRng,
+    save::position_from_content,
+    state::{FloorState, ItemInstance, ItemLocation, ShopState, TownState},
+    stats::AttributeKind,
+};
+
+use super::{Game, initial_item_curse, initial_item_runtime_state};
+use crate::save::{
+    GENERATED_ITEM_ID_PREFIX, initial_item_fuel, inventory_item_from_dto, inventory_to_save,
+};
+
+const CHARISMA_PRICE_ADJUST_PERCENT: [u16; 38] = [
+    130, 125, 122, 120, 118, 116, 114, 112, 110, 108, 106, 104, 103, 102, 101, 100, 99, 98, 97, 96,
+    95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78,
+];
+
+pub(super) type TownAndShopStates = (BTreeMap<String, TownState>, BTreeMap<String, ShopState>);
+
+pub(super) fn shop_state_to_save(shop_id: &str, state: &ShopState) -> ShopStateSaveDto {
+    let mut inventory = state.inventory.clone();
+    for item in &mut inventory {
+        item.location = ItemLocation::Inventory;
+    }
+    ShopStateSaveDto {
+        shop_id: shop_id.to_owned(),
+        visited: state.visited,
+        owner_id: state.owner_id.clone(),
+        last_maintenance_world_tick: state.last_maintenance_world_tick,
+        inventory: inventory_to_save(&inventory),
+    }
+}
+
+pub(super) fn initial_town_and_shop_states(
+    world: &WorldDefinition,
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    next_item_instance_serial: &mut u64,
+) -> Result<TownAndShopStates, CoreError> {
+    let Some(town_id) = &world.town_id else {
+        return Ok((BTreeMap::new(), BTreeMap::new()));
+    };
+    let town_states = BTreeMap::from([(town_id.clone(), TownState { visited: true })]);
+    let town = content
+        .town(town_id)
+        .expect("validated world town must remain available");
+    let mut shop_states = BTreeMap::new();
+    for shop_id in &town.shop_ids {
+        let shop = content
+            .shop(shop_id)
+            .expect("validated town shop must remain available");
+        let inventory = roll_shop_stock(shop, content, rng, next_item_instance_serial, false)?;
+        shop_states.insert(
+            shop_id.clone(),
+            ShopState {
+                visited: false,
+                owner_id: shop.owner.id.clone(),
+                inventory,
+                last_maintenance_world_tick: 0,
+            },
+        );
+    }
+    Ok((town_states, shop_states))
+}
+
+pub(super) fn restore_town_and_shop_states(
+    world: &WorldDefinition,
+    content: &ContentCatalog,
+    current_floor_id: &str,
+    player_position: Position,
+    saved_towns: &[TownStateSaveDto],
+    saved_shops: &[ShopStateSaveDto],
+) -> Result<TownAndShopStates, CoreError> {
+    let Some(town_id) = &world.town_id else {
+        if saved_towns.is_empty() && saved_shops.is_empty() {
+            return Ok((BTreeMap::new(), BTreeMap::new()));
+        }
+        return Err(CoreError::InvalidSave("town state is invalid"));
+    };
+    let town = content
+        .town(town_id)
+        .expect("validated world town must remain available");
+
+    let town_states = if saved_towns.is_empty() {
+        BTreeMap::from([(town_id.clone(), TownState { visited: true })])
+    } else {
+        if saved_towns.len() != 1 || saved_towns[0].town_id != *town_id {
+            return Err(CoreError::InvalidSave("town state is invalid"));
+        }
+        BTreeMap::from([(
+            town_id.clone(),
+            TownState {
+                visited: saved_towns[0].visited,
+            },
+        )])
+    };
+
+    let expected_shop_ids = town.shop_ids.iter().cloned().collect::<BTreeSet<_>>();
+    let mut shop_states = BTreeMap::new();
+    for saved in saved_shops {
+        if !expected_shop_ids.contains(&saved.shop_id)
+            || shop_states
+                .insert(saved.shop_id.clone(), restore_shop_state(saved, content)?)
+                .is_some()
+        {
+            return Err(CoreError::InvalidSave("shop state is invalid"));
+        }
+    }
+    if saved_shops.is_empty() || shop_states.len() != expected_shop_ids.len() {
+        return Err(CoreError::InvalidSave("shop state is invalid"));
+    }
+    for (shop_id, state) in &shop_states {
+        let shop = content
+            .shop(shop_id)
+            .expect("validated town shop must remain available");
+        if state.owner_id != shop.owner.id
+            || (current_floor_id == town.floor_id
+                && player_position == position_from_content(shop.entrance_position)
+                && !state.visited)
+        {
+            return Err(CoreError::InvalidSave("shop state is invalid"));
+        }
+    }
+    Ok((town_states, shop_states))
+}
+
+fn restore_shop_state(
+    saved: &ShopStateSaveDto,
+    content: &ContentCatalog,
+) -> Result<ShopState, CoreError> {
+    let mut inventory = saved
+        .inventory
+        .iter()
+        .cloned()
+        .map(|item| inventory_item_from_dto(item, content))
+        .collect::<Result<Vec<_>, _>>()?;
+    for item in &mut inventory {
+        item.location = ItemLocation::Shop {
+            shop_id: saved.shop_id.clone(),
+        };
+    }
+    Ok(ShopState {
+        visited: saved.visited,
+        owner_id: saved.owner_id.clone(),
+        inventory,
+        last_maintenance_world_tick: saved.last_maintenance_world_tick,
+    })
+}
+
+fn roll_quantity(rng: &mut RfbRng, minimum: u32, maximum: u32) -> u32 {
+    minimum
+        + u32::try_from(rng.bounded(u64::from(maximum - minimum) + 1))
+            .expect("bounded shop quantity must fit u32")
+}
+
+fn allocate_shop_item_id(next_serial: &mut u64) -> Result<String, CoreError> {
+    let serial = *next_serial;
+    *next_serial = serial.checked_add(1).ok_or(CoreError::ItemIdExhausted)?;
+    Ok(format!("{GENERATED_ITEM_ID_PREFIX}{serial}"))
+}
+
+fn plain_shop_item(
+    shop_id: &str,
+    item_kind_id: &str,
+    quantity: u32,
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    next_serial: &mut u64,
+) -> Result<ItemInstance, CoreError> {
+    let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, 1);
+    Ok(ItemInstance {
+        id: allocate_shop_item_id(next_serial)?,
+        kind_id: item_kind_id.to_owned(),
+        quantity,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
+        enchantments: ItemEnchantmentsDto::default(),
+        curse: initial_item_curse(content, item_kind_id),
+        activation,
+        charges,
+        fuel: initial_item_fuel(content, item_kind_id),
+        device_recovery_progress: 0,
+        location: ItemLocation::Shop {
+            shop_id: shop_id.to_owned(),
+        },
+    })
+}
+
+fn append_plain_stock(
+    inventory: &mut Vec<ItemInstance>,
+    shop: &ShopDefinition,
+    stock: &ShopStockDefinition,
+    quantity: u32,
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    next_serial: &mut u64,
+) -> Result<(), CoreError> {
+    let definition = content
+        .item(&stock.item_kind_id)
+        .expect("validated shop stock must remain available");
+    let mut remaining = quantity;
+    while remaining > 0 {
+        let stacked = remaining.min(definition.max_stack);
+        inventory.push(plain_shop_item(
+            &shop.id,
+            &stock.item_kind_id,
+            stacked,
+            content,
+            rng,
+            next_serial,
+        )?);
+        remaining -= stacked;
+    }
+    Ok(())
+}
+
+fn roll_shop_stock(
+    shop: &ShopDefinition,
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    next_serial: &mut u64,
+    maintenance: bool,
+) -> Result<Vec<ItemInstance>, CoreError> {
+    let mut inventory = Vec::new();
+    for stock in &shop.stock {
+        let (minimum, maximum) = if maintenance {
+            (stock.maintenance_minimum, stock.maintenance_maximum)
+        } else {
+            (stock.initial_minimum, stock.initial_maximum)
+        };
+        let quantity = roll_quantity(rng, minimum, maximum);
+        append_plain_stock(
+            &mut inventory,
+            shop,
+            stock,
+            quantity,
+            content,
+            rng,
+            next_serial,
+        )?;
+    }
+    Ok(inventory)
+}
+
+fn category_dto(category: ShopCategory) -> ShopCategoryDto {
+    match category {
+        ShopCategory::GeneralStore => ShopCategoryDto::GeneralStore,
+    }
+}
+
+fn round_percent(value: u32, percent: u16) -> u32 {
+    u32::try_from((u64::from(value) * u64::from(percent) + 50) / 100).unwrap_or(u32::MAX)
+}
+
+pub(super) fn buy_unit_price(base_value: u32, factor: u16) -> u32 {
+    round_percent(base_value, factor.max(100))
+}
+
+pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
+    ((u64::from(base_value) * 100) / u64::from(factor.max(105)))
+        .try_into()
+        .unwrap_or(u32::MAX)
+        .max(1)
+        .min(cap)
+}
+
+fn shop_price_factor(game: &Game, shop: &ShopDefinition) -> u16 {
+    let charisma_index = usize::from(
+        game.effective_player_attributes()
+            .index(AttributeKind::Charisma),
+    )
+    .min(CHARISMA_PRICE_ADJUST_PERCENT.len() - 1);
+    let charisma_adjust = CHARISMA_PRICE_ADJUST_PERCENT[charisma_index];
+    let player_race = game.character_definitions().map(|(_, race, _, _)| race);
+    let race_adjust = player_race.map_or(110, |race| race.shop_adjust_percent);
+    let mut factor = round_percent(u32::from(race_adjust), charisma_adjust);
+    factor = round_percent(factor, shop.owner.greed_percent);
+    if player_race.is_some_and(|race| race.id == shop.owner.race_id) {
+        factor = factor.saturating_mul(90) / 100;
+    }
+    u16::try_from(factor).unwrap_or(u16::MAX)
+}
+
+fn item_is_legal_for_general_store(game: &Game, item: &ItemInstance) -> bool {
+    game.content.item(&item.kind_id).is_some_and(|definition| {
+        definition.base_value > 0
+            && !definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "corpse" | "remains"))
+    })
+}
+
+fn player_carry_capacity(game: &Game) -> u32 {
+    game.content
+        .actor(&game.player.kind_id)
+        .expect("player actor definition must remain available")
+        .carry_capacity_tenths_pound
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ShopTransactionOutcome {
+    pub(crate) shop_id: String,
+    pub(crate) item_id: String,
+    pub(crate) item_kind_id: String,
+    pub(crate) quantity: u32,
+    pub(crate) unit_price: u32,
+    pub(crate) total_price: u32,
+    pub(crate) gold_balance: u32,
+}
+
+fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
+    let Some(town) = game.content.town(&shop.town_id) else {
+        return false;
+    };
+    game.current_floor_id == town.floor_id
+        && game.player.position == position_from_content(shop.entrance_position)
+}
+
+fn transfer_to_inventory(
+    game: &mut Game,
+    shop_id: &str,
+    item_id: &str,
+    quantity: u32,
+) -> Result<ItemInstance, CoreError> {
+    let split_id = {
+        let state = game
+            .shop_states
+            .get(shop_id)
+            .expect("preflighted shop must remain available");
+        let item = state
+            .inventory
+            .iter()
+            .find(|item| item.id == item_id)
+            .expect("preflighted shop item must remain available");
+        (item.quantity != quantity)
+            .then(|| game.allocate_item_instance_id())
+            .transpose()?
+    };
+    let state = game
+        .shop_states
+        .get_mut(shop_id)
+        .expect("preflighted shop must remain available");
+    let index = state
+        .inventory
+        .iter()
+        .position(|item| item.id == item_id)
+        .expect("preflighted shop item must remain available");
+    if split_id.is_none() {
+        let mut item = state.inventory.remove(index);
+        item.location = ItemLocation::Inventory;
+        return Ok(item);
+    }
+    let mut item = state.inventory[index].clone();
+    state.inventory[index].quantity -= quantity;
+    item.id = split_id.expect("split transfer must allocate an item id");
+    item.quantity = quantity;
+    item.location = ItemLocation::Inventory;
+    Ok(item)
+}
+
+fn transfer_to_shop(
+    game: &mut Game,
+    shop_id: &str,
+    item_id: &str,
+    quantity: u32,
+) -> Result<ItemInstance, CoreError> {
+    let index = game
+        .items
+        .iter()
+        .position(|item| item.id == item_id)
+        .expect("preflighted inventory item must remain available");
+    let split_id = (game.items[index].quantity != quantity)
+        .then(|| game.allocate_item_instance_id())
+        .transpose()?;
+    if split_id.is_none() {
+        let mut item = game.items.remove(index);
+        game.item_property_knowledge.remove(&item.id);
+        item.location = ItemLocation::Shop {
+            shop_id: shop_id.to_owned(),
+        };
+        return Ok(item);
+    }
+    let mut item = game.items[index].clone();
+    game.items[index].quantity -= quantity;
+    item.id = split_id.expect("split transfer must allocate an item id");
+    item.quantity = quantity;
+    item.location = ItemLocation::Shop {
+        shop_id: shop_id.to_owned(),
+    };
+    Ok(item)
+}
+
+impl Game {
+    pub(super) fn buy_from_shop(
+        &mut self,
+        shop_id: &str,
+        item_id: &str,
+        quantity: u32,
+    ) -> Result<ShopTransactionOutcome, &'static str> {
+        let Some(shop) = self.content.shop(shop_id) else {
+            return Err("unknown-shop");
+        };
+        if !shop_accessible(self, shop) {
+            return Err("shop-unreachable");
+        }
+        if quantity == 0 {
+            return Err("invalid-quantity");
+        }
+        let Some(item) = self
+            .shop_states
+            .get(shop_id)
+            .and_then(|state| state.inventory.iter().find(|item| item.id == item_id))
+        else {
+            return Err("item-unavailable");
+        };
+        if quantity > item.quantity {
+            return Err("insufficient-stock");
+        }
+        let item_kind_id = item.kind_id.clone();
+        let definition = self
+            .content
+            .item(&item_kind_id)
+            .expect("shop item kind must remain available");
+        let unit_price = buy_unit_price(definition.base_value, shop_price_factor(self, shop));
+        let Some(total_price) = unit_price.checked_mul(quantity) else {
+            return Err("price-overflow");
+        };
+        if self.gold < total_price {
+            return Err("insufficient-gold");
+        }
+        let added_weight = u32::from(definition.weight_tenths_pound).saturating_mul(quantity);
+        if self
+            .carried_weight_tenths_pound()
+            .saturating_add(added_weight)
+            > player_carry_capacity(self)
+        {
+            return Err("over-capacity");
+        }
+
+        let purchased = transfer_to_inventory(self, shop_id, item_id, quantity)
+            .map_err(|_| "item-id-exhausted")?;
+        let purchased_id = purchased.id.clone();
+        self.items.push(purchased);
+        self.gold -= total_price;
+        self.mark_item_aware(&item_kind_id);
+        let knowledge = self
+            .item_property_knowledge
+            .entry(purchased_id.clone())
+            .or_default();
+        knowledge.appraised = true;
+        knowledge.identified = true;
+        let purchased = self
+            .items
+            .iter()
+            .find(|item| item.id == purchased_id)
+            .expect("purchased item must remain available");
+        knowledge
+            .known_affix_ids
+            .extend(purchased.affix_ids.iter().cloned());
+        knowledge.known_affix_ids.extend(
+            purchased
+                .rolled_affixes
+                .iter()
+                .map(|affix| affix.affix_id.clone()),
+        );
+        Ok(ShopTransactionOutcome {
+            shop_id: shop_id.to_owned(),
+            item_id: purchased_id,
+            item_kind_id,
+            quantity,
+            unit_price,
+            total_price,
+            gold_balance: self.gold,
+        })
+    }
+
+    pub(super) fn sell_to_shop(
+        &mut self,
+        shop_id: &str,
+        item_id: &str,
+        quantity: u32,
+    ) -> Result<ShopTransactionOutcome, &'static str> {
+        let Some(shop) = self.content.shop(shop_id) else {
+            return Err("unknown-shop");
+        };
+        if !shop_accessible(self, shop) {
+            return Err("shop-unreachable");
+        }
+        if quantity == 0 {
+            return Err("invalid-quantity");
+        }
+        let Some(item) = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id && item.location == ItemLocation::Inventory)
+        else {
+            return Err("item-unavailable");
+        };
+        if quantity > item.quantity {
+            return Err("insufficient-quantity");
+        }
+        if !item_is_legal_for_general_store(self, item) {
+            return Err("item-illegal");
+        }
+        let item_kind_id = item.kind_id.clone();
+        let definition = self
+            .content
+            .item(&item_kind_id)
+            .expect("inventory item kind must remain available");
+        let unit_price = sell_unit_price(
+            definition.base_value,
+            shop_price_factor(self, shop),
+            shop.owner.purchase_price_cap,
+        );
+        let Some(total_price) = unit_price.checked_mul(quantity) else {
+            return Err("price-overflow");
+        };
+        let Some(gold_balance) = self.gold.checked_add(total_price) else {
+            return Err("gold-overflow");
+        };
+        if gold_balance > super::gold::MAX_PLAYER_GOLD {
+            return Err("gold-overflow");
+        }
+
+        let sold =
+            transfer_to_shop(self, shop_id, item_id, quantity).map_err(|_| "item-id-exhausted")?;
+        let sold_id = sold.id.clone();
+        self.shop_states
+            .get_mut(shop_id)
+            .expect("preflighted shop must remain available")
+            .inventory
+            .push(sold);
+        self.gold = gold_balance;
+        Ok(ShopTransactionOutcome {
+            shop_id: shop_id.to_owned(),
+            item_id: sold_id,
+            item_kind_id,
+            quantity,
+            unit_price,
+            total_price,
+            gold_balance,
+        })
+    }
+
+    pub(super) fn maintain_shop_at_player(&mut self) -> Result<(), CoreError> {
+        let Some(world) = self.content.world(&self.world_id) else {
+            return Ok(());
+        };
+        let Some(town) = world
+            .town_id
+            .as_deref()
+            .and_then(|town_id| self.content.town(town_id))
+        else {
+            return Ok(());
+        };
+        let Some(shop_id) = town
+            .shop_ids
+            .iter()
+            .find(|shop_id| {
+                self.content.shop(shop_id).is_some_and(|shop| {
+                    self.current_floor_id == town.floor_id
+                        && self.player.position == position_from_content(shop.entrance_position)
+                })
+            })
+            .cloned()
+        else {
+            return Ok(());
+        };
+        let shop = self
+            .content
+            .shop(&shop_id)
+            .expect("validated town shop must remain available")
+            .clone();
+        let state = self
+            .shop_states
+            .get(&shop_id)
+            .expect("validated shop state must remain available");
+        if self
+            .world_tick
+            .saturating_sub(state.last_maintenance_world_tick)
+            < shop.maintenance.interval_world_ticks
+        {
+            return Ok(());
+        }
+        let mut additions = Vec::new();
+        for stock in &shop.stock {
+            let current = state
+                .inventory
+                .iter()
+                .filter(|item| item.kind_id == stock.item_kind_id)
+                .map(|item| item.quantity)
+                .sum::<u32>();
+            let target = roll_quantity(
+                &mut self.rng,
+                stock.maintenance_minimum,
+                stock.maintenance_maximum,
+            );
+            if target > current {
+                append_plain_stock(
+                    &mut additions,
+                    &shop,
+                    stock,
+                    target - current,
+                    &self.content,
+                    &mut self.rng,
+                    &mut self.next_item_instance_serial,
+                )?;
+            }
+        }
+        let state = self
+            .shop_states
+            .get_mut(&shop_id)
+            .expect("validated shop state must remain available");
+        state.inventory.extend(additions);
+        state.last_maintenance_world_tick = self.world_tick;
+        Ok(())
+    }
+}
+
+fn static_surface_terrain(world: &WorldDefinition) -> Vec<String> {
+    let mut terrain =
+        vec![world.fill_terrain_id.clone(); usize::from(world.width) * usize::from(world.height)];
+    for y in 0..world.height {
+        for x in 0..world.width {
+            if x == 0 || y == 0 || x == world.width - 1 || y == world.height - 1 {
+                terrain[usize::from(y) * usize::from(world.width) + usize::from(x)] =
+                    world.border_terrain_id.clone();
+            }
+        }
+    }
+    for terrain_override in &world.terrain_overrides {
+        for position in &terrain_override.positions {
+            terrain[usize::from(position.y) * usize::from(world.width) + usize::from(position.x)] =
+                terrain_override.terrain_id.clone();
+        }
+    }
+    terrain
+}
+
+fn position_is_walkable(
+    position: Position,
+    width: u16,
+    height: u16,
+    terrain: &[String],
+    content: &ContentCatalog,
+) -> bool {
+    let (Ok(x), Ok(y)) = (u16::try_from(position.x), u16::try_from(position.y)) else {
+        return false;
+    };
+    if x >= width || y >= height {
+        return false;
+    }
+    content
+        .terrain(&terrain[usize::from(y) * usize::from(width) + usize::from(x)])
+        .is_some_and(|definition| definition.walkable)
+}
+
+fn floor_needs_outpost_layout(
+    floor_id: &str,
+    width: u16,
+    height: u16,
+    terrain: &[String],
+    world: &WorldDefinition,
+    content: &ContentCatalog,
+) -> bool {
+    if floor_id != world.initial_floor_id || width != world.width || height != world.height {
+        return floor_id == world.initial_floor_id;
+    }
+    let Some(town_id) = &world.town_id else {
+        return false;
+    };
+    let town = content
+        .town(town_id)
+        .expect("validated world town must remain available");
+    town.shop_ids.iter().any(|shop_id| {
+        let shop = content
+            .shop(shop_id)
+            .expect("validated town shop must remain available");
+        let position = shop.entrance_position;
+        terrain.get(usize::from(position.y) * usize::from(width) + usize::from(position.x))
+            != Some(&shop.entrance_terrain_id)
+    })
+}
+
+fn migrate_stored_surface(
+    floor: &mut FloorState,
+    world: &WorldDefinition,
+    content: &ContentCatalog,
+    terrain: &[String],
+) {
+    floor.width = world.width;
+    floor.height = world.height;
+    floor.terrain = terrain.to_vec();
+    if !position_is_walkable(
+        floor.player_position,
+        floor.width,
+        floor.height,
+        &floor.terrain,
+        content,
+    ) {
+        floor.player_position = position_from_content(world.player.position);
+    }
+    floor.explored = vec![false; floor.terrain.len()];
+    floor.revealed_terrain.clear();
+    floor.connections.clear();
+    floor.regions.clear();
+}
+
+impl Game {
+    pub(super) fn mark_current_town_visited(&mut self) {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        if self.current_floor_id == world.initial_floor_id
+            && let Some(town_id) = &world.town_id
+            && let Some(state) = self.town_states.get_mut(town_id)
+        {
+            state.visited = true;
+        }
+    }
+
+    pub(super) fn mark_shop_visited_at_player(&mut self) {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let Some(town_id) = &world.town_id else {
+            return;
+        };
+        let town = self
+            .content
+            .town(town_id)
+            .expect("validated world town must remain available");
+        if self.current_floor_id != town.floor_id {
+            return;
+        }
+        for shop_id in &town.shop_ids {
+            let shop = self
+                .content
+                .shop(shop_id)
+                .expect("validated town shop must remain available");
+            if self.player.position == position_from_content(shop.entrance_position)
+                && let Some(state) = self.shop_states.get_mut(shop_id)
+            {
+                state.visited = true;
+            }
+        }
+    }
+
+    pub(super) fn current_town_dto(&self) -> Option<TownDto> {
+        let world = self.content.world(&self.world_id)?;
+        let town = self.content.town(world.town_id.as_deref()?)?;
+        (self.current_floor_id == town.floor_id).then(|| TownDto {
+            id: town.id.clone(),
+            name_key: town.name_key.clone(),
+            description_key: town.description_key.clone(),
+            floor_id: town.floor_id.clone(),
+            visited: self
+                .town_states
+                .get(&town.id)
+                .is_some_and(|state| state.visited),
+        })
+    }
+
+    pub(super) fn current_shop_dtos(&self) -> Vec<ShopDto> {
+        let Some(world) = self.content.world(&self.world_id) else {
+            return Vec::new();
+        };
+        let Some(town) = world
+            .town_id
+            .as_deref()
+            .and_then(|town_id| self.content.town(town_id))
+            .filter(|town| self.current_floor_id == town.floor_id)
+        else {
+            return Vec::new();
+        };
+        town.shop_ids
+            .iter()
+            .filter_map(|shop_id| self.content.shop(shop_id))
+            .map(|shop| {
+                let entrance_position = position_from_content(shop.entrance_position);
+                let player_at_entrance = self.player.position == entrance_position;
+                let factor = shop_price_factor(self, shop);
+                let state = self
+                    .shop_states
+                    .get(&shop.id)
+                    .expect("validated shop state must remain available");
+                let mut stock = if player_at_entrance {
+                    state
+                        .inventory
+                        .iter()
+                        .map(|item| {
+                            let definition = self
+                                .content
+                                .item(&item.kind_id)
+                                .expect("shop item kind must remain available");
+                            let unit_price = buy_unit_price(definition.base_value, factor);
+                            let affordable = self.gold / unit_price.max(1);
+                            let remaining_capacity = player_carry_capacity(self)
+                                .saturating_sub(self.carried_weight_tenths_pound());
+                            let carryable =
+                                remaining_capacity / u32::from(definition.weight_tenths_pound);
+                            ShopStockItemDto {
+                                id: item.id.clone(),
+                                kind_id: item.kind_id.clone(),
+                                display_name_key: self.item_display_name_key(&item.kind_id),
+                                quantity: item.quantity,
+                                maximum_quantity: item.quantity.min(affordable).min(carryable),
+                                unit_price,
+                                weight_tenths_pound: definition.weight_tenths_pound,
+                                fuel: item.fuel,
+                                charges: item.charges,
+                                activation: item.activation.clone(),
+                                enchantments: item.enchantments,
+                                curse: item.curse,
+                                quality: item.quality,
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                stock.sort_by(|left, right| left.id.cmp(&right.id));
+                let mut sell_quotes = if player_at_entrance {
+                    self.items
+                        .iter()
+                        .filter(|item| item.location == ItemLocation::Inventory)
+                        .map(|item| {
+                            let definition = self
+                                .content
+                                .item(&item.kind_id)
+                                .expect("inventory item kind must remain available");
+                            let unavailable_reason = (!item_is_legal_for_general_store(self, item))
+                                .then(|| "item-illegal".to_owned());
+                            ShopSellQuoteDto {
+                                item_id: item.id.clone(),
+                                kind_id: item.kind_id.clone(),
+                                unit_price: unavailable_reason.as_ref().map_or_else(
+                                    || {
+                                        sell_unit_price(
+                                            definition.base_value,
+                                            factor,
+                                            shop.owner.purchase_price_cap,
+                                        )
+                                    },
+                                    |_| 0,
+                                ),
+                                maximum_quantity: if unavailable_reason.is_some() {
+                                    0
+                                } else {
+                                    item.quantity
+                                },
+                                unavailable_reason,
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                sell_quotes.sort_by(|left, right| left.item_id.cmp(&right.item_id));
+                ShopDto {
+                    id: shop.id.clone(),
+                    name_key: shop.name_key.clone(),
+                    description_key: shop.description_key.clone(),
+                    category: category_dto(shop.category),
+                    entrance_position,
+                    entrance_terrain_id: shop.entrance_terrain_id.clone(),
+                    visited: self
+                        .shop_states
+                        .get(&shop.id)
+                        .is_some_and(|state| state.visited),
+                    player_at_entrance,
+                    owner: ShopOwnerDto {
+                        id: shop.owner.id.clone(),
+                        name_key: shop.owner.name_key.clone(),
+                        race_id: shop.owner.race_id.clone(),
+                        greed_percent: shop.owner.greed_percent,
+                        purchase_price_cap: shop.owner.purchase_price_cap,
+                        price_factor_percent: factor,
+                    },
+                    stock,
+                    sell_quotes,
+                }
+            })
+            .collect()
+    }
+
+    pub(super) fn migrate_outpost_surface_layout(&mut self) {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available")
+            .clone();
+        if world.town_id.is_none() {
+            return;
+        }
+        let static_terrain = static_surface_terrain(&world);
+        if floor_needs_outpost_layout(
+            &self.current_floor_id,
+            self.width,
+            self.height,
+            &self.terrain,
+            &world,
+            &self.content,
+        ) {
+            self.width = world.width;
+            self.height = world.height;
+            self.terrain.clone_from(&static_terrain);
+            if !position_is_walkable(
+                self.player.position,
+                self.width,
+                self.height,
+                &self.terrain,
+                &self.content,
+            ) {
+                self.player.position = position_from_content(world.player.position);
+            }
+            self.explored = vec![false; self.terrain.len()];
+            self.revealed_terrain.clear();
+            self.floor_connections.clear();
+            self.floor_regions.clear();
+        }
+        for floor in self.stored_floors.values_mut() {
+            if floor_needs_outpost_layout(
+                &floor.id,
+                floor.width,
+                floor.height,
+                &floor.terrain,
+                &world,
+                &self.content,
+            ) {
+                migrate_stored_surface(floor, &world, &self.content, &static_terrain);
+            }
+        }
+        self.mark_current_town_visited();
+        self.mark_shop_visited_at_player();
+    }
+}

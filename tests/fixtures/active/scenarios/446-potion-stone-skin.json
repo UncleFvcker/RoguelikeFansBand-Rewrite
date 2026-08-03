@@ -50,7 +50,7 @@
         "x": 3,
         "y": 3
       },
-      "playerHp": 33,
+      "playerHp": 34,
       "playerMaxHp": 162,
       "playerAttack": 2,
       "playerDefense": 45,
@@ -58,6 +58,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.stone-skin",
@@ -403,6 +405,7 @@
         }
       ],
       "nextItemInstanceSerial": 6,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -470,7 +473,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "af22b2fb1ee414dab109fa57cf058348d87b0a2a4cdf2dbfd07b310513debef9"
+      "stateHash": "baab45b2c1cc05fd601b42f9776a03bab934f963c6c2f7a5d0f42f10520b26dd"
     },
     "events": [
       {

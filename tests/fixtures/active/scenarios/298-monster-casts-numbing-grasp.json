@@ -63,6 +63,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.paralysis",
@@ -281,6 +283,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -348,7 +351,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "056bb7f148058f38a0e41abe31ed659ca857a14ce82f733f35c67d1c48aec307"
+      "stateHash": "d2d6c2ece90ec0cb8c2c09ecfba383e815735f18495cc63edd27ec08eb8f42fc"
     },
     "events": [
       {
@@ -552,6 +555,6 @@
         "y": 3
       }
     ],
-    "saveRoundTripStateHash": "056bb7f148058f38a0e41abe31ed659ca857a14ce82f733f35c67d1c48aec307"
+    "saveRoundTripStateHash": "d2d6c2ece90ec0cb8c2c09ecfba383e815735f18495cc63edd27ec08eb8f42fc"
   }
 }

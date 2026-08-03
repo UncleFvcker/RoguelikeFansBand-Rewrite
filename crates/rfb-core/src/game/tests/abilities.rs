@@ -2882,6 +2882,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             curse: None,
             activation: None,
             charges: None,
+            fuel: None,
             device_recovery_progress: 0,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
@@ -2972,6 +2973,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
             curse: None,
             activation: None,
             charges: None,
+            fuel: None,
             device_recovery_progress: 0,
             location: ItemLocation::Equipped {
                 slot_id: "weapon".to_owned(),
@@ -2989,6 +2991,7 @@ fn vampiric_branding_is_permanent_and_only_the_source_weapon_drains_life() {
                 curse: None,
                 activation: None,
                 charges: None,
+                fuel: None,
                 device_recovery_progress: 0,
                 location: ItemLocation::Equipped {
                     slot_id: "charm".to_owned(),
@@ -3489,6 +3492,7 @@ fn poison_branding_is_temporary_affects_melee_and_round_trips() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Equipped {
             slot_id: "weapon".to_owned(),
@@ -4354,6 +4358,28 @@ fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
 }
 
 #[test]
+fn natural_regeneration_and_rest_restore_warrior_health() {
+    let mut game =
+        Game::new_with_build(0, "demo.build.warrior").expect("warrior build should create");
+    clear_monsters(&mut game);
+    let maximum = game.effective_player_max_hp();
+    game.player.hp = maximum - 2;
+
+    for _ in 0..8 {
+        dispatch_next(&mut game, GameCommand::Wait);
+    }
+    assert_eq!(game.player.hp, maximum - 2);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.player.hp, maximum - 1);
+
+    let rested = dispatch_next(&mut game, GameCommand::Rest { turns: 9_999 });
+    let resolution = rest_resolution(&rested);
+    assert!(resolution.completed_turns > 0);
+    assert_eq!(resolution.stop_reason, RestStopReasonDto::FullResources);
+    assert_eq!(game.player.hp, maximum);
+}
+
+#[test]
 fn duelist_initializes_innate_techniques_and_empty_tempo_pool() {
     let game = Game::new_with_build(0, "demo.build.duelist").expect("duelist build should create");
     let baseline =
@@ -5147,6 +5173,7 @@ fn esoteria_validates_item_targets_before_cost_and_persists_knowledge() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Ground(Position { x: 10, y: 10 }),
     };

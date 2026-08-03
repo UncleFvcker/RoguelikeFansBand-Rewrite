@@ -646,6 +646,11 @@ impl Game {
         })
     }
 
+    fn player_has_rest_need(&self) -> bool {
+        self.player.hp < self.effective_player_max_hp()
+            || self.player_has_depleted_recoverable_resource(true)
+    }
+
     fn visible_hostile_exists(&self) -> bool {
         self.entities.iter().any(|entity| {
             entity.hp > 0
@@ -669,7 +674,7 @@ impl Game {
         let mut completed_turns = 0_u16;
         let stop_reason = if requested_turns == 0 || requested_turns > MAX_REST_TURNS {
             RestStopReasonDto::InvalidTurns
-        } else if !self.player_has_depleted_recoverable_resource(true) {
+        } else if !self.player_has_rest_need() {
             RestStopReasonDto::FullResources
         } else if self.visible_hostile_exists() {
             RestStopReasonDto::EnemyVisible
@@ -677,7 +682,7 @@ impl Game {
             loop {
                 let hp_before = self.player.hp;
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
-                self.advance_until_player_ready(events, changed, removed_entities)?;
+                self.advance_until_player_ready(true, events, changed, removed_entities)?;
                 completed_turns = completed_turns.saturating_add(1);
                 if self.player_is_dead() {
                     break RestStopReasonDto::PlayerDied;
@@ -690,7 +695,7 @@ impl Game {
                 }
                 self.recover_player_resources(true);
                 self.decay_player_resources();
-                if !self.player_has_depleted_recoverable_resource(true) {
+                if !self.player_has_rest_need() {
                     break RestStopReasonDto::FullResources;
                 }
                 if completed_turns >= requested_turns {

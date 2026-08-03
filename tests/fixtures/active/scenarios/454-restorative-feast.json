@@ -100,6 +100,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.poison",
@@ -450,6 +452,7 @@
         }
       ],
       "nextItemInstanceSerial": 6,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -517,7 +520,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "73394fb70483552bd1a9e7dcff8b00f23afa1e478dc43305a9530f8d719ca56f"
+      "stateHash": "62ee76610b102c9642c6a7027fae9a67767b2a9fa33a002fe8a972c9b9d9026f"
     },
     "events": [
       {

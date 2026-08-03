@@ -6,7 +6,30 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.143.0");
+    assert_eq!(catalog.pack_version(), "1.151.0");
+    assert_eq!(
+        catalog
+            .town("demo.town.outpost")
+            .map(|town| (town.floor_id.as_str(), town.shop_ids.as_slice())),
+        Some((
+            "demo.floor.surface",
+            ["demo.shop.outpost-general-store".to_owned()].as_slice()
+        ))
+    );
+    assert_eq!(
+        catalog.shop("demo.shop.outpost-general-store").map(|shop| (
+            shop.town_id.as_str(),
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            "demo.town.outpost",
+            ShopCategory::GeneralStore,
+            ContentPosition { x: 16, y: 8 },
+            "demo.terrain.general-store-entrance",
+        ))
+    );
     assert_eq!(
         catalog.resource("demo.resource.mana").map(|resource| (
             resource.name_key.as_str(),
@@ -604,28 +627,44 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     assert_eq!(warrens.procedural_floors.len(), 9);
     let warrens_first = &warrens.procedural_floors[0];
     assert_eq!(
-        warrens_first
-            .generation_budget
-            .as_ref()
-            .map(|budget| (budget.room_placements, budget.room_area_tiles,)),
-        Some((Some(5), Some(450)))
+        warrens_first.generation_budget.as_ref().map(|budget| (
+            budget.actor_slots,
+            budget.room_placements,
+            budget.room_area_tiles,
+            budget.streamer_placements,
+            budget.streamer_area_tiles,
+        )),
+        Some((4, Some(5), Some(450), Some(2), Some(24)))
     );
     assert_eq!(
         warrens_first.layout.as_ref().map(|layout| (
-            layout.rooms.as_ref().map(|rooms| {
+            layout.rooms.as_ref().map(|rooms| (
+                rooms.placement,
                 rooms
                     .shapes
                     .iter()
                     .map(|candidate| (candidate.shape, candidate.weight))
                     .collect::<Vec<_>>()
-            }),
+            )),
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<Vec<_>>(),
             layout.stairs,
         )),
         Some((
-            Some(vec![
-                (ProceduralRoomShape::Rectangle, 1),
-                (ProceduralRoomShape::Cavern, 9),
-            ]),
+            Some((
+                ProceduralRoomPlacement::Free,
+                vec![
+                    (ProceduralRoomShape::Rectangle, 1),
+                    (ProceduralRoomShape::Cavern, 9),
+                ]
+            )),
+            vec![
+                ("demo.terrain.magma-vein", 1),
+                ("demo.terrain.quartz-vein", 1)
+            ],
             Some(ProceduralStairLayoutDefinition {
                 up: ProceduralCountRangeDefinition {
                     minimum: 1,

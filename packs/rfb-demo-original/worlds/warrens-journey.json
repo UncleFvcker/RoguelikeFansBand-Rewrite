@@ -4,20 +4,94 @@
   "id": "demo.world.warrens-journey",
   "nameKey": "world-demo-warrens-journey-name",
   "initialFloorId": "demo.floor.surface",
+  "townId": "demo.town.outpost",
   "width": 66,
   "height": 22,
-  "fillTerrainId": "demo.terrain.floor",
-  "borderTerrainId": "demo.terrain.wall",
+  "fillTerrainId": "demo.terrain.surface-grass",
+  "borderTerrainId": "demo.terrain.surface-tree",
   "terrainOverrides": [
     {
+      "terrainId": "demo.terrain.surface-path",
+      "positions": [
+        { "x": 3, "y": 11 }, { "x": 4, "y": 11 }, { "x": 5, "y": 11 },
+        { "x": 6, "y": 11 }, { "x": 7, "y": 11 }, { "x": 8, "y": 11 },
+        { "x": 9, "y": 11 }, { "x": 10, "y": 11 }, { "x": 11, "y": 11 },
+        { "x": 12, "y": 11 }, { "x": 13, "y": 11 }, { "x": 14, "y": 11 },
+        { "x": 15, "y": 11 }, { "x": 16, "y": 11 }, { "x": 17, "y": 11 },
+        { "x": 18, "y": 11 }, { "x": 19, "y": 11 }, { "x": 20, "y": 11 },
+        { "x": 21, "y": 11 }, { "x": 22, "y": 11 }, { "x": 23, "y": 11 },
+        { "x": 24, "y": 11 }, { "x": 25, "y": 11 }, { "x": 26, "y": 11 },
+        { "x": 27, "y": 11 }, { "x": 28, "y": 11 }, { "x": 29, "y": 11 },
+        { "x": 30, "y": 11 }, { "x": 31, "y": 11 }, { "x": 32, "y": 11 },
+        { "x": 33, "y": 11 }, { "x": 34, "y": 11 }, { "x": 35, "y": 11 },
+        { "x": 36, "y": 11 }, { "x": 37, "y": 11 }, { "x": 38, "y": 11 },
+        { "x": 39, "y": 11 }, { "x": 40, "y": 11 }, { "x": 41, "y": 11 },
+        { "x": 42, "y": 11 }, { "x": 43, "y": 11 }, { "x": 44, "y": 11 },
+        { "x": 45, "y": 11 }, { "x": 46, "y": 11 }, { "x": 47, "y": 11 },
+        { "x": 48, "y": 11 }, { "x": 49, "y": 11 }, { "x": 50, "y": 11 },
+        { "x": 51, "y": 11 }, { "x": 52, "y": 11 }, { "x": 53, "y": 11 },
+        { "x": 54, "y": 11 }, { "x": 55, "y": 11 }, { "x": 56, "y": 11 },
+        { "x": 57, "y": 11 }, { "x": 58, "y": 11 }, { "x": 59, "y": 11 },
+        { "x": 60, "y": 11 }, { "x": 61, "y": 11 }, { "x": 62, "y": 11 },
+        { "x": 16, "y": 9 }, { "x": 16, "y": 10 },
+        { "x": 51, "y": 12 }, { "x": 51, "y": 13 }, { "x": 51, "y": 14 },
+        { "x": 51, "y": 15 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.outpost-wall",
+      "positions": [
+        { "x": 14, "y": 6 }, { "x": 15, "y": 6 },
+        { "x": 16, "y": 6 }, { "x": 17, "y": 6 },
+        { "x": 14, "y": 7 }, { "x": 15, "y": 7 },
+        { "x": 16, "y": 7 }, { "x": 17, "y": 7 },
+        { "x": 14, "y": 8 }, { "x": 15, "y": 8 },
+        { "x": 17, "y": 8 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.general-store-entrance",
+      "positions": [{ "x": 16, "y": 8 }]
+    },
+    {
+      "terrainId": "demo.terrain.surface-rock",
+      "positions": [
+        { "x": 47, "y": 14 }, { "x": 48, "y": 14 }, { "x": 49, "y": 14 },
+        { "x": 50, "y": 14 }, { "x": 52, "y": 14 }, { "x": 53, "y": 14 },
+        { "x": 54, "y": 14 }, { "x": 55, "y": 14 },
+        { "x": 47, "y": 15 }, { "x": 55, "y": 15 },
+        { "x": 47, "y": 16 }, { "x": 55, "y": 16 },
+        { "x": 47, "y": 17 }, { "x": 55, "y": 17 },
+        { "x": 47, "y": 18 }, { "x": 48, "y": 18 }, { "x": 49, "y": 18 },
+        { "x": 50, "y": 18 }, { "x": 51, "y": 18 }, { "x": 52, "y": 18 },
+        { "x": 53, "y": 18 }, { "x": 54, "y": 18 }, { "x": 55, "y": 18 }
+      ]
+    },
+    {
+      "terrainId": "demo.terrain.surface-tree",
+      "positions": [
+        { "x": 5, "y": 4 }, { "x": 6, "y": 5 },
+        { "x": 4, "y": 7 }, { "x": 5, "y": 8 },
+        { "x": 28, "y": 3 }, { "x": 29, "y": 3 }, { "x": 30, "y": 4 },
+        { "x": 35, "y": 5 }, { "x": 36, "y": 5 }, { "x": 37, "y": 6 },
+        { "x": 42, "y": 3 }, { "x": 43, "y": 4 }, { "x": 44, "y": 4 },
+        { "x": 57, "y": 3 }, { "x": 58, "y": 4 }, { "x": 60, "y": 5 },
+        { "x": 7, "y": 15 }, { "x": 8, "y": 16 }, { "x": 9, "y": 16 },
+        { "x": 15, "y": 17 }, { "x": 16, "y": 18 }, { "x": 17, "y": 17 },
+        { "x": 25, "y": 15 }, { "x": 26, "y": 16 }, { "x": 27, "y": 17 },
+        { "x": 36, "y": 15 }, { "x": 37, "y": 16 }, { "x": 38, "y": 17 },
+        { "x": 60, "y": 15 }, { "x": 61, "y": 16 }, { "x": 62, "y": 17 }
+      ]
+    },
+    {
       "terrainId": "demo.terrain.stairs-down",
-      "positions": [{ "x": 3, "y": 4 }]
+      "positions": [{ "x": 51, "y": 16 }]
     }
   ],
   "player": {
     "instanceId": "demo.actor.warrens-player.1",
     "kindId": "demo.actor.warrior-player",
-    "position": { "x": 3, "y": 3 }
+    "position": { "x": 32, "y": 11 }
   },
   "playerBuildId": "demo.build.warrior",
   "actors": [],
@@ -25,13 +99,13 @@
     {
       "instanceId": "demo.item.warrens-short-sword.1",
       "kindId": "demo.item.short-sword",
-      "position": { "x": 4, "y": 3 },
+      "position": { "x": 33, "y": 11 },
       "quantity": 1
     },
     {
       "instanceId": "demo.item.warrens-light-healing-potion.1",
       "kindId": "demo.item.light-healing-potion",
-      "position": { "x": 5, "y": 3 },
+      "position": { "x": 34, "y": 11 },
       "quantity": 2
     }
   ],
@@ -59,9 +133,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 2, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -71,6 +152,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -97,9 +182,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 2, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -109,6 +201,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -134,9 +230,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 3, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -146,6 +249,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -171,9 +278,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 3, "lootPlacements": 1, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -183,6 +297,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -208,9 +326,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 4, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -220,6 +345,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -245,9 +374,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 4, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -257,6 +393,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -282,9 +422,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 5, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -294,6 +441,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -319,9 +470,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 5, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 4, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -331,6 +489,10 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": {
           "up": { "minimum": 1, "maximum": 2 },
           "down": { "minimum": 4, "maximum": 5 }
@@ -356,9 +518,16 @@
       "dungeonId": "demo.dungeon.warrens",
       "encounterTableId": "demo.encounter-table.warrens",
       "lootTableId": "demo.loot-table.warrens",
-      "generationBudget": { "actorSlots": 4, "lootPlacements": 2, "roomPlacements": 5, "roomAreaTiles": 450 },
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.warrens-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.warrens-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 5, "lootPlacements": 5, "roomPlacements": 5, "roomAreaTiles": 450, "streamerPlacements": 2, "streamerAreaTiles": 24 },
       "layout": {
         "rooms": {
+          "placement": "free",
           "minWidth": 8,
           "maxWidth": 18,
           "minHeight": 7,
@@ -368,12 +537,17 @@
             { "shape": "rectangle", "weight": 1 }
           ]
         },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1 },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1 }
+        ],
         "stairs": { "up": { "minimum": 1, "maximum": 2 } }
       },
       "finalFloor": true,
       "guardian": {
         "instanceId": "demo.guardian.warrens.1",
-        "actorKindId": "demo.actor.warrens-keeper"
+        "actorKindId": "demo.actor.warrens-keeper",
+        "rewardLootTableId": "demo.loot-table.warrens-final-reward"
       },
       "depth": 9,
       "width": 66,

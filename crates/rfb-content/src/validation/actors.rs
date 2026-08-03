@@ -117,6 +117,13 @@ pub(super) fn validate_actors(
             }
             actor_loot_table_ids.push((actor.id.clone(), loot_table_id.clone()));
         }
+        if actor.gold_drop_chance_percent.is_some_and(|chance| {
+            actor.role != ActorRole::Monster
+                || actor.loot_table_id.is_none()
+                || !(1..=100).contains(&chance)
+        }) {
+            return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+        }
         if let Some(loot_table_id) = &actor.carried_loot_table_id {
             if actor.role != ActorRole::Monster || validate_id(loot_table_id).is_err() {
                 return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
@@ -128,6 +135,35 @@ pub(super) fn validate_actors(
                 return Err(ContentError::InvalidActorStats(actor.id.clone()));
             }
             actor_corpse_item_ids.push((actor.id.clone(), corpse_item_kind_id.clone()));
+        }
+        if let Some(remains) = &actor.remains {
+            let valid_corpse = remains.corpse_item_kind_id.is_some() == (remains.corpse_weight > 0);
+            let valid_skeleton =
+                remains.skeleton_item_kind_id.is_some() == (remains.skeleton_weight > 0);
+            if actor.role != ActorRole::Monster
+                || actor.corpse_item_kind_id.is_some()
+                || remains.chance_denominator == 0
+                || remains.chance_denominator > 10_000
+                || (!valid_corpse || !valid_skeleton)
+                || remains
+                    .corpse_weight
+                    .saturating_add(remains.skeleton_weight)
+                    == 0
+            {
+                return Err(ContentError::InvalidActorStats(actor.id.clone()));
+            }
+            if let Some(item_kind_id) = &remains.corpse_item_kind_id {
+                if validate_id(item_kind_id).is_err() {
+                    return Err(ContentError::InvalidActorStats(actor.id.clone()));
+                }
+                actor_corpse_item_ids.push((actor.id.clone(), item_kind_id.clone()));
+            }
+            if let Some(item_kind_id) = &remains.skeleton_item_kind_id {
+                if validate_id(item_kind_id).is_err() {
+                    return Err(ContentError::InvalidActorStats(actor.id.clone()));
+                }
+                actor_corpse_item_ids.push((actor.id.clone(), item_kind_id.clone()));
+            }
         }
         normalize_tags(&actor.id, &mut actor.tags)?;
         for tag in &actor.tags {

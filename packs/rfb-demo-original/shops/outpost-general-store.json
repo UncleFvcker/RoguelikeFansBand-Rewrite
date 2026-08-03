@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.outpost-general-store",
+  "nameKey": "shop-demo-outpost-general-store-name",
+  "descriptionKey": "shop-demo-outpost-general-store-description",
+  "townId": "demo.town.outpost",
+  "category": "general-store",
+  "entrancePosition": { "x": 16, "y": 8 },
+  "entranceTerrainId": "demo.terrain.general-store-entrance",
+  "owner": {
+    "id": "demo.shop-owner.outpost-mara-venn",
+    "nameKey": "shop-owner-demo-outpost-mara-venn-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 500
+  },
+  "stock": [
+    {
+      "itemKindId": "demo.item.ration-of-food",
+      "initialMinimum": 1,
+      "initialMaximum": 5,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 5
+    },
+    {
+      "itemKindId": "demo.item.wooden-torch",
+      "initialMinimum": 1,
+      "initialMaximum": 5,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 5
+    },
+    {
+      "itemKindId": "demo.item.brass-lantern",
+      "initialMinimum": 1,
+      "initialMaximum": 2,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 2
+    },
+    {
+      "itemKindId": "demo.item.flask-of-oil",
+      "initialMinimum": 1,
+      "initialMaximum": 5,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 5
+    }
+  ],
+  "maintenance": {
+    "intervalWorldTicks": 10000
+  }
+}

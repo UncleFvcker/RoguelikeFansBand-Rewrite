@@ -28,8 +28,13 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.resultRestart.id, "result-restart");
   assert.equal(dom.resultExit.id, "result-exit");
   assert.equal(dom.lookModeToggle.id, "look-mode-toggle");
+  assert.equal(dom.traverseStairs.id, "traverse-stairs");
+  assert.equal(dom.healthMeterFill.id, "health-meter-fill");
+  assert.equal(dom.goldValue.id, "gold-value");
+  assert.equal(dom.nutritionValue.id, "nutrition-value");
+  assert.equal(dom.nearbyList.id, "nearby-list");
   assert.equal(dom.summonCommandButtons["keep-distance"].id, "summon-command-keep-distance");
-  assert.equal(elements.size, 90);
+  assert.equal(elements.size, 97);
   assert.equal(Object.isFrozen(dom), true);
   assert.equal(Object.isFrozen(dom.summonCommandButtons), true);
 });

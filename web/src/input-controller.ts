@@ -25,6 +25,7 @@ import {
   terrainSearchCommandForKey,
   type TerrainInteractionMode,
 } from "./terrain-interaction.ts";
+import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 
 export type InputPreset = "numpad" | "vi" | "wasd";
 
@@ -32,6 +33,7 @@ type InputDom = Pick<
   AppDom,
   | "mapHost"
   | "targetCursor"
+  | "traverseStairs"
   | "targetModeToggle"
   | "lookModeToggle"
   | "targetModeStatus"
@@ -87,6 +89,7 @@ export class InputController {
     this.#installed = true;
     this.#window.addEventListener("keydown", this.#handleKeydown);
     this.#window.addEventListener("resize", this.#handleResize);
+    this.#dom.traverseStairs.addEventListener("click", this.#handleTraverseStairs);
     this.#dom.targetModeToggle.addEventListener("click", this.#handleTargetToggle);
     this.#dom.lookModeToggle.addEventListener("click", this.#handleLookToggle);
   }
@@ -96,6 +99,7 @@ export class InputController {
     this.#installed = false;
     this.#window.removeEventListener("keydown", this.#handleKeydown);
     this.#window.removeEventListener("resize", this.#handleResize);
+    this.#dom.traverseStairs.removeEventListener("click", this.#handleTraverseStairs);
     this.#dom.targetModeToggle.removeEventListener("click", this.#handleTargetToggle);
     this.#dom.lookModeToggle.removeEventListener("click", this.#handleLookToggle);
   }
@@ -190,6 +194,24 @@ export class InputController {
           this.#state.status.player.projectileProfile?.targetSpec,
         ),
     );
+    const connectionAction = connectionActionForState(this.#state);
+    const waitingAtWarrensSurface =
+      this.#state.worldId === "demo.world.warrens-journey" &&
+      this.#state.status?.floorId === "demo.floor.surface";
+    this.#dom.traverseStairs.textContent = this.#localization.format(
+      connectionAction === "enter-warrens"
+        ? "action-enter-warrens"
+        : connectionAction === "ascend"
+          ? "action-stairs-ascend"
+          : connectionAction === "descend"
+            ? "action-stairs-descend"
+            : waitingAtWarrensSurface
+              ? "action-enter-warrens-unavailable"
+              : "action-stairs-unavailable",
+    );
+    this.#dom.traverseStairs.disabled =
+      this.#state.busy || this.#state.commandBlocked || connectionAction === undefined;
+    this.#dom.mapHost.dataset.connectionAction = connectionAction ?? "unavailable";
     this.#dom.targetModeToggle.textContent = this.#localization.format(
       targeting ? "action-target-cancel" : "action-target-start",
     );
@@ -256,6 +278,11 @@ export class InputController {
       this.cancelTargeting(false);
       this.startLookMode();
     }
+  };
+
+  readonly #handleTraverseStairs = (): void => {
+    if (this.#dom.traverseStairs.disabled) return;
+    void this.#dispatch({ type: "traverse-stairs" });
   };
 
   readonly #handleResize = (): void => {
@@ -411,6 +438,7 @@ export function commandForKeyboardInput(
 ): GameCommand | undefined {
   const key = event.key.toLowerCase();
   if (key === "g") return { type: "pick-up" };
+  if (key === "r") return { type: "rest", turns: REST_UNTIL_RECOVERED_TURNS };
   if (key === ">" || key === "<") return { type: "traverse-stairs" };
   const direction = directionForKeyboardInput(event, preset);
   if (preset === "numpad") {
@@ -423,6 +451,21 @@ export function commandForKeyboardInput(
   }
   if (key === " ") return { type: "wait" };
   return direction ? { type: "move", direction } : undefined;
+}
+
+export type ConnectionAction = "enter-warrens" | "ascend" | "descend";
+
+export function connectionActionForState(state: AppState): ConnectionAction | undefined {
+  const status = state.status;
+  if (!status) return undefined;
+  const terrainId = state.cellAt(status.player.position)?.terrainId;
+  const glyph = terrainId ? state.contentGlyphs.get(terrainId) : undefined;
+  if (glyph === "<") return "ascend";
+  if (glyph !== ">") return undefined;
+  return state.worldId === "demo.world.warrens-journey" &&
+    status.floorId === "demo.floor.surface"
+    ? "enter-warrens"
+    : "descend";
 }
 
 export function directionForKeyboardInput(

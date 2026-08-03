@@ -35,6 +35,20 @@
         "itemKindId": {
           "type": "string"
         },
+        "maxDepth": {
+          "default": 65535,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minDepth": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "quantity": {
           "format": "uint32",
           "minimum": 0,
@@ -68,6 +82,28 @@
       "required": [
         "quality",
         "weight"
+      ],
+      "type": "object"
+    },
+    "LootRollDiceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "dice": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sides": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dice",
+        "sides"
       ],
       "type": "object"
     }
@@ -105,6 +141,27 @@
         "$ref": "#/$defs/LootQualityWeightDefinition"
       },
       "type": "array"
+    },
+    "rollChancePercent": {
+      "default": null,
+      "format": "uint8",
+      "maximum": 255,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "rollDice": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LootRollDiceDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "rolls": {
       "format": "uint16",

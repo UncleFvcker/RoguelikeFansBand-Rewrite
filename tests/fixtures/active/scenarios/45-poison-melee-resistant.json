@@ -51,6 +51,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerResistances": [
         {
           "damageType": "poison",
@@ -237,6 +239,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -304,7 +307,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "737994076e61755f02e2f65556285d20f87033358845965121cc3f1399afc707"
+      "stateHash": "5fd6efdac60a7d81bbdac4716ab15599134a5abcf2fb800e072a1e897d353389"
     },
     "events": [
       {
@@ -332,6 +335,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "737994076e61755f02e2f65556285d20f87033358845965121cc3f1399afc707"
+    "saveRoundTripStateHash": "5fd6efdac60a7d81bbdac4716ab15599134a5abcf2fb800e072a1e897d353389"
   }
 }

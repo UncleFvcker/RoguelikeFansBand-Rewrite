@@ -20,21 +20,17 @@ pub(super) fn dispatch_next(game: &mut Game, command_value: GameCommand) -> Game
 }
 
 pub(super) fn descend_one_floor(game: &mut Game) {
-    if game.current_floor_id == "demo.floor.surface" {
-        game.player.position = Position { x: 3, y: 4 };
-    } else {
-        let down_index = game
-            .terrain
-            .iter()
-            .position(|terrain_id| terrain_id == "demo.terrain.stairs-down")
-            .expect("current floor should contain descending stairs");
-        game.player.position = Position {
-            x: i32::try_from(down_index % usize::from(game.width))
-                .expect("descending stair x must fit i32"),
-            y: i32::try_from(down_index / usize::from(game.width))
-                .expect("descending stair y must fit i32"),
-        };
-    }
+    let down_index = game
+        .terrain
+        .iter()
+        .position(|terrain_id| terrain_id == "demo.terrain.stairs-down")
+        .expect("current floor should contain descending stairs");
+    game.player.position = Position {
+        x: i32::try_from(down_index % usize::from(game.width))
+            .expect("descending stair x must fit i32"),
+        y: i32::try_from(down_index / usize::from(game.width))
+            .expect("descending stair y must fit i32"),
+    };
     game.traverse_stairs(false)
         .expect("descent should resolve")
         .expect("descent should transition");
@@ -147,6 +143,7 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         curse: None,
         activation,
         charges,
+        fuel: initial_item_fuel(&game.content, kind_id),
         device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });

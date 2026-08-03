@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.leather-gloves",
+  "nameKey": "item-demo-leather-gloves-name",
+  "descriptionKey": "item-demo-leather-gloves-description",
+  "glyph": "[",
+  "weightTenthsPound": 5,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "modifiers": { "defense": 1 },
+  "tags": ["armor", "equipment", "rfb-compatibility"]
+}

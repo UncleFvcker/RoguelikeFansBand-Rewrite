@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
   "formatVersion": 1,
   "id": "demo.encounter-table.warrens",
-  "rolls": 1,
+  "rolls": 4,
   "entries": [
     {
       "actorKindId": "demo.actor.giant-white-mouse",

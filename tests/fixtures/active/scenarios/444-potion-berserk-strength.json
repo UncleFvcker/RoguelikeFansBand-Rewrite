@@ -47,6 +47,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 444,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerStatuses": [
         {
           "kindId": "rfb.status.berserk",
@@ -395,6 +397,7 @@
         }
       ],
       "nextItemInstanceSerial": 6,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -462,7 +465,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "68c325921de0c65448506a95a5a377fc4db0e433d95acd3a36904b32ecf82761"
+      "stateHash": "7b6e5c37aee8e8f75fd9021470709a52d37ceb14de18ec834fbaf028a49983ff"
     },
     "events": [
       {

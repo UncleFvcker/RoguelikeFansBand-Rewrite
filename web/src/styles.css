@@ -596,6 +596,14 @@ h1 {
   opacity: 0.48;
 }
 
+.map-host[data-connection-action]:not([data-connection-action="unavailable"])
+  + .input-toolbar #traverse-stairs {
+  border-color: #c99a45;
+  color: #fff4cf;
+  background: #593d17;
+  box-shadow: 0 0 0 1px rgb(255 215 128 / 16%);
+}
+
 .target-controls span {
   color: #aabed1;
   font-size: 0.84rem;
@@ -944,6 +952,21 @@ h1 {
   font-size: 0.7rem;
 }
 
+.item-identification {
+  color: var(--ui-muted, #7890a7);
+  font-size: 0.7rem;
+}
+
+.item-identification-appraised {
+  color: var(--ui-accent, #d6b56f);
+}
+
+.item-identification-identified,
+.item-identification-identified-ego,
+.item-identification-identified-ordinary {
+  color: #8fd8c4;
+}
+
 .inventory-empty {
   border-bottom: 0;
   color: #64788c;
@@ -1246,5 +1269,876 @@ h1 {
   .input-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+/* Production player interface */
+
+:root {
+  --ui-bg: #0b0b0a;
+  --ui-surface: #11110f;
+  --ui-surface-raised: #171611;
+  --ui-line: #343128;
+  --ui-line-soft: #242219;
+  --ui-text: #ddd8ca;
+  --ui-muted: #8d8779;
+  --ui-faint: #645f54;
+  --ui-accent: #c49a5a;
+  --ui-accent-strong: #e0b873;
+  --ui-health: #a94b42;
+  --ui-health-low: #d45e4f;
+  --ui-resource: #5d91a3;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  font-family: "Segoe UI", "Noto Sans SC", "Microsoft YaHei UI", sans-serif;
+}
+
+body {
+  background: #090908;
+}
+
+button,
+.file-button {
+  min-height: 2.25rem;
+  border-color: #423d30;
+  border-radius: 4px;
+  padding: 0.48rem 0.72rem;
+  color: var(--ui-text);
+  background: #1b1914;
+  transition: border-color 100ms ease, color 100ms ease, background 100ms ease;
+}
+
+button:hover,
+.file-button:hover {
+  border-color: #756549;
+  color: #fff7e7;
+  background: #242017;
+}
+
+button:focus-visible,
+.file-button:focus-within,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+.primary-button {
+  border-color: #806437;
+  color: #17130d;
+  background: var(--ui-accent);
+}
+
+.primary-button:hover {
+  border-color: var(--ui-accent-strong);
+  color: #100d08;
+  background: var(--ui-accent-strong);
+}
+
+#app {
+  width: min(1800px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 0.7rem clamp(0.7rem, 1.4vw, 1.4rem) 1rem;
+}
+
+.app-header {
+  min-height: 3.35rem;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid var(--ui-line);
+  padding-bottom: 0.55rem;
+}
+
+.app-header h1 {
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.app-header .eyebrow {
+  display: none;
+}
+
+.run-metadata {
+  margin-top: 0.2rem;
+  color: var(--ui-faint);
+  font-size: 0.68rem;
+}
+
+.run-metadata strong {
+  color: var(--ui-muted);
+}
+
+.header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.header-actions button,
+.header-actions .file-button {
+  min-height: 1.9rem;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.journey-panel {
+  grid-template-columns: minmax(15rem, 0.36fr) minmax(0, 0.64fr);
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.journey-dungeon,
+.onboarding-card {
+  border-color: var(--ui-line);
+  border-radius: 4px;
+  padding: 0.65rem 0.8rem;
+  background: var(--ui-surface);
+  box-shadow: none;
+}
+
+.journey-heading {
+  padding-bottom: 0.35rem;
+}
+
+.journey-label {
+  display: none;
+}
+
+.journey-dungeon h2,
+.onboarding-card h3 {
+  color: var(--ui-accent-strong);
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 1rem;
+}
+
+.journey-dungeon > p:last-child,
+.onboarding-card > p {
+  margin-top: 0.25rem;
+  font-size: 0.76rem;
+}
+
+.onboarding-card {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) auto;
+  gap: 0.2rem 0.8rem;
+  align-items: center;
+}
+
+.onboarding-meta {
+  grid-row: 1 / span 2;
+}
+
+.onboarding-card h3,
+.onboarding-card > p {
+  margin: 0;
+}
+
+.onboarding-control {
+  border-left-width: 1px;
+  padding-left: 0.55rem;
+}
+
+.onboarding-settings {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  border-top: 0;
+  border-left: 1px solid var(--ui-line-soft);
+  padding: 0 0 0 0.8rem;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 20rem);
+  gap: 0.55rem;
+  align-items: start;
+}
+
+#app[data-tool-column="visible"] .game-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 19rem) minmax(22rem, 27rem);
+}
+
+.play-column,
+.player-sidebar,
+.tool-column {
+  min-width: 0;
+}
+
+.play-column,
+.player-sidebar,
+.tool-column,
+.support-panel-host {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.map-panel,
+.status-panel,
+.inventory-panel,
+.save-panel,
+.message-panel {
+  border-color: var(--ui-line);
+  border-radius: 4px;
+  background: var(--ui-surface);
+  box-shadow: none;
+}
+
+.panel-heading {
+  min-height: 2.1rem;
+  border-bottom-color: var(--ui-line-soft);
+  padding: 0.45rem 0.65rem;
+  color: var(--ui-muted);
+  background: #15140f;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.map-host {
+  width: 100%;
+  max-width: none;
+  height: clamp(25rem, 61vh, 50rem);
+  background: #080807;
+}
+
+.map-host[data-camera-mode="player-centered"] {
+  width: min(var(--map-centered-width), 100%);
+  height: var(--map-centered-height);
+  margin-inline: auto;
+}
+
+.input-toolbar {
+  gap: 0.45rem;
+  min-height: 3.05rem;
+  padding: 0.45rem 0.65rem;
+}
+
+.target-controls {
+  flex-basis: auto;
+  gap: 0.4rem;
+  min-height: auto;
+}
+
+.target-controls button {
+  min-height: 2rem;
+  border-color: #4c4535;
+  border-radius: 4px;
+  padding: 0.35rem 0.6rem;
+  color: var(--ui-text);
+  background: #1a1813;
+  font-size: 0.74rem;
+}
+
+.target-controls span {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+}
+
+.map-host[data-connection-action]:not([data-connection-action="unavailable"])
+  + .input-toolbar #traverse-stairs {
+  border-color: #8c6937;
+  color: #fff0d0;
+  background: #3b2c18;
+  box-shadow: none;
+}
+
+.player-sidebar {
+  position: sticky;
+  top: 0.55rem;
+  max-height: calc(100vh - 1.1rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.turn-indicator {
+  color: var(--ui-faint);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+}
+
+.turn-indicator strong {
+  color: var(--ui-text);
+  font-weight: 500;
+}
+
+.health-meter {
+  display: grid;
+  gap: 0.42rem;
+  padding: 0.7rem 0.75rem;
+}
+
+.health-meter-label,
+.resource-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.health-meter-label span,
+.resource-name {
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+}
+
+.health-meter-label strong,
+.resource-value {
+  color: #f1e9dc;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.meter-track,
+.resource-meter {
+  display: block;
+  height: 0.38rem;
+  overflow: hidden;
+  border: 1px solid #3a3129;
+  border-radius: 2px;
+  background: #080807;
+}
+
+.health-meter-fill,
+.resource-meter > span {
+  display: block;
+  height: 100%;
+  background: var(--ui-health);
+  transition: width 180ms ease;
+}
+
+.health-meter[data-health-state="critical"] .health-meter-fill {
+  background: var(--ui-health-low);
+}
+
+.status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: var(--ui-line-soft);
+}
+
+.status-grid div {
+  padding: 0.55rem 0.65rem;
+  background: #0f0f0d;
+}
+
+.status-grid .status-effects {
+  grid-column: 1 / -1;
+}
+
+.status-grid .status-gold {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.status-grid .status-gold dt {
+  margin-bottom: 0;
+}
+
+.status-grid .status-gold dd {
+  color: #e2bb57;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-weight: 650;
+}
+
+.status-grid .status-nutrition {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.status-grid .status-nutrition dt {
+  margin-bottom: 0;
+}
+
+.status-grid .status-nutrition dd {
+  color: #b7c98c;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-weight: 600;
+}
+
+.status-grid dt {
+  margin-bottom: 0.22rem;
+  color: var(--ui-faint);
+  font-size: 0.66rem;
+}
+
+.status-grid dd {
+  color: var(--ui-text);
+  font-size: 0.78rem;
+}
+
+.technical-details,
+.player-details {
+  border-top: 1px solid var(--ui-line-soft);
+}
+
+.technical-details > summary,
+.player-details > summary,
+.support-drawer > summary {
+  padding: 0.5rem 0.65rem;
+  color: var(--ui-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.progression-detail-grid > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.attribute-list,
+.skill-list {
+  padding: 0.5rem 0.65rem;
+}
+
+.skill-list {
+  grid-template-columns: 1fr;
+}
+
+.attribute-row {
+  grid-template-columns: minmax(4.2rem, 0.65fr) minmax(0, 1.5fr) auto;
+  font-size: 0.7rem;
+}
+
+.resource-list {
+  gap: 0;
+  border-bottom: 0;
+  padding: 0;
+  color: var(--ui-text);
+  font-family: inherit;
+}
+
+.resource-row {
+  display: grid;
+  gap: 0.38rem;
+  padding: 0.58rem 0.7rem;
+  border-bottom: 1px solid var(--ui-line-soft);
+}
+
+.resource-row:last-child {
+  border-bottom: 0;
+}
+
+.resource-empty {
+  padding: 0.65rem 0.7rem;
+  color: var(--ui-faint);
+  font-size: 0.68rem;
+}
+
+.resource-meter {
+  border-color: #29353a;
+}
+
+.resource-meter > span {
+  background: var(--ui-resource);
+}
+
+.resource-recovery {
+  color: var(--ui-faint);
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+
+.player-page-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.player-page-actions button {
+  display: flex;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: space-between;
+  border-color: var(--ui-line);
+  padding: 0.5rem 0.65rem;
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  font-size: 0.74rem;
+}
+
+kbd {
+  min-width: 1.35rem;
+  border: 1px solid #514a3a;
+  border-bottom-color: #75684e;
+  border-radius: 3px;
+  padding: 0.12rem 0.28rem;
+  color: var(--ui-accent-strong);
+  background: #0d0c09;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.66rem;
+  text-align: center;
+}
+
+.nearby-current {
+  margin: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  padding: 0.48rem 0.65rem;
+  color: var(--ui-muted);
+  font-size: 0.7rem;
+}
+
+.nearby-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nearby-row {
+  display: grid;
+  grid-template-columns: 1.8rem minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 2.65rem;
+  border-bottom: 1px solid var(--ui-line-soft);
+  padding: 0.4rem 0.65rem;
+}
+
+.nearby-row:last-child {
+  border-bottom: 0;
+}
+
+.nearby-glyph {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 1px solid #3b382f;
+  border-radius: 3px;
+  color: var(--ui-accent-strong);
+  background: #0a0a08;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.nearby-hostile .nearby-glyph {
+  color: #db766b;
+}
+
+.nearby-ally .nearby-glyph {
+  color: #75a99a;
+}
+
+.nearby-gold .nearby-glyph {
+  color: #e2bb57;
+}
+
+.nearby-details {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.nearby-details strong {
+  overflow: hidden;
+  color: var(--ui-text);
+  font-size: 0.75rem;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nearby-details span,
+.nearby-empty {
+  color: var(--ui-faint);
+  font-size: 0.64rem;
+}
+
+.nearby-empty {
+  padding: 0.7rem;
+}
+
+.message-panel-host .message-panel {
+  min-height: 8.6rem;
+}
+
+.message-list {
+  height: 8rem;
+}
+
+.message {
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.42rem 0.65rem;
+  border-bottom-color: var(--ui-line-soft);
+  color: #bbb5a8;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.support-drawer {
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  background: var(--ui-surface);
+}
+
+.support-drawer > summary {
+  min-height: 2.35rem;
+  padding: 0.58rem 0.7rem;
+}
+
+.support-drawer[open] > summary {
+  border-bottom: 1px solid var(--ui-line-soft);
+  color: var(--ui-accent-strong);
+}
+
+.support-panel-host {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0.55rem;
+}
+
+.tool-column {
+  position: sticky;
+  top: 0.55rem;
+  max-height: calc(100vh - 1.1rem);
+  overflow-y: auto;
+}
+
+.tool-column .inventory-list,
+.tool-column .ability-list {
+  max-height: 26vh;
+}
+
+.tool-column .inventory-panel,
+.tool-column .ability-panel {
+  scroll-margin-top: 0.55rem;
+}
+
+.panel-attention {
+  border-color: var(--ui-accent);
+}
+
+.player-page-dialog,
+.player-ui-settings-dialog {
+  width: min(58rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  border: 1px solid #504937;
+  border-radius: 4px;
+  padding: 0;
+  color: var(--ui-text);
+  background: #0e0e0c;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 60%);
+}
+
+.player-page-dialog::backdrop,
+.player-ui-settings-dialog::backdrop {
+  background: rgb(2 2 2 / 76%);
+  backdrop-filter: blur(2px);
+}
+
+.player-page-dialog > header,
+.player-ui-settings-dialog > header {
+  display: flex;
+  min-height: 3.8rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-line);
+  padding: 0.7rem 0.9rem;
+  background: #15140f;
+}
+
+.player-page-dialog h2,
+.player-ui-settings-dialog h2 {
+  margin: 0;
+  color: #eee5d3;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
+.player-page-dialog .eyebrow,
+.player-ui-settings-dialog .eyebrow {
+  margin-bottom: 0.15rem;
+  color: var(--ui-accent);
+  font-size: 0.6rem;
+}
+
+.dialog-close {
+  color: var(--ui-muted);
+}
+
+.player-page-host {
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+.player-page-host > .inventory-panel,
+.player-page-host > .ability-panel {
+  border: 0;
+  background: transparent;
+}
+
+.player-page-host > section > .panel-heading {
+  display: none;
+}
+
+.player-page-host .inventory-list,
+.player-page-host .ability-list {
+  max-height: none;
+}
+
+.player-ui-settings-dialog {
+  width: min(46rem, calc(100vw - 2rem));
+  overflow-y: auto;
+}
+
+.settings-section {
+  padding: 0.9rem;
+  border-bottom: 1px solid var(--ui-line-soft);
+}
+
+.settings-section:last-child {
+  border-bottom: 0;
+}
+
+.settings-section h3 {
+  margin: 0;
+  color: #e5dccb;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.settings-section > p {
+  max-width: 62ch;
+  margin: 0.3rem 0 0.75rem;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.settings-grid label {
+  display: grid;
+  gap: 0.32rem;
+  color: var(--ui-muted);
+  font-size: 0.7rem;
+}
+
+.settings-grid select,
+.settings-grid input {
+  width: 100%;
+  min-height: 2.3rem;
+  border: 1px solid #403b2f;
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+  color: var(--ui-text);
+  background: #15140f;
+  font: inherit;
+}
+
+.gameplay-settings-host .controls {
+  grid-column: 1 / -1;
+  margin: 0;
+  border-top: 1px solid var(--ui-line-soft);
+  padding-top: 0.65rem;
+  color: var(--ui-faint);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 1280px) {
+  #app[data-tool-column="visible"] .game-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(17rem, 19rem);
+  }
+
+  #app[data-tool-column="visible"] .tool-column {
+    position: static;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 900px) {
+  .game-layout,
+  #app[data-tool-column="visible"] .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .player-sidebar {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+    overflow: visible;
+  }
+
+  .player-page-actions {
+    align-self: start;
+  }
+
+  .nearby-panel {
+    grid-column: 1 / -1;
+  }
+
+  .onboarding-card {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-meta,
+  .onboarding-settings {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .onboarding-settings {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    border-top: 1px solid var(--ui-line-soft);
+    border-left: 0;
+    padding: 0.45rem 0 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-header {
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .journey-panel,
+  .player-sidebar,
+  #app[data-tool-column="visible"] .tool-column,
+  .support-panel-host,
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nearby-panel {
+    grid-column: auto;
+  }
+
+  .map-host {
+    height: 55vh;
+  }
+
+
+  .map-host[data-camera-mode="player-centered"] {
+    height: var(--map-centered-height);
   }
 }

@@ -6,6 +6,7 @@ mod characters;
 mod items;
 mod pack;
 mod tables;
+mod towns;
 mod worlds;
 
 pub(crate) use abilities::valid_ability_level_scaling;
@@ -15,6 +16,7 @@ pub use characters::*;
 pub use items::*;
 pub use pack::*;
 pub use tables::*;
+pub use towns::*;
 pub use worlds::*;
 
 const fn default_percent() -> u16 {

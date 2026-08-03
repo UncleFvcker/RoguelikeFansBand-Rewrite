@@ -46,6 +46,8 @@
       "playerEnergyNeed": 0,
       "playerCarriedWeightTenthsPound": 0,
       "playerCarryCapacityTenthsPound": 100,
+      "playerGold": 0,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -226,6 +228,7 @@
       ],
       "groundItemCount": 5,
       "nextItemInstanceSerial": 2,
+      "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
           "kind": "dig-terrain",
@@ -295,7 +298,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "45bfcb638fef51350c6471f7360fd74c932ad3254f1d4013121d87c644a8717d"
+      "stateHash": "523a826df2a225991b83c7e646fa3289f2e7e892704437c2e359e3c9ef14e60e"
     },
     "events": [
       {
@@ -310,9 +313,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "45bfcb638fef51350c6471f7360fd74c932ad3254f1d4013121d87c644a8717d"
+        "stateHash": "523a826df2a225991b83c7e646fa3289f2e7e892704437c2e359e3c9ef14e60e"
       }
     ],
-    "saveRoundTripStateHash": "45bfcb638fef51350c6471f7360fd74c932ad3254f1d4013121d87c644a8717d"
+    "saveRoundTripStateHash": "523a826df2a225991b83c7e646fa3289f2e7e892704437c2e359e3c9ef14e60e"
   }
 }

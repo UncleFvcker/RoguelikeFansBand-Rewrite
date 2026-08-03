@@ -35,7 +35,13 @@ async function loadExpectedIdentity() {
     contentHash: lock.contentHash,
   };
 }
-const executable = path.join(repositoryDirectory, "target", "debug", "rfb-tauri.exe");
+const executable = path.join(
+  repositoryDirectory,
+  "target",
+  "e2e",
+  "debug",
+  "rfb-tauri.exe",
+);
 const artifactDirectory = path.join(repositoryDirectory, "test-results");
 const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
 const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
@@ -136,7 +142,10 @@ async function runScenario(driver) {
     localStorage.clear();
     localStorage.setItem("rfb.locale", "zh-CN");
     localStorage.setItem("rfb.renderer-profile-enabled", "1");
-    setTimeout(() => window.location.reload(), 0);
+    // Give WebDriver enough time to receive the execute response before the
+    // document is replaced. A zero-delay reload can race WebView2 and leave
+    // the synchronous command waiting until its script timeout.
+    setTimeout(() => window.location.reload(), 250);
     return true;
   `);
   await driver.waitFor(
@@ -194,6 +203,55 @@ async function runScenario(driver) {
   assert.equal(initialGuidance.prompt, "movement");
   assert.equal(initialGuidance.kind, "journey");
 
+  const playerUiStructure = await driver.execute(`
+    const sidebar = document.querySelector("#player-sidebar");
+    const resource = document.querySelector("#resource-panel");
+    const nearby = document.querySelector("#nearby-panel");
+    return {
+      messageDocked: document.querySelector("#message-panel")?.parentElement?.id,
+      supportDocked: document.querySelector("#native-save-panel")?.parentElement?.id,
+      resourceInSidebar: resource?.parentElement === sidebar,
+      nearbyFollowsResources: Boolean(
+        resource?.compareDocumentPosition(nearby) & Node.DOCUMENT_POSITION_FOLLOWING
+      ),
+      toolColumnHidden: document.querySelector("#player-tool-column")?.hidden,
+    };
+  `);
+  assert.equal(playerUiStructure.messageDocked, "message-panel-host");
+  assert.equal(playerUiStructure.supportDocked, "support-panel-host");
+  assert.equal(playerUiStructure.resourceInSidebar, true);
+  assert.equal(playerUiStructure.nearbyFollowsResources, true);
+  assert.equal(playerUiStructure.toolColumnHidden, true);
+
+  await dispatchKey(driver, "KeyI", "i");
+  await driver.waitFor(
+    `return document.querySelector("#player-page-dialog")?.open && document.querySelector("#inventory-panel")?.parentElement?.id === "player-page-host"`,
+    "inventory shortcut page",
+  );
+  await dispatchKey(driver, "KeyI", "i");
+  await driver.waitFor(
+    `return !document.querySelector("#player-page-dialog")?.open && document.querySelector("#inventory-panel")?.parentElement?.id === "player-page-parking"`,
+    "inventory shortcut page closes",
+  );
+  await click(driver, "#player-ui-settings-open");
+  await driver.execute(`
+    const presentation = document.querySelector("#inventory-presentation");
+    presentation.value = "column";
+    presentation.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  `);
+  await driver.waitFor(
+    `return !document.querySelector("#player-tool-column")?.hidden && document.querySelector("#inventory-panel")?.parentElement?.id === "player-tool-column"`,
+    "inventory pinned column",
+  );
+  await driver.execute(`
+    const presentation = document.querySelector("#inventory-presentation");
+    presentation.value = "page";
+    presentation.dispatchEvent(new Event("change", { bubbles: true }));
+    document.querySelector("#player-ui-settings-close").click();
+    return true;
+  `);
+
   await driver.execute(`
     const input = document.querySelector("#input-preset");
     input.value = "numpad";
@@ -248,8 +306,8 @@ async function runScenario(driver) {
   assert.equal(state.cameraMode, "full-map");
   assert.equal(state.cameraX, "0");
   assert.equal(state.cameraY, "0");
-  assert.equal(state.viewportWidth, "560");
-  assert.equal(state.viewportHeight, "560");
+  assert.ok(Number(state.viewportWidth) >= 560);
+  assert.ok(Number(state.viewportHeight) >= 400);
   assert.equal(state.zoom, "1");
   assert.equal(state.canvasUnchanged, true);
   assert.equal(state.contentId, expected.contentId);
@@ -373,7 +431,7 @@ async function runScenario(driver) {
     `return document.querySelector("#position-value")?.textContent === "4, 4" && document.querySelector("#turn-value")?.textContent === "4"`,
     "movement after native save",
   );
-  await driver.execute(`setTimeout(() => window.location.reload(), 0); return true;`);
+  await driver.execute(`setTimeout(() => window.location.reload(), 250); return true;`);
   await driver.waitFor(
     `return document.documentElement.dataset.appMode === "title" && document.querySelector("#app")?.hidden`,
     "return to title without implicit session",

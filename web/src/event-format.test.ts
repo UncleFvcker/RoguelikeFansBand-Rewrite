@@ -44,6 +44,79 @@ test("item event formatting follows projected knowledge and locale changes", () 
   localization.setLocale("en-US");
 });
 
+test("item names preserve observable base kinds before property identification", () => {
+  assert.equal(
+    formatter.visibleItemName(
+      "item-demo-unfamiliar-potion-name",
+      "demo.item.light-healing-potion",
+    ),
+    "unfamiliar potion",
+  );
+  assert.equal(
+    formatter.visibleItemName("item-demo-chain-mail-name", "demo.item.chain-mail"),
+    "Chain Mail",
+  );
+});
+
+test("gold events report gained balance and monster drops", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "gold.pickup",
+      messageKey: "gold-pickup-success",
+      args: { amount: "37", balance: "412" },
+    }),
+    "You collect 37 gold (412 total).",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "gold.drop",
+      messageKey: "gold-drop",
+      args: { source: "demo.actor.small-kobold", amount: "19" },
+    }),
+    "Small Kobold drops 19 gold.",
+  );
+});
+
+test("food events report eating hunger changes fainting and starvation", () => {
+  assert.equal(
+    formatter.formatEvent({
+      kind: "item.use-food",
+      messageKey: "item-use-food",
+      args: {
+        target: "demo.item.ration-of-food",
+        nameKey: "item-demo-ration-of-food-name",
+        amount: "5000",
+        nutrition: "14999",
+      },
+    }),
+    "You eat Ration of Food, restoring 5000 food (14999 / 15000).",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "hunger.state-changed",
+      messageKey: "hunger-state-changed",
+      args: { from: "normal", to: "hungry", nutrition: "1990" },
+    }),
+    "You are now Hungry.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "hunger.fainted",
+      messageKey: "hunger-fainted",
+      args: { duration: "3" },
+    }),
+    "Hunger makes you faint for 3 ticks.",
+  );
+  assert.equal(
+    formatter.formatEvent({
+      kind: "hunger.starvation-damage",
+      messageKey: "hunger-starvation-damage",
+      args: { damage: "7" },
+    }),
+    "Starvation deals 7 damage.",
+  );
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",
@@ -71,6 +144,28 @@ test("damage event formatting preserves typed resistance outcomes", () => {
     formatter.formatEvent(event),
     "你击中了回声猎犬，造成 7 点火焰伤害（抵抗了 3 点）。",
   );
+  localization.setLocale("en-US");
+});
+
+test("Warrens transitions name the Outpost and stairs without legacy Echo text", () => {
+  state.currentWorldId = "demo.world.warrens-journey";
+  const event = {
+    kind: "floor.transition",
+    messageKey: "floor-transition",
+    args: {
+      from: "demo.floor.surface",
+      to: "demo.floor.warrens-depth-1",
+    },
+  };
+
+  assert.equal(
+    formatter.formatEvent(event),
+    "You leave Outpost and enter Warrens.",
+  );
+  assert.equal(formatter.contentName("demo.terrain.stairs-down"), "descending stairs");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你离开了前哨站，进入兽穴。");
+  assert.equal(formatter.contentName("demo.terrain.stairs-up"), "向上楼梯");
   localization.setLocale("en-US");
 });
 

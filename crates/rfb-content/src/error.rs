@@ -69,6 +69,8 @@ pub enum ContentError {
     InvalidActorLootTable(String),
     #[error("item stack limit is outside supported limits: {0}")]
     InvalidItemStack(String),
+    #[error("item base value is outside supported limits: {0}")]
+    InvalidItemValue(String),
     #[error("item weight is outside supported limits: {0}")]
     InvalidItemWeight(String),
     #[error("item appearance must use a distinct valid message key: {0}")]
@@ -91,6 +93,8 @@ pub enum ContentError {
     InvalidThrowProfile(String),
     #[error("item use action is invalid: {0}")]
     InvalidItemUseAction(String),
+    #[error("item fuel definition is invalid: {0}")]
+    InvalidItemFuel(String),
     #[error("effect program definition is invalid: {0}")]
     InvalidEffectProgram(String),
     #[error("ability program definition is invalid: {0}")]
@@ -139,6 +143,10 @@ pub enum ContentError {
     InvalidTerrainFeatureTable(String),
     #[error("vault terrain, encounters, or loot definition is invalid: {0}")]
     InvalidVault(String),
+    #[error("town definition or ownership is invalid: {0}")]
+    InvalidTown(String),
+    #[error("shop definition or entrance is invalid: {0}")]
+    InvalidShop(String),
     #[error("world dimensions are outside supported limits: {0}")]
     InvalidWorldDimensions(String),
     #[error("procedural floor definition is invalid: {0}")]

@@ -456,6 +456,7 @@ fn revelation_scroll_fully_identifies_affixes_and_round_trips() {
         curse: None,
         activation: None,
         charges: None,
+        fuel: None,
         device_recovery_progress: 0,
         location: ItemLocation::Inventory,
     });
@@ -2937,6 +2938,7 @@ fn item_summon_zero_candidate_and_zero_space_consume_without_awareness_or_rng() 
             curse: None,
             activation: None,
             charges: None,
+            fuel: None,
             device_recovery_progress: 0,
             location: ItemLocation::Ground(position),
         });

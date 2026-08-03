@@ -6,12 +6,13 @@ use rfb_core::{CoreError, Game};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
     CharacterSummary, EntityFactionDto, EquipmentItemDto, GameCommand, GameCommandEnvelope,
-    GameEventDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
-    ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
-    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
-    PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
-    ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, StatusDto, StatusSaveDto,
-    SummonCommandDto, SummonSaveDto, TaskStatusDto, TerrainInteractionDto,
+    GameEventDto, GoldPileDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto,
+    ItemChargesDto, ItemCurseSeverityDto, ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto,
+    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
+    PROTOCOL_VERSION, PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto,
+    ResourcePoolDto, ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
+    StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
+    TerrainInteractionDto, TownDto,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -20,7 +21,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
-pub const ACTIVE_BASELINE: &str = "contract-v153";
+pub const ACTIVE_BASELINE: &str = "contract-v161";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -165,6 +166,8 @@ pub struct InventoryItemPrecondition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
@@ -257,6 +260,10 @@ pub struct FinalStateAssertion {
     pub floor_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub town: Option<TownDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shops: Vec<ShopDto>,
     pub player_position: Position,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
@@ -274,6 +281,10 @@ pub struct FinalStateAssertion {
     pub player_carried_weight_tenths_pound: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_carry_capacity_tenths_pound: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player_gold: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player_nutrition: Option<u16>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_statuses: Vec<StatusDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -305,6 +316,8 @@ pub struct FinalStateAssertion {
     pub entities: Vec<ActorStateAssertion>,
     #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub ground_item_count: usize,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub gold_piles: Vec<GoldPileDto>,
     #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub inventory_stack_count: usize,
     #[serde(default, skip_serializing_if = "is_zero_usize")]
@@ -319,6 +332,8 @@ pub struct FinalStateAssertion {
     pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_item_instance_serial: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_gold_pile_serial: Option<u64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -483,6 +498,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             rolled_affixes: Vec::new(),
             activation: item.activation.clone(),
             charges: item.charges,
+            fuel: item.fuel,
             enchantments: item.enchantments,
             curse: item.curse,
             device_recovery_progress: item.device_recovery_progress,
@@ -628,6 +644,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             rng_draw_counter: game.rng_draw_counter(),
             floor_id: snapshot.floor_id.clone(),
             dungeon_instance_id: snapshot.dungeon_instance_id.clone(),
+            town: snapshot.town.clone(),
+            shops: snapshot.shops.clone(),
             player_position: snapshot.player.position,
             player_hp: Some(snapshot.player.hp),
             player_max_hp: Some(snapshot.player.max_hp),
@@ -637,6 +655,8 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             player_energy_need: Some(snapshot.player.energy_need),
             player_carried_weight_tenths_pound: Some(snapshot.player.carried_weight_tenths_pound),
             player_carry_capacity_tenths_pound: Some(snapshot.player.carry_capacity_tenths_pound),
+            player_gold: Some(snapshot.player.gold),
+            player_nutrition: Some(snapshot.player.nutrition),
             player_statuses: snapshot.player.statuses.clone(),
             player_resistances: snapshot.player.resistances.clone(),
             player_level: Some(snapshot.player.progress.level),
@@ -676,6 +696,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                 })
                 .collect(),
             ground_item_count: snapshot.items.len(),
+            gold_piles: snapshot.gold_piles,
             inventory_stack_count: snapshot.inventory.len(),
             equipment_count: snapshot.equipment.len(),
             inventory: snapshot.inventory,
@@ -683,6 +704,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             item_knowledge: save.item_knowledge,
             item_property_knowledge: save.item_property_knowledge,
             next_item_instance_serial: Some(save.next_item_instance_serial),
+            next_gold_pile_serial: Some(save.next_gold_pile_serial),
             terrain_interactions: snapshot.terrain_interactions,
             tasks: snapshot.tasks,
             campaign: Some(snapshot.campaign),

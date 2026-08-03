@@ -7,28 +7,45 @@ use crate::{
     error::CoreError,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
-        Actor, FloorConnectionState, FloorRegionState, FloorState, ItemInstance, ItemLocation,
-        MonsterPackIdentity, RolledAffixState, SummonIdentity,
+        Actor, FloorConnectionState, FloorRegionState, FloorState, GoldPile, ItemInstance,
+        ItemLocation, MonsterPackIdentity, RolledAffixState, SummonIdentity,
     },
     stats::{CharacterBuildIdentity, CharacterProgress},
 };
 use rfb_content::{
     AbilityTargetModeDefinition, ActorDamageType, ActorResistanceLevel,
     AffixPropertyBundleDefinition, ContentCatalog, ContentPosition, EquipmentBonuses,
-    EquipmentPassive, SlayLevel, SlayTarget, StatModifiers, WeaponBrand,
+    EquipmentPassive, ItemFuelKindDefinition, SlayLevel, SlayTarget, StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
     ActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto, EquipmentItemSaveDto,
-    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto,
-    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemSaveDto,
-    MonsterPackSaveDto, NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto,
-    PlayerSaveDto, Position, ResistanceDto, ResistanceLevelDto, ResistanceSaveDto,
-    RolledAffixSaveDto, SkillProgressSaveDto, SlayDto, SlayLevelDto, SlayTargetDto,
-    StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto, TargetSpecDto, TerrainSaveDto,
-    WeaponBrandDto,
+    EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto, FloorSaveDto, GoldPileDto,
+    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemEnchantmentsDto, ItemFuelDto,
+    ItemFuelKindDto, ItemSaveDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
+    PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceDto,
+    ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto, SlayDto,
+    SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto,
+    TargetSpecDto, TerrainSaveDto, WeaponBrandDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
+
+pub(crate) fn initial_item_fuel(content: &ContentCatalog, kind_id: &str) -> Option<ItemFuelDto> {
+    content.item(kind_id).and_then(item_fuel_from_definition)
+}
+
+fn item_fuel_from_definition(definition: &rfb_content::ItemDefinition) -> Option<ItemFuelDto> {
+    definition.fuel.map(|fuel| ItemFuelDto {
+        kind: match fuel.kind {
+            ItemFuelKindDefinition::Torch => ItemFuelKindDto::Torch,
+            ItemFuelKindDefinition::Lantern => ItemFuelKindDto::Lantern,
+            ItemFuelKindDefinition::Oil => ItemFuelKindDto::Oil,
+        },
+        current: fuel.initial,
+        maximum: fuel.maximum,
+        light_radius: fuel.light_radius,
+    })
+}
 
 pub(crate) fn actor_from_spawn(
     id: &str,
@@ -202,10 +219,12 @@ pub(crate) fn item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
         item.activation.as_ref(),
         item.charges,
+        fuel,
         item.device_recovery_progress,
         item.enchantments,
     )?;
@@ -221,6 +240,7 @@ pub(crate) fn item_from_dto(
         curse: item.curse,
         activation: item.activation,
         charges: item.charges,
+        fuel,
         device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::Ground(item.position),
     })
@@ -233,10 +253,12 @@ pub(crate) fn inventory_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
         item.activation.as_ref(),
         item.charges,
+        fuel,
         item.device_recovery_progress,
         item.enchantments,
     )?;
@@ -252,6 +274,7 @@ pub(crate) fn inventory_item_from_dto(
         curse: item.curse,
         activation: item.activation,
         charges: item.charges,
+        fuel,
         device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::Inventory,
     })
@@ -269,10 +292,12 @@ pub(crate) fn equipment_item_from_dto(
     if definition.equipment_slot.is_none() {
         return Err(CoreError::InvalidSave("equipment metadata is invalid"));
     }
+    let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
         item.activation.as_ref(),
         item.charges,
+        fuel,
         item.device_recovery_progress,
         item.enchantments,
     )?;
@@ -288,6 +313,7 @@ pub(crate) fn equipment_item_from_dto(
         curse: item.curse,
         activation: item.activation,
         charges: item.charges,
+        fuel,
         device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
@@ -302,10 +328,12 @@ pub(crate) fn carried_item_from_dto(
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+    let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
         item.activation.as_ref(),
         item.charges,
+        fuel,
         item.device_recovery_progress,
         item.enchantments,
     )?;
@@ -321,6 +349,7 @@ pub(crate) fn carried_item_from_dto(
         curse: item.curse,
         activation: item.activation,
         charges: item.charges,
+        fuel,
         device_recovery_progress: item.device_recovery_progress,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
@@ -332,6 +361,7 @@ fn validate_item_runtime_state(
     definition: &rfb_content::ItemDefinition,
     activation: Option<&ItemActivationDto>,
     charges: Option<ItemChargesDto>,
+    fuel: Option<ItemFuelDto>,
     device_recovery_progress: u16,
     enchantments: ItemEnchantmentsDto,
 ) -> Result<(), CoreError> {
@@ -401,7 +431,17 @@ fn validate_item_runtime_state(
     if enchantments.to_hit > 15 || enchantments.to_damage > 15 || enchantments.to_armor > 15 {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
     }
-    if valid && valid_recovery_progress {
+    let valid_fuel = match (item_fuel_from_definition(definition), fuel) {
+        (None, None) => true,
+        (Some(expected), Some(actual)) => {
+            actual.kind == expected.kind
+                && actual.maximum == expected.maximum
+                && actual.light_radius == expected.light_radius
+                && actual.current <= actual.maximum
+        }
+        _ => false,
+    };
+    if valid && valid_recovery_progress && valid_fuel {
         Ok(())
     } else {
         Err(CoreError::InvalidSave("item charge state is invalid"))
@@ -418,6 +458,8 @@ pub(crate) fn player_to_save(
         kind_id: player.kind_id.clone(),
         position: player.position,
         hp: player.hp,
+        gold: 0,
+        nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
         base_max_hp: player.max_hp,
         base_speed: player.speed,
         energy_need: player.energy_need,
@@ -1066,6 +1108,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 curse: item.curse,
                 activation: item.activation.clone(),
                 charges: item.charges,
+                fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
             })
         })
@@ -1092,6 +1135,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 curse: item.curse,
                 activation: item.activation.clone(),
                 charges: item.charges,
+                fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
             })
         })
@@ -1119,6 +1163,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 curse: item.curse,
                 activation: item.activation.clone(),
                 charges: item.charges,
+                fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
             })
         })
@@ -1150,6 +1195,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 curse: item.curse,
                 activation: item.activation.clone(),
                 charges: item.charges,
+                fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
             })
         })
@@ -1174,6 +1220,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
+        gold_piles: gold_piles_to_save(&floor.gold_piles),
         carried_items: carried_items_to_save(&floor.items),
         explored: floor.explored.clone(),
         revealed_terrain: floor.revealed_terrain.iter().copied().collect(),
@@ -1227,11 +1274,38 @@ pub(crate) fn floor_from_save(
         player_position: floor.player_position,
         entities,
         items,
+        gold_piles: gold_piles_from_save(floor.gold_piles),
         explored: floor.explored,
         revealed_terrain,
         connections,
         regions,
     })
+}
+
+pub(crate) fn gold_piles_to_save(piles: &[GoldPile]) -> Vec<GoldPileDto> {
+    let mut piles = piles
+        .iter()
+        .map(|pile| GoldPileDto {
+            id: pile.id.clone(),
+            position: pile.position,
+            amount: pile.amount,
+            appearance: pile.appearance,
+        })
+        .collect::<Vec<_>>();
+    piles.sort_by(|left, right| left.id.cmp(&right.id));
+    piles
+}
+
+pub(crate) fn gold_piles_from_save(piles: Vec<GoldPileDto>) -> Vec<GoldPile> {
+    piles
+        .into_iter()
+        .map(|pile| GoldPile {
+            id: pile.id,
+            position: pile.position,
+            amount: pile.amount,
+            appearance: pile.appearance,
+        })
+        .collect()
 }
 
 pub(crate) fn floor_regions_to_save(regions: &[FloorRegionState]) -> Vec<FloorRegionSaveDto> {
