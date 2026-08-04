@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v171`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v172`，共 462 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 fixture 使用受控的主分类。日常开发只验证或刷新受影响分类；普通 `cargo test -p rfb-contract` 只做快速的 schema、分类、ID 唯一性和契约单元测试，不回放全部场景：
 
@@ -461,6 +461,8 @@ Phase 19 装备与背包扩展 / contract-v169 将正式原版物品选择扩至
 contract-v170 将负重改为按有效力量使用 RFB 原版 38 档表动态计算，装备与背包物品共同计重。超重不再拒绝拾取、购买或从 Home 取出；达到容量 120% 后，每额外 20% 施加 1 点速度惩罚。协议 1.136、demo 1.164.0、Schema 保持 v61、active baseline 为 462 条 exact fixtures、零 waiver，content hash 为 `59d9801214e8f62544b9ffa96a0d56cdfd790d248ec04c90a94246a8089eaf8f`。详见 [Contract v170](design/contract-v170-strength-encumbrance.md)。
 
 contract-v171 按固定 RFB 原版来源扩充 Warrens 普通生态：接入 Newt、Rock Lizard、Fruit Bat、Wild Cat、Kobold、Cave Lizard、Large Kobold、Rat-thing、Night Lizard、Hunting Hawk of Julian 与 Chiokovo，并校正 Small Kobold、Mughash 和 Warg 的原版等级、HP、攻击与抗性边界。静态表按 `100 / rarity` 和怪物等级分层；Warg 不再常驻普通 Warrens，Giant White Mouse 等待繁殖/随机移动后再启用。协议与 Schema 不变，demo 升至 1.165.0，active baseline 保持 462 条 exact fixtures，content hash 为 `ab54279248422c2d39dc6e91b8827f6be1f15c4d9ab4c79ee60707e766abbb52`。全局分配、越级、群体、Unique、移动域与特殊怪物能力已拆入 [Warrens 怪物机制清单](design/warrens-monster-mechanism-backlog.md)。详见 [Contract v171](design/contract-v171-warrens-ecology.md)。
+
+contract-v172 将玩家施法参数改为 Ability Program 之外的可选 `player` 策略：能力默认不绑定，但不会被永久划分为怪物专属；能力书、职业先天技以及未来种族或怪物模式实际引用时才要求玩家策略。demo 保留当前玩家可获得能力的 48 个绑定，删除 21 个占位绑定；导入器同样从书本和职业先天列表派生绑定。存档与回放继续独立精确匹配 `contentId/contentHash`，历史 hash 兼容表已删除；`contentHash` 不再进入 state hash，Schema 升至 v62。协议保持 1.136，demo 升至 1.166.0，content hash 为 `eb6dded2ca73a46535357886d44561040ca571387353feaeefa6873b0afeb7c0`。详见 [Contract v172](design/contract-v172-optional-player-abilities-state-hash.md)。
 
 ### 本地验证
 

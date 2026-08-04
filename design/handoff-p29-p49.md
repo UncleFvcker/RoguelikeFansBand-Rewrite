@@ -33,7 +33,7 @@
 
 ## 2. 铁律约定（违反必炸）
 
-1. **每迭代五件套**：`PROTOCOL_VERSION`、state hash `STATE_HASH_SCHEMA_VERSION`（改 hash 输入结构才 bump）、`pack.json` 版本、`content.lock.json`、`BUILT_IN_CONTENT_HASH`（旧 hash 追加进 `PREVIOUS_BUILT_IN_CONTENT_HASHES` 数组）。内容结构体加字段（即使 serde default）会改内容 hash——lock 不匹配时 rfb-core build.rs 直接 panic，**必须先走五件套再编核心**。内容 hash 用 `rfb-contentc inspect-source` 取新值手写 lock。
+1. **版本与 hash 边界**：协议 DTO 变化才更新 `PROTOCOL_VERSION`；state hash 输入结构变化才更新 `STATE_HASH_SCHEMA_VERSION`；内容变化更新 `pack.json` 与 `content.lock.json`。不再维护硬编码内置 hash 或历史 hash 兼容表。存档与回放必须独立精确匹配当前 `contentId/contentHash`，而 `contentHash` 不进入 state hash。内容 hash 使用 `rfb-contentc inspect-source` 计算并写入 lock。
 2. **fixture active-only**：不再创建或迁移全量版本目录。新 contract 只更新逻辑版本、active policy、新增场景和真正变化的 assertions；新场景 `refresh` 录制前要塞完整占位 assertions 才能解析，录制后人工审阅。`active/waivers/` 只保留 `.gitkeep`，出现任何 waiver 条目均使 policy 验证失败。
 3. **显示状态**（镜头/缩放/tileset/语言/准星）永不进存档/回放/state hash。
 4. **E2E**（web/e2e/tauri.e2e.mjs）只在 CI Windows job 跑，本地验证套件不含它；覆盖桌面启动、渲染、存档、语言切换和交互工作流，不再把内容字形总数当作行为契约。本地 `cd web && npm run e2e` 约 35s。

@@ -6,7 +6,17 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.165.0");
+    assert_eq!(catalog.pack_version(), "1.166.0");
+    assert!(
+        catalog
+            .ability("demo.ability.warrens-scare")
+            .is_some_and(|ability| ability.player.is_none())
+    );
+    assert!(
+        catalog
+            .ability("demo.ability.mending-echo")
+            .is_some_and(|ability| ability.player.is_some())
+    );
     assert_eq!(
         catalog
             .town("demo.town.outpost")

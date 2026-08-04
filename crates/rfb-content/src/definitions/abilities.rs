@@ -627,6 +627,20 @@ pub(crate) fn valid_ability_level_scaling(
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlayerAbilityDefinition {
+    pub minimum_level: u16,
+    pub resource_id: String,
+    pub resource_cost: u32,
+    pub base_failure_percent: u8,
+    #[serde(default)]
+    pub proficiency: AbilityProficiencyDefinition,
+    #[serde(default)]
+    pub cooldown: Option<AbilityCooldownDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AbilityDefinition {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -634,18 +648,12 @@ pub struct AbilityDefinition {
     pub id: String,
     pub name_key: String,
     pub description_key: String,
-    pub minimum_level: u16,
-    pub resource_id: String,
-    pub resource_cost: u32,
-    pub base_failure_percent: u8,
     pub target: AbilityTargetDefinition,
     pub effect: AbilityEffectDefinition,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
-    #[serde(default)]
-    pub proficiency: AbilityProficiencyDefinition,
-    #[serde(default)]
-    pub cooldown: Option<AbilityCooldownDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player: Option<PlayerAbilityDefinition>,
     pub tags: Vec<String>,
 }
 

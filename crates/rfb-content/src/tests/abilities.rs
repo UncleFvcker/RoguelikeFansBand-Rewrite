@@ -280,7 +280,14 @@ fn ability_books_require_consistent_resources_items_and_casting_profiles() {
     ));
 
     let mut invalid_proficiency = artifact.content.clone();
-    invalid_proficiency.abilities[0].proficiency.cap = 1_601;
+    invalid_proficiency
+        .abilities
+        .iter_mut()
+        .find(|ability| ability.id == "demo.ability.mending-echo")
+        .and_then(|ability| ability.player.as_mut())
+        .expect("fixture healing ability should have player parameters")
+        .proficiency
+        .cap = 1_601;
     assert!(matches!(
         validate_and_normalize(&mut invalid_proficiency),
         Err(ContentError::InvalidAbility(_))
@@ -292,6 +299,9 @@ fn ability_books_require_consistent_resources_items_and_casting_profiles() {
         .iter_mut()
         .find(|ability| ability.id == "demo.ability.mending-echo")
         .expect("fixture should contain the healing ability")
+        .player
+        .as_mut()
+        .expect("healing ability should have player parameters")
         .cooldown
         .as_mut()
         .expect("healing ability should declare a cooldown")
@@ -302,7 +312,13 @@ fn ability_books_require_consistent_resources_items_and_casting_profiles() {
     ));
 
     let mut dangling_resource = artifact.content.clone();
-    dangling_resource.abilities[0].resource_id = "demo.resource.missing".to_owned();
+    dangling_resource
+        .abilities
+        .iter_mut()
+        .find(|ability| ability.id == "demo.ability.mending-echo")
+        .and_then(|ability| ability.player.as_mut())
+        .expect("fixture healing ability should have player parameters")
+        .resource_id = "demo.resource.missing".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut dangling_resource),
         Err(ContentError::DanglingReference { .. })

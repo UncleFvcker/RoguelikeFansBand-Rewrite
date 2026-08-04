@@ -240,50 +240,13 @@ fn starvation_damage_precedes_recovery_and_can_kill() {
 }
 
 #[test]
-fn nutrition_round_trips_and_v157_missing_field_migrates_without_side_effects() {
+fn nutrition_round_trips() {
     let mut game = Game::new_warrens_journey_with_build(17, RFB_WARRIOR_BUILD_ID)
         .expect("Warrens Warrior should create");
     game.nutrition = 321;
     let restored = Game::from_save(game.to_save()).expect("nutrition should round trip");
     assert_eq!(restored.nutrition, 321);
     assert_eq!(restored.state_hash(), game.state_hash());
-
-    let mut payload = game.to_save();
-    payload.content_hash =
-        "70f21e8d8f28a2102a8b28e5c6cabf83137afb4532e5c2868d10fb7c1e5e5012".to_owned();
-    payload.items.retain(|item| item.kind_id != RATION_KIND_ID);
-    payload
-        .inventory
-        .retain(|item| item.kind_id != RATION_KIND_ID);
-    payload
-        .equipment
-        .retain(|item| item.kind_id != RATION_KIND_ID);
-    payload
-        .carried_items
-        .retain(|item| item.kind_id != RATION_KIND_ID);
-    let revision_before = payload.revision;
-    let turn_before = payload.turn;
-    let tick_before = payload.world_tick;
-    let draws_before = payload.rng.draw_counter;
-    let mut json = serde_json::to_value(payload).expect("save should encode as JSON");
-    json["player"]
-        .as_object_mut()
-        .expect("player save should be an object")
-        .remove("nutrition");
-    let legacy: SavePayloadV1 = serde_json::from_value(json).expect("legacy save should decode");
-
-    let migrated = Game::from_save(legacy).expect("v157 save should migrate nutrition");
-    assert_eq!(migrated.nutrition, rfb_protocol::PLAYER_NUTRITION_BIRTH);
-    assert!(
-        migrated
-            .items
-            .iter()
-            .all(|item| item.kind_id != RATION_KIND_ID)
-    );
-    assert_eq!(migrated.revision, revision_before);
-    assert_eq!(migrated.turn, turn_before);
-    assert_eq!(migrated.world_tick, tick_before);
-    assert_eq!(migrated.rng.draw_counter, draws_before);
 }
 
 #[test]

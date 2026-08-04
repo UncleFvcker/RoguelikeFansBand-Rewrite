@@ -80,11 +80,12 @@ impl Game {
         {
             Self::apply_casting_profile_effect_scaling(profile, &mut ability, self.progress.level);
         }
+        let player = Self::player_ability_parameters(&ability).clone();
         // Innate technique abilities skip the study/book pipeline: they are
         // granted by the class technique profile and only gate on level,
         // cooldown, and resource availability.
         let unavailable_reason = if technique_profile.is_some() {
-            if self.progress.level < ability.minimum_level {
+            if self.progress.level < player.minimum_level {
                 Some("level-too-low")
             } else if self.ability_cooldown_remaining(&ability) > 0 {
                 Some("cooldown")
@@ -97,7 +98,7 @@ impl Game {
                 .expect("casting profile must exist for non-technique abilities");
             if !self.learned_abilities.contains(ability_id) {
                 Some("not-learned")
-            } else if self.progress.level < ability.minimum_level {
+            } else if self.progress.level < player.minimum_level {
                 Some("level-too-low")
             } else if !self.profile_supports_ability(profile, ability_id) {
                 Some("ability-not-supported")
@@ -143,7 +144,7 @@ impl Game {
                 ),
             }
         };
-        let Some(pool) = self.resources.get_mut(&ability.resource_id) else {
+        let Some(pool) = self.resources.get_mut(&player.resource_id) else {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "resource-unavailable".to_owned(),
@@ -160,15 +161,15 @@ impl Game {
         let resource_before = pool.current;
         pool.current -= resource_cost;
         let resource_after = pool.current;
-        self.resources_touched.insert(ability.resource_id.clone());
+        self.resources_touched.insert(player.resource_id.clone());
         let percentile_roll =
             u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
         let succeeded = percentile_roll >= failure_percent;
         let progress_after = self.record_ability_cast(&ability, succeeded);
         let resolution = AbilityCastResolutionDto {
             ability_id: ability.id.clone(),
-            resource_id: ability.resource_id.clone(),
-            base_resource_cost: ability.resource_cost,
+            resource_id: player.resource_id.clone(),
+            base_resource_cost: player.resource_cost,
             resource_cost,
             resource_before,
             resource_after,

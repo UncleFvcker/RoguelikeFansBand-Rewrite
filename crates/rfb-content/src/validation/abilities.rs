@@ -644,25 +644,28 @@ pub(super) fn validate_abilities(
         };
         let directional_target = !directional_effect
             || ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction];
-        if !(1..=100).contains(&ability.minimum_level)
-            || !(1..=1_000_000).contains(&ability.resource_cost)
-            || ability.base_failure_percent > 95
-            || ability.proficiency.initial > ability.proficiency.cap
-            || ability.proficiency.cap > 1600
-            || ability
-                .proficiency
-                .success_gain
-                .saturating_add(ability.proficiency.failure_gain)
-                > 10_000
-            || ability
-                .cooldown
-                .as_ref()
-                .is_some_and(|cooldown| cooldown.turns == 0)
-            || ability
-                .cooldown
-                .as_ref()
-                .and_then(|cooldown| cooldown.group_id.as_deref())
-                .is_some_and(|group_id| validate_id(group_id).is_err())
+        let valid_player = ability.player.as_ref().is_none_or(|player| {
+            (1..=100).contains(&player.minimum_level)
+                && (1..=1_000_000).contains(&player.resource_cost)
+                && player.base_failure_percent <= 95
+                && player.proficiency.initial <= player.proficiency.cap
+                && player.proficiency.cap <= 1600
+                && player
+                    .proficiency
+                    .success_gain
+                    .saturating_add(player.proficiency.failure_gain)
+                    <= 10_000
+                && player
+                    .cooldown
+                    .as_ref()
+                    .is_none_or(|cooldown| cooldown.turns > 0)
+                && player
+                    .cooldown
+                    .as_ref()
+                    .and_then(|cooldown| cooldown.group_id.as_deref())
+                    .is_none_or(|group_id| validate_id(group_id).is_ok())
+        });
+        if !valid_player
             || ability.target.modes.is_empty()
             || ability.target.modes.len() > 5
             || ability.target.modes.iter().any(|mode| !modes.insert(*mode))
@@ -673,7 +676,9 @@ pub(super) fn validate_abilities(
         {
             return Err(ContentError::InvalidAbility(ability.id.clone()));
         }
-        require_reference(&resource_ids, &ability.resource_id, &ability.id)?;
+        if let Some(player) = &ability.player {
+            require_reference(&resource_ids, &player.resource_id, &ability.id)?;
+        }
         let referenced_effects = match &ability.effect {
             AbilityEffectDefinition::RandomChoice { branches, .. } => branches
                 .iter()
@@ -721,7 +726,9 @@ pub(super) fn validate_abilities(
         }
         normalize_tags(&ability.id, &mut ability.tags)?;
         insert_definition_id(all_ids, &ability.id)?;
-        ability_resources.insert(ability.id.clone(), ability.resource_id.clone());
+        if let Some(player) = &ability.player {
+            ability_resources.insert(ability.id.clone(), player.resource_id.clone());
+        }
         ability_ids.insert(ability.id.clone());
     }
     for (actor_id, casting) in actor_monster_casting {

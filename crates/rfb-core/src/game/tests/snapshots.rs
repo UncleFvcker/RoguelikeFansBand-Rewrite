@@ -4,7 +4,9 @@ use super::*;
 
 #[test]
 fn built_in_game_is_created_from_the_compiled_content_pack() {
-    let snapshot = Game::new(42).snapshot();
+    let game = Game::new(42);
+    let expected_content_hash = game.content_hash().to_owned();
+    let snapshot = game.snapshot();
     let shard = snapshot
         .items
         .iter()
@@ -12,7 +14,7 @@ fn built_in_game_is_created_from_the_compiled_content_pack() {
         .expect("compiled world should spawn its item");
 
     assert_eq!(snapshot.content_id, "rfb.demo.original-v1");
-    assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
+    assert_eq!(snapshot.content_hash, expected_content_hash);
     assert_eq!(snapshot.world_id, BUILT_IN_WORLD_ID);
     assert_eq!(
         snapshot.player.melee_damage.damage_type,

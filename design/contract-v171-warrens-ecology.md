@@ -1,6 +1,6 @@
 # Contract v171: Warrens Ecology
 
-Status: active baseline. Protocol `1.136`, demo pack `1.165.0`, save v1,
+Status: historical baseline. Protocol `1.136`, demo pack `1.165.0`, save v1,
 state hash Schema v61. This is a content-only milestone; it adds no old-save
 compatibility path.
 

@@ -4,6 +4,8 @@
 
 本文件只记录已经在现有设计或原版对比中明确出现、但尚未实现的内容。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)，这里用于跟踪可以实际排入后续 contract 的缺口。
 
+contract-v172 已把玩家施法策略从通用 Ability Program 中改为按需选配。当前由能力书或职业先天列表引用的能力必须拥有 `player` 策略；其他能力默认无绑定，但未来种族或怪物模式要授予玩家时可直接补充策略。存档与回放继续独立精确匹配内容，state hash 不再包含 `contentHash`，后续纯内容 hash 更新不需要全量刷新 fixture。
+
 contract-v171 已按固定原版来源完成 Warrens 怪物生成审计。全局分配池与 `MONSTER_DIV_16`、两阶段越级、leader-first 群体、`XdY` 朋友数量、Unique/Mughash escort、繁殖与随机移动、门交互、飞行/游泳、随机 HP、特殊近战、怪物光源、地形/物品破坏、完整掉落和 Pest Control Warg 均已拆为可逐项实施的验收边界，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md)。优先顺序为 W1–W6 的 Warrens 生成真实性，再推进 W7–W13 公共怪物能力；W14 随 Outpost 任务线实施。
 
 ## 当前推进顺序

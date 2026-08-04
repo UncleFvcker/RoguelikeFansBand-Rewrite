@@ -203,62 +203,6 @@ fn carried_item_save_rejects_a_missing_monster_owner() {
 }
 
 #[test]
-fn previous_built_in_content_hash_migrates_without_spawning_new_items() {
-    for previous_hash in PREVIOUS_BUILT_IN_CONTENT_HASHES {
-        let mut payload = Game::new(42).to_save();
-        payload.content_hash = previous_hash.to_owned();
-        payload.carried_items.clear();
-        payload.items.retain(|item| {
-            item.kind_id != "demo.item.echo-charm"
-                && item.kind_id != "demo.item.echo-blade"
-                && item.kind_id != "demo.item.resonance-sling"
-                && item.kind_id != "demo.item.resonance-pellet"
-        });
-
-        let restored = Game::from_save(payload).expect("known previous content should migrate");
-        let snapshot = restored.snapshot();
-        assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
-        assert_eq!(snapshot.items.len(), 1);
-        assert!(snapshot.items.iter().all(|item| {
-            item.kind_id != "demo.item.echo-charm"
-                && item.kind_id != "demo.item.echo-blade"
-                && item.kind_id != "demo.item.resonance-sling"
-                && item.kind_id != "demo.item.resonance-pellet"
-        }));
-    }
-}
-
-#[test]
-fn previous_task_state_set_adds_new_tasks_as_available() {
-    let mut current_payload = Game::new(42).to_save();
-    current_payload
-        .task_states
-        .retain(|state| state.task_id != "demo.task.echo-chain");
-    assert!(matches!(
-        Game::from_save(current_payload),
-        Err(CoreError::InvalidSave("task state set is incomplete"))
-    ));
-
-    let mut payload = Game::new(42).to_save();
-    payload.content_hash =
-        "b37398cb9d005302c958a9e300d07a435e8631d6a5cd44ba63b0086069577c43".to_owned();
-    payload
-        .task_states
-        .retain(|state| state.task_id != "demo.task.echo-chain");
-
-    let restored = Game::from_save(payload).expect("v44 task state set should migrate");
-    let chain = restored
-        .snapshot()
-        .tasks
-        .into_iter()
-        .find(|task| task.task_id == "demo.task.echo-chain")
-        .expect("new staged task should be added during migration");
-    assert_eq!(chain.status, TaskStatusKindDto::Available);
-    assert_eq!((chain.stage, chain.stages), (1, 3));
-    assert_eq!((chain.current, chain.required), (0, 1));
-}
-
-#[test]
 fn paused_task_can_be_abandoned_from_the_surface() {
     let mut game = Game::new(27);
     let entry = Position { x: 4, y: 4 };
@@ -378,44 +322,7 @@ fn regenerated_retake_preserves_progress_and_enforces_the_limit() {
 }
 
 #[test]
-fn v60_task_state_defaults_to_zero_retakes_without_rng_drift() {
-    let mut payload = Game::new(27).to_save();
-    payload.content_hash =
-        "9789fcbbd8431ed745d8a0305cc81a54cc7e45ce79be86ed76e0227d66564a02".to_owned();
-    let saved_draws = payload.rng.draw_counter;
-    let restored = Game::from_save(payload).expect("v60 task state should migrate");
-
-    assert_eq!(restored.rng.draw_counter, saved_draws);
-    assert!(
-        restored
-            .snapshot()
-            .tasks
-            .iter()
-            .all(|task| task.retakes_used == 0)
-    );
-}
-
-#[test]
-fn dungeon_guardian_state_migrates_and_rejects_entity_mismatch() {
-    let mut old_payload = Game::new(42).to_save();
-    old_payload.content_hash =
-        "0e6cf15310644e7b3eb2f7acb0c18a8b1a7fb08739e981e7492d4079e61ab44a".to_owned();
-    old_payload.dungeon_states.clear();
-    let restored = Game::from_save(old_payload).expect("v45 save should add dungeon state");
-    assert!(!restored.dungeon_states["demo.dungeon.echo-depths"].guardian_defeated);
-    assert!(!restored.dungeon_states["demo.dungeon.resonance-descent"].guardian_defeated);
-
-    let mut v48_payload = Game::new(42).to_save();
-    v48_payload.content_hash =
-        "9c8fc3226c20300a308d21a5da69033efb853169214f4c411e6c740800bdf9ad".to_owned();
-    v48_payload
-        .dungeon_states
-        .retain(|state| state.dungeon_id == "demo.dungeon.echo-depths");
-    let restored =
-        Game::from_save(v48_payload).expect("v48 save should add the pressure dungeon state");
-    assert!(!restored.dungeon_states["demo.dungeon.echo-depths"].guardian_defeated);
-    assert!(!restored.dungeon_states["demo.dungeon.resonance-descent"].guardian_defeated);
-
+fn dungeon_guardian_state_rejects_missing_state_and_entity_mismatch() {
     let mut current_payload = Game::new(42).to_save();
     current_payload
         .dungeon_states

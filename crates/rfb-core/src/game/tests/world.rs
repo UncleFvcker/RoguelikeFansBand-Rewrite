@@ -612,7 +612,7 @@ fn entrance_guardian_holds_position_but_does_not_block_dungeon_entry() {
 }
 
 #[test]
-fn entrance_guardian_defeat_persists_and_v66_migration_does_not_backfill_it() {
+fn entrance_guardian_defeat_persists() {
     let guardian_id = "demo.z-entrance-guardian.resonance-descent.1";
     let mut game = Game::new(42);
     let guardian_index = game
@@ -657,24 +657,6 @@ fn entrance_guardian_defeat_persists_and_v66_migration_does_not_backfill_it() {
             .iter()
             .any(|entity| entity.id == guardian_id)
     );
-
-    let mut v66 = Game::new(42).to_save();
-    v66.content_hash =
-        "834acbe3d025810eb1399db74689d35a4d3dae34862bcbf1271c8d20ad11d9fc".to_owned();
-    v66.entities.retain(|entity| entity.id != guardian_id);
-    for state in &mut v66.dungeon_states {
-        state.entrance_guardian_defeated = None;
-    }
-    let draws = v66.rng.draw_counter;
-    let migrated = Game::from_save(v66).expect("v66 surface should migrate without backfill");
-    assert!(migrated.dungeon_states["demo.dungeon.resonance-descent"].entrance_guardian_defeated);
-    assert!(
-        !migrated
-            .entities
-            .iter()
-            .any(|entity| entity.id == guardian_id)
-    );
-    assert_eq!(migrated.rng.draw_counter, draws);
 }
 
 #[test]
@@ -970,50 +952,6 @@ fn dynamic_connection_targets_form_distinct_branches_and_survive_reload() {
             .iter()
             .all(|connection| connection.target_floor_id.is_none())
     );
-}
-
-#[test]
-fn previous_v57_floor_without_connection_state_uses_legacy_stairs_without_rebuild() {
-    let mut game = Game::new(117);
-    game.player.position = Position { x: 3, y: 4 };
-    game.traverse_stairs(false)
-        .expect("echo dungeon entry should resolve")
-        .expect("echo dungeon entry should transition");
-    let down_a = connection_position(&game, "demo.connection.echo-depth-1.down-a");
-    let surface_up = connection_position(&game, "demo.connection.echo-depth-1.surface-up");
-    let mut payload = game.to_save();
-    for connection in &payload.floor_connections {
-        let index = connection.position.y as usize * usize::from(payload.terrain.width)
-            + connection.position.x as usize;
-        payload.terrain.terrain_ids[index] = if connection.position == down_a {
-            "demo.terrain.stairs-down".to_owned()
-        } else if connection.position == surface_up {
-            "demo.terrain.stairs-up".to_owned()
-        } else {
-            "demo.terrain.floor".to_owned()
-        };
-    }
-    payload.player.position = down_a;
-    payload.floor_connections.clear();
-    payload.content_hash =
-        "d209d68a6a39af21eee8d1a951684be86e847ab570823c9c2604fa199e4571e1".to_owned();
-    let expected_terrain = payload.terrain.clone();
-    let expected_entities = payload.entities.clone();
-    let expected_items = payload.items.clone();
-    let saved_draw_counter = payload.rng.draw_counter;
-
-    let mut restored = Game::from_save(payload).expect("v57 floor should migrate");
-    assert_eq!(restored.to_save().terrain, expected_terrain);
-    assert_eq!(actors_to_save(&restored.entities), expected_entities);
-    assert_eq!(items_to_save(&restored.items), expected_items);
-    assert_eq!(restored.rng.draw_counter, saved_draw_counter);
-    assert!(restored.floor_connections.is_empty());
-
-    restored
-        .traverse_stairs(false)
-        .expect("legacy stairs should resolve")
-        .expect("legacy stairs should transition");
-    assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-2");
 }
 
 #[test]

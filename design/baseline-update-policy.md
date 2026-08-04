@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v171`，机器可读政策固定在：
+当前逻辑基线是 `contract-v172`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -32,7 +32,7 @@ cargo run -p rfb-contract -- refresh-category tests/fixtures/active/baseline-pol
 只有以下变化默认需要全量回放或刷新：
 
 - contract assertion 或公共 protocol 投影字段变化；
-- 所有场景都可观察到的内容 hash 或 state hash 变化；
+- state hash Schema 或所有场景都可观察到的 state hash 输入变化；
 - 公共初始化、RNG、存档往返语义变化；
 - 明确的里程碑验收。
 
@@ -43,6 +43,10 @@ cargo run -p rfb-contract -- verify-all tests/fixtures/active/baseline-policy.js
 cargo run -p rfb-contract -- refresh-all tests/fixtures/active/baseline-policy.json
 cargo test -p rfb-contract --test contract_fixtures committed_contract_fixtures_pass -- --ignored
 ```
+
+`contentHash` 由存档与回放头独立做精确内容匹配，不属于 state hash
+输入。纯内容 hash 更新本身不再要求刷新全部 fixture；只有场景实际观察到的
+内容、初始化状态或行为发生变化时，才刷新对应分类。
 
 工作树只保留这一份 active fixture 集。历史基线由 Git 提交、tag 或 release artifact 保存，不再复制为 `contract-vN` 目录。
 

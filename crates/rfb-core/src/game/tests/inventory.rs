@@ -3,38 +3,6 @@ use super::support::*;
 use super::*;
 
 #[test]
-fn previous_equipment_content_migrates_to_derived_modifiers() {
-    let mut game = Game::new(42);
-    collect_both_demo_items(&mut game);
-    game.dispatch(command(
-        5,
-        4,
-        GameCommand::Equip {
-            item_id: "demo.item.echo-charm.1".to_owned(),
-            slot_id: None,
-        },
-    ))
-    .expect("equip should execute");
-    let mut payload = game.to_save();
-    payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[1].to_owned();
-    payload.carried_items.clear();
-    payload.player.base_max_hp = 0;
-    payload.next_item_instance_serial = 0;
-
-    let restored = Game::from_save(payload).expect("known 1.1 content should migrate");
-    let snapshot = restored.snapshot();
-    assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
-    assert_eq!(snapshot.player.base_max_hp, 10);
-    assert_eq!(snapshot.player.max_hp, 14);
-    assert_eq!(snapshot.player.attack, 4);
-    assert_eq!(snapshot.player.defense, 2);
-    assert_eq!(snapshot.player.equipment_modifiers.attack, 2);
-    assert_eq!(snapshot.player.equipment_modifiers.defense, 1);
-    assert_eq!(snapshot.player.equipment_modifiers.max_hp, 4);
-    assert_eq!(restored.next_item_instance_serial, 1);
-}
-
-#[test]
 fn ring_slots_fill_in_body_order_and_replace_deterministically() {
     let mut game = Game::new(42);
     for ordinal in 1..=3 {

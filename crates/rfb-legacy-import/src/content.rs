@@ -7188,6 +7188,7 @@ struct ExtractedAbilitySources {
 
 fn extract_ability_programs_and_player_bindings(
     ability_files: &mut [(String, serde_json::Value)],
+    player_ability_ids: &BTreeSet<String>,
 ) -> Result<ExtractedAbilitySources, String> {
     let mut programs = BTreeMap::new();
     let mut bindings = BTreeMap::new();
@@ -7242,31 +7243,33 @@ fn extract_ability_programs_and_player_bindings(
             return Err(format!("duplicate ability program for {file_name}"));
         }
 
-        let minimum_level = ability
-            .remove("minimumLevel")
-            .ok_or_else(|| format!("{file_name} player ability has no minimumLevel"))?;
-        let resource_id = ability
-            .remove("resourceId")
-            .ok_or_else(|| format!("{file_name} player ability has no resourceId"))?;
-        let resource_cost = ability
-            .remove("resourceCost")
-            .ok_or_else(|| format!("{file_name} player ability has no resourceCost"))?;
-        let base_failure_percent = ability
-            .remove("baseFailurePercent")
-            .ok_or_else(|| format!("{file_name} player ability has no baseFailurePercent"))?;
+        let minimum_level = ability.remove("minimumLevel");
+        let resource_id = ability.remove("resourceId");
+        let resource_cost = ability.remove("resourceCost");
+        let base_failure_percent = ability.remove("baseFailurePercent");
+        let proficiency = ability.remove("proficiency");
+        let cooldown = ability.remove("cooldown");
+        if !player_ability_ids.contains(&ability_id) {
+            continue;
+        }
         let mut binding = serde_json::json!({
             "$schema": format!("{SCHEMA_BASE}/player-ability-binding.schema.json"),
             "formatVersion": 1,
             "abilityId": ability_id,
-            "minimumLevel": minimum_level,
-            "resourceId": resource_id,
-            "resourceCost": resource_cost,
-            "baseFailurePercent": base_failure_percent,
+            "minimumLevel": minimum_level
+                .ok_or_else(|| format!("{file_name} player ability has no minimumLevel"))?,
+            "resourceId": resource_id
+                .ok_or_else(|| format!("{file_name} player ability has no resourceId"))?,
+            "resourceCost": resource_cost
+                .ok_or_else(|| format!("{file_name} player ability has no resourceCost"))?,
+            "baseFailurePercent": base_failure_percent
+                .ok_or_else(|| format!("{file_name} player ability has no baseFailurePercent"))?,
         });
-        for optional_field in ["proficiency", "cooldown"] {
-            if let Some(value) = ability.remove(optional_field) {
-                binding[optional_field] = value;
-            }
+        if let Some(value) = proficiency {
+            binding["proficiency"] = value;
+        }
+        if let Some(value) = cooldown {
+            binding["cooldown"] = value;
         }
         if bindings.insert(file_name.clone(), binding).is_some() {
             return Err(format!("duplicate player ability binding for {file_name}"));
@@ -7276,6 +7279,37 @@ fn extract_ability_programs_and_player_bindings(
         program_files: programs.into_iter().collect(),
         player_binding_files: bindings.into_iter().collect(),
     })
+}
+
+fn imported_player_ability_ids(
+    ability_book_files: &[(String, serde_json::Value)],
+    class_files: &[(String, serde_json::Value)],
+) -> BTreeSet<String> {
+    let book_abilities = ability_book_files.iter().flat_map(|(_, book)| {
+        book.get("abilityIds")
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(serde_json::Value::as_str)
+            .map(str::to_owned)
+    });
+    let innate_abilities = class_files.iter().flat_map(|(_, class)| {
+        class
+            .get("techniqueProfiles")
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .flat_map(|profile| {
+                profile
+                    .get("innateAbilityIds")
+                    .and_then(serde_json::Value::as_array)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(serde_json::Value::as_str)
+                    .map(str::to_owned)
+            })
+    });
+    book_abilities.chain(innate_abilities).collect()
 }
 
 pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImportError> {
@@ -7398,9 +7432,13 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let mut outcome = convert_content(&terrain, &monsters, &items, &egos, &artifacts, &characters);
     let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
-    let extracted_ability_sources =
-        extract_ability_programs_and_player_bindings(&mut outcome.ability_files)
-            .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
+    let player_ability_ids =
+        imported_player_ability_ids(&outcome.ability_book_files, &outcome.class_files);
+    let extracted_ability_sources = extract_ability_programs_and_player_bindings(
+        &mut outcome.ability_files,
+        &player_ability_ids,
+    )
+    .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
     let ability_program_files = extracted_ability_sources.program_files;
     let player_ability_binding_files = extracted_ability_sources.player_binding_files;
 
@@ -8738,13 +8776,18 @@ W:5:0:0:150:80
                 ),
             ),
         ];
-        let extracted = extract_ability_programs_and_player_bindings(&mut abilities)
-            .expect("ability source policy should extract deterministically");
+        let player_ability_ids = BTreeSet::from([
+            "rfb-legacy.ability.book-spell".to_owned(),
+            "rfb-legacy.ability.innate".to_owned(),
+        ]);
+        let extracted =
+            extract_ability_programs_and_player_bindings(&mut abilities, &player_ability_ids)
+                .expect("ability source policy should extract deterministically");
         let programs = extracted.program_files;
         let bindings = extracted.player_binding_files;
 
         assert_eq!(programs.len(), 3);
-        assert_eq!(bindings.len(), 3);
+        assert_eq!(bindings.len(), 2);
         assert_eq!(
             abilities[0].1["abilityProgramId"],
             "rfb-legacy.ability-program.book-spell"
@@ -8774,15 +8817,7 @@ W:5:0:0:150:80
             .expect("book player binding should be emitted");
         assert_eq!(book_binding["abilityId"], "rfb-legacy.ability.book-spell");
         assert_eq!(book_binding["resourceCost"], 5);
-        let monster_binding = bindings
-            .iter()
-            .find(|(name, _)| name == "monster-only.json")
-            .map(|(_, value)| value)
-            .expect("monster-only casting policy should be emitted");
-        assert_eq!(
-            monster_binding["abilityId"],
-            "rfb-legacy.ability.monster-only"
-        );
+        assert!(bindings.iter().all(|(name, _)| name != "monster-only.json"));
     }
 
     #[test]

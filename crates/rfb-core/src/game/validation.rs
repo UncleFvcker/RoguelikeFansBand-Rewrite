@@ -1024,7 +1024,8 @@ impl Game {
                         && self.learned_abilities.iter().all(|ability_id| {
                             self.content.ability(ability_id).is_some_and(|ability| {
                                 let ability = Self::effective_casting_ability(profile, ability);
-                                ability.minimum_level <= self.progress.level
+                                Self::player_ability_parameters(&ability).minimum_level
+                                    <= self.progress.level
                                     && self.profile_supports_ability(profile, ability_id)
                             })
                         })
@@ -1041,7 +1042,8 @@ impl Game {
                     != expected_ability_ids
                 || self.ability_progress.iter().any(|(ability_id, progress)| {
                     self.content.ability(ability_id).is_none_or(|ability| {
-                        progress.proficiency_cap != ability.proficiency.cap
+                        progress.proficiency_cap
+                            != Self::player_ability_parameters(ability).proficiency.cap
                             || progress.proficiency > progress.proficiency_cap
                             || progress.cooldown_remaining > self.ability_cooldown_turns(ability_id)
                     })
@@ -1234,12 +1236,13 @@ impl Game {
                 .content
                 .ability(&summon.source_ability_id)
                 .cloned()
-                .map(|ability| {
-                    let mut ability = self.casting_profile().map_or_else(
-                        || ability.clone(),
-                        |profile| Self::effective_casting_ability(profile, &ability),
-                    );
-                    Self::apply_player_level_scaling(&mut ability, self.progress.level);
+                .map(|mut ability| {
+                    if summon.owner_id == self.player.id {
+                        if let Some(profile) = self.casting_profile() {
+                            ability = Self::effective_casting_ability(profile, &ability);
+                        }
+                        Self::apply_player_level_scaling(&mut ability, self.progress.level);
+                    }
                     ability
                 })
                 .is_some_and(|ability| match &ability.effect {

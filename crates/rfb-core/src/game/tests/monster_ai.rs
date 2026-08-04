@@ -364,6 +364,39 @@ fn monster_summons_are_hostile_owned_active_and_saveable() {
 }
 
 #[test]
+fn unbound_monster_summon_round_trips_with_player_casting_profile() {
+    let mut game =
+        Game::new_with_build(1, "demo.build.scholar").expect("casting-profile build should create");
+    clear_monsters(&mut game);
+    game.entities.push(game.generated_actor(
+        "test.monster.echo-cantor.1".to_owned(),
+        "demo.actor.echo-cantor",
+        Position { x: 5, y: 3 },
+    ));
+    let ability = game
+        .content
+        .ability("demo.ability.call-discord")
+        .expect("unbound monster summon ability should exist")
+        .clone();
+    assert!(ability.player.is_none());
+    let plan = game
+        .monster_ability_plan(0, ability, 2)
+        .expect("open cells should permit hostile summoning");
+    game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.echo-cantor",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+
+    let restored = Game::from_save(game.to_save())
+        .expect("monster summon should not use the player's casting profile");
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn monster_spells_target_nearby_player_summons_and_score_enemy_footprints() {
     let mut game = Game::new(1);
     clear_monsters(&mut game);

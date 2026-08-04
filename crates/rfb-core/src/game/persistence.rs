@@ -35,13 +35,11 @@ use super::gold::derive_next_gold_pile_serial;
 use super::town::{
     home_state_to_save, restore_home_states, restore_town_and_shop_states, shop_state_to_save,
 };
-use super::validation::floor_connections_are_valid;
 use super::{
-    BUILT_IN_CONTENT_HASH, BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState,
-    ItemPropertyKnowledgeState, PREVIOUS_BUILT_IN_CONTENT_HASHES, STATE_HASH_SCHEMA_VERSION,
-    TaskState, character_skill_progress, dungeon_instance_id, dungeon_instance_storage_key,
-    floor_dungeon_id, floor_task_id, initial_dungeon_states, initial_task_states,
-    load_built_in_content, parse_dungeon_instance_ordinal, resolve_body_slots,
+    BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState, ItemPropertyKnowledgeState,
+    STATE_HASH_SCHEMA_VERSION, TaskState, character_skill_progress, dungeon_instance_id,
+    dungeon_instance_storage_key, floor_dungeon_id, floor_task_id, initial_dungeon_states,
+    initial_task_states, load_built_in_content, parse_dungeon_instance_ordinal, resolve_body_slots,
     resolve_character_build, task_objectives,
 };
 
@@ -482,7 +480,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV41<'a> {
+struct StateHashPayloadV62<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -517,7 +515,6 @@ struct StateHashPayloadV41<'a> {
     floor_regions: Vec<FloorRegionSaveDto>,
     rng: RngSaveDto,
     content_id: &'a str,
-    content_hash: &'a str,
     world_id: &'a str,
     current_floor_id: &'a str,
     current_dungeon_instance_id: Option<&'a str>,
@@ -595,15 +592,10 @@ impl Game {
         if payload.schema_version != SAVE_PAYLOAD_SCHEMA_VERSION {
             return Err(CoreError::UnsupportedSaveVersion(payload.schema_version));
         }
-        if payload.content_id != content.pack_id()
-            || (payload.content_hash != content.content_hash()
-                && !(content.pack_id() == "rfb.demo.original-v1"
-                    && content.content_hash() == BUILT_IN_CONTENT_HASH
-                    && PREVIOUS_BUILT_IN_CONTENT_HASHES.contains(&payload.content_hash.as_str())))
+        if payload.content_id != content.pack_id() || payload.content_hash != content.content_hash()
         {
             return Err(CoreError::ContentMismatch);
         }
-        let migrating_previous_content = payload.content_hash != content.content_hash();
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
@@ -667,8 +659,7 @@ impl Game {
                 "surface or task floor cannot have a dungeon instance ID",
             ));
         }
-        let mut dungeon_states =
-            restore_dungeon_states(world, &payload.dungeon_states, migrating_previous_content)?;
+        let mut dungeon_states = restore_dungeon_states(world, &payload.dungeon_states, false)?;
         let (town_states, shop_states) = restore_town_and_shop_states(
             world,
             &content,
@@ -943,7 +934,7 @@ impl Game {
                 items: &items,
                 legacy_progress: &legacy_task_progress,
                 saved_states: &payload.task_states,
-                allow_missing_states: migrating_previous_content,
+                allow_missing_states: false,
             },
         )?;
         for instance_id in current_dungeon_instance_id.iter().chain(
@@ -1027,63 +1018,6 @@ impl Game {
             game.campaign_state.status = CampaignStatusDto::Victorious;
             game.campaign_state.victory_turn = Some(game.turn);
         }
-        if migrating_previous_content {
-            game.migrate_outpost_surface_layout();
-            let world = game
-                .content
-                .world(&game.world_id)
-                .expect("restored world must remain available")
-                .clone();
-            let entrance_guardian_ids = world
-                .dungeons
-                .iter()
-                .filter_map(|dungeon| {
-                    dungeon
-                        .entrance_guardian
-                        .as_ref()
-                        .filter(|_| {
-                            game.dungeon_states
-                                .get(&dungeon.id)
-                                .is_some_and(|state| state.entrance_guardian_defeated)
-                        })
-                        .map(|guardian| guardian.instance_id.as_str())
-                })
-                .collect::<BTreeSet<_>>();
-            game.entities
-                .retain(|entity| !entrance_guardian_ids.contains(entity.id.as_str()));
-            for floor in game.stored_floors.values_mut() {
-                if floor.id == world.initial_floor_id {
-                    floor
-                        .entities
-                        .retain(|entity| !entrance_guardian_ids.contains(entity.id.as_str()));
-                }
-            }
-            if !floor_connections_are_valid(
-                &game.current_floor_id,
-                game.width,
-                game.height,
-                &game.terrain,
-                &game.floor_connections,
-                &world,
-            ) {
-                game.floor_connections.clear();
-            }
-            for floor in game.stored_floors.values_mut() {
-                if !floor_connections_are_valid(
-                    &floor.id,
-                    floor.width,
-                    floor.height,
-                    &floor.terrain,
-                    &floor.connections,
-                    &world,
-                ) {
-                    floor.connections.clear();
-                }
-            }
-        }
-        if migrating_previous_content && game.recall.is_none() {
-            game.update_recall_destination_for_current_floor();
-        }
         // A victorious/retired v70 save may contain experience banked at the
         // pre-victory cap. Reconcile the newly unlocked cap during load so
         // the authoritative level and HP are not dependent on a later input.
@@ -1155,7 +1089,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV41 {
+        let payload = StateHashPayloadV62 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1204,7 +1138,6 @@ impl Game {
             floor_regions: floor_regions_to_save(&self.floor_regions),
             rng: self.rng.to_save(),
             content_id: self.content.pack_id(),
-            content_hash: self.content.content_hash(),
             world_id: &self.world_id,
             current_floor_id: &self.current_floor_id,
             current_dungeon_instance_id: self.current_dungeon_instance_id.as_deref(),

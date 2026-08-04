@@ -99,35 +99,6 @@ fn pickup_collects_all_gold_before_item_and_gold_has_no_weight() {
 }
 
 #[test]
-fn v156_save_migrates_without_backfilling_gold_or_rng() {
-    let mut game = Game::new_warrens_journey_with_build(17, "demo.build.warrior")
-        .expect("Warrens journey should create");
-    descend_one_floor(&mut game);
-    let mut payload = game.to_save();
-    payload.content_hash =
-        "91ac518116420421305410a9435e002648c5538deba102780ce5e1359d7e33be".to_owned();
-    payload.player.gold = 0;
-    payload.gold_piles.clear();
-    payload.next_gold_pile_serial = 0;
-    for floor in &mut payload.stored_floors {
-        floor.gold_piles.clear();
-    }
-    let draws_before = payload.rng.draw_counter;
-
-    let restored = Game::from_save(payload).expect("v156 save should migrate");
-    assert_eq!(restored.gold, 0);
-    assert!(restored.gold_piles.is_empty());
-    assert!(
-        restored
-            .stored_floors
-            .values()
-            .all(|floor| floor.gold_piles.is_empty())
-    );
-    assert_eq!(restored.next_gold_pile_serial, 1);
-    assert_eq!(restored.rng.draw_counter, draws_before);
-}
-
-#[test]
 fn invalid_gold_state_and_allocator_are_rejected() {
     let game = Game::new(42);
     let position = game.player.position;

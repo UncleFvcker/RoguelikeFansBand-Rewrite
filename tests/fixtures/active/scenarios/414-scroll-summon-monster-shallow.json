@@ -32,13 +32,13 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 10,
+      "rngDrawCounter": 12,
       "floorId": "demo.floor.surface",
       "playerPosition": {
         "x": 3,
         "y": 3
       },
-      "playerHp": 10,
+      "playerHp": 9,
       "playerMaxHp": 10,
       "playerAttack": 2,
       "playerDefense": 1,
@@ -206,8 +206,8 @@
             "x": 2,
             "y": 2
           },
-          "hp": 1,
-          "speed": 110,
+          "hp": 3,
+          "speed": 120,
           "energyNeed": 100
         },
         {
@@ -216,7 +216,7 @@
             "x": 3,
             "y": 2
           },
-          "hp": 1,
+          "hp": 3,
           "speed": 110,
           "energyNeed": 100
         }
@@ -298,7 +298,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "288188f995cc66f242dd0d3a37d6fa9b8edbaf6caf516064c1a32f7a7e3ffb41"
+      "stateHash": "f83e032f527fda4998e6cfc4f6b8c0d56305b7f99dacad1cb8fc04b4dfa21f06"
     },
     "events": [
       {
@@ -332,8 +332,8 @@
             "hostile": true,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.adaptive-echo",
-              "demo.actor.adaptive-echo"
+              "demo.actor.fruit-bat",
+              "demo.actor.acid-seep"
             ]
           }
         }
@@ -342,16 +342,16 @@
         "kind": "combat.monster-hit",
         "messageKey": "combat-monster-hit",
         "args": {
-          "damage": "0",
-          "source": "demo.actor.adaptive-echo"
+          "damage": "1",
+          "source": "demo.actor.fruit-bat"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 1,
+            "rawDamage": 2,
             "armorReduction": 1,
             "resistanceAdjustment": 0,
-            "finalDamage": 0,
+            "finalDamage": 1,
             "damageType": "physical",
             "resistance": "normal"
           }
@@ -361,7 +361,14 @@
         "kind": "combat.monster-miss",
         "messageKey": "combat-monster-miss",
         "args": {
-          "source": "demo.actor.adaptive-echo"
+          "source": "demo.actor.fruit-bat"
+        }
+      },
+      {
+        "kind": "combat.monster-miss",
+        "messageKey": "combat-monster-miss",
+        "args": {
+          "source": "demo.actor.acid-seep"
         }
       }
     ],

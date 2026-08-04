@@ -24,41 +24,6 @@ fn default_character_build_preserves_the_v70_player_baseline() {
 }
 
 #[test]
-fn v70_save_migrates_default_build_and_skills_without_rng_drift() {
-    let canonical = Game::new(42);
-    let mut legacy = canonical.to_save();
-    legacy.content_hash =
-        "ad6b35c6e0ae8980a74fac51ea1e6597b09559541d4a85d598284dc2cb41d7e6".to_owned();
-    legacy.player.build = None;
-    legacy
-        .player
-        .progress
-        .as_mut()
-        .expect("v70 save should contain character progress")
-        .skills
-        .clear();
-    let draw_counter = legacy.rng.draw_counter;
-
-    let migrated = Game::from_save(legacy).expect("v70 save should migrate character build");
-    let snapshot = migrated.snapshot();
-    assert_eq!(
-        snapshot
-            .player
-            .build
-            .as_ref()
-            .map(|build| build.build_id.as_str()),
-        Some("demo.build.explorer")
-    );
-    assert_eq!(snapshot.player.progress.skills.len(), 10);
-    assert_eq!(migrated.rng_draw_counter(), draw_counter);
-    assert_eq!(migrated.state_hash(), canonical.state_hash());
-
-    let restored = Game::from_save(migrated.to_save())
-        .expect("migrated character build should survive another round trip");
-    assert_eq!(restored.state_hash(), migrated.state_hash());
-}
-
-#[test]
 fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
     let warrior = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrior journey should create");

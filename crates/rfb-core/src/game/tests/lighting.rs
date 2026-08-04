@@ -256,35 +256,6 @@ fn equipped_light_spends_one_fuel_per_ten_ticks_and_reports_extinction() {
 }
 
 #[test]
-fn missing_saved_fuel_uses_content_defaults_without_rng_or_metadata_drift() {
-    let mut game = Game::new(42);
-    give_inventory_item(&mut game, "test.lantern", LANTERN_KIND_ID);
-    set_inventory_light_equipped(&mut game, "test.lantern");
-    set_fuel(&mut game, "test.lantern", 321);
-    let mut payload = game.to_save();
-    payload.content_hash =
-        "3f113d088273af9ac1098e78f5a6c8bd597f043a90f8dfc48bc21af9c316aabf".to_owned();
-    payload
-        .equipment
-        .iter_mut()
-        .find(|item| item.id == "test.lantern")
-        .expect("saved lantern should be equipped")
-        .fuel = None;
-    let revision_before = payload.revision;
-    let turn_before = payload.turn;
-    let tick_before = payload.world_tick;
-    let draws_before = payload.rng.draw_counter;
-
-    let migrated = Game::from_save(payload).expect("missing fuel should migrate from content");
-
-    assert_eq!(fuel(&migrated, "test.lantern").current, 7_500);
-    assert_eq!(migrated.revision, revision_before);
-    assert_eq!(migrated.turn, turn_before);
-    assert_eq!(migrated.world_tick, tick_before);
-    assert_eq!(migrated.rng.draw_counter, draws_before);
-}
-
-#[test]
 fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius() {
     let mut game = Game::new_warrens_journey_with_build(42, RFB_WARRIOR_BUILD_ID)
         .expect("Warrens Warrior should create");

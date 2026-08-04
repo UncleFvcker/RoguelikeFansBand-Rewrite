@@ -296,33 +296,6 @@ fn leader_death_dissolves_pack_before_remaining_members_act() {
 }
 
 #[test]
-fn previous_combat_content_migrates_to_current_actor_stats() {
-    let mut game = Game::new(42);
-    collect_both_demo_items(&mut game);
-    game.dispatch(command(
-        5,
-        4,
-        GameCommand::Equip {
-            item_id: "demo.item.echo-charm.1".to_owned(),
-            slot_id: None,
-        },
-    ))
-    .expect("equip should execute");
-    let mut payload = game.to_save();
-    payload.content_hash = PREVIOUS_BUILT_IN_CONTENT_HASHES[2].to_owned();
-
-    let restored = Game::from_save(payload).expect("known 1.2 content should migrate");
-    let snapshot = restored.snapshot();
-    assert_eq!(snapshot.content_hash, BUILT_IN_CONTENT_HASH);
-    assert_eq!(snapshot.player.base_attack, 2);
-    assert_eq!(snapshot.player.attack, 4);
-    assert_eq!(snapshot.player.base_defense, 1);
-    assert_eq!(snapshot.player.defense, 2);
-    assert_eq!(snapshot.entities[0].attack, 1);
-    assert_eq!(snapshot.entities[0].defense, 1);
-}
-
-#[test]
 fn rfb_style_armor_reduction_uses_the_legacy_linear_cap() {
     assert_eq!(apply_melee_armor_reduction(100, 0), 100);
     assert_eq!(apply_melee_armor_reduction(100, 90), 70);

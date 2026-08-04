@@ -31,6 +31,15 @@ impl AbilityProgress {
 }
 
 impl Game {
+    pub(super) fn player_ability_parameters(
+        ability: &AbilityDefinition,
+    ) -> &PlayerAbilityDefinition {
+        ability
+            .player
+            .as_ref()
+            .expect("validated player ability must have casting parameters")
+    }
+
     pub(super) fn casting_profile(&self) -> Option<&CastingProfileDefinition> {
         self.character_definitions()
             .and_then(|(_, _, class, _)| class.casting_profile.as_ref())
@@ -51,14 +60,18 @@ impl Game {
         ability: &AbilityDefinition,
     ) -> AbilityDefinition {
         let mut effective = ability.clone();
+        let player = effective
+            .player
+            .as_mut()
+            .expect("validated casting-profile ability must have player parameters");
         if let Some(override_) = profile
             .ability_overrides
             .iter()
             .find(|override_| override_.ability_id == ability.id)
         {
-            effective.minimum_level = override_.minimum_level;
-            effective.resource_cost = override_.resource_cost;
-            effective.base_failure_percent = override_.base_failure_percent;
+            player.minimum_level = override_.minimum_level;
+            player.resource_cost = override_.resource_cost;
+            player.base_failure_percent = override_.base_failure_percent;
             if !override_.level_scaling.is_empty() {
                 effective.level_scaling.clone_from(&override_.level_scaling);
             }
@@ -111,13 +124,14 @@ impl Game {
         minimum_failure_percent: u8,
         ability: &AbilityDefinition,
     ) -> u8 {
+        let player = Self::player_ability_parameters(ability);
         let attribute_index = i32::from(self.effective_player_attributes().index(attribute));
         let level_adjustment =
-            i32::from(self.progress.level.saturating_sub(ability.minimum_level)).saturating_mul(3);
+            i32::from(self.progress.level.saturating_sub(player.minimum_level)).saturating_mul(3);
         let proficiency = self.ability_progress_value(ability).proficiency;
         let proficiency_adjustment =
             i32::from(proficiency >= SPELL_EXP_EXPERT) + i32::from(proficiency >= SPELL_EXP_MASTER);
-        let chance = i32::from(ability.base_failure_percent)
+        let chance = i32::from(player.base_failure_percent)
             .saturating_sub(level_adjustment)
             .saturating_sub(attribute_index)
             .saturating_sub(proficiency_adjustment)
@@ -193,8 +207,9 @@ impl Game {
         &self,
         ability: &AbilityDefinition,
     ) -> Option<&TechniqueProfileDefinition> {
+        let player = ability.player.as_ref()?;
         self.technique_profiles().iter().find(|profile| {
-            profile.resource_id == ability.resource_id
+            profile.resource_id == player.resource_id
                 && profile
                     .innate_ability_ids
                     .iter()
@@ -276,9 +291,10 @@ impl Game {
         }
         for ability_id in ability_ids {
             if let Some(ability) = self.content.ability(&ability_id) {
+                let player = Self::player_ability_parameters(ability);
                 self.ability_progress.insert(
                     ability_id,
-                    AbilityProgress::new(ability.proficiency.initial, ability.proficiency.cap),
+                    AbilityProgress::new(player.proficiency.initial, player.proficiency.cap),
                 );
             }
         }
@@ -327,7 +343,7 @@ impl Game {
                     return Err(CoreError::InvalidSave("learned ability ID is invalid"));
                 };
                 let ability = Self::effective_casting_ability(profile, ability);
-                if ability.minimum_level > self.progress.level
+                if Self::player_ability_parameters(&ability).minimum_level > self.progress.level
                     || !self.profile_supports_ability(profile, &ability_id)
                     || !self.learned_abilities.insert(ability_id)
                 {
@@ -415,7 +431,8 @@ impl Game {
             .get(&ability.id)
             .copied()
             .unwrap_or_else(|| {
-                AbilityProgress::new(ability.proficiency.initial, ability.proficiency.cap)
+                let player = Self::player_ability_parameters(ability);
+                AbilityProgress::new(player.proficiency.initial, player.proficiency.cap)
             })
     }
 
@@ -438,11 +455,12 @@ impl Game {
         ability: &AbilityDefinition,
         progress: AbilityProgress,
     ) -> u32 {
+        let player = Self::player_ability_parameters(ability);
         let proficiency = u64::from(progress.proficiency.min(SPELL_EXP_MASTER));
         let factor = SPELL_MANA_CONST
             .saturating_add(SPELL_MANA_EXPERT)
             .saturating_sub(proficiency);
-        let numerator = u64::from(ability.resource_cost)
+        let numerator = u64::from(player.resource_cost)
             .saturating_mul(factor)
             .saturating_add(SPELL_MANA_CONST.saturating_sub(1));
         u32::try_from((numerator / SPELL_MANA_CONST).max(1))
@@ -453,7 +471,11 @@ impl Game {
         let Some(ability) = self.content.ability(ability_id) else {
             return 0;
         };
-        let Some(cooldown) = ability.cooldown.as_ref() else {
+        let Some(cooldown) = ability
+            .player
+            .as_ref()
+            .and_then(|player| player.cooldown.as_ref())
+        else {
             return 0;
         };
         let Some(group_id) = cooldown.group_id.as_deref() else {
@@ -462,17 +484,25 @@ impl Game {
         self.content
             .abilities()
             .filter_map(|candidate| {
-                candidate.cooldown.as_ref().and_then(|candidate_cooldown| {
-                    (candidate_cooldown.group_id.as_deref() == Some(group_id))
-                        .then_some(candidate_cooldown.turns)
-                })
+                candidate
+                    .player
+                    .as_ref()
+                    .and_then(|player| player.cooldown.as_ref())
+                    .and_then(|candidate_cooldown| {
+                        (candidate_cooldown.group_id.as_deref() == Some(group_id))
+                            .then_some(candidate_cooldown.turns)
+                    })
             })
             .max()
             .unwrap_or(cooldown.turns)
     }
 
     pub(super) fn ability_cooldown_remaining(&self, ability: &AbilityDefinition) -> u16 {
-        let Some(cooldown) = ability.cooldown.as_ref() else {
+        let Some(cooldown) = ability
+            .player
+            .as_ref()
+            .and_then(|player| player.cooldown.as_ref())
+        else {
             return 0;
         };
         if let Some(group_id) = cooldown.group_id.as_deref() {
@@ -480,9 +510,10 @@ impl Game {
                 .abilities()
                 .filter(|candidate| {
                     candidate
-                        .cooldown
+                        .player
                         .as_ref()
-                        .and_then(|value| value.group_id.as_deref())
+                        .and_then(|player| player.cooldown.as_ref())
+                        .and_then(|cooldown| cooldown.group_id.as_deref())
                         == Some(group_id)
                 })
                 .filter_map(|candidate| self.ability_progress.get(&candidate.id))
@@ -510,35 +541,37 @@ impl Game {
         ability: &AbilityDefinition,
         succeeded: bool,
     ) -> AbilityProgress {
+        let player = Self::player_ability_parameters(ability).clone();
         let progress = self
             .ability_progress
             .entry(ability.id.clone())
             .or_insert_with(|| {
-                AbilityProgress::new(ability.proficiency.initial, ability.proficiency.cap)
+                AbilityProgress::new(player.proficiency.initial, player.proficiency.cap)
             });
         if succeeded {
             progress.cast_count = progress.cast_count.saturating_add(1);
             progress.proficiency = progress
                 .proficiency
-                .saturating_add(ability.proficiency.success_gain)
+                .saturating_add(player.proficiency.success_gain)
                 .min(progress.proficiency_cap);
         } else {
             progress.fail_count = progress.fail_count.saturating_add(1);
             progress.proficiency = progress
                 .proficiency
-                .saturating_add(ability.proficiency.failure_gain)
+                .saturating_add(player.proficiency.failure_gain)
                 .min(progress.proficiency_cap);
         }
-        if succeeded && let Some(cooldown) = ability.cooldown.as_ref() {
+        if succeeded && let Some(cooldown) = player.cooldown.as_ref() {
             if let Some(group_id) = cooldown.group_id.as_deref() {
                 let group_ids = self
                     .content
                     .abilities()
                     .filter(|candidate| {
                         candidate
-                            .cooldown
+                            .player
                             .as_ref()
-                            .and_then(|value| value.group_id.as_deref())
+                            .and_then(|player| player.cooldown.as_ref())
+                            .and_then(|cooldown| cooldown.group_id.as_deref())
                             == Some(group_id)
                     })
                     .map(|candidate| candidate.id.clone())

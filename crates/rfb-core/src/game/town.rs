@@ -15,7 +15,7 @@ use crate::{
     error::CoreError,
     rng::RfbRng,
     save::position_from_content,
-    state::{FloorState, HomeState, ItemInstance, ItemLocation, ShopState, TownState},
+    state::{HomeState, ItemInstance, ItemLocation, ShopState, TownState},
     stats::AttributeKind,
 };
 
@@ -1227,102 +1227,6 @@ impl Game {
     }
 }
 
-fn static_surface_terrain(world: &WorldDefinition) -> Vec<String> {
-    let mut terrain =
-        vec![world.fill_terrain_id.clone(); usize::from(world.width) * usize::from(world.height)];
-    for y in 0..world.height {
-        for x in 0..world.width {
-            if x == 0 || y == 0 || x == world.width - 1 || y == world.height - 1 {
-                terrain[usize::from(y) * usize::from(world.width) + usize::from(x)] =
-                    world.border_terrain_id.clone();
-            }
-        }
-    }
-    for terrain_override in &world.terrain_overrides {
-        for position in &terrain_override.positions {
-            terrain[usize::from(position.y) * usize::from(world.width) + usize::from(position.x)] =
-                terrain_override.terrain_id.clone();
-        }
-    }
-    terrain
-}
-
-fn position_is_walkable(
-    position: Position,
-    width: u16,
-    height: u16,
-    terrain: &[String],
-    content: &ContentCatalog,
-) -> bool {
-    let (Ok(x), Ok(y)) = (u16::try_from(position.x), u16::try_from(position.y)) else {
-        return false;
-    };
-    if x >= width || y >= height {
-        return false;
-    }
-    content
-        .terrain(&terrain[usize::from(y) * usize::from(width) + usize::from(x)])
-        .is_some_and(|definition| definition.walkable)
-}
-
-fn floor_needs_outpost_layout(
-    floor_id: &str,
-    width: u16,
-    height: u16,
-    terrain: &[String],
-    world: &WorldDefinition,
-    content: &ContentCatalog,
-) -> bool {
-    if floor_id != world.initial_floor_id || width != world.width || height != world.height {
-        return floor_id == world.initial_floor_id;
-    }
-    let Some(town_id) = &world.town_id else {
-        return false;
-    };
-    let town = content
-        .town(town_id)
-        .expect("validated world town must remain available");
-    town.facility_ids.iter().any(|facility_id| {
-        let facility = content
-            .town_facility(facility_id)
-            .expect("validated town facility must remain available");
-        let position = facility.entrance_position;
-        terrain.get(usize::from(position.y) * usize::from(width) + usize::from(position.x))
-            != Some(&facility.entrance_terrain_id)
-    }) || town.shop_ids.iter().any(|shop_id| {
-        let shop = content
-            .shop(shop_id)
-            .expect("validated town shop must remain available");
-        let position = shop.entrance_position;
-        terrain.get(usize::from(position.y) * usize::from(width) + usize::from(position.x))
-            != Some(&shop.entrance_terrain_id)
-    })
-}
-
-fn migrate_stored_surface(
-    floor: &mut FloorState,
-    world: &WorldDefinition,
-    content: &ContentCatalog,
-    terrain: &[String],
-) {
-    floor.width = world.width;
-    floor.height = world.height;
-    floor.terrain = terrain.to_vec();
-    if !position_is_walkable(
-        floor.player_position,
-        floor.width,
-        floor.height,
-        &floor.terrain,
-        content,
-    ) {
-        floor.player_position = position_from_content(world.player.position);
-    }
-    floor.explored = vec![false; floor.terrain.len()];
-    floor.revealed_terrain.clear();
-    floor.connections.clear();
-    floor.regions.clear();
-}
-
 impl Game {
     pub(super) fn mark_current_town_visited(&mut self) {
         let world = self
@@ -1586,56 +1490,5 @@ impl Game {
                 }
             })
             .collect()
-    }
-
-    pub(super) fn migrate_outpost_surface_layout(&mut self) {
-        let world = self
-            .content
-            .world(&self.world_id)
-            .expect("active world must remain available")
-            .clone();
-        if world.town_id.is_none() {
-            return;
-        }
-        let static_terrain = static_surface_terrain(&world);
-        if floor_needs_outpost_layout(
-            &self.current_floor_id,
-            self.width,
-            self.height,
-            &self.terrain,
-            &world,
-            &self.content,
-        ) {
-            self.width = world.width;
-            self.height = world.height;
-            self.terrain.clone_from(&static_terrain);
-            if !position_is_walkable(
-                self.player.position,
-                self.width,
-                self.height,
-                &self.terrain,
-                &self.content,
-            ) {
-                self.player.position = position_from_content(world.player.position);
-            }
-            self.explored = vec![false; self.terrain.len()];
-            self.revealed_terrain.clear();
-            self.floor_connections.clear();
-            self.floor_regions.clear();
-        }
-        for floor in self.stored_floors.values_mut() {
-            if floor_needs_outpost_layout(
-                &floor.id,
-                floor.width,
-                floor.height,
-                &floor.terrain,
-                &world,
-                &self.content,
-            ) {
-                migrate_stored_surface(floor, &world, &self.content, &static_terrain);
-            }
-        }
-        self.mark_current_town_visited();
-        self.mark_shop_visited_at_player();
     }
 }

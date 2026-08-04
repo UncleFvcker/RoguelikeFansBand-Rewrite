@@ -170,6 +170,8 @@ contract-v74 为资源增加带默认值的 `waitRecoveryAmount` 与 `restRecove
 
 contract-v75 为 `AbilityDefinition` 增加必需的 `proficiency.initial/cap/successGain/failureGain`，以及可选 `cooldown.turns/groupId`。熟练度初值不能超过上限，上限不超过 RFB 的 1600 档；增量必须为非负整数。冷却回合必须为正数，组 ID 必须是稳定非空标识。普通能力可以省略冷却，表示无冷却；能力的实际熟练度和冷却进度属于存档状态而不是内容定义。
 
+contract-v172 将 Ability Program 与玩家施法策略完全分离。每个能力必须声明 Program，但 `playerAbilityBindings` 只在玩家入口需要时提供等级、资源/成本、失败率、熟练度和冷却。缺少绑定不表示能力永久属于怪物；未来能力书、职业先天技、种族或怪物模式要授予玩家时再添加绑定。绑定本身不授予可用性，actor 的 `monsterCasting` 也不依赖该绑定。编译器拒绝未知、重复或参数非法的绑定，并拒绝任何引用了无绑定能力的玩家入口。
+
 contract-v76 为 Class `castingProfile` 增加独立学习容量字段：`baseLearningCapacity`、`learningCapacityPerLevel`、`learningCapacityPerAttributeIndex` 与 `learningCapacityCap`。容量由等级和施法属性桶纯函数派生，与 Mana 容量分离；`ForgetAbility` 只移除已学集合并保留能力进度，容量满与遗忘前置拒绝均不抽能力 RNG。缺字段的旧存档按当前内容初值迁移，已学数量超过容量时原子拒绝。
 
 contract-v77 为 `AbilityEffectDefinition` 增加 `area-damage`，声明伤害骰、伤害类型与 1–9 的 `radius`。范围能力沿用 `TargetSpec` 的射程/视线验证，并在 DTO 中输出可选 `areaRadius`；定点与方向投射的停止策略、RFB 距离衰减和墙体遮挡由核心固定，内容包只声明效果参数。当前 demo 的 `Echo Burst` 使用 2d4 electricity、半径 2、射程 6。范围效果不增加 save 字段，能力进度继续由 `abilityProgress` 承载。

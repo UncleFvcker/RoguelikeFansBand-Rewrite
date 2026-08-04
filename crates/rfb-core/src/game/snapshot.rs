@@ -173,6 +173,7 @@ impl Game {
                     );
                 }
                 let ability = &effective_ability;
+                let player = Self::player_ability_parameters(ability);
                 let progress = self.ability_progress_value(ability);
                 let resource_cost = self.ability_effective_resource_cost(ability, progress);
                 let cooldown_remaining = self.ability_cooldown_remaining(ability);
@@ -183,10 +184,10 @@ impl Game {
                     casting_profile
                         .and_then(|profile| self.ability_book_item_id(profile, &ability_id))
                 };
-                let level_available = self.progress.level >= ability.minimum_level;
+                let level_available = self.progress.level >= player.minimum_level;
                 let resource_available = self
                     .resources
-                    .get(&ability.resource_id)
+                    .get(&player.resource_id)
                     .is_some_and(|pool| pool.current >= resource_cost);
                 let failure_percent = if innate {
                     let profile = self.technique_profile_for_ability(ability)?;
@@ -198,10 +199,10 @@ impl Game {
                     id: ability.id.clone(),
                     name_key: ability.name_key.clone(),
                     description_key: ability.description_key.clone(),
-                    minimum_level: ability.minimum_level,
+                    minimum_level: player.minimum_level,
                     innate,
-                    resource_id: ability.resource_id.clone(),
-                    base_resource_cost: ability.resource_cost,
+                    resource_id: player.resource_id.clone(),
+                    base_resource_cost: player.resource_cost,
                     resource_cost,
                     failure_percent,
                     proficiency: progress.proficiency,
@@ -210,8 +211,8 @@ impl Game {
                     cast_count: progress.cast_count,
                     fail_count: progress.fail_count,
                     cooldown_remaining,
-                    cooldown_turns: ability.cooldown.as_ref().map_or(0, |value| value.turns),
-                    cooldown_group_id: ability
+                    cooldown_turns: player.cooldown.as_ref().map_or(0, |value| value.turns),
+                    cooldown_group_id: player
                         .cooldown
                         .as_ref()
                         .and_then(|value| value.group_id.clone()),

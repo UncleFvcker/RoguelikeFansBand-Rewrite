@@ -313,10 +313,7 @@ impl SourceAbilityDefinition {
         programs: &BTreeMap<String, ResolvedAbilityProgram>,
         player_bindings: &BTreeMap<String, ResolvedPlayerAbilityBinding>,
     ) -> Result<AbilityDefinition, ContentError> {
-        let player_binding = player_bindings
-            .get(&self.id)
-            .cloned()
-            .ok_or_else(|| ContentError::InvalidAbility(self.id.clone()))?;
+        let player = player_bindings.get(&self.id).cloned();
         let program = resolve_source_ability_program(&self.id, self.ability_program_id, programs)?;
         if !ability_program_input_matches_target(program.input, &self.target) {
             return Err(ContentError::InvalidAbility(self.id));
@@ -327,15 +324,10 @@ impl SourceAbilityDefinition {
             id: self.id,
             name_key: self.name_key,
             description_key: self.description_key,
-            minimum_level: player_binding.minimum_level,
-            resource_id: player_binding.resource_id,
-            resource_cost: player_binding.resource_cost,
-            base_failure_percent: player_binding.base_failure_percent,
             target: self.target,
             effect: program.effect,
             level_scaling: self.level_scaling,
-            proficiency: player_binding.proficiency,
-            cooldown: player_binding.cooldown,
+            player,
             tags: self.tags,
         })
     }
@@ -535,7 +527,7 @@ mod tests {
     }
 
     #[test]
-    fn ability_program_references_and_casting_bindings_are_required() {
+    fn ability_program_references_are_required_and_player_bindings_are_optional() {
         let programs = compile_ability_program_catalog(vec![ability_program(
             "demo.ability-program.healing",
             AbilityProgramInputDefinition::SelfTarget,
@@ -572,14 +564,16 @@ mod tests {
             referenced.effect,
             AbilityEffectDefinition::Heal { amount: 4 }
         );
-        assert_eq!(referenced.minimum_level, 1);
-        assert_eq!(referenced.resource_id, "demo.resource.mana");
+        let player = referenced
+            .player
+            .expect("matching player binding should be lowered");
+        assert_eq!(player.minimum_level, 1);
+        assert_eq!(player.resource_id, "demo.resource.mana");
 
-        assert!(matches!(
-            source_ability(self_target.clone(), "demo.ability-program.healing")
-                .into_compiled(&programs, &BTreeMap::new()),
-            Err(ContentError::InvalidAbility(id)) if id == "demo.ability.test"
-        ));
+        let monster_only = source_ability(self_target.clone(), "demo.ability-program.healing")
+            .into_compiled(&programs, &BTreeMap::new())
+            .expect("an ability without a player binding should compile");
+        assert!(monster_only.player.is_none());
         assert!(matches!(
             source_ability(self_target.clone(), "demo.ability-program.missing")
                 .into_compiled(&programs, &player_bindings),

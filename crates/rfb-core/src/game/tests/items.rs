@@ -3995,25 +3995,3 @@ fn recall_can_be_cancelled_and_reset_to_a_shallower_branch_floor() {
             .any(|event| event.kind == "item.recall-cancelled")
     );
 }
-
-#[test]
-fn v113_dungeon_save_without_recall_derives_a_stable_destination() {
-    let mut game = Game::new(2);
-    clear_monsters(&mut game);
-    descend_one_floor(&mut game);
-    let mut payload = game.to_save();
-    payload.content_hash =
-        "10d3813ec933dd881c23229b604c5f64e67716a56ebdb20b6a844c98593a7653".to_owned();
-    payload.player.recall = None;
-
-    let restored = Game::from_save(payload).expect("v113 save should migrate");
-    assert_eq!(restored.current_floor_id, "demo.floor.echo-depth-1");
-    assert_eq!(
-        restored.recall,
-        Some(RecallStateDto {
-            dungeon_id: "demo.dungeon.echo-depths".to_owned(),
-            floor_id: "demo.floor.echo-depth-1".to_owned(),
-            remaining_turns: None,
-        })
-    );
-}

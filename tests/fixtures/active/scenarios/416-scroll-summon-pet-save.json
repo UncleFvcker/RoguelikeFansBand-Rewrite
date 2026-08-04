@@ -219,7 +219,7 @@
             "x": 3,
             "y": 2
           },
-          "hp": 4,
+          "hp": 3,
           "speed": 110,
           "energyNeed": 100,
           "faction": "player",
@@ -315,7 +315,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a695d249883c01fa18de2416eb16aaa075907b75cc0c723b09b62a168ad692f0"
+      "stateHash": "43af7c8e119c2e171e9c180e1d534f6298a0998bbe17d8375e73d820125b7592"
     },
     "events": [
       {
@@ -354,9 +354,9 @@
             "hostile": false,
             "group": true,
             "summonedKindIds": [
-              "demo.actor.ember-mote",
-              "demo.actor.echo-listener",
-              "demo.actor.ember-mote"
+              "demo.actor.echo-hound",
+              "demo.actor.acid-seep",
+              "demo.actor.frost-wisp"
             ]
           }
         }
@@ -376,6 +376,6 @@
         "y": 2
       }
     ],
-    "saveRoundTripStateHash": "a695d249883c01fa18de2416eb16aaa075907b75cc0c723b09b62a168ad692f0"
+    "saveRoundTripStateHash": "43af7c8e119c2e171e9c180e1d534f6298a0998bbe17d8375e73d820125b7592"
   }
 }

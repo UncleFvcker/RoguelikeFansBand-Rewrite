@@ -1632,6 +1632,19 @@ mod tests {
     }
 
     #[test]
+    fn content_hash_mismatch_is_rejected_before_execution() {
+        let initial = quiet_game(1);
+        let recorder = ReplayRecorder::new(initial.clone());
+        let (_, mut replay) = recorder.finish();
+        replay.content_hash = "different-content-hash".to_owned();
+
+        assert!(matches!(
+            verify(&replay, initial),
+            Err(ReplayError::ContentMismatch(hash)) if hash == "different-content-hash"
+        ));
+    }
+
+    #[test]
     fn command_context_tampering_is_rejected() {
         let initial = quiet_game(42);
         let mut recorder = ReplayRecorder::new(initial.clone());

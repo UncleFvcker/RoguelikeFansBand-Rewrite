@@ -292,7 +292,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "059924e8faa309db8ed2e896bcc2bbcdfef62621ac68fb2d515ee85f8fa3e00b"
+      "stateHash": "2496a4552a1527460070694d502d3355ec4d87c3dea96efa7acaa05eb86db10a"
     },
     "events": [
       {
@@ -315,7 +315,7 @@
       {
         "step": 2,
         "kind": "revision-mismatch",
-        "stateHash": "059924e8faa309db8ed2e896bcc2bbcdfef62621ac68fb2d515ee85f8fa3e00b"
+        "stateHash": "2496a4552a1527460070694d502d3355ec4d87c3dea96efa7acaa05eb86db10a"
       }
     ]
   }

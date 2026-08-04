@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     AbilityCooldownDefinition, AbilityDefinition, AbilityProficiencyDefinition, ContentError,
-    PLAYER_ABILITY_BINDING_SCHEMA,
+    PLAYER_ABILITY_BINDING_SCHEMA, PlayerAbilityDefinition,
 };
 use crate::validation::{
     require_format_version, require_schema, validate_definition_id, validate_id,
@@ -32,15 +32,7 @@ pub struct PlayerAbilityBindingDefinition {
     pub cooldown: Option<AbilityCooldownDefinition>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) struct ResolvedPlayerAbilityBinding {
-    pub(super) minimum_level: u16,
-    pub(super) resource_id: String,
-    pub(super) resource_cost: u32,
-    pub(super) base_failure_percent: u8,
-    pub(super) proficiency: AbilityProficiencyDefinition,
-    pub(super) cooldown: Option<AbilityCooldownDefinition>,
-}
+pub(super) type ResolvedPlayerAbilityBinding = PlayerAbilityDefinition;
 
 pub(super) fn compile_player_ability_binding_catalog(
     definitions: Vec<PlayerAbilityBindingDefinition>,
@@ -62,7 +54,7 @@ pub(super) fn compile_player_ability_binding_catalog(
         }
 
         let ability_id = definition.ability_id;
-        let binding = ResolvedPlayerAbilityBinding {
+        let binding = PlayerAbilityDefinition {
             minimum_level: definition.minimum_level,
             resource_id: definition.resource_id,
             resource_cost: definition.resource_cost,
