@@ -1,6 +1,6 @@
 # 旧版物品导入 v2（k_info / e_info / a_info）
 
-状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58–P66 设备/消耗品与卷轴纵切）；legacy 产物只进 `.local/packs/rfb-legacy/`，仓库继续只含原创内容。实例充能、动态设备、恢复物品以及鉴定/侦测/传送/附魔/诅咒卷轴运行时由 Contract v108–v116 定义。
+状态：已实现并持续回灌（P44 基础物品 + P45 词条与固定神器 + P46 fake bow 修正 + P58–P66 设备/消耗品与卷轴纵切）；完整 legacy 产物只进 `.local/packs/rfb-legacy/`。Phase 19 起，经过显式双重索引选择且无行为缺口的普通物品可由 `sync-demo-items` 生成进正式 demo 包；见 [Phase 19](phase-19-legacy-item-integration.md)。实例充能、动态设备、恢复物品以及鉴定/侦测/传送/附魔/诅咒卷轴运行时由 Contract v108–v116 定义。
 
 ## 1. 行格式（按固定 commit init1.c 钉死）
 
@@ -14,7 +14,7 @@
 | 19（弓） | `equipmentSlot: launcher` + projectileProfile（沿用 demo 惯例射程/骰；倍率语义记缺口）；**无弹药配对的竖琴/长笛/枪械保槽不带射击档**——原版 `obj_is_fake_bow` 语义（占射击槽、不可射击），计 launcher-unpaired（P46 修正，此前误降级为无槽壳） |
 | 16/17/18（弹/箭/弩矢） | 弹药：无槽、堆叠 99、`ammunition` 标签、破损率 25%；**弹药自带骰折入发射器**记为已知差异 |
 | 36/37/38（软甲/硬甲/龙鳞） | `equipmentSlot: body` + `modifiers.defense = AC + to_ac` |
-| 34/35（盔/冠） | `head`；33（盾）`shield`；32（披风）`cloak`；31（手套）`gloves`；30（靴）`boots`（同上 defense 映射） |
+| 32/33（盔/冠） | `head`；34（盾）`shield`；35（披风）`cloak`；31（手套）`gloves`；30（靴）`boots`（同上 defense 映射） |
 | 45（戒指） | `ring` 槽通用壳——**普通首饰无任何属性**（原版属性与 pval 全部由 ego 生成期赋予或固定神器携带，P45 修正）；AC 直接入 defense；效果留壳+缺口 |
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |

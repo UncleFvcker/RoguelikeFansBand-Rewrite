@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 30,
+  "descriptionKey": "item-demo-metal-cap-description",
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.metal-cap",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 3
+  },
+  "nameKey": "item-demo-metal-cap-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

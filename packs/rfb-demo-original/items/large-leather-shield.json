@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 100,
+  "descriptionKey": "item-demo-large-leather-shield-description",
+  "equipmentSlot": "shield",
+  "formatVersion": 1,
+  "glyph": ")",
+  "id": "demo.item.large-leather-shield",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 6
+  },
+  "nameKey": "item-demo-large-leather-shield-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 100
+}

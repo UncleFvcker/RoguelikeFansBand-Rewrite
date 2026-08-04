@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 4,
+  "descriptionKey": "item-demo-robe-description",
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "glyph": "(",
+  "id": "demo.item.robe",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 2
+  },
+  "nameKey": "item-demo-robe-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

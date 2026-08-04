@@ -313,6 +313,10 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
         (
             ARMOURY_ID,
             std::collections::BTreeSet::from([
+                "demo.item.robe",
+                "demo.item.soft-leather-armour",
+                "demo.item.metal-cap",
+                "demo.item.large-leather-shield",
                 "demo.item.leather-gloves",
                 "demo.item.soft-leather-boots",
                 "demo.item.hard-leather-cap",
@@ -323,6 +327,10 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
         (
             WEAPONSMITH_ID,
             std::collections::BTreeSet::from([
+                "demo.item.dagger",
+                "demo.item.main-gauche",
+                "demo.item.rapier",
+                "demo.item.mace",
                 "demo.item.spear",
                 "demo.item.sabre",
                 "demo.item.short-sword",
@@ -925,6 +933,19 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
 fn compatible_shop_instances_project_and_trade_as_one_row() {
     let mut game = store_game(42);
     game.gold = 100;
+    let mut extra_ration = game.shop_states[GENERAL_STORE_ID]
+        .inventory
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("store should stock rations")
+        .clone();
+    extra_ration.id = "demo.shop.outpost-general-store.test-ration".to_owned();
+    extra_ration.quantity = 1;
+    game.shop_states
+        .get_mut(GENERAL_STORE_ID)
+        .expect("general store state should exist")
+        .inventory
+        .push(extra_ration);
     let shop_before = projected_shop(&game.snapshot().shops, GENERAL_STORE_ID).clone();
     for kind_id in [
         "demo.item.ration-of-food",

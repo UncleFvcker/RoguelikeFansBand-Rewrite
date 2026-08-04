@@ -277,6 +277,63 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
 }
 
 #[test]
+fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_stock = |id: &str| {
+        artifact
+            .content
+            .shops
+            .iter()
+            .find(|shop| shop.id == id)
+            .expect("shop should exist")
+            .stock
+            .iter()
+            .map(|entry| entry.item_kind_id.as_str())
+            .collect::<BTreeSet<_>>()
+    };
+    assert!(
+        BTreeSet::from([
+            "demo.item.dagger",
+            "demo.item.main-gauche",
+            "demo.item.rapier",
+            "demo.item.mace",
+        ])
+        .is_subset(&shop_stock("demo.shop.outpost-weaponsmith"))
+    );
+    assert!(
+        BTreeSet::from([
+            "demo.item.robe",
+            "demo.item.soft-leather-armour",
+            "demo.item.metal-cap",
+            "demo.item.large-leather-shield",
+        ])
+        .is_subset(&shop_stock("demo.shop.outpost-armoury"))
+    );
+
+    let warrens = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.warrens")
+        .expect("Warrens loot table should exist");
+    let depth = |id: &str| {
+        warrens
+            .entries
+            .iter()
+            .find(|entry| entry.item_kind_id == id)
+            .map(|entry| (entry.min_depth, entry.max_depth))
+    };
+    assert_eq!(depth("demo.item.dagger"), Some((0, 9)));
+    assert_eq!(depth("demo.item.robe"), Some((1, 9)));
+    assert_eq!(depth("demo.item.main-gauche"), Some((3, 9)));
+    assert_eq!(depth("demo.item.soft-leather-armour"), Some((3, 9)));
+    assert_eq!(depth("demo.item.rapier"), Some((5, 9)));
+    assert_eq!(depth("demo.item.mace"), Some((5, 9)));
+    assert_eq!(depth("demo.item.metal-cap"), None);
+    assert_eq!(depth("demo.item.large-leather-shield"), None);
+}
+
+#[test]
 fn bookstore_stock_is_limited_to_original_town_books() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_id = "demo.shop.outpost-bookstore";

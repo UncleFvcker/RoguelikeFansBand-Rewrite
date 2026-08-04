@@ -16,6 +16,10 @@
     "purchasePriceCap": 20000
   },
   "stock": [
+    { "itemKindId": "demo.item.robe", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.soft-leather-armour", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.metal-cap", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.large-leather-shield", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.leather-gloves", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.soft-leather-boots", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.hard-leather-cap", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },

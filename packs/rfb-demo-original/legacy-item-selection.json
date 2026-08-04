@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    { "sourceIndex": 47, "id": "dagger" },
+    { "sourceIndex": 48, "id": "main-gauche" },
+    { "sourceIndex": 50, "id": "rapier" },
+    { "sourceIndex": 124, "id": "mace" },
+    { "sourceIndex": 247, "id": "robe" },
+    { "sourceIndex": 249, "id": "soft-leather-armour" },
+    { "sourceIndex": 213, "id": "metal-cap" },
+    { "sourceIndex": 237, "id": "large-leather-shield" }
+  ]
+}

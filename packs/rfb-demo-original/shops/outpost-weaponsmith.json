@@ -16,6 +16,10 @@
     "purchasePriceCap": 20000
   },
   "stock": [
+    { "itemKindId": "demo.item.dagger", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.main-gauche", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.rapier", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
+    { "itemKindId": "demo.item.mace", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.spear", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.sabre", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.short-sword", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },

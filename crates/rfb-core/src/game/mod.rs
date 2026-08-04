@@ -337,7 +337,7 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 151] = [
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "6816ed2d04032ca79ad36aa2451ca8d2adac91633680d7541e4ab3084e231860";
+    "6fab5b75a54951101146f6a4c722bb5230b6485a4dbf7f8771a0b89683ed8c89";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 61;

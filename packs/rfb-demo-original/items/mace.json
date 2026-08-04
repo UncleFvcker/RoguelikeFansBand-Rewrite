@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 130,
+  "descriptionKey": "item-demo-mace-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "glyph": "\\",
+  "id": "demo.item.mace",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 5,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "nameKey": "item-demo-mace-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 120
+}

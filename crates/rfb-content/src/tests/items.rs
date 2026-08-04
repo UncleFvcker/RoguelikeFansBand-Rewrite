@@ -551,3 +551,45 @@ fn fuel_items_require_original_capacity_slot_stack_and_radius_shapes() {
         Err(ContentError::InvalidItemFuel(_))
     ));
 }
+
+#[test]
+fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let expected = [
+        ("demo.item.dagger", 10, 12, "weapon", 0, Some((1, 5))),
+        ("demo.item.main-gauche", 25, 30, "weapon", 0, Some((1, 6))),
+        ("demo.item.rapier", 42, 40, "weapon", 0, Some((1, 8))),
+        ("demo.item.mace", 130, 120, "weapon", 0, Some((2, 5))),
+        ("demo.item.robe", 4, 20, "body", 2, None),
+        ("demo.item.soft-leather-armour", 18, 80, "body", 4, None),
+        ("demo.item.metal-cap", 30, 20, "head", 3, None),
+        (
+            "demo.item.large-leather-shield",
+            100,
+            100,
+            "shield",
+            6,
+            None,
+        ),
+    ];
+
+    for (id, value, weight, slot, defense, damage) in expected {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("fixture should contain {id}"));
+        assert_eq!(item.base_value, value, "{id} value");
+        assert_eq!(item.weight_tenths_pound, weight, "{id} weight");
+        assert_eq!(item.equipment_slot.as_deref(), Some(slot), "{id} slot");
+        assert_eq!(item.modifiers.defense, defense, "{id} defense");
+        assert_eq!(
+            item.melee_profile
+                .as_ref()
+                .map(|profile| (profile.damage_dice, profile.damage_sides)),
+            damage,
+            "{id} damage"
+        );
+    }
+}

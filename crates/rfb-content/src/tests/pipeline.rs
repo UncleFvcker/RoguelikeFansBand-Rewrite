@@ -144,7 +144,7 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.content.terrain.len(), 68);
     assert_eq!(first.content.actors.len(), 33);
     assert_eq!(first.content.affixes.len(), 4);
-    assert_eq!(first.content.items.len(), 111);
+    assert_eq!(first.content.items.len(), 119);
     assert_eq!(first.content.resources.len(), 3);
     assert_eq!(first.content.abilities.len(), 68);
     assert_eq!(first.content.ability_books.len(), 6);

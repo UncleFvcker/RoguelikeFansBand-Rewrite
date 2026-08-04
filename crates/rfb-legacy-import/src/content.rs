@@ -15,7 +15,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{LEGACY_BASELINE_COMMIT, LegacyImportError};
 
@@ -29,6 +29,20 @@ const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
 const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
 const M_INFO_SOURCE: &str = "lib/edit/m_info.txt";
 const S_INFO_SOURCE: &str = "lib/edit/s_info.txt";
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemSelection {
+    schema_version: u16,
+    items: Vec<DemoItemSelectionEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemSelectionEntry {
+    source_index: u32,
+    id: String,
+}
 
 fn content_parse_error(
     source: &'static str,
@@ -196,6 +210,7 @@ pub struct LegacyItemEntry {
     pub pval: i32,
     pub level: u16,
     pub weight_tenths_pound: u16,
+    pub base_value: u32,
     pub armor_class: i32,
     pub damage_dice: Option<(u16, u16)>,
     pub to_hit: i32,
@@ -227,6 +242,7 @@ pub struct LegacyArtifactEntry {
     pub pval: i32,
     pub level: u16,
     pub weight_tenths_pound: u16,
+    pub base_value: u32,
     pub armor_class: i32,
     pub damage_dice: Option<(u16, u16)>,
     pub to_hit: i32,
@@ -870,7 +886,8 @@ pub fn parse_k_info(text: &str) -> Result<Vec<LegacyItemEntry>, LegacyImportErro
                 "W.weight",
                 parts.get(3).copied(),
             )?;
-            let _: i64 = parse_number(K_INFO_SOURCE, line_number, "W.cost", parts.get(4).copied())?;
+            entry.base_value =
+                parse_number(K_INFO_SOURCE, line_number, "W.cost", parts.get(4).copied())?;
         } else if let Some(rest) = line.strip_prefix("P:") {
             let parts = parse_fields(K_INFO_SOURCE, line_number, "P", rest, 5)?;
             entry.armor_class = parse_number(
@@ -968,7 +985,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             launcher: false,
             behavior_gap: None,
         },
-        34 | 35 => ItemShape {
+        32 | 33 => ItemShape {
             slot: Some("head"),
             max_stack: 1,
             tags: vec!["armor", "equipment", "legacy-import"],
@@ -976,7 +993,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             launcher: false,
             behavior_gap: None,
         },
-        33 => ItemShape {
+        34 => ItemShape {
             slot: Some("shield"),
             max_stack: 1,
             tags: vec!["armor", "equipment", "legacy-import"],
@@ -984,7 +1001,7 @@ fn item_shape(tval: u16) -> Option<ItemShape> {
             launcher: false,
             behavior_gap: None,
         },
-        32 => ItemShape {
+        35 => ItemShape {
             slot: Some("cloak"),
             max_stack: 1,
             tags: vec!["armor", "equipment", "legacy-import"],
@@ -1751,6 +1768,7 @@ fn item_json_with_terrain(
         "glyph": entry.glyph.map_or_else(|| "?".to_owned(), |glyph| glyph.to_string()),
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": shape.max_stack,
+        "baseValue": entry.base_value,
         "tags": tags,
     });
     if let Some(ability_book_id) = ability_book_id {
@@ -1856,6 +1874,55 @@ fn item_json(
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
     item_json_with_terrain(entry, id, ammo, ability_book_id, None, report)
+}
+
+fn demo_item_json(
+    entry: &LegacyItemEntry,
+    id: &str,
+) -> Result<serde_json::Value, LegacyImportError> {
+    let shape = item_shape(entry.tval).expect("every tval resolves a shape");
+    if !matches!(
+        shape.slot,
+        Some("weapon" | "body" | "head" | "shield" | "cloak" | "gloves" | "boots")
+    ) || shape.behavior_gap.is_some()
+        || fixed_consumable_use_action_with_terrain(entry, None).is_some()
+        || legacy_device_generation(entry).is_some()
+        || player_ability_book_for_item(entry).is_some()
+    {
+        return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+            "{id} is not a behavior-complete ordinary weapon or armor item"
+        )));
+    }
+
+    let mut report = ContentImportReport::default();
+    let mut value = item_json_with_terrain(
+        entry,
+        id,
+        &LauncherAmmoIndex::default(),
+        None,
+        None,
+        &mut report,
+    );
+    report.unmapped_item_flags.remove("TOWN");
+    if !report.item_behavior_gaps.is_empty() || !report.unmapped_item_flags.is_empty() {
+        return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+            "{id} still has import gaps"
+        )));
+    }
+
+    value["id"] = serde_json::json!(format!("demo.item.{id}"));
+    value["nameKey"] = serde_json::json!(format!("item-demo-{id}-name"));
+    value["descriptionKey"] = serde_json::json!(format!("item-demo-{id}-description"));
+    if let Some(tags) = value["tags"].as_array_mut() {
+        for tag in tags.iter_mut() {
+            if tag == "legacy-import" {
+                *tag = serde_json::json!("rfb-compatibility");
+            }
+        }
+        tags.sort_by_key(serde_json::Value::to_string);
+        tags.dedup();
+    }
+    Ok(value)
 }
 
 impl ItemShape {
@@ -2054,7 +2121,8 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                 "W.weight",
                 parts.get(2).copied(),
             )?;
-            let _: i64 = parse_number(A_INFO_SOURCE, line_number, "W.cost", parts.get(3).copied())?;
+            entry.base_value =
+                parse_number(A_INFO_SOURCE, line_number, "W.cost", parts.get(3).copied())?;
         } else if let Some(rest) = line.strip_prefix("P:") {
             let parts = parse_fields(A_INFO_SOURCE, line_number, "P", rest, 5)?;
             entry.armor_class = parse_number(
@@ -2586,6 +2654,7 @@ fn artifact_json(
         "glyph": "*",
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": 1,
+        "baseValue": entry.base_value,
         "tags": ["artifact", "legacy-import"],
     });
     if let Some(slot) = shape.slot {
@@ -4978,13 +5047,20 @@ fn terrain_json(entry: &LegacyTerrainEntry, id: &str) -> serde_json::Value {
     {
         tags.push("passage");
     }
+    let glyph = match entry.glyph {
+        Some(glyph) if glyph.is_ascii_alphabetic() && tags.contains(&"passage") => '+',
+        Some(glyph) if glyph.is_ascii_alphabetic() && walkable => '.',
+        Some(glyph) if glyph.is_ascii_alphabetic() => '#',
+        Some(glyph) => glyph,
+        None => '?',
+    };
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/terrain.schema.json"),
         "formatVersion": 1,
         "id": format!("rfb-legacy.terrain.{id}"),
         "nameKey": format!("terrain-legacy-{id}-name"),
         "descriptionKey": format!("terrain-legacy-{id}-description"),
-        "glyph": entry.glyph.map_or_else(|| "?".to_owned(), |glyph| glyph.to_string()),
+        "glyph": glyph.to_string(),
         "walkable": walkable,
         "blocksSight": blocks_sight,
         "tags": tags,
@@ -7391,6 +7467,70 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     Ok(report_path)
 }
 
+pub fn sync_demo_items(
+    source: &Path,
+    selection_path: &Path,
+    output: &Path,
+) -> Result<usize, LegacyImportError> {
+    let canonical_source = source
+        .canonicalize()
+        .map_err(|error| LegacyImportError::LegacyGit(error.to_string()))?;
+    if output.starts_with(&canonical_source) {
+        return Err(LegacyImportError::LegacyGit(
+            "output directory must live outside the legacy source".to_owned(),
+        ));
+    }
+    let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
+    if selection.schema_version != 1 || selection.items.is_empty() {
+        return Err(LegacyImportError::InvalidDemoItemSelection(
+            "selection must use schemaVersion 1 and contain at least one item".to_owned(),
+        ));
+    }
+    let entries = parse_k_info(&read_legacy_object(source, K_INFO_SOURCE)?)?;
+    let by_index = entries
+        .iter()
+        .filter(|entry| {
+            !entry.name.is_empty() && entry.name != "something" && entry.glyph.is_some()
+        })
+        .map(|entry| (entry.index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let mut selected = BTreeSet::new();
+    let mut files = Vec::with_capacity(selection.items.len());
+    for selected_entry in selection.items {
+        if !selected.insert(selected_entry.id.clone()) {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "duplicate item {}",
+                selected_entry.id
+            )));
+        }
+        let entry = by_index.get(&selected_entry.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemSelection(format!(
+                "unknown legacy source index {}",
+                selected_entry.source_index
+            ))
+        })?;
+        let actual_id = kebab(&entry.name);
+        if actual_id != selected_entry.id {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "source index {} is {actual_id}, expected {}",
+                selected_entry.source_index, selected_entry.id
+            )));
+        }
+        files.push((
+            format!("{}.json", selected_entry.id),
+            demo_item_json(entry, &selected_entry.id)?,
+        ));
+    }
+    fs::create_dir_all(output)?;
+    for (name, value) in &files {
+        fs::write(
+            output.join(name),
+            serde_json::to_string_pretty(value)? + "\n",
+        )?;
+    }
+    Ok(files.len())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -8247,6 +8387,7 @@ W:5:0:0:150:80
         assert_eq!(sword["equipmentSlot"], "weapon");
         assert_eq!(sword["maxStack"], 1);
         assert_eq!(sword["weightTenthsPound"], 130);
+        assert_eq!(sword["baseValue"], 300);
         assert_eq!(sword["meleeProfile"]["damageDice"], 2);
         assert_eq!(sword["meleeProfile"]["damageSides"], 6);
         assert_eq!(sword["meleeProfile"]["toHit"], 1);
@@ -8310,6 +8451,22 @@ W:5:0:0:150:80
         assert_eq!(harp["equipmentSlot"], "launcher");
         assert!(harp.get("projectileProfile").is_none());
         assert_eq!(outcome.report.item_behavior_gaps["launcher-unpaired"], 1);
+    }
+
+    #[test]
+    fn legacy_armor_tvals_map_to_the_original_body_slots() {
+        let expected = [
+            (30, "boots"),
+            (31, "gloves"),
+            (32, "head"),
+            (33, "head"),
+            (34, "shield"),
+            (35, "cloak"),
+        ];
+
+        for (tval, slot) in expected {
+            assert_eq!(item_shape(tval).and_then(|shape| shape.slot), Some(slot));
+        }
     }
 
     #[test]
@@ -9202,6 +9359,28 @@ F:BRAND_VAMP | HOLD_LIFE
                 .as_array()
                 .is_some_and(|tags| { tags.iter().any(|tag| tag == "trap") })
         );
+    }
+
+    #[test]
+    fn legacy_letter_terrain_glyphs_are_remapped_without_using_actor_letters() {
+        let passage = terrain_json(
+            &LegacyTerrainEntry {
+                glyph: Some('M'),
+                flags: vec!["MOVE".to_owned(), "STORE".to_owned(), "DOOR".to_owned()],
+                ..LegacyTerrainEntry::default()
+            },
+            "test-store",
+        );
+        assert_eq!(passage["glyph"], "+");
+
+        let blocked = terrain_json(
+            &LegacyTerrainEntry {
+                glyph: Some('x'),
+                ..LegacyTerrainEntry::default()
+            },
+            "test-hidden",
+        );
+        assert_eq!(blocked["glyph"], "#");
     }
 
     #[test]

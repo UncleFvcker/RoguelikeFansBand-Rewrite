@@ -16,7 +16,11 @@ const GENERAL_STORE_ITEM_IDS: [&str; 4] = [
     "demo.item.flask-of-oil",
 ];
 
-const ARMOURY_ITEM_IDS: [&str; 5] = [
+const ARMOURY_ITEM_IDS: [&str; 9] = [
+    "demo.item.robe",
+    "demo.item.soft-leather-armour",
+    "demo.item.metal-cap",
+    "demo.item.large-leather-shield",
     "demo.item.leather-gloves",
     "demo.item.soft-leather-boots",
     "demo.item.hard-leather-cap",
@@ -24,7 +28,11 @@ const ARMOURY_ITEM_IDS: [&str; 5] = [
     "demo.item.chain-mail",
 ];
 
-const WEAPONSMITH_ITEM_IDS: [&str; 6] = [
+const WEAPONSMITH_ITEM_IDS: [&str; 10] = [
+    "demo.item.dagger",
+    "demo.item.main-gauche",
+    "demo.item.rapier",
+    "demo.item.mace",
     "demo.item.spear",
     "demo.item.sabre",
     "demo.item.short-sword",
