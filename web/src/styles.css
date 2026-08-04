@@ -539,8 +539,8 @@ h1 {
 }
 
 .map-host[data-camera-mode="player-centered"] {
-  width: var(--map-centered-width);
-  height: var(--map-centered-height);
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -1510,9 +1510,9 @@ summary:focus-visible {
 }
 
 .map-host[data-camera-mode="player-centered"] {
-  width: min(var(--map-centered-width), 100%);
-  height: var(--map-centered-height);
-  margin-inline: auto;
+  width: 100%;
+  height: clamp(25rem, 61vh, 50rem);
+  margin-inline: 0;
 }
 
 .input-toolbar {
@@ -2455,7 +2455,7 @@ kbd {
 
 
   .map-host[data-camera-mode="player-centered"] {
-    height: var(--map-centered-height);
+    height: 55vh;
   }
 
   .shop-dialog > header {

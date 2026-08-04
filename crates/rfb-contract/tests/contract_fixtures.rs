@@ -8,8 +8,10 @@ use std::{
 };
 
 use rfb_contract::{
-    ACTIVE_FIXTURE_DIRECTORY, ContractError, ContractFixture, validate_fixture_set, verify,
+    ACTIVE_FIXTURE_DIRECTORY, ContractError, ContractFixture, observe, validate_fixture_set, verify,
 };
+use rfb_protocol::Position;
+use serde_json::json;
 
 #[test]
 fn committed_contract_fixtures_pass() {
@@ -129,4 +131,124 @@ fn legacy_attribute_projection_migration_is_schema_bounded() {
         verify(&legacy(2)),
         Err(ContractError::AssertionMismatch { .. })
     ));
+}
+
+fn minimal_warrens_fixture(
+    preconditions: serde_json::Value,
+    commands: serde_json::Value,
+) -> ContractFixture {
+    serde_json::from_value(json!({
+        "schemaVersion": 2,
+        "id": "town.minimal-contract-helper",
+        "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
+        "determinism": "exact",
+        "seed": "42",
+        "preconditions": preconditions,
+        "commands": commands
+    }))
+    .expect("minimal fixture should parse")
+}
+
+#[test]
+fn player_position_precondition_does_not_simulate_movement() {
+    let fixture = minimal_warrens_fixture(
+        json!({
+            "world": "demo.world.warrens-journey",
+            "debugClearEntities": true,
+            "playerPosition": { "x": 32, "y": 13 }
+        }),
+        json!([]),
+    );
+
+    let observed = observe(&fixture).expect("walkable player position should be accepted");
+
+    assert_eq!(
+        observed.final_state.player_position,
+        Position { x: 32, y: 13 }
+    );
+    assert_eq!(observed.final_state.revision, 0);
+    assert_eq!(observed.final_state.turn, 0);
+    assert!(observed.changed_cells.is_empty());
+    assert!(observed.events.is_empty());
+}
+
+#[test]
+fn player_position_precondition_rejects_unwalkable_cells() {
+    let fixture = minimal_warrens_fixture(
+        json!({
+            "world": "demo.world.warrens-journey",
+            "debugClearEntities": true,
+            "playerPosition": { "x": 22, "y": 6 }
+        }),
+        json!([]),
+    );
+
+    assert!(matches!(
+        observe(&fixture),
+        Err(ContractError::InvalidPlayerPositionPrecondition(Position {
+            x: 22,
+            y: 6
+        }))
+    ));
+}
+
+#[test]
+fn equipment_precondition_relocates_and_identifies_an_existing_item() {
+    let fixture = minimal_warrens_fixture(
+        json!({
+            "world": "demo.world.original-v1",
+            "debugClearEntities": true,
+            "equipmentItems": [{
+                "id": "demo.item.echo-charm.1",
+                "kindId": "demo.item.echo-charm",
+                "quantity": 1,
+                "slotId": "charm",
+                "quality": "fine",
+                "affixIds": ["demo.affix.harmonic-edge"]
+            }]
+        }),
+        json!([]),
+    );
+
+    let observed = observe(&fixture).expect("equipment precondition should be accepted");
+
+    assert_eq!(observed.final_state.ground_item_count, 4);
+    assert_eq!(observed.final_state.equipment.len(), 1);
+    assert_eq!(
+        observed.final_state.equipment[0].id,
+        "demo.item.echo-charm.1"
+    );
+    assert_eq!(
+        observed.final_state.item_property_knowledge[0].known_affix_ids,
+        ["demo.affix.harmonic-edge"]
+    );
+}
+
+#[test]
+fn buy_first_from_shop_resolves_projected_stock_without_movement() {
+    let fixture = minimal_warrens_fixture(
+        json!({
+            "world": "demo.world.warrens-journey",
+            "debugClearEntities": true,
+            "playerPosition": { "x": 32, "y": 13 },
+            "playerGold": 1000000
+        }),
+        json!([{
+            "command": {
+                "type": "buy-first-from-shop",
+                "shopId": "demo.shop.outpost-general-store",
+                "quantity": 1
+            }
+        }]),
+    );
+
+    let observed = observe(&fixture).expect("first projected shop item should be purchasable");
+
+    assert_eq!(
+        observed.final_state.player_position,
+        Position { x: 32, y: 13 }
+    );
+    assert_eq!(observed.events.len(), 1);
+    assert_eq!(observed.events[0].kind, "shop.purchase");
+    assert!(observed.changed_cells.is_empty());
 }

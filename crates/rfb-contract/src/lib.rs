@@ -2,15 +2,16 @@
 
 use std::collections::BTreeSet;
 
-use rfb_core::{CoreError, Game};
+use rfb_core::{CoreError, Game, load_built_in_content};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, CampaignStateDto, CampaignStateSaveDto,
-    CharacterSummary, EntityFactionDto, EquipmentItemDto, GameCommand, GameCommandEnvelope,
-    GameEventDto, GoldPileDto, InventoryItemDto, InventoryItemSaveDto, ItemActivationDto,
-    ItemChargesDto, ItemCurseSeverityDto, ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto,
-    PROTOCOL_VERSION, PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto,
-    ResourcePoolDto, ResourcePoolSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
+    CharacterSummary, EntityFactionDto, EquipmentItemDto, EquipmentItemSaveDto, GameCommand,
+    GameCommandEnvelope, GameEventDto, GoldPileDto, HomeDto, InventoryItemDto,
+    InventoryItemSaveDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
+    ItemEnchantmentsDto, ItemFuelDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
+    ItemQualityDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PROTOCOL_VERSION,
+    PlayerBuildDto, Position, RecallStateDto, ResistanceDto, ResistanceSaveDto, ResourcePoolDto,
+    ResourcePoolSaveDto, RolledAffixSaveDto, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1, ShopDto,
     StatusDto, StatusSaveDto, SummonCommandDto, SummonSaveDto, TaskStatusDto,
     TerrainInteractionDto, TownDto,
 };
@@ -21,7 +22,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 2;
-pub const ACTIVE_BASELINE: &str = "contract-v165";
+pub const ACTIVE_BASELINE: &str = "contract-v168";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const ORIGINAL_TEST_WORLD: &str = "demo.world.original-v1";
@@ -76,6 +77,8 @@ pub struct Preconditions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_build_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player_position: Option<Position>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_gold: Option<u32>,
@@ -111,6 +114,8 @@ pub struct Preconditions {
     pub entity_effects: Vec<EntityEffectsPrecondition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory_items: Vec<InventoryItemPrecondition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub equipment_items: Vec<EquipmentItemSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terrain_overrides: Vec<TerrainOverridePrecondition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -163,6 +168,12 @@ pub struct InventoryItemPrecondition {
         skip_serializing_if = "is_default_precondition_quantity"
     )]
     pub quantity: u32,
+    #[serde(default, skip_serializing_if = "is_ordinary_item_quality")]
+    pub quality: ItemQualityDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rolled_affixes: Vec<RolledAffixSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generation_depth: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -185,6 +196,10 @@ const fn default_precondition_quantity() -> u32 {
 
 const fn is_default_precondition_quantity(value: &u32) -> bool {
     *value == default_precondition_quantity()
+}
+
+const fn is_ordinary_item_quality(value: &ItemQualityDto) -> bool {
+    matches!(value, ItemQualityDto::Ordinary)
 }
 
 const fn is_false(value: &bool) -> bool {
@@ -225,11 +240,29 @@ pub struct TerrainOverridePrecondition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ContractCommand {
-    pub command: GameCommand,
+    pub command: ContractCommandAction,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub command_seq: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected_revision: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ContractCommandAction {
+    Protocol(GameCommand),
+    Fixture(ContractOnlyCommand),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum ContractOnlyCommand {
+    BuyFirstFromShop { shop_id: String, quantity: u32 },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -266,6 +299,8 @@ pub struct FinalStateAssertion {
     pub town: Option<TownDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub shops: Vec<ShopDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub homes: Vec<HomeDto>,
     pub player_position: Position,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
@@ -488,6 +523,39 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     }
     payload.player.statuses = fixture.preconditions.player_statuses.clone();
     payload.player.resistances = fixture.preconditions.player_resistances.clone();
+    let precondition_item_ids = fixture
+        .preconditions
+        .inventory_items
+        .iter()
+        .map(|item| item.id.as_str())
+        .chain(
+            fixture
+                .preconditions
+                .equipment_items
+                .iter()
+                .map(|item| item.id.as_str()),
+        )
+        .collect::<BTreeSet<_>>();
+    payload
+        .items
+        .retain(|item| !precondition_item_ids.contains(item.id.as_str()));
+    payload
+        .inventory
+        .retain(|item| !precondition_item_ids.contains(item.id.as_str()));
+    payload
+        .equipment
+        .retain(|item| !precondition_item_ids.contains(item.id.as_str()));
+    payload
+        .carried_items
+        .retain(|item| !precondition_item_ids.contains(item.id.as_str()));
+    for floor in &mut payload.stored_floors {
+        floor
+            .items
+            .retain(|item| !precondition_item_ids.contains(item.id.as_str()));
+        floor
+            .carried_items
+            .retain(|item| !precondition_item_ids.contains(item.id.as_str()));
+    }
     for item in fixture
         .preconditions
         .inventory_items
@@ -498,9 +566,9 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             id: item.id.clone(),
             kind_id: item.kind_id.clone(),
             quantity: item.quantity,
-            quality: ItemQualityDto::Ordinary,
-            affix_ids: Vec::new(),
-            rolled_affixes: Vec::new(),
+            quality: item.quality,
+            affix_ids: item.affix_ids.clone(),
+            rolled_affixes: item.rolled_affixes.clone(),
             activation: item.activation.clone(),
             charges: item.charges,
             fuel: item.fuel,
@@ -508,6 +576,20 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             curse: item.curse,
             device_recovery_progress: item.device_recovery_progress,
         });
+    }
+    for item in &fixture.preconditions.equipment_items {
+        payload
+            .item_property_knowledge
+            .retain(|knowledge| knowledge.item_id != item.id);
+        payload
+            .item_property_knowledge
+            .push(ItemPropertyKnowledgeSaveDto {
+                item_id: item.id.clone(),
+                appraised: true,
+                identified: true,
+                known_affix_ids: item.affix_ids.clone(),
+            });
+        payload.equipment.push(item.clone());
     }
     for terrain_override in &fixture.preconditions.terrain_overrides {
         if terrain_override.position.x < 0
@@ -525,6 +607,55 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             + usize::try_from(terrain_override.position.x)
                 .expect("validated terrain x must fit usize");
         payload.terrain.terrain_ids[index].clone_from(&terrain_override.terrain_id);
+    }
+    if let Some(position) = fixture.preconditions.player_position {
+        let terrain_index =
+            fixture_position_index(position, payload.terrain.width, payload.terrain.height)
+                .ok_or(ContractError::InvalidPlayerPositionPrecondition(position))?;
+        let terrain_id = &payload.terrain.terrain_ids[terrain_index];
+        let content = load_built_in_content()?;
+        if !content
+            .terrain(terrain_id)
+            .is_some_and(|terrain| terrain.walkable)
+        {
+            return Err(ContractError::InvalidPlayerPositionPrecondition(position));
+        }
+        payload.player.position = position;
+        if let Some(town) = content
+            .world(&payload.world_id)
+            .and_then(|world| world.town_id.as_deref())
+            .and_then(|town_id| content.town(town_id))
+            .filter(|town| town.floor_id == payload.current_floor_id)
+        {
+            for shop_id in &town.shop_ids {
+                let Some(shop) = content.shop(shop_id) else {
+                    continue;
+                };
+                if position.x == i32::from(shop.entrance_position.x)
+                    && position.y == i32::from(shop.entrance_position.y)
+                    && let Some(state) = payload
+                        .shop_states
+                        .iter_mut()
+                        .find(|state| &state.shop_id == shop_id)
+                {
+                    state.visited = true;
+                }
+            }
+            for facility_id in &town.facility_ids {
+                let Some(facility) = content.town_facility(facility_id) else {
+                    continue;
+                };
+                if position.x == i32::from(facility.entrance_position.x)
+                    && position.y == i32::from(facility.entrance_position.y)
+                    && let Some(state) = payload
+                        .home_states
+                        .iter_mut()
+                        .find(|state| &state.facility_id == facility_id)
+                {
+                    state.visited = true;
+                }
+            }
+        }
     }
     payload
         .revealed_terrain
@@ -610,6 +741,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     let mut errors = Vec::new();
 
     for (index, contract_command) in fixture.commands.iter().enumerate() {
+        let command = resolve_contract_command(&game, &contract_command.command)?;
         let envelope = GameCommandEnvelope {
             command_seq: contract_command
                 .command_seq
@@ -617,7 +749,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             expected_revision: contract_command
                 .expected_revision
                 .unwrap_or(game.revision()),
-            command: contract_command.command.clone(),
+            command,
         };
         match game.dispatch(envelope) {
             Ok(update) => {
@@ -651,6 +783,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             dungeon_instance_id: snapshot.dungeon_instance_id.clone(),
             town: snapshot.town.clone(),
             shops: snapshot.shops.clone(),
+            homes: snapshot.homes.clone(),
             player_position: snapshot.player.position,
             player_hp: Some(snapshot.player.hp),
             player_max_hp: Some(snapshot.player.max_hp),
@@ -809,6 +942,9 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     for item in &fixture.preconditions.inventory_items {
         if let Some(depth) = item.generation_depth
             && (item.quantity != 1
+                || item.quality != ItemQualityDto::Ordinary
+                || !item.affix_ids.is_empty()
+                || !item.rolled_affixes.is_empty()
                 || item.activation.is_some()
                 || item.charges.is_some()
                 || !item.enchantments.is_empty()
@@ -835,6 +971,49 @@ fn parse_seed(seed: &str) -> Result<u64, ContractError> {
     }
     seed.parse::<u64>()
         .map_err(|_| ContractError::InvalidSeed(seed.to_owned()))
+}
+
+fn fixture_position_index(position: Position, width: u16, height: u16) -> Option<usize> {
+    if position.x < 0
+        || position.y < 0
+        || position.x >= i32::from(width)
+        || position.y >= i32::from(height)
+    {
+        return None;
+    }
+    Some(
+        usize::try_from(position.y).ok()? * usize::from(width)
+            + usize::try_from(position.x).ok()?,
+    )
+}
+
+fn resolve_contract_command(
+    game: &Game,
+    command: &ContractCommandAction,
+) -> Result<GameCommand, ContractError> {
+    match command {
+        ContractCommandAction::Protocol(command) => Ok(command.clone()),
+        ContractCommandAction::Fixture(ContractOnlyCommand::BuyFirstFromShop {
+            shop_id,
+            quantity,
+        }) => {
+            let snapshot = game.snapshot();
+            let shop = snapshot
+                .shops
+                .iter()
+                .find(|shop| &shop.id == shop_id)
+                .ok_or_else(|| ContractError::UnavailableShopSelection(shop_id.clone()))?;
+            let item = shop
+                .stock
+                .first()
+                .ok_or_else(|| ContractError::EmptyShopSelection(shop_id.clone()))?;
+            Ok(GameCommand::BuyFromShop {
+                shop_id: shop_id.clone(),
+                item_id: item.id.clone(),
+                quantity: *quantity,
+            })
+        }
+    }
 }
 
 fn command_error_kind(error: &CoreError) -> Result<CommandErrorKind, ContractError> {
@@ -894,10 +1073,16 @@ pub enum ContractError {
     MissingProgressPrecondition,
     #[error("terrain precondition position is outside the active floor: {0:?}")]
     InvalidTerrainPrecondition(Position),
+    #[error("player position precondition is not a walkable cell on the active floor: {0:?}")]
+    InvalidPlayerPositionPrecondition(Position),
     #[error("generated item precondition is invalid for {0}")]
     InvalidGeneratedItemPrecondition(String),
     #[error("item curse debug preconditions cannot force both landing and resistance")]
     ConflictingItemCurseDebugPreconditions,
+    #[error("fixture cannot select stock from unavailable shop {0}")]
+    UnavailableShopSelection(String),
+    #[error("fixture cannot select the first item from empty shop {0}")]
+    EmptyShopSelection(String),
     #[error("duplicate contract fixture ID {0}")]
     DuplicateId(String),
     #[error("invalid contract seed {0}")]

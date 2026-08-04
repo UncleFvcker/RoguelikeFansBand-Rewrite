@@ -414,6 +414,17 @@ pub(crate) enum DomainEvent {
         item_id: String,
         reason: String,
     },
+    HomeItemDeposited {
+        outcome: crate::game::town::HomeTransferOutcome,
+    },
+    HomeItemWithdrawn {
+        outcome: crate::game::town::HomeTransferOutcome,
+    },
+    HomeTransferUnavailable {
+        facility_id: String,
+        item_id: String,
+        reason: String,
+    },
     ItemPickupOverCapacity {
         target_kind_id: String,
         quantity: u32,
@@ -1868,6 +1879,39 @@ impl DomainEvent {
                 "shop-transaction-unavailable",
                 [
                     ("shop", shop_id.clone()),
+                    ("item", item_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::HomeItemDeposited { outcome } => dto(
+                "home.deposit",
+                "home-deposit-success",
+                [
+                    ("facility", outcome.facility_id.clone()),
+                    ("item", outcome.item_id.clone()),
+                    ("target", outcome.item_kind_id.clone()),
+                    ("quantity", outcome.quantity.to_string()),
+                ],
+            ),
+            Self::HomeItemWithdrawn { outcome } => dto(
+                "home.withdraw",
+                "home-withdraw-success",
+                [
+                    ("facility", outcome.facility_id.clone()),
+                    ("item", outcome.item_id.clone()),
+                    ("target", outcome.item_kind_id.clone()),
+                    ("quantity", outcome.quantity.to_string()),
+                ],
+            ),
+            Self::HomeTransferUnavailable {
+                facility_id,
+                item_id,
+                reason,
+            } => dto(
+                "home.transfer-unavailable",
+                "home-transfer-unavailable",
+                [
+                    ("facility", facility_id.clone()),
                     ("item", item_id.clone()),
                     ("reason", reason.clone()),
                 ],

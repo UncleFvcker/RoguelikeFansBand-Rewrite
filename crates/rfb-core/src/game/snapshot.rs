@@ -651,6 +651,7 @@ impl Game {
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             town: self.current_town_dto(),
             shops: self.current_shop_dtos(),
+            homes: self.current_home_dtos(),
             terrain_interactions: self.terrain_interactions(),
             tasks: self.task_statuses(),
             campaign: self.campaign_state_dto(),

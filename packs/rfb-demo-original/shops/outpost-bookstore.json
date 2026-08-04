@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-bookstore-description",
   "townId": "demo.town.outpost",
   "category": "bookstore",
-  "entrancePosition": { "x": 40, "y": 8 },
+  "entrancePosition": { "x": 55, "y": 13 },
   "entranceTerrainId": "demo.terrain.bookstore-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-doraf",

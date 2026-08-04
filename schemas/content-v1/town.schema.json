@@ -9,6 +9,13 @@
     "descriptionKey": {
       "type": "string"
     },
+    "facilityIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "floorId": {
       "type": "string"
     },

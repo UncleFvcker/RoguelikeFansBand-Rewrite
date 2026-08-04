@@ -60,6 +60,7 @@ pub(crate) enum ItemLocation {
     Equipped { slot_id: String },
     CarriedBy { actor_id: String },
     Shop { shop_id: String },
+    Home { facility_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -138,6 +139,12 @@ pub(crate) struct ShopState {
     pub(crate) owner_id: String,
     pub(crate) inventory: Vec<ItemInstance>,
     pub(crate) last_maintenance_world_tick: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct HomeState {
+    pub(crate) visited: bool,
+    pub(crate) inventory: Vec<ItemInstance>,
 }
 
 pub(crate) struct EquipOutcome {

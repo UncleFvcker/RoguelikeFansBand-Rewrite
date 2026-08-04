@@ -14,8 +14,9 @@ use super::{
     RaceDefinition, RegionTableDefinition, ResourceDefinition, SHOP_SCHEMA, SKILL_SCHEMA,
     SKILL_SET_SCHEMA, ShopDefinition, SkillDefinition, SkillSetDefinition, SourceAbilityDefinition,
     SourceItemDefinition, TERRAIN_FEATURE_TABLE_SCHEMA, TERRAIN_SCHEMA, THEME_TABLE_SCHEMA,
-    TOWN_SCHEMA, TerrainDefinition, TerrainFeatureTableDefinition, ThemeTableDefinition,
-    TownDefinition, VAULT_SCHEMA, VaultDefinition, WORLD_SCHEMA, WorldDefinition,
+    TOWN_FACILITY_SCHEMA, TOWN_SCHEMA, TerrainDefinition, TerrainFeatureTableDefinition,
+    ThemeTableDefinition, TownDefinition, TownFacilityDefinition, VAULT_SCHEMA, VaultDefinition,
+    WORLD_SCHEMA, WorldDefinition,
 };
 
 pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde_json::Error> {
@@ -128,6 +129,11 @@ pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde
             schema_for!(VaultDefinition),
         )?,
         schema_document("town.schema.json", TOWN_SCHEMA, schema_for!(TownDefinition))?,
+        schema_document(
+            "town-facility.schema.json",
+            TOWN_FACILITY_SCHEMA,
+            schema_for!(TownFacilityDefinition),
+        )?,
         schema_document("shop.schema.json", SHOP_SCHEMA, schema_for!(ShopDefinition))?,
         schema_document(
             "world.schema.json",

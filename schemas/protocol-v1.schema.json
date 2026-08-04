@@ -3688,6 +3688,32 @@
         {
           "type": "object",
           "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "deposit-at-home"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "itemId",
+            "quantity"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "abilityId": {
               "type": "string"
             },
@@ -3927,6 +3953,32 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "withdraw-from-home"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "itemId",
+            "quantity"
           ]
         },
         {
@@ -4730,6 +4782,13 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "homes": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/HomeDto"
+          }
+        },
         "inventory": {
           "type": "array",
           "items": {
@@ -4905,6 +4964,13 @@
             "$ref": "#/$defs/GoldPileDto"
           }
         },
+        "homes": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/HomeDto"
+          }
+        },
         "inventory": {
           "type": "array",
           "items": {
@@ -5050,6 +5116,103 @@
       "required": [
         "requested",
         "applied"
+      ]
+    },
+    "HomeDto": {
+      "type": "object",
+      "properties": {
+        "depositItems": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/HomeItemDto"
+          }
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "entrancePosition": {
+          "$ref": "#/$defs/Position"
+        },
+        "entranceTerrainId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "playerAtEntrance": {
+          "type": "boolean"
+        },
+        "storedItems": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/HomeItemDto"
+          }
+        },
+        "visited": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey",
+        "entrancePosition",
+        "entranceTerrainId",
+        "visited",
+        "playerAtEntrance"
+      ]
+    },
+    "HomeItemDto": {
+      "type": "object",
+      "properties": {
+        "displayNameKey": {
+          "type": "string"
+        },
+        "fuel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemFuelDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maximumQuantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "quantity": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "weightTenthsPound": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "kindId",
+        "displayNameKey",
+        "quantity",
+        "maximumQuantity",
+        "weightTenthsPound"
       ]
     },
     "InventoryItemDto": {
@@ -6654,6 +6817,7 @@
         "temple",
         "alchemist",
         "magic-shop",
+        "black-market",
         "bookstore"
       ]
     },

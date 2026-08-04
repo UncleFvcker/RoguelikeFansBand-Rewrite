@@ -88,6 +88,11 @@
       "foreground": "#d8b6e8",
       "background": "#31243a"
     },
+    "demo.terrain.black-market-entrance": {
+      "glyph": "7",
+      "foreground": "#e6a3a3",
+      "background": "#351d22"
+    },
     "demo.terrain.temple-wall": {
       "glyph": "▒",
       "foreground": "#ddd8c9",

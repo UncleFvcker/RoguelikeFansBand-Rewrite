@@ -1,0 +1,80 @@
+{
+  "$defs": {
+    "ContentPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "y": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "TownFacilityCategory": {
+      "enum": [
+        "home"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "category": {
+      "$ref": "#/$defs/TownFacilityCategory"
+    },
+    "descriptionKey": {
+      "type": "string"
+    },
+    "entrancePosition": {
+      "$ref": "#/$defs/ContentPosition"
+    },
+    "entranceTerrainId": {
+      "type": "string"
+    },
+    "formatVersion": {
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "id": {
+      "type": "string"
+    },
+    "nameKey": {
+      "type": "string"
+    },
+    "townId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "$schema",
+    "formatVersion",
+    "id",
+    "nameKey",
+    "descriptionKey",
+    "townId",
+    "category",
+    "entrancePosition",
+    "entranceTerrainId"
+  ],
+  "title": "TownFacilityDefinition",
+  "type": "object"
+}

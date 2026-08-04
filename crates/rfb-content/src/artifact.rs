@@ -46,6 +46,7 @@ impl CompiledArtifact {
             terrain_feature_table_count: self.content.terrain_feature_tables.len(),
             vault_count: self.content.vaults.len(),
             town_count: self.content.towns.len(),
+            town_facility_count: self.content.town_facilities.len(),
             shop_count: self.content.shops.len(),
             world_count: self.content.worlds.len(),
         }

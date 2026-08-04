@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v163`，机器可读政策固定在：
+当前逻辑基线是 `contract-v168`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -27,6 +27,8 @@ cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-poli
 - JSON 可以省略由 contract Schema 明确定义的默认值；反序列化后的完整对象才是 exact 比较边界。
 - 历史结果从对应 Git 提交恢复，不在当前工作树重复保存。
 - `active/waivers/` 只保留 `.gitkeep`。当前不接受 waiver 文件。
+- fixture 应只覆盖一个最小行为。除专门验证移动外，位置相关场景使用 `playerPosition` 前置条件，不混入移动命令，也不在一个 fixture 中串联多个设施。
+- 通用商店购买场景使用 `buy-first-from-shop` 选择当前投影库存首项；只有物品身份或物品自身行为是测试主题时，才绑定具体实例。
 
 ## 3. 更新流程
 

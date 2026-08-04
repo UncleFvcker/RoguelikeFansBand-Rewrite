@@ -7,6 +7,7 @@
   "glyph": "?",
   "weightTenthsPound": 15,
   "maxStack": 1,
+  "baseValue": 15000,
   "abilityBookId": "demo.ability-book.black-channels",
   "tags": ["book", "death", "spellbook"]
 }

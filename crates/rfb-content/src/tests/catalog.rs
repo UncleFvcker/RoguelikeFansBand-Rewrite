@@ -6,7 +6,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.155.0");
+    assert_eq!(catalog.pack_version(), "1.158.0");
     assert_eq!(
         catalog
             .town("demo.town.outpost")
@@ -16,6 +16,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
             [
                 "demo.shop.outpost-alchemist".to_owned(),
                 "demo.shop.outpost-armoury".to_owned(),
+                "demo.shop.outpost-black-market".to_owned(),
                 "demo.shop.outpost-bookstore".to_owned(),
                 "demo.shop.outpost-general-store".to_owned(),
                 "demo.shop.outpost-magic-shop".to_owned(),
@@ -26,6 +27,18 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         ))
     );
     assert_eq!(
+        catalog.shop("demo.shop.outpost-black-market").map(|shop| (
+            shop.category,
+            shop.entrance_position,
+            shop.entrance_terrain_id.as_str(),
+        )),
+        Some((
+            ShopCategory::BlackMarket,
+            ContentPosition { x: 55, y: 19 },
+            "demo.terrain.black-market-entrance",
+        ))
+    );
+    assert_eq!(
         catalog.shop("demo.shop.outpost-bookstore").map(|shop| (
             shop.category,
             shop.entrance_position,
@@ -33,7 +46,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Bookstore,
-            ContentPosition { x: 40, y: 8 },
+            ContentPosition { x: 55, y: 13 },
             "demo.terrain.bookstore-entrance",
         ))
     );
@@ -45,7 +58,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Armoury,
-            ContentPosition { x: 15, y: 14 },
+            ContentPosition { x: 30, y: 19 },
             "demo.terrain.armoury-entrance",
         ))
     );
@@ -57,7 +70,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Weaponsmith,
-            ContentPosition { x: 19, y: 14 },
+            ContentPosition { x: 34, y: 19 },
             "demo.terrain.weaponsmith-entrance",
         ))
     );
@@ -69,7 +82,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Temple,
-            ContentPosition { x: 29, y: 14 },
+            ContentPosition { x: 45, y: 19 },
             "demo.terrain.temple-entrance",
         ))
     );
@@ -81,7 +94,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::Alchemist,
-            ContentPosition { x: 38, y: 8 },
+            ContentPosition { x: 53, y: 13 },
             "demo.terrain.alchemist-entrance",
         ))
     );
@@ -95,7 +108,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         Some((
             "demo.town.outpost",
             ShopCategory::GeneralStore,
-            ContentPosition { x: 17, y: 8 },
+            ContentPosition { x: 32, y: 13 },
             "demo.terrain.general-store-entrance",
         ))
     );
@@ -107,7 +120,7 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
         )),
         Some((
             ShopCategory::MagicShop,
-            ContentPosition { x: 42, y: 8 },
+            ContentPosition { x: 57, y: 13 },
             "demo.terrain.magic-shop-entrance",
         ))
     );
@@ -705,9 +718,10 @@ fn compiled_catalog_exposes_stable_runtime_indexes() {
     let warrens = catalog
         .world("demo.world.warrens-journey")
         .expect("Warrens world should remain available");
-    assert_eq!((warrens.width, warrens.height), (66, 22));
+    assert_eq!((warrens.width, warrens.height), (96, 32));
     assert_eq!(warrens.procedural_floors.len(), 9);
     let warrens_first = &warrens.procedural_floors[0];
+    assert_eq!((warrens_first.width, warrens_first.height), (66, 22));
     assert_eq!(
         warrens_first.generation_budget.as_ref().map(|budget| (
             budget.actor_slots,

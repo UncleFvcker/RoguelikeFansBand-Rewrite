@@ -6,15 +6,16 @@ use rfb_content::{
     ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, WorldDefinition,
 };
 use rfb_protocol::{
-    ItemEnchantmentsDto, ItemQualityDto, Position, ShopCategoryDto, ShopDto, ShopOwnerDto,
-    ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
+    HomeDto, HomeItemDto, HomeStateSaveDto, ItemEnchantmentsDto, ItemQualityDto, Position,
+    ShopCategoryDto, ShopDto, ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto,
+    TownDto, TownStateSaveDto,
 };
 
 use crate::{
     error::CoreError,
     rng::RfbRng,
     save::position_from_content,
-    state::{FloorState, ItemInstance, ItemLocation, ShopState, TownState},
+    state::{FloorState, HomeState, ItemInstance, ItemLocation, ShopState, TownState},
     stats::AttributeKind,
 };
 
@@ -32,6 +33,94 @@ const CHARISMA_PRICE_ADJUST_PERCENT: [u16; 38] = [
 ];
 
 pub(super) type TownAndShopStates = (BTreeMap<String, TownState>, BTreeMap<String, ShopState>);
+
+pub(super) fn initial_home_states(
+    world: &WorldDefinition,
+    content: &ContentCatalog,
+) -> BTreeMap<String, HomeState> {
+    let Some(town) = world.town_id.as_deref().and_then(|id| content.town(id)) else {
+        return BTreeMap::new();
+    };
+    town.facility_ids
+        .iter()
+        .filter_map(|id| {
+            content.town_facility(id).map(|facility| {
+                (
+                    facility.id.clone(),
+                    HomeState {
+                        visited: false,
+                        inventory: Vec::new(),
+                    },
+                )
+            })
+        })
+        .collect()
+}
+
+pub(super) fn home_state_to_save(facility_id: &str, state: &HomeState) -> HomeStateSaveDto {
+    let mut inventory = state.inventory.clone();
+    for item in &mut inventory {
+        item.location = ItemLocation::Inventory;
+    }
+    HomeStateSaveDto {
+        facility_id: facility_id.to_owned(),
+        visited: state.visited,
+        inventory: inventory_to_save(&inventory),
+    }
+}
+
+pub(super) fn restore_home_states(
+    world: &WorldDefinition,
+    content: &ContentCatalog,
+    current_floor_id: &str,
+    player_position: Position,
+    saved_homes: &[HomeStateSaveDto],
+) -> Result<BTreeMap<String, HomeState>, CoreError> {
+    let Some(town) = world.town_id.as_deref().and_then(|id| content.town(id)) else {
+        return saved_homes
+            .is_empty()
+            .then(BTreeMap::new)
+            .ok_or(CoreError::InvalidSave("home state is invalid"));
+    };
+    let expected = town.facility_ids.iter().cloned().collect::<BTreeSet<_>>();
+    let mut states = BTreeMap::new();
+    for saved in saved_homes {
+        let Some(facility) = content.town_facility(&saved.facility_id) else {
+            return Err(CoreError::InvalidSave("home state is invalid"));
+        };
+        let mut inventory = saved
+            .inventory
+            .iter()
+            .cloned()
+            .map(|item| inventory_item_from_dto(item, content))
+            .collect::<Result<Vec<_>, _>>()?;
+        for item in &mut inventory {
+            item.location = ItemLocation::Home {
+                facility_id: saved.facility_id.clone(),
+            };
+        }
+        if !expected.contains(&saved.facility_id)
+            || (current_floor_id == town.floor_id
+                && player_position == position_from_content(facility.entrance_position)
+                && !saved.visited)
+            || states
+                .insert(
+                    saved.facility_id.clone(),
+                    HomeState {
+                        visited: saved.visited,
+                        inventory,
+                    },
+                )
+                .is_some()
+        {
+            return Err(CoreError::InvalidSave("home state is invalid"));
+        }
+    }
+    if states.len() != expected.len() {
+        return Err(CoreError::InvalidSave("home state is invalid"));
+    }
+    Ok(states)
+}
 
 pub(super) fn shop_state_to_save(shop_id: &str, state: &ShopState) -> ShopStateSaveDto {
     let mut inventory = state.inventory.clone();
@@ -267,6 +356,7 @@ fn category_dto(category: ShopCategory) -> ShopCategoryDto {
         ShopCategory::Temple => ShopCategoryDto::Temple,
         ShopCategory::Alchemist => ShopCategoryDto::Alchemist,
         ShopCategory::MagicShop => ShopCategoryDto::MagicShop,
+        ShopCategory::BlackMarket => ShopCategoryDto::BlackMarket,
         ShopCategory::Bookstore => ShopCategoryDto::Bookstore,
     }
 }
@@ -285,6 +375,27 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
         .unwrap_or(u32::MAX)
         .max(1)
         .min(cap)
+}
+
+fn player_purchase_unit_price(shop: &ShopDefinition, base_value: u32, factor: u16) -> u32 {
+    let price = buy_unit_price(base_value, factor);
+    if shop.category == ShopCategory::BlackMarket {
+        price.saturating_mul(2)
+    } else {
+        price
+    }
+}
+
+fn player_sale_unit_price(shop: &ShopDefinition, base_value: u32, factor: u16) -> u32 {
+    if shop.category == ShopCategory::BlackMarket {
+        ((u64::from(base_value) * 100) / u64::from(factor.max(105)) / 2)
+            .try_into()
+            .unwrap_or(u32::MAX)
+            .max(1)
+            .min(shop.owner.purchase_price_cap)
+    } else {
+        sell_unit_price(base_value, factor, shop.owner.purchase_price_cap)
+    }
 }
 
 fn shop_price_factor(game: &Game, shop: &ShopDefinition) -> u16 {
@@ -330,6 +441,233 @@ pub(crate) struct ShopTransactionOutcome {
     pub(crate) unit_price: u32,
     pub(crate) total_price: u32,
     pub(crate) gold_balance: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct HomeTransferOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) item_id: String,
+    pub(crate) item_kind_id: String,
+    pub(crate) quantity: u32,
+}
+
+fn home_accessible(game: &Game, facility_id: &str) -> bool {
+    let Some(facility) = game.content.town_facility(facility_id) else {
+        return false;
+    };
+    let Some(town) = game.content.town(&facility.town_id) else {
+        return false;
+    };
+    game.current_floor_id == town.floor_id
+        && game.player.position == position_from_content(facility.entrance_position)
+}
+
+fn home_item_group(
+    game: &Game,
+    facility_id: &str,
+    item_id: &str,
+) -> Option<(ItemInstance, Vec<String>, u32)> {
+    let state = game.home_states.get(facility_id)?;
+    let anchor = state
+        .inventory
+        .iter()
+        .find(|item| item.id == item_id)?
+        .clone();
+    let anchor_knowledge = game.item_property_knowledge.get(&anchor.id);
+    let mut items = state
+        .inventory
+        .iter()
+        .filter(|item| {
+            item_instances_stack_compatible(item, &anchor)
+                && game.item_property_knowledge.get(&item.id) == anchor_knowledge
+        })
+        .collect::<Vec<_>>();
+    items.sort_by(|left, right| left.id.cmp(&right.id));
+    let quantity = items.iter().map(|item| item.quantity).sum();
+    Some((
+        anchor,
+        items.into_iter().map(|item| item.id.clone()).collect(),
+        quantity,
+    ))
+}
+
+fn inventory_home_group(game: &Game, item_id: &str) -> Option<(ItemInstance, Vec<String>, u32)> {
+    inventory_sale_group(game, item_id)
+}
+
+fn grouped_home_items<'a>(
+    game: &'a Game,
+    items: &'a [ItemInstance],
+) -> Vec<(&'a ItemInstance, u32)> {
+    let mut sorted = items.iter().collect::<Vec<_>>();
+    sorted.sort_by(|left, right| left.id.cmp(&right.id));
+    let mut groups: Vec<(&ItemInstance, u32)> = Vec::new();
+    for item in sorted {
+        let knowledge = game.item_property_knowledge.get(&item.id);
+        if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
+            item_instances_stack_compatible(anchor, item)
+                && game.item_property_knowledge.get(&anchor.id) == knowledge
+        }) {
+            *quantity = quantity.saturating_add(item.quantity);
+        } else {
+            groups.push((item, item.quantity));
+        }
+    }
+    groups
+}
+
+fn grouped_inventory_for_home(game: &Game) -> Vec<(&ItemInstance, u32)> {
+    let mut sorted = game
+        .items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .collect::<Vec<_>>();
+    sorted.sort_by(|left, right| left.id.cmp(&right.id));
+    let mut groups: Vec<(&ItemInstance, u32)> = Vec::new();
+    for item in sorted {
+        let knowledge = game.item_property_knowledge.get(&item.id);
+        if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
+            item_instances_stack_compatible(anchor, item)
+                && game.item_property_knowledge.get(&anchor.id) == knowledge
+        }) {
+            *quantity = quantity.saturating_add(item.quantity);
+        } else {
+            groups.push((item, item.quantity));
+        }
+    }
+    groups
+}
+
+fn transfer_inventory_group_to_home(
+    game: &mut Game,
+    facility_id: &str,
+    item_ids: &[String],
+    quantity: u32,
+    mut split_id: Option<String>,
+) -> Vec<ItemInstance> {
+    let mut remaining = quantity;
+    let mut transferred = Vec::new();
+    for item_id in item_ids {
+        if remaining == 0 {
+            break;
+        }
+        let index = game
+            .items
+            .iter()
+            .position(|item| item.id == *item_id)
+            .expect("preflighted inventory item must remain available");
+        let moved = remaining.min(game.items[index].quantity);
+        let mut item = if moved == game.items[index].quantity {
+            game.items.remove(index)
+        } else {
+            let mut item = game.items[index].clone();
+            game.items[index].quantity -= moved;
+            item.id = split_id
+                .take()
+                .expect("partial home deposit must have a split id");
+            if let Some(knowledge) = game.item_property_knowledge.get(item_id).cloned() {
+                game.item_property_knowledge
+                    .insert(item.id.clone(), knowledge);
+            }
+            item.quantity = moved;
+            item
+        };
+        item.location = ItemLocation::Home {
+            facility_id: facility_id.to_owned(),
+        };
+        transferred.push(item);
+        remaining -= moved;
+    }
+    transferred
+}
+
+fn transfer_home_group_to_inventory(
+    game: &mut Game,
+    facility_id: &str,
+    item_ids: &[String],
+    quantity: u32,
+    mut split_id: Option<String>,
+) -> Vec<ItemInstance> {
+    let state = game
+        .home_states
+        .get_mut(facility_id)
+        .expect("preflighted home must remain available");
+    let mut remaining = quantity;
+    let mut transferred = Vec::new();
+    for item_id in item_ids {
+        if remaining == 0 {
+            break;
+        }
+        let index = state
+            .inventory
+            .iter()
+            .position(|item| item.id == *item_id)
+            .expect("preflighted home item must remain available");
+        let moved = remaining.min(state.inventory[index].quantity);
+        let mut item = if moved == state.inventory[index].quantity {
+            state.inventory.remove(index)
+        } else {
+            let mut item = state.inventory[index].clone();
+            state.inventory[index].quantity -= moved;
+            item.id = split_id
+                .take()
+                .expect("partial home withdrawal must have a split id");
+            if let Some(knowledge) = game.item_property_knowledge.get(item_id).cloned() {
+                game.item_property_knowledge
+                    .insert(item.id.clone(), knowledge);
+            }
+            item.quantity = moved;
+            item
+        };
+        item.location = ItemLocation::Inventory;
+        transferred.push(item);
+        remaining -= moved;
+    }
+    transferred
+}
+
+fn carry_home_withdrawal_item(game: &mut Game, mut item: ItemInstance) -> Vec<String> {
+    let definition = game
+        .content
+        .item(&item.kind_id)
+        .expect("home item kind must remain available");
+    let source_knowledge = game.item_property_knowledge.get(&item.id).cloned();
+    let mut stack_indices = game
+        .items
+        .iter()
+        .enumerate()
+        .filter(|(_, carried)| {
+            carried.location == ItemLocation::Inventory
+                && carried.quantity < definition.max_stack
+                && item_instances_stack_compatible(carried, &item)
+                && game.item_property_knowledge.get(&carried.id) == source_knowledge.as_ref()
+        })
+        .map(|(index, _)| index)
+        .collect::<Vec<_>>();
+    stack_indices.sort_by(|left, right| game.items[*left].id.cmp(&game.items[*right].id));
+
+    let mut destination_ids = Vec::new();
+    for stack_index in stack_indices {
+        let transferred = item
+            .quantity
+            .min(definition.max_stack - game.items[stack_index].quantity);
+        if transferred == 0 {
+            continue;
+        }
+        game.items[stack_index].quantity += transferred;
+        item.quantity -= transferred;
+        destination_ids.push(game.items[stack_index].id.clone());
+        if item.quantity == 0 {
+            break;
+        }
+    }
+    if item.quantity > 0 {
+        destination_ids.push(item.id.clone());
+        game.items.push(item);
+    } else {
+        game.item_property_knowledge.remove(&item.id);
+    }
+    destination_ids
 }
 
 fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
@@ -542,6 +880,119 @@ fn transfer_group_to_shop(
 }
 
 impl Game {
+    pub(super) fn deposit_at_home(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+        quantity: u32,
+    ) -> Result<HomeTransferOutcome, &'static str> {
+        if self.content.town_facility(facility_id).is_none() {
+            return Err("unknown-home");
+        }
+        if !home_accessible(self, facility_id) {
+            return Err("home-unreachable");
+        }
+        if quantity == 0 {
+            return Err("invalid-quantity");
+        }
+        let Some((item, source_ids, available_quantity)) = inventory_home_group(self, item_id)
+        else {
+            return Err("item-unavailable");
+        };
+        if quantity > available_quantity {
+            return Err("insufficient-quantity");
+        }
+        let split_required = group_requires_split(&self.items, &source_ids, quantity);
+        let split_id = split_required
+            .then(|| self.allocate_item_instance_id())
+            .transpose()
+            .map_err(|_| "item-id-exhausted")?;
+        let deposited =
+            transfer_inventory_group_to_home(self, facility_id, &source_ids, quantity, split_id);
+        let destination_id = deposited
+            .first()
+            .expect("successful deposit must have a destination")
+            .id
+            .clone();
+        self.home_states
+            .get_mut(facility_id)
+            .expect("preflighted home must remain available")
+            .inventory
+            .extend(deposited);
+        Ok(HomeTransferOutcome {
+            facility_id: facility_id.to_owned(),
+            item_id: destination_id,
+            item_kind_id: item.kind_id,
+            quantity,
+        })
+    }
+
+    pub(super) fn withdraw_from_home(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+        quantity: u32,
+    ) -> Result<HomeTransferOutcome, &'static str> {
+        if self.content.town_facility(facility_id).is_none() {
+            return Err("unknown-home");
+        }
+        if !home_accessible(self, facility_id) {
+            return Err("home-unreachable");
+        }
+        if quantity == 0 {
+            return Err("invalid-quantity");
+        }
+        let Some((item, source_ids, available_quantity)) =
+            home_item_group(self, facility_id, item_id)
+        else {
+            return Err("item-unavailable");
+        };
+        if quantity > available_quantity {
+            return Err("insufficient-quantity");
+        }
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .expect("home item kind must remain available");
+        let added_weight = u32::from(definition.weight_tenths_pound).saturating_mul(quantity);
+        if self
+            .carried_weight_tenths_pound()
+            .saturating_add(added_weight)
+            > player_carry_capacity(self)
+        {
+            return Err("over-capacity");
+        }
+        let split_required = group_requires_split(
+            &self
+                .home_states
+                .get(facility_id)
+                .expect("preflighted home must remain available")
+                .inventory,
+            &source_ids,
+            quantity,
+        );
+        let split_id = split_required
+            .then(|| self.allocate_item_instance_id())
+            .transpose()
+            .map_err(|_| "item-id-exhausted")?;
+        let withdrawn =
+            transfer_home_group_to_inventory(self, facility_id, &source_ids, quantity, split_id);
+        let mut destination_ids = Vec::new();
+        for item in withdrawn {
+            destination_ids.extend(carry_home_withdrawal_item(self, item));
+        }
+        let destination_id = destination_ids
+            .first()
+            .expect("successful withdrawal must have a destination")
+            .clone();
+        Ok(HomeTransferOutcome {
+            facility_id: facility_id.to_owned(),
+            item_id: destination_id,
+            item_kind_id: item.kind_id,
+            quantity,
+        })
+    }
+
     pub(super) fn buy_from_shop(
         &mut self,
         shop_id: &str,
@@ -570,7 +1021,11 @@ impl Game {
             .content
             .item(&item_kind_id)
             .expect("shop item kind must remain available");
-        let unit_price = buy_unit_price(definition.base_value, shop_price_factor(self, &shop));
+        let unit_price = player_purchase_unit_price(
+            &shop,
+            definition.base_value,
+            shop_price_factor(self, &shop),
+        );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
             return Err("price-overflow");
         };
@@ -678,11 +1133,8 @@ impl Game {
             .content
             .item(&item_kind_id)
             .expect("inventory item kind must remain available");
-        let unit_price = sell_unit_price(
-            definition.base_value,
-            shop_price_factor(self, &shop),
-            shop.owner.purchase_price_cap,
-        );
+        let unit_price =
+            player_sale_unit_price(&shop, definition.base_value, shop_price_factor(self, &shop));
         let Some(total_price) = unit_price.checked_mul(quantity) else {
             return Err("price-overflow");
         };
@@ -851,7 +1303,14 @@ fn floor_needs_outpost_layout(
     let town = content
         .town(town_id)
         .expect("validated world town must remain available");
-    town.shop_ids.iter().any(|shop_id| {
+    town.facility_ids.iter().any(|facility_id| {
+        let facility = content
+            .town_facility(facility_id)
+            .expect("validated town facility must remain available");
+        let position = facility.entrance_position;
+        terrain.get(usize::from(position.y) * usize::from(width) + usize::from(position.x))
+            != Some(&facility.entrance_terrain_id)
+    }) || town.shop_ids.iter().any(|shop_id| {
         let shop = content
             .shop(shop_id)
             .expect("validated town shop must remain available");
@@ -925,6 +1384,17 @@ impl Game {
                 state.visited = true;
             }
         }
+        for facility_id in &town.facility_ids {
+            let facility = self
+                .content
+                .town_facility(facility_id)
+                .expect("validated town facility must remain available");
+            if self.player.position == position_from_content(facility.entrance_position)
+                && let Some(state) = self.home_states.get_mut(facility_id)
+            {
+                state.visited = true;
+            }
+        }
     }
 
     pub(super) fn current_town_dto(&self) -> Option<TownDto> {
@@ -973,7 +1443,8 @@ impl Game {
                                 .content
                                 .item(&item.kind_id)
                                 .expect("shop item kind must remain available");
-                            let unit_price = buy_unit_price(definition.base_value, factor);
+                            let unit_price =
+                                player_purchase_unit_price(shop, definition.base_value, factor);
                             let affordable = self.gold / unit_price.max(1);
                             let remaining_capacity = player_carry_capacity(self)
                                 .saturating_sub(self.carried_weight_tenths_pound());
@@ -1014,13 +1485,7 @@ impl Game {
                                 item_id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 unit_price: unavailable_reason.as_ref().map_or_else(
-                                    || {
-                                        sell_unit_price(
-                                            definition.base_value,
-                                            factor,
-                                            shop.owner.purchase_price_cap,
-                                        )
-                                    },
+                                    || player_sale_unit_price(shop, definition.base_value, factor),
                                     |_| 0,
                                 ),
                                 maximum_quantity: if unavailable_reason.is_some() {
@@ -1058,6 +1523,96 @@ impl Game {
                     },
                     stock,
                     sell_quotes,
+                }
+            })
+            .collect()
+    }
+
+    pub(super) fn current_home_dtos(&self) -> Vec<HomeDto> {
+        let Some(world) = self.content.world(&self.world_id) else {
+            return Vec::new();
+        };
+        let Some(town) = world
+            .town_id
+            .as_deref()
+            .and_then(|town_id| self.content.town(town_id))
+            .filter(|town| self.current_floor_id == town.floor_id)
+        else {
+            return Vec::new();
+        };
+        town.facility_ids
+            .iter()
+            .filter_map(|id| self.content.town_facility(id))
+            .map(|facility| {
+                let entrance_position = position_from_content(facility.entrance_position);
+                let player_at_entrance = self.player.position == entrance_position;
+                let state = self
+                    .home_states
+                    .get(&facility.id)
+                    .expect("validated home state must remain available");
+                let remaining_capacity =
+                    player_carry_capacity(self).saturating_sub(self.carried_weight_tenths_pound());
+                let mut stored_items = if player_at_entrance {
+                    grouped_home_items(self, &state.inventory)
+                        .into_iter()
+                        .map(|(item, quantity)| {
+                            let definition = self
+                                .content
+                                .item(&item.kind_id)
+                                .expect("home item kind must remain available");
+                            let carryable = if definition.weight_tenths_pound == 0 {
+                                quantity
+                            } else {
+                                remaining_capacity / u32::from(definition.weight_tenths_pound)
+                            };
+                            HomeItemDto {
+                                id: item.id.clone(),
+                                kind_id: item.kind_id.clone(),
+                                display_name_key: self.item_display_name_key(&item.kind_id),
+                                quantity,
+                                maximum_quantity: quantity.min(carryable),
+                                weight_tenths_pound: definition.weight_tenths_pound,
+                                fuel: item.fuel,
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                stored_items.sort_by(|left, right| left.id.cmp(&right.id));
+                let mut deposit_items = if player_at_entrance {
+                    grouped_inventory_for_home(self)
+                        .into_iter()
+                        .map(|(item, quantity)| {
+                            let definition = self
+                                .content
+                                .item(&item.kind_id)
+                                .expect("inventory item kind must remain available");
+                            HomeItemDto {
+                                id: item.id.clone(),
+                                kind_id: item.kind_id.clone(),
+                                display_name_key: self.item_display_name_key(&item.kind_id),
+                                quantity,
+                                maximum_quantity: quantity,
+                                weight_tenths_pound: definition.weight_tenths_pound,
+                                fuel: item.fuel,
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                deposit_items.sort_by(|left, right| left.id.cmp(&right.id));
+                HomeDto {
+                    id: facility.id.clone(),
+                    name_key: facility.name_key.clone(),
+                    description_key: facility.description_key.clone(),
+                    entrance_position,
+                    entrance_terrain_id: facility.entrance_terrain_id.clone(),
+                    visited: state.visited,
+                    player_at_entrance,
+                    stored_items,
+                    deposit_items,
                 }
             })
             .collect()

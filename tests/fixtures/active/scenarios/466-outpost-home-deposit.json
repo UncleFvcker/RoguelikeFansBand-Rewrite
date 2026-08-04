@@ -1,114 +1,34 @@
 {
   "schemaVersion": 2,
-  "id": "town.outpost-general-store-visit",
+  "id": "town.outpost-home-deposit",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
   "seed": "42",
   "preconditions": {
     "world": "demo.world.warrens-journey",
     "debugClearEntities": true,
-    "playerBuildId": "demo.build.warrior"
+    "playerBuildId": "demo.build.warrior",
+    "playerPosition": {
+      "x": 42,
+      "y": 13
+    }
   },
   "commands": [
     {
       "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "west"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "north"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "north"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "north"
+        "type": "deposit-at-home",
+        "facilityId": "demo.town-facility.outpost-home",
+        "itemId": "generated.item.1",
+        "quantity": 1
       }
     }
   ],
-  "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 15,
-      "turn": 15,
-      "worldTick": 150,
-      "lastCommandSeq": 15,
-      "rngDrawCounter": 43,
+      "revision": 1,
+      "turn": 1,
+      "lastCommandSeq": 1,
+      "rngDrawCounter": 45,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -124,8 +44,8 @@
           "descriptionKey": "shop-demo-outpost-alchemist-description",
           "category": "alchemist",
           "entrancePosition": {
-            "x": 38,
-            "y": 8
+            "x": 53,
+            "y": 13
           },
           "entranceTerrainId": "demo.terrain.alchemist-entrance",
           "visited": false,
@@ -147,8 +67,8 @@
           "descriptionKey": "shop-demo-outpost-armoury-description",
           "category": "armoury",
           "entrancePosition": {
-            "x": 15,
-            "y": 14
+            "x": 30,
+            "y": 19
           },
           "entranceTerrainId": "demo.terrain.armoury-entrance",
           "visited": false,
@@ -165,13 +85,36 @@
           "sellQuotes": []
         },
         {
+          "id": "demo.shop.outpost-black-market",
+          "nameKey": "shop-demo-outpost-black-market-name",
+          "descriptionKey": "shop-demo-outpost-black-market-description",
+          "category": "black-market",
+          "entrancePosition": {
+            "x": 55,
+            "y": 19
+          },
+          "entranceTerrainId": "demo.terrain.black-market-entrance",
+          "visited": false,
+          "playerAtEntrance": false,
+          "owner": {
+            "id": "demo.shop-owner.outpost-topi",
+            "nameKey": "shop-owner-demo-outpost-topi-name",
+            "raceId": "demo.race.rfb-human",
+            "greedPercent": 150,
+            "purchasePriceCap": 30000,
+            "priceFactorPercent": 140
+          },
+          "stock": [],
+          "sellQuotes": []
+        },
+        {
           "id": "demo.shop.outpost-bookstore",
           "nameKey": "shop-demo-outpost-bookstore-name",
           "descriptionKey": "shop-demo-outpost-bookstore-description",
           "category": "bookstore",
           "entrancePosition": {
-            "x": 40,
-            "y": 8
+            "x": 55,
+            "y": 13
           },
           "entranceTerrainId": "demo.terrain.bookstore-entrance",
           "visited": false,
@@ -193,12 +136,12 @@
           "descriptionKey": "shop-demo-outpost-general-store-description",
           "category": "general-store",
           "entrancePosition": {
-            "x": 17,
-            "y": 8
+            "x": 32,
+            "y": 13
           },
           "entranceTerrainId": "demo.terrain.general-store-entrance",
-          "visited": true,
-          "playerAtEntrance": true,
+          "visited": false,
+          "playerAtEntrance": false,
           "owner": {
             "id": "demo.shop-owner.outpost-mara-venn",
             "nameKey": "shop-owner-demo-outpost-mara-venn-name",
@@ -207,86 +150,8 @@
             "purchasePriceCap": 500,
             "priceFactorPercent": 100
           },
-          "stock": [
-            {
-              "id": "generated.item.26",
-              "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.27",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.28",
-              "kindId": "demo.item.brass-lantern",
-              "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 30,
-              "weightTenthsPound": 50,
-              "fuel": {
-                "kind": "lantern",
-                "current": 7500,
-                "maximum": 15000,
-                "lightRadius": 2
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.29",
-              "kindId": "demo.item.flask-of-oil",
-              "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "fuel": {
-                "kind": "oil",
-                "current": 7500,
-                "maximum": 7500,
-                "lightRadius": 0
-              },
-              "quality": "ordinary"
-            }
-          ],
-          "sellQuotes": [
-            {
-              "itemId": "generated.item.1",
-              "kindId": "demo.item.ration-of-food",
-              "unitPrice": 2,
-              "maximumQuantity": 9
-            },
-            {
-              "itemId": "generated.item.2",
-              "kindId": "demo.item.wooden-torch",
-              "unitPrice": 1,
-              "maximumQuantity": 6
-            },
-            {
-              "itemId": "generated.item.8",
-              "kindId": "demo.item.arrow",
-              "unitPrice": 1,
-              "maximumQuantity": 22
-            }
-          ]
+          "stock": [],
+          "sellQuotes": []
         },
         {
           "id": "demo.shop.outpost-magic-shop",
@@ -294,8 +159,8 @@
           "descriptionKey": "shop-demo-outpost-magic-shop-description",
           "category": "magic-shop",
           "entrancePosition": {
-            "x": 42,
-            "y": 8
+            "x": 57,
+            "y": 13
           },
           "entranceTerrainId": "demo.terrain.magic-shop-entrance",
           "visited": false,
@@ -317,8 +182,8 @@
           "descriptionKey": "shop-demo-outpost-temple-description",
           "category": "temple",
           "entrancePosition": {
-            "x": 29,
-            "y": 14
+            "x": 45,
+            "y": 19
           },
           "entranceTerrainId": "demo.terrain.temple-entrance",
           "visited": false,
@@ -340,8 +205,8 @@
           "descriptionKey": "shop-demo-outpost-weaponsmith-description",
           "category": "weaponsmith",
           "entrancePosition": {
-            "x": 19,
-            "y": 14
+            "x": 34,
+            "y": 19
           },
           "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
           "visited": false,
@@ -358,9 +223,65 @@
           "sellQuotes": []
         }
       ],
+      "homes": [
+        {
+          "id": "demo.town-facility.outpost-home",
+          "nameKey": "town-facility-demo-outpost-home-name",
+          "descriptionKey": "town-facility-demo-outpost-home-description",
+          "entrancePosition": {
+            "x": 42,
+            "y": 13
+          },
+          "entranceTerrainId": "demo.terrain.home-entrance",
+          "visited": true,
+          "playerAtEntrance": true,
+          "storedItems": [
+            {
+              "id": "generated.item.55",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "weightTenthsPound": 10
+            }
+          ],
+          "depositItems": [
+            {
+              "id": "generated.item.1",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 8,
+              "maximumQuantity": 8,
+              "weightTenthsPound": 10
+            },
+            {
+              "id": "generated.item.2",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 6,
+              "maximumQuantity": 6,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 2000,
+                "maximum": 5000,
+                "lightRadius": 1
+              }
+            },
+            {
+              "id": "generated.item.8",
+              "kindId": "demo.item.arrow",
+              "displayNameKey": "item-demo-arrow-name",
+              "quantity": 22,
+              "maximumQuantity": 22,
+              "weightTenthsPound": 2
+            }
+          ]
+        }
+      ],
       "playerPosition": {
-        "x": 17,
-        "y": 8
+        "x": 42,
+        "y": 13
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -368,10 +289,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 714,
+      "playerCarriedWeightTenthsPound": 704,
       "playerCarryCapacityTenthsPound": 1200,
       "playerGold": 346,
-      "playerNutrition": 9969,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -534,7 +455,7 @@
           "usable": true,
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
-          "quantity": 9,
+          "quantity": 8,
           "weightTenthsPound": 10,
           "equipmentSlot": null,
           "modifiers": {
@@ -883,7 +804,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 47,
+      "nextItemInstanceSerial": 56,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -891,130 +812,19 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7ad905530e6e489565273837a02ad734fb0e02be34cb55db1a3524b0b2d52cd9"
+      "stateHash": "7dd7ee311376dbdf59fc6a10485ad2f3cffc7f7a38ed886e81ed01b67bf60872"
     },
-    "changedCells": [
+    "events": [
       {
-        "x": 28,
-        "y": 11
-      },
-      {
-        "x": 29,
-        "y": 11
-      },
-      {
-        "x": 27,
-        "y": 11
-      },
-      {
-        "x": 28,
-        "y": 11
-      },
-      {
-        "x": 26,
-        "y": 11
-      },
-      {
-        "x": 27,
-        "y": 11
-      },
-      {
-        "x": 25,
-        "y": 11
-      },
-      {
-        "x": 26,
-        "y": 11
-      },
-      {
-        "x": 24,
-        "y": 11
-      },
-      {
-        "x": 25,
-        "y": 11
-      },
-      {
-        "x": 23,
-        "y": 11
-      },
-      {
-        "x": 24,
-        "y": 11
-      },
-      {
-        "x": 22,
-        "y": 11
-      },
-      {
-        "x": 23,
-        "y": 11
-      },
-      {
-        "x": 21,
-        "y": 11
-      },
-      {
-        "x": 22,
-        "y": 11
-      },
-      {
-        "x": 20,
-        "y": 11
-      },
-      {
-        "x": 21,
-        "y": 11
-      },
-      {
-        "x": 19,
-        "y": 11
-      },
-      {
-        "x": 20,
-        "y": 11
-      },
-      {
-        "x": 18,
-        "y": 11
-      },
-      {
-        "x": 19,
-        "y": 11
-      },
-      {
-        "x": 17,
-        "y": 11
-      },
-      {
-        "x": 18,
-        "y": 11
-      },
-      {
-        "x": 17,
-        "y": 10
-      },
-      {
-        "x": 17,
-        "y": 11
-      },
-      {
-        "x": 17,
-        "y": 9
-      },
-      {
-        "x": 17,
-        "y": 10
-      },
-      {
-        "x": 17,
-        "y": 8
-      },
-      {
-        "x": 17,
-        "y": 9
+        "kind": "home.deposit",
+        "messageKey": "home-deposit-success",
+        "args": {
+          "facility": "demo.town-facility.outpost-home",
+          "item": "generated.item.55",
+          "quantity": "1",
+          "target": "demo.item.ration-of-food"
+        }
       }
-    ],
-    "saveRoundTripStateHash": "7ad905530e6e489565273837a02ad734fb0e02be34cb55db1a3524b0b2d52cd9"
+    ]
   }
 }

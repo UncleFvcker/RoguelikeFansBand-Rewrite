@@ -9,7 +9,9 @@ const WEAPONSMITH_ID: &str = "demo.shop.outpost-weaponsmith";
 const TEMPLE_ID: &str = "demo.shop.outpost-temple";
 const ALCHEMIST_ID: &str = "demo.shop.outpost-alchemist";
 const MAGIC_SHOP_ID: &str = "demo.shop.outpost-magic-shop";
+const BLACK_MARKET_ID: &str = "demo.shop.outpost-black-market";
 const BOOKSTORE_ID: &str = "demo.shop.outpost-bookstore";
+const HOME_ID: &str = "demo.town-facility.outpost-home";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -21,7 +23,7 @@ fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
 fn store_game(seed: u64) -> Game {
     let mut game = Game::new_warrens_journey_with_build(seed, "demo.build.warrior")
         .expect("Warrens game should start");
-    game.player.position = Position { x: 17, y: 8 };
+    game.player.position = Position { x: 32, y: 13 };
     game.mark_shop_visited_at_player();
     game
 }
@@ -45,32 +47,42 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     assert_eq!(town.id, "demo.town.outpost");
     assert_eq!(town.floor_id, "demo.floor.surface");
     assert!(town.visited);
-    assert_eq!(snapshot.shops.len(), 7);
+    assert_eq!(snapshot.shops.len(), 8);
+    assert_eq!(snapshot.homes.len(), 1);
+    assert_eq!(snapshot.homes[0].id, HOME_ID);
+    assert_eq!(
+        snapshot.homes[0].entrance_position,
+        Position { x: 42, y: 13 }
+    );
+    assert!(!snapshot.homes[0].visited);
     let general_store = projected_shop(&snapshot.shops, GENERAL_STORE_ID);
-    assert_eq!(general_store.entrance_position, Position { x: 17, y: 8 });
+    assert_eq!(general_store.entrance_position, Position { x: 32, y: 13 });
     assert_eq!(
         general_store.entrance_terrain_id,
         "demo.terrain.general-store-entrance"
     );
     assert_eq!(general_store.category, ShopCategoryDto::GeneralStore);
     let temple = projected_shop(&snapshot.shops, TEMPLE_ID);
-    assert_eq!(temple.entrance_position, Position { x: 29, y: 14 });
+    assert_eq!(temple.entrance_position, Position { x: 45, y: 19 });
     assert_eq!(temple.category, ShopCategoryDto::Temple);
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
-    assert_eq!(alchemist.entrance_position, Position { x: 38, y: 8 });
+    assert_eq!(alchemist.entrance_position, Position { x: 53, y: 13 });
     assert_eq!(alchemist.category, ShopCategoryDto::Alchemist);
     let magic_shop = projected_shop(&snapshot.shops, MAGIC_SHOP_ID);
-    assert_eq!(magic_shop.entrance_position, Position { x: 42, y: 8 });
+    assert_eq!(magic_shop.entrance_position, Position { x: 57, y: 13 });
     assert_eq!(magic_shop.category, ShopCategoryDto::MagicShop);
     let bookstore = projected_shop(&snapshot.shops, BOOKSTORE_ID);
-    assert_eq!(bookstore.entrance_position, Position { x: 40, y: 8 });
+    assert_eq!(bookstore.entrance_position, Position { x: 55, y: 13 });
     assert_eq!(bookstore.category, ShopCategoryDto::Bookstore);
     let armoury = projected_shop(&snapshot.shops, ARMOURY_ID);
-    assert_eq!(armoury.entrance_position, Position { x: 15, y: 14 });
+    assert_eq!(armoury.entrance_position, Position { x: 30, y: 19 });
     assert_eq!(armoury.category, ShopCategoryDto::Armoury);
     let weaponsmith = projected_shop(&snapshot.shops, WEAPONSMITH_ID);
-    assert_eq!(weaponsmith.entrance_position, Position { x: 19, y: 14 });
+    assert_eq!(weaponsmith.entrance_position, Position { x: 34, y: 19 });
     assert_eq!(weaponsmith.category, ShopCategoryDto::Weaponsmith);
+    let black_market = projected_shop(&snapshot.shops, BLACK_MARKET_ID);
+    assert_eq!(black_market.entrance_position, Position { x: 55, y: 19 });
+    assert_eq!(black_market.category, ShopCategoryDto::BlackMarket);
     assert!(
         snapshot
             .shops
@@ -80,10 +92,150 @@ fn outpost_shops_are_projected_from_authoritative_content() {
 }
 
 #[test]
+fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
+    let game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+
+    for y in 19..=24 {
+        for x in [38, 52] {
+            assert_eq!(
+                game.terrain_at(Position { x, y }),
+                "demo.terrain.surface-grass",
+                "temple side passage at ({x}, {y}) should remain walkable"
+            );
+        }
+    }
+    for x in 38..=52 {
+        assert_eq!(
+            game.terrain_at(Position { x, y: 24 }),
+            "demo.terrain.surface-grass",
+            "temple south passage at ({x}, 24) should remain walkable"
+        );
+    }
+}
+
+#[test]
+fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.player.position = Position { x: 42, y: 13 };
+    game.mark_shop_visited_at_player();
+    let home = game.snapshot().homes[0].clone();
+    assert!(home.visited);
+    assert!(home.player_at_entrance);
+    assert!(home.stored_items.is_empty());
+    let ration = home
+        .deposit_items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("Warrior should carry rations")
+        .clone();
+    let initial_ration_quantity = ration.quantity;
+    game.item_property_knowledge.insert(
+        ration.id.clone(),
+        ItemPropertyKnowledgeState {
+            appraised: true,
+            identified: true,
+            known_affix_ids: BTreeSet::new(),
+        },
+    );
+    let gold_before = game.gold;
+    let tick_before = game.world_tick;
+    let draws_before = game.rng_draw_counter();
+    let deposit = dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: HOME_ID.to_owned(),
+            item_id: ration.id,
+            quantity: 1,
+        },
+    );
+    assert!(
+        deposit
+            .events
+            .iter()
+            .any(|event| event.kind == "home.deposit")
+    );
+    assert_eq!(game.gold, gold_before);
+    assert_eq!(game.world_tick, tick_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    let stored = game.snapshot().homes[0]
+        .stored_items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("deposited ration should be stored")
+        .clone();
+    assert_eq!(stored.quantity, 1);
+
+    let restored = Game::from_save(game.to_save()).expect("home inventory should round-trip");
+    assert_eq!(restored.home_states, game.home_states);
+    let mut game = restored;
+    let withdrawal = dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: HOME_ID.to_owned(),
+            item_id: stored.id,
+            quantity: 1,
+        },
+    );
+    assert!(
+        withdrawal
+            .events
+            .iter()
+            .any(|event| event.kind == "home.withdraw")
+    );
+    assert!(game.snapshot().homes[0].stored_items.is_empty());
+    let carried_rations = game
+        .items
+        .iter()
+        .filter(|item| {
+            item.kind_id == "demo.item.ration-of-food" && item.location == ItemLocation::Inventory
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(carried_rations.len(), 1);
+    assert_eq!(carried_rations[0].quantity, initial_ration_quantity);
+    assert_eq!(game.gold, gold_before);
+    assert_eq!(game.world_tick, tick_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn home_inventory_ids_are_reserved_by_the_global_allocator() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    let reserved_id = format!("{GENERATED_ITEM_ID_PREFIX}9000");
+    let mut stored = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.ration-of-food" && item.location == ItemLocation::Inventory
+        })
+        .expect("Warrior should carry rations")
+        .clone();
+    stored.id = reserved_id.clone();
+    stored.quantity = 1;
+    stored.location = ItemLocation::Home {
+        facility_id: HOME_ID.to_owned(),
+    };
+    game.home_states
+        .get_mut(HOME_ID)
+        .expect("Home should have authoritative state")
+        .inventory
+        .push(stored);
+    game.next_item_instance_serial = 9000;
+
+    assert_eq!(
+        game.allocate_item_instance_id()
+            .expect("allocator should skip Home inventory IDs"),
+        format!("{GENERATED_ITEM_ID_PREFIX}9001")
+    );
+}
+
+#[test]
 fn entering_general_store_entrance_marks_persistent_shop_visit() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
-    game.player.position = Position { x: 17, y: 9 };
+    game.player.position = Position { x: 32, y: 14 };
 
     let update = dispatch_next(
         &mut game,
@@ -114,6 +266,17 @@ fn malformed_town_state_is_rejected() {
     payload.town_states[0].visited = false;
     assert!(matches!(
         Game::from_save(payload),
+        Err(CoreError::InvalidSave("town state is invalid"))
+    ));
+}
+
+#[test]
+fn runtime_town_validation_requires_complete_home_state() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.home_states.clear();
+    assert!(matches!(
+        game.validate_loaded_state(),
         Err(CoreError::InvalidSave("town state is invalid"))
     ));
 }
@@ -240,11 +403,43 @@ fn current_warrior_uses_rfb_price_factor_and_trade_values() {
 }
 
 #[test]
+fn black_market_uses_original_warrior_markup_and_markdown() {
+    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+        .expect("Warrens game should start");
+    game.gold = 1_000_000;
+    game.player.position = Position { x: 55, y: 19 };
+    game.mark_shop_visited_at_player();
+    let snapshot = game.snapshot();
+    let shop = projected_shop(&snapshot.shops, BLACK_MARKET_ID);
+    assert!(shop.visited);
+    assert!(shop.player_at_entrance);
+    assert_eq!(shop.owner.greed_percent, 150);
+    assert_eq!(shop.owner.purchase_price_cap, 30_000);
+    assert_eq!(shop.owner.price_factor_percent, 140);
+    let black_channels = shop
+        .stock
+        .iter()
+        .find(|item| item.kind_id == "demo.item.black-channels")
+        .expect("Black Market should stock Black Channels");
+    assert_eq!(black_channels.unit_price, 42_000);
+    let ration = shop
+        .sell_quotes
+        .iter()
+        .find(|item| item.kind_id == "demo.item.ration-of-food")
+        .expect("Black Market should buy ordinary legal inventory");
+    assert_eq!(ration.unit_price, 1);
+
+    let restored = Game::from_save(game.to_save()).expect("Black Market should round-trip");
+    assert_eq!(restored.shop_states, game.shop_states);
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     game.gold = 1_000;
-    game.player.position = Position { x: 29, y: 14 };
+    game.player.position = Position { x: 45, y: 19 };
     game.mark_shop_visited_at_player();
     let temple_snapshot = game.snapshot();
     let temple = projected_shop(&temple_snapshot.shops, TEMPLE_ID);
@@ -283,7 +478,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     assert_eq!(game.gold, 980);
     assert_eq!(game.shop_states[ALCHEMIST_ID], alchemist_before);
 
-    game.player.position = Position { x: 38, y: 8 };
+    game.player.position = Position { x: 53, y: 13 };
     game.mark_shop_visited_at_player();
     let snapshot = game.snapshot();
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
@@ -310,7 +505,7 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
     game.gold = 10_000;
     game.items
         .retain(|item| item.location != ItemLocation::Inventory);
-    game.player.position = Position { x: 40, y: 8 };
+    game.player.position = Position { x: 55, y: 13 };
     game.mark_shop_visited_at_player();
 
     let shop = projected_shop(&game.snapshot().shops, BOOKSTORE_ID).clone();
@@ -375,7 +570,7 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     game.gold = 10_000;
-    game.player.position = Position { x: 19, y: 14 };
+    game.player.position = Position { x: 34, y: 19 };
     game.mark_shop_visited_at_player();
 
     let weaponsmith = projected_shop(&game.snapshot().shops, WEAPONSMITH_ID).clone();
@@ -401,7 +596,7 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
         "seed 42 should exercise grouping across the arrow stack limit"
     );
 
-    game.player.position = Position { x: 15, y: 14 };
+    game.player.position = Position { x: 30, y: 19 };
     game.mark_shop_visited_at_player();
     let armoury = projected_shop(&game.snapshot().shops, ARMOURY_ID).clone();
     assert!(armoury.visited);
@@ -445,10 +640,10 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
 
 #[test]
 fn magic_shop_purchase_device_use_and_save_are_authoritative() {
-    let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
+    let mut game = Game::new_warrens_journey_with_build(43, "demo.build.warrior")
         .expect("Warrens game should start");
     game.gold = 10_000;
-    game.player.position = Position { x: 42, y: 8 };
+    game.player.position = Position { x: 57, y: 13 };
     game.mark_shop_visited_at_player();
 
     let shop = projected_shop(&game.snapshot().shops, MAGIC_SHOP_ID).clone();

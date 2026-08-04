@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-armoury-description",
   "townId": "demo.town.outpost",
   "category": "armoury",
-  "entrancePosition": { "x": 15, "y": 14 },
+  "entrancePosition": { "x": 30, "y": 19 },
   "entranceTerrainId": "demo.terrain.armoury-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-dagro",

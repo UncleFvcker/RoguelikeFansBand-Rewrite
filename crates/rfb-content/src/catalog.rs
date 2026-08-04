@@ -10,8 +10,8 @@ use super::{
     EncounterTableDefinition, ItemDefinition, LootTableDefinition, PackDependency,
     PersonalityDefinition, RaceDefinition, RegionTableDefinition, ResourceDefinition,
     ShopDefinition, SkillDefinition, SkillKind, SkillSetDefinition, TerrainDefinition,
-    TerrainFeatureTableDefinition, ThemeTableDefinition, TownDefinition, VaultDefinition,
-    WorldDefinition, decode_content,
+    TerrainFeatureTableDefinition, ThemeTableDefinition, TownDefinition, TownFacilityDefinition,
+    VaultDefinition, WorldDefinition, decode_content,
 };
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -60,6 +60,8 @@ pub struct CompiledContentV1 {
     #[serde(default)]
     pub towns: Vec<TownDefinition>,
     #[serde(default)]
+    pub town_facilities: Vec<TownFacilityDefinition>,
+    #[serde(default)]
     pub shops: Vec<ShopDefinition>,
     pub worlds: Vec<WorldDefinition>,
 }
@@ -89,6 +91,7 @@ pub struct ContentCatalog {
     terrain_feature_tables: BTreeMap<String, TerrainFeatureTableDefinition>,
     vaults: BTreeMap<String, VaultDefinition>,
     towns: BTreeMap<String, TownDefinition>,
+    town_facilities: BTreeMap<String, TownFacilityDefinition>,
     shops: BTreeMap<String, ShopDefinition>,
     worlds: BTreeMap<String, WorldDefinition>,
 }
@@ -119,6 +122,7 @@ pub struct ContentSummary {
     pub terrain_feature_table_count: usize,
     pub vault_count: usize,
     pub town_count: usize,
+    pub town_facility_count: usize,
     pub shop_count: usize,
     pub world_count: usize,
 }
@@ -241,6 +245,11 @@ impl ContentCatalog {
                 .collect(),
             towns: content
                 .towns
+                .into_iter()
+                .map(|definition| (definition.id.clone(), definition))
+                .collect(),
+            town_facilities: content
+                .town_facilities
                 .into_iter()
                 .map(|definition| (definition.id.clone(), definition))
                 .collect(),
@@ -393,6 +402,11 @@ impl ContentCatalog {
     #[must_use]
     pub fn town(&self, id: &str) -> Option<&TownDefinition> {
         self.towns.get(id)
+    }
+
+    #[must_use]
+    pub fn town_facility(&self, id: &str) -> Option<&TownFacilityDefinition> {
+        self.town_facilities.get(id)
     }
 
     #[must_use]

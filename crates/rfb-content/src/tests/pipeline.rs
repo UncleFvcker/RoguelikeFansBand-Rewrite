@@ -28,6 +28,7 @@ fn source_roots_and_validation_precedence_are_stable() {
             "terrainFeatureTables",
             "themeTables",
             "towns",
+            "townFacilities",
             "vaults",
             "worlds",
         ]
@@ -123,6 +124,7 @@ fn generated_schema_document_order_is_stable() {
             "terrain-feature-table.schema.json",
             "vault.schema.json",
             "town.schema.json",
+            "town-facility.schema.json",
             "shop.schema.json",
             "world.schema.json",
         ]
@@ -139,7 +141,7 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.bytes, second.bytes);
     assert_eq!(decoded, first);
     assert_eq!(first.content.pack_id, "rfb.demo.original-v1");
-    assert_eq!(first.content.terrain.len(), 66);
+    assert_eq!(first.content.terrain.len(), 68);
     assert_eq!(first.content.actors.len(), 33);
     assert_eq!(first.content.affixes.len(), 4);
     assert_eq!(first.content.items.len(), 111);
@@ -159,6 +161,7 @@ fn original_pack_compiles_deterministically_and_round_trips() {
     assert_eq!(first.content.terrain_feature_tables.len(), 1);
     assert_eq!(first.content.vaults.len(), 6);
     assert_eq!(first.content.towns.len(), 1);
-    assert_eq!(first.content.shops.len(), 7);
+    assert_eq!(first.content.town_facilities.len(), 1);
+    assert_eq!(first.content.shops.len(), 8);
     assert_eq!(first.content.worlds.len(), 2);
 }

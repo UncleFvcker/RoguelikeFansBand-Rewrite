@@ -48,6 +48,16 @@ async function main() {
     await mkdir(artifactDirectory, { recursive: true });
     if (client) {
       try {
+        logs.push(`[dom] ${JSON.stringify(await client.execute(`
+          return {
+            homeOpen: document.querySelector("#home-dialog")?.open,
+            saveName: document.querySelector("#native-save-name")?.value,
+            saveNameDisabled: document.querySelector("#native-save-name")?.disabled,
+            saveButtonDisabled: document.querySelector("#native-save-create")?.disabled,
+            saveRows: [...document.querySelectorAll(".native-save-name")].map((item) => item.textContent),
+            messages: [...document.querySelectorAll("#message-list li")].slice(-5).map((item) => item.textContent),
+          };
+        `))}`);
         await writeFile(
           path.join(artifactDirectory, "tauri-supply-e2e.png"),
           await client.screenshot(),
@@ -101,7 +111,7 @@ async function runSupplyLoop(driver) {
     "Warrens Warrior session",
     60_000,
   );
-  assert.equal(await text(driver, "#position-value"), "29, 11");
+  assert.equal(await text(driver, "#position-value"), "44, 16");
   assert.equal(await text(driver, "#journey-dungeon-name"), "前哨站");
 
   await moveMany(driver, "Numpad4", "4", 12, -1, 0);
@@ -254,7 +264,7 @@ async function runSupplyLoop(driver) {
 
   await click(driver, "#shop-close");
   await moveMany(driver, "Numpad8", "8", 3, 0, -1);
-  await moveMany(driver, "Numpad6", "6", 10, 1, 0);
+  await moveMany(driver, "Numpad6", "6", 11, 1, 0);
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "圣殿"`,
@@ -279,7 +289,7 @@ async function runSupplyLoop(driver) {
 
   await click(driver, "#shop-close");
   await moveMany(driver, "Numpad8", "8", 3, 0, -1);
-  await moveMany(driver, "Numpad6", "6", 9, 1, 0);
+  await moveMany(driver, "Numpad6", "6", 8, 1, 0);
   await moveMany(driver, "Numpad8", "8", 3, 0, -1);
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "炼金店"`,
@@ -335,8 +345,39 @@ async function runSupplyLoop(driver) {
 
   await click(driver, "#shop-close");
   await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 17, 1, 0);
-  assert.equal(await text(driver, "#position-value"), "59, 11");
+  await moveMany(driver, "Numpad4", "4", 2, -1, 0);
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await driver.waitFor(
+    `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "黑市"`,
+    "Black Market entry",
+  );
+  const blackMarketLayout = await currentShopLayout(driver);
+  assert.match(blackMarketLayout.owner, /公平的托皮/);
+  assert.equal(blackMarketLayout.stockRows, 2);
+  assert.deepEqual(blackMarketLayout.stockNames, ["黑暗通道", "死灵之书"]);
+
+  await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await moveMany(driver, "Numpad6", "6", 19, 1, 0);
+  assert.equal(await text(driver, "#position-value"), "74, 16");
+  const fullMapCamera = await driver.execute(`
+    const host = document.querySelector("#map-host");
+    const cellSize = 28 * Number(host.dataset.zoom);
+    const playerLeft = 74 * cellSize - host.scrollLeft;
+    const playerTop = 16 * cellSize - host.scrollTop;
+    return {
+      mode: host.dataset.cameraMode,
+      scrollX: host.scrollLeft,
+      playerVisible:
+        playerLeft >= 0 &&
+        playerTop >= 0 &&
+        playerLeft + cellSize <= host.clientWidth &&
+        playerTop + cellSize <= host.clientHeight,
+    };
+  `);
+  assert.equal(fullMapCamera.mode, "full-map");
+  assert.ok(fullMapCamera.scrollX > 0);
+  assert.equal(fullMapCamera.playerVisible, true);
   await dispatchKey(driver, "Period", ">");
   await driver.waitFor(
     `return document.querySelector("#map-host")?.dataset.worldId === "demo.world.warrens-journey" && document.querySelector("#journey-depth")?.textContent.includes("1")`,
@@ -374,7 +415,7 @@ async function runSupplyLoop(driver) {
 
   await dispatchKey(driver, "Comma", "<");
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "59, 11" && document.querySelector("#journey-dungeon-name")?.textContent === "前哨站"`,
+    `return document.querySelector("#position-value")?.textContent === "74, 16" && document.querySelector("#journey-dungeon-name")?.textContent === "前哨站"`,
     "returning to Outpost",
     30_000,
   );
@@ -389,11 +430,46 @@ async function runSupplyLoop(driver) {
     "Outpost resupply",
   );
 
+  await click(driver, "#shop-close");
+  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await moveMany(driver, "Numpad6", "6", 10, 1, 0);
+  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await driver.waitFor(
+    `return document.querySelector("#home-dialog")?.open && document.querySelector("#home-title")?.textContent === "家"`,
+    "automatic Home entry",
+  );
+  assert.equal(await text(driver, "#position-value"), "27, 8");
+  assert.equal(
+    await driver.execute(`return document.querySelector("#home-withdraw-tab")?.getAttribute("aria-selected");`),
+    "true",
+  );
+  await click(driver, "#home-deposit-tab");
+  await driver.waitFor(
+    `return document.querySelector("#home-deposit-tab")?.getAttribute("aria-selected") === "true"`,
+    "Home deposit tab",
+  );
+  const rationsBeforeDeposit = await inventoryQuantity(driver, "demo.item.ration-of-food");
+  const goldBeforeHome = await text(driver, "#gold-value");
+  await selectHomeItem(driver, "一份口粮");
+  await setHomeQuantity(driver, 1);
+  await click(driver, "#home-confirm");
+  await driver.waitFor(
+    `return document.querySelector("#home-feedback")?.dataset.kind === "success" && document.querySelector("#home-feedback")?.textContent.includes("存入")`,
+    "Home ration deposit",
+  );
+  assert.equal(await inventoryQuantity(driver, "demo.item.ration-of-food"), rationsBeforeDeposit - 1);
+  assert.equal(await text(driver, "#gold-value"), goldBeforeHome);
+  await click(driver, "#home-withdraw-tab");
+  await driver.waitFor(
+    `return document.querySelectorAll("#home-item-list [data-home-item-id]").length === 1 && document.querySelector("#home-item-list")?.textContent.includes("一份口粮")`,
+    "Home stored ration",
+  );
+
   const savedHash = await driver.execute(`return document.querySelector("#hash-value")?.title;`);
   const savedGold = await text(driver, "#gold-value");
   const savedRations = await inventoryQuantity(driver, "demo.item.ration-of-food");
   nativeSaveName = `E2E 补给闭环 ${Date.now()}`;
-  await click(driver, "#shop-close");
+  await click(driver, "#home-close");
   await driver.execute(`
     const input = document.querySelector("#native-save-name");
     input.value = arguments[0];
@@ -410,16 +486,15 @@ async function runSupplyLoop(driver) {
 
   await moveMany(driver, "Numpad2", "2", 1, 0, 1);
   await moveMany(driver, "Numpad8", "8", 1, 0, -1);
-  await driver.waitFor(`return document.querySelector("#shop-dialog")?.open`, "shop re-entry before mutation");
-  await selectShopItem(driver, "油瓶");
-  await setShopQuantity(driver, 1);
-  await click(driver, "#shop-confirm");
+  await driver.waitFor(`return document.querySelector("#home-dialog")?.open`, "Home re-entry before mutation");
+  await selectHomeItem(driver, "一份口粮");
+  await setHomeQuantity(driver, 1);
+  await click(driver, "#home-confirm");
   await driver.waitFor(
-    `return document.querySelector("#shop-feedback")?.dataset.kind === "success"`,
-    "post-save transaction mutation",
+    `return document.querySelector("#home-feedback")?.dataset.kind === "success" && document.querySelector("#home-feedback")?.textContent.includes("取出")`,
+    "post-save Home withdrawal mutation",
   );
   assert.notEqual(await driver.execute(`return document.querySelector("#hash-value")?.title;`), savedHash);
-  await click(driver, "#shop-close");
   await driver.execute(`
     const row = [...document.querySelectorAll(".native-save-item")]
       .find((item) => item.querySelector(".native-save-name")?.textContent === arguments[0]);
@@ -427,7 +502,7 @@ async function runSupplyLoop(driver) {
     return true;
   `, [nativeSaveName]);
   await driver.waitFor(
-    `return document.querySelector("#hash-value")?.title === arguments[0] && document.querySelector("#shop-dialog")?.open`,
+    `return document.querySelector("#hash-value")?.title === arguments[0] && document.querySelector("#home-dialog")?.open && document.querySelector("#home-item-list")?.textContent.includes("一份口粮")`,
     "supply-loop native restore",
     30_000,
     [savedHash],
@@ -446,6 +521,24 @@ async function currentShopLayout(driver) {
         .map((item) => item.textContent),
     };
   `);
+}
+
+async function selectHomeItem(driver, name) {
+  await driver.execute(`
+    const button = [...document.querySelectorAll("#home-item-list [data-home-item-id]")]
+      .find((item) => item.querySelector(".shop-item-name")?.textContent === arguments[0]);
+    button?.click();
+    return Boolean(button);
+  `, [name]);
+}
+
+async function setHomeQuantity(driver, quantity) {
+  await driver.execute(`
+    const input = document.querySelector("#home-quantity");
+    input.value = String(arguments[0]);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  `, [quantity]);
 }
 
 async function moveMany(driver, code, key, count, dx, dy) {

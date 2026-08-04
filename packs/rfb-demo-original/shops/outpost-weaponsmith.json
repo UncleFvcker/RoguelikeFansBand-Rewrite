@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-weaponsmith-description",
   "townId": "demo.town.outpost",
   "category": "weaponsmith",
-  "entrancePosition": { "x": 19, "y": 14 },
+  "entrancePosition": { "x": 34, "y": 19 },
   "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-arndal",

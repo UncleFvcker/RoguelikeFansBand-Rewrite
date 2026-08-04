@@ -594,7 +594,8 @@ impl Game {
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::CarriedBy { .. }
-                | ItemLocation::Shop { .. } => None,
+                | ItemLocation::Shop { .. }
+                | ItemLocation::Home { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let connections = self
@@ -1001,7 +1002,9 @@ impl Game {
                     && match &item.location {
                         ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
                         ItemLocation::Ground(position) => *position == self.player.position,
-                        ItemLocation::CarriedBy { .. } | ItemLocation::Shop { .. } => false,
+                        ItemLocation::CarriedBy { .. }
+                        | ItemLocation::Shop { .. }
+                        | ItemLocation::Home { .. } => false,
                     }
             })
     }

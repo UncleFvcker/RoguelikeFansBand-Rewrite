@@ -15,31 +15,35 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     let entrances = [
         (
             "demo.terrain.general-store-entrance",
-            ContentPosition { x: 17, y: 8 },
+            ContentPosition { x: 32, y: 13 },
         ),
         (
             "demo.terrain.temple-entrance",
-            ContentPosition { x: 29, y: 14 },
+            ContentPosition { x: 45, y: 19 },
         ),
         (
             "demo.terrain.alchemist-entrance",
-            ContentPosition { x: 38, y: 8 },
+            ContentPosition { x: 53, y: 13 },
         ),
         (
             "demo.terrain.magic-shop-entrance",
-            ContentPosition { x: 42, y: 8 },
+            ContentPosition { x: 57, y: 13 },
         ),
         (
             "demo.terrain.bookstore-entrance",
-            ContentPosition { x: 40, y: 8 },
+            ContentPosition { x: 55, y: 13 },
         ),
         (
             "demo.terrain.armoury-entrance",
-            ContentPosition { x: 15, y: 14 },
+            ContentPosition { x: 30, y: 19 },
         ),
         (
             "demo.terrain.weaponsmith-entrance",
-            ContentPosition { x: 19, y: 14 },
+            ContentPosition { x: 34, y: 19 },
+        ),
+        (
+            "demo.terrain.black-market-entrance",
+            ContentPosition { x: 55, y: 19 },
         ),
     ];
     for (terrain_id, entrance) in entrances {
@@ -53,10 +57,17 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         .iter()
         .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-fortification")
         .expect("fixture should contain town fortifications");
-    let expected_fortifications = (8..=50)
-        .flat_map(|x| [ContentPosition { x, y: 2 }, ContentPosition { x, y: 19 }])
-        .chain((3..=18).flat_map(|y| [ContentPosition { x: 8, y }, ContentPosition { x: 50, y }]))
-        .filter(|position| position.y != 11)
+    assert_eq!((world.width, world.height), (96, 32));
+    assert!(
+        world
+            .procedural_floors
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (66, 22))
+    );
+    let expected_fortifications = (22..=66)
+        .flat_map(|x| [ContentPosition { x, y: 6 }, ContentPosition { x, y: 25 }])
+        .chain((7..=24).flat_map(|y| [ContentPosition { x: 22, y }, ContentPosition { x: 66, y }]))
+        .filter(|position| position.y != 16)
         .collect::<BTreeSet<_>>();
     assert_eq!(
         fortifications
@@ -75,12 +86,12 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     assert_eq!(
         gates.positions,
         [
-            ContentPosition { x: 8, y: 11 },
-            ContentPosition { x: 50, y: 11 }
+            ContentPosition { x: 22, y: 16 },
+            ContentPosition { x: 66, y: 16 }
         ]
     );
     assert!(entrances.iter().all(|(_, position)| {
-        position.x > 8 && position.x < 50 && position.y > 2 && position.y < 19
+        position.x > 22 && position.x < 66 && position.y > 6 && position.y < 25
     }));
     let warrens_entrance = world
         .terrain_overrides
@@ -89,9 +100,9 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         .expect("fixture should contain the Warrens entrance");
     assert_eq!(
         warrens_entrance.positions,
-        [ContentPosition { x: 59, y: 11 }]
+        [ContentPosition { x: 74, y: 16 }]
     );
-    assert!(warrens_entrance.positions[0].x > 50);
+    assert!(warrens_entrance.positions[0].x > 66);
 
     let mut wrong_entrance = artifact.content.clone();
     wrong_entrance
@@ -106,10 +117,12 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
     ));
 
     let mut unowned_shop = artifact.content.clone();
-    unowned_shop.towns[0].shop_ids.clear();
+    unowned_shop.towns[0]
+        .shop_ids
+        .retain(|shop_id| shop_id != "demo.shop.outpost-general-store");
     assert!(matches!(
         validate_and_normalize(&mut unowned_shop),
-        Err(ContentError::InvalidTown(id)) if id == "demo.town.outpost"
+        Err(ContentError::InvalidShop(id)) if id == "demo.shop.outpost-general-store"
     ));
 }
 
@@ -297,6 +310,50 @@ fn bookstore_stock_is_limited_to_original_town_books() {
         .iter_mut()
         .find(|shop| shop.id == shop_id)
         .expect("bookstore should exist")
+        .stock
+        .pop();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidShop(id)) if id == shop_id
+    ));
+}
+
+#[test]
+fn black_market_stock_is_limited_to_original_non_town_books() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let shop_id = "demo.shop.outpost-black-market";
+    let shop = artifact
+        .content
+        .shops
+        .iter()
+        .find(|shop| shop.id == shop_id)
+        .expect("Black Market should exist");
+    assert_eq!(shop.category, ShopCategory::BlackMarket);
+    assert_eq!(shop.owner.greed_percent, 150);
+    assert_eq!(shop.owner.purchase_price_cap, 30_000);
+    assert_eq!(
+        shop.stock
+            .iter()
+            .map(|stock| stock.item_kind_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["demo.item.black-channels", "demo.item.necronomicon"])
+    );
+    let values = artifact
+        .content
+        .items
+        .iter()
+        .filter(|item| shop.stock.iter().any(|stock| stock.item_kind_id == item.id))
+        .map(|item| (item.id.as_str(), item.base_value))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    assert_eq!(values["demo.item.black-channels"], 15_000);
+    assert_eq!(values["demo.item.necronomicon"], 100_000);
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .shops
+        .iter_mut()
+        .find(|shop| shop.id == shop_id)
+        .expect("Black Market should exist")
         .stock
         .pop();
     assert!(matches!(

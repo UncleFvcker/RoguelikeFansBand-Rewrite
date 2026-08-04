@@ -37,6 +37,7 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) vaults: &'a BTreeMap<String, VaultDefinition>,
     pub(super) build_ids: &'a BTreeSet<String>,
     pub(super) towns: &'a BTreeMap<String, TownDefinition>,
+    pub(super) town_facilities: &'a BTreeMap<String, TownFacilityDefinition>,
     pub(super) shops: &'a BTreeMap<String, ShopDefinition>,
 }
 
@@ -155,6 +156,7 @@ pub(super) fn validate_world(
         vaults,
         build_ids,
         towns,
+        town_facilities,
         shops,
     } = refs;
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
@@ -295,8 +297,6 @@ pub(super) fn validate_world(
             }
         }
         if procedural.id == world.initial_floor_id
-            || procedural.width != world.width
-            || procedural.height != world.height
             || (procedural.return_floor_id != world.initial_floor_id
                 && !floor_ids.contains(&procedural.return_floor_id))
             || procedural
@@ -1965,6 +1965,30 @@ pub(super) fn validate_world(
             return Err(ContentError::InvalidTown(town.id.clone()));
         }
         let mut entrance_positions = BTreeSet::new();
+        for facility_id in &town.facility_ids {
+            let facility = town_facilities
+                .get(facility_id)
+                .expect("validated town facility reference must remain available");
+            validate_position(
+                facility.entrance_position,
+                world.width,
+                world.height,
+                &facility.id,
+            )?;
+            require_reference(terrain_ids, &facility.entrance_terrain_id, &facility.id)?;
+            let effective_terrain_id = override_terrain
+                .get(&facility.entrance_position)
+                .unwrap_or(&world.fill_terrain_id);
+            if !entrance_positions.insert(facility.entrance_position)
+                || effective_terrain_id != &facility.entrance_terrain_id
+                || terrain_walkability.get(effective_terrain_id) != Some(&true)
+                || !terrain_tags
+                    .get(effective_terrain_id)
+                    .is_some_and(|tags| tags.contains("town-facility-entrance"))
+            {
+                return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+            }
+        }
         for shop_id in &town.shop_ids {
             let shop = shops
                 .get(shop_id)

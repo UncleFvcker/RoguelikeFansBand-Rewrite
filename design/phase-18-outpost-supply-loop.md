@@ -1,6 +1,6 @@
 # Phase 18: Outpost supply loop
 
-状态：Gate 0–6 完成，围墙城镇、共享 Armoury/Weaponsmith 工坊与 Bookstore 扩展完成。当前 active baseline 为 `contract-v165`；协议 `1.132`、save 容器 v1、state hash Schema `60`、demo 内容包 `1.155.0`（hash `3f12b3a62351b245edb8223b324c72a7bd01e3cc53f2ffb3fcd402dce5109435`）和 465 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、围墙 Outpost、七店权威交易、玩家 UI 与完整供给闭环已经建立。
+状态：Gate 0–6 完成，围墙城镇、八家交易商店与 Home 扩展完成。当前 active baseline 为 `contract-v167`；协议 `1.134`、save 容器 v1、state hash Schema `61`、demo 内容包 `1.157.0`（hash `796b48c16924b0d89a5c98443122b3802b920e9ef460aab447e0468a3f99d7ea`）和 467 条 exact fixtures、零 waiver。金币、食物/饥饿、燃料/地牢光照、围墙 Outpost、八店权威交易、持久 Home、玩家 UI 与完整供给闭环已经建立。
 
 ## 1. 目标
 
@@ -160,9 +160,14 @@ contract-v164 在西南侧加入 Armoury/Weaponsmith 共享工坊，使用原版
 
 contract-v165 在东北 Alchemist/Magic Shop 建筑中增加 Bookstore 第三入口 `(40,8)`，使用原版数字 `9`。首批严格采用原版 `TOWN` 库存中的 Stench of Death 与 Sepulchral Ways，价值 `100/1000`；前者补齐为可购买、可学习、可存档的完整死亡魔法书，Black Channels 与 Necronomicon 不提前进入城镇库存。fixture 465 与桌面 supply-loop E2E 覆盖入口、交易、法术学习和存档回环。协议升至 `1.132`、内容包升至 `1.155.0`，state hash Schema 保持 `60`。当前开发期仍不为旧开发存档新增兼容哈希。
 
+contract-v166 在北侧独立建筑加入 Home，入口 `(27,8)` 使用原版数字 `8`。独立 `townFacilities` 内容模型与持久 `HomeState` 支持免费存入/取出、知识一致的相容堆叠和负重检查，不复用店主、钱包、价格或刷新；操作零时间、零金币、零 RNG。fixture 466、核心测试与桌面 supply-loop E2E 覆盖存取、背包合并、全局实例 ID 和原生存档恢复。协议升至 `1.133`、内容包升至 `1.156.0`，state hash Schema 升至 `61`。当前开发期不为旧开发存档新增兼容迁移。
+
+contract-v167 在东南侧加入 Black Market，入口 `(40,14)` 使用原版数字 `7`。固定 Human 店主“公平的托皮(?)”采用 greed `150` 和 `30000` 单件收购上限；Warrior 没有 Burglary/Black Marketeer，买价在普通报价后乘二，卖价减半。首批库存严格选用原版不带 `TOWN` 的 Black Channels 与 Necronomicon；fixture 467、核心测试与桌面 E2E 覆盖入口、价格、购买、库存转移和存档回环。协议升至 `1.134`、内容包升至 `1.157.0`，state hash Schema 保持 `61`。当前开发期不为旧开发存档新增兼容迁移。
+
 ## 8. 明确暂缓
 
-- Black Market、Home、Jeweler、Shroomery、Dragon 与 Museum；
+- Outpost 地图尚未实现的 `0` Shroomery、Museum、`a/b` 两条轮换任务服务线与 `n` Bounty Office；
+- 原版 shop 系统存在但不在固定 Outpost 地图上的 Jeweler、Dragon；
 - White Horse Inn、城堡、Pest Control、其他任务与建筑服务；
 - 荒野旅行、其他城镇、昼夜、镇民生成和城镇战斗；
 - 全部普通食物、投掷油、光源 ego/神器、永久光源和特殊种族消化；

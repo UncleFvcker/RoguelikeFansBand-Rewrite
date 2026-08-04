@@ -6,6 +6,10 @@
   "seed": "0",
   "preconditions": {
     "world": "demo.world.original-v1",
+    "playerPosition": {
+      "x": 6,
+      "y": 4
+    },
     "entityEffects": [
       {
         "id": "demo.monster.ember-mote.1",
@@ -14,82 +18,27 @@
           "y": 5
         },
         "hp": 3,
-        "energyNeed": 100,
-        "statuses": [
-          {
-            "kindId": "rfb.status.slow",
-            "intensity": 10,
-            "remainingTicks": 100,
-            "grantedModifiers": {
-              "attack": 0,
-              "defense": 0,
-              "maxHp": 0,
-              "strength": 0,
-              "intelligence": 0,
-              "wisdom": 0,
-              "dexterity": 0,
-              "constitution": 0,
-              "charisma": 0,
-              "speed": 0
-            },
-            "grantedEquipmentBonuses": {
-              "meleeAttacks": 0,
-              "meleeSkill": 0,
-              "meleeDamage": 0,
-              "rangedSkill": 0,
-              "throwingSkill": 0,
-              "deviceSkill": 0,
-              "savingThrowSkill": 0,
-              "stealthSkill": 0,
-              "searchSkill": 0,
-              "perceptionSkill": 0,
-              "disarmingSkill": 0,
-              "diggingSkill": 0,
-              "infravision": 0,
-              "lightRadius": 0
-            },
-            "grantsWallPassage": false,
-            "incomingDamagePercent": 100
-          }
-        ]
+        "energyNeed": 100
+      }
+    ],
+    "inventoryItems": [
+      {
+        "id": "demo.item.resonance-pellet.1",
+        "kindId": "demo.item.resonance-pellet",
+        "quantity": 6
+      }
+    ],
+    "equipmentItems": [
+      {
+        "id": "demo.item.resonance-sling.1",
+        "kindId": "demo.item.resonance-sling",
+        "quantity": 1,
+        "slotId": "launcher",
+        "quality": "ordinary"
       }
     ]
   },
   "commands": [
-    {
-      "command": {
-        "type": "move",
-        "direction": "east"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "east"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "south-east"
-      }
-    },
-    {
-      "command": {
-        "type": "pick-up"
-      }
-    },
-    {
-      "command": {
-        "type": "pick-up"
-      }
-    },
-    {
-      "command": {
-        "type": "equip",
-        "itemId": "demo.item.resonance-sling.1"
-      }
-    },
     {
       "command": {
         "type": "fire-target",
@@ -100,13 +49,12 @@
       }
     }
   ],
-  "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 7,
-      "turn": 7,
-      "worldTick": 70,
-      "lastCommandSeq": 7,
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
       "rngDrawCounter": 7,
       "floorId": "demo.floor.surface",
       "playerPosition": {
@@ -122,7 +70,7 @@
       "playerCarriedWeightTenthsPound": 25,
       "playerCarryCapacityTenthsPound": 100,
       "playerGold": 0,
-      "playerNutrition": 9989,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -277,49 +225,12 @@
         {
           "id": "demo.monster.ember-mote.1",
           "position": {
-            "x": 9,
-            "y": 5
+            "x": 8,
+            "y": 4
           },
           "hp": 2,
-          "speed": 10,
-          "energyNeed": 30,
-          "statuses": [
-            {
-              "kindId": "rfb.status.slow",
-              "intensity": 10,
-              "remainingTicks": 30,
-              "grantedModifiers": {
-                "attack": 0,
-                "defense": 0,
-                "maxHp": 0,
-                "strength": 0,
-                "intelligence": 0,
-                "wisdom": 0,
-                "dexterity": 0,
-                "constitution": 0,
-                "charisma": 0,
-                "speed": 0
-              },
-              "grantedEquipmentBonuses": {
-                "meleeAttacks": 0,
-                "meleeSkill": 0,
-                "meleeDamage": 0,
-                "rangedSkill": 0,
-                "throwingSkill": 0,
-                "deviceSkill": 0,
-                "savingThrowSkill": 0,
-                "stealthSkill": 0,
-                "searchSkill": 0,
-                "perceptionSkill": 0,
-                "disarmingSkill": 0,
-                "diggingSkill": 0,
-                "infravision": 0,
-                "lightRadius": 0
-              },
-              "grantsWallPassage": false,
-              "incomingDamagePercent": 100
-            }
-          ]
+          "speed": 110,
+          "energyNeed": 100
         },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
@@ -477,33 +388,9 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "bc64fecf9c91e2e7b74fc52e25a22071cd8ed2f06e3199e907b9f30840b51ca5"
+      "stateHash": "7a5613fca25521f39c19779854c5efb884e45046dcb036e2f56915a6c49907ec"
     },
     "events": [
-      {
-        "kind": "item.pickup",
-        "messageKey": "item-pickup-success",
-        "args": {
-          "quantity": "6",
-          "target": "demo.item.resonance-pellet"
-        }
-      },
-      {
-        "kind": "item.pickup",
-        "messageKey": "item-pickup-success",
-        "args": {
-          "quantity": "1",
-          "target": "demo.item.resonance-sling"
-        }
-      },
-      {
-        "kind": "item.equip",
-        "messageKey": "item-equip-success",
-        "args": {
-          "slot": "launcher",
-          "target": "demo.item.resonance-sling"
-        }
-      },
       {
         "kind": "combat.projectile-hit",
         "messageKey": "projectile-hit",
@@ -561,42 +448,13 @@
     ],
     "changedCells": [
       {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 4,
-        "y": 3
-      },
-      {
-        "x": 4,
-        "y": 3
-      },
-      {
-        "x": 5,
-        "y": 3
-      },
-      {
-        "x": 5,
-        "y": 3
-      },
-      {
-        "x": 6,
-        "y": 4
-      },
-      {
-        "x": 6,
-        "y": 4
-      },
-      {
-        "x": 6,
+        "x": 8,
         "y": 4
       },
       {
         "x": 9,
         "y": 5
       }
-    ],
-    "saveRoundTripStateHash": "bc64fecf9c91e2e7b74fc52e25a22071cd8ed2f06e3199e907b9f30840b51ca5"
+    ]
   }
 }

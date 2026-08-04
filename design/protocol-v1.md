@@ -356,3 +356,7 @@ contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与
 协议 1.131 为 `ShopCategoryDto` 增加 `armoury` 与 `weaponsmith`，使 Outpost 共享工坊的两个入口保持严格类别。装备购买、穿戴、箭矢聚合、交易事件和存档继续复用既有 DTO；save v1 与 state hash Schema v60 保持不变。完整边界见 [Contract v164](contract-v164-outpost-armoury-weaponsmith.md)。
 
 协议 1.132 为 `ShopCategoryDto` 增加 `bookstore`，使 Outpost 共享奥术建筑的书店入口保持严格类别。购买后的法术书实例继续复用既有库存、能力学习、知识和存档 DTO；save v1 与 state hash Schema v60 保持不变。完整边界见 [Contract v165](contract-v165-outpost-bookstore.md)。
+
+协议 1.133 增加 `DepositAtHome` / `WithdrawFromHome`、`HomeDto` / `HomeItemDto` 与 `homes` 投影，并为 save v1 增加省略式 `homeStates`。Home 库存作为权威状态进入 state hash Schema v61；操作零时间、零金币、零 RNG，且不复用商店价格或店主模型。完整边界见 [Contract v166](contract-v166-outpost-home.md)。
+
+协议 1.134 为 `ShopCategoryDto` 增加 `black-market`。Black Market 继续复用既有商店、库存、报价、交易事件和 save DTO；其 Warrior 买入加倍、卖出减半与店主单件收购上限由核心价格管线执行，不增加新的存档字段，state hash Schema 保持 v61。完整边界见 [Contract v167](contract-v167-outpost-black-market.md)。

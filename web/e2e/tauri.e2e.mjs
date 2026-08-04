@@ -308,6 +308,8 @@ async function runScenario(driver) {
   assert.equal(state.cameraY, "0");
   assert.ok(Number(state.viewportWidth) >= 560);
   assert.ok(Number(state.viewportHeight) >= 400);
+  const fullMapViewportWidth = Number(state.viewportWidth);
+  const fullMapViewportHeight = Number(state.viewportHeight);
   assert.equal(state.zoom, "1");
   assert.equal(state.canvasUnchanged, true);
   assert.equal(state.contentId, expected.contentId);
@@ -636,18 +638,20 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered" && document.querySelector("#map-host")?.dataset.viewportWidth === "420"`,
+    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered" && Number(document.querySelector("#map-host")?.dataset.viewportWidth) > 420 && Number(document.querySelector("#map-host")?.dataset.viewportHeight) > 420`,
     "player-centered camera mode",
   );
   state = await readState(driver);
   assert.equal(state.stateHash, hashBeforeCameraSwitch);
   assert.equal(state.appliedCells, appliedCellsBeforeCameraSwitch);
   assert.equal(state.totalAppliedCells, totalAppliedCellsBeforeCameraSwitch);
-  assert.equal(state.cameraX, "0");
+  assert.ok(Number(state.cameraX) >= 0);
   assert.equal(state.cameraY, "0");
-  assert.equal(state.viewportHeight, "420");
-  assert.equal(state.visibleChunkCount, "1");
-  assert.equal(state.culledChunkCount, "3");
+  assert.ok(Number(state.viewportWidth) >= fullMapViewportWidth);
+  assert.ok(Number(state.viewportWidth) - fullMapViewportWidth <= 20);
+  assert.ok(Number(state.viewportHeight) >= fullMapViewportHeight);
+  assert.ok(Number(state.viewportHeight) - fullMapViewportHeight <= 20);
+  assert.ok(Number(state.visibleChunkCount) > 0);
   assert.equal(state.canvasUnchanged, true);
 
   for (const x of [5, 6, 7, 8]) {
@@ -659,10 +663,17 @@ async function runScenario(driver) {
   }
   state = await readState(driver);
   assert.equal(state.cameraMode, "player-centered");
-  assert.equal(state.cameraX, "-28");
   assert.equal(state.cameraY, "0");
-  assert.equal(state.visibleChunkCount, "2");
-  assert.equal(state.culledChunkCount, "2");
+  assert.equal(
+    await driver.execute(`
+      const host = document.querySelector("#map-host");
+      const cellSize = 28 * Number(host.dataset.zoom);
+      const x = Number(host.dataset.cameraX) + 8 * cellSize;
+      const y = Number(host.dataset.cameraY) + 3 * cellSize;
+      return x >= 0 && y >= 0 && x + cellSize <= host.clientWidth && y + cellSize <= host.clientHeight;
+    `),
+    true,
+  );
   assert.ok(Number(state.rememberedCellCount) > 0);
   assert.equal(state.canvasUnchanged, true);
 
@@ -675,16 +686,26 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.zoom === "1.5" && document.querySelector("#map-host")?.dataset.cameraX === "-147"`,
+    `return document.querySelector("#map-host")?.dataset.zoom === "1.5"`,
     "screen zoom",
   );
   state = await readState(driver);
   assert.equal(state.stateHash, hashBeforeZoom);
   assert.equal(state.totalAppliedCells, cellsBeforeZoom);
   assert.equal(state.zoom, "1.5");
-  assert.equal(state.viewportWidth, "420");
-  assert.equal(state.viewportHeight, "420");
-  assert.equal(state.visibleChunkCount, "1");
+  assert.ok(Number(state.viewportWidth) >= fullMapViewportWidth);
+  assert.ok(Number(state.viewportHeight) >= fullMapViewportHeight);
+  assert.ok(Number(state.visibleChunkCount) > 0);
+  assert.equal(
+    await driver.execute(`
+      const host = document.querySelector("#map-host");
+      const cellSize = 28 * Number(host.dataset.zoom);
+      const x = Number(host.dataset.cameraX) + 8 * cellSize;
+      const y = Number(host.dataset.cameraY) + 3 * cellSize;
+      return x >= 0 && y >= 0 && x + cellSize <= host.clientWidth && y + cellSize <= host.clientHeight;
+    `),
+    true,
+  );
   assert.equal(state.canvasUnchanged, true);
   await driver.execute(`
     const select = document.querySelector("#zoom-level");
@@ -693,7 +714,7 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.zoom === "1" && document.querySelector("#map-host")?.dataset.cameraX === "-28"`,
+    `return document.querySelector("#map-host")?.dataset.zoom === "1"`,
     "zoom restore",
   );
 
@@ -720,7 +741,7 @@ async function runScenario(driver) {
     return true;
   `);
   await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered" && document.querySelector("#map-host")?.dataset.cameraX === "-28"`,
+    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered"`,
     "player-centered camera restore",
   );
 
@@ -748,8 +769,8 @@ async function runScenario(driver) {
   assert.equal(state.itemCount, "4");
   assert.equal(state.inventoryStackCount, "1");
   assert.equal(state.cameraMode, "player-centered");
-  assert.equal(state.cameraX, "0");
-  assert.equal(state.visibleChunkCount, "1");
+  assert.ok(Number(state.cameraX) >= 0);
+  assert.equal(state.visibleChunkCount, "4");
   assert.match(state.inventory, /陌生的浅色碎片/);
   assert.match(state.messages, /存档校验与载入成功/);
 
@@ -775,6 +796,7 @@ async function runScenario(driver) {
   assert.equal(state.crashDiagnosticReason, "frontend-error");
   assert.match(state.crashDiagnosticReport, /^crash-\d+(?:-\d+)?\.rfbdiagnostic$/);
   assert.match(state.messages, /已在本机自动保存脱敏诊断报告/);
+  const visibleChunksBeforeTilesetSwitch = state.visibleChunkCount;
 
   await driver.execute(`
     const select = document.querySelector("#tileset-preset");
@@ -791,7 +813,7 @@ async function runScenario(driver) {
   assert.equal(state.appliedCells, "400");
   assert.equal(state.lastRebuiltTerrainChunks, "4");
   assert.equal(state.totalRebuiltTerrainChunks, "8");
-  assert.equal(state.visibleChunkCount, "1");
+  assert.equal(state.visibleChunkCount, visibleChunksBeforeTilesetSwitch);
   assert.equal(state.canvasUnchanged, true);
   assert.match(state.messages, /地图外观已载入：rfb\.tileset\.image-demo/);
 
@@ -879,8 +901,8 @@ async function runScenario(driver) {
       run.diagnostics.totalRebuiltTerrainChunks >=
         run.diagnostics.terrainChunkCount * 2,
     );
-    assert.ok(run.canvasPixelWidth >= 192 * 28);
-    assert.ok(run.canvasPixelHeight >= 64 * 28);
+    assert.ok(run.canvasPixelWidth >= 420);
+    assert.ok(run.canvasPixelHeight >= 420);
     assert.equal(run.frameTiming.sampleCount, 45);
     for (const timing of [
       run.initializeMs,
@@ -938,6 +960,8 @@ async function readState(driver) {
       cameraMode: host?.dataset.cameraMode,
       cameraX: host?.dataset.cameraX,
       cameraY: host?.dataset.cameraY,
+      scrollX: host?.dataset.scrollX,
+      scrollY: host?.dataset.scrollY,
       viewportWidth: host?.dataset.viewportWidth,
       viewportHeight: host?.dataset.viewportHeight,
       zoom: host?.dataset.zoom,

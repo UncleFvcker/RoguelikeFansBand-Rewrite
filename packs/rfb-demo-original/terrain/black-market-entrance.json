@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.black-market-entrance",
+  "nameKey": "terrain-demo-black-market-entrance-name",
+  "descriptionKey": "terrain-demo-black-market-entrance-description",
+  "glyph": "7",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "shop-entrance", "surface"]
+}

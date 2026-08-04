@@ -2444,7 +2444,9 @@ impl Game {
                             && match &item.location {
                                 ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
                                 ItemLocation::Ground(position) => *position == self.player.position,
-                                ItemLocation::CarriedBy { .. } | ItemLocation::Shop { .. } => false,
+                                ItemLocation::CarriedBy { .. }
+                                | ItemLocation::Shop { .. }
+                                | ItemLocation::Home { .. } => false,
                             }
                     }))
                 .then(|| AbilityTargetPlan::Item {

@@ -473,6 +473,48 @@
         </div>
       </dialog>
 
+      <dialog id="home-dialog" class="shop-dialog home-dialog" aria-labelledby="home-title" aria-describedby="home-description">
+        <header class="shop-header">
+          <div>
+            <p class="eyebrow" data-l10n-id="home-eyebrow"></p>
+            <h2 id="home-title"></h2>
+            <p id="home-description" class="shop-description"></p>
+          </div>
+          <button id="home-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div class="shop-workspace">
+          <section class="shop-catalog" aria-labelledby="home-catalog-title">
+            <div class="shop-tabs" role="tablist">
+              <button id="home-withdraw-tab" role="tab" type="button" aria-controls="home-item-list" aria-selected="true" data-l10n-id="action-home-withdraw-tab"></button>
+              <button id="home-deposit-tab" role="tab" type="button" aria-controls="home-item-list" aria-selected="false" data-l10n-id="action-home-deposit-tab"></button>
+            </div>
+            <h3 id="home-catalog-title" class="visually-hidden" data-l10n-id="home-item-list-label"></h3>
+            <ul id="home-item-list" class="shop-item-list" aria-live="polite"></ul>
+          </section>
+          <aside class="shop-ledger" aria-labelledby="home-ledger-title">
+            <h3 id="home-ledger-title" data-l10n-id="home-pack-summary-label"></h3>
+            <dl class="shop-player-summary">
+              <div><dt data-l10n-id="shop-weight-label"></dt><dd id="home-weight-value">--</dd></div>
+            </dl>
+            <div class="shop-transaction">
+              <p id="home-selection" class="shop-selection" aria-live="polite"></p>
+              <label for="home-quantity" data-l10n-id="shop-quantity-label"></label>
+              <div class="shop-quantity-controls">
+                <button id="home-quantity-decrease" type="button" aria-label="" data-l10n-id="action-shop-quantity-decrease-symbol" data-l10n-aria-label="action-shop-quantity-decrease"></button>
+                <input id="home-quantity" type="number" inputmode="numeric" min="1" value="1" />
+                <button id="home-quantity-increase" type="button" aria-label="" data-l10n-id="action-shop-quantity-increase-symbol" data-l10n-aria-label="action-shop-quantity-increase"></button>
+                <button id="home-quantity-maximum" type="button" data-l10n-id="action-shop-quantity-maximum"></button>
+              </div>
+              <dl class="shop-transaction-summary">
+                <div><dt data-l10n-id="shop-weight-after-label"></dt><dd id="home-weight-after">--</dd></div>
+              </dl>
+              <button id="home-confirm" class="primary-button shop-confirm" type="button" disabled></button>
+              <p id="home-feedback" class="shop-feedback" aria-live="assertive"></p>
+            </div>
+          </aside>
+        </div>
+      </dialog>
+
       <dialog id="player-ui-settings-dialog" class="player-ui-settings-dialog" aria-labelledby="player-ui-settings-title">
         <header>
           <div>

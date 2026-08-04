@@ -32,7 +32,7 @@ pub(crate) use items::SourceItemUseActionDefinition;
 const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
-pub(crate) const SUPPORTED_ROOTS: [&str; 25] = [
+pub(crate) const SUPPORTED_ROOTS: [&str; 26] = [
     "abilities",
     "abilityBooks",
     "abilityPrograms",
@@ -56,6 +56,7 @@ pub(crate) const SUPPORTED_ROOTS: [&str; 25] = [
     "terrainFeatureTables",
     "themeTables",
     "towns",
+    "townFacilities",
     "vaults",
     "worlds",
 ];
@@ -128,6 +129,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         terrain_feature_tables: load_root(root, "terrainFeatureTables", &roots, &mut budget)?,
         vaults: load_root(root, "vaults", &roots, &mut budget)?,
         towns: load_root(root, "towns", &roots, &mut budget)?,
+        town_facilities: load_root(root, "townFacilities", &roots, &mut budget)?,
         shops: load_root(root, "shops", &roots, &mut budget)?,
         worlds: load_root(root, "worlds", &roots, &mut budget)?,
     };

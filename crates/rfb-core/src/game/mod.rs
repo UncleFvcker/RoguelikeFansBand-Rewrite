@@ -35,8 +35,8 @@ use crate::{
         gain_energy, spend_energy,
     },
     state::{
-        Actor, FloorConnectionState, FloorRegionState, FloorState, GoldPile, ItemInstance,
-        ItemLocation, MonsterPackIdentity, ResourcePool, RolledAffixState, ShopState,
+        Actor, FloorConnectionState, FloorRegionState, FloorState, GoldPile, HomeState,
+        ItemInstance, ItemLocation, MonsterPackIdentity, ResourcePool, RolledAffixState, ShopState,
         SummonIdentity, TownState,
     },
     stats::{
@@ -337,10 +337,10 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 151] = [
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "3f12b3a62351b245edb8223b324c72a7bd01e3cc53f2ffb3fcd402dce5109435";
+    "6816ed2d04032ca79ad36aa2451ca8d2adac91633680d7541e4ab3084e231860";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 60;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 61;
 pub const WARRENS_JOURNEY_WORLD_ID: &str = "demo.world.warrens-journey";
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -874,6 +874,7 @@ pub struct Game {
     dungeon_states: BTreeMap<String, DungeonState>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
+    home_states: BTreeMap<String, HomeState>,
     campaign_state: CampaignState,
     summon_command: SummonCommandDto,
     recall: Option<RecallStateDto>,
@@ -1126,6 +1127,7 @@ impl Game {
             &mut rng,
             &mut next_item_instance_serial,
         )?;
+        let home_states = town::initial_home_states(world, &content);
         let mut game = Self {
             content,
             world_id: world_id.to_owned(),
@@ -1156,6 +1158,7 @@ impl Game {
             dungeon_states,
             town_states,
             shop_states,
+            home_states,
             campaign_state: CampaignState::default(),
             summon_command: SummonCommandDto::default(),
             recall: None,
@@ -1287,9 +1290,11 @@ impl Game {
                 &action,
                 GameAction::Retire
                     | GameAction::BuyFromShop { .. }
+                    | GameAction::DepositAtHome { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::Rest { .. }
                     | GameAction::SellToShop { .. }
+                    | GameAction::WithdrawFromHome { .. }
                     | GameAction::SetSummonCommand { .. }
             );
         // Paralysis wastes any world-advancing action: the substituted idle
@@ -1360,6 +1365,18 @@ impl Game {
                 Ok(outcome) => events.push(DomainEvent::ShopPurchaseCompleted { outcome }),
                 Err(reason) => events.push(DomainEvent::ShopTransactionUnavailable {
                     shop_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::DepositAtHome {
+                facility_id,
+                item_id,
+                quantity,
+            } => match self.deposit_at_home(&facility_id, &item_id, quantity) {
+                Ok(outcome) => events.push(DomainEvent::HomeItemDeposited { outcome }),
+                Err(reason) => events.push(DomainEvent::HomeTransferUnavailable {
+                    facility_id,
                     item_id,
                     reason: reason.to_owned(),
                 }),
@@ -1691,6 +1708,18 @@ impl Game {
                     reason: reason.to_owned(),
                 }),
             },
+            GameAction::WithdrawFromHome {
+                facility_id,
+                item_id,
+                quantity,
+            } => match self.withdraw_from_home(&facility_id, &item_id, quantity) {
+                Ok(outcome) => events.push(DomainEvent::HomeItemWithdrawn { outcome }),
+                Err(reason) => events.push(DomainEvent::HomeTransferUnavailable {
+                    facility_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
             GameAction::SetSummonCommand { mode } => {
                 self.summon_command = SummonCommandDto {
                     mode,
@@ -1774,6 +1803,7 @@ impl Game {
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             town: self.current_town_dto(),
             shops: self.current_shop_dtos(),
+            homes: self.current_home_dtos(),
             events,
             changed_cells: changed
                 .into_iter()
@@ -2289,7 +2319,8 @@ impl Game {
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::CarriedBy { .. }
-                | ItemLocation::Shop { .. } => None,
+                | ItemLocation::Shop { .. }
+                | ItemLocation::Home { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let mut candidates = Vec::new();
@@ -2501,7 +2532,8 @@ impl Game {
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::CarriedBy { .. }
-                | ItemLocation::Shop { .. } => None,
+                | ItemLocation::Shop { .. }
+                | ItemLocation::Home { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let connections = self
@@ -3910,6 +3942,11 @@ impl Game {
             || self.items.iter().any(|item| item.id == candidate)
             || self
                 .shop_states
+                .values()
+                .flat_map(|state| state.inventory.iter())
+                .any(|item| item.id == candidate)
+            || self
+                .home_states
                 .values()
                 .flat_map(|state| state.inventory.iter())
                 .any(|item| item.id == candidate)

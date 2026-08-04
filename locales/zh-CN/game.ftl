@@ -369,3 +369,6 @@ message-hunger-starvation-death = 你饿死了。
 shop-purchase-success = 花费 { $totalPrice } 金币购买了 { $quantity } 件{ $target }。余额：{ $balance }。
 shop-sale-success = 出售了 { $quantity } 件{ $target }，获得 { $totalPrice } 金币。余额：{ $balance }。
 shop-transaction-unavailable = 无法完成商店交易（{ $reason }）。
+home-deposit-success = 已将 { $quantity } 件{ $target }存入家中。
+home-withdraw-success = 已从家中取出 { $quantity } 件{ $target }。
+home-transfer-unavailable = 无法完成家中物品转移（{ $reason }）。

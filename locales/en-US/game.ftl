@@ -373,3 +373,6 @@ message-hunger-starvation-death = You die from starvation.
 shop-purchase-success = Purchased { $quantity } { $target } for { $totalPrice } gold. Balance: { $balance }.
 shop-sale-success = Sold { $quantity } { $target } for { $totalPrice } gold. Balance: { $balance }.
 shop-transaction-unavailable = The shop transaction cannot be completed ({ $reason }).
+home-deposit-success = Stored { $quantity } { $target } at home.
+home-withdraw-success = Withdrew { $quantity } { $target } from home.
+home-transfer-unavailable = The home transfer cannot be completed ({ $reason }).

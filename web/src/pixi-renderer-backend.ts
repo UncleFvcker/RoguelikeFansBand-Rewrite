@@ -156,12 +156,18 @@ export class PixiRendererBackend implements RendererBackend {
   }
 
   setCameraTransform(transform: CameraTransform): void {
-    if (this.#zoom !== transform.zoom) {
-      this.#zoom = transform.zoom;
-      this.#application.renderer.resize(
-        this.#width * MAP_CELL_SIZE * this.#zoom,
-        this.#height * MAP_CELL_SIZE * this.#zoom,
-      );
+    this.#zoom = transform.zoom;
+    const canvasWidth = transform.cullingEnabled
+      ? transform.viewportWidth
+      : this.#width * MAP_CELL_SIZE * this.#zoom;
+    const canvasHeight = transform.cullingEnabled
+      ? transform.viewportHeight
+      : this.#height * MAP_CELL_SIZE * this.#zoom;
+    if (
+      this.#application.renderer.screen.width !== canvasWidth ||
+      this.#application.renderer.screen.height !== canvasHeight
+    ) {
+      this.#application.renderer.resize(canvasWidth, canvasHeight);
     }
     this.#camera.scale.set(this.#zoom);
     this.#camera.position.set(transform.x, transform.y);

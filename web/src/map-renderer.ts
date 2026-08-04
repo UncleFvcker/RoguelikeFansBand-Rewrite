@@ -2,8 +2,8 @@
 
 import {
   computeCameraOffset,
+  computeFullMapScroll,
   MAP_CELL_SIZE,
-  PLAYER_CENTERED_VIEW_CELLS,
   type CameraMode,
   type ZoomLevel,
 } from "./camera";
@@ -132,13 +132,9 @@ export class MapRenderer {
     if (!host) return;
     const worldWidth = this.#width * MAP_CELL_SIZE * this.#zoom;
     const worldHeight = this.#height * MAP_CELL_SIZE * this.#zoom;
-    const centeredWidth = Math.min(this.#width, PLAYER_CENTERED_VIEW_CELLS) * MAP_CELL_SIZE;
-    const centeredHeight = Math.min(this.#height, PLAYER_CENTERED_VIEW_CELLS) * MAP_CELL_SIZE;
     host.dataset.cameraMode = this.#cameraMode;
     host.style.setProperty("--map-world-width", `${worldWidth}px`);
     host.style.setProperty("--map-world-height", `${worldHeight}px`);
-    host.style.setProperty("--map-centered-width", `${centeredWidth}px`);
-    host.style.setProperty("--map-centered-height", `${centeredHeight}px`);
   }
 
   #updateCamera(): void {
@@ -169,6 +165,23 @@ export class MapRenderer {
     host.dataset.zoom = String(this.#zoom);
     host.dataset.viewportWidth = String(viewportWidth);
     host.dataset.viewportHeight = String(viewportHeight);
+    if (this.#cameraMode === "full-map") {
+      const scroll = computeFullMapScroll({
+        focus: world.playerPosition,
+        worldWidth: this.#width * MAP_CELL_SIZE,
+        worldHeight: this.#height * MAP_CELL_SIZE,
+        viewportWidth,
+        viewportHeight,
+        scrollX: host.scrollLeft,
+        scrollY: host.scrollTop,
+        zoom: this.#zoom,
+      });
+      host.scrollTo({ left: scroll.x, top: scroll.y, behavior: "auto" });
+    } else {
+      host.scrollTo({ left: 0, top: 0, behavior: "auto" });
+    }
+    host.dataset.scrollX = String(host.scrollLeft);
+    host.dataset.scrollY = String(host.scrollTop);
     this.#recordBackendDiagnostics();
   }
 

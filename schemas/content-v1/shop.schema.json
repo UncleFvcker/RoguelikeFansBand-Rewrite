@@ -30,6 +30,7 @@
         "temple",
         "alchemist",
         "magic-shop",
+        "black-market",
         "bookstore"
       ],
       "type": "string"

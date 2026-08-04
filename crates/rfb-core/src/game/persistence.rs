@@ -23,16 +23,18 @@ use rfb_content::{ContentCatalog, FloorLifecycle, TaskObjectiveKind};
 use rfb_protocol::{
     AbilityProgressSaveDto, ActorSaveDto, BodySlotSaveDto, CampaignStateSaveDto, CampaignStatusDto,
     CarriedItemSaveDto, DungeonStateSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
-    FloorRegionSaveDto, InventoryItemSaveDto, ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto,
-    ItemSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position, ResourcePoolSaveDto, RngSaveDto,
-    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, ShopStateSaveDto, TaskStateSaveDto,
-    TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
+    FloorRegionSaveDto, HomeStateSaveDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
+    ItemPropertyKnowledgeSaveDto, ItemSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ResourcePoolSaveDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, ShopStateSaveDto,
+    TaskStateSaveDto, TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::gold::derive_next_gold_pile_serial;
-use super::town::{restore_town_and_shop_states, shop_state_to_save};
+use super::town::{
+    home_state_to_save, restore_home_states, restore_town_and_shop_states, shop_state_to_save,
+};
 use super::validation::floor_connections_are_valid;
 use super::{
     BUILT_IN_CONTENT_HASH, BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState,
@@ -501,6 +503,7 @@ struct StateHashPayloadV41<'a> {
     dungeon_states: Vec<DungeonStateSaveDto>,
     town_states: Vec<TownStateSaveDto>,
     shop_states: Vec<ShopStateSaveDto>,
+    home_states: Vec<HomeStateSaveDto>,
     campaign_state: CampaignStateSaveDto,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
@@ -673,6 +676,13 @@ impl Game {
             payload.player.position,
             &payload.town_states,
             &payload.shop_states,
+        )?;
+        let home_states = restore_home_states(
+            world,
+            &content,
+            &current_floor_id,
+            payload.player.position,
+            &payload.home_states,
         )?;
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0 || payload.terrain.terrain_ids.len() != expected_len {
@@ -849,6 +859,11 @@ impl Game {
                 .values()
                 .flat_map(|state| state.inventory.iter().cloned()),
         );
+        allocator_items.extend(
+            home_states
+                .values()
+                .flat_map(|state| state.inventory.iter().cloned()),
+        );
         let derived_next_item_instance_serial =
             derive_next_item_instance_serial(&player, &allocator_entities, &allocator_items)?;
         let next_item_instance_serial = if payload.next_item_instance_serial == 0 {
@@ -979,6 +994,7 @@ impl Game {
             dungeon_states,
             town_states,
             shop_states,
+            home_states,
             campaign_state,
             summon_command,
             recall,
@@ -1115,6 +1131,11 @@ impl Game {
                 .iter()
                 .map(|(shop_id, state)| shop_state_to_save(shop_id, state))
                 .collect(),
+            home_states: self
+                .home_states
+                .iter()
+                .map(|(facility_id, state)| home_state_to_save(facility_id, state))
+                .collect(),
             campaign_state: Some(self.campaign_state_to_save()),
             next_item_instance_serial: self.next_item_instance_serial,
             next_gold_pile_serial: self.next_gold_pile_serial,
@@ -1168,6 +1189,11 @@ impl Game {
                 .shop_states
                 .iter()
                 .map(|(shop_id, state)| shop_state_to_save(shop_id, state))
+                .collect(),
+            home_states: self
+                .home_states
+                .iter()
+                .map(|(facility_id, state)| home_state_to_save(facility_id, state))
                 .collect(),
             campaign_state: self.campaign_state_to_save(),
             next_item_instance_serial: self.next_item_instance_serial,

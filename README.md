@@ -180,6 +180,8 @@ RoguelikeFansBand 的新一代重构工程。
 - [Contract v163：围墙 Outpost 与魔法店](design/contract-v163-walled-outpost-magic-shop.md)
 - [Contract v164：护甲店与武器店](design/contract-v164-outpost-armoury-weaponsmith.md)
 - [Contract v165：书店](design/contract-v165-outpost-bookstore.md)
+- [Contract v166：Outpost Home](design/contract-v166-outpost-home.md)
+- [Contract v167：Outpost Black Market](design/contract-v167-outpost-black-market.md)
 - [旧版物品导入 v2（k_info / e_info / a_info）](design/legacy-item-import-v2.md)
 - [旧版内容导入优先级规划 v1](design/legacy-import-priority-v1.md)
 - [旧版角色内容导入 v1（b_info / 种族 / 性格）](design/legacy-character-import-v1.md)
@@ -203,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v165`，共 465 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v168`，共 463 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -438,6 +440,12 @@ Phase 18 后续 / contract-v164 在 Outpost 西南侧加入共享工坊：护甲
 
 Phase 18 后续 / contract-v165 将书店作为炼金店/魔法店共享建筑的第三入口，使用原版数字 `9`。库存严格限定为原版可进入城镇库存的《死亡的气息》和《冥府之路》，基础价值为 `100/1000`；前者新增为可购买并用于学习的完整能力书，后两册高阶死亡魔法书不提前出售。协议升至 1.132、demo 升至 1.155.0、Schema 保持 v60，active baseline 增至 465 条 exact fixtures、零 waiver，content hash 为 `3f12b3a62351b245edb8223b324c72a7bd01e3cc53f2ffb3fcd402dce5109435`。详见[Contract v165](design/contract-v165-outpost-bookstore.md)。
 
+Phase 18 后续 / contract-v166 在北侧独立建筑加入 Home，使用原版数字 `8`。Home 是无店主、钱包、价格和刷新的独立设施，支持免费持久存取、相容物品聚合、负重检查和原生存档恢复；操作不耗时间、不改变金币、不推进 RNG。协议升至 1.133、demo 升至 1.156.0、Schema 升至 v61，active baseline 增至 466 条 exact fixtures、零 waiver，content hash 为 `4b6e95cdd3c09be3f08c68a458d1c81965fb81d457fe6a0908ffcacb6a15b400`。原版基础数字入口现只剩 Black Market；连同新版 Jeweler、Shroomery、Dragon，共四类正式交易设施待实现。详见[Contract v166](design/contract-v166-outpost-home.md)。
+
+Phase 18 后续 / contract-v167 在东南侧加入原版数字 `7` Black Market。固定 Human 店主“公平的托皮(?)”使用 greed 150 与 30000 单件收购上限；Warrior 买价在普通报价后乘二、卖价减半。首批库存严格限定为原版不带 `TOWN` 的 Black Channels 与 Necronomicon。协议升至 1.134、demo 升至 1.157.0、Schema 保持 v61，active baseline 增至 467 条 exact fixtures、零 waiver，content hash 为 `796b48c16924b0d89a5c98443122b3802b920e9ef460aab447e0468a3f99d7ea`。重写版现已覆盖 Outpost 数字 1-9 的全部基础入口；原版地图仍缺 `0` Shroomery、Museum、两条轮换任务服务线和 Bounty Office，共五类。详见[Contract v167](design/contract-v167-outpost-black-market.md)。
+
+Phase 18 地图修订 / contract-v168 将 Outpost 地表扩为 `96×32`，城镇整体置于带四周荒野缓冲的地表中央，Warrens 入口继续位于东城门外；圣殿与相邻建筑之间保留左右通道和南侧绕行带。内容模型允许地表与程序楼层使用独立尺寸，因此九层 Warrens 继续保持原版依据的 `66×22`。协议和 Schema 不变，demo 升至 1.158.0；当前 active baseline 在去除四条重复的普通商店购买场景后为 463 条 exact fixtures，content hash 为 `6816ed2d04032ca79ad36aa2451ca8d2adac91633680d7541e4ab3084e231860`。详见[Contract v168](design/contract-v168-open-outpost-layout.md)。
+
 ### 本地验证
 
 ```powershell
@@ -513,7 +521,7 @@ cargo run -p rfb-contract -- hash-snapshot <snapshot.json>
 cargo run -p rfb-contract -- validate-policy tests/fixtures/active/baseline-policy.json
 ```
 
-当前 465 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
+当前 463 个原创 contract fixtures、自动协议生成、原创内容包、ASCII glyph atlas、图片 tileset manifest、缺失资源回退和 Windows Tauri 端到端测试已经建立。桌面 E2E 可用以下命令运行：
 
 ```powershell
 cd web

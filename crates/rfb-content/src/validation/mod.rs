@@ -90,6 +90,9 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .sort_by(|left, right| left.id.cmp(&right.id));
     content.vaults.sort_by(|left, right| left.id.cmp(&right.id));
     content.towns.sort_by(|left, right| left.id.cmp(&right.id));
+    content
+        .town_facilities
+        .sort_by(|left, right| left.id.cmp(&right.id));
     content.shops.sort_by(|left, right| left.id.cmp(&right.id));
     content.worlds.sort_by(|left, right| left.id.cmp(&right.id));
     let mut all_ids = BTreeSet::new();
@@ -217,9 +220,11 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
 
     let TownValidationOutputs {
         towns_by_id,
+        facilities_by_id,
         shops_by_id,
     } = validate_towns_and_shops(
         &mut content.towns,
+        &mut content.town_facilities,
         &mut content.shops,
         TownValidationRefs {
             items: &content.items,
@@ -257,6 +262,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 vaults: &vaults_by_id,
                 build_ids: &build_ids,
                 towns: &towns_by_id,
+                town_facilities: &facilities_by_id,
                 shops: &shops_by_id,
             },
         )?;

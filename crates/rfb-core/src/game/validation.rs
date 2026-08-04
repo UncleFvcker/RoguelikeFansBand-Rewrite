@@ -156,7 +156,7 @@ pub(super) fn floor_regions_are_valid(
             .find(|entity| &entity.id == actor_id)
             .is_some_and(|entity| cells.contains(&entity.position)),
         ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
-        ItemLocation::Shop { .. } => false,
+        ItemLocation::Shop { .. } | ItemLocation::Home { .. } => false,
     })
 }
 
@@ -315,7 +315,10 @@ impl Game {
             .as_deref()
             .and_then(|town_id| self.content.town(town_id))
         {
-            None if !self.town_states.is_empty() || !self.shop_states.is_empty() => {
+            None if !self.town_states.is_empty()
+                || !self.shop_states.is_empty()
+                || !self.home_states.is_empty() =>
+            {
                 return Err(CoreError::InvalidSave("town state is invalid"));
             }
             None => {}
@@ -330,6 +333,11 @@ impl Game {
                         .shop_ids
                         .iter()
                         .any(|shop_id| !self.shop_states.contains_key(shop_id))
+                    || self.home_states.len() != town.facility_ids.len()
+                    || town
+                        .facility_ids
+                        .iter()
+                        .any(|facility_id| !self.home_states.contains_key(facility_id))
                 {
                     return Err(CoreError::InvalidSave("town state is invalid"));
                 }
@@ -347,6 +355,21 @@ impl Game {
                     })
                 {
                     return Err(CoreError::InvalidSave("shop state is invalid"));
+                }
+                if self.current_floor_id == town.floor_id
+                    && town.facility_ids.iter().any(|facility_id| {
+                        let facility = self
+                            .content
+                            .town_facility(facility_id)
+                            .expect("validated town facility must remain available");
+                        self.player.position == position_from_content(facility.entrance_position)
+                            && !self
+                                .home_states
+                                .get(facility_id)
+                                .is_some_and(|state| state.visited)
+                    })
+                {
+                    return Err(CoreError::InvalidSave("home state is invalid"));
                 }
                 for shop_id in &town.shop_ids {
                     let shop = self
@@ -583,6 +606,11 @@ impl Game {
                         "shop item is in the active item set",
                     ));
                 }
+                ItemLocation::Home { .. } => {
+                    return Err(CoreError::InvalidSave(
+                        "home item is in the active item set",
+                    ));
+                }
             }
         }
         for (shop_id, state) in &self.shop_states {
@@ -611,6 +639,35 @@ impl Game {
                     || !location_is_valid
                 {
                     return Err(CoreError::InvalidSave("shop item state is invalid"));
+                }
+            }
+        }
+        for (facility_id, state) in &self.home_states {
+            for item in &state.inventory {
+                let definition = self
+                    .content
+                    .item(&item.kind_id)
+                    .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
+                let location_is_valid = matches!(
+                    &item.location,
+                    ItemLocation::Home { facility_id: location_facility_id }
+                        if location_facility_id == facility_id
+                );
+                let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
+                    && item
+                        .affix_ids
+                        .iter()
+                        .all(|affix_id| self.content.affix(affix_id).is_some())
+                    && rolled_affixes_are_valid(item)
+                    && (item.quality == ItemQualityDto::Ordinary
+                        || (definition.max_stack == 1 && item.quantity == 1));
+                if !instance_ids.insert(item.id.clone())
+                    || item.quantity == 0
+                    || item.quantity > definition.max_stack
+                    || !affixes_are_valid
+                    || !location_is_valid
+                {
+                    return Err(CoreError::InvalidSave("home item state is invalid"));
                 }
             }
         }
@@ -714,7 +771,8 @@ impl Game {
                     ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
                     ItemLocation::Inventory
                     | ItemLocation::Equipped { .. }
-                    | ItemLocation::Shop { .. } => false,
+                    | ItemLocation::Shop { .. }
+                    | ItemLocation::Home { .. } => false,
                 };
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0
@@ -1002,6 +1060,11 @@ impl Game {
                         .values()
                         .flat_map(|floor| floor.items.iter()),
                 )
+                .chain(
+                    self.home_states
+                        .values()
+                        .flat_map(|state| state.inventory.iter()),
+                )
                 .find(|item| &item.id == item_id)
             else {
                 return Err(CoreError::InvalidSave(
@@ -1037,6 +1100,16 @@ impl Game {
             allocator_entities.extend(floor.entities.iter().cloned());
             allocator_items.extend(floor.items.iter().cloned());
         }
+        allocator_items.extend(
+            self.shop_states
+                .values()
+                .flat_map(|state| state.inventory.iter().cloned()),
+        );
+        allocator_items.extend(
+            self.home_states
+                .values()
+                .flat_map(|state| state.inventory.iter().cloned()),
+        );
         if self.next_item_instance_serial == 0
             || self.next_item_instance_serial
                 < derive_next_item_instance_serial(

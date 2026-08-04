@@ -214,6 +214,7 @@ mod tests {
             dungeon_states: Vec::new(),
             town_states: Vec::new(),
             shop_states: Vec::new(),
+            home_states: Vec::new(),
             next_item_instance_serial: 1,
             next_gold_pile_serial: 1,
             explored: vec![true],

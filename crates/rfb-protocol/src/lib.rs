@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.132";
+pub const PROTOCOL_VERSION: &str = "1.134";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -96,6 +96,11 @@ pub enum GameCommand {
         item_id: String,
         quantity: u32,
     },
+    DepositAtHome {
+        facility_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     CastAbility {
         ability_id: String,
         target: TargetSelection,
@@ -138,6 +143,11 @@ pub enum GameCommand {
         turns: u16,
     },
     Search,
+    WithdrawFromHome {
+        facility_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     SellToShop {
         shop_id: String,
         item_id: String,
@@ -2441,6 +2451,7 @@ pub enum ShopCategoryDto {
     Temple,
     Alchemist,
     MagicShop,
+    BlackMarket,
     Bookstore,
 }
 
@@ -2514,6 +2525,37 @@ pub struct ShopDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct HomeItemDto {
+    pub id: String,
+    pub kind_id: String,
+    pub display_name_key: String,
+    pub quantity: u32,
+    pub maximum_quantity: u32,
+    pub weight_tenths_pound: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuel: Option<ItemFuelDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct HomeDto {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub entrance_position: Position,
+    pub entrance_terrain_id: String,
+    pub visited: bool,
+    pub player_at_entrance: bool,
+    #[serde(default)]
+    pub stored_items: Vec<HomeItemDto>,
+    #[serde(default)]
+    pub deposit_items: Vec<HomeItemDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct GameSnapshot {
     pub protocol_version: String,
     pub revision: u32,
@@ -2548,6 +2590,8 @@ pub struct GameSnapshot {
     #[serde(default)]
     pub shops: Vec<ShopDto>,
     #[serde(default)]
+    pub homes: Vec<HomeDto>,
+    #[serde(default)]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
@@ -2572,6 +2616,8 @@ pub struct GameUpdate {
     pub town: Option<TownDto>,
     #[serde(default)]
     pub shops: Vec<ShopDto>,
+    #[serde(default)]
+    pub homes: Vec<HomeDto>,
     pub events: Vec<GameEventDto>,
     pub changed_cells: Vec<CellDto>,
     #[serde(default)]
@@ -2748,6 +2794,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(ShopStockItemDto);
     push_declaration!(ShopSellQuoteDto);
     push_declaration!(ShopDto);
+    push_declaration!(HomeItemDto);
+    push_declaration!(HomeDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
 
@@ -3238,6 +3286,14 @@ pub struct ShopStateSaveDto {
     pub inventory: Vec<InventoryItemSaveDto>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HomeStateSaveDto {
+    pub facility_id: String,
+    pub visited: bool,
+    pub inventory: Vec<InventoryItemSaveDto>,
+}
+
 fn is_zero_u32(value: &u32) -> bool {
     *value == 0
 }
@@ -3282,6 +3338,8 @@ pub struct SavePayloadV1 {
     pub town_states: Vec<TownStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub shop_states: Vec<ShopStateSaveDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub home_states: Vec<HomeStateSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign_state: Option<CampaignStateSaveDto>,
     #[serde(default)]

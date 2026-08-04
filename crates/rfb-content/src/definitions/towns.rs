@@ -17,7 +17,32 @@ pub struct TownDefinition {
     pub name_key: String,
     pub description_key: String,
     pub floor_id: String,
+    #[serde(default)]
+    pub facility_ids: Vec<String>,
     pub shop_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub town_id: String,
+    pub category: TownFacilityCategory,
+    pub entrance_position: ContentPosition,
+    pub entrance_terrain_id: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TownFacilityCategory {
+    Home,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,5 +105,6 @@ pub enum ShopCategory {
     Temple,
     Alchemist,
     MagicShop,
+    BlackMarket,
     Bookstore,
 }

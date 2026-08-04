@@ -269,7 +269,7 @@ fn prepare_supply_e2e(
 ) -> Result<GameSnapshot, String> {
     #[cfg(feature = "webdriver")]
     {
-        return state.prepare_supply_e2e(amount);
+        state.prepare_supply_e2e(amount)
     }
     #[cfg(not(feature = "webdriver"))]
     {

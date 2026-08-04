@@ -5,7 +5,71 @@
   "determinism": "exact",
   "seed": "42",
   "preconditions": {
-    "world": "demo.world.original-v1"
+    "world": "demo.world.original-v1",
+    "playerPosition": {
+      "x": 7,
+      "y": 5
+    },
+    "entityEffects": [
+      {
+        "id": "demo.monster.ember-mote.1",
+        "position": {
+          "x": 8,
+          "y": 5
+        },
+        "hp": 3,
+        "energyNeed": 100,
+        "statuses": [
+          {
+            "kindId": "rfb.status.slow",
+            "intensity": 10,
+            "remainingTicks": 100,
+            "grantedModifiers": {
+              "attack": 0,
+              "defense": 0,
+              "maxHp": 0,
+              "strength": 0,
+              "intelligence": 0,
+              "wisdom": 0,
+              "dexterity": 0,
+              "constitution": 0,
+              "charisma": 0,
+              "speed": 0
+            },
+            "grantedEquipmentBonuses": {
+              "meleeAttacks": 0,
+              "meleeSkill": 0,
+              "meleeDamage": 0,
+              "rangedSkill": 0,
+              "throwingSkill": 0,
+              "deviceSkill": 0,
+              "savingThrowSkill": 0,
+              "stealthSkill": 0,
+              "searchSkill": 0,
+              "perceptionSkill": 0,
+              "disarmingSkill": 0,
+              "diggingSkill": 0,
+              "infravision": 0,
+              "lightRadius": 0
+            },
+            "grantsWallPassage": false,
+            "incomingDamagePercent": 100
+          }
+        ]
+      }
+    ],
+    "equipmentItems": [
+      {
+        "id": "demo.item.echo-charm.1",
+        "kindId": "demo.item.echo-charm",
+        "quantity": 1,
+        "slotId": "charm",
+        "quality": "fine",
+        "affixIds": [
+          "demo.affix.harmonic-edge"
+        ]
+      }
+    ]
   },
   "commands": [
     {
@@ -13,77 +77,30 @@
         "type": "move",
         "direction": "east"
       }
-    },
-    {
-      "command": {
-        "type": "pick-up"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "east"
-      }
-    },
-    {
-      "command": {
-        "type": "pick-up"
-      }
-    },
-    {
-      "command": {
-        "type": "equip",
-        "itemId": "demo.item.echo-charm.1"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "south-east"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "south-east"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "east"
-      }
-    },
-    {
-      "command": {
-        "type": "move",
-        "direction": "east"
-      }
     }
   ],
-  "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 9,
-      "turn": 9,
-      "worldTick": 90,
-      "lastCommandSeq": 9,
-      "rngDrawCounter": 17,
+      "revision": 1,
+      "turn": 1,
+      "worldTick": 10,
+      "lastCommandSeq": 1,
+      "rngDrawCounter": 6,
       "floorId": "demo.floor.surface",
       "playerPosition": {
-        "x": 9,
+        "x": 7,
         "y": 5
       },
-      "playerHp": 4,
+      "playerHp": 10,
       "playerMaxHp": 14,
       "playerAttack": 4,
       "playerDefense": 2,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 55,
+      "playerCarriedWeightTenthsPound": 5,
       "playerCarryCapacityTenthsPound": 100,
       "playerGold": 0,
-      "playerNutrition": 9989,
+      "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
       "playerMaxLevel": 1,
@@ -241,9 +258,46 @@
             "x": 8,
             "y": 5
           },
-          "hp": 3,
-          "speed": 110,
-          "energyNeed": 100
+          "hp": 2,
+          "speed": 10,
+          "energyNeed": 90,
+          "statuses": [
+            {
+              "kindId": "rfb.status.slow",
+              "intensity": 10,
+              "remainingTicks": 90,
+              "grantedModifiers": {
+                "attack": 0,
+                "defense": 0,
+                "maxHp": 0,
+                "strength": 0,
+                "intelligence": 0,
+                "wisdom": 0,
+                "dexterity": 0,
+                "constitution": 0,
+                "charisma": 0,
+                "speed": 0
+              },
+              "grantedEquipmentBonuses": {
+                "meleeAttacks": 0,
+                "meleeSkill": 0,
+                "meleeDamage": 0,
+                "rangedSkill": 0,
+                "throwingSkill": 0,
+                "deviceSkill": 0,
+                "savingThrowSkill": 0,
+                "stealthSkill": 0,
+                "searchSkill": 0,
+                "perceptionSkill": 0,
+                "disarmingSkill": 0,
+                "diggingSkill": 0,
+                "infravision": 0,
+                "lightRadius": 0
+              },
+              "grantsWallPassage": false,
+              "incomingDamagePercent": 100
+            }
+          ]
         },
         {
           "id": "demo.z-entrance-guardian.resonance-descent.1",
@@ -262,36 +316,8 @@
           }
         }
       ],
-      "groundItemCount": 3,
-      "inventoryStackCount": 1,
+      "groundItemCount": 4,
       "equipmentCount": 1,
-      "inventory": [
-        {
-          "id": "demo.item.luminous-shard.1",
-          "kindId": "demo.item.luminous-shard",
-          "displayNameKey": "item-demo-unfamiliar-shard-name",
-          "knowledge": "unknown",
-          "usable": true,
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 5,
-          "weightTenthsPound": 10,
-          "equipmentSlot": null,
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "unexamined"
-        }
-      ],
       "equipment": [
         {
           "id": "demo.item.echo-charm.1",
@@ -401,38 +427,15 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "0335a90a57b98c9a197a8a0124e10dd80ff6a2b71d923f6629a427b063bfb7ab"
+      "stateHash": "8662a837ff2fe740bcf989ba5ac95e6d92ca919e03b4481ddfd4631e27a5ff50"
     },
     "events": [
       {
-        "kind": "item.pickup",
-        "messageKey": "item-pickup-success",
-        "args": {
-          "quantity": "5",
-          "target": "demo.item.luminous-shard"
-        }
-      },
-      {
-        "kind": "combat.monster-miss",
-        "messageKey": "combat-monster-miss",
-        "args": {
-          "source": "demo.actor.ember-mote"
-        }
-      },
-      {
-        "kind": "item.pickup",
-        "messageKey": "item-pickup-success",
-        "args": {
-          "quantity": "1",
-          "target": "demo.item.echo-charm"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
         "args": {
           "damage": "1",
-          "source": "demo.actor.ember-mote"
+          "target": "demo.actor.ember-mote"
         },
         "outcome": {
           "type": "damage",
@@ -441,80 +444,7 @@
             "armorReduction": 0,
             "resistanceAdjustment": 0,
             "finalDamage": 1,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "item.equip",
-        "messageKey": "item-equip-success",
-        "args": {
-          "slot": "charm",
-          "target": "demo.item.echo-charm"
-        }
-      },
-      {
-        "kind": "item.property-discovered",
-        "messageKey": "item-property-discovered",
-        "args": {
-          "propertyNameKey": "affix-demo-harmonic-edge-name",
-          "target": "demo.item.echo-charm"
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "2",
-          "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 2,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 2,
-            "damageType": "fire",
-            "resistance": "normal"
-          }
-        }
-      },
-      {
-        "kind": "combat.monster-hit",
-        "messageKey": "combat-monster-hit",
-        "args": {
-          "damage": "1",
-          "source": "demo.actor.ember-mote"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 1,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 1,
-            "damageType": "fire",
+            "damageType": "physical",
             "resistance": "normal"
           }
         }
@@ -522,90 +452,9 @@
     ],
     "changedCells": [
       {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 4,
-        "y": 3
-      },
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
         "x": 8,
-        "y": 5
-      },
-      {
-        "x": 4,
-        "y": 3
-      },
-      {
-        "x": 6,
-        "y": 3
-      },
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
-        "x": 4,
-        "y": 3
-      },
-      {
-        "x": 5,
-        "y": 3
-      },
-      {
-        "x": 5,
-        "y": 3
-      },
-      {
-        "x": 5,
-        "y": 3
-      },
-      {
-        "x": 6,
-        "y": 4
-      },
-      {
-        "x": 6,
-        "y": 3
-      },
-      {
-        "x": 6,
-        "y": 4
-      },
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
-        "x": 7,
-        "y": 5
-      },
-      {
-        "x": 7,
-        "y": 5
-      },
-      {
-        "x": 8,
-        "y": 5
-      },
-      {
-        "x": 7,
-        "y": 4
-      },
-      {
-        "x": 8,
-        "y": 5
-      },
-      {
-        "x": 9,
         "y": 5
       }
-    ],
-    "saveRoundTripStateHash": "0335a90a57b98c9a197a8a0124e10dd80ff6a2b71d923f6629a427b063bfb7ab"
+    ]
   }
 }

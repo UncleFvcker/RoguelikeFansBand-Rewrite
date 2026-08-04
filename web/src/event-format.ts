@@ -526,6 +526,20 @@ export function createPresentationFormatter(
         return localization.format("shop-transaction-unavailable", {
           reason: shopTransactionReason(event.args.reason),
         });
+      case "home-deposit-success":
+        return localization.format("home-deposit-success", {
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+        });
+      case "home-withdraw-success":
+        return localization.format("home-withdraw-success", {
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+        });
+      case "home-transfer-unavailable":
+        return localization.format("home-transfer-unavailable", {
+          reason: shopTransactionReason(event.args.reason),
+        });
       case "item-pickup-over-capacity":
         return localization.format("message-item-pickup-over-capacity", {
           target: visibleItemNameForKind(event.args.target),

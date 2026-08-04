@@ -54,6 +54,8 @@ const MAGIC_SHOP_ITEM_IDS: [&str; 3] = [
     "demo.item.identify-staff",
 ];
 
+const BLACK_MARKET_ITEM_IDS: [&str; 2] = ["demo.item.black-channels", "demo.item.necronomicon"];
+
 const BOOKSTORE_ITEM_IDS: [&str; 2] = ["demo.item.stench-of-death", "demo.item.sepulchral-ways"];
 
 fn expected_stock_ids(category: ShopCategory) -> BTreeSet<&'static str> {
@@ -64,6 +66,7 @@ fn expected_stock_ids(category: ShopCategory) -> BTreeSet<&'static str> {
         ShopCategory::Temple => TEMPLE_ITEM_IDS.into_iter().collect(),
         ShopCategory::Alchemist => ALCHEMIST_ITEM_IDS.into_iter().collect(),
         ShopCategory::MagicShop => MAGIC_SHOP_ITEM_IDS.into_iter().collect(),
+        ShopCategory::BlackMarket => BLACK_MARKET_ITEM_IDS.into_iter().collect(),
         ShopCategory::Bookstore => BOOKSTORE_ITEM_IDS.into_iter().collect(),
     }
 }
@@ -75,11 +78,13 @@ pub(super) struct TownValidationRefs<'a> {
 
 pub(super) struct TownValidationOutputs {
     pub(super) towns_by_id: BTreeMap<String, TownDefinition>,
+    pub(super) facilities_by_id: BTreeMap<String, TownFacilityDefinition>,
     pub(super) shops_by_id: BTreeMap<String, ShopDefinition>,
 }
 
 pub(super) fn validate_towns_and_shops(
     towns: &mut [TownDefinition],
+    facilities: &mut [TownFacilityDefinition],
     shops: &mut [ShopDefinition],
     refs: TownValidationRefs<'_>,
     all_ids: &mut BTreeSet<String>,
@@ -91,8 +96,14 @@ pub(super) fn validate_towns_and_shops(
         validate_definition_id(&town.id, "town")?;
         validate_definition_text(&town.id, &town.name_key, &town.description_key)?;
         validate_definition_id(&town.floor_id, "floor")?;
+        town.facility_ids.sort();
         town.shop_ids.sort();
-        if town.shop_ids.is_empty()
+        if (town.facility_ids.is_empty() && town.shop_ids.is_empty())
+            || town.facility_ids.windows(2).any(|pair| pair[0] == pair[1])
+            || town
+                .facility_ids
+                .iter()
+                .any(|facility_id| validate_definition_id(facility_id, "town-facility").is_err())
             || town.shop_ids.windows(2).any(|pair| pair[0] == pair[1])
             || town
                 .shop_ids
@@ -103,6 +114,18 @@ pub(super) fn validate_towns_and_shops(
         }
         insert_definition_id(all_ids, &town.id)?;
         towns_by_id.insert(town.id.clone(), town.clone());
+    }
+
+    let mut facilities_by_id = BTreeMap::new();
+    for facility in facilities {
+        require_schema(&facility.schema, TOWN_FACILITY_SCHEMA, &facility.id)?;
+        require_format_version(facility.format_version, &facility.id)?;
+        validate_definition_id(&facility.id, "town-facility")?;
+        validate_definition_text(&facility.id, &facility.name_key, &facility.description_key)?;
+        validate_definition_id(&facility.town_id, "town")?;
+        validate_definition_id(&facility.entrance_terrain_id, "terrain")?;
+        insert_definition_id(all_ids, &facility.id)?;
+        facilities_by_id.insert(facility.id.clone(), facility.clone());
     }
 
     let mut shops_by_id = BTreeMap::new();
@@ -154,6 +177,17 @@ pub(super) fn validate_towns_and_shops(
     }
 
     for town in towns_by_id.values() {
+        for facility_id in &town.facility_ids {
+            let facility = facilities_by_id.get(facility_id).ok_or_else(|| {
+                ContentError::DanglingReference {
+                    owner: town.id.clone(),
+                    target: facility_id.clone(),
+                }
+            })?;
+            if facility.town_id != town.id {
+                return Err(ContentError::InvalidTown(town.id.clone()));
+            }
+        }
         for shop_id in &town.shop_ids {
             let shop = shops_by_id
                 .get(shop_id)
@@ -164,6 +198,18 @@ pub(super) fn validate_towns_and_shops(
             if shop.town_id != town.id {
                 return Err(ContentError::InvalidTown(town.id.clone()));
             }
+        }
+    }
+    for facility in facilities_by_id.values() {
+        let town =
+            towns_by_id
+                .get(&facility.town_id)
+                .ok_or_else(|| ContentError::DanglingReference {
+                    owner: facility.id.clone(),
+                    target: facility.town_id.clone(),
+                })?;
+        if !town.facility_ids.contains(&facility.id) {
+            return Err(ContentError::InvalidTownFacility(facility.id.clone()));
         }
     }
     for shop in shops_by_id.values() {
@@ -181,6 +227,7 @@ pub(super) fn validate_towns_and_shops(
 
     Ok(TownValidationOutputs {
         towns_by_id,
+        facilities_by_id,
         shops_by_id,
     })
 }

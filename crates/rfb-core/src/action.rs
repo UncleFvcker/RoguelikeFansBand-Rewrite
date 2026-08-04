@@ -27,6 +27,11 @@ pub(crate) enum GameAction {
         item_id: String,
         quantity: u32,
     },
+    DepositAtHome {
+        facility_id: String,
+        item_id: String,
+        quantity: u32,
+    },
     CastAbility {
         ability_id: String,
         target: TargetSelection,
@@ -66,6 +71,11 @@ pub(crate) enum GameAction {
     Search,
     SellToShop {
         shop_id: String,
+        item_id: String,
+        quantity: u32,
+    },
+    WithdrawFromHome {
+        facility_id: String,
         item_id: String,
         quantity: u32,
     },
@@ -119,9 +129,11 @@ impl GameAction {
     pub(crate) const fn energy_cost(&self) -> i32 {
         match self {
             Self::BuyFromShop { .. }
+            | Self::DepositAtHome { .. }
             | Self::IncreaseAttribute { .. }
             | Self::Retire
             | Self::SellToShop { .. }
+            | Self::WithdrawFromHome { .. }
             | Self::SetSummonCommand { .. } => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
             _ => STANDARD_ACTION_COST,
@@ -152,6 +164,15 @@ impl From<GameCommand> for GameAction {
                 quantity,
             } => Self::BuyFromShop {
                 shop_id,
+                item_id,
+                quantity,
+            },
+            GameCommand::DepositAtHome {
+                facility_id,
+                item_id,
+                quantity,
+            } => Self::DepositAtHome {
+                facility_id,
                 item_id,
                 quantity,
             },
@@ -188,6 +209,15 @@ impl From<GameCommand> for GameAction {
                 quantity,
             } => Self::SellToShop {
                 shop_id,
+                item_id,
+                quantity,
+            },
+            GameCommand::WithdrawFromHome {
+                facility_id,
+                item_id,
+                quantity,
+            } => Self::WithdrawFromHome {
+                facility_id,
                 item_id,
                 quantity,
             },
