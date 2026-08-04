@@ -582,7 +582,10 @@ impl Game {
                     // The occupied instance must exist on the body and its
                     // type must match the item's declared slot class.
                     let slot_type_matches = self.body_slot_type(slot_id).is_some_and(|slot_type| {
-                        definition.equipment_slot.as_deref() == Some(slot_type)
+                        definition
+                            .equipment_slot
+                            .as_deref()
+                            .is_some_and(|declared| item_can_occupy_slot_type(declared, slot_type))
                     });
                     if !common_valid
                         || item.quantity != 1
@@ -612,6 +615,9 @@ impl Game {
                     ));
                 }
             }
+        }
+        if self.inventory_used_slots() > self.inventory_slot_capacity() {
+            return Err(CoreError::InvalidSave("inventory exceeds slot capacity"));
         }
         for (shop_id, state) in &self.shop_states {
             for item in &state.inventory {

@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 45,
+      "rngDrawCounter": 72,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -666,6 +666,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -765,7 +781,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 55,
+      "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -775,7 +791,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "28d708f1bab60d04049bb19d0b299ea8a23927dc806aeb0d68efff493e13b461"
+      "stateHash": "77f1817b5c0a9b3df127bb11ae12112534840afcbf8cbeb451a57319ac3b2496"
     },
     "events": [
       {
@@ -790,9 +806,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "28d708f1bab60d04049bb19d0b299ea8a23927dc806aeb0d68efff493e13b461"
+        "stateHash": "77f1817b5c0a9b3df127bb11ae12112534840afcbf8cbeb451a57319ac3b2496"
       }
     ],
-    "saveRoundTripStateHash": "28d708f1bab60d04049bb19d0b299ea8a23927dc806aeb0d68efff493e13b461"
+    "saveRoundTripStateHash": "77f1817b5c0a9b3df127bb11ae12112534840afcbf8cbeb451a57319ac3b2496"
   }
 }

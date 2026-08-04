@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 50,
+  "descriptionKey": "item-demo-padded-armour-description",
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "glyph": "(",
+  "id": "demo.item.padded-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 5
+  },
+  "nameKey": "item-demo-padded-armour-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 60
+}

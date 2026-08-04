@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.134";
+pub const PROTOCOL_VERSION: &str = "1.135";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -123,6 +123,8 @@ pub enum GameCommand {
     },
     Equip {
         item_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        slot_id: Option<String>,
     },
     Fire {
         direction: Direction,
@@ -1920,6 +1922,10 @@ pub struct PlayerDto {
     #[serde(default)]
     pub carry_capacity_tenths_pound: u32,
     #[serde(default)]
+    pub inventory_used_slots: u16,
+    #[serde(default)]
+    pub inventory_slot_capacity: u16,
+    #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default)]
     pub attack: i32,
@@ -3474,7 +3480,8 @@ mod tests {
             },
             GameCommand::PickUp,
             GameCommand::Equip {
-                item_id: "demo.item.echo-charm.1".to_owned(),
+                item_id: "demo.item.shovel.1".to_owned(),
+                slot_id: Some("weapon".to_owned()),
             },
             GameCommand::Unequip {
                 slot_id: "charm".to_owned(),
@@ -3657,6 +3664,8 @@ mod tests {
                 energy_need: 0,
                 carried_weight_tenths_pound: 5,
                 carry_capacity_tenths_pound: 100,
+                inventory_used_slots: 1,
+                inventory_slot_capacity: 26,
                 base_max_hp: 10,
                 attack: 3,
                 base_attack: 2,

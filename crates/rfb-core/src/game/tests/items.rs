@@ -1187,6 +1187,7 @@ fn cursed_equipment_cannot_be_unequipped_or_replaced_and_rejection_is_zero_time(
         &mut game,
         GameCommand::Equip {
             item_id: REPLACEMENT_ID.to_owned(),
+            slot_id: None,
         },
     );
     assert_eq!(replace.events[0].kind, "item.unequip.cursed");

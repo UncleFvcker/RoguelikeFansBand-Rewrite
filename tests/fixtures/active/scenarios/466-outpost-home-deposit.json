@@ -28,7 +28,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 45,
+      "rngDrawCounter": 72,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -237,7 +237,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.55",
+              "id": "generated.item.90",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -705,6 +705,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -804,7 +820,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 56,
+      "nextItemInstanceSerial": 91,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -812,7 +828,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7dd7ee311376dbdf59fc6a10485ad2f3cffc7f7a38ed886e81ed01b67bf60872"
+      "stateHash": "181b81f14d5a354b22d58ca984d4480629f0955a08c6a898f5b28db49cc76efd"
     },
     "events": [
       {
@@ -820,7 +836,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.55",
+          "item": "generated.item.90",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

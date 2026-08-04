@@ -133,6 +133,8 @@ export class InventoryPanel {
     this.#dom.inventoryCount.textContent = this.#state.status
       ? this.#localization.format("inventory-weight-summary", {
           stacks,
+          usedSlots: this.#state.status.player.inventoryUsedSlots,
+          slotCapacity: this.#state.status.player.inventorySlotCapacity,
           weight: formatTenthsPound(this.#state.status.player.carriedWeightTenthsPound),
           capacity: formatTenthsPound(this.#state.status.player.carryCapacityTenthsPound),
         })
@@ -474,7 +476,34 @@ export class InventoryPanel {
   async #equipSelectedItem(): Promise<void> {
     const selected = this.#selectedItems();
     if (this.#state.busy || selected.length !== 1 || !selected[0]?.equipmentSlot) return;
-    await this.#dispatch({ type: "equip", itemId: selected[0].id });
+    const item = selected[0];
+    if (item.equipmentSlot !== "tool") {
+      await this.#dispatch({ type: "equip", itemId: item.id });
+      return;
+    }
+    const eligibleSlots = this.#state.bodySlots.filter(
+      (slot) => slot.slotType === "tool" || slot.slotType === "weapon",
+    );
+    const typeCounts = new Map<string, number>();
+    for (const slot of eligibleSlots) {
+      typeCounts.set(slot.slotType, (typeCounts.get(slot.slotType) ?? 0) + 1);
+    }
+    const typeOrdinals = new Map<string, number>();
+    const candidates = eligibleSlots.map((slot) => {
+      const ordinal = (typeOrdinals.get(slot.slotType) ?? 0) + 1;
+      typeOrdinals.set(slot.slotType, ordinal);
+      const slotName = this.#formatter.equipmentSlotName(slot.slotType);
+      return {
+        id: slot.id,
+        label:
+          (typeCounts.get(slot.slotType) ?? 1) > 1
+            ? this.#localization.format("equipment-slot-ordinal", { slot: slotName, ordinal })
+            : slotName,
+      };
+    });
+    this.#selectEquipmentSlotFrom(candidates, (slotId) =>
+      this.#dispatch({ type: "equip", itemId: item.id, slotId }),
+    );
   }
 
   async #appraiseSelectedItem(): Promise<void> {
@@ -628,6 +657,56 @@ export class InventoryPanel {
       const itemId = select.value;
       dialog.close();
       void onSelect(itemId);
+    });
+    dialog.addEventListener("close", () => dialog.remove(), { once: true });
+    dialog.append(form);
+    document.body.append(dialog);
+    dialog.showModal();
+    select.focus();
+  }
+
+  #selectEquipmentSlotFrom(
+    candidates: Array<{ id: string; label: string }>,
+    onSelect: (slotId: string) => Promise<void>,
+  ): void {
+    if (candidates.length === 0) {
+      this.#announce("message-target-mode-unavailable", undefined, "system");
+      return;
+    }
+    const document = this.#dom.inventoryList.ownerDocument;
+    const dialog = document.createElement("dialog");
+    dialog.className = "item-target-dialog";
+    const form = document.createElement("form");
+    form.method = "dialog";
+    const title = document.createElement("h2");
+    title.textContent = this.#localization.format("equipment-slot-target-title");
+    const label = document.createElement("label");
+    const labelText = document.createElement("span");
+    labelText.textContent = this.#localization.format("equipment-slot-target-label");
+    const select = document.createElement("select");
+    for (const candidate of candidates) {
+      const option = document.createElement("option");
+      option.value = candidate.id;
+      option.textContent = candidate.label;
+      select.append(option);
+    }
+    label.append(labelText, select);
+    const actions = document.createElement("div");
+    actions.className = "item-target-actions";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = this.#localization.format("action-dialog-cancel");
+    cancel.addEventListener("click", () => dialog.close());
+    const confirm = document.createElement("button");
+    confirm.type = "submit";
+    confirm.textContent = this.#localization.format("action-item-target-confirm");
+    actions.append(cancel, confirm);
+    form.append(title, label, actions);
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const slotId = select.value;
+      dialog.close();
+      void onSelect(slotId);
     });
     dialog.addEventListener("close", () => dialog.remove(), { once: true });
     dialog.append(form);

@@ -20,5 +20,6 @@
   "damageSides": 2,
   "damageType": "physical",
   "carryCapacityTenthsPound": 1200,
+  "inventorySlotCapacity": 26,
   "tags": ["player", "rfb-compatibility"]
 }

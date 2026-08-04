@@ -41,7 +41,15 @@ struct DemoItemSelection {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct DemoItemSelectionEntry {
     source_index: u32,
+    #[serde(default)]
+    source_id: Option<String>,
     id: String,
+}
+
+impl DemoItemSelectionEntry {
+    fn expected_source_id(&self) -> &str {
+        self.source_id.as_deref().unwrap_or(&self.id)
+    }
 }
 
 fn content_parse_error(
@@ -953,11 +961,27 @@ struct ItemShape {
 
 fn item_shape(tval: u16) -> Option<ItemShape> {
     let shape = match tval {
-        20..=23 => ItemShape {
+        20 => ItemShape {
+            slot: Some("tool"),
+            max_stack: 1,
+            tags: vec!["equipment", "legacy-import", "tool", "weapon"],
+            melee: true,
+            launcher: false,
+            behavior_gap: None,
+        },
+        21..=23 => ItemShape {
             slot: Some("weapon"),
             max_stack: 1,
             tags: vec!["equipment", "legacy-import", "weapon"],
             melee: true,
+            launcher: false,
+            behavior_gap: None,
+        },
+        46 => ItemShape {
+            slot: Some("container"),
+            max_stack: 1,
+            tags: vec!["container", "equipment", "legacy-import"],
+            melee: false,
             launcher: false,
             behavior_gap: None,
         },
@@ -1833,15 +1857,31 @@ fn item_json_with_terrain(
     } else {
         OffensiveFold::default()
     };
-    let equipment = if shape.slot.is_some() {
+    let mut equipment = if shape.slot.is_some() {
         equipment_fold(&entry.flags, entry.pval)
     } else {
         EquipmentFold::default()
     };
+    if shape.slot.is_some() && !shape.melee && !shape.launcher {
+        add_equipment_bonus(
+            &mut equipment,
+            "meleeSkill",
+            entry.to_hit.clamp(-1_000_000, 1_000_000),
+        );
+        add_equipment_bonus(
+            &mut equipment,
+            "meleeDamage",
+            entry.to_damage.clamp(-1_000_000, 1_000_000),
+        );
+    }
     let mut modifiers = serde_json::Map::new();
     let defense = entry.armor_class.saturating_add(entry.to_armor);
     if shape.slot.is_some() && defense != 0 {
         modifiers.insert("defense".to_owned(), serde_json::json!(defense));
+    }
+    if entry.tval == 46 && entry.sval == 1 {
+        value["inventorySlotBonus"] =
+            serde_json::json!(entry.pval.saturating_add(1).saturating_mul(4));
     }
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
@@ -1883,7 +1923,17 @@ fn demo_item_json(
     let shape = item_shape(entry.tval).expect("every tval resolves a shape");
     if !matches!(
         shape.slot,
-        Some("weapon" | "body" | "head" | "shield" | "cloak" | "gloves" | "boots")
+        Some(
+            "weapon"
+                | "body"
+                | "head"
+                | "shield"
+                | "cloak"
+                | "gloves"
+                | "boots"
+                | "tool"
+                | "container"
+        )
     ) || shape.behavior_gap.is_some()
         || fixed_consumable_use_action_with_terrain(entry, None).is_some()
         || legacy_device_generation(entry).is_some()
@@ -2427,6 +2477,22 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
     }
     fold.passives.sort_unstable();
     fold
+}
+
+fn add_equipment_bonus(fold: &mut EquipmentFold, field: &str, amount: i32) {
+    if amount == 0 {
+        return;
+    }
+    let current = fold
+        .bonuses
+        .get(field)
+        .and_then(serde_json::Value::as_i64)
+        .and_then(|value| i32::try_from(value).ok())
+        .unwrap_or_default();
+    fold.bonuses.insert(
+        field.to_owned(),
+        serde_json::json!(current.saturating_add(amount)),
+    );
 }
 
 fn apply_equipment_fold(value: &mut serde_json::Value, fold: &EquipmentFold) {
@@ -7510,10 +7576,11 @@ pub fn sync_demo_items(
             ))
         })?;
         let actual_id = kebab(&entry.name);
-        if actual_id != selected_entry.id {
+        let expected_source_id = selected_entry.expected_source_id();
+        if actual_id != expected_source_id {
             return Err(LegacyImportError::InvalidDemoItemSelection(format!(
-                "source index {} is {actual_id}, expected {}",
-                selected_entry.source_index, selected_entry.id
+                "source index {} is {actual_id}, expected {expected_source_id}",
+                selected_entry.source_index
             )));
         }
         files.push((
@@ -8467,6 +8534,61 @@ W:5:0:0:150:80
         for (tval, slot) in expected {
             assert_eq!(item_shape(tval).and_then(|shape| shape.slot), Some(slot));
         }
+    }
+
+    #[test]
+    fn armor_hit_and_glove_damage_modifiers_become_melee_equipment_bonuses() {
+        let armor = LegacyItemEntry {
+            name: "Hard Leather Armour".to_owned(),
+            glyph: Some('('),
+            tval: 36,
+            weight_tenths_pound: 100,
+            base_value: 150,
+            armor_class: 6,
+            to_hit: -1,
+            flags: vec!["TOWN".to_owned()],
+            ..LegacyItemEntry::default()
+        };
+        let gloves = LegacyItemEntry {
+            name: "Studded Leather Gloves".to_owned(),
+            glyph: Some(']'),
+            tval: 31,
+            weight_tenths_pound: 5,
+            base_value: 3,
+            armor_class: 1,
+            to_damage: 1,
+            flags: vec!["TOWN".to_owned()],
+            ..LegacyItemEntry::default()
+        };
+
+        let armor = demo_item_json(&armor, "hard-leather-armour")
+            .expect("armor hit modifier should be behavior-complete");
+        assert_eq!(armor["equipmentBonuses"]["meleeSkill"], -1);
+        assert!(armor["equipmentBonuses"].get("meleeDamage").is_none());
+        assert!(armor.get("meleeProfile").is_none());
+
+        let gloves = demo_item_json(&gloves, "studded-leather-gloves")
+            .expect("glove damage modifier should be behavior-complete");
+        assert_eq!(gloves["equipmentBonuses"]["meleeDamage"], 1);
+        assert!(gloves["equipmentBonuses"].get("meleeSkill").is_none());
+        assert!(gloves.get("meleeProfile").is_none());
+    }
+
+    #[test]
+    fn demo_item_selection_can_keep_a_stable_id_distinct_from_the_source_name() {
+        let selection: DemoItemSelection = serde_json::from_value(serde_json::json!({
+            "schemaVersion": 1,
+            "items": [{
+                "sourceIndex": 227,
+                "sourceId": "set-of-leather-gloves",
+                "id": "leather-gloves"
+            }]
+        }))
+        .expect("selection alias should parse");
+
+        let entry = &selection.items[0];
+        assert_eq!(entry.expected_source_id(), "set-of-leather-gloves");
+        assert_eq!(entry.id, "leather-gloves");
     }
 
     #[test]

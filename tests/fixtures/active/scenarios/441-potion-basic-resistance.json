@@ -342,6 +342,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -517,7 +533,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "1ce7267aa72a1e0c6d47d7a6614257ec0dda5bb5c4dfc5140dd4b9bcbfca25de"
+      "stateHash": "cdd0a2dec443de91beca1570a938f83d51425d7b6912ee200b5c2529dce5b2dd"
     },
     "events": [
       {
@@ -539,6 +555,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "1ce7267aa72a1e0c6d47d7a6614257ec0dda5bb5c4dfc5140dd4b9bcbfca25de"
+    "saveRoundTripStateHash": "cdd0a2dec443de91beca1570a938f83d51425d7b6912ee200b5c2529dce5b2dd"
   }
 }

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 35,
+  "descriptionKey": "item-demo-soft-studded-leather-description",
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "glyph": "(",
+  "id": "demo.item.soft-studded-leather",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 5
+  },
+  "nameKey": "item-demo-soft-studded-leather-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 90
+}

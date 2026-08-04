@@ -28,7 +28,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 45,
+      "rngDrawCounter": 72,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -106,7 +106,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.25",
+              "id": "generated.item.47",
               "kindId": "demo.item.necronomicon",
               "displayNameKey": "item-demo-necronomicon-name",
               "quantity": 1,
@@ -130,7 +130,7 @@
               "maximumQuantity": 6
             },
             {
-              "itemId": "generated.item.24",
+              "itemId": "generated.item.46",
               "kindId": "demo.item.black-channels",
               "unitPrice": 5357,
               "maximumQuantity": 1
@@ -500,32 +500,6 @@
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.24",
-          "kindId": "demo.item.black-channels",
-          "displayNameKey": "item-demo-black-channels-name",
-          "knowledge": "aware",
-          "usable": false,
-          "canReceiveRecharge": false,
-          "canSupplyRecharge": false,
-          "quantity": 1,
-          "weightTenthsPound": 15,
-          "equipmentSlot": null,
-          "modifiers": {
-            "attack": 0,
-            "defense": 0,
-            "maxHp": 0,
-            "strength": 0,
-            "intelligence": 0,
-            "wisdom": 0,
-            "dexterity": 0,
-            "constitution": 0,
-            "charisma": 0,
-            "speed": 0
-          },
-          "identification": "identified",
-          "quality": "ordinary"
-        },
-        {
           "id": "generated.item.3",
           "kindId": "demo.item.wooden-torch",
           "displayNameKey": "item-demo-wooden-torch-name",
@@ -586,6 +560,32 @@
             "speed": 0
           },
           "identification": "unexamined"
+        },
+        {
+          "id": "generated.item.46",
+          "kindId": "demo.item.black-channels",
+          "displayNameKey": "item-demo-black-channels-name",
+          "knowledge": "aware",
+          "usable": false,
+          "canReceiveRecharge": false,
+          "canSupplyRecharge": false,
+          "quantity": 1,
+          "weightTenthsPound": 15,
+          "equipmentSlot": null,
+          "modifiers": {
+            "attack": 0,
+            "defense": 0,
+            "maxHp": 0,
+            "strength": 0,
+            "intelligence": 0,
+            "wisdom": 0,
+            "dexterity": 0,
+            "constitution": 0,
+            "charisma": 0,
+            "speed": 0
+          },
+          "identification": "identified",
+          "quality": "ordinary"
         },
         {
           "id": "generated.item.5",
@@ -727,6 +727,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -821,7 +837,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.24",
+          "itemId": "generated.item.46",
           "appraised": true,
           "identified": true
         },
@@ -831,7 +847,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 55,
+      "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -839,7 +855,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8c73b6eca4295c2c0d2728ac57b22bf7a313dd75e88ba4e712571efc2598c29e"
+      "stateHash": "7e982ad36653f2d26d3e52856947204b00a46e32f88f08b189b7a1b54fb17c0b"
     },
     "events": [
       {
@@ -847,7 +863,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "958000",
-          "item": "generated.item.24",
+          "item": "generated.item.46",
           "quantity": "1",
           "shop": "demo.shop.outpost-black-market",
           "target": "demo.item.black-channels",

@@ -720,6 +720,13 @@
       "default": null,
       "description": "Curse stamped onto newly generated instances. Save data remains\nauthoritative after generation and never re-derives this field."
     },
+    "inventorySlotBonus": {
+      "default": 0,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "maxStack": {
       "format": "uint32",
       "minimum": 0,

@@ -6,7 +6,7 @@
   "descriptionKey": "item-demo-arrow-description",
   "glyph": "{",
   "weightTenthsPound": 2,
-  "maxStack": 30,
+  "maxStack": 99,
   "baseValue": 1,
   "breakChancePercent": 20,
   "tags": ["ammunition", "rfb-compatibility"]

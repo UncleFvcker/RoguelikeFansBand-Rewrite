@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 30,
+  "descriptionKey": "item-demo-whip-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "glyph": "\\",
+  "id": "demo.item.whip",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 7,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "nameKey": "item-demo-whip-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 30
+}

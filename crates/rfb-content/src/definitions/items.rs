@@ -579,6 +579,9 @@ pub struct ItemDefinition {
     pub base_value: u32,
     #[serde(default)]
     pub equipment_slot: Option<String>,
+    /// Extra shared-pack stack slots granted while this container is equipped.
+    #[serde(default)]
+    pub inventory_slot_bonus: u16,
     /// Curse stamped onto newly generated instances. Save data remains
     /// authoritative after generation and never re-derives this field.
     #[serde(default)]

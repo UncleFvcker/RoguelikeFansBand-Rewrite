@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-dwarven-backpack-description",
+  "equipmentSlot": "container",
+  "formatVersion": 1,
+  "glyph": "~",
+  "id": "demo.item.dwarven-backpack",
+  "inventorySlotBonus": 12,
+  "maxStack": 1,
+  "nameKey": "item-demo-dwarven-backpack-name",
+  "tags": [
+    "container",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 10
+}

@@ -962,6 +962,9 @@ impl Game {
         {
             return Err("over-capacity");
         }
+        if self.inventory_quantity_capacity_for(&item, true) < quantity {
+            return Err("inventory-full");
+        }
         let split_required = group_requires_split(
             &self
                 .home_states
@@ -1039,6 +1042,9 @@ impl Game {
             > player_carry_capacity(self)
         {
             return Err("over-capacity");
+        }
+        if self.inventory_quantity_capacity_for(&item, false) < quantity {
+            return Err("inventory-full");
         }
 
         let split_required = group_requires_split(
@@ -1450,12 +1456,16 @@ impl Game {
                                 .saturating_sub(self.carried_weight_tenths_pound());
                             let carryable =
                                 remaining_capacity / u32::from(definition.weight_tenths_pound);
+                            let slot_carryable = self.inventory_quantity_capacity_for(item, false);
                             ShopStockItemDto {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),
                                 quantity,
-                                maximum_quantity: quantity.min(affordable).min(carryable),
+                                maximum_quantity: quantity
+                                    .min(affordable)
+                                    .min(carryable)
+                                    .min(slot_carryable),
                                 unit_price,
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
@@ -1565,12 +1575,13 @@ impl Game {
                             } else {
                                 remaining_capacity / u32::from(definition.weight_tenths_pound)
                             };
+                            let slot_carryable = self.inventory_quantity_capacity_for(item, true);
                             HomeItemDto {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: self.item_display_name_key(&item.kind_id),
                                 quantity,
-                                maximum_quantity: quantity.min(carryable),
+                                maximum_quantity: quantity.min(carryable).min(slot_carryable),
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
                             }

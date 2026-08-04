@@ -499,6 +499,12 @@ pub(super) fn validate_items(
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }
+        if item.inventory_slot_bonus > 100
+            || (item.inventory_slot_bonus > 0
+                && (item.equipment_slot.as_deref() != Some("container") || item.max_stack != 1))
+        {
+            return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
+        }
         if item.modifiers.max_hp < 0
             || item.modifiers.max_hp > 1_000_000
             || item.modifiers.attack < -1_000_000
@@ -527,7 +533,7 @@ pub(super) fn validate_items(
         }
         if let Some(profile) = &item.melee_profile
             && (item.max_stack != 1
-                || item.equipment_slot.as_deref() != Some("weapon")
+                || !matches!(item.equipment_slot.as_deref(), Some("weapon" | "tool"))
                 || profile.attacks == 0
                 || profile.attacks > 8
                 || profile.to_hit < -1_000_000

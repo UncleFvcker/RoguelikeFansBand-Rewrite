@@ -1,14 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.hard-leather-cap",
-  "nameKey": "item-demo-hard-leather-cap-name",
-  "descriptionKey": "item-demo-hard-leather-cap-description",
-  "glyph": "[",
-  "weightTenthsPound": 15,
-  "maxStack": 1,
   "baseValue": 12,
+  "descriptionKey": "item-demo-hard-leather-cap-description",
   "equipmentSlot": "head",
-  "modifiers": { "defense": 2 },
-  "tags": ["armor", "equipment", "rfb-compatibility"]
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.hard-leather-cap",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 2
+  },
+  "nameKey": "item-demo-hard-leather-cap-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 15
 }

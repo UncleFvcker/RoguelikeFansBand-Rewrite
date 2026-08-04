@@ -84,6 +84,7 @@ fn melee_routines_require_monsters_and_valid_blow_profiles() {
     hound.role = ActorRole::Player;
     hound.experience_value = 0;
     hound.carry_capacity_tenths_pound = 100;
+    hound.inventory_slot_capacity = 26;
     assert!(matches!(
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidMeleeRoutine(_))

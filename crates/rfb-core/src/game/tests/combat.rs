@@ -304,6 +304,7 @@ fn previous_combat_content_migrates_to_current_actor_stats() {
         4,
         GameCommand::Equip {
             item_id: "demo.item.echo-charm.1".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("equip should execute");

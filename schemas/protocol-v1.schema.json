@@ -3826,6 +3826,12 @@
             "itemId": {
               "type": "string"
             },
+            "slotId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "type": {
               "type": "string",
               "const": "equip"
@@ -6297,6 +6303,20 @@
         },
         "id": {
           "type": "string"
+        },
+        "inventorySlotCapacity": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "inventoryUsedSlots": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
         },
         "isDead": {
           "type": "boolean",

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 3,
+  "descriptionKey": "item-demo-set-of-studded-leather-gloves-description",
+  "equipmentBonuses": {
+    "meleeDamage": 1
+  },
+  "equipmentSlot": "gloves",
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.set-of-studded-leather-gloves",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 1
+  },
+  "nameKey": "item-demo-set-of-studded-leather-gloves-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 5
+}

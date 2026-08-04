@@ -10,11 +10,13 @@
 
 | tval 类 | 形态 |
 | --- | --- |
-| 20/21/22/23（挖掘/钝器/长柄/剑） | `equipmentSlot: weapon` + meleeProfile（attacks 1、P: 骰与命中/伤害修正；原版攻击次数源于玩家技能，记为差异） |
+| 20（挖掘工具） | `equipmentSlot: tool` + 原版 meleeProfile 留作物品信息；装备后仅 `TUNNEL` 映射的 `diggingSkill` 生效，不应用命中、伤害、攻击次数或其他装备属性 |
+| 21/22/23（钝器/长柄/剑） | `equipmentSlot: weapon` + meleeProfile（attacks 1、P: 骰与命中/伤害修正；原版攻击次数源于玩家技能，记为差异） |
+| 46（容器） | `equipmentSlot: container`；统一背包不建立子物品栏，容量按原版 `(pval + 1) * 4` 增加背包槽位 |
 | 19（弓） | `equipmentSlot: launcher` + projectileProfile（沿用 demo 惯例射程/骰；倍率语义记缺口）；**无弹药配对的竖琴/长笛/枪械保槽不带射击档**——原版 `obj_is_fake_bow` 语义（占射击槽、不可射击），计 launcher-unpaired（P46 修正，此前误降级为无槽壳） |
 | 16/17/18（弹/箭/弩矢） | 弹药：无槽、堆叠 99、`ammunition` 标签、破损率 25%；**弹药自带骰折入发射器**记为已知差异 |
 | 36/37/38（软甲/硬甲/龙鳞） | `equipmentSlot: body` + `modifiers.defense = AC + to_ac` |
-| 32/33（盔/冠） | `head`；34（盾）`shield`；35（披风）`cloak`；31（手套）`gloves`；30（靴）`boots`（同上 defense 映射） |
+| 32/33（盔/冠） | `head`；34（盾）`shield`；35（披风）`cloak`；31（手套）`gloves`；30（靴）`boots`（同上 defense 映射）；非武器装备的 `P:` 命中/伤害分别映射为仅影响近战的 `equipmentBonuses.meleeSkill/meleeDamage` |
 | 45（戒指） | `ring` 槽通用壳——**普通首饰无任何属性**（原版属性与 pval 全部由 ego 生成期赋予或固定神器携带，P45 修正）；AC 直接入 defense；效果留壳+缺口 |
 | 40（护符） | `amulet` 槽，同戒指 |
 | 39（光源） | `light` 槽（contract-v100 身体模板起）+ `light-source` 标签；光源神器六维随槽回收（帕蓝提尔等 8 件）；原版火把可堆叠、半径/燃料语义记差异 |

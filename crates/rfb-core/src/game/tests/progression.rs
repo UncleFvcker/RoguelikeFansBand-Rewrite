@@ -76,7 +76,7 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
             .map(|skill| skill.current),
         Some(73)
     );
-    assert_eq!(snapshot.player.melee_skill, 73);
+    assert_eq!(snapshot.player.melee_skill, 71);
     assert!((202..=800).contains(&snapshot.player.gold));
     assert_eq!(snapshot.player.carry_capacity_tenths_pound, 1200);
     assert_eq!(snapshot.player.carried_weight_tenths_pound, 714);
@@ -100,6 +100,8 @@ fn representative_builds_merge_identity_skills_attributes_and_starting_gear() {
             ("head", "head"),
             ("hands", "gloves"),
             ("feet", "boots"),
+            ("container", "container"),
+            ("tool", "tool"),
         ]
     );
     assert_eq!(snapshot.inventory.len(), 8);

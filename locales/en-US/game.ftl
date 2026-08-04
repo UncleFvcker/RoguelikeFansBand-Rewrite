@@ -191,6 +191,7 @@ damage-type-curse-name = curse
 message-item-pickup-success = You pick up { $target } ×{ $quantity }.
 message-gold-pickup-success = You collect { $amount } gold ({ $balance } total).
 message-item-pickup-over-capacity = You cannot pick up { $target } ×{ $quantity }: { $currentWeight } + { $pickupWeight } exceeds your { $capacity } lb carrying limit.
+message-item-pickup-inventory-full = You cannot pick up { $target } ×{ $quantity }: your pack uses { $usedSlots } / { $capacity } slots and needs { $requiredSlots } more.
 message-item-pickup-none = There is nothing here to pick up. Move onto a visible item and press G again.
 message-item-equip-success = You equip { $target } in the { $slot } slot.
 message-item-equip-swap = You unequip { $replaced } and equip { $target } in the { $slot } slot.

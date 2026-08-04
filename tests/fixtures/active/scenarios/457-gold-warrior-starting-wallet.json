@@ -15,7 +15,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 45,
+      "rngDrawCounter": 72,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -652,6 +652,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -751,7 +767,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 55,
+      "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -759,8 +775,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "fdd8c7f9dcedc733e73cad3eab7b22e8d378402c89cb4cf05edca6e84eaa477d"
+      "stateHash": "1ccced4e47b0677f3290be468fe54d993e103252c390a065612795b76e500e95"
     },
-    "saveRoundTripStateHash": "fdd8c7f9dcedc733e73cad3eab7b22e8d378402c89cb4cf05edca6e84eaa477d"
+    "saveRoundTripStateHash": "1ccced4e47b0677f3290be468fe54d993e103252c390a065612795b76e500e95"
   }
 }

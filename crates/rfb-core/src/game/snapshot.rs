@@ -47,6 +47,8 @@ impl Game {
             energy_need: self.player.energy_need,
             carried_weight_tenths_pound: self.carried_weight_tenths_pound(),
             carry_capacity_tenths_pound: definition.carry_capacity_tenths_pound,
+            inventory_used_slots: self.inventory_used_slots(),
+            inventory_slot_capacity: self.inventory_slot_capacity(),
             base_max_hp: self.player.max_hp,
             attack: stats.attack.value,
             base_attack: definition.attack,

@@ -20,7 +20,9 @@
     { "id": "cloak", "slotType": "cloak" },
     { "id": "head", "slotType": "head" },
     { "id": "hands", "slotType": "gloves" },
-    { "id": "feet", "slotType": "boots" }
+    { "id": "feet", "slotType": "boots" },
+    { "id": "container", "slotType": "container" },
+    { "id": "tool", "slotType": "tool" }
   ],
   "tags": ["humanoid", "rfb-compatibility", "standard-body"]
 }

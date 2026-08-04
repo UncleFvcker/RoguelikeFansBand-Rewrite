@@ -1,21 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.short-sword",
-  "nameKey": "item-demo-short-sword-name",
+  "baseValue": 90,
   "descriptionKey": "item-demo-short-sword-description",
-  "glyph": "/",
-  "weightTenthsPound": 80,
-  "maxStack": 1,
-  "baseValue": 80,
   "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "glyph": "|",
+  "id": "demo.item.short-sword",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 8,
-    "toDamage": 1,
     "damageDice": 1,
-    "damageSides": 4,
-    "damageType": "physical"
+    "damageSides": 8,
+    "toDamage": 0,
+    "toHit": 0
   },
-  "tags": ["equipment", "weapon"]
+  "nameKey": "item-demo-short-sword-name",
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 80
 }

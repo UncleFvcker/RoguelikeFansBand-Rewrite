@@ -202,12 +202,12 @@
       "turn": 31,
       "worldTick": 310,
       "lastCommandSeq": 31,
-      "rngDrawCounter": 496,
+      "rngDrawCounter": 480,
       "floorId": "demo.floor.warrens-depth-1",
       "dungeonInstanceId": "demo.dungeon.warrens.instance.1",
       "playerPosition": {
-        "x": 28,
-        "y": 6
+        "x": 14,
+        "y": 12
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -377,8 +377,8 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.1",
           "position": {
-            "x": 23,
-            "y": 14
+            "x": 46,
+            "y": 16
           },
           "hp": 4,
           "speed": 110,
@@ -387,43 +387,43 @@
         {
           "id": "demo.floor.warrens-depth-1.encounter.2",
           "position": {
-            "x": 46,
-            "y": 12
+            "x": 34,
+            "y": 6
           },
-          "hp": 4,
+          "hp": 2,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.3",
           "position": {
-            "x": 7,
-            "y": 6
+            "x": 24,
+            "y": 16
           },
-          "hp": 4,
+          "hp": 2,
           "speed": 110,
           "energyNeed": 100
         },
         {
           "id": "demo.floor.warrens-depth-1.encounter.4",
           "position": {
-            "x": 60,
-            "y": 4
+            "x": 56,
+            "y": 6
           },
           "hp": 4,
           "speed": 110,
           "energyNeed": 100
         }
       ],
-      "groundItemCount": 2,
+      "groundItemCount": 4,
       "goldPiles": [
         {
           "id": "generated.gold.1",
           "position": {
-            "x": 10,
-            "y": 2
+            "x": 11,
+            "y": 11
           },
-          "amount": 34,
+          "amount": 44,
           "appearance": "copper"
         }
       ],
@@ -688,6 +688,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -787,7 +803,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 57,
+      "nextItemInstanceSerial": 94,
       "nextGoldPileSerial": 2,
       "campaign": {
         "status": "active",
@@ -795,7 +811,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e866fc317f0253693d8fcf90533a2a2d9779f5272e3de8a569b54179fb1d2ce3"
+      "stateHash": "6b7174a14b2e5de5c5511997dc4c2a5d9ac1cf86e379cedb1a3b19a176605b05"
     },
     "events": [
       {
@@ -6857,6 +6873,6 @@
         "y": 21
       }
     ],
-    "saveRoundTripStateHash": "e866fc317f0253693d8fcf90533a2a2d9779f5272e3de8a569b54179fb1d2ce3"
+    "saveRoundTripStateHash": "6b7174a14b2e5de5c5511997dc4c2a5d9ac1cf86e379cedb1a3b19a176605b05"
   }
 }

@@ -127,7 +127,7 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
 }
 
 #[test]
-fn general_store_economy_content_is_strict() {
+fn general_store_economy_content_enforces_generic_stock_rules() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let store_id = "demo.shop.outpost-general-store";
 
@@ -142,13 +142,12 @@ fn general_store_economy_content_is_strict() {
                 .greed_percent = 99;
         },
         |content: &mut CompiledContentV1| {
-            content
+            let store = content
                 .shops
                 .iter_mut()
                 .find(|shop| shop.id == "demo.shop.outpost-general-store")
-                .unwrap()
-                .stock
-                .pop();
+                .unwrap();
+            store.stock.push(store.stock[0].clone());
         },
         |content: &mut CompiledContentV1| {
             let shop = content
@@ -183,6 +182,25 @@ fn general_store_economy_content_is_strict() {
             Err(ContentError::InvalidShop(id)) if id == store_id
         ));
     }
+
+    let mut extended = artifact.content.clone();
+    let template = extended
+        .shops
+        .iter()
+        .find(|shop| shop.id == store_id)
+        .unwrap()
+        .stock[0]
+        .clone();
+    let mut added = template;
+    added.item_kind_id = "demo.item.leather-pouch".to_owned();
+    extended
+        .shops
+        .iter_mut()
+        .find(|shop| shop.id == store_id)
+        .unwrap()
+        .stock
+        .push(added);
+    validate_and_normalize(&mut extended).expect("a valid new stock item should be data-only");
 
     let mut invalid_owner = artifact.content.clone();
     invalid_owner
@@ -260,19 +278,6 @@ fn temple_and_alchemist_stock_are_strictly_separated() {
                 .collect::<BTreeSet<_>>(),
             item_ids
         );
-
-        let mut invalid = artifact.content.clone();
-        invalid
-            .shops
-            .iter_mut()
-            .find(|shop| shop.id == shop_id)
-            .unwrap()
-            .stock
-            .pop();
-        assert!(matches!(
-            validate_and_normalize(&mut invalid),
-            Err(ContentError::InvalidShop(id)) if id == shop_id
-        ));
     }
 }
 
@@ -293,19 +298,37 @@ fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
     };
     assert!(
         BTreeSet::from([
+            "demo.item.club",
             "demo.item.dagger",
             "demo.item.main-gauche",
+            "demo.item.tanto",
+            "demo.item.whip",
             "demo.item.rapier",
+            "demo.item.small-sword",
+            "demo.item.cutlass",
             "demo.item.mace",
+            "demo.item.shovel",
+            "demo.item.pick",
         ])
         .is_subset(&shop_stock("demo.shop.outpost-weaponsmith"))
     );
     assert!(
         BTreeSet::from([
+            "demo.item.cloak",
             "demo.item.robe",
+            "demo.item.padded-armour",
+            "demo.item.knit-cap",
             "demo.item.soft-leather-armour",
+            "demo.item.soft-studded-leather",
+            "demo.item.hard-leather-armour",
+            "demo.item.hard-studded-leather",
+            "demo.item.pair-of-hard-leather-boots",
+            "demo.item.cord-armour",
             "demo.item.metal-cap",
+            "demo.item.small-metal-shield",
             "demo.item.large-leather-shield",
+            "demo.item.set-of-studded-leather-gloves",
+            "demo.item.set-of-gauntlets",
         ])
         .is_subset(&shop_stock("demo.shop.outpost-armoury"))
     );
@@ -323,18 +346,39 @@ fn selected_legacy_equipment_is_exposed_by_its_shop_and_warrens_depth() {
             .find(|entry| entry.item_kind_id == id)
             .map(|entry| (entry.min_depth, entry.max_depth))
     };
+    assert_eq!(depth("demo.item.club"), Some((0, 9)));
     assert_eq!(depth("demo.item.dagger"), Some((0, 9)));
+    assert_eq!(depth("demo.item.cloak"), Some((1, 9)));
     assert_eq!(depth("demo.item.robe"), Some((1, 9)));
+    assert_eq!(depth("demo.item.shovel"), Some((1, 9)));
+    assert_eq!(depth("demo.item.padded-armour"), Some((2, 9)));
+    assert_eq!(depth("demo.item.knit-cap"), Some((3, 9)));
     assert_eq!(depth("demo.item.main-gauche"), Some((3, 9)));
     assert_eq!(depth("demo.item.soft-leather-armour"), Some((3, 9)));
+    assert_eq!(depth("demo.item.soft-studded-leather"), Some((3, 9)));
+    assert_eq!(depth("demo.item.tanto"), Some((3, 9)));
+    assert_eq!(depth("demo.item.whip"), Some((3, 9)));
+    assert_eq!(depth("demo.item.cord-armour"), Some((5, 9)));
+    assert_eq!(depth("demo.item.cutlass"), Some((5, 9)));
+    assert_eq!(depth("demo.item.hard-leather-armour"), Some((5, 9)));
     assert_eq!(depth("demo.item.rapier"), Some((5, 9)));
     assert_eq!(depth("demo.item.mace"), Some((5, 9)));
+    assert_eq!(depth("demo.item.pair-of-hard-leather-boots"), Some((5, 9)));
+    assert_eq!(depth("demo.item.pick"), Some((5, 9)));
+    assert_eq!(depth("demo.item.small-sword"), Some((5, 9)));
+    assert_eq!(
+        depth("demo.item.set-of-studded-leather-gloves"),
+        Some((5, 9))
+    );
     assert_eq!(depth("demo.item.metal-cap"), None);
+    assert_eq!(depth("demo.item.small-metal-shield"), None);
     assert_eq!(depth("demo.item.large-leather-shield"), None);
+    assert_eq!(depth("demo.item.hard-studded-leather"), None);
+    assert_eq!(depth("demo.item.set-of-gauntlets"), None);
 }
 
 #[test]
-fn bookstore_stock_is_limited_to_original_town_books() {
+fn bookstore_stocks_original_town_books() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_id = "demo.shop.outpost-bookstore";
     let shop = artifact
@@ -360,23 +404,10 @@ fn bookstore_stock_is_limited_to_original_town_books() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(values["demo.item.stench-of-death"], 100);
     assert_eq!(values["demo.item.sepulchral-ways"], 1_000);
-
-    let mut invalid = artifact.content.clone();
-    invalid
-        .shops
-        .iter_mut()
-        .find(|shop| shop.id == shop_id)
-        .expect("bookstore should exist")
-        .stock
-        .pop();
-    assert!(matches!(
-        validate_and_normalize(&mut invalid),
-        Err(ContentError::InvalidShop(id)) if id == shop_id
-    ));
 }
 
 #[test]
-fn black_market_stock_is_limited_to_original_non_town_books() {
+fn black_market_stocks_original_non_town_books() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let shop_id = "demo.shop.outpost-black-market";
     let shop = artifact
@@ -404,19 +435,6 @@ fn black_market_stock_is_limited_to_original_non_town_books() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(values["demo.item.black-channels"], 15_000);
     assert_eq!(values["demo.item.necronomicon"], 100_000);
-
-    let mut invalid = artifact.content.clone();
-    invalid
-        .shops
-        .iter_mut()
-        .find(|shop| shop.id == shop_id)
-        .expect("Black Market should exist")
-        .stock
-        .pop();
-    assert!(matches!(
-        validate_and_normalize(&mut invalid),
-        Err(ContentError::InvalidShop(id)) if id == shop_id
-    ));
 }
 
 #[test]

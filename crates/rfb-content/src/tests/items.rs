@@ -556,13 +556,37 @@ fn fuel_items_require_original_capacity_slot_stack_and_radius_shapes() {
 fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let expected = [
+        ("demo.item.club", 3, 100, "weapon", 0, Some((1, 5))),
         ("demo.item.dagger", 10, 12, "weapon", 0, Some((1, 5))),
         ("demo.item.main-gauche", 25, 30, "weapon", 0, Some((1, 6))),
+        ("demo.item.tanto", 30, 20, "weapon", 0, Some((1, 7))),
+        ("demo.item.whip", 30, 30, "weapon", 0, Some((1, 7))),
         ("demo.item.rapier", 42, 40, "weapon", 0, Some((1, 8))),
+        ("demo.item.small-sword", 48, 75, "weapon", 0, Some((1, 8))),
+        ("demo.item.short-sword", 90, 80, "weapon", 0, Some((1, 8))),
+        ("demo.item.cutlass", 85, 110, "weapon", 0, Some((1, 9))),
         ("demo.item.mace", 130, 120, "weapon", 0, Some((2, 5))),
+        ("demo.item.shovel", 10, 60, "tool", 0, Some((1, 3))),
+        ("demo.item.pick", 50, 150, "tool", 0, Some((1, 5))),
+        ("demo.item.cloak", 3, 10, "cloak", 1, None),
         ("demo.item.robe", 4, 20, "body", 2, None),
+        ("demo.item.padded-armour", 50, 60, "body", 5, None),
+        ("demo.item.knit-cap", 10, 8, "head", 1, None),
         ("demo.item.soft-leather-armour", 18, 80, "body", 4, None),
+        ("demo.item.soft-studded-leather", 35, 90, "body", 5, None),
+        (
+            "demo.item.pair-of-hard-leather-boots",
+            12,
+            40,
+            "boots",
+            3,
+            None,
+        ),
+        ("demo.item.cord-armour", 200, 80, "body", 6, None),
+        ("demo.item.hard-leather-armour", 150, 100, "body", 6, None),
+        ("demo.item.hard-studded-leather", 200, 110, "body", 7, None),
         ("demo.item.metal-cap", 30, 20, "head", 3, None),
+        ("demo.item.small-metal-shield", 40, 65, "shield", 5, None),
         (
             "demo.item.large-leather-shield",
             100,
@@ -571,6 +595,20 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
             6,
             None,
         ),
+        (
+            "demo.item.set-of-studded-leather-gloves",
+            3,
+            5,
+            "gloves",
+            1,
+            None,
+        ),
+        ("demo.item.set-of-gauntlets", 35, 20, "gloves", 4, None),
+        ("demo.item.leather-gloves", 3, 5, "gloves", 1, None),
+        ("demo.item.soft-leather-boots", 7, 20, "boots", 2, None),
+        ("demo.item.hard-leather-cap", 12, 15, "head", 2, None),
+        ("demo.item.small-leather-shield", 15, 50, "shield", 3, None),
+        ("demo.item.chain-mail", 750, 220, "body", 14, None),
     ];
 
     for (id, value, weight, slot, defense, damage) in expected {
@@ -592,4 +630,44 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
             "{id} damage"
         );
     }
+}
+
+#[test]
+fn selected_legacy_armor_and_gloves_keep_melee_combat_modifiers() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let bonuses = |id: &str| {
+        &artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+            .equipment_bonuses
+    };
+
+    assert_eq!(bonuses("demo.item.hard-leather-armour").melee_skill, -1);
+    assert_eq!(bonuses("demo.item.hard-studded-leather").melee_skill, -1);
+    assert_eq!(
+        bonuses("demo.item.set-of-studded-leather-gloves").melee_damage,
+        1
+    );
+    let gauntlets = bonuses("demo.item.set-of-gauntlets");
+    assert_eq!(gauntlets.melee_skill, 1);
+    assert_eq!(gauntlets.melee_damage, 1);
+    assert_eq!(bonuses("demo.item.chain-mail").melee_skill, -2);
+    assert_eq!(bonuses("demo.item.shovel").digging_skill, 2);
+    assert_eq!(bonuses("demo.item.pick").digging_skill, 2);
+}
+
+#[test]
+fn arrows_stack_up_to_ninety_nine() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let arrow = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.arrow")
+        .expect("original pack should contain arrows");
+
+    assert_eq!(arrow.max_stack, 99);
 }

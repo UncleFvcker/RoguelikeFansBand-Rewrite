@@ -46,6 +46,24 @@ fn malformed_revealed_terrain_knowledge_is_rejected() {
 }
 
 #[test]
+fn inventory_over_its_equipped_slot_capacity_is_rejected() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    for index in 0..27 {
+        give_inventory_item(
+            &mut game,
+            &format!("test.inventory.item.{index}"),
+            "demo.item.resonant-band",
+        );
+    }
+
+    assert!(matches!(
+        Game::from_save(game.to_save()),
+        Err(CoreError::InvalidSave("inventory exceeds slot capacity"))
+    ));
+}
+
+#[test]
 fn v62_floor_with_obsolete_connection_set_uses_legacy_stair_fallback() {
     let mut game = Game::new(93);
     game.player.position = Position { x: 3, y: 4 };
@@ -198,6 +216,7 @@ fn save_payload_restores_identical_state() {
         4,
         GameCommand::Equip {
             item_id: "demo.item.echo-charm.1".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("equip should execute");

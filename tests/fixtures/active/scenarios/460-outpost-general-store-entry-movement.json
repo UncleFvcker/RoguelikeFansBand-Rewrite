@@ -27,7 +27,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 45,
+      "rngDrawCounter": 72,
       "floorId": "demo.floor.surface",
       "town": {
         "id": "demo.town.outpost",
@@ -151,21 +151,21 @@
           },
           "stock": [
             {
-              "id": "generated.item.28",
+              "id": "generated.item.50",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.29",
+              "id": "generated.item.51",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -177,7 +177,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.34",
+              "id": "generated.item.52",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
               "quantity": 2,
@@ -193,7 +193,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.36",
+              "id": "generated.item.54",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
               "quantity": 5,
@@ -206,6 +206,16 @@
                 "maximum": 7500,
                 "lightRadius": 0
               },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.55",
+              "kindId": "demo.item.fabric-bag",
+              "displayNameKey": "item-demo-fabric-bag-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 30,
+              "weightTenthsPound": 10,
               "quality": "ordinary"
             }
           ],
@@ -742,6 +752,22 @@
             "charisma": 0,
             "speed": 0
           },
+          "equipmentBonuses": {
+            "meleeAttacks": 0,
+            "meleeSkill": -2,
+            "meleeDamage": 0,
+            "rangedSkill": 0,
+            "throwingSkill": 0,
+            "deviceSkill": 0,
+            "savingThrowSkill": 0,
+            "stealthSkill": 0,
+            "searchSkill": 0,
+            "perceptionSkill": 0,
+            "disarmingSkill": 0,
+            "diggingSkill": 0,
+            "infravision": 0,
+            "lightRadius": 0
+          },
           "identification": "identified",
           "quality": "ordinary"
         },
@@ -841,7 +867,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 55,
+      "nextItemInstanceSerial": 90,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -849,7 +875,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "f33acfc008e96da066d862d64fe5363d89d9223c7769880139d011aed43b4997"
+      "stateHash": "56731d02aef4316438fcfd58643907d61953892efb2eac73f73ae7a49031ac3d"
     },
     "changedCells": [
       {

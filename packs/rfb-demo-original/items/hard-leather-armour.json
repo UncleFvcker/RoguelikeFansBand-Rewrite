@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 150,
+  "descriptionKey": "item-demo-hard-leather-armour-description",
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "glyph": "(",
+  "id": "demo.item.hard-leather-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 6
+  },
+  "nameKey": "item-demo-hard-leather-armour-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 100
+}

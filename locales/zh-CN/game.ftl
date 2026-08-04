@@ -191,6 +191,7 @@ damage-type-curse-name = 诅咒
 message-item-pickup-success = 你将 { $quantity } 个{ $target }收入了背包。
 message-gold-pickup-success = 你拾取了 { $amount } 金币（现有 { $balance }）。
 message-item-pickup-over-capacity = 你无法拾取 { $quantity } 个{ $target }：当前 { $currentWeight } 磅加上 { $pickupWeight } 磅，超过了 { $capacity } 磅的携带上限。
+message-item-pickup-inventory-full = 你无法拾取 { $quantity } 个{ $target }：背包已使用 { $usedSlots } / { $capacity } 个槽位，还需要 { $requiredSlots } 个槽位。
 message-item-pickup-none = 脚下没有可以拾取的物品。请走到可见物品所在格，再按 G。
 message-item-equip-success = 你将{ $target }装备在{ $slot }槽位。
 message-item-equip-swap = 你卸下了{ $replaced }，并将{ $target }装备在{ $slot }槽位。

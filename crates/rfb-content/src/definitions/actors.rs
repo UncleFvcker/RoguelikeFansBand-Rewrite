@@ -119,6 +119,8 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub carry_capacity_tenths_pound: u32,
     #[serde(default)]
+    pub inventory_slot_capacity: u16,
+    #[serde(default)]
     pub damage_type: ActorDamageType,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,

@@ -11,7 +11,7 @@ use crate::{
     state::{EquipOutcome, ItemInstance, ItemLocation},
 };
 
-use super::{BodySlot, Game, body_slot_instance_for_type};
+use super::{BodySlot, Game, body_slot_instance_for_type, item_can_occupy_slot_type};
 
 #[derive(Debug, Clone, Default)]
 pub(super) struct ItemKnowledgeState {
@@ -185,6 +185,13 @@ pub(super) enum PickUpOutcome {
         pickup_weight: u32,
         capacity: u32,
     },
+    InventoryFull {
+        kind_id: String,
+        quantity: u32,
+        used_slots: u16,
+        required_slots: u16,
+        capacity: u16,
+    },
     Nothing,
 }
 
@@ -228,7 +235,96 @@ enum PickUpPlan {
         pickup_weight: u32,
         capacity: u32,
     },
+    InventoryFull {
+        kind_id: String,
+        quantity: u32,
+        used_slots: u16,
+        required_slots: u16,
+        capacity: u16,
+    },
     Nothing,
+}
+
+fn inventory_used_slots(items: &[ItemInstance]) -> u16 {
+    u16::try_from(
+        items
+            .iter()
+            .filter(|item| item.location == ItemLocation::Inventory)
+            .count(),
+    )
+    .unwrap_or(u16::MAX)
+}
+
+fn compatible_inventory_space(
+    content: &ContentCatalog,
+    items: &[ItemInstance],
+    item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
+    incoming: &ItemInstance,
+    match_knowledge: bool,
+) -> u32 {
+    let Some(definition) = content.item(&incoming.kind_id) else {
+        return 0;
+    };
+    let incoming_knowledge = item_property_knowledge.get(&incoming.id);
+    items
+        .iter()
+        .filter(|carried| {
+            carried.location == ItemLocation::Inventory
+                && carried.quantity < definition.max_stack
+                && item_instances_stack_compatible(carried, incoming)
+                && (!match_knowledge
+                    || item_property_knowledge.get(&carried.id) == incoming_knowledge)
+        })
+        .fold(0_u32, |space, carried| {
+            space.saturating_add(definition.max_stack - carried.quantity)
+        })
+}
+
+pub(super) fn additional_inventory_slots(
+    content: &ContentCatalog,
+    items: &[ItemInstance],
+    item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
+    incoming: &ItemInstance,
+    quantity: u32,
+    match_knowledge: bool,
+) -> u16 {
+    let Some(definition) = content.item(&incoming.kind_id) else {
+        return u16::MAX;
+    };
+    let remaining = quantity.saturating_sub(compatible_inventory_space(
+        content,
+        items,
+        item_property_knowledge,
+        incoming,
+        match_knowledge,
+    ));
+    if remaining == 0 {
+        return 0;
+    }
+    let slots = remaining.div_ceil(definition.max_stack);
+    u16::try_from(slots).unwrap_or(u16::MAX)
+}
+
+pub(super) fn inventory_quantity_capacity(
+    content: &ContentCatalog,
+    items: &[ItemInstance],
+    item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
+    incoming: &ItemInstance,
+    slot_capacity: u16,
+    match_knowledge: bool,
+) -> u32 {
+    let Some(definition) = content.item(&incoming.kind_id) else {
+        return 0;
+    };
+    let stack_space = compatible_inventory_space(
+        content,
+        items,
+        item_property_knowledge,
+        incoming,
+        match_knowledge,
+    );
+    let free_slots = slot_capacity.saturating_sub(inventory_used_slots(items));
+    stack_space.saturating_add(u32::from(free_slots).saturating_mul(definition.max_stack))
 }
 
 fn plan_batch_drop(items: &[ItemInstance], item_ids: &[String]) -> Option<BatchDropPlan> {
@@ -279,22 +375,34 @@ fn plan_equip(
     body_slots: &[BodySlot],
     items: &[ItemInstance],
     item_id: &str,
+    requested_slot_id: Option<&str>,
 ) -> Option<EquipPlan> {
     let inventory_index = items
         .iter()
         .position(|item| item.id == item_id && item.location == ItemLocation::Inventory)?;
     let carried = &items[inventory_index];
-    let slot_type = content.item(&carried.kind_id)?.equipment_slot.as_ref()?;
-    let slot_id = body_slot_instance_for_type(body_slots, slot_type, |slot_id| {
-        items.iter().any(|item| {
-            matches!(
-                &item.location,
-                ItemLocation::Equipped { slot_id: equipped } if equipped == slot_id
-            )
-        })
-    })?
-    .id
-    .clone();
+    let definition = content.item(&carried.kind_id)?;
+    let declared_slot_type = definition.equipment_slot.as_deref()?;
+    let slot_id = if let Some(requested_slot_id) = requested_slot_id {
+        let requested_slot = body_slots
+            .iter()
+            .find(|slot| slot.id == requested_slot_id)?;
+        if !item_can_occupy_slot_type(declared_slot_type, &requested_slot.slot_type) {
+            return None;
+        }
+        requested_slot.id.clone()
+    } else {
+        body_slot_instance_for_type(body_slots, declared_slot_type, |slot_id| {
+            items.iter().any(|item| {
+                matches!(
+                    &item.location,
+                    ItemLocation::Equipped { slot_id: equipped } if equipped == slot_id
+                )
+            })
+        })?
+        .id
+        .clone()
+    };
     if carried.quantity != 1 {
         return None;
     }
@@ -332,6 +440,7 @@ fn plan_pick_up(
     player_position: Position,
     player_kind_id: &str,
     current_weight: u32,
+    inventory_slot_capacity: u16,
 ) -> Result<PickUpPlan, CoreError> {
     let Some(ground_index) = items
         .iter()
@@ -361,6 +470,25 @@ fn plan_pick_up(
             current_weight,
             pickup_weight,
             capacity,
+        });
+    }
+
+    let used_slots = inventory_used_slots(items);
+    let required_slots = additional_inventory_slots(
+        content,
+        items,
+        item_property_knowledge,
+        pickup_item,
+        original_quantity,
+        true,
+    );
+    if used_slots.saturating_add(required_slots) > inventory_slot_capacity {
+        return Ok(PickUpPlan::InventoryFull {
+            kind_id,
+            quantity: original_quantity,
+            used_slots,
+            required_slots,
+            capacity: inventory_slot_capacity,
         });
     }
 
@@ -412,6 +540,44 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
 }
 
 impl Game {
+    pub(super) fn inventory_used_slots(&self) -> u16 {
+        inventory_used_slots(&self.items)
+    }
+
+    pub(super) fn inventory_slot_capacity(&self) -> u16 {
+        let base = self
+            .content
+            .actor(&self.player.kind_id)
+            .expect("player actor definition must remain available")
+            .inventory_slot_capacity;
+        self.items
+            .iter()
+            .filter_map(|item| {
+                if !matches!(item.location, ItemLocation::Equipped { .. }) {
+                    return None;
+                }
+                self.content
+                    .item(&item.kind_id)
+                    .map(|definition| definition.inventory_slot_bonus)
+            })
+            .fold(base, u16::saturating_add)
+    }
+
+    pub(super) fn inventory_quantity_capacity_for(
+        &self,
+        incoming: &ItemInstance,
+        match_knowledge: bool,
+    ) -> u32 {
+        inventory_quantity_capacity(
+            &self.content,
+            &self.items,
+            &self.item_property_knowledge,
+            incoming,
+            self.inventory_slot_capacity(),
+            match_knowledge,
+        )
+    }
+
     pub(super) fn carry_shop_purchase_item(&mut self, mut item: ItemInstance) -> Vec<String> {
         let definition = self
             .content
@@ -921,12 +1087,41 @@ impl Game {
         Ok(Some((1, u64::from(plan.quantity))))
     }
 
-    pub(super) fn equip_inventory_item(&mut self, item_id: &str) -> Option<EquipOutcome> {
-        let plan = plan_equip(&self.content, &self.body_slots, &self.items, item_id)?;
+    pub(super) fn equip_inventory_item(
+        &mut self,
+        item_id: &str,
+        slot_id: Option<&str>,
+    ) -> Option<EquipOutcome> {
+        let plan = plan_equip(
+            &self.content,
+            &self.body_slots,
+            &self.items,
+            item_id,
+            slot_id,
+        )?;
         if plan
             .replaced_index
             .is_some_and(|index| self.items[index].curse.is_some())
         {
+            return None;
+        }
+        let current_capacity = self.inventory_slot_capacity();
+        let equipped_bonus = self
+            .content
+            .item(&self.items[plan.inventory_index].kind_id)?
+            .inventory_slot_bonus;
+        let replaced_bonus = plan
+            .replaced_index
+            .and_then(|index| self.content.item(&self.items[index].kind_id))
+            .map_or(0, |definition| definition.inventory_slot_bonus);
+        let projected_capacity = current_capacity
+            .saturating_sub(replaced_bonus)
+            .saturating_add(equipped_bonus);
+        let projected_used = self
+            .inventory_used_slots()
+            .saturating_sub(1)
+            .saturating_add(u16::from(plan.replaced_index.is_some()));
+        if projected_used > projected_capacity {
             return None;
         }
         let replaced_kind_id = plan.replaced_index.map(|index| {
@@ -962,8 +1157,15 @@ impl Game {
     pub(super) fn cursed_equipment_replaced_by(
         &self,
         item_id: &str,
+        slot_id: Option<&str>,
     ) -> Option<(String, String, ItemCurseSeverityDto)> {
-        let plan = plan_equip(&self.content, &self.body_slots, &self.items, item_id)?;
+        let plan = plan_equip(
+            &self.content,
+            &self.body_slots,
+            &self.items,
+            item_id,
+            slot_id,
+        )?;
         let replaced = &self.items[plan.replaced_index?];
         Some((replaced.kind_id.clone(), plan.slot_id, replaced.curse?))
     }
@@ -971,6 +1173,11 @@ impl Game {
     pub(super) fn unequip_slot(&mut self, slot_id: &str) -> Option<String> {
         let plan = plan_unequip(&self.items, slot_id)?;
         if plan.curse.is_some() {
+            return None;
+        }
+        let removed_bonus = self.content.item(&plan.kind_id)?.inventory_slot_bonus;
+        let projected_capacity = self.inventory_slot_capacity().saturating_sub(removed_bonus);
+        if self.inventory_used_slots().saturating_add(1) > projected_capacity {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;
@@ -994,6 +1201,7 @@ impl Game {
             self.player.position,
             &self.player.kind_id,
             self.carried_weight_tenths_pound(),
+            self.inventory_slot_capacity(),
         )?;
         match plan {
             PickUpPlan::Nothing => Ok(PickUpOutcome::Nothing),
@@ -1008,6 +1216,19 @@ impl Game {
                 quantity,
                 current_weight,
                 pickup_weight,
+                capacity,
+            }),
+            PickUpPlan::InventoryFull {
+                kind_id,
+                quantity,
+                used_slots,
+                required_slots,
+                capacity,
+            } => Ok(PickUpOutcome::InventoryFull {
+                kind_id,
+                quantity,
+                used_slots,
+                required_slots,
                 capacity,
             }),
             PickUpPlan::Picked(plan) => {

@@ -228,7 +228,8 @@ impl Game {
             }
         }
         for item in &self.items {
-            if !matches!(&item.location, ItemLocation::Equipped { .. }) {
+            if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            {
                 continue;
             }
             if let Some(definition) = self.content.item(&item.kind_id) {
@@ -311,7 +312,8 @@ impl Game {
             immunities.extend(race.status_immunities.iter().cloned());
         }
         for item in &self.items {
-            if !matches!(&item.location, ItemLocation::Equipped { .. }) {
+            if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            {
                 continue;
             }
             if let Some(definition) = self.content.item(&item.kind_id) {
@@ -401,7 +403,9 @@ impl Game {
     pub(super) fn player_equipment_passives(&self) -> BTreeSet<EquipmentPassive> {
         self.items
             .iter()
-            .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            })
             .flat_map(|item| self.item_passives(item))
             .collect()
     }
@@ -409,7 +413,9 @@ impl Game {
     pub(super) fn equipment_modifiers(&self) -> StatModifiersDto {
         self.items
             .iter()
-            .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            })
             .fold(StatModifiersDto::default(), |total, item| {
                 let item = self.item_modifiers(item);
                 StatModifiersDto {
@@ -664,7 +670,8 @@ impl Game {
             }
         };
         for item in &self.items {
-            if !matches!(&item.location, ItemLocation::Equipped { .. }) {
+            if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            {
                 continue;
             }
             if let Some(item_definition) = self.content.item(&item.kind_id) {
@@ -946,6 +953,17 @@ impl Game {
                 .iter()
                 .filter(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
             {
+                if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("tool"))
+                {
+                    let bonuses = self.item_equipment_bonuses(item);
+                    add_equipment_stat(
+                        &mut pipeline,
+                        StatKind::DigSkill,
+                        &item.id,
+                        bonuses.digging_skill,
+                    );
+                    continue;
+                }
                 let modifiers = self.item_modifiers(item);
                 add_equipment_stat(&mut pipeline, StatKind::MaxHp, &item.id, modifiers.max_hp);
                 add_equipment_stat(&mut pipeline, StatKind::Attack, &item.id, modifiers.attack);
@@ -980,6 +998,12 @@ impl Game {
                     StatKind::MeleeSkill,
                     &item.id,
                     bonuses.melee_skill,
+                );
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::MeleeDamageBonus,
+                    &item.id,
+                    bonuses.melee_damage,
                 );
                 add_equipment_stat(
                     &mut pipeline,
@@ -1035,11 +1059,17 @@ impl Game {
                     &item.id,
                     bonuses.digging_skill,
                 );
-                if let Some(profile) = self
-                    .content
-                    .item(&item.kind_id)
-                    .and_then(|definition| definition.melee_profile.as_ref())
-                {
+                let melee_profile = match &item.location {
+                    ItemLocation::Equipped { slot_id }
+                        if self.body_slot_type(slot_id) == Some("weapon") =>
+                    {
+                        self.content
+                            .item(&item.kind_id)
+                            .and_then(|definition| definition.melee_profile.as_ref())
+                    }
+                    _ => None,
+                };
+                if let Some(profile) = melee_profile {
                     add_equipment_stat(
                         &mut pipeline,
                         StatKind::MeleeAttacks,

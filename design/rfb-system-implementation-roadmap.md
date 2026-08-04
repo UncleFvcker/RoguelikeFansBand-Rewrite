@@ -1,6 +1,6 @@
 # RFB 全系统梳理与重构实现路线
 
-状态：长期规则实现路线；当前基线为协议 1.134 / contract-v167（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18 文档）
+状态：长期规则实现路线；当前基线为协议 1.135 / contract-v169（P31–P98 进展见 8.3，玩家流程与 Outpost 进展见 Phase 17/18，物品接入见 Phase 19）
 
 ## 1. 目的与边界
 
@@ -463,9 +463,9 @@ contract-v69 继续完成内容驱动的 dungeon 实例生命周期。`reset-on-
 
 ### 8.1 基线与完成度判断
 
-当前权威基线为协议 1.134、内容包 1.157.0、contract-v167、save v1 和 state hash Schema v61；内容 hash 为 `796b48c16924b0d89a5c98443122b3802b920e9ef460aab447e0468a3f99d7ea`。active baseline 包含 467 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v161 建立金币、饥饿、燃料光照、Outpost 和首家交易；v162–v165 扩展 Temple、Alchemist、Magic Shop、Armoury、Weaponsmith 与 Bookstore；v166 增加独立 Town Facility/Home 内容模型；v167 增加 Black Market 严格类别、原版价格修正与两本非城镇库存法书。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
+当前权威基线为协议 1.135、内容包 1.163.0、contract-v169、save v1 和 state hash Schema v61；内容 hash 为 `d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac`。active baseline 包含 463 个 exact fixtures，零 waiver。v73–v149 建立的规则与内容边界保持；v150–v156 建立 Warrens 玩家流程、角色切片、结果恢复、地图密度和掉落；v157–v168 建立并扩展开放 Outpost、补给、九类设施与 Home；v169 接入 35 项固定原版物品、共享背包容量、容器/工具槽、装备近战修正与工具双槽语义。Original Lab/Echo 与旧 demo builds 留作历史系统回归。Race/Class/Personality、技能成长、出生装备、自然属性、HP 序列、胜利后等级 100 / `18/820` 和装备派生边界保持一致。
 
-这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 68 种 terrain、33 种 actor、111 种 item、3 种 resource、68 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、12 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、1 个 town facility、8 个 shop 和 2 个 world。
+这一里程碑代表“规则架构、地牢纵切、角色构筑、玩家/怪物施法循环和首个兼容玩家流程已经成型”，不代表“旧 RFB 已重制完成”。当前 demo 内容包有 68 种 terrain、33 种 actor、140 种 item、3 种 resource、68 个 ability、6 本 ability book、10 个 skill、13 个 skill set、5 个 Race、6 个 Class、3 个 Personality、7 个 build、7 张 encounter table、12 张 loot table、3 张 theme table、1 张 region table、1 张 terrain feature table、6 个 Vault、1 个 town、1 个 town facility、8 个 shop 和 2 个 world。
 
 | 领域 | 阶段性状态 | 与旧 RFB 的当前差距 |
 | --- | --- | --- |

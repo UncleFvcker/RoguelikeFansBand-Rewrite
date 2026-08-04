@@ -1,14 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.soft-leather-boots",
-  "nameKey": "item-demo-soft-leather-boots-name",
-  "descriptionKey": "item-demo-soft-leather-boots-description",
-  "glyph": "[",
-  "weightTenthsPound": 20,
-  "maxStack": 1,
   "baseValue": 7,
+  "descriptionKey": "item-demo-soft-leather-boots-description",
   "equipmentSlot": "boots",
-  "modifiers": { "defense": 2 },
-  "tags": ["armor", "equipment", "rfb-compatibility"]
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.soft-leather-boots",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 2
+  },
+  "nameKey": "item-demo-soft-leather-boots-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
 }

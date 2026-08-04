@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 120,
+  "descriptionKey": "item-demo-leather-pouch-description",
+  "equipmentSlot": "container",
+  "formatVersion": 1,
+  "glyph": "~",
+  "id": "demo.item.leather-pouch",
+  "inventorySlotBonus": 8,
+  "maxStack": 1,
+  "nameKey": "item-demo-leather-pouch-name",
+  "tags": [
+    "container",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 10
+}

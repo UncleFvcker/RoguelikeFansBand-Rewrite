@@ -337,7 +337,7 @@ const PREVIOUS_BUILT_IN_CONTENT_HASHES: [&str; 151] = [
 ];
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_HASH: &str =
-    "6fab5b75a54951101146f6a4c722bb5230b6485a4dbf7f8771a0b89683ed8c89";
+    "d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac";
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 61;
@@ -576,7 +576,7 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
 /// The engine's standard humanoid body: the slot roster every player uses
 /// unless their race declares its own `bodySlots`. Single-instance slot ids
 /// equal their type so pre-template saves (e.g. `charm`) stay valid.
-const STANDARD_BODY_SLOTS: [(&str, &str); 13] = [
+const STANDARD_BODY_SLOTS: [(&str, &str); 15] = [
     ("weapon", "weapon"),
     ("launcher", "launcher"),
     ("body", "body"),
@@ -590,6 +590,8 @@ const STANDARD_BODY_SLOTS: [(&str, &str); 13] = [
     ("amulet", "amulet"),
     ("light", "light"),
     ("charm", "charm"),
+    ("container", "container"),
+    ("tool", "tool"),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -650,6 +652,11 @@ fn body_slot_instance_for_type<'a>(
         }
     }
     first_match
+}
+
+fn item_can_occupy_slot_type(declared_slot_type: &str, target_slot_type: &str) -> bool {
+    declared_slot_type == target_slot_type
+        || (declared_slot_type == "tool" && target_slot_type == "weapon")
 }
 
 fn append_starting_items(
@@ -1248,8 +1255,10 @@ impl Game {
         );
         let cursed_equip_replacement = matches!(
             &action,
-            GameAction::Equip { item_id }
-                if self.cursed_equipment_replaced_by(item_id).is_some()
+            GameAction::Equip { item_id, slot_id }
+                if self
+                    .cursed_equipment_replaced_by(item_id, slot_id.as_deref())
+                    .is_some()
         );
         let unavailable_recharge = matches!(
             &action,
@@ -1410,16 +1419,18 @@ impl Game {
                     events.push(DomainEvent::NoItemsDropped);
                 }
             }
-            GameAction::Equip { item_id } => {
+            GameAction::Equip { item_id, slot_id } => {
                 if let Some((target_kind_id, slot_id, severity)) =
-                    self.cursed_equipment_replaced_by(&item_id)
+                    self.cursed_equipment_replaced_by(&item_id, slot_id.as_deref())
                 {
                     events.push(DomainEvent::ItemUnequipCursed {
                         target_kind_id,
                         slot_id,
                         severity,
                     });
-                } else if let Some(outcome) = self.equip_inventory_item(&item_id) {
+                } else if let Some(outcome) =
+                    self.equip_inventory_item(&item_id, slot_id.as_deref())
+                {
                     self.refresh_player_resource_maxima();
                     let discovered_affix_ids = outcome.discovered_affix_ids.clone();
                     let equipped_kind_id = outcome.kind_id.clone();
@@ -1607,6 +1618,19 @@ impl Game {
                         quantity,
                         current_weight,
                         pickup_weight,
+                        capacity,
+                    }),
+                    PickUpOutcome::InventoryFull {
+                        kind_id,
+                        quantity,
+                        used_slots,
+                        required_slots,
+                        capacity,
+                    } => events.push(DomainEvent::ItemPickupInventoryFull {
+                        target_kind_id: kind_id,
+                        quantity,
+                        used_slots,
+                        required_slots,
                         capacity,
                     }),
                     PickUpOutcome::Nothing if gold_pickup.is_none() => {

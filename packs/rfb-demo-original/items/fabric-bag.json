@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 30,
+  "descriptionKey": "item-demo-fabric-bag-description",
+  "equipmentSlot": "container",
+  "formatVersion": 1,
+  "glyph": "~",
+  "id": "demo.item.fabric-bag",
+  "inventorySlotBonus": 4,
+  "maxStack": 1,
+  "nameKey": "item-demo-fabric-bag-name",
+  "tags": [
+    "container",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 10
+}

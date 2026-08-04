@@ -236,6 +236,7 @@ fn equipped_light_spends_one_fuel_per_ten_ticks_and_reports_extinction() {
         &mut game,
         GameCommand::Equip {
             item_id: "test.torch".to_owned(),
+            slot_id: None,
         },
     );
     set_fuel(&mut game, "test.torch", 1);

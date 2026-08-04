@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 12,
+  "descriptionKey": "item-demo-pair-of-hard-leather-boots-description",
+  "equipmentSlot": "boots",
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.pair-of-hard-leather-boots",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 3
+  },
+  "nameKey": "item-demo-pair-of-hard-leather-boots-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 40
+}

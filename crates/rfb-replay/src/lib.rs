@@ -1538,6 +1538,7 @@ mod tests {
             GameCommand::PickUp,
             GameCommand::Equip {
                 item_id: "demo.item.echo-charm.1".to_owned(),
+                slot_id: None,
             },
             GameCommand::Unequip {
                 slot_id: "charm".to_owned(),

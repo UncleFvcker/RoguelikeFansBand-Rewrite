@@ -300,83 +300,21 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
     let right = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("same seed should start");
     assert_eq!(left.shop_states, right.shop_states);
-    let expected = [
-        (
-            GENERAL_STORE_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.ration-of-food",
-                "demo.item.wooden-torch",
-                "demo.item.brass-lantern",
-                "demo.item.flask-of-oil",
-            ]),
-        ),
-        (
-            ARMOURY_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.robe",
-                "demo.item.soft-leather-armour",
-                "demo.item.metal-cap",
-                "demo.item.large-leather-shield",
-                "demo.item.leather-gloves",
-                "demo.item.soft-leather-boots",
-                "demo.item.hard-leather-cap",
-                "demo.item.small-leather-shield",
-                "demo.item.chain-mail",
-            ]),
-        ),
-        (
-            WEAPONSMITH_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.dagger",
-                "demo.item.main-gauche",
-                "demo.item.rapier",
-                "demo.item.mace",
-                "demo.item.spear",
-                "demo.item.sabre",
-                "demo.item.short-sword",
-                "demo.item.broad-sword",
-                "demo.item.short-bow",
-                "demo.item.arrow",
-            ]),
-        ),
-        (
-            TEMPLE_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.light-healing-potion",
-                "demo.item.valor-tonic",
-                "demo.item.homeward-scroll",
-                "demo.item.cleansing-scroll",
-            ]),
-        ),
-        (
-            ALCHEMIST_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.flicker-scroll",
-                "demo.item.farstep-scroll",
-                "demo.item.seeking-scroll",
-                "demo.item.trapfinding-scroll",
-                "demo.item.temperate-tonic",
-            ]),
-        ),
-        (
-            MAGIC_SHOP_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.magic-missile-wand",
-                "demo.item.detect-objects-staff",
-                "demo.item.identify-staff",
-            ]),
-        ),
-        (
-            BOOKSTORE_ID,
-            std::collections::BTreeSet::from([
-                "demo.item.stench-of-death",
-                "demo.item.sepulchral-ways",
-            ]),
-        ),
-    ];
-    for (shop_id, expected_kinds) in expected {
+    let town = left
+        .content
+        .town("demo.town.outpost")
+        .expect("Outpost should exist");
+    for shop_id in &town.shop_ids {
+        let expected_kinds = left
+            .content
+            .shop(shop_id)
+            .expect("town shop should exist")
+            .stock
+            .iter()
+            .map(|stock| stock.item_kind_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
         assert_eq!(
-            left.shop_states[shop_id]
+            left.shop_states[shop_id.as_str()]
                 .inventory
                 .iter()
                 .map(|item| item.kind_id.as_str())
@@ -578,6 +516,21 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
     let mut game = Game::new_warrens_journey_with_build(42, "demo.build.warrior")
         .expect("Warrens game should start");
     game.gold = 10_000;
+    let mut extra_arrows = game.shop_states[WEAPONSMITH_ID]
+        .inventory
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arrow")
+        .expect("Weaponsmith should stock arrows")
+        .clone();
+    extra_arrows.id = game
+        .allocate_item_instance_id()
+        .expect("test arrow stock should allocate a unique item ID");
+    extra_arrows.quantity = 99;
+    game.shop_states
+        .get_mut(WEAPONSMITH_ID)
+        .expect("weaponsmith state should exist")
+        .inventory
+        .push(extra_arrows);
     game.player.position = Position { x: 34, y: 19 };
     game.mark_shop_visited_at_player();
 
@@ -600,8 +553,8 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
             .stock
             .iter()
             .find(|item| item.kind_id == "demo.item.arrow")
-            .is_some_and(|item| item.quantity > 30),
-        "seed 42 should exercise grouping across the arrow stack limit"
+            .is_some_and(|item| item.quantity > 99),
+        "compatible arrow instances should group across the stack limit"
     );
 
     game.player.position = Position { x: 30, y: 19 };
@@ -634,7 +587,13 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
         .expect("purchased gloves should be carried")
         .id
         .clone();
-    let equipped = dispatch_next(&mut game, GameCommand::Equip { item_id: glove_id });
+    let equipped = dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: glove_id,
+            slot_id: None,
+        },
+    );
     assert!(
         equipped
             .equipment
@@ -819,6 +778,53 @@ fn rejected_purchase_preserves_rng_and_business_state() {
             .args
             .get("reason")
             .is_some_and(|reason| reason == "insufficient-gold")
+    }));
+    assert_eq!(game.shop_states, business_before);
+    assert_eq!(game.items, items_before);
+    assert_eq!(game.gold, gold_before);
+    assert_eq!(game.world_tick, tick_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn full_inventory_purchase_is_rejected_atomically() {
+    let mut game = store_game(42);
+    game.gold = 10_000;
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    for index in 0..26 {
+        support::give_inventory_item(
+            &mut game,
+            &format!("test.inventory.band.{index}"),
+            "demo.item.resonant-band",
+        );
+    }
+    let first_stock_id = projected_shop(&game.snapshot().shops, GENERAL_STORE_ID)
+        .stock
+        .first()
+        .expect("General Store should project stock")
+        .id
+        .clone();
+    let business_before = game.shop_states.clone();
+    let items_before = game.items.clone();
+    let gold_before = game.gold;
+    let tick_before = game.world_tick;
+    let draws_before = game.rng_draw_counter();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: GENERAL_STORE_ID.to_owned(),
+            item_id: first_stock_id,
+            quantity: 1,
+        },
+    );
+
+    assert!(update.events.iter().any(|event| {
+        event
+            .args
+            .get("reason")
+            .is_some_and(|reason| reason == "inventory-full")
     }));
     assert_eq!(game.shop_states, business_before);
     assert_eq!(game.items, items_before);
@@ -1072,6 +1078,12 @@ fn maintenance_refills_only_after_interval_at_entrance() {
     game.world_tick = 10_000;
     game.maintain_shop_at_player().unwrap();
     let state = &game.shop_states[GENERAL_STORE_ID];
+    let defined_stock_count = game
+        .content
+        .shop(GENERAL_STORE_ID)
+        .expect("General Store should exist")
+        .stock
+        .len();
     assert_eq!(state.last_maintenance_world_tick, 10_000);
     assert_eq!(
         state
@@ -1080,7 +1092,7 @@ fn maintenance_refills_only_after_interval_at_entrance() {
             .map(|item| item.kind_id.as_str())
             .collect::<std::collections::BTreeSet<_>>()
             .len(),
-        4
+        defined_stock_count
     );
     assert!(game.rng_draw_counter() > draws_before);
 }

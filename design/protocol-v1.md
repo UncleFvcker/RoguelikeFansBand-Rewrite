@@ -360,3 +360,5 @@ contract-v132 不增加运行时命令或快照 DTO，继续复用 `UseItem` 与
 协议 1.133 增加 `DepositAtHome` / `WithdrawFromHome`、`HomeDto` / `HomeItemDto` 与 `homes` 投影，并为 save v1 增加省略式 `homeStates`。Home 库存作为权威状态进入 state hash Schema v61；操作零时间、零金币、零 RNG，且不复用商店价格或店主模型。完整边界见 [Contract v166](contract-v166-outpost-home.md)。
 
 协议 1.134 为 `ShopCategoryDto` 增加 `black-market`。Black Market 继续复用既有商店、库存、报价、交易事件和 save DTO；其 Warrior 买入加倍、卖出减半与店主单件收购上限由核心价格管线执行，不增加新的存档字段，state hash Schema 保持 v61。完整边界见 [Contract v167](contract-v167-outpost-black-market.md)。
+
+协议 1.135 为 `Equip` 增加可选 `slotId`，用于在一个物品有多个合法装备目标时明确选择具体身体槽实例。未提供时继续按声明槽类型使用既有确定性自动选择；声明为 `tool` 的工具可以选择 `tool` 或 `weapon`，其他物品仍只能进入声明类型。该字段只属于瞬时命令，不进入存档；实际装备槽继续由既有 equipment save 保存，state hash Schema 保持 v61。

@@ -253,7 +253,7 @@ inventory-stack-count =
         [one] 1 stack
        *[other] { $count } stacks
     }
-inventory-weight-summary = { $stacks } · { $weight } / { $capacity } lb
+inventory-weight-summary = { $stacks } · { $usedSlots } / { $slotCapacity } slots · { $weight } / { $capacity } lb
 inventory-empty = Your inventory is empty. Stand on an item and press G to pick it up.
 inventory-quantity = ×{ $quantity }
 inventory-charges = Charges: { $current }/{ $maximum }
@@ -335,6 +335,8 @@ action-inventory-appraise = Appraise
 action-inventory-drop = Drop
 item-target-title = Select item
 item-target-label = Target
+equipment-slot-target-title = Equip tool
+equipment-slot-target-label = Slot
 action-item-target-confirm = Select
 action-dialog-cancel = Cancel
 item-use-glyph-title = Choose a monster glyph
@@ -356,6 +358,8 @@ equipment-slot-boots = Boots
 equipment-slot-ring = Ring
 equipment-slot-amulet = Amulet
 equipment-slot-light = Light
+equipment-slot-container = Container
+equipment-slot-tool = Tool
 equipment-slot-ordinal = { $slot } ({ $ordinal })
 equipment-slot-vacant = Empty
 equipment-slot-unknown = Unknown slot ({ $slot })
@@ -501,6 +505,7 @@ shop-transaction-reason-insufficient-stock = The shop does not have that many.
 shop-transaction-reason-insufficient-quantity = You do not own that many.
 shop-transaction-reason-insufficient-gold = Not enough gold.
 shop-transaction-reason-over-capacity = The purchase would exceed your carrying capacity.
+shop-transaction-reason-inventory-full = The purchase needs more pack slots than you have available.
 shop-transaction-reason-item-illegal = This general store will not buy that item.
 shop-transaction-reason-price-overflow = The price cannot be represented safely.
 shop-transaction-reason-gold-overflow = Your gold balance cannot hold the proceeds.

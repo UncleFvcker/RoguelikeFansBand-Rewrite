@@ -548,6 +548,14 @@ export function createPresentationFormatter(
           pickupWeight: formatTenthsPoundArgument(event.args.pickupWeight),
           capacity: formatTenthsPoundArgument(event.args.capacity),
         });
+      case "item-pickup-inventory-full":
+        return localization.format("message-item-pickup-inventory-full", {
+          target: visibleItemNameForKind(event.args.target),
+          quantity: event.args.quantity ?? "?",
+          usedSlots: event.args.usedSlots ?? "?",
+          requiredSlots: event.args.requiredSlots ?? "?",
+          capacity: event.args.capacity ?? "?",
+        });
       case "item-pickup-none":
         return localization.format("message-item-pickup-none");
       case "item-equip-success":
@@ -1368,6 +1376,8 @@ export function createPresentationFormatter(
     ring: "equipment-slot-ring",
     amulet: "equipment-slot-amulet",
     light: "equipment-slot-light",
+    container: "equipment-slot-container",
+    tool: "equipment-slot-tool",
   };
 
   function equipmentSlotName(slotType: string | undefined): string {

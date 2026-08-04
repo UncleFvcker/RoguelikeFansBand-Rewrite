@@ -38,6 +38,8 @@ pub(crate) struct SourceItemDefinition {
     base_value: u32,
     #[serde(default)]
     equipment_slot: Option<String>,
+    #[serde(default)]
+    inventory_slot_bonus: u16,
     /// Curse stamped onto newly generated instances. Save data remains
     /// authoritative after generation and never re-derives this field.
     #[serde(default)]
@@ -206,6 +208,7 @@ impl SourceItemDefinition {
             max_stack: self.max_stack,
             base_value: self.base_value,
             equipment_slot: self.equipment_slot,
+            inventory_slot_bonus: self.inventory_slot_bonus,
             initial_curse: self.initial_curse,
             modifiers: self.modifiers,
             equipment_bonuses: self.equipment_bonuses,

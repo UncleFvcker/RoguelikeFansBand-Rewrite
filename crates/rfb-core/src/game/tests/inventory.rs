@@ -11,6 +11,7 @@ fn previous_equipment_content_migrates_to_derived_modifiers() {
         4,
         GameCommand::Equip {
             item_id: "demo.item.echo-charm.1".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("equip should execute");
@@ -69,6 +70,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
         0,
         GameCommand::Equip {
             item_id: "test.item.band.1".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("first ring should equip");
@@ -77,6 +79,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
         1,
         GameCommand::Equip {
             item_id: "test.item.band.2".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("second ring should equip");
@@ -84,7 +87,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
     assert_eq!(slot_of(&game, "test.item.band.2"), "ring-2");
     let snapshot = game.snapshot();
     assert_eq!(snapshot.player.equipment_modifiers.defense, 2);
-    assert_eq!(snapshot.body_slots.len(), 13);
+    assert_eq!(snapshot.body_slots.len(), 15);
     assert!(
         snapshot
             .body_slots
@@ -99,6 +102,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
         2,
         GameCommand::Equip {
             item_id: "test.item.band.3".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("third ring should replace the first instance");
@@ -107,7 +111,7 @@ fn ring_slots_fill_in_body_order_and_replace_deterministically() {
     assert_eq!(slot_of(&game, "test.item.band.2"), "ring-2");
 
     let restored = Game::from_save(game.to_save()).expect("body slots should round trip");
-    assert_eq!(restored.body_slots.len(), 13);
+    assert_eq!(restored.body_slots.len(), 15);
     assert_eq!(slot_of(&restored, "test.item.band.3"), "ring-1");
 }
 
@@ -178,6 +182,171 @@ fn pickup_over_capacity_rejects_the_whole_ground_stack() {
 }
 
 #[test]
+fn twenty_seventh_inventory_stack_is_rejected() {
+    let mut game = Game::new(42);
+    clear_monsters(&mut game);
+    game.items.clear();
+    for index in 0..26 {
+        give_inventory_item(
+            &mut game,
+            &format!("test.inventory.band.{index}"),
+            "demo.item.resonant-band",
+        );
+    }
+    game.items.push(ItemInstance {
+        id: "test.ground.band".to_owned(),
+        kind_id: "demo.item.resonant-band".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
+        curse: None,
+        activation: None,
+        charges: None,
+        fuel: None,
+        device_recovery_progress: 0,
+        location: ItemLocation::Ground(game.player.position),
+    });
+
+    let update = dispatch_next(&mut game, GameCommand::PickUp);
+
+    assert_eq!(update.player.inventory_used_slots, 26);
+    assert_eq!(update.player.inventory_slot_capacity, 26);
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.pickup.inventory-full"
+            && event.args["usedSlots"] == "26"
+            && event.args["requiredSlots"] == "1"
+            && event.args["capacity"] == "26"
+    }));
+    assert!(game.items.iter().any(|item| {
+        item.id == "test.ground.band" && item.location == ItemLocation::Ground(game.player.position)
+    }));
+}
+
+#[test]
+fn full_inventory_can_merge_into_an_existing_stack() {
+    let mut game = Game::new(42);
+    clear_monsters(&mut game);
+    game.items.clear();
+    for index in 0..25 {
+        give_inventory_item(
+            &mut game,
+            &format!("test.inventory.band.{index}"),
+            "demo.item.resonant-band",
+        );
+    }
+    give_inventory_item(&mut game, "test.inventory.arrow", "demo.item.arrow");
+    let ground = ItemInstance {
+        id: "test.ground.arrow".to_owned(),
+        kind_id: "demo.item.arrow".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
+        curse: None,
+        activation: None,
+        charges: None,
+        fuel: None,
+        device_recovery_progress: 0,
+        location: ItemLocation::Ground(game.player.position),
+    };
+    game.items.push(ground);
+
+    let update = dispatch_next(&mut game, GameCommand::PickUp);
+
+    assert_eq!(update.player.inventory_used_slots, 26);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.pickup")
+    );
+    assert!(game.items.iter().any(|item| {
+        item.id == "test.inventory.arrow"
+            && item.location == ItemLocation::Inventory
+            && item.quantity == 2
+    }));
+    assert!(!game.items.iter().any(|item| item.id == "test.ground.arrow"));
+}
+
+#[test]
+fn fabric_bag_adds_four_shared_inventory_slots() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.inventory.fabric-bag",
+        "demo.item.fabric-bag",
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.inventory.fabric-bag".to_owned(),
+            slot_id: None,
+        },
+    );
+
+    assert_eq!(update.player.inventory_used_slots, 0);
+    assert_eq!(update.player.inventory_slot_capacity, 30);
+    assert!(
+        update
+            .equipment
+            .iter()
+            .any(|item| { item.id == "test.inventory.fabric-bag" && item.slot_id == "container" })
+    );
+}
+
+#[test]
+fn container_cannot_be_unequipped_while_its_slots_are_in_use() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.inventory.fabric-bag",
+        "demo.item.fabric-bag",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.inventory.fabric-bag".to_owned(),
+            slot_id: None,
+        },
+    );
+    for index in 0..27 {
+        give_inventory_item(
+            &mut game,
+            &format!("test.inventory.band.{index}"),
+            "demo.item.resonant-band",
+        );
+    }
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::Unequip {
+            slot_id: "container".to_owned(),
+        },
+    );
+
+    assert_eq!(update.player.inventory_used_slots, 27);
+    assert_eq!(update.player.inventory_slot_capacity, 30);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.unequip.none")
+    );
+    assert!(
+        update
+            .equipment
+            .iter()
+            .any(|item| item.id == "test.inventory.fabric-bag")
+    );
+}
+
+#[test]
 fn equipping_and_unequipping_moves_an_item_between_authoritative_lists() {
     let mut game = Game::new(42);
     clear_monsters(&mut game);
@@ -199,6 +368,7 @@ fn equipping_and_unequipping_moves_an_item_between_authoritative_lists() {
             4,
             GameCommand::Equip {
                 item_id: "demo.item.echo-charm.1".to_owned(),
+                slot_id: None,
             },
         ))
         .expect("equipping should execute");
@@ -321,6 +491,7 @@ fn player_derived_stats_retain_equipment_and_status_sources() {
         4,
         GameCommand::Equip {
             item_id: "demo.item.echo-charm.1".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("equipping should execute");
@@ -378,6 +549,152 @@ fn player_derived_stats_retain_equipment_and_status_sources() {
             && contribution.origin_id.as_deref() == Some("demo.monster.impact.1")
             && contribution.amount == -20
     }));
+}
+
+#[test]
+fn armor_hit_modifier_only_changes_melee_skill() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    let baseline = game.player_derived_stats();
+    game.items.push(ItemInstance {
+        id: "test.item.hard-leather-armour".to_owned(),
+        kind_id: "demo.item.hard-leather-armour".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
+        curse: None,
+        activation: None,
+        charges: None,
+        fuel: None,
+        device_recovery_progress: 0,
+        location: ItemLocation::Equipped {
+            slot_id: "body".to_owned(),
+        },
+    });
+
+    let equipped = game.player_derived_stats();
+    assert_eq!(equipped.melee_skill.value, baseline.melee_skill.value - 1);
+    assert_eq!(
+        equipped.melee_damage_bonus.value,
+        baseline.melee_damage_bonus.value
+    );
+    assert_eq!(equipped.ranged_skill.value, baseline.ranged_skill.value);
+}
+
+#[test]
+fn gauntlets_add_their_hit_and_damage_modifiers_to_melee() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    let baseline = game.player_derived_stats();
+    game.items.push(ItemInstance {
+        id: "test.item.set-of-gauntlets".to_owned(),
+        kind_id: "demo.item.set-of-gauntlets".to_owned(),
+        quantity: 1,
+        quality: ItemQualityDto::Ordinary,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
+        enchantments: Default::default(),
+        curse: None,
+        activation: None,
+        charges: None,
+        fuel: None,
+        device_recovery_progress: 0,
+        location: ItemLocation::Equipped {
+            slot_id: "hands".to_owned(),
+        },
+    });
+
+    let equipped = game.player_derived_stats();
+    assert_eq!(equipped.melee_skill.value, baseline.melee_skill.value + 1);
+    assert_eq!(
+        equipped.melee_damage_bonus.value,
+        baseline.melee_damage_bonus.value + 1
+    );
+    assert_eq!(equipped.ranged_skill.value, baseline.ranged_skill.value);
+}
+
+#[test]
+fn shovel_equips_as_a_tool_without_replacing_the_melee_weapon_profile() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    let baseline = game.player_derived_stats();
+    give_inventory_item(&mut game, "test.item.shovel", "demo.item.shovel");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.item.shovel".to_owned(),
+            slot_id: Some("tool".to_owned()),
+        },
+    );
+
+    let equipped = game.player_derived_stats();
+    let profile = game.player_melee_profile(&equipped);
+    assert_eq!(update.equipment[0].slot_id, "tool");
+    assert_eq!(equipped.dig_skill.value, baseline.dig_skill.value + 2);
+    assert_eq!(equipped.attack.value, baseline.attack.value);
+    assert_eq!(equipped.defense.value, baseline.defense.value);
+    assert_eq!(equipped.melee_skill.value, baseline.melee_skill.value);
+    assert_eq!(
+        equipped.melee_damage_bonus.value,
+        baseline.melee_damage_bonus.value
+    );
+    assert_eq!((profile.damage_dice, profile.damage_sides), (1, 2));
+    assert_eq!(profile.source_item_id, None);
+}
+
+#[test]
+fn shovel_equips_as_a_weapon_with_its_full_melee_profile() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    let baseline = game.player_derived_stats();
+    give_inventory_item(&mut game, "test.item.shovel", "demo.item.shovel");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.item.shovel".to_owned(),
+            slot_id: Some("weapon".to_owned()),
+        },
+    );
+
+    let equipped = game.player_derived_stats();
+    let profile = game.player_melee_profile(&equipped);
+    assert_eq!(update.equipment[0].slot_id, "weapon");
+    assert_eq!(equipped.dig_skill.value, baseline.dig_skill.value + 2);
+    assert_eq!((profile.damage_dice, profile.damage_sides), (1, 3));
+    assert_eq!(profile.source_item_id.as_deref(), Some("test.item.shovel"));
+
+    let restored = Game::from_save(game.to_save()).expect("weapon-slot tool should reload");
+    let restored_stats = restored.player_derived_stats();
+    let restored_profile = restored.player_melee_profile(&restored_stats);
+    assert_eq!(restored.snapshot().equipment[0].slot_id, "weapon");
+    assert_eq!(
+        (restored_profile.damage_dice, restored_profile.damage_sides),
+        (1, 3)
+    );
+}
+
+#[test]
+fn tool_rejects_an_unrelated_target_slot_without_changing_inventory() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    give_inventory_item(&mut game, "test.item.shovel", "demo.item.shovel");
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.item.shovel".to_owned(),
+            slot_id: Some("body".to_owned()),
+        },
+    );
+
+    assert!(update.equipment.is_empty());
+    assert_eq!(update.inventory.len(), 1);
+    assert_eq!(update.inventory[0].id, "test.item.shovel");
+    assert_eq!(update.events[0].kind, "item.equip.none");
 }
 
 #[test]
@@ -452,6 +769,7 @@ fn item_instance_identity_survives_location_transitions() {
         4,
         GameCommand::Equip {
             item_id: charm_id.to_owned(),
+            slot_id: None,
         },
     ))
     .expect("equip should execute");
@@ -497,6 +815,7 @@ fn equipped_attack_modifier_changes_authoritative_melee_skill() {
         4,
         GameCommand::Equip {
             item_id: "demo.item.echo-charm.1".to_owned(),
+            slot_id: None,
         },
     ))
     .expect("equip should execute");

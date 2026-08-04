@@ -37,10 +37,12 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
   assert.equal(
     localization.format("inventory-weight-summary", {
       stacks: "2 stacks",
+      usedSlots: 2,
+      slotCapacity: 26,
       weight: "9.7",
       capacity: "10.0",
     }),
-    "2 stacks · 9.7 / 10.0 lb",
+    "2 stacks · 2 / 26 slots · 9.7 / 10.0 lb",
   );
   assert.equal(
     localization.format("ability-resource-value", {
@@ -73,10 +75,12 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
   assert.equal(
     localization.format("inventory-weight-summary", {
       stacks: "2 堆",
+      usedSlots: 2,
+      slotCapacity: 26,
       weight: "9.7",
       capacity: "10.0",
     }),
-    "2 堆 · 9.7 / 10.0 磅",
+    "2 堆 · 背包槽位 2 / 26 · 9.7 / 10.0 磅",
   );
   assert.equal(
     localization.format("ability-resource-value", {

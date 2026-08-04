@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 35,
+  "descriptionKey": "item-demo-set-of-gauntlets-description",
+  "equipmentBonuses": {
+    "meleeDamage": 1,
+    "meleeSkill": 1
+  },
+  "equipmentSlot": "gloves",
+  "formatVersion": 1,
+  "glyph": "]",
+  "id": "demo.item.set-of-gauntlets",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 4
+  },
+  "nameKey": "item-demo-set-of-gauntlets-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

@@ -91,6 +91,7 @@ pub(crate) enum GameAction {
     },
     Equip {
         item_id: String,
+        slot_id: Option<String>,
     },
     Fire {
         direction: Direction,
@@ -230,7 +231,7 @@ impl From<GameCommand> for GameAction {
                 book_item_id,
                 ability_id,
             },
-            GameCommand::Equip { item_id } => Self::Equip { item_id },
+            GameCommand::Equip { item_id, slot_id } => Self::Equip { item_id, slot_id },
             GameCommand::Fire { direction } => Self::Fire { direction },
             GameCommand::FireTarget { target } => Self::FireTarget { target },
             GameCommand::Throw { item_id, direction } => Self::Throw { item_id, direction },

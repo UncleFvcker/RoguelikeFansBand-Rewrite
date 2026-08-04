@@ -205,7 +205,7 @@ RoguelikeFansBand 的新一代重构工程。
 - [Rust 权威可见性与光照 v1](design/visibility-lighting-v1.md)
 - [静态地形 Chunk 渲染 v1](design/terrain-chunk-rendering-v1.md)
 
-当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v168`，共 463 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
+当前原创规则契约位于稳定的 [`tests/fixtures/active/scenarios`](tests/fixtures/active/scenarios)，逻辑版本为 `contract-v169`，共 463 条 exact fixtures、零 waiver，由 `rfb-contract` 在所有平台运行。历史基线由 Git 历史保存，不再以全量副本驻留工作树。
 
 确定性命令回放由 [`rfb-replay`](crates/rfb-replay) 提供：正式 `.rfbreplay` 使用带 SHA-256 校验的 MessagePack 容器，JSON 仅用于调试。
 
@@ -445,6 +445,8 @@ Phase 18 后续 / contract-v166 在北侧独立建筑加入 Home，使用原版�
 Phase 18 后续 / contract-v167 在东南侧加入原版数字 `7` Black Market。固定 Human 店主“公平的托皮(?)”使用 greed 150 与 30000 单件收购上限；Warrior 买价在普通报价后乘二、卖价减半。首批库存严格限定为原版不带 `TOWN` 的 Black Channels 与 Necronomicon。协议升至 1.134、demo 升至 1.157.0、Schema 保持 v61，active baseline 增至 467 条 exact fixtures、零 waiver，content hash 为 `796b48c16924b0d89a5c98443122b3802b920e9ef460aab447e0468a3f99d7ea`。重写版现已覆盖 Outpost 数字 1-9 的全部基础入口；原版地图仍缺 `0` Shroomery、Museum、两条轮换任务服务线和 Bounty Office，共五类。详见[Contract v167](design/contract-v167-outpost-black-market.md)。
 
 Phase 18 地图修订 / contract-v168 将 Outpost 地表扩为 `96×32`，城镇整体置于带四周荒野缓冲的地表中央，Warrens 入口继续位于东城门外；圣殿与相邻建筑之间保留左右通道和南侧绕行带。内容模型允许地表与程序楼层使用独立尺寸，因此九层 Warrens 继续保持原版依据的 `66×22`。协议和 Schema 不变，demo 升至 1.158.0；当前 active baseline 在去除四条重复的普通商店购买场景后为 463 条 exact fixtures，content hash 为 `6816ed2d04032ca79ad36aa2451ca8d2adac91633680d7541e4ab3084e231860`。详见[Contract v168](design/contract-v168-open-outpost-layout.md)。
+
+Phase 19 装备与背包扩展 / contract-v169 将正式原版物品选择扩至 35 项，并建立 26 格共享背包、`container/tool` 槽、装备容器增加 4/8/12 格、箭矢 99 堆叠、护甲/手套近战修正，以及工具双目标装备。工具装入 `tool` 时只贡献挖掘，装入 `weapon` 时完整武器与装备属性生效；`Equip.slotId` 明确选择具体槽实例。协议 1.135、demo 1.163.0、Schema 保持 v61、active baseline 保持 463 条 exact fixtures、零 waiver，content hash 为 `d9e227cc7757ff82a66c7afadf8da2846a1751920f53fa3f1f0a74c640b8a0ac`。详见[Contract v169](design/contract-v169-inventory-containers-tools.md)与[Phase 19](design/phase-19-legacy-item-integration.md)。
 
 ### 本地验证
 

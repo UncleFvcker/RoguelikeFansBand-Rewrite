@@ -62,8 +62,11 @@ pub(super) fn validate_actors(
         }
         if (actor.role == ActorRole::Player
             && (actor.carry_capacity_tenths_pound == 0
-                || actor.carry_capacity_tenths_pound > 1_000_000))
-            || (actor.role == ActorRole::Monster && actor.carry_capacity_tenths_pound != 0)
+                || actor.carry_capacity_tenths_pound > 1_000_000
+                || actor.inventory_slot_capacity == 0
+                || actor.inventory_slot_capacity > 1_000))
+            || (actor.role == ActorRole::Monster
+                && (actor.carry_capacity_tenths_pound != 0 || actor.inventory_slot_capacity != 0))
         {
             return Err(ContentError::InvalidActorCarryCapacity(actor.id.clone()));
         }
